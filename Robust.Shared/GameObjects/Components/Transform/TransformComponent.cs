@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
         [DataField("rot")] internal Angle _localRotation; // local rotation
         [DataField("noRot")] internal bool _noLocalRotation;
         [DataField("anchored")]
-        private bool _anchored;
+        internal bool _anchored;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
@@ -454,7 +454,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -464,17 +464,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (_entMan.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
-                        gridComp.UnanchorEntity(this);
-                    else
-                        SetAnchored(false);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(this);
                 }
             }
         }

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -14,10 +15,78 @@ public abstract partial class SharedTransformSystem
 
     internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos)
     {
+        // Bypass some of the expensive stuff in unanchoring / anchoring.
+        oldGrid.Grid.RemoveFromSnapGridCell(tilePos, xform.Owner);
+        newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
+        xform._parent = newGrid.Owner;
+        xform._anchored = true;
+        Dirty(xform);
         var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
-        oldGrid.UnanchorEntity(xform, false);
-        newGrid.AnchorEntity(xform, tilePos, false);
         RaiseLocalEvent(xform.Owner, ref ev);
+    }
+
+    public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
+    {
+        var result = grid.AddToSnapGridCell(tileIndices, xform.Owner);
+
+        if (result)
+        {
+            // Mark as static first to avoid the velocity change on parent change.
+            if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
+                physicsComponent.BodyType = BodyType.Static;
+
+            SetParent(xform, grid.GridEntityId, false);
+
+            // anchor snapping
+            xform.LocalPosition = grid.GridTileToLocal(tileIndices).Position;
+            xform.SetAnchored(result);
+        }
+
+        return result;
+    }
+
+    public bool AnchorEntity(TransformComponent xform, IMapGridComponent component)
+    {
+        return AnchorEntity(xform, component.Grid);
+    }
+
+    public bool AnchorEntity(TransformComponent xform, IMapGrid grid)
+    {
+        var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+        return AnchorEntity(xform, grid, tileIndices);
+    }
+
+    public bool AnchorEntity(TransformComponent xform)
+    {
+        if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+        {
+            return false;
+        }
+
+        var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+        return AnchorEntity(xform, grid, tileIndices);
+    }
+
+    public void Unanchor(TransformComponent xform)
+    {
+        //HACK: Client grid pivot causes this.
+        //TODO: make grid components the actual grid
+        if(xform.GridID == GridId.Invalid)
+            return;
+
+        UnanchorEntity(xform, Comp<IMapGridComponent>(_mapManager.GetGridEuid(xform.GridID)));
+    }
+
+    public void UnanchorEntity(TransformComponent xform, IMapGridComponent grid)
+    {
+        var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+        grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+        if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
+        {
+            physicsComponent.BodyType = BodyType.Dynamic;
+        }
+
+        xform.SetAnchored(false);
     }
 
     #endregion
@@ -100,7 +169,7 @@ public abstract partial class SharedTransformSystem
             if (newState.Anchored && !component.Anchored)
             {
                 var iGrid = Comp<MapGridComponent>(_mapManager.GetGridEuid(component.GridID));
-                iGrid.AnchorEntity(component);
+                AnchorEntity(component, iGrid);
                 component.SetAnchored(true);
             }
             else

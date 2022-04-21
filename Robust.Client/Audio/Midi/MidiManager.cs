@@ -445,6 +445,10 @@ internal sealed partial class MidiManager : IMidiManager
                 {
                     stream = resourceCache.UserData.OpenRead(resourcePath);
                 }
+                else if (File.Exists(filename))
+                {
+                    stream = File.OpenRead(filename);
+                }
                 else
                 {
                     return IntPtr.Zero;

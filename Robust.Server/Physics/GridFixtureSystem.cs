@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -226,11 +227,13 @@ namespace Robust.Server.Physics
                 var (gridPos, gridRot) = xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = Comp<MapGridComponent>(mapGrid.GridEntityId);
+                var newGrids = new GridId[grids.Count];
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
                     var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
+                    newGrids[i] = splitGrid.Index;
 
                     splitGrid.WorldPosition = gridPos;
                     splitGrid.WorldRotation = gridRot;
@@ -325,6 +328,10 @@ namespace Robust.Server.Physics
                 {
                     _nodes[mapGrid.GridEntityId].Remove(group.Chunk.Indices);
                 }
+
+                // Allow content to react to the grid being split...
+                var ev = new GridSplitEvent(newGrids, mapGrid.Index);
+                RaiseLocalEvent(uid, ref ev);
 
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
@@ -601,5 +608,28 @@ namespace Robust.Server.Physics
                 return MoveNext(out neighbor);
             }
         }
+    }
+}
+
+/// <summary>
+///     Event raised on a grid that has been split into multiple grids.
+/// </summary>
+[ByRefEvent]
+public readonly struct GridSplitEvent
+{
+    /// <summary>
+    ///     Contains the IDs of the newly created grids.
+    /// </summary>
+    public readonly GridId[] NewGrids;
+
+    /// <summary>
+    ///     The grid that has been split.
+    /// </summary>
+    public readonly GridId Grid;
+
+    public GridSplitEvent(GridId[] newGrids, GridId grid)
+    {
+        NewGrids = newGrids;
+        Grid = grid;
     }
 }

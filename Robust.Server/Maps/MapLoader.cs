@@ -371,6 +371,9 @@ namespace Robust.Server.Maps
 
                 // Run Startup on all components.
                 FinishEntitiesStartup();
+
+                // Do this last so any entity transforms are fixed first and that they go to the new grids correctly.
+                CheckGridSplits();
             }
 
             private void VerifyEntitiesExist()
@@ -496,7 +499,6 @@ namespace Robust.Server.Maps
                     }
 
                     fixtureSystem.FixtureUpdate(fixtures, body);
-                    gridFixtures.CheckSplits(grid.GridEntityId);
                 }
             }
 
@@ -756,6 +758,16 @@ namespace Robust.Server.Maps
                 foreach (var entity in Entities)
                 {
                     _serverEntityManager.FinishEntityStartup(entity);
+                }
+            }
+
+            private void CheckGridSplits()
+            {
+                var gridFixtures = _serverEntityManager.EntitySysManager.GetEntitySystem<GridFixtureSystem>();
+                foreach (var grid in Grids)
+                {
+                    if (_serverEntityManager.Deleted(grid.GridEntityId)) continue;
+                    gridFixtures.CheckSplits(grid.GridEntityId);
                 }
             }
 

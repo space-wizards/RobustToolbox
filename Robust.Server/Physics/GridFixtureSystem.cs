@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -35,7 +37,9 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Recursion detection to avoid splitting while handling an existing split
         /// </summary>
-        private bool _splitting;
+        private bool _isSplitting;
+
+        private bool _splitAllowed = true;
 
         public override void Initialize()
         {
@@ -45,12 +49,18 @@ namespace Robust.Server.Physics
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
+
+        private void SetSplitAllowed(bool value) => _splitAllowed = value;
 
         public override void Shutdown()
         {
             base.Shutdown();
             _subscribedSessions.Clear();
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
         /// <summary>
@@ -174,10 +184,10 @@ namespace Robust.Server.Physics
         /// </summary>
         private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
-            if (_splitting) return;
+            if (_isSplitting || !_splitAllowed) return;
 
-            _splitting = true;
-            var splitFrontier = new Queue<ChunkSplitNode>();
+            _isSplitting = true;
+            var splitFrontier = new Queue<ChunkSplitNode>(4);
             var grids = new List<HashSet<ChunkSplitNode>>(1);
 
             // TODO: At this point detect splits.
@@ -275,7 +285,7 @@ namespace Robust.Server.Physics
 
                             for (var j = snapgrid.Count - 1; j >= 0; j--)
                             {
-                                var ent = snapgrid[i];
+                                var ent = snapgrid[j];
                                 var xform = xformQuery.GetComponent(ent);
                                 _xformSystem.ReAnchor(xform, oldGridComp, gridComp, tilePos, oldGridXform, splitXform, xformQuery);
                                 DebugTools.Assert(xform.Anchored);
@@ -337,7 +347,7 @@ namespace Robust.Server.Physics
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
 
-            _splitting = false;
+            _isSplitting = false;
             SendNodeDebug(mapGrid.GridEntityId);
         }
 
@@ -478,7 +488,7 @@ namespace Robust.Server.Physics
 
         internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
         {
-            if (_splitting) return;
+            if (_isSplitting) return;
 
             var grid = (IMapGridInternal) _mapManager.GetGrid(gridEuid);
             var dirtyNodes = new HashSet<ChunkSplitNode>();

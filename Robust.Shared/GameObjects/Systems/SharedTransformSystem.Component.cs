@@ -20,10 +20,16 @@ public abstract partial class SharedTransformSystem
         newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
         // TODO: Could do this re-parent way better.
         xform._parent = newGrid.Owner;
-        SetGridId(xform, newGrid.GridIndex, xformQuery);
-        DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
 
-        xform._anchored = true;
+        SetGridId(xform, newGrid.GridIndex, xformQuery);
+        var movEevee = new MoveEvent(xform.Owner,
+            new EntityCoordinates(oldGrid.Owner, xform._localPosition),
+            new EntityCoordinates(newGrid.Owner, xform._localPosition), xform);
+        RaiseLocalEvent(xform.Owner, ref movEevee);
+
+        DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
+        DebugTools.Assert(xform._anchored);
+
         Dirty(xform);
         var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
         RaiseLocalEvent(xform.Owner, ref ev);

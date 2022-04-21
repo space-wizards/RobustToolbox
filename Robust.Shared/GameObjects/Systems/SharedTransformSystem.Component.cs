@@ -13,17 +13,22 @@ public abstract partial class SharedTransformSystem
 {
     #region Anchoring
 
-    internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos)
+    internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos, EntityQuery<TransformComponent> xformQuery)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
         oldGrid.Grid.RemoveFromSnapGridCell(tilePos, xform.Owner);
         newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
+        // TODO: Could do this re-parent way better.
         xform._parent = newGrid.Owner;
+        SetGridId(xform, newGrid.GridIndex, xformQuery);
+        DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
+
         xform._anchored = true;
         Dirty(xform);
         var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
         RaiseLocalEvent(xform.Owner, ref ev);
     }
+
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
     {
@@ -87,6 +92,37 @@ public abstract partial class SharedTransformSystem
         }
 
         xform.SetAnchored(false);
+    }
+
+    #endregion
+
+    #region GridId
+
+    /// <summary>
+    /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
+    /// </summary>
+    public void SetGridId(TransformComponent xform, GridId gridId)
+    {
+        SetGridId(xform, gridId, GetEntityQuery<TransformComponent>());
+    }
+
+    /// <inheritdoc cref="SetGridId"/> />
+    private void SetGridId(TransformComponent xform, GridId gridId, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (xform.GridID == gridId) return;
+
+        SetGridIdRecursive(xform, gridId, xformQuery);
+    }
+
+    private static void SetGridIdRecursive(TransformComponent xform, GridId gridId, EntityQuery<TransformComponent> xformQuery)
+    {
+        xform._gridId = gridId;
+        var childEnumerator = xform.ChildEnumerator;
+
+        while (childEnumerator.MoveNext(out var child))
+        {
+            SetGridIdRecursive(xformQuery.GetComponent(child.Value), gridId, xformQuery);
+        }
     }
 
     #endregion

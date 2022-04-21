@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private GridId _gridId = GridId.Invalid;
+        internal GridId _gridId = GridId.Invalid;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.

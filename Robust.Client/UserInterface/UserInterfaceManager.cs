@@ -34,6 +34,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IUIControllerManagerInternal _controllers = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -283,6 +284,8 @@ namespace Robust.Client.UserInterface
 
                 RunArrange(control);
             }
+
+            _controllers.FrameUpdate(args);
 
             foreach (var root in _roots)
             {

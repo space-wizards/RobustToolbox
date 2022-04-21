@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
@@ -13,6 +14,7 @@ namespace Robust.Client.UserInterface;
 [Virtual]
 public abstract class UIController
 {
+    public virtual void FrameUpdate(FrameEventArgs args) {}
     public virtual void OnSystemLoaded(IEntitySystem system) {}
     public virtual void OnSystemUnloaded(IEntitySystem system) {}
 }
@@ -26,6 +28,7 @@ public interface IUIControllerManager
 internal interface IUIControllerManagerInternal : IUIControllerManager
 {
     void Initialize();
+    void FrameUpdate(FrameEventArgs args);
 }
 
 public sealed class UISystemDependency : Attribute {}
@@ -203,6 +206,14 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
         _systemManager.SystemUnloaded += OnSystemUnloaded;
 
         _stateManager.OnStateChanged += OnStateChanged;
+    }
+
+    public void FrameUpdate(FrameEventArgs args)
+    {
+        foreach (var controller in _uiControllerRegistry)
+        {
+            controller.FrameUpdate(args);
+        }
     }
 
     private void OnSystemLoaded(object? sender,SystemChangedArgs args)

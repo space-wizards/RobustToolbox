@@ -238,7 +238,7 @@ namespace Robust.Server.Physics
                 var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = Comp<MapGridComponent>(mapGrid.GridEntityId);
-                var newGrids = new GridId[grids.Count];
+                var newGrids = new GridId[grids.Count - 1];
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
@@ -246,6 +246,7 @@ namespace Robust.Server.Physics
                     var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
                     newGrids[i] = splitGrid.Index;
 
+                    // Keep same origin / velocity etc; this makes updating a lot faster and easier.
                     splitGrid.WorldPosition = gridPos;
                     splitGrid.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
@@ -327,6 +328,7 @@ namespace Robust.Server.Physics
                     SendNodeDebug(splitGrid.GridEntityId);
                 }
 
+                // Cull all of the old chunk nodes.
                 var toRemove = new RemQueue<ChunkNodeGroup>();
 
                 foreach (var (_, group) in _nodes[mapGrid.GridEntityId])
@@ -407,6 +409,7 @@ namespace Robust.Server.Physics
 
                 tiles.Remove(origin);
 
+                // Check for valid neighbours and add them to the frontier.
                 while (frontier.TryDequeue(out var index))
                 {
                     var tile = chunk.GetTile((ushort) index.X, (ushort) index.Y);
@@ -429,9 +432,12 @@ namespace Robust.Server.Physics
             }
 
             // Build neighbors
-            ChunkSplitNode? neighborNode = null;
-            MapChunk? neighborChunk = null;
+            ChunkSplitNode? neighborNode;
+            MapChunk? neighborChunk;
 
+            // Check each tile for node neighbours on other chunks (not possible for us to have neighbours on the same chunk
+            // as they would already be in our node).
+            // TODO: This could be better (maybe only check edges of the chunk or something).
             foreach (var chunkNode in group.Nodes)
             {
                 foreach (var index in chunkNode.Indices)

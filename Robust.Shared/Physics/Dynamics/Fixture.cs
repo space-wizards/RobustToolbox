@@ -146,6 +146,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _hard = value;
+                Body.CanCollide = true;
                 Body.Awake = true;
                 EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }

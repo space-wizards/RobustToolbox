@@ -939,13 +939,13 @@ namespace Robust.Shared.Map
             // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
             if (mapChunk.FilledTiles == 0)
             {
-                RemoveChunk(mapChunk.Indices);
-
                 var fixtureSystem = EntitySystem.Get<FixtureSystem>();
                 foreach (var fixture in mapChunk.Fixtures)
                 {
                     fixtureSystem.DestroyFixture(fixture);
                 }
+
+                RemoveChunk(mapChunk.Indices);
             }
 
             // generate collision rectangles for this chunk based on filled tiles.

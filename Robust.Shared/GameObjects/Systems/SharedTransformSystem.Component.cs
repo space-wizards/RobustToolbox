@@ -13,13 +13,24 @@ public abstract partial class SharedTransformSystem
 {
     #region Anchoring
 
-    internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos, EntityQuery<TransformComponent> xformQuery)
+    internal void ReAnchor(TransformComponent xform,
+        MapGridComponent oldGrid,
+        MapGridComponent newGrid,
+        Vector2i tilePos,
+        TransformComponent oldGridXform,
+        TransformComponent newGridXform,
+        EntityQuery<TransformComponent> xformQuery)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
         oldGrid.Grid.RemoveFromSnapGridCell(tilePos, xform.Owner);
         newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
         // TODO: Could do this re-parent way better.
+        // Unfortunately we don't want any anchoring events to go out hence... this.
+        xform._anchored = false;
+        oldGridXform._children.Remove(xform.Owner);
+        newGridXform._children.Add(xform.Owner);
         xform._parent = newGrid.Owner;
+        xform._anchored = true;
 
         SetGridId(xform, newGrid.GridIndex, xformQuery);
         var movEevee = new MoveEvent(xform.Owner,
@@ -46,10 +57,9 @@ public abstract partial class SharedTransformSystem
             if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
                 physicsComponent.BodyType = BodyType.Static;
 
-            SetParent(xform, grid.GridEntityId, false);
-
             // anchor snapping
-            xform.LocalPosition = grid.GridTileToLocal(tileIndices).Position;
+            // Internally it will do the parent update; doing it separately just triggers a redundant move.
+            xform.Coordinates = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
             xform.SetAnchored(result);
         }
 
@@ -257,6 +267,7 @@ public abstract partial class SharedTransformSystem
 
     #region Parent
 
+    /* TODO: Need to peel out relevant bits of AttachParent e.g. children updates.
     public void SetParent(TransformComponent xform, EntityUid parent, bool move = true)
     {
         if (xform.ParentUid == parent) return;
@@ -279,6 +290,7 @@ public abstract partial class SharedTransformSystem
 
         Dirty(xform);
     }
+    */
 
     #endregion
 

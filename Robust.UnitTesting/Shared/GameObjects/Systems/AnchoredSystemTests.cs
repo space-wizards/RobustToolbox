@@ -84,9 +84,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
-            // So previously this was 1 but then the moveevent being raised on parent changes was fixed where the parent has the same position.
-            // hence this will be called twice (once for parent change and once for the anchoring snap).
-            Assert.That(calledCount, Is.EqualTo(2)); // because the ent was moved from snapping, a MoveEvent was raised.
+            Assert.That(calledCount, Is.EqualTo(1)); // because the ent was moved from snapping, a MoveEvent was raised.
             void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;

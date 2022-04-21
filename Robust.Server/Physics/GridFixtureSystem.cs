@@ -224,7 +224,8 @@ namespace Robust.Server.Physics
 
                 var xformQuery = GetEntityQuery<TransformComponent>();
                 var bodyQuery = GetEntityQuery<PhysicsComponent>();
-                var (gridPos, gridRot) = xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
+                var oldGridXform = xformQuery.GetComponent(mapGrid.GridEntityId);
+                var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = Comp<MapGridComponent>(mapGrid.GridEntityId);
                 var newGrids = new GridId[grids.Count];
@@ -276,7 +277,7 @@ namespace Robust.Server.Physics
                             {
                                 var ent = snapgrid[i];
                                 var xform = xformQuery.GetComponent(ent);
-                                _xformSystem.ReAnchor(xform, oldGridComp, gridComp, tilePos, xformQuery);
+                                _xformSystem.ReAnchor(xform, oldGridComp, gridComp, tilePos, oldGridXform, splitXform, xformQuery);
                                 DebugTools.Assert(xform.Anchored);
                             }
                         }

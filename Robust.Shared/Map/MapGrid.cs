@@ -225,7 +225,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<TileRef> GetAllTiles(bool ignoreSpace = true)
+        public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             foreach (var kvChunk in _chunks)
             {
@@ -236,7 +236,7 @@ namespace Robust.Shared.Map
                     {
                         var tile = chunk.GetTile(x, y);
 
-                        if (ignoreSpace && tile.IsEmpty)
+                        if (ignoreEmpty && tile.IsEmpty)
                             continue;
 
                         var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * ChunkSize;
@@ -244,6 +244,12 @@ namespace Robust.Shared.Map
                     }
                 }
             }
+        }
+
+        /// <inheritdoc />
+        public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
+        {
+            return new GridTileEnumerator(Index, _chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
         }
 
         /// <inheritdoc />
@@ -719,9 +725,11 @@ namespace Robust.Shared.Map
             for (var y = -n; y <= n; ++y)
                 for (var x = -n; x <= n; ++x)
                 {
-                    foreach (var cell in GetAnchoredEntities(position + new Vector2i(x, y)))
+                    var enumerator = GetAnchoredEntitiesEnumerator(position + new Vector2i(x, y));
+
+                    while (enumerator.MoveNext(out var cell))
                     {
-                        yield return cell;
+                        yield return cell.Value;
                     }
                 }
         }
@@ -1018,5 +1026,57 @@ namespace Robust.Shared.Map
     public sealed class EmptyGridEvent : EntityEventArgs
     {
         public GridId GridId { get; init;  }
+    }
+
+    /// <summary>
+    /// Returns all tiles on a grid.
+    /// </summary>
+    public struct GridTileEnumerator
+    {
+        private GridId _gridId;
+        private Dictionary<Vector2i, MapChunk>.Enumerator _chunkEnumerator;
+        private readonly ushort _chunkSize;
+        private int _index;
+        private bool _ignoreEmpty;
+
+        internal GridTileEnumerator(GridId gridId, Dictionary<Vector2i, MapChunk>.Enumerator chunkEnumerator, ushort chunkSize, bool ignoreEmpty)
+        {
+            _gridId = gridId;
+            _chunkEnumerator = chunkEnumerator;
+            _chunkSize = chunkSize;
+            _index = _chunkSize * _chunkSize;
+            _ignoreEmpty = ignoreEmpty;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TileRef? tileRef)
+        {
+            if (_index == _chunkSize * _chunkSize)
+            {
+                if (!_chunkEnumerator.MoveNext())
+                {
+                    tileRef = null;
+                    return false;
+                }
+
+                _index = 0;
+            }
+
+            var (chunkOrigin, chunk) = _chunkEnumerator.Current;
+
+            var x = (ushort) (_index / _chunkSize);
+            var y = (ushort) (_index % _chunkSize);
+            var tile = chunk.GetTile(x, y);
+            _index++;
+
+            if (!_ignoreEmpty && tile.IsEmpty)
+            {
+                return MoveNext(out tileRef);
+            }
+
+            var gridX = x + chunkOrigin.X * _chunkSize;
+            var gridY = y + chunkOrigin.Y * _chunkSize;
+            tileRef = new TileRef(_gridId, gridX, gridY, tile);
+            return true;
+        }
     }
 }

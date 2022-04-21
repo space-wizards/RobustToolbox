@@ -186,7 +186,7 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
 
             foreach (var @interface in uiControllerType.GetInterfaces())
             {
-                if (@interface.GetGenericTypeDefinition() != typeof(IOnStateChanged<>))
+                if (!@interface.IsGenericType || @interface.GetGenericTypeDefinition() != typeof(IOnStateChanged<>))
                     continue;
 
                 var stateType = @interface.GetGenericArguments()[0];

@@ -6,6 +6,8 @@ on:
     tags:
       - 'v*'
 
+concurrency: benchmarks
+
 env:
   ROBUST_BENCHMARKS_ENABLE_SQL: 1
   ROBUST_BENCHMARKS_SQL_ADDRESS: ${{ secrets.BENCHMARKS_WRITE_ADDRESS }}

@@ -55,30 +55,12 @@ public static class ZStd
     {
         if (name == "zstd" && OperatingSystem.IsLinux())
         {
-            try
-            {
-                var paths = (string)AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES")!;
-                foreach (var p in paths.Split(':', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var tryPath = Path.Join(p, "zstd.so");
-                    // Console.WriteLine($"TRYING: {tryPath}");
-                    var result = dlopen(tryPath, RTLD_LOCAL | RTLD_DEEPBIND | RTLD_LAZY);
-                    // Console.WriteLine(result);
-                    if (result != IntPtr.Zero)
-                    {
-                        // Console.WriteLine($"FOUND: {tryPath}");
-                        return result;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Catch and at least provide some way of retrieving this.
-                System.Console.Error.WriteLine($"Exception during ZStd libdl search: {ex}");
-            }
+            // Try zstd.so we ship ourselves.
+            if (NativeLibrary.TryLoad("zstd.so", typeof(Zstd).Assembly, null, out var handle))
+                return handle;
 
-            // Try some extra paths too worst case.
-            if (NativeLibrary.TryLoad("libzstd.so.1", out var handle))
+            // Try some extra paths from the system too worst case.
+            if (NativeLibrary.TryLoad("libzstd.so.1", out handle))
                 return handle;
 
             if (NativeLibrary.TryLoad("libzstd.so", out handle))

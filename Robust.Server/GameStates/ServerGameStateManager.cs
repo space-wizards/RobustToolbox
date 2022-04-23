@@ -21,6 +21,7 @@ using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Robust.Server.GameStates
 {
@@ -46,7 +47,7 @@ namespace Robust.Server.GameStates
 
         private ISawmill _logger = default!;
 
-        private PvsThreadResources[] _threadResourcesPool = Array.Empty<PvsThreadResources>();
+        private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
         public ushort TransformNetId { get; set; }
 
@@ -66,42 +67,53 @@ namespace Robust.Server.GameStates
 
             _pvs = EntitySystem.Get<PVSSystem>();
 
-            _parallelMgr.AddAndInvokeParallelCountChanged(ParallelChanged);
+            _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
-            _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => UpdateZStdParams(), true);
+            _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => ResetParallelism(), true);
         }
 
-        private void ParallelChanged()
+        private void ResetParallelism()
         {
-            foreach (var resource in _threadResourcesPool)
-            {
-                resource.CompressionContext.Dispose();
-            }
-
-            _threadResourcesPool = new PvsThreadResources[_parallelMgr.ParallelProcessCount];
-            for (var i = 0; i < _threadResourcesPool.Length; i++)
-            {
-                ref var res = ref _threadResourcesPool[i];
-                res.CompressionContext = new ZStdCompressionContext();
-            }
-
-            UpdateZStdParams();
+            var compressLevel = _cfg.GetCVar(CVars.NetPVSCompressLevel);
+            // The * 2 is because trusting .NET won't take more is what got this code into this mess in the first place.
+            _threadResourcesPool = new DefaultObjectPool<PvsThreadResources>(new PvsThreadResourcesObjectPolicy(compressLevel), _parallelMgr.ParallelProcessCount * 2);
         }
 
-        private void UpdateZStdParams()
+        private sealed class PvsThreadResourcesObjectPolicy : IPooledObjectPolicy<PvsThreadResources>
         {
-            var compressionLevel = _cfg.GetCVar(CVars.NetPVSCompressLevel);
+            public int CompressionLevel;
 
-            for (var i = 0; i < _threadResourcesPool.Length; i++)
+            public PvsThreadResourcesObjectPolicy(int ce)
             {
-                ref var res = ref _threadResourcesPool[i];
-                res.CompressionContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, compressionLevel);
+                CompressionLevel = ce;
+            }
+
+            PvsThreadResources IPooledObjectPolicy<PvsThreadResources>.Create()
+            {
+                var res = new PvsThreadResources();
+                res.CompressionContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, CompressionLevel);
+                return res;
+            }
+
+            bool IPooledObjectPolicy<PvsThreadResources>.Return(PvsThreadResources _)
+            {
+                return true;
             }
         }
 
-        private struct PvsThreadResources
+        private sealed class PvsThreadResources
         {
             public ZStdCompressionContext CompressionContext;
+
+            public PvsThreadResources()
+            {
+                CompressionContext = new ZStdCompressionContext();
+            }
+
+            ~PvsThreadResources()
+            {
+                CompressionContext.Dispose();
+            }
         }
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)
@@ -211,22 +223,26 @@ namespace Robust.Server.GameStates
                 ArrayPool<bool>.Shared.Return(reuse);
             }
 
-            _parallelMgr.ParallelForWithResources(
+            Parallel.For(
                 0, players.Length,
-                _threadResourcesPool,
-                (int i, ref PvsThreadResources resource) =>
+                new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
+                () => _threadResourcesPool.Get(),
+                (i, loop, resource) =>
                 {
                     try
                     {
-                        SendStateUpdate(i, ref resource);
+                        SendStateUpdate(i, resource);
                     }
                     catch (Exception e) // Catch EVERY exception
                     {
                         _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
                     }
-                });
+                    return resource;
+                },
+                resource => _threadResourcesPool.Return(resource)
+            );
 
-            void SendStateUpdate(int sessionIndex, ref PvsThreadResources resources)
+            void SendStateUpdate(int sessionIndex, PvsThreadResources resources)
             {
                 var session = players[sessionIndex];
 

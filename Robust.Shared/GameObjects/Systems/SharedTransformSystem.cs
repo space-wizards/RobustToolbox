@@ -163,6 +163,22 @@ namespace Robust.Shared.GameObjects
             var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
             return new EntityCoordinates(grid.GridEntityId, gridPos);
         }
+
+        /// <summary>
+        ///     Helper method that returns the grid or map tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridOrMapTilePosition(EntityUid uid, TransformComponent? xform = null)
+        {
+            if(!Resolve(uid, ref xform, false))
+                return Vector2i.Zero;
+
+            // Fast path, we're not on a grid.
+            if (xform.GridID == GridId.Invalid)
+                return (Vector2i) xform.WorldPosition;
+
+            // We're on a grid, need to convert the coordinates to grid tiles.
+            return _mapManager.GetGrid(xform.GridID).CoordinatesToTile(xform.Coordinates);
+        }
     }
 
     /// <summary>

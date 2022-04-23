@@ -1,12 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -35,7 +33,8 @@ namespace Robust.Client.GameObjects
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
 
-            SubscribeLocalEvent<ClientOccluderComponent, AnchorStateChangedEvent>(HandleAnchorChanged);
+            SubscribeLocalEvent<ClientOccluderComponent, AnchorStateChangedEvent>(OnAnchorChanged);
+            SubscribeLocalEvent<ClientOccluderComponent, ReAnchorEvent>(OnReAnchor);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -62,7 +61,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void HandleAnchorChanged(EntityUid uid, ClientOccluderComponent component, ref AnchorStateChangedEvent args)
+        private static void OnAnchorChanged(EntityUid uid, ClientOccluderComponent component, ref AnchorStateChangedEvent args)
+        {
+            component.AnchorStateChanged();
+        }
+
+        private void OnReAnchor(EntityUid uid, ClientOccluderComponent component, ref ReAnchorEvent args)
         {
             component.AnchorStateChanged();
         }

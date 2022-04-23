@@ -88,7 +88,12 @@ namespace Robust.Shared.Map
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
         /// </summary>
         /// <returns>All tiles in the chunk.</returns>
-        IEnumerable<TileRef> GetAllTiles(bool ignoreSpace = true);
+        IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true);
+
+        /// <summary>
+        ///     Returns an enumerator that gets all tiles in the grid without empty ones, in row-major order [xTileIndex, yTileIndex].
+        /// </summary>
+        GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true);
 
         /// <summary>
         ///     Replaces a single tile inside of the grid.
@@ -127,6 +132,7 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        int AnchoredEntityCount(Vector2i pos);
         IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);

@@ -15,8 +15,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeEvent>(OnWake);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepEvent>(OnSleep);
 
             SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(HandleJointAdd);
             SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(HandleJointRemove);
@@ -87,12 +87,12 @@ namespace Robust.Shared.GameObjects
                 args.OurBody.CanCollide = true;
         }
 
-        private void HandleWake(EntityUid uid, CollisionWakeComponent component, PhysicsWakeMessage args)
+        private void OnWake(EntityUid uid, CollisionWakeComponent component, ref PhysicsWakeEvent args)
         {
             UpdateCanCollide(uid, component, args.Body, checkTerminating: false);
         }
 
-        private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
+        private void OnSleep(EntityUid uid, CollisionWakeComponent component, ref PhysicsSleepEvent args)
         {
             UpdateCanCollide(uid, component, args.Body);
         }

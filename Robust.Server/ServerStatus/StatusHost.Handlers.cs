@@ -48,10 +48,10 @@ namespace Robust.Server.ServerStatus
             var tagsCache = _serverTagsCache;
             if (tagsCache != null)
             {
-                var tags = new JsonObject();
+                var tags = new JsonArray();
                 foreach (var tag in tagsCache)
                 {
-                    tags[tag] = true;
+                    tags.Add(tag);
                 }
                 jObject["tags"] = tags;
             }

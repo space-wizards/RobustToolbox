@@ -39,10 +39,22 @@ namespace Robust.Server.ServerStatus
             var jObject = new JsonObject
             {
                 // We need to send at LEAST name and player count to have the launcher work with us.
+                // Tags is optional technically but will be necessary practically for future organization.
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
                 ["players"] = _playerManager.PlayerCount
             };
+
+            var tagsCache = _serverTagsCache;
+            if (tagsCache != null)
+            {
+                var tags = new JsonObject();
+                foreach (var tag in tagsCache)
+                {
+                    tags[tag] = true;
+                }
+                jObject["tags"] = tags;
+            }
 
             OnStatusRequest?.Invoke(jObject);
 

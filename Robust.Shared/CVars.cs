@@ -1076,6 +1076,12 @@ namespace Robust.Shared
             CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
 
         /// <summary>
+        /// Comma-separated list of tags to advertise via the status server (and therefore, to the hub).
+        /// </summary>
+        public static readonly CVarDef<string> HubTags =
+            CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// URL of the master hub server to advertise to.
         /// </summary>
         public static readonly CVarDef<string> HubMasterUrl =

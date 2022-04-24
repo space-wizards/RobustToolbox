@@ -391,6 +391,7 @@ namespace Robust.Shared.Map
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
 
+            chunk.Fixtures.Clear();
             _chunks.Remove(origin);
 
             _mapManager.ChunkRemoved(Index, chunk);
@@ -934,7 +935,11 @@ namespace Robust.Shared.Map
             }
 
             if (chunkRectangles.Count == 0)
-                fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+            {
+                // May have been deleted from the bulk update above!
+                if (!_entityManager.Deleted(GridEntityId))
+                    fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+            }
             else if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
                 system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
         }
@@ -981,7 +986,9 @@ namespace Robust.Shared.Map
             }
 
             // TryGet because unit tests YAY
-            if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+            if (mapChunk.FilledTiles > 0 &&
+                _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) &&
+                !_entityManager.Deleted(GridEntityId))
                 system.RegenerateCollision(GridEntityId, mapChunk, rectangles, checkSplit);
         }
 

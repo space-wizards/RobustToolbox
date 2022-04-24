@@ -185,6 +185,7 @@ namespace Robust.Shared.Physics
                 var proxyBody = proxy.Fixture.Body;
                 if (proxyBody.Deleted)
                 {
+                    // TODO: This happens in some grid deletion scenarios which does have an issue on github.
                     Logger.ErrorS("physics", $"Deleted body {EntityManager.ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
                     DebugTools.Assert(false);
                     continue;

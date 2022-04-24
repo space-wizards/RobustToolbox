@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Profiling;
 using Robust.Shared.Random;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
@@ -42,6 +43,7 @@ namespace Robust.Shared
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<TaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<ProfManager, ProfManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();

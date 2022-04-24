@@ -21,10 +21,12 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -67,6 +69,8 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -92,7 +96,8 @@ namespace Robust.Client
 
             _clyde.InitializePostWindowing();
             _clydeAudio.InitializePostWindowing();
-            _clyde.SetWindowTitle(Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(
+                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
@@ -152,6 +157,7 @@ namespace Robust.Client
             }
 
             _authManager.LoadFromEnv();
+            _prof.IsEnabled = true;
 
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
@@ -159,7 +165,7 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming)
+                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof)
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };
@@ -450,9 +456,20 @@ namespace Robust.Client
 
         private void Input(FrameEventArgs frameEventArgs)
         {
+            var sw = ProfSampler.StartNew();
+
             _clyde.ProcessInput(frameEventArgs);
+            _prof.WriteSample("Input Events", sw);
+
+            sw.Restart();
+
             _networkManager.ProcessPackets();
+            _prof.WriteSample("Network", sw);
+
+            sw.Restart();
+
             _taskManager.ProcessPendingTasks(); // tasks like connect
+            _prof.WriteSample("Async", sw);
         }
 
         private void Tick(FrameEventArgs frameEventArgs)
@@ -481,21 +498,61 @@ namespace Robust.Client
 
         private void Update(FrameEventArgs frameEventArgs)
         {
-            _webViewHook?.Update();
-            _clydeAudio.FrameProcess(frameEventArgs);
-            _clyde.FrameProcess(frameEventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
-            _stateManager.FrameUpdate(frameEventArgs);
+            if (_webViewHook != null)
+            {
+                using (_prof.Group("WebView"))
+                {
+                    _webViewHook?.Update();
+                }
+            }
+
+            using (_prof.Group("ClydeAudio"))
+            {
+                _clydeAudio.FrameProcess(frameEventArgs);
+            }
+
+            using (_prof.Group("Clyde"))
+            {
+                _clyde.FrameProcess(frameEventArgs);
+            }
+
+            using (_prof.Group("Content Pre Engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("State"))
+            {
+                _stateManager.FrameUpdate(frameEventArgs);
+            }
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
-                _placementManager.FrameUpdate(frameEventArgs);
-                _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+                using (_prof.Group("Placement"))
+                {
+                    _placementManager.FrameUpdate(frameEventArgs);
+                }
+
+                using (_prof.Group("Entity"))
+                {
+                    _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+                }
             }
 
-            _overlayManager.FrameUpdate(frameEventArgs);
-            _userInterfaceManager.FrameUpdate(frameEventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            using (_prof.Group("Overlay"))
+            {
+                _overlayManager.FrameUpdate(frameEventArgs);
+            }
+
+            using (_prof.Group("UI"))
+            {
+                _userInterfaceManager.FrameUpdate(frameEventArgs);
+            }
+
+            using (_prof.Group("Content Post Engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            }
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,10 +7,12 @@ using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using Dependency = Robust.Shared.IoC.DependencyAttribute;
+using Stopwatch = System.Diagnostics.Stopwatch;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -23,6 +24,7 @@ namespace Robust.Shared.GameObjects
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+        [IoC.Dependency] private readonly ProfManager _profManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -321,7 +323,9 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
+                    var sw = ProfSampler.StartNew();
                     system.FrameUpdate(frameTime);
+                    _profManager.WriteSample(system.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

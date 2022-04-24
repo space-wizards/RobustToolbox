@@ -5,6 +5,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Prometheus;
+using Robust.Shared.Profiling;
 
 namespace Robust.Shared.Timing
 {
@@ -95,6 +96,7 @@ namespace Robust.Shared.Timing
         // Only used on release mode.
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
+        private readonly ProfManager _prof;
 
 #if EXCEPTION_TOLERANCE
         private int _tickExceptions;
@@ -102,10 +104,11 @@ namespace Robust.Shared.Timing
         private const int MaxSoftLockExceptions = 10;
 #endif
 
-        public GameLoop(IGameTiming timing)
+        public GameLoop(IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof)
         {
             _timing = timing;
-            _runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+            _runtimeLog = runtimeLog;
+            _prof = prof;
         }
 
         /// <summary>
@@ -149,11 +152,13 @@ namespace Robust.Shared.Timing
                 }
 
                 _timing.StartFrame();
-                realFrameEvent = new FrameEventArgs((float) _timing.RealFrameTime.TotalSeconds);
+                realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
+                    using var _ = _prof.Group("Input");
+
                     // process Net/KB/Mouse input
                     Input?.Invoke(this, realFrameEvent);
                 }
@@ -166,19 +171,23 @@ namespace Robust.Shared.Timing
                 _timing.InSimulation = true;
                 var tickPeriod = CalcTickPeriod();
 
-
-                // run the simulation for every accumulated tick
-                while (accumulator >= tickPeriod)
+                using (_prof.Group("Tick"))
                 {
-                    accumulator -= tickPeriod;
-                    _timing.LastTick += tickPeriod;
+                    var countTicksRan = 0;
+                    // run the simulation for every accumulated tick
+                    while (accumulator >= tickPeriod)
+                    {
+                        accumulator -= tickPeriod;
+                        _timing.LastTick += tickPeriod;
 
-                    // only run the simulation if unpaused, but still use up the accumulated time
-                    if (_timing.Paused)
-                        continue;
+                        // only run the simulation if unpaused, but still use up the accumulated time
+                        if (_timing.Paused)
+                            continue;
 
-                    // update the simulation
-                    simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
+                        countTicksRan += 1;
+
+                        // update the simulation
+                        simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                     var threw = false;
                     try
@@ -216,11 +225,14 @@ namespace Robust.Shared.Timing
                         _tickExceptions = 0;
                     }
 #endif
-                    _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
-                    tickPeriod = CalcTickPeriod();
+                        _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
+                        tickPeriod = CalcTickPeriod();
 
-                    if (SingleStep)
-                        _timing.Paused = true;
+                        if (SingleStep)
+                            _timing.Paused = true;
+                    }
+
+                    _prof.WriteSample("Tick count", ProfData.Int32(countTicksRan));
                 }
 
                 // if not paused, save how close to the next tick we are so interpolation works
@@ -235,6 +247,8 @@ namespace Robust.Shared.Timing
                 try
 #endif
                 {
+                    using var _ = _prof.Group("Update");
+
                     Update?.Invoke(this, realFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
@@ -249,7 +263,12 @@ namespace Robust.Shared.Timing
                 try
 #endif
                 {
-                    Render?.Invoke(this, realFrameEvent);
+                    using (_prof.Group("Render"))
+                    {
+                        Render?.Invoke(this, realFrameEvent);
+                    }
+
+                    _prof.Swap();
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)
@@ -262,7 +281,7 @@ namespace Robust.Shared.Timing
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.
                 if (SleepMode != SleepMode.None)
-                    Thread.Sleep((int) SleepMode);
+                    Thread.Sleep((int)SleepMode);
             }
         }
 
@@ -270,7 +289,7 @@ namespace Robust.Shared.Timing
         {
             // ranges from -1 to 1, with 0 being 'default'
             var ratio = MathHelper.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
-            var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
+            var diff = TimeSpan.FromTicks((long)(_timing.TickPeriod.Ticks * ratio));
             return _timing.TickPeriod - diff;
         }
     }

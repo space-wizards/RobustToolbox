@@ -104,8 +104,11 @@ namespace Robust.Client.Graphics.Clyde
 
             TakeScreenshot(ScreenshotType.Final);
 
-            // And finally, swap those buffers!
-            SwapAllBuffers();
+            using (_prof.Group("Swap buffers"))
+            {
+                // And finally, swap those buffers!
+                SwapAllBuffers();
+            }
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)

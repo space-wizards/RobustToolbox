@@ -33,6 +33,9 @@ public abstract partial class SharedTransformSystem
         xform._anchored = true;
 
         SetGridId(xform, newGrid.GridIndex, xformQuery);
+        var reParent = new EntParentChangedMessage(xform.Owner, oldGrid.Owner, xform.MapID, xform);
+        RaiseLocalEvent(xform.Owner, ref reParent);
+        // TODO: Ideally shouldn't need to call the moveevent
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
             new EntityCoordinates(newGrid.Owner, xform._localPosition), xform);

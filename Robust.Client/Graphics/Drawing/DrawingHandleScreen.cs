@@ -56,28 +56,7 @@ namespace Robust.Client.Graphics
         /// <param name="str">The text to draw.</param>
         /// <param name="color">The color of text to draw.</param>
         public Vector2 DrawString(Font font, Vector2 pos, string str, Color color)
-        {
-            var advanceTotal = Vector2.Zero;
-            var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
-            var lineHeight = font.GetLineHeight(1);
-
-            foreach (var rune in str.EnumerateRunes())
-            {
-                if (rune == new Rune('\n'))
-                {
-                    baseLine.X = pos.X;
-                    baseLine.Y += lineHeight;
-                    advanceTotal.Y += lineHeight;
-                    continue;
-                }
-
-                var advance = font.DrawChar(this, rune, baseLine, 1, color);
-                advanceTotal.X += advance;
-                baseLine += new Vector2(advance, 0);
-            }
-
-            return advanceTotal;
-        }
+            => DrawString(font, pos, str, 1, color);
 
         /// <summary>
         ///     Draw a simple string to the screen at the specified position.
@@ -93,6 +72,30 @@ namespace Robust.Client.Graphics
         /// <param name="str">The text to draw.</param>
         public Vector2 DrawString(Font font, Vector2 pos, string str)
             => DrawString(font, pos, str, Color.White);
+
+        public Vector2 DrawString(Font font, Vector2 pos, ReadOnlySpan<char> str, float scale, Color color)
+        {
+            var advanceTotal = Vector2.Zero;
+            var baseLine = new Vector2(pos.X, font.GetAscent(scale) + pos.Y);
+            var lineHeight = font.GetLineHeight(scale);
+
+            foreach (var rune in str.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    baseLine.X = pos.X;
+                    baseLine.Y += lineHeight;
+                    advanceTotal.Y += lineHeight;
+                    continue;
+                }
+
+                var advance = font.DrawChar(this, rune, baseLine, scale, color);
+                advanceTotal.X += advance;
+                baseLine += new Vector2(advance, 0);
+            }
+
+            return advanceTotal;
+        }
 
         public abstract void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }

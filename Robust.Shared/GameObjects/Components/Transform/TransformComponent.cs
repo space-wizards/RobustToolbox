@@ -608,7 +608,7 @@ namespace Robust.Shared.GameObjects
         protected override void Startup()
         {
             // Re-Anchor the entity if needed.
-            if (_anchored && _mapManager.TryGetGrid(_gridId, out var grid) && !grid.IsAnchored(Coordinates, Owner))
+            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid) && !grid.IsAnchored(Coordinates, Owner))
                 _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
             else
                 _anchored = false;

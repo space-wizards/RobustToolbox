@@ -611,6 +611,14 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
+        public bool IsAnchored(EntityCoordinates coords, EntityUid euid)
+        {
+            var tilePos = TileIndicesFor(coords);
+            var (chunk, chunkTile) = ChunkAndOffsetForTile(tilePos);
+            var snapgrid = chunk.GetSnapGrid((ushort) chunkTile.X, (ushort) chunkTile.Y);
+            return snapgrid?.Contains(euid) == true;
+        }
+
         /// <inheritdoc />
         public bool AddToSnapGridCell(Vector2i pos, EntityUid euid)
         {

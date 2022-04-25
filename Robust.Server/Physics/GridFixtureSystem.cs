@@ -316,6 +316,9 @@ namespace Robust.Server.Physics
                         _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
 
+                    var eevee = new PostGridSplitEvent(mapGrid.Index, splitGrid.Index);
+                    RaiseLocalEvent(uid, ref eevee);
+
                     for (var j = 0; j < tileData.Count; j++)
                     {
                         var (index, _) = tileData[j];
@@ -625,6 +628,29 @@ namespace Robust.Server.Physics
                 return MoveNext(out neighbor);
             }
         }
+    }
+}
+
+/// <summary>
+///     Event raised on a grid after it has been split but before the old grid has been cleaned up.
+/// </summary>
+[ByRefEvent]
+public readonly struct PostGridSplitEvent
+{
+    /// <summary>
+    ///     The grid it was part of previously.
+    /// </summary>
+    public readonly GridId OldGrid;
+
+    /// <summary>
+    ///     The grid that has been split.
+    /// </summary>
+    public readonly GridId Grid;
+
+    public PostGridSplitEvent(GridId oldGrid, GridId grid)
+    {
+        OldGrid = oldGrid;
+        Grid = grid;
     }
 }
 

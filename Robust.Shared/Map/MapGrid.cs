@@ -1083,7 +1083,7 @@ namespace Robust.Shared.Map
             var tile = chunk.GetTile(x, y);
             _index++;
 
-            if (!_ignoreEmpty && tile.IsEmpty)
+            if (_ignoreEmpty && tile.IsEmpty)
             {
                 return MoveNext(out tileRef);
             }

@@ -4,7 +4,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Client</OutputPath>
     <NoWarn>NU1701</NoWarn>

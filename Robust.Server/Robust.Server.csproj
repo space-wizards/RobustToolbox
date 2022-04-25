@@ -3,7 +3,7 @@
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Server</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

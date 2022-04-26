@@ -75,7 +75,7 @@ namespace Robust.Server.Scripting
 
         private void ReceiveScriptStart(MsgScriptStart message)
         {
-            var reply = _netManager.CreateNetMessage<MsgScriptStartAck>();
+            var reply = new MsgScriptStartAck();
             reply.ScriptSession = message.ScriptSession;
             reply.WasAccepted = false;
             if (!_playerManager.TryGetSessionByChannel(message.MsgChannel, out var session))
@@ -128,7 +128,7 @@ namespace Robust.Server.Scripting
                 return;
             }
 
-            var replyMessage = _netManager.CreateNetMessage<MsgScriptResponse>();
+            var replyMessage = new MsgScriptResponse();
             replyMessage.ScriptSession = message.ScriptSession;
 
             var code = message.Code;
@@ -259,7 +259,7 @@ namespace Robust.Server.Scripting
                 !instances.TryGetValue(message.ScriptSession, out var instance))
                     return;
 
-            var replyMessage = _netManager.CreateNetMessage<MsgScriptCompletionResponse>();
+            var replyMessage = new MsgScriptCompletionResponse();
             replyMessage.ScriptSession = message.ScriptSession;
 
             // Everything below here cribbed from

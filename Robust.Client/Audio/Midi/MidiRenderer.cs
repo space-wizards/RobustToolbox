@@ -138,7 +138,11 @@ internal sealed class MidiRenderer : IMidiRenderer
     public uint SequencerTick => !Disposed ? _sequencer?.Tick ?? 0 : 0;
 
     [ViewVariables(VVAccess.ReadWrite)]
-    public double SequencerTimeScale => !Disposed ? _sequencer?.TimeScale ?? 0 : 0;
+    public double SequencerTimeScale
+    {
+        get => !Disposed ? _sequencer?.TimeScale ?? 0 : 0;
+        set => _sequencer.TimeScale = value;
+    }
 
     [ViewVariables(VVAccess.ReadWrite)]
     public bool Mono { get; set; }

@@ -19,19 +19,13 @@ namespace Robust.Shared.Serialization.Markdown
 
         public abstract DataNode Copy();
 
+        /// <summary>
+        ///     This function will return a data node that contains only the elements within this data node that do not
+        ///     have an equivalent entry in some other data node.
+        /// </summary>
         public abstract DataNode? Except(DataNode node);
 
         public abstract DataNode PushInheritance(DataNode parent);
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is not DataNode other)
-                return false;
-
-            // mapping and sequences nodes are equal if removing duplicate entires leaves us with nothing. Value nodes
-            // override this and directly check equality.
-            return Except(other) == null;
-        }
 
         public T CopyCast<T>() where T : DataNode
         {

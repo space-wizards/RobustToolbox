@@ -21,6 +21,8 @@ namespace Robust.Shared.Serialization
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
 
+        private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
+
         private ISawmill LogSzr => _lazyLogSzr.Value;
 
 
@@ -193,6 +195,15 @@ namespace Robust.Shared.Serialization
         /// <inheritdoc />
         public Type? FindSerializedType(Type assignableType, string serializedTypeName)
         {
+            if (!_cachedSerialized.TryGetValue(assignableType, out var assigned))
+            {
+                assigned = new Dictionary<string, Type?>();
+                _cachedSerialized[assignableType] = assigned;
+            }
+
+            if (assigned.TryGetValue(serializedTypeName, out var resolved))
+                return resolved;
+
             var types = _reflectionManager.GetAllChildren(assignableType);
             foreach (var type in types)
             {
@@ -202,9 +213,13 @@ namespace Robust.Shared.Serialization
                     continue;
 
                 if (serializedAttribute.SerializeName == serializedTypeName)
+                {
+                    assigned[serializedTypeName] = type;
                     return type;
+                }
             }
 
+            assigned[serializedTypeName] = null;
             return null;
         }
     }

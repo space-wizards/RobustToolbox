@@ -151,10 +151,12 @@ namespace Robust.Client.Debugging
         /// Shows the world point for each contact in the viewport.
         /// </summary>
         ContactPoints = 1 << 0,
+
         /// <summary>
         /// Shows the world normal for each contact in the viewport.
         /// </summary>
         ContactNormals = 1 << 1,
+
         /// <summary>
         /// Shows all physics shapes in the viewport.
         /// </summary>
@@ -162,6 +164,10 @@ namespace Robust.Client.Debugging
         ShapeInfo = 1 << 3,
         Joints = 1 << 4,
         AABBs = 1 << 5,
+
+        /// <summary>
+        /// Shows Center of Mass for all bodies in the viewport.
+        /// </summary>
         COM = 1 << 6,
     }
 

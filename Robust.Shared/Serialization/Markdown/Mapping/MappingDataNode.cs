@@ -18,16 +18,23 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         private static readonly ThreadLocal<ValueDataNode> FetchNode =
             new(() => new ValueDataNode(""));
 
-        private readonly Dictionary<DataNode, DataNode> _children = new();
+        private readonly Dictionary<DataNode, DataNode> _children;
 
         public IReadOnlyDictionary<DataNode, DataNode> Children => _children;
 
         public MappingDataNode() : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _children = new();
+        }
+
+        public MappingDataNode(int size) : base(NodeMark.Invalid, NodeMark.Invalid)
+        {
+            _children = new(size);
         }
 
         public MappingDataNode(YamlMappingNode mapping) : base(mapping.Start, mapping.End)
         {
+            _children = new(mapping.Children.Count);
             foreach (var (key, val) in mapping.Children)
             {
                 _children.Add(key.ToDataNode(), val.ToDataNode());
@@ -36,8 +43,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             Tag = mapping.Tag;
         }
 
-        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : this()
+        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _children = new(nodes.Count);
             foreach (var (key, val) in nodes)
             {
                 _children.Add(key, val);
@@ -52,7 +60,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             set => Add(new ValueDataNode(index), value);
         }
 
-        //todo paul i dont think this is thread-safe
         private static ValueDataNode GetFetchNode(string key)
         {
             var node = FetchNode.Value!;
@@ -192,7 +199,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public override MappingDataNode Copy()
         {
-            var newMapping = new MappingDataNode()
+            var newMapping = new MappingDataNode(_children.Count)
             {
                 Tag = Tag,
                 Start = Start,
@@ -207,7 +214,10 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return newMapping;
         }
 
-        public override MappingDataNode? Except(MappingDataNode node)
+        /// <summary>
+        ///     Variant of <see cref="Except(MappingDataNode)"/> that will recursively call except rather than only checking equality.
+        /// </summary>
+        public MappingDataNode? RecursiveExcept(MappingDataNode node)
         {
             var mappingNode = new MappingDataNode()
             {
@@ -225,15 +235,55 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 }
                 else
                 {
+                    // We recursively call except on the values and keep only the differences.
                     var newValue = val.Except(other.Value.Value);
                     if (newValue == null) continue;
                     mappingNode.Add(key.Copy(), newValue);
                 }
             }
 
-            if (mappingNode._children.Count == 0) return null;
+            return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
 
-            return mappingNode;
+        public override MappingDataNode? Except(MappingDataNode node)
+        {
+            var mappingNode = new MappingDataNode()
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _children)
+            {
+                var other = node._children.FirstOrNull(p => p.Key.Equals(key));
+
+                if (other == null)
+                {
+                    mappingNode.Add(key.Copy(), val.Copy());
+                }
+                else
+                {
+                    // We only keep the entry if the values are not equal
+                    if (!val.Equals(other.Value.Value))
+                        mappingNode.Add(key.Copy(), val.Copy());
+                }
+            }
+
+            return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not MappingDataNode other)
+                return false;
+
+            if (_children.Count != other._children.Count)
+                return false;
+
+            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
+            // key-value pairs leaves us with an empty list then the mappings are equal.
+            return Except(other) == null;
         }
 
         public override MappingDataNode PushInheritance(MappingDataNode node)

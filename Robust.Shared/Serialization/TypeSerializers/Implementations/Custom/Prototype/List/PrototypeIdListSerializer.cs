@@ -10,9 +10,15 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public sealed partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
+    public sealed class AbstractPrototypeIdListSerializer<T> : PrototypeIdListSerializer<T> where T : class, IPrototype
     {
-        private readonly PrototypeIdSerializer<T> _prototypeSerializer = new();
+        protected override PrototypeIdSerializer<T> PrototypeSerializer => new AbstractPrototypeIdSerializer<T>();
+    }
+
+    [Virtual]
+    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
+    {
+        protected virtual PrototypeIdSerializer<T> PrototypeSerializer => new();
 
         private ValidationNode ValidateInternal(
             ISerializationManager serializationManager,
@@ -30,7 +36,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(_prototypeSerializer.Validate(serializationManager, value, dependencies, context));
+                list.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -46,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var str in value)
             {
-                list.Add(_prototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
+                list.Add(PrototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
             }
 
             return new SequenceDataNode(list);
@@ -71,7 +77,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(_prototypeSerializer.Read(
+                list.Add(PrototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,

@@ -31,6 +31,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
@@ -87,6 +88,7 @@ namespace Robust.Server
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
+        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -183,6 +185,8 @@ namespace Robust.Server
             }
 
             ProfileOptSetup.Setup(_config);
+
+            _parallelMgr.Initialize();
 
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;

@@ -10,6 +10,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -83,11 +84,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
-            new ChunkPoolPolicy<MapChunkLocation>(), 256);
+            new ChunkPoolPolicy<MapChunkLocation>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
-            new ChunkPoolPolicy<GridChunkLocation>(), 256);
+            new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
 
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
@@ -220,7 +221,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
@@ -228,7 +229,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
@@ -351,6 +352,8 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var eyeEuid in viewers)
             {
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+
+                if(mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -544,7 +547,7 @@ internal sealed partial class PVSSystem : EntitySystem
             !AddToChunkSetRecursively(in parent, visMask, tree, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
-        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        //i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles
         tree.Set(uid, parent);
         set.Add(uid, mComp);
         return true;
@@ -601,6 +604,14 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 
+        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
+        {
+            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+        }
+
         var entityStates = new List<EntityState>();
 
         foreach (var (entityUid, visiblity) in visibleEnts)
@@ -629,7 +640,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
             }), true));
         }
 

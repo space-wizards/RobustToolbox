@@ -22,6 +22,8 @@ namespace Robust.Client.ResourceManagement
     {
         private static readonly float[] OneArray = {1};
 
+        public override ResourcePath? Fallback => new("/Textures/error.rsi");
+
         private static readonly JsonSerializerOptions SerializerOptions =
             new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {

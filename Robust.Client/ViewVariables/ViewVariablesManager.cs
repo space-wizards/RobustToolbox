@@ -277,7 +277,7 @@ namespace Robust.Client.ViewVariables
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)
         {
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesReqSession>();
+            var msg = new MsgViewVariablesReqSession();
             msg.Selector = selector;
             msg.RequestId = _nextReqId++;
             _netManager.ClientSendMessage(msg);
@@ -293,7 +293,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException("Session is closed", nameof(session));
             }
 
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesReqData>();
+            var msg = new MsgViewVariablesReqData();
             var reqId = msg.RequestId = _nextReqId++;
             msg.RequestMeta = meta;
             msg.SessionId = session.SessionId;
@@ -315,7 +315,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException();
             }
 
-            var closeMsg = _netManager.CreateNetMessage<MsgViewVariablesCloseSession>();
+            var closeMsg = new MsgViewVariablesCloseSession();
             closeMsg.SessionId = session.SessionId;
             _netManager.ClientSendMessage(closeMsg);
         }
@@ -332,7 +332,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException();
             }
 
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesModifyRemote>();
+            var msg = new MsgViewVariablesModifyRemote();
             msg.SessionId = session.SessionId;
             msg.ReinterpretValue = reinterpretValue;
             msg.PropertyIndex = propertyIndex;

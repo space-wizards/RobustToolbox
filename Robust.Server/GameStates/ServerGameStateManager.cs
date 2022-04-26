@@ -1,15 +1,14 @@
 using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -18,8 +17,11 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Robust.Server.GameStates
 {
@@ -40,8 +42,12 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IParallelManager _parallelMgr = default!;
 
         private ISawmill _logger = default!;
+
+        private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
         public ushort TransformNetId { get; set; }
 
@@ -60,6 +66,54 @@ namespace Robust.Server.GameStates
             _networkManager.Disconnect += HandleClientDisconnect;
 
             _pvs = EntitySystem.Get<PVSSystem>();
+
+            _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
+
+            _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => ResetParallelism(), true);
+        }
+
+        private void ResetParallelism()
+        {
+            var compressLevel = _cfg.GetCVar(CVars.NetPVSCompressLevel);
+            // The * 2 is because trusting .NET won't take more is what got this code into this mess in the first place.
+            _threadResourcesPool = new DefaultObjectPool<PvsThreadResources>(new PvsThreadResourcesObjectPolicy(compressLevel), _parallelMgr.ParallelProcessCount * 2);
+        }
+
+        private sealed class PvsThreadResourcesObjectPolicy : IPooledObjectPolicy<PvsThreadResources>
+        {
+            public int CompressionLevel;
+
+            public PvsThreadResourcesObjectPolicy(int ce)
+            {
+                CompressionLevel = ce;
+            }
+
+            PvsThreadResources IPooledObjectPolicy<PvsThreadResources>.Create()
+            {
+                var res = new PvsThreadResources();
+                res.CompressionContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, CompressionLevel);
+                return res;
+            }
+
+            bool IPooledObjectPolicy<PvsThreadResources>.Return(PvsThreadResources _)
+            {
+                return true;
+            }
+        }
+
+        private sealed class PvsThreadResources
+        {
+            public ZStdCompressionContext CompressionContext;
+
+            public PvsThreadResources()
+            {
+                CompressionContext = new ZStdCompressionContext();
+            }
+
+            ~PvsThreadResources()
+            {
+                CompressionContext.Dispose();
+            }
         }
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)
@@ -142,7 +196,7 @@ namespace Robust.Server.GameStates
                 (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
                 const int ChunkBatchSize = 2;
                 var chunksCount = chunks.Count;
-                var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
+                var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
                 chunkCache =
                     new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
 
@@ -159,7 +213,8 @@ namespace Robust.Server.GameStates
                     for (var j = start; j < end; ++j)
                     {
                         var (visMask, chunkIndexLocation) = chunks[j];
-                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery, out var chunk);
+                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery,
+                            out var chunk);
                         chunkCache[j] = chunk;
                     }
                 });
@@ -168,33 +223,31 @@ namespace Robust.Server.GameStates
                 ArrayPool<bool>.Shared.Return(reuse);
             }
 
-            const int BatchSize = 2;
-            var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
-
-            Parallel.For(0, batches, i =>
-            {
-                var start = i * BatchSize;
-                var end = Math.Min(start + BatchSize, players.Length);
-
-                for (var j = start; j < end; ++j)
+            Parallel.For(
+                0, players.Length,
+                new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
+                () => _threadResourcesPool.Get(),
+                (i, loop, resource) =>
                 {
                     try
                     {
-                        SendStateUpdate(j);
+                        SendStateUpdate(i, resource);
                     }
                     catch (Exception e) // Catch EVERY exception
                     {
                         _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
                     }
-                }
-            });
+                    return resource;
+                },
+                resource => _threadResourcesPool.Return(resource)
+            );
 
-            void SendStateUpdate(int sessionIndex)
+            void SendStateUpdate(int sessionIndex, PvsThreadResources resources)
             {
                 var session = players[sessionIndex];
 
                 // KILL IT WITH FIRE
-                if(mainThread != Thread.CurrentThread)
+                if (mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
 
                 var channel = session.ConnectedClient;
@@ -214,13 +267,15 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData);
+                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
+                    entStates, playerStates, deletions, mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
                 // actually send the state
-                var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
+                var stateUpdateMessage = new MsgState();
                 stateUpdateMessage.State = state;
+                stateUpdateMessage.CompressionContext = resources.CompressionContext;
 
                 // If the state is too big we let Lidgren send it reliably.
                 // This is to avoid a situation where a state is so large that it consistently gets dropped
@@ -238,7 +293,7 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            if(_pvs.CullingEnabled)
+            if (_pvs.CullingEnabled)
                 _pvs.ReturnToPool(playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);

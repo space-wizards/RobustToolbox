@@ -32,7 +32,7 @@ enabled = true
 
 [game]
 hostname = "MyServer"
-# map = "Maps/saltern.yml"
+# map = "saltern"
 maxplayers = 64
 type = 1
 welcomemsg = "Welcome to the server!"

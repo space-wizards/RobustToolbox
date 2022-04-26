@@ -152,11 +152,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(TileRef newTile, Tile oldTile)
+        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile)
         {
+            Entity = uid;
             NewTile = newTile;
             OldTile = oldTile;
         }
+
+        /// <summary>
+        ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
+        /// </summary>
+        public EntityUid Entity { get; }
 
         /// <summary>
         ///     New tile that replaced the old one.

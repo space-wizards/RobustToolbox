@@ -106,10 +106,6 @@ namespace Robust.Shared.Network
         // Used for processing incoming net messages.
         private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
-        // Used for processing outgoing net messages.
-        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
-            new();
-
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
@@ -375,11 +371,12 @@ namespace Robust.Shared.Network
                 InitUpnp();
         }
 
-        /// <inheritdoc />
-        public void Shutdown(string reason)
+        public void Reset(string reason)
         {
             foreach (var kvChannel in _channels)
+            {
                 DisconnectChannel(kvChannel.Value, reason);
+            }
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Peer.Shutdown(reason));
@@ -398,10 +395,20 @@ namespace Robust.Shared.Network
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
-            _blankNetMsgFunctions.Clear();
+
             // Clear string table.
             // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
+
+            _cancelConnectTokenSource?.Cancel();
+            ClientConnectState = ClientConnectionState.NotConnecting;
+        }
+
+        /// <inheritdoc />
+        public void Shutdown(string reason)
+        {
+            Reset(reason);
+
             _messages.Clear();
 
             _config.UnsubValueChanged(CVars.NetVerbose, NetVerboseChanged);
@@ -417,9 +424,6 @@ namespace Robust.Shared.Network
 #endif
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
-
-            _cancelConnectTokenSource?.Cancel();
-            ClientConnectState = ClientConnectionState.NotConnecting;
 
             ConnectFailed = null;
             Connected = null;
@@ -555,7 +559,7 @@ namespace Robust.Shared.Network
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             }
 
-            Shutdown(reason);
+            Reset(reason);
         }
 
         private NetPeerConfiguration _getBaseNetPeerConfig()
@@ -980,45 +984,13 @@ namespace Robust.Shared.Network
                     CacheNetMsgFunction((byte) id);
                 }
             }
-
-            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
-            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
-            // so it no thread safety crap.
-            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
-            where T : NetMessage
+            where T : NetMessage, new()
         {
-            return (T) _blankNetMsgFunctions[typeof(T)]();
-        }
-
-        private void CacheBlankFunction(Type type)
-        {
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
-                type, false);
-            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
-
-            // Obsolete path for content
-            if (type.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
-            {
-                gen.Emit(OpCodes.Ldnull);
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                constructor = type.GetConstructor(Type.EmptyTypes)!;
-                DebugTools.AssertNotNull(constructor);
-
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-
-            var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
-
-            _blankNetMsgFunctions.Add(type, @delegate);
+            return new T();
         }
 
         private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)

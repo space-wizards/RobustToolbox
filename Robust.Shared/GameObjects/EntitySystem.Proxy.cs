@@ -410,7 +410,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp)
     {
         if (!uid.HasValue)
         {
@@ -519,11 +519,31 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemComp<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemComp<T>(EntityUid uid) where T : class, IComponent
     {
-        EntityManager.RemoveComponent<T>(uid);
+        return EntityManager.RemoveComponent<T>(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Type)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemComp(EntityUid uid, Type type)
+    {
+        return EntityManager.RemoveComponent(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponent(uid, component);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp(EntityUid uid, IComponent component)
+    {
+        EntityManager.RemoveComponent(uid, component);
+    }
     #endregion
 
     #region Entity Delete

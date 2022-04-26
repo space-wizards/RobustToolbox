@@ -418,7 +418,7 @@ namespace Robust.Client.Placement
             if (!IsActive || !Eraser) return;
             if (Hijack != null && Hijack.HijackDeletion(entity)) return;
 
-            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
             msg.EntityUid = entity;
             NetworkManager.ClientSendMessage(msg);
@@ -426,7 +426,7 @@ namespace Robust.Client.Placement
 
         public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
         {
-            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
             msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
             msg.RectSize = rect.Size;
@@ -748,7 +748,7 @@ namespace Robust.Client.Placement
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.RequestPlacement;
 
             message.Align = CurrentMode.ModeName;

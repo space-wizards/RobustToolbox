@@ -35,7 +35,6 @@ namespace Robust.Shared.Prototypes
 
         private const int DEFAULT_RANGE = 200;
 
-        [NeverPushInheritance]
         [DataField("loc")]
         private Dictionary<string, string>? _locPropertiesSet;
 
@@ -52,17 +51,14 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         /// <seealso cref="Name"/>
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("name")]
         public string? SetName { get; private set; }
 
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("description")]
         public string? SetDesc { get; private set; }
 
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
@@ -93,7 +89,6 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("localizationId")]
-        [NeverPushInheritance]
         public string? CustomLocalizationID { get; private set; }
 
 
@@ -262,8 +257,12 @@ namespace Robust.Shared.Prototypes
                     MappingDataNode? fullData = null;
                     if (prototypeData != null && prototypeData.TryGet<SequenceDataNode>("components", out var compList))
                     {
-                        fullData = compList.Cast<MappingDataNode>().FirstOrDefault(x =>
-                            x.TryGet<ValueDataNode>("type", out var typeNode) && typeNode.Value == name);
+                        foreach (var data in compList)
+                        {
+                            if(data is not MappingDataNode mappingDataNode || !mappingDataNode.TryGet<ValueDataNode>("type", out var typeNode) || typeNode.Value != name ) continue;
+                            fullData = mappingDataNode;
+                            break;
+                        }
                     }
 
                     fullData ??= new MappingDataNode();

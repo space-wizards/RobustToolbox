@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -540,25 +541,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
-        }
-
-        protected override void Startup()
-        {
-            // Re-Anchor the entity if needed.
-            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
-            {
-                if (!grid.IsAnchored(Coordinates, Owner))
-                {
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                }
-            }
-            else
-                _anchored = false;
-
-            base.Startup();
-
-            // Keep the cached matrices in sync with the fields.
-            Dirty(_entMan);
         }
 
         /// <summary>

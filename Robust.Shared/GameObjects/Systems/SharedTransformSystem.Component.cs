@@ -111,7 +111,10 @@ public abstract partial class SharedTransformSystem
         }
 
         xform.SetAnchored(false);
-  
+    }
+
+    #endregion
+
     #region Contains
 
     /// <summary>
@@ -208,6 +211,23 @@ public abstract partial class SharedTransformSystem
         component.RebuildMatrices();
     }
 
+    private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
+    {
+        // Re-Anchor the entity if needed.
+        if (component._anchored && _mapManager.TryFindGridAt(component.MapPosition, out var grid))
+        {
+            if (!grid.IsAnchored(component.Coordinates, uid))
+            {
+                AnchorEntity(component, grid);
+            }
+        }
+        else
+            component._anchored = false;
+
+        // Keep the cached matrices in sync with the fields.
+        Dirty(component);
+    }
+
     #endregion
 
     #region GridId
@@ -239,6 +259,8 @@ public abstract partial class SharedTransformSystem
         }
     }
 
+    #endregion
+
     #region Parent
 
     public TransformComponent? GetParent(EntityUid uid)
@@ -261,6 +283,31 @@ public abstract partial class SharedTransformSystem
         if (!xform.ParentUid.IsValid()) return null;
         return xformQuery.GetComponent(xform.ParentUid);
     }
+
+    /* TODO: Need to peel out relevant bits of AttachParent e.g. children updates.
+    public void SetParent(TransformComponent xform, EntityUid parent, bool move = true)
+    {
+        if (xform.ParentUid == parent) return;
+
+        if (!parent.IsValid())
+        {
+            xform.AttachToGridOrMap();
+            return;
+        }
+
+        if (xform.Anchored)
+        {
+            xform.Anchored = false;
+        }
+
+        if (move)
+            xform.AttachParent(parent);
+        else
+            xform._parent = parent;
+
+        Dirty(xform);
+    }
+    */
 
     #endregion
 
@@ -383,35 +430,6 @@ public abstract partial class SharedTransformSystem
             component.LerpParent = EntityUid.Invalid;
         }
     }
-
-    #endregion
-
-    #region Parent
-
-    /* TODO: Need to peel out relevant bits of AttachParent e.g. children updates.
-    public void SetParent(TransformComponent xform, EntityUid parent, bool move = true)
-    {
-        if (xform.ParentUid == parent) return;
-
-        if (!parent.IsValid())
-        {
-            xform.AttachToGridOrMap();
-            return;
-        }
-
-        if (xform.Anchored)
-        {
-            xform.Anchored = false;
-        }
-
-        if (move)
-            xform.AttachParent(parent);
-        else
-            xform._parent = parent;
-
-        Dirty(xform);
-    }
-    */
 
     #endregion
 
@@ -552,4 +570,5 @@ public abstract partial class SharedTransformSystem
 
         return xform.MapID;
     }
+
 }

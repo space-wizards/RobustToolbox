@@ -148,9 +148,9 @@ namespace Robust.Shared.GameObjects
 
 #if DEBUG
             // Second integrity check in case of.
-            foreach (var t in GetComponents(uid))
+            foreach (var t in _entCompIndex[uid])
             {
-                if (!t.Initialized)
+                if (!t.Deleted && !t.Initialized)
                 {
                     DebugTools.Assert(
                         $"Component {t.GetType()} was not initialized at the end of {nameof(InitializeComponents)}.");

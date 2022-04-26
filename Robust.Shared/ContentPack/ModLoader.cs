@@ -363,7 +363,7 @@ namespace Robust.Shared.ContentPack
         public void Dispose()
         {
             _loadContext.Unload();
-            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+            AssemblyLoadContext.Default.Resolving -= DefaultOnResolving;
         }
 
         private Assembly? DefaultOnResolving(AssemblyLoadContext ctx, AssemblyName name)

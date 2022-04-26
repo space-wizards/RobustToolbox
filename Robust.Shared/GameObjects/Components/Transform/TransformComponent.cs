@@ -20,13 +20,12 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        [DataField("parent")]
-        private EntityUid _parent;
+        [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
         [DataField("rot")] internal Angle _localRotation; // local rotation
         [DataField("noRot")] internal bool _noLocalRotation;
         [DataField("anchored")]
-        private bool _anchored;
+        internal bool _anchored;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
@@ -88,7 +87,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private GridId _gridId = GridId.Invalid;
+        internal GridId _gridId = GridId.Invalid;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -375,7 +374,7 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if (!oldPosition.Position.Equals(Coordinates.Position))
+                        if (!oldPosition.Equals(Coordinates))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
@@ -451,7 +450,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -461,17 +460,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (_entMan.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
-                        gridComp.UnanchorEntity(this);
-                    else
-                        SetAnchored(false);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(this);
                 }
             }
         }
@@ -545,6 +541,26 @@ namespace Robust.Shared.GameObjects
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
+
+        protected override void Startup()
+        {
+            // Re-Anchor the entity if needed.
+            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
+            {
+                if (!grid.IsAnchored(Coordinates, Owner))
+                {
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
+                }
+            }
+            else
+                _anchored = false;
+
+            base.Startup();
+
+            // Keep the cached matrices in sync with the fields.
+            Dirty(_entMan);
+        }
+
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
@@ -586,13 +602,11 @@ namespace Robust.Shared.GameObjects
             }
 
             // nothing to do
-            var oldParent = Parent;
-            if (oldParent == null)
-            {
+            if (!_parent.IsValid())
                 return;
-            }
 
             var mapPos = MapPosition;
+            Logger.InfoS("transform", $"Attempting AttachToGridOrMap for {_entMan.ToPrettyString(Owner)}");
 
             EntityUid newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
@@ -612,8 +626,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            if (newMapEntity == _parent)
             {
                 return;
             }
@@ -631,8 +644,11 @@ namespace Robust.Shared.GameObjects
         public void DetachParentToNull()
         {
             var oldParent = _parent;
+
+            // Even though they may already be in nullspace we may want to deparent them anyway
             if (!oldParent.IsValid())
             {
+                DebugTools.Assert(!Anchored);
                 return;
             }
 
@@ -860,13 +876,16 @@ namespace Robust.Shared.GameObjects
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
-        internal void SetAnchored(bool value)
+        internal void SetAnchored(bool value, bool issueEvent = true)
         {
             _anchored = value;
             Dirty(_entMan);
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            if (issueEvent)
+            {
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            }
         }
     }
 
@@ -945,13 +964,36 @@ namespace Robust.Shared.GameObjects
     public readonly struct AnchorStateChangedEvent
     {
         public readonly EntityUid Entity;
-
         public readonly bool Anchored;
 
         public AnchorStateChangedEvent(EntityUid entity, bool anchored)
         {
             Entity = entity;
             Anchored = anchored;
+        }
+    }
+
+    /// <summary>
+    /// Raised when an entity is re-anchored to another grid.
+    /// </summary>
+    [ByRefEvent]
+    public readonly struct ReAnchorEvent
+    {
+        public readonly EntityUid Entity;
+        public readonly GridId OldGrid;
+        public readonly GridId GridId;
+
+        /// <summary>
+        /// Tile on both the old and new grid being re-anchored.
+        /// </summary>
+        public readonly Vector2i TilePos;
+
+        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId, Vector2i tilePos)
+        {
+            Entity = uid;
+            OldGrid = oldGrid;
+            GridId = gridId;
+            TilePos = tilePos;
         }
     }
 }

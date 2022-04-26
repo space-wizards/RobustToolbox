@@ -53,37 +53,3 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 }
 
-public static class ParallelManagerExt
-{
-    public delegate void ParallelResourceAction<T>(int i, ref T resource);
-
-    public static void ParallelForWithResources<T>(
-        this IParallelManager manager,
-        int fromInclusive,
-        int toExclusive,
-        T[] resources,
-        ParallelResourceAction<T> action)
-    {
-        var parallelCount = manager.ParallelProcessCount;
-
-        DebugTools.Assert(
-            resources.Length >= parallelCount,
-            "Resources buffer is too small to fit maximum thread count.");
-
-        var threadIndex = 0;
-
-        Parallel.For(
-            fromInclusive, toExclusive,
-            new ParallelOptions { MaxDegreeOfParallelism = parallelCount },
-            () => Interlocked.Increment(ref threadIndex),
-            (i, _, localThreadIdx) =>
-            {
-                ref var resource = ref resources[localThreadIdx];
-
-                action(i, ref resource);
-
-                return localThreadIdx;
-            },
-            _ => { });
-    }
-}

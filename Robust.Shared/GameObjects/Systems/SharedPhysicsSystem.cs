@@ -70,8 +70,8 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
-            SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
-            SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
+            SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
+            SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (body.CanCollide)
+            if (body._canCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
@@ -130,7 +130,7 @@ namespace Robust.Shared.GameObjects
             if (args.OldMapId != mapId)
                 HandleMapChange(body, xform, args.OldMapId, mapId);
 
-            if (mapId != MapId.Nullspace && !_container.IsEntityInContainer(uid, meta))
+            if (body.BodyType != BodyType.Static && mapId != MapId.Nullspace && body._canCollide)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
             {
                 var oldMapEnt = MapManager.GetMapEntityId(oldMapId);
 
-                if (MetaData(oldMapEnt).EntityLifeStage < EntityLifeStage.Terminating)
+                if (TryComp<MetaDataComponent>(oldMapEnt, out var meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
                 {
                     oldMap = Comp<SharedPhysicsMapComponent>(oldMapEnt);
                     oldMap.RemoveBody(body);
@@ -232,26 +232,26 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandleWakeMessage(PhysicsWakeMessage message)
+        private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
-        private void HandleSleepMessage(PhysicsSleepMessage message)
+        private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)

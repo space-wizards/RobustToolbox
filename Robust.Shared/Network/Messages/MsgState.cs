@@ -80,8 +80,8 @@ namespace Robust.Shared.Network.Messages
                 buffer.Write(buf.AsSpan(0, length));
 
                 var elapsed = sw.Elapsed;
-                System.Console.WriteLine(
-                    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
+                // System.Console.WriteLine(
+                //    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
 
                 ArrayPool<byte>.Shared.Return(buf);
             }

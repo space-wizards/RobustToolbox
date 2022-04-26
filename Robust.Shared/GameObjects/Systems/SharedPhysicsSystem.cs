@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
             {
                 var oldMapEnt = MapManager.GetMapEntityId(oldMapId);
 
-                if (MetaData(oldMapEnt).EntityLifeStage < EntityLifeStage.Terminating)
+                if (TryComp<MetaDataComponent>(oldMapEnt, out var meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
                 {
                     oldMap = Comp<SharedPhysicsMapComponent>(oldMapEnt);
                     oldMap.RemoveBody(body);

@@ -665,13 +665,11 @@ namespace Robust.Shared.GameObjects
             }
 
             // nothing to do
-            var oldParent = Parent;
-            if (oldParent == null)
-            {
+            if (!_parent.IsValid())
                 return;
-            }
 
             var mapPos = MapPosition;
+            Logger.InfoS("transform", $"Attempting AttachToGridOrMap for {_entMan.ToPrettyString(Owner)}");
 
             EntityUid newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
@@ -691,8 +689,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            if (newMapEntity == _parent)
             {
                 return;
             }

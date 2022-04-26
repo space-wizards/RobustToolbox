@@ -19,6 +19,8 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
+        private ISawmill _logger = default!;
+
         private const int MinimumBroadphaseCapacity = 256;
 
         // We queue updates rather than handle them immediately for multiple reasons
@@ -54,6 +56,7 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
 
+            _logger = Logger.GetSawmill("physics");
             UpdatesOutsidePrediction = true;
 
             UpdatesAfter.Add(typeof(SharedTransformSystem));
@@ -186,7 +189,7 @@ namespace Robust.Shared.Physics
                 if (proxyBody.Deleted)
                 {
                     // TODO: This happens in some grid deletion scenarios which does have an issue on github.
-                    Logger.ErrorS("physics", $"Deleted body {EntityManager.ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
+                    _logger.Error($"Deleted body {ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
                     DebugTools.Assert(false);
                     continue;
                 }
@@ -328,9 +331,32 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null) return;
 
+            // Juussttt in case anything slips through
+            if (!broadphase.Owner.IsValid() ||
+                !TryComp(broadphase.Owner, out MetaDataComponent? meta) ||
+                meta.EntityLifeStage >= EntityLifeStage.Terminating)
+            {
+                // Don't log because this may happen due to recursive deletions.
+                body.Broadphase = null;
+
+                foreach (var (_, fixture) in manager.Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        proxy.ProxyId = DynamicTree.Proxy.Free;
+                    }
+
+                    fixture.ProxyCount = 0;
+                }
+
+                return;
+            }
+
+            var mapId = Transform(broadphase.Owner).MapID;
+
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                DestroyProxies(broadphase, fixture);
+                DestroyProxies(broadphase, fixture, mapId);
             }
 
             body.Broadphase = null;
@@ -637,7 +663,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Destroy the proxies for this fixture on the broadphase.
         /// </summary>
-        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
+        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture, MapId mapId)
         {
             if (broadphase == null)
             {
@@ -645,7 +671,7 @@ namespace Robust.Shared.Physics
             }
 
             var proxyCount = fixture.ProxyCount;
-            var moveBuffer = _moveBuffer[EntityManager.GetComponent<TransformComponent>(broadphase.Owner).MapID];
+            var moveBuffer = _moveBuffer[mapId];
 
             for (var i = 0; i < proxyCount; i++)
             {

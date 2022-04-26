@@ -182,8 +182,7 @@ namespace Robust.Client.GameObjects
                 (i) =>
                 {
                     var stream = _playingClydeStreams[i];
-                    // Note that unlike previously, if the position is invalid, occlusion will be forced to 0.
-                    // This is probably for the best (having EFX on for this == probably not good)
+                    // As set earlier.
                     if (stream.OcclusionValidTemporary)
                     {
                         var pos = stream.MapCoordinatesTemporary;

@@ -447,18 +447,6 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (LifeStage == ComponentLifeStage.Starting)
-                {
-                    if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
-                    {
-                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                    }
-                    // If no grid found then unanchor it.
-                    else
-                    {
-                        _anchored = false;
-                    }
-                }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);

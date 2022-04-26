@@ -363,6 +363,7 @@ namespace Robust.Shared.GameObjects
                 }, gridRay);
             }
 
+/* - As of now this function is called from a Parallel.For, so firing events breaks everything. Sorry! -
 #if DEBUG
             if (penetration > 0f)
             {
@@ -371,6 +372,7 @@ namespace Robust.Shared.GameObjects
                         new DebugRayData(ray, maxLength, null)));
             }
 #endif
+*/
 
             return penetration;
         }

@@ -136,7 +136,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [ParentDataFieldAttribute(typeof(PrototypeIdSerializer<EntityPrototype>))]
+        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
 
         [ViewVariables]
@@ -256,8 +256,12 @@ namespace Robust.Shared.Prototypes
                     MappingDataNode? fullData = null;
                     if (prototypeData != null && prototypeData.TryGet<SequenceDataNode>("components", out var compList))
                     {
-                        fullData = compList.Cast<MappingDataNode>().FirstOrDefault(x =>
-                            x.TryGet<ValueDataNode>("type", out var typeNode) && typeNode.Value == name);
+                        foreach (var data in compList)
+                        {
+                            if(data is not MappingDataNode mappingDataNode || !mappingDataNode.TryGet<ValueDataNode>("type", out var typeNode) || typeNode.Value != name ) continue;
+                            fullData = mappingDataNode;
+                            break;
+                        }
                     }
 
                     fullData ??= new MappingDataNode();

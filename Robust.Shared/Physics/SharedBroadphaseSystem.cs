@@ -185,6 +185,7 @@ namespace Robust.Shared.Physics
                 var proxyBody = proxy.Fixture.Body;
                 if (proxyBody.Deleted)
                 {
+                    // TODO: This happens in some grid deletion scenarios which does have an issue on github.
                     Logger.ErrorS("physics", $"Deleted body {EntityManager.ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
                     DebugTools.Assert(false);
                     continue;
@@ -301,7 +302,6 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
-        /// <param name="body"></param>
         internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform)) return;
@@ -719,10 +719,12 @@ namespace Robust.Shared.Physics
         {
             if (xform.MapID == MapId.Nullspace) return null;
 
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
             var parent = xform.ParentUid;
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (EntityManager.HasComponent<BroadphaseComponent>(xform.Owner) &&
+            if (broadQuery.HasComponent(xform.Owner) &&
                 !parent.IsValid())
             {
                 return null;
@@ -730,8 +732,8 @@ namespace Robust.Shared.Physics
 
             while (parent.IsValid())
             {
-                if (EntityManager.TryGetComponent(parent, out BroadphaseComponent? comp)) return comp;
-                parent = EntityManager.GetComponent<TransformComponent>(parent).ParentUid;
+                if (broadQuery.TryGetComponent(parent, out var comp)) return comp;
+                parent = xformQuery.GetComponent(parent).ParentUid;
             }
 
             return null;

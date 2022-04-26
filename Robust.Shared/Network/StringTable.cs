@@ -236,7 +236,7 @@ namespace Robust.Shared.Network
             if (!_network.IsRunning)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntries>();
+            var message = new MsgStringTableEntries();
 
             message.Entries = new MsgStringTableEntries.Entry[1];
             message.Entries[0].Id = id;
@@ -254,7 +254,7 @@ namespace Robust.Shared.Network
             if (_network.IsClient)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntries>();
+            var message = new MsgStringTableEntries();
 
             var count = _strings.Count;
             message.Entries = new MsgStringTableEntries.Entry[count];

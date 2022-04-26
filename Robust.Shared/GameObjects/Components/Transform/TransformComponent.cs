@@ -24,25 +24,21 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        [DataField("parent")]
-        private EntityUid _parent;
-        [DataField("pos")]
-        private Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
-        [DataField("rot")]
-        private Angle _localRotation; // local rotation
-        [DataField("noRot")]
-        private bool _noLocalRotation;
+        [DataField("parent")] internal EntityUid _parent;
+        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
+        [DataField("rot")] internal Angle _localRotation; // local rotation
+        [DataField("noRot")] internal bool _noLocalRotation;
         [DataField("anchored")]
-        private bool _anchored;
+        internal bool _anchored;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
-        private Vector2? _nextPosition;
-        private Angle? _nextRotation;
+        internal Vector2? _nextPosition;
+        internal Angle? _nextRotation;
 
-        private Vector2 _prevPosition;
-        private Angle _prevRotation;
+        internal Vector2 _prevPosition;
+        internal Angle _prevRotation;
 
         // Cache changes so we can distribute them after physics is done (better cache)
         private EntityCoordinates? _oldCoords;
@@ -95,7 +91,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private GridId _gridId = GridId.Invalid;
+        internal GridId _gridId = GridId.Invalid;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -365,7 +361,7 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
-                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId);
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
                 }
 
@@ -382,7 +378,7 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if (!oldPosition.Position.Equals(Coordinates.Position))
+                        if (!oldPosition.Equals(Coordinates))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
@@ -458,7 +454,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -468,17 +464,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = _entMan.GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (_entMan.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
-                        gridComp.UnanchorEntity(this);
-                    else
-                        SetAnchored(false);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(this);
                 }
             }
         }
@@ -531,7 +524,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables] internal Vector2 LerpSource => _prevPosition;
         [ViewVariables] internal Angle LerpSourceAngle => _prevRotation;
 
-        [ViewVariables] internal EntityUid LerpParent { get; private set; }
+        [ViewVariables] internal EntityUid LerpParent { get; set; }
 
         protected override void Initialize()
         {
@@ -615,8 +608,15 @@ namespace Robust.Shared.GameObjects
         protected override void Startup()
         {
             // Re-Anchor the entity if needed.
-            if (_anchored)
-                Anchored = true;
+            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
+            {
+                if (!grid.IsAnchored(Coordinates, Owner))
+                {
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
+                }
+            }
+            else
+                _anchored = false;
 
             base.Startup();
 
@@ -707,8 +707,11 @@ namespace Robust.Shared.GameObjects
         public void DetachParentToNull()
         {
             var oldParent = _parent;
+
+            // Even though they may already be in nullspace we may want to deparent them anyway
             if (!oldParent.IsValid())
             {
+                DebugTools.Assert(!Anchored);
                 return;
             }
 
@@ -731,8 +734,11 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID);
+            var oldMap = MapID;
             MapID = MapId.Nullspace;
+            GridID = GridId.Invalid;
+
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
@@ -803,19 +809,6 @@ namespace Robust.Shared.GameObjects
         {
             var transform = _entMan.GetComponent<TransformComponent>(parent);
             AttachParent(transform);
-        }
-
-        /// <summary>
-        ///     Finds the transform of the entity located on the map itself
-        /// </summary>
-        public TransformComponent GetMapTransform()
-        {
-            if (Parent != null) //If we are not the final transform, query up the chain of parents
-            {
-                return Parent.GetMapTransform();
-            }
-
-            return this;
         }
 
         /// <summary>
@@ -950,104 +943,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public override ComponentState GetComponentState()
-        {
-            return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation, _anchored);
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState != null)
-            {
-                var newState = (TransformComponentState) curState;
-
-                var newParentId = newState.ParentID;
-                var rebuildMatrices = false;
-                if (Parent?.Owner != newParentId)
-                {
-                    if (newParentId != _parent)
-                    {
-                        if (!newParentId.IsValid())
-                        {
-                            DetachParentToNull();
-                        }
-                        else
-                        {
-                            var entManager = _entMan;
-                            if (!entManager.EntityExists(newParentId))
-                            {
-#if !EXCEPTION_TOLERANCE
-                                throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
-#else
-                                Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
-                                entManager.QueueDeleteEntity(Owner);
-                                return;
-#endif
-                            }
-
-                            AttachParent(entManager.GetComponent<TransformComponent>(newParentId));
-                        }
-                    }
-
-                    rebuildMatrices = true;
-                }
-
-                if (LocalRotation != newState.Rotation)
-                {
-                    _localRotation = newState.Rotation;
-                    rebuildMatrices = true;
-                }
-
-                if (!_localPosition.EqualsApprox(newState.LocalPosition))
-                {
-                    var oldPos = Coordinates;
-                    _localPosition = newState.LocalPosition;
-
-                    var ev = new MoveEvent(Owner, oldPos, Coordinates, this);
-                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ref ev);
-
-                    rebuildMatrices = true;
-                }
-
-                _prevPosition = newState.LocalPosition;
-                _prevRotation = newState.Rotation;
-
-                Anchored = newState.Anchored;
-                _noLocalRotation = newState.NoLocalRotation;
-
-                // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.
-                // If this assert fails, the code above that sets the parent is broken.
-                DebugTools.Assert(!_parent.IsClientSide(), "Transform received a state, but is still parented to a client entity.");
-
-                // Whatever happened on the client, these should still be correct
-                DebugTools.Assert(ParentUid == newState.ParentID);
-                DebugTools.Assert(Anchored == newState.Anchored);
-
-                if (rebuildMatrices)
-                {
-                    RebuildMatrices();
-                }
-
-                Dirty(_entMan);
-            }
-
-            if (nextState is TransformComponentState nextTransform)
-            {
-                _nextPosition = nextTransform.LocalPosition;
-                _nextRotation = nextTransform.Rotation;
-                LerpParent = nextTransform.ParentID;
-                ActivateLerp();
-            }
-            else
-            {
-                // this should cause the lerp to do nothing
-                _nextPosition = null;
-                _nextRotation = null;
-                LerpParent = EntityUid.Invalid;
-            }
-        }
-
-        private void RebuildMatrices()
+        internal void RebuildMatrices()
         {
             var pos = _localPosition;
 
@@ -1065,72 +961,16 @@ namespace Robust.Shared.GameObjects
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
-        private void ActivateLerp()
-        {
-            if (ActivelyLerping)
-            {
-                return;
-            }
-
-            ActivelyLerping = true;
-            _entMan.EventBus.RaiseLocalEvent(Owner, new TransformStartLerpMessage(this));
-        }
-
-        /// <summary>
-        ///     Serialized state of a TransformComponent.
-        /// </summary>
-        [Serializable, NetSerializable]
-        internal sealed class TransformComponentState : ComponentState
-        {
-            /// <summary>
-            ///     Current parent entity of this entity.
-            /// </summary>
-            public readonly EntityUid ParentID;
-
-            /// <summary>
-            ///     Current position offset of the entity.
-            /// </summary>
-            public readonly Vector2 LocalPosition;
-
-            /// <summary>
-            ///     Current rotation offset of the entity.
-            /// </summary>
-            public readonly Angle Rotation;
-
-            /// <summary>
-            /// Is the transform able to be locally rotated?
-            /// </summary>
-            public readonly bool NoLocalRotation;
-
-            /// <summary>
-            /// True if the transform is anchored to a tile.
-            /// </summary>
-            public readonly bool Anchored;
-
-            /// <summary>
-            ///     Constructs a new state snapshot of a TransformComponent.
-            /// </summary>
-            /// <param name="localPosition">Current position offset of this entity.</param>
-            /// <param name="rotation">Current direction offset of this entity.</param>
-            /// <param name="parentId">Current parent transform of this entity.</param>
-            /// <param name="noLocalRotation"></param>
-            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation, bool anchored)
-            {
-                LocalPosition = localPosition;
-                Rotation = rotation;
-                ParentID = parentId;
-                NoLocalRotation = noLocalRotation;
-                Anchored = anchored;
-            }
-        }
-
-        internal void SetAnchored(bool value)
+        internal void SetAnchored(bool value, bool issueEvent = true)
         {
             _anchored = value;
             Dirty(_entMan);
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            if (issueEvent)
+            {
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            }
         }
     }
 
@@ -1209,13 +1049,36 @@ namespace Robust.Shared.GameObjects
     public readonly struct AnchorStateChangedEvent
     {
         public readonly EntityUid Entity;
-
         public readonly bool Anchored;
 
         public AnchorStateChangedEvent(EntityUid entity, bool anchored)
         {
             Entity = entity;
             Anchored = anchored;
+        }
+    }
+
+    /// <summary>
+    /// Raised when an entity is re-anchored to another grid.
+    /// </summary>
+    [ByRefEvent]
+    public readonly struct ReAnchorEvent
+    {
+        public readonly EntityUid Entity;
+        public readonly GridId OldGrid;
+        public readonly GridId GridId;
+
+        /// <summary>
+        /// Tile on both the old and new grid being re-anchored.
+        /// </summary>
+        public readonly Vector2i TilePos;
+
+        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId, Vector2i tilePos)
+        {
+            Entity = uid;
+            OldGrid = oldGrid;
+            GridId = gridId;
+            TilePos = tilePos;
         }
     }
 }

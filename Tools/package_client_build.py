@@ -53,7 +53,9 @@ IGNORED_FILES_WINDOWS = {
     "glfw3.dll",
     "libgthread-2.0-0.dll",
     "libEGL.dll",
-    "swnfd.dll"
+    "swnfd.dll",
+    "zstd.dll",
+    "libsodium.dll"
 }
 
 IGNORED_FILES_MACOS = {
@@ -61,7 +63,9 @@ IGNORED_FILES_MACOS = {
     "libfreetype.6.dylib",
     "libglfw.3.dylib",
     "Robust.Client",
-    "libswnfd.dylib"
+    "libswnfd.dylib",
+    "zstd.dylib",
+    "libsodium.dylib",
 }
 
 IGNORED_FILES_LINUX = {
@@ -69,7 +73,9 @@ IGNORED_FILES_LINUX = {
     "libopenal.so",
     "libglfw.so.3",
     "Robust.Client",
-    "libswnfd.so"
+    "libswnfd.so",
+    "zstd.so",
+    "libsodium.so"
 }
 
 def main() -> None:

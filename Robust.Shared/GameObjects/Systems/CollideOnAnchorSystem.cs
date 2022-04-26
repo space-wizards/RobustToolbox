@@ -6,6 +6,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             SubscribeLocalEvent<CollideOnAnchorComponent, ComponentStartup>(OnStartup);
+            // Shouldn't need to handle re-anchor.
             SubscribeLocalEvent<CollideOnAnchorComponent, AnchorStateChangedEvent>(OnAnchor);
         }
 

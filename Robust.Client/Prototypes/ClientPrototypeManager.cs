@@ -57,7 +57,7 @@ namespace Robust.Client.Prototypes
 #if !FULL_RELEASE
             var sw = Stopwatch.StartNew();
 
-            var msg = _netManager.CreateNetMessage<MsgReloadPrototypes>();
+            var msg = new MsgReloadPrototypes();
             msg.Paths = _reloadQueue.ToArray();
             _netManager.ClientSendMessage(msg);
 

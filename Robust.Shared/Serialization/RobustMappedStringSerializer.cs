@@ -56,8 +56,6 @@ namespace Robust.Shared.Serialization
             '{', '}', ':', ';', '-'
         };
 
-        private static readonly HashAlgorithmName PackHashAlgo = HashAlgorithmName.SHA512;
-
         /// <summary>
         /// The shortest a string can be in order to be inserted in the mapping.
         /// </summary>
@@ -156,7 +154,7 @@ namespace Robust.Shared.Serialization
 
             _incompleteHandshakes.Add(channel, new InProgressHandshake(tcs));
 
-            var message = _net.CreateNetMessage<MsgMapStrServerHandshake>();
+            var message = new MsgMapStrServerHandshake();
             message.Hash = _stringMapHash;
             _net.ServerSendMessage(message, channel);
 
@@ -356,7 +354,7 @@ namespace Robust.Shared.Serialization
 
             handshake.HasRequestedStrings = true;
 
-            var strings = _net.CreateNetMessage<MsgMapStrStrings>();
+            var strings = new MsgMapStrStrings();
             strings.Package = _mappedStringsPackage;
             LogSzr.Debug(
                 $"Sending {_mappedStringsPackage!.Length} bytes sized mapped strings package to {channel.UserName}.");
@@ -411,7 +409,7 @@ namespace Robust.Shared.Serialization
             if (fileName == null || !File.Exists(fileName))
             {
                 LogSzr.Debug($"No string cache for {hashStr}.");
-                var handshake = _net.CreateNetMessage<MsgMapStrClientHandshake>();
+                var handshake = new MsgMapStrClientHandshake();
                 LogSzr.Debug("Asking server to send mapped strings.");
                 handshake.NeedsStrings = true;
                 msgMapStr.MsgChannel.SendMessage(handshake);
@@ -440,7 +438,7 @@ namespace Robust.Shared.Serialization
         private void OnClientCompleteHandshake(INetManager net, INetChannel channel)
         {
             LogSzr.Debug("Letting server know we're good to go.");
-            var handshake = net.CreateNetMessage<MsgMapStrClientHandshake>();
+            var handshake = new MsgMapStrClientHandshake();
             handshake.NeedsStrings = false;
             channel.SendMessage(handshake);
 

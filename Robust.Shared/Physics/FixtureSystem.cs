@@ -134,7 +134,7 @@ namespace Robust.Shared.Physics
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData();
+                body.ResetMassData(manager);
                 Dirty(manager);
             }
             // TODO: Set newcontacts to true.
@@ -248,8 +248,8 @@ namespace Robust.Shared.Physics
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData();
-                manager.Dirty();
+                body.ResetMassData(manager);
+                Dirty(manager);
             }
         }
 
@@ -361,7 +361,7 @@ namespace Robust.Shared.Physics
 
             if (computeProperties)
             {
-                physics.ResetMassData();
+                physics.ResetMassData(component);
             }
         }
 
@@ -387,6 +387,28 @@ namespace Robust.Shared.Physics
                 }
             }
         }
+
+        #region Mass
+
+        public void SetMass(Fixture fixture, float value, FixturesComponent? manager = null, bool update = true)
+        {
+            fixture._mass = value;
+            if (update && Resolve(fixture.Body.Owner, ref manager))
+                FixtureUpdate(manager);
+        }
+
+        #endregion
+
+        #region Restitution
+
+        public void SetRestitution(Fixture fixture, float value, FixturesComponent? manager = null, bool update = true)
+        {
+            fixture._restitution = value;
+            if (update && Resolve(fixture.Body.Owner, ref manager))
+                FixtureUpdate(manager);
+        }
+
+        #endregion
 
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.

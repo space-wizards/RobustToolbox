@@ -19,9 +19,6 @@ namespace Robust.Shared.GameObjects
     {
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
-
-        bool AnchorEntity(TransformComponent transform);
-        void UnanchorEntity(TransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -61,11 +58,12 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = _entMan.GetComponent<TransformComponent>(Owner).MapID;
+            var xform = _entMan.GetComponent<TransformComponent>(Owner);
+            var mapId = xform.MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                _entMan.GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
+                xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
         }
 
@@ -74,49 +72,6 @@ namespace Robust.Shared.GameObjects
             _mapManager.TrueGridDelete((MapGrid)_mapGrid!);
 
             base.OnRemove();
-        }
-
-        /// <inheritdoc />
-        public bool AnchorEntity(TransformComponent transform)
-        {
-            var xform = transform;
-            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner);
-
-            if (result)
-            {
-                xform.ParentUid = Owner;
-
-                // anchor snapping
-                xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
-
-                xform.SetAnchored(result);
-
-                if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
-                {
-                    physicsComponent.BodyType = BodyType.Static;
-                }
-            }
-
-            return result;
-        }
-
-        /// <inheritdoc />
-        public void UnanchorEntity(TransformComponent transform)
-        {
-            //HACK: Client grid pivot causes this.
-            //TODO: make grid components the actual grid
-            if(GridIndex == GridId.Invalid)
-                return;
-
-            var xform = transform;
-            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner);
-            xform.SetAnchored(false);
-            if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
-            {
-                physicsComponent.BodyType = BodyType.Dynamic;
-            }
         }
 
         /// <inheritdoc />

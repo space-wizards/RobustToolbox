@@ -2,13 +2,11 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using NetSerializer;
 using Robust.Shared.Log;
@@ -77,21 +75,21 @@ namespace Robust.Shared.Serialization
 
             public int LoadFromPackage(Stream stream, out byte[] hash)
             {
-                _mappedStrings = ReadStringPackage(stream, out hash).ToArray();
+                _mappedStrings = ReadStringPackage(stream, out hash);
                 _stringMapping = GenMapDict(_mappedStrings);
 
                 return _mappedStrings.Length;
             }
 
-            private static List<string> ReadStringPackage(Stream stream, out byte[] hash)
+            private static string[] ReadStringPackage(Stream stream, out byte[] hash)
             {
-                var list = new List<string>();
                 var buf = ArrayPool<byte>.Shared.Rent(4096);
-                var hasher = IncrementalHash.CreateHash(PackHashAlgo);
-                using var zs = new DeflateStream(stream, CompressionMode.Decompress, true);
-                using var hasherStream = new HasherStream(zs, hasher, true);
+                using var zs = new ZStdDecompressStream(stream, ownStream: false);
+                using var hasherStream = Blake2BHasherStream.CreateReader(zs, ReadOnlySpan<byte>.Empty, 32);
 
                 Primitives.ReadPrimitive(hasherStream, out uint count);
+                var list = new string[count];
+
                 for (var i = 0; i < count; ++i)
                 {
                     Primitives.ReadPrimitive(hasherStream, out uint lu);
@@ -100,13 +98,12 @@ namespace Robust.Shared.Serialization
                     hasherStream.ReadExact(span);
 
                     var str = Encoding.UTF8.GetString(span);
-                    list.Add(str);
+                    list[i] = str;
                 }
 
-                hash = hasher.GetHashAndReset();
+                hash = hasherStream.Finish();
                 return list;
             }
-
 
             /// <summary>
             /// Writes a strings package to a stream.
@@ -118,30 +115,27 @@ namespace Robust.Shared.Serialization
                 // ReSharper disable once SuggestVarOrType_Elsewhere
                 Span<byte> buf = stackalloc byte[MaxMappedStringSize];
 
-                var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA512);
+                using var zs = new ZStdCompressStream(stream, ownStream: false);
+                using var hasherStream = Blake2BHasherStream.CreateWriter(zs, ReadOnlySpan<byte>.Empty, 32);
 
-                using (var zs = new DeflateStream(stream, CompressionLevel.Optimal, true))
+                Primitives.WritePrimitive(hasherStream, (uint) strings.Length);
+
+                foreach (var str in strings)
                 {
-                    using var hasherStream = new HasherStream(zs, hasher, true);
-                    Primitives.WritePrimitive(hasherStream, (uint) strings.Length);
+                    DebugTools.Assert(str.Length < MaxMappedStringSize);
 
-                    foreach (var str in strings)
+                    var l = Encoding.UTF8.GetBytes(str, buf);
+
+                    if (l >= MaxMappedStringSize)
                     {
-                        DebugTools.Assert(str.Length < MaxMappedStringSize);
-
-                        var l = Encoding.UTF8.GetBytes(str, buf);
-
-                        if (l >= MaxMappedStringSize)
-                        {
-                            throw new NotImplementedException("Overly long string in strings package.");
-                        }
-
-                        Primitives.WritePrimitive(hasherStream, (uint) l);
-                        hasherStream.Write(buf[..l]);
+                        throw new NotImplementedException("Overly long string in strings package.");
                     }
+
+                    Primitives.WritePrimitive(hasherStream, (uint) l);
+                    hasherStream.Write(buf[..l]);
                 }
 
-                hash = hasher.GetHashAndReset();
+                hash = hasherStream.Finish();
             }
 
 

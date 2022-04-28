@@ -48,13 +48,13 @@ namespace Robust.Shared.Map
                 var invMatrix3 = xformComp.InvWorldMatrix;
                 var localAABB = invMatrix3.TransformBox(_worldAABB);
 
-                if (!localAABB.Intersects(nextGrid.LocalBounds)) continue;
+                if (!localAABB.Intersects(nextGrid.LocalAABB)) continue;
 
                 var intersects = false;
 
                 if (_entityManager.HasComponent<PhysicsComponent>(nextGrid.GridEntityId))
                 {
-                    nextGrid.GetLocalMapChunks(localAABB, out var enumerator);
+                    var enumerator = nextGrid.GetLocalMapChunks(localAABB);
 
                     if (!_approx)
                     {

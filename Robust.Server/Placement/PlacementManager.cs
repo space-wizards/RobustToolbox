@@ -145,7 +145,7 @@ namespace Robust.Server.Placement
             foreach (var grid in gridsInArea)
             {
                 // figure out closest intersect
-                var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
+                var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
                 var gridDist = (gridIntersect.Center - position).LengthSquared;
 
                 if (gridDist >= distance)

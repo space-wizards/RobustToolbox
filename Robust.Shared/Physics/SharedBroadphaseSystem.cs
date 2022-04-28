@@ -130,7 +130,7 @@ namespace Robust.Shared.Physics
             foreach (var grid in movedGrids)
             {
                 DebugTools.Assert(grid.ParentMapId == mapId);
-                var worldAABB = grid.WorldBounds;
+                var worldAABB = grid.WorldAABB;
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
 
                 var gridBody = bodyQuery.GetComponent(grid.GridEntityId);
@@ -262,9 +262,9 @@ namespace Robust.Shared.Physics
                 var mapGrid = (MapGrid)grid;
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
 
-                var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery);
+                var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);
 
-                var aabb = new Box2Rotated(grid.LocalBounds, worldRot).CalcBoundingBox().Translated(worldPos);
+                var aabb = new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
 
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
@@ -276,18 +276,23 @@ namespace Robust.Shared.Physics
                 {
                     if (grid == colliding) continue;
 
-                    var collidingMapGrid = (MapGrid)colliding;
-                    var otherGridAABB = colliding.WorldBounds;
+                    var otherGrid = (MapGrid)colliding;
+                    var otherGridBounds = colliding.WorldAABB;
+                    var otherGridInvMatrix = colliding.InvWorldMatrix;
                     var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
 
-                    var overlap = aabb.Union(otherGridAABB);
+                    // Get Grid2 AABB in grid1 ref
+                    var aabb1 = invWorldMatrix.TransformBox(otherGridBounds);
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                    mapGrid.GetMapChunks(overlap, out var ourChunks);
+                    var ourChunks = mapGrid.GetLocalMapChunks(aabb1);
 
+                    // Only care about chunks on other grid overlapping us.
                     while (ourChunks.MoveNext(out var ourChunk))
                     {
-                        collidingMapGrid.GetMapChunks(overlap, out var collidingChunks);
+                        var ourChunkWorld = worldMatrix.TransformBox(ourChunk.CachedBounds.Translated(ourChunk.Indices * grid.ChunkSize));
+                        var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
+                        var collidingChunks = otherGrid.GetLocalMapChunks(ourChunkOtherRef);
 
                         while (collidingChunks.MoveNext(out var collidingChunk))
                         {
@@ -869,7 +874,7 @@ namespace Robust.Shared.Physics
                 var grid = (IMapGridInternal) _mapManager.GetGrid(mapGrid.GridIndex);
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                grid.GetMapChunks(aabb, out var chunkEnumerator);
+                var chunkEnumerator = grid.GetMapChunks(aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {

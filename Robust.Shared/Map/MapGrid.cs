@@ -83,14 +83,25 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public Box2 WorldBounds =>
-            new Box2Rotated(LocalBounds, WorldRotation, Vector2.Zero)
+        public Box2Rotated WorldBounds
+        {
+            get
+            {
+                var worldAABB = LocalAABB.Translated(WorldPosition);
+                return new Box2Rotated(worldAABB, WorldRotation, worldAABB.Center);
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public Box2 WorldAABB =>
+            new Box2Rotated(LocalAABB, WorldRotation, Vector2.Zero)
                 .CalcBoundingBox()
                 .Translated(WorldPosition);
 
         /// <inheritdoc />
         [ViewVariables]
-        public Box2 LocalBounds { get; private set; }
+        public Box2 LocalAABB { get; private set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -479,24 +490,23 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void GetMapChunks(Box2 worldAABB, out ChunkEnumerator enumerator)
+        public ChunkEnumerator GetMapChunks(Box2 worldAABB)
         {
-            var localArea = InvWorldMatrix.TransformBox(worldAABB);
-            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+            var localAABB = InvWorldMatrix.TransformBox(worldAABB);
+            return new ChunkEnumerator(_chunks, localAABB, ChunkSize);
         }
 
         /// <inheritdoc />
-        public void GetMapChunks(Box2Rotated worldArea, out ChunkEnumerator enumerator)
+        public ChunkEnumerator GetMapChunks(Box2Rotated worldArea)
         {
             var matrix = InvWorldMatrix;
             var localArea = matrix.TransformBox(worldArea);
-
-            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+            return new ChunkEnumerator(_chunks, localArea, ChunkSize);
         }
 
-        public void GetLocalMapChunks(Box2 localAABB, out ChunkEnumerator enumerator)
+        public ChunkEnumerator GetLocalMapChunks(Box2 localAABB)
         {
-            enumerator = new ChunkEnumerator(_chunks, localAABB, ChunkSize);
+            return new ChunkEnumerator(_chunks, localAABB, ChunkSize);
         }
 
         #endregion ChunkAccess
@@ -914,7 +924,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            LocalBounds = new Box2();
+            LocalAABB = new Box2();
             foreach (var chunk in _chunks.Values)
             {
                 var chunkBounds = chunk.CachedBounds;
@@ -922,15 +932,15 @@ namespace Robust.Shared.Map
                 if(chunkBounds.Size.Equals(Vector2i.Zero))
                     continue;
 
-                if (LocalBounds.Size == Vector2.Zero)
+                if (LocalAABB.Size == Vector2.Zero)
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = gridBounds;
+                    LocalAABB = gridBounds;
                 }
                 else
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = LocalBounds.Union(gridBounds);
+                    LocalAABB = LocalAABB.Union(gridBounds);
                 }
             }
 
@@ -967,7 +977,7 @@ namespace Robust.Shared.Map
             GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
             mapChunk.CachedBounds = localBounds;
 
-            LocalBounds = new Box2();
+            LocalAABB = new Box2();
             foreach (var chunk in _chunks.Values)
             {
                 var chunkBounds = chunk.CachedBounds;
@@ -975,15 +985,15 @@ namespace Robust.Shared.Map
                 if(chunkBounds.Size.Equals(Vector2i.Zero))
                     continue;
 
-                if (LocalBounds.Size == Vector2.Zero)
+                if (LocalAABB.Size == Vector2.Zero)
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = gridBounds;
+                    LocalAABB = gridBounds;
                 }
                 else
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = LocalBounds.Union(gridBounds);
+                    LocalAABB = LocalAABB.Union(gridBounds);
                 }
             }
 

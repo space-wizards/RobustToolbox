@@ -69,7 +69,7 @@ internal partial class MapManager
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-        return new Box2Rotated(grid.LocalBounds, worldRot).CalcBoundingBox().Translated(worldPos);
+        return new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
     }
 
     private void OnGridInit(GridInitializeEvent args)

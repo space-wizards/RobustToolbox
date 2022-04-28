@@ -284,10 +284,11 @@ namespace Robust.Shared.Physics
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
                     mapGrid.GetMapChunks(overlap, out var ourChunks);
-                    collidingMapGrid.GetMapChunks(overlap, out var collidingChunks);
 
                     while (ourChunks.MoveNext(out var ourChunk))
                     {
+                        collidingMapGrid.GetMapChunks(overlap, out var collidingChunks);
+
                         while (collidingChunks.MoveNext(out var collidingChunk))
                         {
                             foreach (var fixture in ourChunk.Fixtures)

@@ -934,6 +934,8 @@ namespace Robust.Shared.Map
                 }
             }
 
+            _mapManager.OnGridBoundsChange(GridEntityId, this);
+
             if (chunkRectangles.Count == 0)
             {
                 // May have been deleted from the bulk update above!
@@ -984,6 +986,9 @@ namespace Robust.Shared.Map
                     LocalBounds = LocalBounds.Union(gridBounds);
                 }
             }
+
+            // TODO: Move this to the component when we combine.
+            _mapManager.OnGridBoundsChange(GridEntityId, this);
 
             // TryGet because unit tests YAY
             if (mapChunk.FilledTiles > 0 &&

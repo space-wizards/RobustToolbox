@@ -66,6 +66,7 @@ namespace Robust.Shared.GameObjects
 
             if (!metas.TryGetComponent(entity, out MetaDataComponent? meta) ||
                 meta.EntityDeleted ||
+                (meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer ||
                 maps.HasComponent(entity) ||
                 grids.HasComponent(entity))
             {
@@ -75,16 +76,16 @@ namespace Robust.Shared.GameObjects
             var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) return;
+            // We only do grid-traversal parent changes if the entity is currently parented to a map or a grid.
+            var parentIsMap = xform.GridID == GridId.Invalid && maps.HasComponent(xform.ParentUid);
+            if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
+                return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
             _gridBuffer.Clear();
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid) &&
-                // TODO: Do we even need this?
-                EntityManager.EntityExists(grid.GridEntityId) &&
-                grid.GridEntityId != entity)
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != xform.GridID)

@@ -66,7 +66,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         [DataField("id")]
         private string? _id;
-        
+
         [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
@@ -127,7 +127,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("restitution")]
-        private float _restitution = 0f;
+        internal float _restitution = 0f;
 
         /// <summary>
         ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
@@ -146,6 +146,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _hard = value;
+                Body.CanCollide = true;
                 Body.Awake = true;
                 EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
@@ -179,7 +180,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("mass")]
-        private float _mass;
+        internal float _mass;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.

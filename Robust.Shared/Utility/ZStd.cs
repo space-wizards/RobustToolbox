@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpZstd.Interop;
+using static Robust.Shared.Native.Libc;
 using static SharpZstd.Interop.Zstd;
 
 namespace Robust.Shared.Utility;
@@ -29,6 +31,43 @@ public static class ZStd
             ZStdException.ThrowIfError(result);
             return (int) result;
         }
+    }
+
+#pragma warning disable CA2255
+    [ModuleInitializer]
+#pragma warning restore CA2255
+    internal static void InitZStd()
+    {
+        try
+        {
+            NativeLibrary.SetDllImportResolver(
+                typeof(Zstd).Assembly,
+                ResolveZstd
+            );
+        }
+        catch (InvalidOperationException)
+        {
+            // Launcher loader probably already set this, ignore.
+        }
+    }
+
+    private static IntPtr ResolveZstd(string name, Assembly assembly, DllImportSearchPath? path)
+    {
+        if (name == "zstd" && OperatingSystem.IsLinux())
+        {
+            // Try zstd.so we ship ourselves.
+            if (NativeLibrary.TryLoad("zstd.so", typeof(Zstd).Assembly, null, out var handle))
+                return handle;
+
+            // Try some extra paths from the system too worst case.
+            if (NativeLibrary.TryLoad("libzstd.so.1", out handle))
+                return handle;
+
+            if (NativeLibrary.TryLoad("libzstd.so", out handle))
+                return handle;
+        }
+
+        return IntPtr.Zero;
     }
 }
 
@@ -329,7 +368,7 @@ internal sealed class ZStdCompressStream : Stream
             outBuf.pos = (nuint)_bufferPos;
             outBuf.dst = outPtr;
 
-            ZSTD_inBuffer inBuf;
+            ZSTD_inBuffer inBuf = default;
 
             while (true)
             {

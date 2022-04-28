@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -395,7 +395,19 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
+            private protected override void SetParameterImpl(string name, float[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
             private protected override void SetParameterImpl(string name, Vector2 value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
+            private protected override void SetParameterImpl(string name, Vector2[] value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;

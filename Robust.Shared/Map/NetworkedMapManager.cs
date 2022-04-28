@@ -42,21 +42,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         }
 
         chunks.Add((GameTiming.CurTick, chunk.Indices));
-
-        // Seemed easier than having this method on GridFixtureSystem
-        if (!TryGetGrid(gridId, out var grid) ||
-            !EntityManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
-            chunk.Fixtures.Count == 0)
-            return;
-
-        // TODO: Like MapManager injecting this is a PITA so need to work out an easy way to do it.
-        // Maybe just add like a PostInject method that gets called way later?
-        var fixtureSystem = EntitySystem.Get<FixtureSystem>();
-
-        foreach (var fixture in chunk.Fixtures)
-        {
-            fixtureSystem.DestroyFixture(body, fixture);
-        }
     }
 
     public GameStateMapData? GetStateData(GameTick fromTick)

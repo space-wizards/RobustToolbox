@@ -10,6 +10,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -220,7 +221,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
@@ -228,7 +229,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
@@ -546,7 +547,7 @@ internal sealed partial class PVSSystem : EntitySystem
             !AddToChunkSetRecursively(in parent, visMask, tree, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
-        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        //i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles
         tree.Set(uid, parent);
         set.Add(uid, mComp);
         return true;

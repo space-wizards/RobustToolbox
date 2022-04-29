@@ -201,6 +201,7 @@ namespace Robust.Client.Graphics
         {
             return
                 (type == ShaderDataType.Float) ||
+                (type == ShaderDataType.Int) ||
                 (type == ShaderDataType.Vec2) ||
                 (type == ShaderDataType.Vec3) ||
                 (type == ShaderDataType.Vec4) ||

@@ -429,7 +429,7 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyEntityStates(ReadOnlySpan<EntityState> curEntStates, ReadOnlySpan<EntityUid> deletions,
             ReadOnlySpan<EntityState> nextEntStates)
         {
-            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>();
+            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>(curEntStates.Length);
             var toInitialize = new List<EntityUid>();
             var created = new List<EntityUid>();
 
@@ -548,6 +548,8 @@ namespace Robust.Client.GameStates
 
             if (curState != null)
             {
+                compStateWork.EnsureCapacity(curState.ComponentChanges.Span.Length);
+
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
                     if (compChange.Deleted)
@@ -580,6 +582,8 @@ namespace Robust.Client.GameStates
 
             if (nextState != null)
             {
+                compStateWork.EnsureCapacity(compStateWork.Count + nextState.ComponentChanges.Span.Length);
+
                 foreach (var compState in nextState.ComponentChanges.Span)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))

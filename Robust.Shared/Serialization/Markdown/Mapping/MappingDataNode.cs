@@ -18,16 +18,23 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         private static readonly ThreadLocal<ValueDataNode> FetchNode =
             new(() => new ValueDataNode(""));
 
-        private readonly Dictionary<DataNode, DataNode> _children = new();
+        private readonly Dictionary<DataNode, DataNode> _children;
 
         public IReadOnlyDictionary<DataNode, DataNode> Children => _children;
 
         public MappingDataNode() : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _children = new();
+        }
+
+        public MappingDataNode(int size) : base(NodeMark.Invalid, NodeMark.Invalid)
+        {
+            _children = new(size);
         }
 
         public MappingDataNode(YamlMappingNode mapping) : base(mapping.Start, mapping.End)
         {
+            _children = new(mapping.Children.Count);
             foreach (var (key, val) in mapping.Children)
             {
                 _children.Add(key.ToDataNode(), val.ToDataNode());
@@ -36,8 +43,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             Tag = mapping.Tag;
         }
 
-        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : this()
+        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _children = new(nodes.Count);
             foreach (var (key, val) in nodes)
             {
                 _children.Add(key, val);
@@ -191,7 +199,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public override MappingDataNode Copy()
         {
-            var newMapping = new MappingDataNode()
+            var newMapping = new MappingDataNode(_children.Count)
             {
                 Tag = Tag,
                 Start = Start,

@@ -10,6 +10,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -220,7 +221,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
@@ -228,7 +229,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }

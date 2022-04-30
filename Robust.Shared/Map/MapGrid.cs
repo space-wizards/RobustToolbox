@@ -391,6 +391,7 @@ namespace Robust.Shared.Map
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
 
+            chunk.Fixtures.Clear();
             _chunks.Remove(origin);
 
             _mapManager.ChunkRemoved(Index, chunk);
@@ -609,6 +610,14 @@ namespace Robust.Shared.Map
             var x = (int)Math.Floor(localPos.X / TileSize);
             var y = (int)Math.Floor(localPos.Y / TileSize);
             return new Vector2i(x, y);
+        }
+
+        public bool IsAnchored(EntityCoordinates coords, EntityUid euid)
+        {
+            var tilePos = TileIndicesFor(coords);
+            var (chunk, chunkTile) = ChunkAndOffsetForTile(tilePos);
+            var snapgrid = chunk.GetSnapGrid((ushort) chunkTile.X, (ushort) chunkTile.Y);
+            return snapgrid?.Contains(euid) == true;
         }
 
         /// <inheritdoc />
@@ -926,7 +935,11 @@ namespace Robust.Shared.Map
             }
 
             if (chunkRectangles.Count == 0)
-                fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+            {
+                // May have been deleted from the bulk update above!
+                if (!_entityManager.Deleted(GridEntityId))
+                    fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+            }
             else if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
                 system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
         }
@@ -973,7 +986,9 @@ namespace Robust.Shared.Map
             }
 
             // TryGet because unit tests YAY
-            if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+            if (mapChunk.FilledTiles > 0 &&
+                _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) &&
+                !_entityManager.Deleted(GridEntityId))
                 system.RegenerateCollision(GridEntityId, mapChunk, rectangles, checkSplit);
         }
 
@@ -1068,7 +1083,7 @@ namespace Robust.Shared.Map
             var tile = chunk.GetTile(x, y);
             _index++;
 
-            if (!_ignoreEmpty && tile.IsEmpty)
+            if (_ignoreEmpty && tile.IsEmpty)
             {
                 return MoveNext(out tileRef);
             }

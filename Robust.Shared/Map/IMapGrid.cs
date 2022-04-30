@@ -147,6 +147,7 @@ namespace Robust.Shared.Map
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
         Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);
 
+        bool IsAnchored(EntityCoordinates coords, EntityUid euid);
         bool AddToSnapGridCell(Vector2i pos, EntityUid euid);
         bool AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
         void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid);

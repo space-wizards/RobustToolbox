@@ -608,8 +608,15 @@ namespace Robust.Shared.GameObjects
         protected override void Startup()
         {
             // Re-Anchor the entity if needed.
-            if (_anchored)
-                Anchored = true;
+            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
+            {
+                if (!grid.IsAnchored(Coordinates, Owner))
+                {
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
+                }
+            }
+            else
+                _anchored = false;
 
             base.Startup();
 
@@ -658,11 +665,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // nothing to do
-            var oldParent = Parent;
-            if (oldParent == null)
-            {
+            if (!_parent.IsValid())
                 return;
-            }
 
             var mapPos = MapPosition;
 
@@ -684,8 +688,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            if (newMapEntity == _parent)
             {
                 return;
             }

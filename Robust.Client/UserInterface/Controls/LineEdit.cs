@@ -66,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 // Save cursor position or -1 for end
-                var cursorTarget = CursorPosition == Text.Length ? -1 : CursorPosition;
+                var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
 
                 if (!InternalSetText(value))
                 {

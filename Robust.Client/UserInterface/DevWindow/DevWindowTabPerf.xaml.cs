@@ -5,7 +5,9 @@ using Robust.Client.Profiling;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Profiling;
+using Robust.Shared.Utility.Collections;
 
 namespace Robust.Client.UserInterface;
 
@@ -115,6 +117,7 @@ public sealed partial class DevWindowTabPerf : Control
             $"Snapshot: {_currentSnapshot.StartFrame} - {_currentSnapshot.EndFrame}  Frame count: {_currentSnapshot.FrameCount}";
 
         GraphView.LoadSnapshot(_currentSnapshot);
+        _frame = _currentSnapshot.EndFrame;
         RebuildTree();
     }
 
@@ -127,11 +130,31 @@ public sealed partial class DevWindowTabPerf : Control
 
         ref var buf = ref _currentSnapshot.Buffer;
         var indexIdx = _profViewMgr.GetIndexOfFrame(_frame, _currentSnapshot);
+        if (indexIdx == 0)
+        {
+            Logger.WarningS("prof.ui", $"Unable to find index for frame: {_frame}");
+            return;
+        }
+
+
         ref var index = ref _currentSnapshot.Buffer.IndexIdx(indexIdx);
 
         var i = index.EndPos - 1;
         ref var logEnd = ref buf.BufferIdx(i);
-        RebuildTreeGroup(buf, index, ref i, ref logEnd.GroupEnd, TreeRoot, (logEnd.GroupEnd.StringId, 1), _treeExpand);
+        var controls = new ValueList<Control>();
+        RebuildTreeGroup(
+            buf,
+            index,
+            ref i,
+            ref logEnd.GroupEnd,
+            ref controls,
+            (logEnd.GroupEnd.StringId, 1),
+            _treeExpand);
+
+        for (var c = controls.Count - 1; c >= 0; c--)
+        {
+            TreeRoot.AddChild(controls[c]);
+        }
     }
 
     private void RebuildTreeAddControls(
@@ -139,14 +162,15 @@ public sealed partial class DevWindowTabPerf : Control
         in ProfIndex index,
         ref long i,
         ref ProfLog log,
-        Control control,
+        ref ValueList<Control> insertInto,
+        Dictionary<int, int> totalCounts,
         Dictionary<int, int> countDict,
         TreeExpand expandParent)
     {
         switch (log.Type)
         {
             case ProfLogType.Sample:
-                control.AddChild(new Label { Text = SampleString(log.Value.StringId, log.Value.Value) });
+                insertInto.Add(new Label { Text = SampleString(log.Value.StringId, log.Value.Value) });
                 break;
 
             case ProfLogType.GroupEnd:
@@ -154,8 +178,18 @@ public sealed partial class DevWindowTabPerf : Control
 
                 ref var count = ref CollectionsMarshal.GetValueRefOrAddDefault(countDict, stringId, out _);
                 count += 1;
+                var totalCount = totalCounts[stringId];
 
-                RebuildTreeGroup(buffer, index, ref i, ref log.GroupEnd, control, (stringId, count), expandParent);
+                var stringI = totalCount - count;
+
+                RebuildTreeGroup(
+                    buffer,
+                    index,
+                    ref i,
+                    ref log.GroupEnd,
+                    ref insertInto,
+                    (stringId, stringI),
+                    expandParent);
                 break;
         }
     }
@@ -165,7 +199,7 @@ public sealed partial class DevWindowTabPerf : Control
         in ProfIndex index,
         ref long i,
         ref ProfLogGroupEnd logEnd,
-        Control control,
+        ref ValueList<Control> insertInto,
         (int str, int i) expandId,
         TreeExpand expandParent)
     {
@@ -174,8 +208,9 @@ public sealed partial class DevWindowTabPerf : Control
         var groupControl = new ProfTreeEntry(this, expandParent, expandId);
         groupControl.Text.Text = SampleString(logEnd.StringId, logEnd.Value);
 
-        control.AddChild(groupControl);
+        insertInto.Add(groupControl);
 
+        var totalCounts = GetTotalGroupCounts(buffer, index, i, logEnd.StartIndex);
         var countDict = new Dictionary<int, int>();
 
         var expand = expandParent.ExpandedItems.GetValueOrDefault(expandId);
@@ -184,6 +219,10 @@ public sealed partial class DevWindowTabPerf : Control
             i = logEnd.StartIndex;
             return;
         }
+
+        groupControl.Arrow.Rotated = true;
+
+        var children = new ValueList<Control>();
 
         for (; i >= index.StartPos; i--)
         {
@@ -196,10 +235,38 @@ public sealed partial class DevWindowTabPerf : Control
                 index,
                 ref i,
                 ref log,
-                groupControl.ChildEntryContainer,
+                ref children,
+                totalCounts,
                 countDict,
                 expand);
         }
+
+        for (var c = children.Count - 1; c >= 0; c--)
+        {
+            groupControl.ChildEntryContainer.AddChild(children[c]);
+        }
+    }
+
+    private static Dictionary<int, int> GetTotalGroupCounts(
+        in ProfBuffer buffer,
+        in ProfIndex index,
+        long i,
+        long startIdx)
+    {
+        var dict = new Dictionary<int, int>();
+
+        for (; i > startIdx; i--)
+        {
+            ref var log = ref buffer.BufferIdx(i);
+            if (log.Type != ProfLogType.GroupEnd)
+                continue;
+
+            i = log.GroupEnd.StartIndex;
+            ref var val = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, log.GroupEnd.StringId, out _);
+            val += 1;
+        }
+
+        return dict;
     }
 
     private string SampleString(int stringId, in ProfValue value)

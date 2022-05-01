@@ -13,7 +13,10 @@ internal sealed partial class ProfTreeEntry : Control
     private readonly DevWindowTabPerf.TreeExpand _parentExpand;
     public readonly (int str, int i) Id;
 
-    public ProfTreeEntry(DevWindowTabPerf tab, DevWindowTabPerf.TreeExpand parentExpand, (int str, int i) id)
+    public ProfTreeEntry(
+        DevWindowTabPerf tab,
+        DevWindowTabPerf.TreeExpand parentExpand,
+        (int str, int i) id)
     {
         _tab = tab;
         _parentExpand = parentExpand;

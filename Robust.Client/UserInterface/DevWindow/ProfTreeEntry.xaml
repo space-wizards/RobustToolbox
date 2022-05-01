@@ -3,7 +3,10 @@
          x:Class="Robust.Client.UserInterface.ProfTreeEntry"
          MouseFilter="Stop">
     <BoxContainer Orientation="Vertical">
-        <Label Name="Text" Access="Public" />
+        <BoxContainer Orientation="Horizontal">
+            <ExpanderArrow Access="Public" Name="Arrow" MinSize="12 12" VerticalAlignment="Center" />
+            <Label Name="Text" Access="Public" HorizontalExpand="True" ClipText="True" Margin="4" />
+        </BoxContainer>
         <BoxContainer Orientation="Vertical" Name="ChildEntryContainer" Access="Public" Margin="16 0 0 0" />
     </BoxContainer>
 </Control>

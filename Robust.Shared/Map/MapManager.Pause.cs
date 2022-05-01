@@ -54,7 +54,7 @@ namespace Robust.Shared.Map
             if (IsMapInitialized(mapId))
                 throw new ArgumentException("That map is already initialized.");
 
-            ClearMapPreInit(mapId);
+            ClearMapPreInitAndUnpauseMap(mapId);
 
             var mapEnt = GetMapEntityId(mapId);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
@@ -157,7 +157,7 @@ namespace Robust.Shared.Map
             return mapComp.MapPreInit;
         }
 
-        private void ClearMapPreInit(MapId mapId)
+        private void ClearMapPreInitAndUnpauseMap(MapId mapId)
         {
             if(mapId == MapId.Nullspace)
                 return;
@@ -165,6 +165,7 @@ namespace Robust.Shared.Map
             var mapEuid = GetMapEntityId(mapId);
             var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
             mapComp.MapPreInit = false;
+            mapComp.MapPaused = false;
         }
 
         /// <inheritdoc />

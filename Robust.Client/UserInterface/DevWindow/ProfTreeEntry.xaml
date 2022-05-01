@@ -1,0 +1,9 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.ProfTreeEntry"
+         MouseFilter="Stop">
+    <BoxContainer Orientation="Vertical">
+        <Label Name="Text" Access="Public" />
+        <BoxContainer Orientation="Vertical" Name="ChildEntryContainer" Access="Public" Margin="16 0 0 0" />
+    </BoxContainer>
+</Control>

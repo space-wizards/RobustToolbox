@@ -4,7 +4,6 @@ using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Client.Profiling;
 
@@ -12,7 +11,11 @@ public sealed class LiveProfileViewControl : Control
 {
     [Dependency] private readonly ProfManager _profManager = default!;
 
-    public int MaxDepth = 1;
+    public int MaxDepth { get; set; } = 2;
+    public long? UseIndex;
+
+    public ProfBuffer Buffer;
+    public bool UseBuffer;
 
     public LiveProfileViewControl()
     {
@@ -27,31 +30,33 @@ public sealed class LiveProfileViewControl : Control
             .GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf")
             .MakeDefault();
 
-        ref var list = ref _profManager.LastCmds();
-
+        ref var buffer = ref UseBuffer ? ref Buffer : ref _profManager.Buffer;
         var baseLine = new Vector2(0, font.GetAscent(UIScale));
-        var i = 0;
 
-        DrawCmds(ref list, ref i, ref baseLine, 0, font, handle);
+        var index = buffer.IndexIdx(UseIndex ?? buffer.IndexWriteOffset - 1);
+        var i = index.StartPos;
+
+        DrawCmds(ref buffer, ref i, ref baseLine, in index, 0, font, handle);
     }
 
     private void DrawCmds(
-        ref ValueList<ProfCmd> list,
-        ref int i,
+        ref ProfBuffer list,
+        ref long i,
         ref Vector2 baseline,
+        in ProfIndex index,
         int depth,
         Font font,
         DrawingHandleScreen handle)
     {
-        for (; i < list.Count; i++)
+        for (; i < index.EndPos; i++)
         {
-            ref var cmd = ref list[i];
-            DrawCmd(ref list, ref i, ref baseline, ref cmd, depth, font, handle);
+            ref var cmd = ref list.BufferIdx(i);
+            DrawCmd(ref list, ref i, ref baseline, index, ref cmd, depth, font, handle);
         }
     }
 
     private void DrawCmdSample(
-        ref ProfCmdValue value,
+        ref ProfLogValue value,
         ref Vector2 baseline,
         Font font,
         DrawingHandleScreen handle)
@@ -69,47 +74,53 @@ public sealed class LiveProfileViewControl : Control
         DrawingHandleScreen handle)
     {
         var cmdString = _profManager.GetString(stringId);
-        baseline += handle.DrawString(font, baseline, cmdString);
-        baseline += handle.DrawString(font, baseline, ": ");
+        baseline += handle.DrawString(font, baseline, cmdString, UIScale, Color.White);
+        baseline += handle.DrawString(font, baseline, ": ", UIScale, Color.White);
 
         var str = value.Type switch
         {
             ProfValueType.TimeAllocSample =>
                 $"{value.TimeAllocSample.Time * 1000:N2} ms, {value.TimeAllocSample.Alloc} B",
             ProfValueType.Int32 => value.Int32.ToString(),
+            ProfValueType.Int64 => value.Int64.ToString(),
             _ => "???"
         };
 
-        handle.DrawString(font, baseline, str);
+        handle.DrawString(font, baseline, str, UIScale, Color.White);
     }
 
-    private void DrawCmd(ref ValueList<ProfCmd> list,
-        ref int i,
+    private void DrawCmd(
+        ref ProfBuffer buffer,
+        ref long i,
         ref Vector2 baseline,
-        ref ProfCmd cmd,
+        in ProfIndex index,
+        ref ProfLog log,
         int depth,
         Font font,
         DrawingHandleScreen handle)
     {
-        switch (cmd.Type)
+        switch (log.Type)
         {
-            case ProfCmdType.Sample:
-                DrawCmdSample(ref cmd.Value, ref baseline, font, handle);
+            case ProfLogType.Sample:
+                DrawCmdSample(ref log.Value, ref baseline, font, handle);
                 break;
-            case ProfCmdType.GroupStart:
-                DrawEnterGroup(ref list, ref i, ref baseline, depth, font, handle);
+            case ProfLogType.GroupStart:
+                DrawEnterGroup(ref buffer, ref i, ref baseline, index, depth, font, handle);
                 break;
         }
     }
 
     private void DrawEnterGroup(
-        ref ValueList<ProfCmd> list,
-        ref int i,
+        ref ProfBuffer buffer,
+        ref long i,
         ref Vector2 baseline,
+        in ProfIndex index,
         int depth,
         Font font,
         DrawingHandleScreen handle)
     {
+        depth += 1;
+
         var indentSize = 12 * UIScale;
 
         var startBaseline = baseline;
@@ -120,10 +131,10 @@ public sealed class LiveProfileViewControl : Control
             var startIdx = i;
 
             // Skip contents of this group.
-            for (; i < list.Count; i++)
+            for (; i < index.EndPos; i++)
             {
-                ref var cmd = ref list[i];
-                if (cmd.Type != ProfCmdType.GroupEnd)
+                ref var cmd = ref buffer.BufferIdx(i);
+                if (cmd.Type != ProfLogType.GroupEnd)
                     continue;
 
                 if (cmd.GroupEnd.StartIndex <= startIdx)
@@ -134,21 +145,21 @@ public sealed class LiveProfileViewControl : Control
         {
             i += 1;
 
-            for (; i < list.Count; i++)
+            for (; i < index.EndPos; i++)
             {
-                ref var cmd = ref list[i];
-                if (cmd.Type == ProfCmdType.GroupEnd)
+                ref var cmd = ref buffer.BufferIdx(i);
+                if (cmd.Type == ProfLogType.GroupEnd)
                     break;
 
-                DrawCmd(ref list, ref i, ref baseline, ref cmd, depth + 1, font, handle);
+                DrawCmd(ref buffer, ref i, ref baseline, index, ref cmd, depth, font, handle);
             }
         }
 
         // Gone through entire list = unmatched begin/end pair
-        if (i == list.Count)
+        if (i == index.EndPos)
             return;
 
-        ref var cmdEnd = ref list[i].GroupEnd;
+        ref var cmdEnd = ref buffer.BufferIdx(i).GroupEnd;
 
         baseline -= (indentSize, 0);
 

@@ -4,6 +4,7 @@ using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
@@ -23,6 +24,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ISerializationManager _serManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         #endregion Dependencies
 
@@ -117,16 +119,19 @@ namespace Robust.Shared.GameObjects
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
+            using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (_prof.Group("Events"))
             {
                 _eventBus.ProcessEventQueue();
             }
 
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (_prof.Group("QueueDel"))
             {
                 while (QueuedDeletions.TryDequeue(out var uid))
                 {
@@ -137,6 +142,7 @@ namespace Robust.Shared.GameObjects
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();
             }

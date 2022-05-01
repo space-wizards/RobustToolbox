@@ -335,6 +335,7 @@ namespace Robust.Client
             ProfileOptSetup.Setup(_configurationManager);
 
             _parallelMgr.Initialize();
+            _prof.Initialize();
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
@@ -474,26 +475,50 @@ namespace Robust.Client
 
         private void Tick(FrameEventArgs frameEventArgs)
         {
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
-            _console.CommandBufferExecute();
-            _timerManager.UpdateTimers(frameEventArgs);
-            _taskManager.ProcessPendingTasks();
+            using (_prof.Group("Content pre engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("Console"))
+            {
+                _console.CommandBufferExecute();
+            }
+
+            using (_prof.Group("Timers"))
+            {
+                _timerManager.UpdateTimers(frameEventArgs);
+            }
+
+            using (_prof.Group("Async"))
+            {
+                _taskManager.ProcessPendingTasks();
+            }
 
             // GameStateManager is in full control of the simulation update in multiplayer.
             if (_client.RunLevel == ClientRunLevel.InGame || _client.RunLevel == ClientRunLevel.Connected)
             {
-                _gameStateManager.ApplyGameState();
+                using (_prof.Group("Game state"))
+                {
+                    _gameStateManager.ApplyGameState();
+                }
             }
 
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
-                // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                _gameTiming.LastRealTick = _gameTiming.CurTick;
-                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                using (_prof.Group("Entity"))
+                {
+                    // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                    _gameTiming.LastRealTick = _gameTiming.CurTick;
+                    _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                }
             }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            using (_prof.Group("Content post engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            }
         }
 
         private void Update(FrameEventArgs frameEventArgs)

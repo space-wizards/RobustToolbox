@@ -298,7 +298,9 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
+                    var sw = ProfSampler.StartNew();
                     updReg.System.Update(frameTime);
+                    _profManager.WriteSample(updReg.System.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

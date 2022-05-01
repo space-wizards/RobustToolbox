@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Configuration;
+using Robust.Shared.Log;
+using Robust.Shared.Utility;
 using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.Profiling;
@@ -8,70 +13,110 @@ namespace Robust.Shared.Profiling;
 // No interfaces here, don't want the interface dispatch overhead.
 public sealed class ProfManager
 {
+    [IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
+
     public bool IsEnabled;
 
     // I don't care that this isn't a tree I will call upon the string tree just like in BYOND.
     private readonly Dictionary<string, int> _stringTreeIndices = new();
     private ValueList<string> _stringTree;
 
-    public ValueList<ProfCmd> CommandsA;
-    public ValueList<ProfCmd> CommandsB;
-    public bool IsA;
+    public ProfBuffer Buffer;
 
-    public void WriteSample(string text, in ProfValue value)
+    internal void Initialize()
+    {
+        _cfg.OnValueChanged(CVars.ProfIndexSize, i =>
+        {
+            if (!BitOperations.IsPow2(i))
+            {
+                Logger.WarningS("prof", "Rounding prof.index_size to next POT");
+                i = BufferHelpers.FittingPowerOfTwo(i);
+            }
+
+            Buffer.Index = new ProfIndex[i];
+            Buffer.IndexWriteOffset = 0;
+        }, true);
+
+        _cfg.OnValueChanged(CVars.ProfBufferSize, i =>
+        {
+            if (!BitOperations.IsPow2(i))
+            {
+                Logger.WarningS("prof", "Rounding prof.buffer_size to next POT");
+                i = BufferHelpers.FittingPowerOfTwo(i);
+            }
+
+            Buffer.Buffer = new ProfLog[i];
+            // Invalidate all indices by artificially incrementing the write position.
+            Buffer.BufferWriteOffset += i;
+        }, true);
+    }
+
+    public void MarkIndex(long start)
     {
         if (!IsEnabled)
             return;
 
-        var stringRef = InsertString(text);
+        // Ha
+        var indexIdx = Buffer.IndexWriteOffset++;
 
-        ref var cmds = ref CurCmds();
+        ProfIndex index = default;
+        index.StartPos = start;
+        index.EndPos = Buffer.BufferWriteOffset;
 
-        ref var cmd = ref cmds.AddRef();
-        cmd = default;
-        cmd.Type = ProfCmdType.Sample;
-        cmd.Value.Value = value;
-        cmd.Value.StringId = stringRef;
+        Buffer.IndexIdx(indexIdx) = index;
     }
 
-    public void WriteSample(string text, in ProfSampler sampler)
-    {
-        WriteSample(text, ProfData.TimeAlloc(sampler));
-    }
-
-    public int WriteGroupStart()
+    public long WriteSample(string text, in ProfValue value)
     {
         if (!IsEnabled)
             return 0;
 
-        ref var cmds = ref CurCmds();
+        var stringRef = InsertString(text);
 
-        ref var cmd = ref cmds.AddRef();
+        var idx = Buffer.BufferWriteOffset;
+        ref var cmd = ref WriteCmd();
         cmd = default;
-        cmd.Type = ProfCmdType.GroupStart;
+        cmd.Type = ProfLogType.Sample;
+        cmd.Value.Value = value;
+        cmd.Value.StringId = stringRef;
 
-        return cmds.Count - 1;
+        return idx;
     }
 
-    public void WriteGroupEnd(int startIndex, string text, in ProfValue value)
+    public long WriteSample(string text, in ProfSampler sampler)
+    {
+        return WriteSample(text, ProfData.TimeAlloc(sampler));
+    }
+
+    public long WriteGroupStart()
+    {
+        if (!IsEnabled)
+            return 0;
+
+        var idx = Buffer.BufferWriteOffset;
+        ref var cmd = ref WriteCmd();
+        cmd = default;
+        cmd.Type = ProfLogType.GroupStart;
+
+        return idx;
+    }
+
+    public void WriteGroupEnd(long startIndex, string text, in ProfValue value)
     {
         if (!IsEnabled)
             return;
 
         var stringRef = InsertString(text);
 
-        ref var cmds = ref CurCmds();
-
-        ProfCmd cmd = default;
-        cmd.Type = ProfCmdType.GroupEnd;
+        ref var cmd = ref WriteCmd();
+        cmd = default;
+        cmd.Type = ProfLogType.GroupEnd;
         cmd.GroupEnd.StringId = stringRef;
         cmd.GroupEnd.StartIndex = startIndex;
         cmd.GroupEnd.Value = value;
-
-        cmds.Add(cmd);
     }
 
-    public void WriteGroupEnd(int startIndex, string text, in ProfSampler sampler)
+    public void WriteGroupEnd(long startIndex, string text, in ProfSampler sampler)
     {
         WriteGroupEnd(startIndex, text, ProfData.TimeAlloc(sampler));
     }
@@ -82,16 +127,15 @@ public sealed class ProfManager
         return new GroupGuard(this, start, name);
     }
 
-    public void Swap()
-    {
-        IsA = !IsA;
-        CurCmds().Clear();
-    }
-
     public string GetString(int stringIdx) => _stringTree[stringIdx];
 
-    public ref ValueList<ProfCmd> CurCmds() => ref IsA ? ref CommandsB : ref CommandsA;
-    public ref ValueList<ProfCmd> LastCmds() => ref IsA ? ref CommandsA : ref CommandsB;
+    public int? GetStringIdx(string stringValue)
+    {
+        if (_stringTreeIndices.TryGetValue(stringValue, out var idx))
+            return idx;
+
+        return null;
+    }
 
     private int InsertString(string text)
     {
@@ -105,14 +149,27 @@ public sealed class ProfManager
         return stringRef;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ref ProfLog WriteCmd()
+    {
+        var buf = Buffer.Buffer;
+        // This uses LongLength because it saves a single instruction to load the value from memory.
+        // I spent more time on this function in sharplab than was probably worth it.
+        var idx = Buffer.BufferWriteOffset & (buf.LongLength - 1);
+
+        Buffer.BufferWriteOffset += 1;
+
+        return ref buf[(int)idx];
+    }
+
     public readonly struct GroupGuard : IDisposable
     {
         private readonly ProfManager _mgr;
-        private readonly int _startIndex;
+        private readonly long _startIndex;
         private readonly string _groupName;
         private readonly ProfSampler _sampler;
 
-        public GroupGuard(ProfManager mgr, int startIndex, string groupName)
+        public GroupGuard(ProfManager mgr, long startIndex, string groupName)
         {
             _mgr = mgr;
             _startIndex = startIndex;

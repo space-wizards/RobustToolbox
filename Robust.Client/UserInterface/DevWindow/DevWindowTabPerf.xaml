@@ -1,0 +1,31 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:prof="clr-namespace:Robust.Client.Profiling"
+         x:Class="Robust.Client.UserInterface.DevWindowTabPerf">
+    <SplitContainer Orientation="Horizontal">
+        <BoxContainer Orientation="Vertical" MinWidth="200">
+            <BoxContainer Orientation="Horizontal">
+                <Button Text="Snap" Name="SnapButton" />
+            </BoxContainer>
+            <ScrollContainer HScrollEnabled="False" VScrollEnabled="True"
+                             VerticalExpand="True">
+                <BoxContainer Orientation="Vertical" Name="SnapList" />
+            </ScrollContainer>
+        </BoxContainer>
+        <Control Name="RightPanel" Visible="False">
+            <BoxContainer Orientation="Vertical">
+                <BoxContainer Orientation="Horizontal">
+                    <Label Name="LabelTopText" HorizontalExpand="True" />
+                    <Button Name="ButtonDeleteSnap" Text="Delete snapshot" />
+                </BoxContainer>
+                <ProfGraphView Name="GraphView" MinHeight="64" MouseFilter="Stop" />
+                <ScrollContainer Name="TreeScroll"
+                                 HScrollEnabled="False" VScrollEnabled="True"
+                                 VerticalExpand="True"
+                                 MinHeight="64">
+                    <BoxContainer Orientation="Vertical" Name="TreeRoot" />
+                </ScrollContainer>
+            </BoxContainer>
+        </Control>
+    </SplitContainer>
+</Control>

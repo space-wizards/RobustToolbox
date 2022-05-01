@@ -49,6 +49,8 @@ namespace Robust.Shared.Timing
     /// </summary>
     public sealed class GameLoop : IGameLoop
     {
+        public const string ProfTextStartFrame = "Start Frame";
+
         private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
             "robust_game_loop_frametime",
             "Histogram of frametimes in ms",
@@ -127,6 +129,10 @@ namespace Robust.Shared.Timing
 
             while (Running)
             {
+                var profFrameStart = _prof.WriteSample(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
+                var profFrameGroupStart = _prof.WriteGroupStart();
+                var profFrameSw = ProfSampler.StartNew();
+
                 // maximum number of ticks to queue before the loop slows down.
                 var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
 
@@ -171,7 +177,7 @@ namespace Robust.Shared.Timing
                 _timing.InSimulation = true;
                 var tickPeriod = CalcTickPeriod();
 
-                using (_prof.Group("Tick"))
+                using (_prof.Group("Ticks"))
                 {
                     var countTicksRan = 0;
                     // run the simulation for every accumulated tick
@@ -193,6 +199,9 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
+                        using var tickGroup = _prof.Group("Tick");
+                        _prof.WriteSample("Tick", ProfData.Int64(_timing.CurTick.Value));
+
                         if (EnableMetrics)
                         {
                             using (_frameTimeHistogram.NewTimer())
@@ -267,8 +276,6 @@ namespace Robust.Shared.Timing
                     {
                         Render?.Invoke(this, realFrameEvent);
                     }
-
-                    _prof.Swap();
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)
@@ -276,6 +283,9 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Render");
                 }
 #endif
+
+                _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
+                _prof.MarkIndex(profFrameStart);
 
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.

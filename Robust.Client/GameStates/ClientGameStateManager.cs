@@ -21,6 +21,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -54,6 +55,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
@@ -224,18 +226,28 @@ namespace Robust.Client.GameStates
                     ResetPredictedEntities(_timing.CurTick);
                 }
 
-                if (!curState.Extrapolated)
+                using (_prof.Group("FullRep"))
                 {
-                    _processor.UpdateFullRep(curState);
+                    if (!curState.Extrapolated)
+                    {
+                        _processor.UpdateFullRep(curState);
+                    }
                 }
 
                 // Store last tick we got from the GameStateProcessor.
                 _lastProcessedTick = _timing.CurTick;
 
                 // apply current state
-                var createdEntities = ApplyGameState(curState, nextState);
+                List<EntityUid> createdEntities;
+                using (_prof.Group("ApplyGameState"))
+                {
+                    createdEntities = ApplyGameState(curState, nextState);
+                }
 
-                MergeImplicitData(createdEntities);
+                using (_prof.Group("MergeImplicitData"))
+                {
+                    MergeImplicitData(createdEntities);
+                }
 
                 if (_lastProcessedSeq < curState.LastProcessedInput)
                 {
@@ -270,6 +282,7 @@ namespace Robust.Client.GameStates
 
             if (IsPredictionEnabled)
             {
+                using var _p = _prof.Group("Prediction");
                 using var _ = _timing.StartPastPredictionArea();
 
                 if (_pendingInputs.Count > 0)
@@ -290,6 +303,8 @@ namespace Robust.Client.GameStates
 
                 for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
                 {
+                    var groupStart = _prof.WriteGroupStart();
+
                     var tick = new GameTick(t);
                     _timing.CurTick = tick;
 
@@ -321,20 +336,36 @@ namespace Robust.Client.GameStates
 
                     if (t != targetTick)
                     {
-                        // Don't run EntitySystemManager.TickUpdate if this is the target tick,
-                        // because the rest of the main loop will call into it with the target tick later,
-                        // and it won't be a past prediction.
-                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: false);
-                        ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                        using (_prof.Group("Systems"))
+                        {
+                            // Don't run EntitySystemManager.TickUpdate if this is the target tick,
+                            // because the rest of the main loop will call into it with the target tick later,
+                            // and it won't be a past prediction.
+                            _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: false);
+                        }
+
+                        using (_prof.Group("Event queue"))
+                        {
+                            ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                        }
                     }
+
+                    _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(t));
                 }
             }
 
-            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
+            using (_prof.Group("Tick"))
+            {
+                _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
+            }
         }
 
         private void ResetPredictedEntities(GameTick curTick)
         {
+            using var _ = _prof.Group("ResetPredictedEntities");
+
+            var countReset = 0;
+
             foreach (var meta in _entityManager.EntityQuery<MetaDataComponent>(true))
             {
                 var entity = meta.Owner;
@@ -355,6 +386,8 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
+                countReset += 1;
+
                 // TODO: handle component deletions/creations.
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
@@ -374,6 +407,8 @@ namespace Robust.Client.GameStates
                     comp.HandleComponentState(compState, null);
                 }
             }
+
+            _prof.WriteSample("Reset count", ProfData.Int32(countReset));
         }
 
         private void MergeImplicitData(List<EntityUid> createdEntities)

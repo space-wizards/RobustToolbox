@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Profiling;
 
@@ -10,6 +11,15 @@ public static class ProfData
         {
             Type = ProfValueType.Int32,
             Int32 = int32
+        };
+    }
+
+    public static ProfValue Int64(long int64)
+    {
+        return new ProfValue
+        {
+            Type = ProfValueType.Int64,
+            Int64 = int64
         };
     }
 
@@ -27,38 +37,75 @@ public static class ProfData
     }
 }
 
+public struct ProfBuffer
+{
+    // Both indices are unmasked and need to be masked before indexing.
+    public long BufferWriteOffset;
+    public long IndexWriteOffset;
+    public ProfLog[] Buffer;
+    public ProfIndex[] Index;
+
+    public readonly ProfBuffer Snapshot()
+    {
+        var ret = this;
+        ret.Buffer = (ProfLog[]) ret.Buffer.Clone();
+        ret.Index = (ProfIndex[]) ret.Index.Clone();
+        return ret;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref ProfLog BufferIdx(long idx) => ref Buffer[idx & (Buffer.LongLength - 1)];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref ProfIndex IndexIdx(long idx) => ref Index[idx & (Index.LongLength - 1)];
+}
+
+public struct ProfIndex
+{
+    public ProfIndexType Type;
+    public long StartPos;
+    public long EndPos;
+}
+
+public enum ProfIndexType
+{
+    Invalid = 0,
+    TickSet,
+    Frame
+}
+
 // TODO: Optimize union layouts
 
 [StructLayout(LayoutKind.Explicit)]
-public struct ProfCmd
+public struct ProfLog
 {
-    [FieldOffset(0)] public ProfCmdType Type;
+    [FieldOffset(0)] public ProfLogType Type;
 
-    [FieldOffset(4)] public ProfCmdValue Value;
-    [FieldOffset(4)] public ProfCmdSystemSample SystemSample;
-    [FieldOffset(4)] public ProfCmdGroupEnd GroupEnd;
+    [FieldOffset(8)] public ProfLogValue Value;
+    [FieldOffset(8)] public ProfLogSystemSample SystemSample;
+    [FieldOffset(8)] public ProfLogGroupEnd GroupEnd;
 }
 
-public struct ProfCmdValue
+public struct ProfLogValue
 {
     public int StringId;
     public ProfValue Value;
 }
 
-public struct ProfCmdSystemSample
+public struct ProfLogSystemSample
 {
     public int StringId;
     public float Value;
 }
 
-public struct ProfCmdGroupEnd
+public struct ProfLogGroupEnd
 {
-    public int StartIndex;
+    public long StartIndex;
     public int StringId;
     public ProfValue Value;
 }
 
-public enum ProfCmdType
+public enum ProfLogType
 {
     Invalid = 0,
     Sample,
@@ -70,7 +117,8 @@ public enum ProfValueType
 {
     Invalid = 0,
     TimeAllocSample,
-    Int32
+    Int32,
+    Int64
 }
 
 [StructLayout(LayoutKind.Explicit)]
@@ -80,6 +128,7 @@ public struct ProfValue
 
     [FieldOffset(8)] public TimeAndAllocSample TimeAllocSample;
     [FieldOffset(8)] public int Int32;
+    [FieldOffset(8)] public long Int64;
 }
 
 public struct TimeAndAllocSample

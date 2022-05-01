@@ -1164,5 +1164,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ThreadParallelCount =
             CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        // TODO: Figure these defaults out better.
+        // This default buffer size gives us about 1 second of snapshot assuming 1k events per frame, 60 FPS.
+        // Takes 2.5 MB at 40 byte ProfCmd.
+
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 65536);
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 1024);
     }
 }

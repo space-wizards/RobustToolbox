@@ -120,6 +120,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         bool Deleted([NotNullWhen(false)] EntityUid? uid);
 
+        void RunMapInit(EntityUid entity, MetaDataComponent meta);
+
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>

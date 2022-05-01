@@ -54,16 +54,18 @@ namespace Robust.Shared.Map
             if (IsMapInitialized(mapId))
                 throw new ArgumentException("That map is already initialized.");
 
-            ClearMapPreInit(mapId);
-
             var mapEnt = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEnt);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+
+            mapComp.MapPreInit = false;
+            mapComp.MapPaused = false;
 
             RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery);
         }
 
-        private static void RecursiveDoMapInit(EntityUid entity,
+        private void RecursiveDoMapInit(EntityUid entity,
             in EntityQuery<TransformComponent> xformQuery,
             in EntityQuery<MetaDataComponent> metaQuery)
         {
@@ -72,7 +74,7 @@ namespace Robust.Shared.Map
             if(!metaQuery.TryGetComponent(entity, out var meta))
                 return;
 
-            entity.RunMapInit();
+            EntityManager.RunMapInit(entity, meta);
             meta.EntityPaused = false;
 
             foreach (var child in xformQuery.GetComponent(entity)._children.ToArray())

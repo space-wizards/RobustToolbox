@@ -122,9 +122,9 @@ namespace Robust.Shared.GameObjects
 
         #region Component Management
 
-        public void InitializeComponents(EntityUid uid)
+        public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
-            var metadata = GetComponent<MetaDataComponent>(uid);
+            metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 

@@ -115,26 +115,25 @@ namespace Robust.Server.Maps
 
         private void PostDeserialize(MapId mapId, MapContext context)
         {
+            var isPaused = _mapManager.IsMapPaused(mapId);
+            var query = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
+
             if (context.MapIsPostInit)
             {
                 foreach (var entity in context.Entities)
                 {
-                    _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
+                    query.GetComponent(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
                 }
             }
             else if (_mapManager.IsMapInitialized(mapId))
             {
-                foreach (var entity in context.Entities)
-                {
-                    entity.RunMapInit(_serverEntityManager);
-                }
-            }
 
-            if (_mapManager.IsMapPaused(mapId))
-            {
                 foreach (var entity in context.Entities)
                 {
-                    _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
+                    var meta = query.GetComponent(entity);
+                    _serverEntityManager.RunMapInit(entity, meta);
+                    if (isPaused)
+                        meta.EntityPaused = true;
                 }
             }
         }
@@ -747,9 +746,10 @@ namespace Robust.Server.Maps
 
             private void FinishEntitiesInitialization()
             {
+                var query = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 foreach (var entity in Entities)
                 {
-                    _serverEntityManager.FinishEntityInitialization(entity);
+                    _serverEntityManager.FinishEntityInitialization(entity, query.GetComponent(entity));
                 }
             }
 

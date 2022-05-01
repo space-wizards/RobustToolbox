@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -32,6 +33,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
@@ -686,6 +688,9 @@ namespace Robust.Client.UserInterface
 
             foreach (var root in _roots)
             {
+                using var _ = _prof.Group("Window");
+                _prof.WriteSample("ID", ProfData.Int32((int) root.Window.Id));
+
                 if (root.Window != _clyde.MainWindow)
                 {
                     renderHandle.RenderInRenderTarget(
@@ -695,7 +700,10 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            using (_prof.Group("Main"))
+            {
+                DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            }
 
             void DoRender(WindowRoot root)
             {

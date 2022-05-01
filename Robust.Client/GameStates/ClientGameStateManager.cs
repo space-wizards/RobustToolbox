@@ -451,13 +451,33 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
-            _config.TickProcessMessages();
-            _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
-            var createdEntities = ApplyEntityStates(curState.EntityStates.Span, curState.EntityDeletions.Span,
-                nextState != null ? nextState.EntityStates.Span : default);
-            _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+            using (_prof.Group("Config"))
+            {
+                _config.TickProcessMessages();
+            }
 
-            GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+            using (_prof.Group("Map Pre"))
+            {
+                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
+            }
+
+            List<EntityUid> createdEntities;
+            using (_prof.Group("Entity"))
+            {
+                createdEntities = ApplyEntityStates(curState.EntityStates.Span, curState.EntityDeletions.Span,
+                    nextState != null ? nextState.EntityStates.Span : default);
+            }
+
+            using (_prof.Group("Player"))
+            {
+                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+            }
+
+            using (_prof.Group("Callback"))
+            {
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+            }
+
             return createdEntities;
         }
 
@@ -571,6 +591,9 @@ namespace Robust.Client.GameStates
                 _entityManager.DeleteEntity(entity);
             }
 #endif
+
+            _prof.WriteSample("Created", ProfData.Int32(created.Count));
+            _prof.WriteSample("Applied", ProfData.Int32(toApply.Count));
 
             return created;
         }

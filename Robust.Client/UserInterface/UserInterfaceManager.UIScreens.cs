@@ -33,8 +33,7 @@ internal partial class UserInterfaceManager
 
     public T? GetActiveUIWidgetOrNull<T>() where T : UIWidget, new()
     {
-        if (_activeScreen == null) return null;
-        return (T?)_activeScreen.GetWidget<T>();
+        return (T?) _activeScreen?.GetWidget<T>();
     }
 
     public T GetActiveUIWidget<T>() where T : UIWidget, new()
@@ -48,10 +47,13 @@ internal partial class UserInterfaceManager
     void IUserInterfaceManager.LoadScreenInternal(Type type)
     {
         ActiveScreen = _screens[type];
+        StateRoot.AddChild(_screens[type]);
     }
 
     public void UnloadScreen()
     {
+        if (_activeScreen == null) return;
+        StateRoot.RemoveChild(_activeScreen);
         _activeScreen = null;
     }
 }

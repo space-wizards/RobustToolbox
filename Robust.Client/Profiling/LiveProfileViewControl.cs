@@ -1,4 +1,5 @@
 ﻿using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -9,6 +10,7 @@ namespace Robust.Client.Profiling;
 public sealed class LiveProfileViewControl : Control
 {
     [Dependency] private readonly ProfManager _profManager = default!;
+    [Dependency] private readonly IResourceCache _resourceCache = default!;
 
     public int MaxDepth { get; set; } = 2;
     public long? UseIndex;
@@ -28,7 +30,7 @@ public sealed class LiveProfileViewControl : Control
         if (!_profManager.IsEnabled)
             return;
 
-        var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+        var font = _resourceCache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf").MakeDefault();
 
         ref var buffer = ref UseBuffer ? ref Buffer : ref _profManager.Buffer;
         var baseLine = new Vector2(0, font.GetAscent(UIScale));

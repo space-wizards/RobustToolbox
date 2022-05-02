@@ -92,7 +92,7 @@ public sealed class ProfGraphView : Control
 
         for (var i = _snapshot.Buffer.IndexWriteOffset - 1; i >= _snapshot.LowestValidIndex; i--)
         {
-            var valueSeconds = GetFrameTime(buffer, buffer.IndexIdx(i));
+            var valueSeconds = GetFrameTime(buffer, buffer.IndexIdx(i)).Time;
 
             const float peak = 0.016f * 4;
 
@@ -108,15 +108,15 @@ public sealed class ProfGraphView : Control
         }
     }
 
-    internal static float GetFrameTime(in ProfBuffer buffer, in ProfIndex index)
+    internal static TimeAndAllocSample GetFrameTime(in ProfBuffer buffer, in ProfIndex index)
     {
         var endPos = index.EndPos;
 
         ref var endGroup = ref buffer.BufferIdx(endPos - 1);
         if (endGroup.Type != ProfLogType.GroupEnd ||
             endGroup.GroupEnd.Value.Type != ProfValueType.TimeAllocSample)
-            return 0;
+            return default;
 
-        return endGroup.GroupEnd.Value.TimeAllocSample.Time;
+        return endGroup.GroupEnd.Value.TimeAllocSample;
     }
 }

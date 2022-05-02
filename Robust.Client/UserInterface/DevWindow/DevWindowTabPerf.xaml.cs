@@ -104,6 +104,7 @@ public sealed partial class DevWindowTabPerf : Control
     private void SnapshotSelected(ProfViewManager.Snapshot snapshot)
     {
         _currentSnapshot = snapshot;
+        _frame = _currentSnapshot.EndFrame;
         UpdateRightPanel();
         UpdateSnapshotList();
         GraphViewOnFrameSelected(_currentSnapshot.EndFrame);
@@ -121,7 +122,6 @@ public sealed partial class DevWindowTabPerf : Control
             $"Snapshot: {_currentSnapshot.StartFrame} - {_currentSnapshot.EndFrame}  Frame count: {_currentSnapshot.FrameCount}";
 
         GraphView.LoadSnapshot(_currentSnapshot);
-        _frame = _currentSnapshot.EndFrame;
         RebuildTree();
     }
 
@@ -140,8 +140,10 @@ public sealed partial class DevWindowTabPerf : Control
             return;
         }
 
+        // Index for this frame's data.
         ref var index = ref _currentSnapshot.Buffer.IndexIdx(indexIdx);
 
+        // The frame must be wrapped in a whole group. We display this group.
         var i = index.EndPos - 1;
         ref var logEnd = ref buf.BufferIdx(i);
         var controls = new ValueList<Control>();
@@ -157,13 +159,32 @@ public sealed partial class DevWindowTabPerf : Control
             _treeExpand,
             0f);
 
+        // Header.
+        // Yeah we destroy this every time I bodged it in.
+        TreeRoot.AddChild(new ProfAltBackground { Children = { new ProfTreeLine
+        {
+            Text = { Text = "Thing" },
+            SideLabel = { Text = "Misc" },
+            TimeLabel = { Text = "Time" },
+            PercentTimeLabel = { Text = "Time%" },
+            AllocLabel = { Text = "Alloc" },
+            PercentAllocLabel = { Text = "Alloc%" },
+        } } });
+
+        // Reverse insert to fix backwards order.
+        // This shouldn't even have more than 1 element but whatever.
         for (var c = controls.Count - 1; c >= 0; c--)
         {
             TreeRoot.AddChild(controls[c]);
         }
 
+        // Do a final pass to assign the alternating background colors.
+        // Easier to do here than to do it while we're creating the controls.
         var alt = true;
-        DoAltBackgroundsRecursive(TreeRoot.GetChild(0), ref alt);
+        foreach (var child in TreeRoot.Children)
+        {
+            DoAltBackgroundsRecursive(child, ref alt);
+        }
     }
 
     private static void DoAltBackgroundsRecursive(Control control, ref bool alt)
@@ -191,7 +212,7 @@ public sealed partial class DevWindowTabPerf : Control
     private void RebuildTreeAddControls(
         in ProfBuffer buffer,
         in ProfIndex index,
-        float totalFrameTime,
+        in TimeAndAllocSample totalFrameTime,
         ref long i,
         ref ProfLog log,
         ref ValueList<Control> insertInto,
@@ -229,7 +250,7 @@ public sealed partial class DevWindowTabPerf : Control
         }
     }
 
-    private void TreeInsertSample(float totalFrameTime, ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
+    private void TreeInsertSample(in TimeAndAllocSample totalFrameTime, ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
     {
         var treeLine = new ProfTreeLine();
         treeLine.Margin = new Thickness(margin + 12 + 3, 0, 0, 0);
@@ -240,7 +261,7 @@ public sealed partial class DevWindowTabPerf : Control
     private void TreeInsertGroup(
         in ProfBuffer buffer,
         in ProfIndex index,
-        float totalFrameTime,
+        in TimeAndAllocSample totalFrameTime,
         ref long i,
         ref ProfLogGroupEnd logEnd,
         ref ValueList<Control> insertInto,
@@ -332,7 +353,7 @@ public sealed partial class DevWindowTabPerf : Control
     }
 
     private void FillTreeLine(
-        float totalFrameTime,
+        in TimeAndAllocSample totalFrameTime,
         ProfTreeLine line,
         int stringId,
         in ProfValue value)
@@ -342,18 +363,19 @@ public sealed partial class DevWindowTabPerf : Control
         switch (value.Type)
         {
             case ProfValueType.TimeAllocSample:
-                line.PercentLabel.Text = $"{value.TimeAllocSample.Time / totalFrameTime:P2}";
                 line.TimeLabel.Text = $"{value.TimeAllocSample.Time * 1000:N2} ms";
+                line.PercentTimeLabel.Text = $"{value.TimeAllocSample.Time / totalFrameTime.Time:P2}";
                 line.AllocLabel.Text = $"{value.TimeAllocSample.Alloc} B";
+                line.PercentAllocLabel.Text = $"{value.TimeAllocSample.Alloc / (float) totalFrameTime.Alloc:P2}";
                 break;
             case ProfValueType.Int32:
-                line.AllocLabel.Text = value.Int32.ToString();
+                line.SideLabel.Text = value.Int32.ToString();
                 break;
             case ProfValueType.Int64:
-                line.AllocLabel.Text = value.Int64.ToString();
+                line.SideLabel.Text = value.Int64.ToString();
                 break;
             default:
-                line.AllocLabel.Text = "???";
+                line.SideLabel.Text = "???";
                 break;
         }
     }

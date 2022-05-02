@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface;
 
@@ -17,6 +18,8 @@ internal partial class UserInterfaceManager
             _activeScreen?.OnAdded();
         }
     }
+    [ViewVariables] public Control ScreenRoot { get; private set; } = default!;
+
     private readonly Dictionary<Type, UIScreen> _screens = new();
     private void _initializeScreens()
     {
@@ -25,7 +28,13 @@ internal partial class UserInterfaceManager
             if (screenType.IsAbstract) continue;
             _screens.Add(screenType, (UIScreen)_typeFactory.CreateInstance(screenType));
         }
+        ScreenRoot = new Control
+        {
+            Name = "ScreenRoot"
+        };
+        RootControl.AddChild(ScreenRoot);
     }
+
     public void LoadScreen<T>() where T:UIScreen, new()
     {
         ((IUserInterfaceManager)this).LoadScreenInternal(typeof(T));
@@ -46,14 +55,17 @@ internal partial class UserInterfaceManager
 
     void IUserInterfaceManager.LoadScreenInternal(Type type)
     {
-        ActiveScreen = _screens[type];
-        StateRoot.AddChild(_screens[type]);
+        var screen = _screens[type];
+        ActiveScreen = screen;
+        ScreenRoot.AddChild(screen);
+        screen.HorizontalAlignment = Control.HAlignment.Stretch;
+        screen.VerticalAlignment = Control.VAlignment.Stretch;
     }
 
     public void UnloadScreen()
     {
         if (_activeScreen == null) return;
-        StateRoot.RemoveChild(_activeScreen);
+        ScreenRoot.RemoveChild(_activeScreen);
         _activeScreen = null;
     }
 }

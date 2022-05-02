@@ -11,6 +11,11 @@ namespace Robust.Client.UserInterface;
 public abstract class UIScreen : LayoutContainer
 {
     private readonly Dictionary<Type, UIWidget> _widgets = new();
+    protected UIScreen()
+    {
+        HorizontalAlignment = HAlignment.Stretch;
+        VerticalAlignment = VAlignment.Stretch;
+    }
 
     private void AddUIWidget(UIWidget widget)
     {

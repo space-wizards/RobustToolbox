@@ -9,6 +9,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -36,12 +37,11 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly IUIControllerManagerInternal _controllers = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
+        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -110,6 +110,7 @@ namespace Robust.Client.UserInterface
             _stateManager.OnStateChanged += OnStateUpdated;
             _initThemes();
             _initializeScreens();
+            _initializeControllers();
         }
 
         private void _initializeCommon()
@@ -210,7 +211,8 @@ namespace Robust.Client.UserInterface
                 RunArrange(control);
             }
 
-            _controllers.FrameUpdate(args); //TODO remove this when DragDrop helper update is removed
+
+            _updateControllers(args); //TODO remove this when DragDrop helper update is removed
 
             foreach (var root in _roots)
             {

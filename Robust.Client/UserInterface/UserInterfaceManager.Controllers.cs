@@ -4,14 +4,15 @@ using System.Reflection.Emit;
 using Robust.Client.State;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
-[Virtual]
+public sealed class UISystemDependency : Attribute {}
+
+[Virtual] //Notices your UIController, *UwU Whats this?*
 public abstract class UIController
 {
     [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
@@ -20,27 +21,9 @@ public abstract class UIController
     public virtual void OnSystemUnloaded(IEntitySystem system) {}
 }
 
-//notices your IUI, *UwU What's this?*
-public interface IUIControllerManager
+
+internal partial class UserInterfaceManager
 {
-    public T GetController<T>() where T : UIController, new();
-}
-
-internal interface IUIControllerManagerInternal : IUIControllerManager
-{
-    void Initialize();
-    void FrameUpdate(FrameEventArgs args);
-}
-
-public sealed class UISystemDependency : Attribute {}
-
-internal sealed class UIControllerManager : IUIControllerManagerInternal
-{
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
-    [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-    [Dependency] private readonly IStateManager _stateManager = default!;
-
     private readonly Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
     private readonly Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
     private UIController[] _uiControllerRegistry = default!;
@@ -123,12 +106,12 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
         return (T)_uiControllerRegistry[_uiControllerIndices[typeof(T)]];
     }
 
-    public T GetController<T>() where T : UIController, new()
+    public T GetUIController<T>() where T : UIController, new()
     {
         return GetUiControllerByType<T>();
     }
 
-    public void Initialize()
+    private void _initializeControllers()
     {
         foreach (var state in _reflectionManager.GetAllChildren<State.State>())
         {
@@ -141,7 +124,7 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
             if (uiControllerType.IsAbstract)
                 continue;
 
-            var newController = _dynamicTypeFactory.CreateInstanceUnchecked<UIController>(uiControllerType);
+            var newController = _typeFactory.CreateInstanceUnchecked<UIController>(uiControllerType);
 
             // TODO hud refactor BEFORE MERGE add them all at the end to prevent people from being too smart
             AddUiControllerToRegistry(tempList, uiControllerType, newController);
@@ -209,7 +192,7 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
         _stateManager.OnStateChanged += OnStateChanged;
     }
 
-    public void FrameUpdate(FrameEventArgs args)
+    private void _updateControllers(FrameEventArgs args)
     {
         foreach (var controller in _uiControllerRegistry)
         {

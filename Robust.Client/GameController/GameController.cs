@@ -68,7 +68,6 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-        [Dependency] private readonly IUIControllerManagerInternal _uiControllerManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -136,7 +135,6 @@ namespace Robust.Client
             _prototypeManager.ResolveResults();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
-            _uiControllerManager.Initialize();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();

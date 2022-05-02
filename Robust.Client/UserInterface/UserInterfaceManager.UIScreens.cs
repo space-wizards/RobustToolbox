@@ -23,7 +23,7 @@ internal partial class UserInterfaceManager
         foreach (var screenType in _reflectionManager.GetAllChildren<UIScreen>())
         {
             if (screenType.IsAbstract) continue;
-            _screens.Add(screenType, (UIScreen)_dynamicTypeFactory.CreateInstance(screenType));
+            _screens.Add(screenType, (UIScreen)_typeFactory.CreateInstance(screenType));
         }
     }
     public void LoadScreen<T>() where T:UIScreen, new()

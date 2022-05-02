@@ -11,7 +11,29 @@ namespace Robust.Client.UserInterface;
 public abstract class UIScreen : LayoutContainer
 {
     private readonly Dictionary<Type, UIWidget> _widgets = new();
+    protected UIScreen()
+    {
+        HorizontalAlignment = HAlignment.Stretch;
+        VerticalAlignment = VAlignment.Stretch;
+    }
 
+    protected override void Parented(Control newParent)
+    {
+        Size = newParent.Size;
+        base.Parented(newParent);
+        newParent.OnResized += OnParentResized;
+    }
+
+    protected override void Deparented()
+    {
+        Parent!.OnResized -= OnParentResized;
+        base.Deparented();
+    }
+
+    private void OnParentResized()
+    {
+        //Size = Parent!.Size;
+    }
     private void AddUIWidget(UIWidget widget)
     {
         AddChild(widget);

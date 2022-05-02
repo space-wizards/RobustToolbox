@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface
         protected virtual void OnThemeUpdated(){}
         internal void ThemeUpdateRecursive()
         {
-            var curTheme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
+            var curTheme = IoCManager.Resolve<IUserInterfaceManager>().CurrentTheme;
             if (Theme == curTheme) return; //don't update themes if the themes are up to date
             Theme = curTheme;
             OnThemeUpdated();
@@ -469,7 +469,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
-            Theme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
+            Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
         }
 

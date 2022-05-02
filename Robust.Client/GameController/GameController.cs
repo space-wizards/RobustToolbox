@@ -69,8 +69,6 @@ namespace Robust.Client
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly IUIControllerManagerInternal _uiControllerManager = default!;
-        [Dependency] private readonly IUIWindowManager _uiWindowManager = default!;
-        [Dependency] private readonly IUIThemeManager _uiThemeManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -127,8 +125,6 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _resourceCache.PreloadTextures();
-            _userInterfaceManager.Initialize();
-            _eyeManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
@@ -138,8 +134,8 @@ namespace Robust.Client
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.ResolveResults();
-            _uiThemeManager.Initialize();
-            _uiWindowManager.Initialize();
+            _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
             _uiControllerManager.Initialize();
             _entityManager.Initialize();
             _mapManager.Initialize();

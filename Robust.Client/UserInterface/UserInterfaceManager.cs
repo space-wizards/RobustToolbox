@@ -16,6 +16,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -32,7 +33,11 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IStateManager _stateManager = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPrototypeManager _protoManager = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IUIControllerManagerInternal _controllers = default!;
 
@@ -77,6 +82,7 @@ namespace Robust.Client.UserInterface
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
 
+            _initScaling();
             _initializeCommon();
 
             DebugConsole = new DropDownDebugConsole();
@@ -99,17 +105,14 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
-            RegisterAutoscaleCVarListeners();
-            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
+            _stateManager.OnStateChanged += OnStateUpdated;
+            _initThemes();
         }
 
         private void _initializeCommon()
         {
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
-
-            _clyde.OnWindowResized += WindowSizeChanged;
-            _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
             _clyde.DestroyWindow += WindowDestroyed;
 
             MainViewport = new MainViewportContainer(_eyeManager)
@@ -157,6 +160,7 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
         }
+
         public event Action<PostDrawUIRootEventArgs>? OnPostDrawUIRoot;
 
         private void WindowDestroyed(WindowDestroyedEventArgs args)
@@ -295,5 +299,10 @@ namespace Robust.Client.UserInterface
         }
 
         public Color GetMainClearColor() => RootControl.ActualBgColor;
+
+        ~UserInterfaceManager()
+        {
+            CleanupWindowData();
+        }
     }
 }

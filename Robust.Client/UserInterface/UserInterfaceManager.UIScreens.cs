@@ -2,5 +2,5 @@
 
 internal partial class UserInterfaceManager
 {
-
+    public UIScreen? ActiveScreen { get; private set;}
 }

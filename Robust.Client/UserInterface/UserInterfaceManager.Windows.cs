@@ -10,31 +10,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
-public interface IUIWindowManager
+internal partial class UserInterfaceManager
 {
-    public bool TryGetPopupWindow(string windowName, out WindowRoot? window);
-    public bool RemovePopupWindow(string windowName);
-    public WindowRoot GetPopupWindow(string windowName);
-    public WindowRoot? CreatePopupWindow(string windowName, string? displayName = null, int width = 1000,
-        int height = 1000, Action<WindowRequestClosedEventArgs>? onClosed = null);
-    public bool RegisterNamedWindow(string name, BaseWindow window);
-    public T? CreateNamedWindow<T>(string name) where T : BaseWindow, new();
-    public bool RemoveWindowOfType<T>() where T : BaseWindow, new();
-    public T? CreateWindowOfType<T>() where T : BaseWindow, new();
-    public bool RemoveNamedWindow(string name);
-    public T GetFirstWindowOfType<T>() where T : BaseWindow, new();
-    public bool TryGetWindowByType<T>(out T? window) where T : BaseWindow, new();
-    public bool TryGetWindowByType(Type type, out BaseWindow? window);
-    internal void Initialize();
-}
-
-[Virtual]
-public class UIWindowManager : IUIWindowManager
-{
-    [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IStateManager _stateManager = default!;
     private readonly Dictionary<string, BaseWindow> _windowData = new();
     private readonly Dictionary<Type, Queue<BaseWindow>> _windowsByType = new();
     private readonly Dictionary<string, (IClydeWindow, WindowRoot)> _popoutWindows = new ();
@@ -181,15 +158,10 @@ public class UIWindowManager : IUIWindowManager
 
     private void OnStateUpdated(StateChangedEventArgs args)
     {
-        CleanupData();
+        CleanupWindowData();
     }
 
-    void IUIWindowManager.Initialize()
-    {
-        _stateManager.OnStateChanged += OnStateUpdated;
-    }
-
-    private void CleanupData()
+    private void CleanupWindowData()
     {
         foreach (var data in _windowsByType)
         {
@@ -203,10 +175,5 @@ public class UIWindowManager : IUIWindowManager
             value.Item1.Dispose();
         }
         _popoutWindows.Clear();
-    }
-
-    ~UIWindowManager()
-    {
-        CleanupData();
     }
 }

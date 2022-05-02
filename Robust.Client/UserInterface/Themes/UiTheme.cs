@@ -48,7 +48,7 @@ public sealed class UITheme : IPrototype
     public Color? ResolveColor(string colorName)
     {
         if (Colors == null) return null;
-        return Colors.TryGetValue(colorName, out var color) ? color : IoCManager.Resolve<IUIThemeManager>().DefaultTheme.ResolveColor(colorName);
+        return Colors.TryGetValue(colorName, out var color) ? color : IoCManager.Resolve<IUserInterfaceManager>().DefaultTheme.ResolveColor(colorName);
     }
 
     public Color ResolveColorOrSpecified(string colorName, Color defaultColor = default)

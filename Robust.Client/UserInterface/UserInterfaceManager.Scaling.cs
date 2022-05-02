@@ -14,6 +14,16 @@ internal partial class UserInterfaceManager
     [ViewVariables] private Vector2i _resolutionAutoScaleLower;
     [ViewVariables] private bool _autoScaleEnabled;
     [ViewVariables] private float _resolutionAutoScaleMinValue;
+
+    private void _initScaling()
+    {
+        _clyde.OnWindowResized += WindowSizeChanged;
+        _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
+        RegisterAutoscaleCVarListeners();
+        _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
+    }
+
+
     private void _uiScaleChanged(float newValue)
         {
             foreach (var root in _roots)

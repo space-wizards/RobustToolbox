@@ -1,33 +1,16 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface.Themes;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 
-namespace Robust.Client.UserInterface.Themes;
+namespace Robust.Client.UserInterface;
 
-public interface IUIThemeManager
+internal partial class UserInterfaceManager
 {
-    internal void Initialize();
-    public UITheme CurrentTheme { get;}
-    public UITheme this[string name] { get; }
-    public UITheme GetTheme(string name);
-    public UITheme GetThemeOrDefault(string name);
-    public void SetActiveTheme(string themeName);
-    public UITheme DefaultTheme { get; }
-    public void SetDefaultTheme(string themeId);
-}
-
-
-public sealed class UiThemeManager : IUIThemeManager
-{
-    [Dependency] private readonly IResourceCache _cache = default!;
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-
     private readonly Dictionary<string, UITheme> _themes = new();
 
     public UITheme CurrentTheme { get; private set; } = default!;
@@ -35,7 +18,7 @@ public sealed class UiThemeManager : IUIThemeManager
     private bool _defaultOverriden = false;
     public UITheme DefaultTheme { get; private set; } = default!;
 
-    void IUIThemeManager.Initialize()
+    private void _initThemes()
     {
         DefaultTheme = _protoManager.Index<UITheme>(UITheme.DefaultName);
         CurrentTheme = DefaultTheme;
@@ -106,5 +89,4 @@ public sealed class UiThemeManager : IUIThemeManager
         return _themes[name];
     }
 
-    public UITheme this[string name] => GetTheme(name);
 }

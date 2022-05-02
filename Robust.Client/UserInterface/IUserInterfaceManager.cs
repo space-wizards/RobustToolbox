@@ -8,7 +8,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Client.UserInterface
 {
-    public interface IUserInterfaceManager
+    public partial interface IUserInterfaceManager
     {
         InterfaceTheme ThemeDefaults { get; }
 

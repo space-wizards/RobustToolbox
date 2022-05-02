@@ -12,7 +12,7 @@ public sealed class UiTexExtension
     public UiTexExtension(string path)
     {
         Path = path;
-        Theme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
+        Theme = IoCManager.Resolve<IUserInterfaceManager>().CurrentTheme;
     }
     //Support for forcing a theme
     public UiTexExtension(UITheme theme, string path)

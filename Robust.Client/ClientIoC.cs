@@ -113,10 +113,8 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
-            IoCManager.Register<IUIWindowManager, UIWindowManager>();
             IoCManager.Register<IUIControllerManager, UIControllerManager>();
             IoCManager.Register<IUIControllerManagerInternal, UIControllerManager>();
-            IoCManager.Register<IUIThemeManager, UiThemeManager>();
         }
     }
 }

@@ -42,6 +42,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private string? _texturePath;
 
+        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
         public string TextureThemePath
         {
             set
@@ -51,11 +52,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
         public string TexturePath
         {
             set
             {
-                Texture = IoCManager.Resolve<ResourceCache>().GetResource<TextureResource>(value);
+                Texture = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
             }
 

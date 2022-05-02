@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             set
             {
-                TextureNormal = IoCManager.Resolve<ResourceCache>().GetResource<TextureResource>(value);
+                TextureNormal = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
             }
         }

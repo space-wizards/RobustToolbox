@@ -132,6 +132,9 @@ namespace Robust.Shared.Timing
                 var profFrameStart = _prof.WriteSample(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
                 var profFrameGroupStart = _prof.WriteGroupStart();
                 var profFrameSw = ProfSampler.StartNew();
+                var profFrameGcGen0 = GC.CollectionCount(0);
+                var profFrameGcGen1 = GC.CollectionCount(1);
+                var profFrameGcGen2 = GC.CollectionCount(2);
 
                 // maximum number of ticks to queue before the loop slows down.
                 var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
@@ -283,6 +286,14 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Render");
                 }
 #endif
+
+                {
+                    using var gc = _prof.Group("GC Overview");
+
+                    _prof.WriteSample("Gen 0 Count", ProfData.Int32(GC.CollectionCount(0) - profFrameGcGen0));
+                    _prof.WriteSample("Gen 1 Count", ProfData.Int32(GC.CollectionCount(1) - profFrameGcGen1));
+                    _prof.WriteSample("Gen 2 Count", ProfData.Int32(GC.CollectionCount(2) - profFrameGcGen2));
+                }
 
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
                 _prof.MarkIndex(profFrameStart);

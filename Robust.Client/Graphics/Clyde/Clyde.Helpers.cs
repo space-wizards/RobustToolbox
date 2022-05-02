@@ -272,7 +272,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void LoadGLProc<T>(string name, out T field) where T : Delegate
+        private nint LoadGLProc(string name)
         {
             var proc = _glBindingsContext.GetProcAddress(name);
             if (proc == IntPtr.Zero || proc == new IntPtr(1) || proc == new IntPtr(2))
@@ -280,7 +280,7 @@ namespace Robust.Client.Graphics.Clyde
                 throw new InvalidOperationException($"Unable to load GL function '{name}'!");
             }
 
-            field = Marshal.GetDelegateForFunctionPointer<T>(proc);
+            return proc;
         }
     }
 }

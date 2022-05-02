@@ -1,0 +1,9 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.ProfTree"
+         MinHeight="64">
+    <ScrollContainer Name="TreeScroll"
+                     HScrollEnabled="False" VScrollEnabled="True">
+        <BoxContainer Orientation="Vertical" Name="TreeRoot" />
+    </ScrollContainer>
+</Control>

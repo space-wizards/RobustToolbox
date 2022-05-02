@@ -32,12 +32,7 @@
                             <Button Name="ButtonDeleteSnap" Text="Delete snapshot" />
                         </BoxContainer>
                         <ProfGraphView Name="GraphView" MinHeight="96" MouseFilter="Stop" Margin="0 4" />
-                        <ScrollContainer Name="TreeScroll"
-                                         HScrollEnabled="False" VScrollEnabled="True"
-                                         VerticalExpand="True"
-                                         MinHeight="64">
-                            <BoxContainer Orientation="Vertical" Name="TreeRoot" />
-                        </ScrollContainer>
+                        <ProfTree Name="Tree" VerticalExpand="True" />
                     </BoxContainer>
                 </Control>
             </BoxContainer>

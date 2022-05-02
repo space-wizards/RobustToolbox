@@ -9,13 +9,13 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 internal sealed partial class ProfTreeEntry : Control
 {
-    private readonly DevWindowTabPerf _tab;
-    private readonly DevWindowTabPerf.TreeExpand _parentExpand;
+    private readonly ProfTree _tab;
+    private readonly ProfTree.TreeExpand _parentExpand;
     public readonly (int str, int i) Id;
 
     public ProfTreeEntry(
-        DevWindowTabPerf tab,
-        DevWindowTabPerf.TreeExpand parentExpand,
+        ProfTree tab,
+        ProfTree.TreeExpand parentExpand,
         (int str, int i) id,
         float margin)
     {
@@ -51,9 +51,11 @@ internal sealed partial class ProfTreeEntry : Control
         }
         else
         {
-            tree = new DevWindowTabPerf.TreeExpand();
+            tree = new ProfTree.TreeExpand();
         }
 
         _tab.RebuildTree();
     }
+
+
 }

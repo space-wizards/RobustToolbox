@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface.Controls;
@@ -15,28 +15,6 @@ public abstract class UIScreen : LayoutContainer
     {
         HorizontalAlignment = HAlignment.Stretch;
         VerticalAlignment = VAlignment.Stretch;
-    }
-
-    protected override void Parented(Control newParent)
-    {
-        Size = newParent.Size;
-        base.Parented(newParent);
-        newParent.OnResized += OnParentResized;
-    }
-
-    protected override void Deparented()
-    {
-        Parent!.OnResized -= OnParentResized;
-        base.Deparented();
-    }
-
-    private void OnParentResized()
-    {
-        //Size = Parent!.Size;
-    }
-    private void AddUIWidget(UIWidget widget)
-    {
-        AddChild(widget);
     }
 
     public T RegisterWidget<T>() where T: UIWidget, new()

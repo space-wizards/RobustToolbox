@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface;
 [Virtual]
 public abstract class UIController
 {
+    [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
     public virtual void FrameUpdate(FrameEventArgs args) {}
     public virtual void OnSystemLoaded(IEntitySystem system) {}
     public virtual void OnSystemUnloaded(IEntitySystem system) {}

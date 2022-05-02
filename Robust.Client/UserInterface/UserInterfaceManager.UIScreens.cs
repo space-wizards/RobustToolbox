@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.UserInterface;
 
@@ -28,6 +29,20 @@ internal partial class UserInterfaceManager
     public void LoadScreen<T>() where T:UIScreen, new()
     {
         ((IUserInterfaceManager)this).LoadScreenInternal(typeof(T));
+    }
+
+    public T? GetActiveUIWidgetOrNull<T>() where T : UIWidget, new()
+    {
+        if (_activeScreen == null) return null;
+        return (T?)_activeScreen.GetWidget<T>();
+    }
+
+    public T GetActiveUIWidget<T>() where T : UIWidget, new()
+    {
+        if (_activeScreen == null) throw new Exception("No screen is currently active");
+        var widget = _activeScreen.GetWidget<T>();
+        if (widget == null) throw new Exception("No widget of type found in active screen");
+        return (T)widget;
     }
 
     void IUserInterfaceManager.LoadScreenInternal(Type type)

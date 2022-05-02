@@ -10,7 +10,29 @@ namespace Robust.Client.UserInterface;
 [PublicAPI]
 public abstract class UIScreen : LayoutContainer
 {
-    private readonly Dictionary<System.Type, UIWidget> _widgets = new();
+    private readonly Dictionary<Type, UIWidget> _widgets = new();
+
+    private void AddUIWidget(UIWidget widget)
+    {
+        AddChild(widget);
+    }
+
+    public T RegisterWidget<T>() where T: UIWidget, new()
+    {
+        if (_widgets.ContainsKey(typeof(T))) throw new Exception("Hud Widget not found");
+        var newWidget = new T();
+        AddUIWidget(newWidget);
+        return newWidget;
+    }
+
+    public void RemoveWidget<T>() where T : UIWidget, new()
+    {
+        if (_widgets.TryGetValue(typeof(T), out var widget))
+        {
+            RemoveChild(widget);
+        }
+        _widgets.Remove(typeof(T));
+    }
 
     internal void OnRemoved()
     {
@@ -43,6 +65,16 @@ public abstract class UIScreen : LayoutContainer
             widget = new T();
         }
         return widget;
+    }
+
+    public bool IsWidgetShown<T>() where T : UIWidget
+    {
+        return _widgets.TryGetValue(typeof(T), out var widget) && widget.Visible;
+    }
+
+    public void ShowWidget<T>(bool show) where T : UIWidget
+    {
+        _widgets[typeof(T)].Visible = show;
     }
 
     protected override void ChildAdded(Control newChild)

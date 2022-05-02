@@ -92,15 +92,8 @@ public sealed class ProfGraphView : Control
 
         for (var i = _snapshot.Buffer.IndexWriteOffset - 1; i >= _snapshot.LowestValidIndex; i--)
         {
-            ref var index = ref buffer.IndexIdx(i);
-            var endPos = index.EndPos;
+            var valueSeconds = GetFrameTime(buffer, buffer.IndexIdx(i));
 
-            ref var endGroup = ref buffer.BufferIdx(endPos - 1);
-            if (endGroup.Type != ProfLogType.GroupEnd ||
-                endGroup.GroupEnd.Value.Type != ProfValueType.TimeAllocSample)
-                continue;
-
-            var valueSeconds = endGroup.GroupEnd.Value.TimeAllocSample.Time;
             const float peak = 0.016f * 4;
 
             var height = controlHeight * (valueSeconds / peak);
@@ -113,5 +106,17 @@ public sealed class ProfGraphView : Control
 
             frame -= 1;
         }
+    }
+
+    internal static float GetFrameTime(in ProfBuffer buffer, in ProfIndex index)
+    {
+        var endPos = index.EndPos;
+
+        ref var endGroup = ref buffer.BufferIdx(endPos - 1);
+        if (endGroup.Type != ProfLogType.GroupEnd ||
+            endGroup.GroupEnd.Value.Type != ProfValueType.TimeAllocSample)
+            return 0;
+
+        return endGroup.GroupEnd.Value.TimeAllocSample.Time;
     }
 }

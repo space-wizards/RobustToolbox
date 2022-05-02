@@ -149,6 +149,7 @@ public sealed partial class DevWindowTabPerf : Control
         TreeInsertGroup(
             buf,
             index,
+            ProfGraphView.GetFrameTime(buf, index),
             ref i,
             ref logEnd.GroupEnd,
             ref controls,
@@ -190,6 +191,7 @@ public sealed partial class DevWindowTabPerf : Control
     private void RebuildTreeAddControls(
         in ProfBuffer buffer,
         in ProfIndex index,
+        float totalFrameTime,
         ref long i,
         ref ProfLog log,
         ref ValueList<Control> insertInto,
@@ -201,7 +203,7 @@ public sealed partial class DevWindowTabPerf : Control
         switch (log.Type)
         {
             case ProfLogType.Sample:
-                TreeInsertSample(ref insertInto, log.Value.StringId, log.Value.Value, margin);
+                TreeInsertSample(totalFrameTime, ref insertInto, log.Value.StringId, log.Value.Value, margin);
                 break;
 
             case ProfLogType.GroupEnd:
@@ -216,6 +218,7 @@ public sealed partial class DevWindowTabPerf : Control
                 TreeInsertGroup(
                     buffer,
                     index,
+                    totalFrameTime,
                     ref i,
                     ref log.GroupEnd,
                     ref insertInto,
@@ -226,17 +229,18 @@ public sealed partial class DevWindowTabPerf : Control
         }
     }
 
-    private void TreeInsertSample(ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
+    private void TreeInsertSample(float totalFrameTime, ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
     {
         var treeLine = new ProfTreeLine();
         treeLine.Margin = new Thickness(margin + 12 + 3, 0, 0, 0);
-        FillTreeLine(treeLine, stringId, value);
+        FillTreeLine(totalFrameTime, treeLine, stringId, value);
         insertInto.Add(new ProfAltBackground { Children = { treeLine } });
     }
 
     private void TreeInsertGroup(
         in ProfBuffer buffer,
         in ProfIndex index,
+        float totalFrameTime,
         ref long i,
         ref ProfLogGroupEnd logEnd,
         ref ValueList<Control> insertInto,
@@ -251,13 +255,13 @@ public sealed partial class DevWindowTabPerf : Control
         if (!anyChildren)
         {
             // Node has no children we can display. Just insert it as if it's a sample and move along.
-            TreeInsertSample(ref insertInto, logEnd.StringId, logEnd.Value, margin);
+            TreeInsertSample(totalFrameTime, ref insertInto, logEnd.StringId, logEnd.Value, margin);
             i = logEnd.StartIndex;
             return;
         }
 
         var groupControl = new ProfTreeEntry(this, expandParent, expandId, margin);
-        FillTreeLine(groupControl.TextLine, logEnd.StringId, logEnd.Value);
+        FillTreeLine(totalFrameTime, groupControl.TextLine, logEnd.StringId, logEnd.Value);
 
         insertInto.Add(groupControl);
 
@@ -285,6 +289,7 @@ public sealed partial class DevWindowTabPerf : Control
             RebuildTreeAddControls(
                 buffer,
                 index,
+                totalFrameTime,
                 ref i,
                 ref log,
                 ref children,
@@ -326,18 +331,31 @@ public sealed partial class DevWindowTabPerf : Control
         return (dict, anyChildren);
     }
 
-    private void FillTreeLine(ProfTreeLine line, int stringId, in ProfValue value)
+    private void FillTreeLine(
+        float totalFrameTime,
+        ProfTreeLine line,
+        int stringId,
+        in ProfValue value)
     {
         line.Text.Text = _profManager.GetString(stringId);
 
-        (line.TimeLabel.Text, line.AllocLabel.Text) = value.Type switch
+        switch (value.Type)
         {
-            ProfValueType.TimeAllocSample => ($"{value.TimeAllocSample.Time * 1000:N2} ms",
-                $"{value.TimeAllocSample.Alloc} B"),
-            ProfValueType.Int32 => ("", value.Int32.ToString()),
-            ProfValueType.Int64 => ("", value.Int64.ToString()),
-            _ => ("", "???")
-        };
+            case ProfValueType.TimeAllocSample:
+                line.PercentLabel.Text = $"{value.TimeAllocSample.Time / totalFrameTime:P2}";
+                line.TimeLabel.Text = $"{value.TimeAllocSample.Time * 1000:N2} ms";
+                line.AllocLabel.Text = $"{value.TimeAllocSample.Alloc} B";
+                break;
+            case ProfValueType.Int32:
+                line.AllocLabel.Text = value.Int32.ToString();
+                break;
+            case ProfValueType.Int64:
+                line.AllocLabel.Text = value.Int64.ToString();
+                break;
+            default:
+                line.AllocLabel.Text = "???";
+                break;
+        }
     }
 
     internal sealed class TreeExpand

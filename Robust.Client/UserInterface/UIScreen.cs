@@ -21,7 +21,6 @@ public abstract class UIScreen : LayoutContainer
     {
         if (_widgets.ContainsKey(typeof(T))) throw new Exception("Hud Widget not found");
         var newWidget = new T();
-        AddUIWidget(newWidget);
         return newWidget;
     }
 

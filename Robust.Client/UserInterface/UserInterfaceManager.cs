@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -17,6 +16,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -40,6 +40,8 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IUIControllerManagerInternal _controllers = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -107,6 +109,7 @@ namespace Robust.Client.UserInterface
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _stateManager.OnStateChanged += OnStateUpdated;
             _initThemes();
+            _initializeScreens();
         }
 
         private void _initializeCommon()
@@ -207,7 +210,7 @@ namespace Robust.Client.UserInterface
                 RunArrange(control);
             }
 
-            _controllers.FrameUpdate(args);
+            _controllers.FrameUpdate(args); //TODO remove this when DragDrop helper update is removed
 
             foreach (var root in _roots)
             {

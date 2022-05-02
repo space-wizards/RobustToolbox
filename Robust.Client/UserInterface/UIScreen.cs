@@ -1,12 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.UserInterface;
 
+
+// ReSharper disable MemberCanBePrivate.Global
+[PublicAPI]
 public abstract class UIScreen : LayoutContainer
 {
     private readonly Dictionary<System.Type, UIWidget> _widgets = new();
+
+    internal void OnRemoved()
+    {
+        OnUnloaded();
+    }
+
+    internal void OnAdded()
+    {
+        OnLoaded();
+    }
+
     public UIWidget? this[Type type]
     {
         get
@@ -44,4 +59,8 @@ public abstract class UIScreen : LayoutContainer
         if (child is not UIWidget widget) return;
         _widgets.Remove(child.GetType());
     }
+    protected void OnLoaded() {}
+
+    protected void OnUnloaded() {}
+
 }

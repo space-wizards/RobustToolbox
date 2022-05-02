@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Client.State;
 using Robust.Shared.GameObjects;
@@ -28,15 +29,17 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
     private UIController[] _uiControllerRegistry = default!;
     private readonly Dictionary<Type, int> _uiControllerIndices = new();
-    private readonly Dictionary<Type, List<object>> _onStateChanged = new();
-    private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateChangedCallers = new();
+    private readonly Dictionary<Type, List<object>> _onStateEnteredControllers = new();
+    private readonly Dictionary<Type, List<object>> _onStateExitedControllers = new();
+    private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateEnteredCallers = new();
+    private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateExitedCallers = new();
 
     //field type, systemsDict
     private readonly Dictionary<Type, List<(Type, DataDefinition.AssignField<UIController,object?>)>> _assignerRegistry = new ();
 
     private delegate void StateChangedCaller(object controller, State.State state);
 
-    private StateChangedCaller EmitStateChangedCaller(Type controller, Type state)
+    private StateChangedCaller EmitStateChangedCaller(Type controller, Type state, bool entered)
     {
         if (controller.IsValueType)
         {
@@ -56,10 +59,21 @@ internal partial class UserInterfaceManager
         );
 
         var generator = method.GetILGenerator();
-        var onStateChangedType = typeof(IOnStateChanged<>).MakeGenericType(state);
-        var onStateChangedMethod =
-            controller.GetMethod(nameof(IOnStateChanged<State.State>.OnStateChanged), new[] {state})
-            ?? throw new NullReferenceException();
+
+        Type onStateChangedType;
+        MethodInfo onStateChangedMethod;
+        if (entered)
+        {
+            onStateChangedType = typeof(IOnStateEntered<>).MakeGenericType(state);
+            onStateChangedMethod = controller.GetMethod(nameof(IOnStateEntered<State.State>.OnStateEntered), new[] {state})
+                                   ?? throw new NullReferenceException();
+        }
+        else
+        {
+            onStateChangedType = typeof(IOnStateExited<>).MakeGenericType(state);
+            onStateChangedMethod = controller.GetMethod(nameof(IOnStateExited<State.State>.OnStateExited), new[] {state})
+                                   ?? throw new NullReferenceException();
+        }
 
         generator.Emit(OpCodes.Ldarg_0); // controller
         generator.Emit(OpCodes.Castclass, onStateChangedType);
@@ -78,10 +92,15 @@ internal partial class UserInterfaceManager
     private void OnStateChanged(StateChangedEventArgs args)
     {
         var stateType = args.NewState.GetType();
-        foreach (var controller in _onStateChanged[stateType])
+
+        foreach (var controller in _onStateExitedControllers[stateType])
         {
-            var controllerType = controller.GetType();
-            _onStateChangedCallers[(controllerType, stateType)](controller, args.NewState);
+            _onStateEnteredCallers[(controller.GetType(), stateType)](controller, args.OldState);
+        }
+
+        foreach (var controller in _onStateEnteredControllers[stateType])
+        {
+            _onStateEnteredCallers[(controller.GetType(), stateType)](controller, args.NewState);
         }
     }
 
@@ -115,7 +134,8 @@ internal partial class UserInterfaceManager
     {
         foreach (var state in _reflectionManager.GetAllChildren<State.State>())
         {
-            _onStateChanged.Add(state, new List<object>());
+            _onStateEnteredControllers.Add(state, new List<object>());
+            _onStateExitedControllers.Add(state, new List<object>());
         }
 
         List<UIController> tempList = new();
@@ -173,14 +193,25 @@ internal partial class UserInterfaceManager
 
             foreach (var @interface in uiControllerType.GetInterfaces())
             {
-                if (!@interface.IsGenericType || @interface.GetGenericTypeDefinition() != typeof(IOnStateChanged<>))
+                if (!@interface.IsGenericType)
                     continue;
 
-                var stateType = @interface.GetGenericArguments()[0];
-                _onStateChanged[stateType].Add(newController);
+                if (@interface.GetGenericTypeDefinition() == typeof(IOnStateEntered<>))
+                {
+                    var stateType = @interface.GetGenericArguments()[0];
+                    _onStateEnteredControllers[stateType].Add(newController);
 
-                var caller = EmitStateChangedCaller(uiControllerType, stateType);
-                _onStateChangedCallers.Add((uiControllerType, stateType), caller);
+                    var enteredCaller = EmitStateChangedCaller(uiControllerType, stateType, true);
+                    _onStateEnteredCallers.Add((uiControllerType, stateType), enteredCaller);
+                }
+                else if (@interface.GetGenericTypeDefinition() == typeof(IOnStateExited<>))
+                {
+                    var stateType = @interface.GetGenericArguments()[0];
+                    _onStateExitedControllers[stateType].Add(newController);
+
+                    var exitedCaller = EmitStateChangedCaller(uiControllerType, stateType, false);
+                    _onStateExitedCallers.Add((uiControllerType, stateType), exitedCaller);
+                }
             }
         }
 

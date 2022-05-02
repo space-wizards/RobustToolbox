@@ -3,10 +3,12 @@
          x:Class="Robust.Client.UserInterface.ProfTreeEntry"
          MouseFilter="Stop">
     <BoxContainer Orientation="Vertical">
-        <BoxContainer Orientation="Horizontal">
-            <ExpanderArrow Access="Public" Name="Arrow" MinSize="12 12" VerticalAlignment="Center" />
-            <Label Name="Text" Access="Public" HorizontalExpand="True" ClipText="True" Margin="4" />
-        </BoxContainer>
-        <BoxContainer Orientation="Vertical" Name="ChildEntryContainer" Access="Public" Margin="16 0 0 0" />
+        <ProfAltBackground Name="AltBG" Access="Public">
+            <BoxContainer Orientation="Horizontal" Access="Public" Name="LineContainer">
+                <ExpanderArrow Access="Public" Name="Arrow" MinSize="12 12" VerticalAlignment="Center" Margin="2 0 0 0" />
+                <ProfTreeLine Name="TextLine" Access="Public" HorizontalExpand="True" />
+            </BoxContainer>
+        </ProfAltBackground>
+        <BoxContainer Orientation="Vertical" Name="ChildEntryContainer" Access="Public" />
     </BoxContainer>
 </Control>

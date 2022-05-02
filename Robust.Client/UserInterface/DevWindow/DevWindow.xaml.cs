@@ -23,7 +23,7 @@ namespace Robust.Client.UserInterface
 
             TabContainer.SetTabTitle(DebugConsole, "Debug Console");
             TabContainer.SetTabTitle(UI, "User Interface");
-            TabContainer.SetTabTitle(Perf, "Performance");
+            TabContainer.SetTabTitle(Perf, "Profiling");
         }
     }
 

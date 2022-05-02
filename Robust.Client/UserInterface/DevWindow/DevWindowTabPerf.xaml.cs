@@ -6,6 +6,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility.Collections;
 
@@ -14,6 +15,8 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 public sealed partial class DevWindowTabPerf : Control
 {
+    public const float TreeLevelMargin = 16;
+
     [Dependency] private readonly ProfManager _profManager = default!;
     [Dependency] private readonly ProfViewManager _profViewMgr = default!;
 
@@ -109,6 +112,7 @@ public sealed partial class DevWindowTabPerf : Control
     private void UpdateRightPanel()
     {
         RightPanel.Visible = _currentSnapshot != null;
+        RightPanelPlaceholder.Visible = _currentSnapshot == null;
 
         if (_currentSnapshot == null)
             return;
@@ -136,24 +140,50 @@ public sealed partial class DevWindowTabPerf : Control
             return;
         }
 
-
         ref var index = ref _currentSnapshot.Buffer.IndexIdx(indexIdx);
 
         var i = index.EndPos - 1;
         ref var logEnd = ref buf.BufferIdx(i);
         var controls = new ValueList<Control>();
-        RebuildTreeGroup(
+
+        TreeInsertGroup(
             buf,
             index,
             ref i,
             ref logEnd.GroupEnd,
             ref controls,
             (logEnd.GroupEnd.StringId, 1),
-            _treeExpand);
+            _treeExpand,
+            0f);
 
         for (var c = controls.Count - 1; c >= 0; c--)
         {
             TreeRoot.AddChild(controls[c]);
+        }
+
+        var alt = true;
+        DoAltBackgroundsRecursive(TreeRoot.GetChild(0), ref alt);
+    }
+
+    private static void DoAltBackgroundsRecursive(Control control, ref bool alt)
+    {
+        switch (control)
+        {
+            case ProfAltBackground altBg:
+                altBg.IsAltBackground = alt;
+                alt ^= true;
+                break;
+
+            case ProfTreeEntry entry:
+                entry.AltBG.IsAltBackground = alt;
+                alt ^= true;
+
+                foreach (var child in entry.ChildEntryContainer.Children)
+                {
+                    DoAltBackgroundsRecursive(child, ref alt);
+                }
+
+                break;
         }
     }
 
@@ -165,12 +195,13 @@ public sealed partial class DevWindowTabPerf : Control
         ref ValueList<Control> insertInto,
         Dictionary<int, int> totalCounts,
         Dictionary<int, int> countDict,
-        TreeExpand expandParent)
+        TreeExpand expandParent,
+        float margin)
     {
         switch (log.Type)
         {
             case ProfLogType.Sample:
-                insertInto.Add(new Label { Text = SampleString(log.Value.StringId, log.Value.Value) });
+                TreeInsertSample(ref insertInto, log.Value.StringId, log.Value.Value, margin);
                 break;
 
             case ProfLogType.GroupEnd:
@@ -182,47 +213,68 @@ public sealed partial class DevWindowTabPerf : Control
 
                 var stringI = totalCount - count;
 
-                RebuildTreeGroup(
+                TreeInsertGroup(
                     buffer,
                     index,
                     ref i,
                     ref log.GroupEnd,
                     ref insertInto,
                     (stringId, stringI),
-                    expandParent);
+                    expandParent,
+                    margin);
                 break;
         }
     }
 
-    private void RebuildTreeGroup(
+    private void TreeInsertSample(ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
+    {
+        var treeLine = new ProfTreeLine();
+        treeLine.Margin = new Thickness(margin + 12 + 3, 0, 0, 0);
+        FillTreeLine(treeLine, stringId, value);
+        insertInto.Add(new ProfAltBackground { Children = { treeLine } });
+    }
+
+    private void TreeInsertGroup(
         in ProfBuffer buffer,
         in ProfIndex index,
         ref long i,
         ref ProfLogGroupEnd logEnd,
         ref ValueList<Control> insertInto,
         (int str, int i) expandId,
-        TreeExpand expandParent)
+        TreeExpand expandParent,
+        float margin)
     {
         i -= 1;
 
-        var groupControl = new ProfTreeEntry(this, expandParent, expandId);
-        groupControl.Text.Text = SampleString(logEnd.StringId, logEnd.Value);
+        var (totalCounts, anyChildren) = GetTotalGroupCounts(buffer, i, logEnd.StartIndex);
+
+        if (!anyChildren)
+        {
+            // Node has no children we can display. Just insert it as if it's a sample and move along.
+            TreeInsertSample(ref insertInto, logEnd.StringId, logEnd.Value, margin);
+            i = logEnd.StartIndex;
+            return;
+        }
+
+        var groupControl = new ProfTreeEntry(this, expandParent, expandId, margin);
+        FillTreeLine(groupControl.TextLine, logEnd.StringId, logEnd.Value);
 
         insertInto.Add(groupControl);
 
-        var totalCounts = GetTotalGroupCounts(buffer, index, i, logEnd.StartIndex);
-        var countDict = new Dictionary<int, int>();
-
+        // Look up in the parent's expand data whether we're expanded.
         var expand = expandParent.ExpandedItems.GetValueOrDefault(expandId);
         if (expand is not { Enabled: true })
         {
+            // Note expanded. Skip!
             i = logEnd.StartIndex;
             return;
         }
 
         groupControl.Arrow.Rotated = true;
 
+        // Create child controls.
         var children = new ValueList<Control>();
+        var countDict = new Dictionary<int, int>();
 
         for (; i >= index.StartPos; i--)
         {
@@ -238,26 +290,31 @@ public sealed partial class DevWindowTabPerf : Control
                 ref children,
                 totalCounts,
                 countDict,
-                expand);
+                expand,
+                margin + TreeLevelMargin);
         }
 
+        // Insert child controls in reverse so the order checks out.
         for (var c = children.Count - 1; c >= 0; c--)
         {
             groupControl.ChildEntryContainer.AddChild(children[c]);
         }
     }
 
-    private static Dictionary<int, int> GetTotalGroupCounts(
+    private static (Dictionary<int, int> counts, bool anyChildren) GetTotalGroupCounts(
         in ProfBuffer buffer,
-        in ProfIndex index,
         long i,
         long startIdx)
     {
+        var anyChildren = false;
         var dict = new Dictionary<int, int>();
 
         for (; i > startIdx; i--)
         {
             ref var log = ref buffer.BufferIdx(i);
+
+            anyChildren |= log.Type is ProfLogType.GroupEnd or ProfLogType.Sample;
+
             if (log.Type != ProfLogType.GroupEnd)
                 continue;
 
@@ -266,23 +323,21 @@ public sealed partial class DevWindowTabPerf : Control
             val += 1;
         }
 
-        return dict;
+        return (dict, anyChildren);
     }
 
-    private string SampleString(int stringId, in ProfValue value)
+    private void FillTreeLine(ProfTreeLine line, int stringId, in ProfValue value)
     {
-        var cmdString = _profManager.GetString(stringId);
+        line.Text.Text = _profManager.GetString(stringId);
 
-        var str = value.Type switch
+        (line.TimeLabel.Text, line.AllocLabel.Text) = value.Type switch
         {
-            ProfValueType.TimeAllocSample =>
-                $"{value.TimeAllocSample.Time * 1000:N2} ms, {value.TimeAllocSample.Alloc} B",
-            ProfValueType.Int32 => value.Int32.ToString(),
-            ProfValueType.Int64 => value.Int64.ToString(),
-            _ => "???"
+            ProfValueType.TimeAllocSample => ($"{value.TimeAllocSample.Time * 1000:N2} ms",
+                $"{value.TimeAllocSample.Alloc} B"),
+            ProfValueType.Int32 => ("", value.Int32.ToString()),
+            ProfValueType.Int64 => ("", value.Int64.ToString()),
+            _ => ("", "???")
         };
-
-        return $"{cmdString}: {str}";
     }
 
     internal sealed class TreeExpand

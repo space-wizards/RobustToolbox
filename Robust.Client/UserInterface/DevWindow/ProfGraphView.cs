@@ -1,7 +1,9 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.Profiling;
-using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -11,6 +13,8 @@ namespace Robust.Client.UserInterface;
 
 public sealed class ProfGraphView : Control
 {
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
+
     private ProfViewManager.Snapshot? _snapshot;
 
     public event Action<long>? FrameSelected;
@@ -18,6 +22,13 @@ public sealed class ProfGraphView : Control
     private bool _dragging;
 
     public long HighlightFrame;
+
+    public ProfGraphView()
+    {
+        RectClipContent = true;
+
+        IoCManager.InjectDependencies(this);
+    }
 
     public void LoadSnapshot(ProfViewManager.Snapshot snapshot)
     {
@@ -57,7 +68,7 @@ public sealed class ProfGraphView : Control
             return;
 
         var trackedFrameCount = _snapshot.EndFrame - _snapshot.StartFrame + 1;
-        var frame = (int)(MathHelper.Clamp(pos.X / Width, 0, 1)* trackedFrameCount);
+        var frame = MathHelper.Clamp((int)(pos.X / Width * trackedFrameCount), 0, trackedFrameCount-1);
 
         FrameSelected?.Invoke(frame + _snapshot.StartFrame);
     }
@@ -67,13 +78,15 @@ public sealed class ProfGraphView : Control
         if (_snapshot == null)
             return;
 
+        var targetFps = _cfg.GetCVar(CVars.DebugTargetFps);
+
         var trackedFrameCount = _snapshot.EndFrame - _snapshot.StartFrame + 1;
 
         ref var buffer = ref _snapshot.Buffer;
 
-        var x = (float) PixelWidth;
-        var controlHeight = PixelHeight;
         var barWidth = PixelWidth / (float) trackedFrameCount;
+        var x = PixelWidth - barWidth;
+        var controlHeight = PixelHeight;
 
         var frame = _snapshot.EndFrame;
 
@@ -93,19 +106,12 @@ public sealed class ProfGraphView : Control
             var height = controlHeight * (valueSeconds / peak);
 
             var rect = UIBox2.FromDimensions(x, (controlHeight - height), barWidth, height);
-            var color = HighlightFrame == frame ? Color.Pink : Color.Yellow;
+            var color = HighlightFrame == frame ? Color.Pink : FrameGraph.FrameTimeColor(valueSeconds, targetFps);
             handle.DrawRect(rect, color);
 
             x -= barWidth;
 
             frame -= 1;
         }
-
-        var font = IoCManager.Resolve<IResourceCache>()
-            .GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf")
-            .MakeDefault();
-
-        handle.DrawString(font, new Vector2(19, 19), $"{trackedFrameCount}", Color.Black);
-        handle.DrawString(font, new Vector2(20, 20), $"{trackedFrameCount}");
     }
 }

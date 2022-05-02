@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -1169,11 +1176,19 @@ namespace Robust.Shared
          * PROF
          */
 
-        // TODO: Figure these defaults out better.
-        // This default buffer size gives us about 1 second of snapshot assuming 1k events per frame, 60 FPS.
-        // Takes 2.5 MB at 40 byte ProfCmd.
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", !ConstFullRelease);
 
-        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 65536);
-        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 1024);
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

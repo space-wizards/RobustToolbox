@@ -49,6 +49,8 @@ public sealed class ProfManager
             // Invalidate all indices by artificially incrementing the write position.
             Buffer.BufferWriteOffset += i;
         }, true);
+
+        _cfg.OnValueChanged(CVars.ProfEnabled, b => IsEnabled = b, true);
     }
 
     public void MarkIndex(long start)

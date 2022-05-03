@@ -22,6 +22,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -156,6 +157,7 @@ namespace Robust.UnitTesting.Server
             container.Register<ILocalizationManager, LocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
+            container.Register<ProfManager, ProfManager>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
 
             var realReflection = new ServerReflectionManager();

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Composition;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
@@ -9,9 +8,9 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -22,7 +21,7 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PVSSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
@@ -81,7 +80,20 @@ internal sealed partial class PVSSystem : EntitySystem
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
     private readonly ObjectPool<RobustTree<EntityUid>> _treePool =
-        new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>());
+        new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
+        new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
+            new ChunkPoolPolicy<MapChunkLocation>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
+        new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
+            new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
+
+    private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
+    private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
+    private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
+    private readonly List<MapGrid> _gridsPool = new(8);
 
     public override void Initialize()
     {
@@ -102,6 +114,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -111,6 +124,17 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
+    private void OnParentChange(ref EntParentChangedMessage ev)
+    {
+        if (_mapManager.IsGrid(ev.Entity) || _mapManager.IsMap(ev.Entity)) return;
+
+        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+        // Should still be at its old location as moveevent is called after.
+        var xform = Transform(ev.Entity);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        var index = _entityPvsCollection.GetChunkIndex(coordinates);
+        _entityPvsCollection.MarkDirty(index);
+    }
 
     public override void Shutdown()
     {
@@ -162,6 +186,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         CleanupDirty(playerSessions);
+
+        foreach (var collection in _pvsCollections)
+        {
+            collection.ClearDirty();
+        }
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -192,7 +221,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
@@ -200,7 +229,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
@@ -293,15 +322,24 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
-        var chunkList = new List<(uint, IChunkIndexLocation)>();
         var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
+        _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
-        var mapIndices = new Dictionary<uint, Dictionary<MapChunkLocation, int>>(4);
-        var gridIndices = new Dictionary<uint, Dictionary<GridChunkLocation, int>>(4);
+        // Pool it because this will allocate a lot across ticks as we scale in players.
+        foreach (var (_, chunks) in _mapIndices)
+            _mapChunkPool.Return(chunks);
+
+        foreach (var (_, chunks) in _gridIndices)
+            _gridChunkPool.Return(chunks);
+
+        _mapIndices.Clear();
+        _gridIndices.Clear();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         for (int i = 0; i < sessions.Length; i++)
         {
@@ -309,22 +347,23 @@ internal sealed partial class PVSSystem : EntitySystem
             playerChunks[i] = _playerChunkPool.Get();
 
             var viewers = GetSessionViewers(session);
-            viewerEntities[i] = new EntityUid[viewers.Count];
-            viewers.CopyTo(viewerEntities[i]);
+            viewerEntities[i] = viewers;
 
             foreach (var eyeEuid in viewers)
             {
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+
+                if(mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
                 // Get the nyoom dictionary for index lookups.
-                if (!mapIndices.TryGetValue(visMask, out var mapDict))
+                if (!_mapIndices.TryGetValue(visMask, out var mapDict))
                 {
-                    mapDict = new Dictionary<MapChunkLocation, int>(32);
-                    mapIndices[visMask] = mapDict;
+                    mapDict = _mapChunkPool.Get();
+                    _mapIndices[visMask] = mapDict;
                 }
 
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
@@ -340,21 +379,28 @@ internal sealed partial class PVSSystem : EntitySystem
                     }
                     else
                     {
-                        playerChunks[i].Add(chunkList.Count);
-                        mapDict.Add(chunkLocation, chunkList.Count);
-                        chunkList.Add(entry);
+                        playerChunks[i].Add(_chunkList.Count);
+                        mapDict.Add(chunkLocation, _chunkList.Count);
+                        _chunkList.Add(entry);
                     }
                 }
 
                 // Get the nyoom dictionary for index lookups.
-                if (!gridIndices.TryGetValue(visMask, out var gridDict))
+                if (!_gridIndices.TryGetValue(visMask, out var gridDict))
                 {
-                    gridDict = new Dictionary<GridChunkLocation, int>(32);
-                    gridIndices[visMask] = gridDict;
+                    gridDict = _gridChunkPool.Get();
+                    _gridIndices[visMask] = gridDict;
                 }
 
-                _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
-                while (gridEnumerator.MoveNext(out var mapGrid))
+                _gridsPool.Clear();
+
+                foreach (var mapGrid in _mapManager.FindGridsIntersecting(
+                             mapId,
+                             new Box2(viewPos - range, viewPos + range),
+                             _gridsPool,
+                             xformQuery,
+                             physicsQuery,
+                             true))
                 {
                     var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
 
@@ -372,22 +418,77 @@ internal sealed partial class PVSSystem : EntitySystem
                         }
                         else
                         {
-                            playerChunks[i].Add(chunkList.Count);
-                            gridDict.Add(chunkLocation, chunkList.Count);
-                            chunkList.Add(entry);
+                            playerChunks[i].Add(_chunkList.Count);
+                            gridDict.Add(chunkLocation, _chunkList.Count);
+                            _chunkList.Add(entry);
                         }
                     }
                 }
             }
-
-            _uidSetPool.Return(viewers);
         }
 
-        return (chunkList, playerChunks, viewerEntities);
+        return (_chunkList, playerChunks, viewerEntities);
     }
 
-    public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    private Dictionary<(uint visMask, IChunkIndexLocation location), (Dictionary<EntityUid, MetaDataComponent> metadata,
+        RobustTree<EntityUid> tree)?> _previousTrees = new();
+
+    private HashSet<(uint visMask, IChunkIndexLocation location)> _reusedTrees = new();
+
+    public void RegisterNewPreviousChunkTrees(
+        List<(uint, IChunkIndexLocation)> chunks,
+        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees,
+        bool[] reuse)
     {
+        // For any chunks able to re-used we'll chuck them in a dictionary for faster lookup.
+        for (var i = 0; i < chunks.Count; i++)
+        {
+            var canReuse = reuse[i];
+            if (!canReuse) continue;
+
+            _reusedTrees.Add(chunks[i]);
+        }
+
+        var previousIndices = _previousTrees.Keys.ToArray();
+        foreach (var index in previousIndices)
+        {
+            // ReSharper disable once InconsistentlySynchronizedField
+            if(_reusedTrees.Contains(index)) continue;
+            var chunk = _previousTrees[index];
+            if (chunk.HasValue)
+            {
+                _chunkCachePool.Return(chunk.Value.metadata);
+                _treePool.Return(chunk.Value.tree);
+            }
+
+            if (!chunks.Contains(index))
+            {
+                _previousTrees.Remove(index);
+            }
+        }
+        _previousTrees.EnsureCapacity(chunks.Count);
+        for (int i = 0; i < chunks.Count; i++)
+        {
+            //this is a redundant assign if the tree has been reused. the assumption is that this is cheaper than a .Contains call
+            _previousTrees[chunks[i]] = trees[i];
+        }
+        // ReSharper disable once InconsistentlySynchronizedField
+        _reusedTrees.Clear();
+    }
+
+    public bool TryCalculateChunk(
+        IChunkIndexLocation chunkLocation,
+        uint visMask,
+        EntityQuery<TransformComponent> transform,
+        EntityQuery<MetaDataComponent> metadata,
+        out (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? result)
+    {
+        if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
+        {
+            result = previousTree;
+            return true;
+        }
+
         var chunk = chunkLocation switch
         {
             GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridId,
@@ -399,7 +500,11 @@ internal sealed partial class PVSSystem : EntitySystem
                 ? mapChunk
                 : null
         };
-        if (chunk == null) return null;
+        if (chunk == null)
+        {
+            result = null;
+            return false;
+        }
         var chunkSet = _chunkCachePool.Get();
         var tree = _treePool.Get();
         foreach (var uid in chunk)
@@ -407,18 +512,12 @@ internal sealed partial class PVSSystem : EntitySystem
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
         }
 
-        return (chunkSet, tree);
+        result = (chunkSet, tree);
+        return false;
     }
 
-    public void ReturnToPool((Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache, HashSet<int>[] playerChunks)
+    public void ReturnToPool(HashSet<int>[] playerChunks)
     {
-        foreach (var chunk in chunkCache)
-        {
-            if(!chunk.HasValue) continue;
-            _chunkCachePool.Return(chunk.Value.metadata);
-            _treePool.Return(chunk.Value.tree);
-        }
-
         foreach (var playerChunk in playerChunks)
         {
             _playerChunkPool.Return(playerChunk);
@@ -448,7 +547,7 @@ internal sealed partial class PVSSystem : EntitySystem
             !AddToChunkSetRecursively(in parent, visMask, tree, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
-        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        //i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles
         tree.Set(uid, parent);
         set.Add(uid, mComp);
         return true;
@@ -474,13 +573,11 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var cache = chunkCache[i];
             if(!cache.HasValue) continue;
-            var rootNodes = cache.Value.tree.GetRootNodes();
-            foreach (var rootNode in rootNodes)
+            foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                         ref entitiesSent, cache.Value.metadata, in enteredEntityBudget, in newEntityBudget);
             }
-            cache.Value.tree.ReturnRootNodes(rootNodes);
         }
 
         var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
@@ -504,6 +601,14 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var viewerEntity in viewerEntities)
         {
             RecursivelyAddOverride(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+        }
+
+        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
+        {
+            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                 ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 
@@ -535,7 +640,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
             }), true));
         }
 
@@ -549,7 +654,8 @@ internal sealed partial class PVSSystem : EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RecursivelyAddTreeNode(
-        in RobustTree<EntityUid>.TreeNode node,
+        in EntityUid nodeIndex,
+        RobustTree<EntityUid> tree,
         HashSet<EntityUid> seenSet,
         Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
@@ -566,22 +672,26 @@ internal sealed partial class PVSSystem : EntitySystem
         // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
         // we may find duplicate parents with children we haven't encountered before
         // on different chunks (this is especially common with direct grid children)
-        if (node.Value.IsValid() && !toSend.ContainsKey(node.Value))
+        if (nodeIndex.IsValid() && !toSend.ContainsKey(nodeIndex))
         {
             //are we new?
-            var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
+            var (entered, budgetFail) = ProcessEntry(in nodeIndex, seenSet, previousVisibleEnts, ref newEntitiesSent,
                 ref totalEnteredEntities, in enteredEntityBudget, in newEntityBudget);
 
             if (budgetFail) return;
 
-            AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
+            AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
         }
 
+        var node = tree[nodeIndex];
         //our children are important regardless! iterate them!
-        foreach (var child in node.Children)
+        if(node.Children != null)
         {
-            RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
-                ref totalEnteredEntities, metaDataCache, in enteredEntityBudget, in newEntityBudget);
+            foreach (var child in node.Children)
+            {
+                RecursivelyAddTreeNode(in child, tree, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
+                    ref totalEnteredEntities, metaDataCache, in enteredEntityBudget, in newEntityBudget);
+            }
         }
     }
 
@@ -830,14 +940,24 @@ internal sealed partial class PVSSystem : EntitySystem
         return new EntityState(entityUid, changed.ToArray());
     }
 
-    private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
+    private EntityUid[] GetSessionViewers(ICommonSession session)
     {
-        var viewers = _uidSetPool.Get();
         if (session.Status != SessionStatus.InGame)
-            return viewers;
+            return Array.Empty<EntityUid>();
+
+        var viewers = _uidSetPool.Get();
 
         if (session.AttachedEntity != null)
+        {
+            // Fast path
+            if (session is IPlayerSession { ViewSubscriptionCount: 0 })
+            {
+                _uidSetPool.Return(viewers);
+                return new[] { session.AttachedEntity.Value };
+            }
+
             viewers.Add(session.AttachedEntity.Value);
+        }
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
         if (session is IPlayerSession playerSession)
@@ -848,7 +968,10 @@ internal sealed partial class PVSSystem : EntitySystem
             }
         }
 
-        return viewers;
+        var viewerArray = viewers.ToArray();
+
+        _uidSetPool.Return(viewers);
+        return viewerArray;
     }
 
     // Read Safe
@@ -872,20 +995,6 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    public sealed class ListPolicy<T> : PooledObjectPolicy<List<T>>
-    {
-        public override List<T> Create()
-        {
-            return new();
-        }
-
-        public override bool Return(List<T> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
     public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
     {
         public override Dictionary<T1, T2> Create()
@@ -902,15 +1011,27 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
-        private readonly ObjectPool<HashSet<RobustTree<T>.TreeNode>> _treeNodeSetPool =
-            new DefaultObjectPool<HashSet<RobustTree<T>.TreeNode>>(new SetPolicy<RobustTree<T>.TreeNode>());
-
         public override RobustTree<T> Create()
         {
-            return new RobustTree<T>(_treeNodeSetPool.Get, _treeNodeSetPool.Return);
+            var pool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
+            return new RobustTree<T>(pool);
         }
 
         public override bool Return(RobustTree<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    private sealed class ChunkPoolPolicy<T> : PooledObjectPolicy<Dictionary<T, int>> where T : notnull
+    {
+        public override Dictionary<T, int> Create()
+        {
+            return new Dictionary<T, int>(32);
+        }
+
+        public override bool Return(Dictionary<T, int> obj)
         {
             obj.Clear();
             return true;

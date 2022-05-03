@@ -347,9 +347,7 @@ namespace Robust.Client.GameStates
 
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
-                {
                     _sawmill.Debug($"Entity {entity} was made dirty.");
-                }
 
                 if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
@@ -367,7 +365,9 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    _sawmill.Debug($"  And also its component {comp.GetType()}");
+                    if (_sawmill.Level <= LogLevel.Debug)
+                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
@@ -409,7 +409,7 @@ namespace Robust.Client.GameStates
 
         private void AckGameState(GameTick sequence)
         {
-            var msg = _network.CreateNetMessage<MsgStateAck>();
+            var msg = new MsgStateAck();
             msg.Sequence = sequence;
             _network.ClientSendMessage(msg);
         }
@@ -429,7 +429,7 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyEntityStates(ReadOnlySpan<EntityState> curEntStates, ReadOnlySpan<EntityUid> deletions,
             ReadOnlySpan<EntityState> nextEntStates)
         {
-            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>();
+            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>(curEntStates.Length);
             var toInitialize = new List<EntityUid>();
             var created = new List<EntityUid>();
 
@@ -548,6 +548,8 @@ namespace Robust.Client.GameStates
 
             if (curState != null)
             {
+                compStateWork.EnsureCapacity(curState.ComponentChanges.Span.Length);
+
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
                     if (compChange.Deleted)
@@ -580,6 +582,8 @@ namespace Robust.Client.GameStates
 
             if (nextState != null)
             {
+                compStateWork.EnsureCapacity(compStateWork.Count + nextState.ComponentChanges.Span.Length);
+
                 foreach (var compState in nextState.ComponentChanges.Span)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))

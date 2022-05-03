@@ -87,6 +87,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         internal LinkedList<Contact> Contacts = new();
 
+        [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
 
         internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
@@ -113,7 +114,8 @@ namespace Robust.Shared.GameObjects
                     _angularVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
-                else
+                // Even if it's dynamic if it can't collide then don't force it awake.
+                else if (_canCollide)
                 {
                     SetAwake(true);
                 }
@@ -139,7 +141,8 @@ namespace Robust.Shared.GameObjects
             if (_awake || _bodyType == BodyType.Static) return;
 
             _awake = true;
-            _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+            var ev = new PhysicsWakeEvent(this);
+            _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
         }
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
@@ -166,11 +169,13 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsWakeMessage(this));
+                var ev = new PhysicsWakeEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
             }
             else
             {
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsSleepMessage(this));
+                var ev = new PhysicsSleepEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }

@@ -67,7 +67,7 @@ namespace Robust.Shared.Network
 
             /// <inheritdoc />
             public T CreateNetMessage<T>()
-                where T : NetMessage
+                where T : NetMessage, new()
             {
                 return _manager.CreateNetMessage<T>();
             }

@@ -9,7 +9,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var lineEdit = new LineEdit
             {
-                Text = (string) value!,
+                Text = (string) (value ?? ""),
                 Editable = !ReadOnly,
                 HorizontalExpand = true,
             };

@@ -44,6 +44,8 @@ namespace Robust.Server.Player
 
         IReadOnlySet<EntityUid> ViewSubscriptions { get; }
 
+        int ViewSubscriptionCount { get; }
+
         /// <summary>
         ///     Persistent data for this player.
         /// </summary>

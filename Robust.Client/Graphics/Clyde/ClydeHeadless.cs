@@ -251,6 +251,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void RunOnWindowThread(Action action)
+        {
+            action();
+        }
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()
@@ -407,7 +412,15 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, float[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, Vector2 value)
+            {
+            }
+
+            private protected override void SetParameterImpl(string name, Vector2[] value)
             {
             }
 

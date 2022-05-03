@@ -197,6 +197,18 @@ namespace Robust.Shared.Map
             return list;
         }
 
+        internal List<EntityUid>? GetSnapGrid(ushort xCell, ushort yCell)
+        {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            var cell = _snapGrid[xCell, yCell];
+            return cell.Center;
+        }
+
         /// <summary>
         /// Adds an entity to the anchor cell at the given tile indices.
         /// </summary>

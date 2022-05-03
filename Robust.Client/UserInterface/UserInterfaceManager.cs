@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -13,7 +12,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -374,15 +372,20 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            ReleaseKeyboardFocus();
 
             if (hit == null)
             {
+                ReleaseKeyboardFocus();
                 hitData = null;
                 return false;
             }
 
             var (control, rel) = hit.Value;
+
+            if (control != KeyboardFocused)
+            {
+                ReleaseKeyboardFocus();
+            }
 
             ControlFocused = control;
 

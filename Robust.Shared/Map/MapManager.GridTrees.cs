@@ -32,7 +32,7 @@ internal partial class MapManager
         EntityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
-        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>(OnGridParentChange);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
@@ -42,7 +42,7 @@ internal partial class MapManager
         EntityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
-        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>();
+        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>();
 
         DebugTools.Assert(_gridTrees.Count == 0);
@@ -139,7 +139,7 @@ internal partial class MapManager
         _movedGrids[grid.ParentMapId].Add(grid);
     }
 
-    private void OnGridMapChange(EntityUid uid, MapGridComponent component, EntMapIdChangedMessage args)
+    private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)
     {
         var aGrid = (MapGrid)component.Grid;
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
@@ -148,13 +148,20 @@ internal partial class MapManager
         // Want gridinit / gridremoval to handle this hence specialcase those situations.
         if (lifestage < EntityLifeStage.Initialized) return;
 
+        var oldMapId = args.OldParent == null
+            ? MapId.Nullspace
+            : EntityManager.GetComponent<TransformComponent>(args.OldParent.Value).MapID;
+
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
 
-        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
+        // y'all need jesus
+        if (oldMapId == mapId) return;
+
+        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(oldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
-            RemoveGrid(aGrid, args.OldMapId);
+            RemoveGrid(aGrid, oldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))

@@ -35,6 +35,8 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         public static float PostShadeScale = 1.25f;
 
+        private List<Overlay> _overlays = new();
+
         public void Render()
         {
             CheckTransferringScreenshots();
@@ -142,7 +144,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var worldAABB = CalcWorldAABB(vp);
             var worldBounds = CalcWorldBounds(vp);
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, vp.Eye!.Position.MapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {
@@ -152,19 +154,19 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Overlay> GetOverlaysForSpace(OverlaySpace space)
         {
-            var list = new List<Overlay>();
+            _overlays.Clear();
 
             foreach (var overlay in _overlayManager.AllOverlays)
             {
                 if ((overlay.Space & space) != 0)
                 {
-                    list.Add(overlay);
+                    _overlays.Add(overlay);
                 }
             }
 
-            list.Sort(OverlayComparer.Instance);
+            _overlays.Sort(OverlayComparer.Instance);
 
-            return list;
+            return _overlays;
         }
 
         private ClydeTexture? ScreenBufferTexture;

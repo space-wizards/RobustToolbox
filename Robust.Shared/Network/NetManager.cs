@@ -18,6 +18,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
@@ -38,7 +39,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed partial class NetManager : IClientNetManager, IServerNetManager
     {
-        internal const int AesKeyLength = 32;
+        internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes
 
         [Dependency] private readonly IRobustSerializer _serializer = default!;
 
@@ -104,10 +105,6 @@ namespace Robust.Shared.Network
 
         // Used for processing incoming net messages.
         private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
-
-        // Used for processing outgoing net messages.
-        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
-            new();
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
@@ -266,7 +263,7 @@ namespace Robust.Shared.Network
 
             if (IsServer)
             {
-                SAGenerateRsaKeys();
+                SAGenerateKeys();
             }
         }
 
@@ -374,11 +371,12 @@ namespace Robust.Shared.Network
                 InitUpnp();
         }
 
-        /// <inheritdoc />
-        public void Shutdown(string reason)
+        public void Reset(string reason)
         {
             foreach (var kvChannel in _channels)
+            {
                 DisconnectChannel(kvChannel.Value, reason);
+            }
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Peer.Shutdown(reason));
@@ -397,10 +395,20 @@ namespace Robust.Shared.Network
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
-            _blankNetMsgFunctions.Clear();
+
             // Clear string table.
             // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
+
+            _cancelConnectTokenSource?.Cancel();
+            ClientConnectState = ClientConnectionState.NotConnecting;
+        }
+
+        /// <inheritdoc />
+        public void Shutdown(string reason)
+        {
+            Reset(reason);
+
             _messages.Clear();
 
             _config.UnsubValueChanged(CVars.NetVerbose, NetVerboseChanged);
@@ -416,9 +424,6 @@ namespace Robust.Shared.Network
 #endif
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
-
-            _cancelConnectTokenSource?.Cancel();
-            ClientConnectState = ClientConnectionState.NotConnecting;
 
             ConnectFailed = null;
             Connected = null;
@@ -554,7 +559,7 @@ namespace Robust.Shared.Network
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             }
 
-            Shutdown(reason);
+            Reset(reason);
         }
 
         private NetPeerConfiguration _getBaseNetPeerConfig()
@@ -830,10 +835,7 @@ namespace Robust.Shared.Network
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 
-            if (encryption != null)
-            {
-                msg.Decrypt(encryption);
-            }
+            encryption?.Decrypt(msg);
 
             var id = msg.ReadByte();
 
@@ -982,45 +984,13 @@ namespace Robust.Shared.Network
                     CacheNetMsgFunction((byte) id);
                 }
             }
-
-            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
-            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
-            // so it no thread safety crap.
-            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
-            where T : NetMessage
+            where T : NetMessage, new()
         {
-            return (T) _blankNetMsgFunctions[typeof(T)]();
-        }
-
-        private void CacheBlankFunction(Type type)
-        {
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
-                type, false);
-            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
-
-            // Obsolete path for content
-            if (type.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
-            {
-                gen.Emit(OpCodes.Ldnull);
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                constructor = type.GetConstructor(Type.EmptyTypes)!;
-                DebugTools.AssertNotNull(constructor);
-
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-
-            var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
-
-            _blankNetMsgFunctions.Add(type, @delegate);
+            return new T();
         }
 
         private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)
@@ -1062,10 +1032,8 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
-            if (channel.Encryption != null)
-            {
-                packet.Encrypt(channel.Encryption);
-            }
+
+            channel.Encryption?.Encrypt(packet);
 
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
@@ -1105,10 +1073,8 @@ namespace Robust.Shared.Network
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer.Peer);
             var method = message.DeliveryMethod;
-            if (_clientEncryption != null)
-            {
-                packet.Encrypt(_clientEncryption);
-            }
+
+            _clientEncryption?.Encrypt(packet);
 
             peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
             LogSend(message, method, packet);

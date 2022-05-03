@@ -23,6 +23,7 @@ namespace Robust.Shared.Scripting
             BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         [field: Dependency] public IEntityManager ent { get; } = default!;
+        [field: Dependency] public IEntitySystemManager esm { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
 
@@ -76,6 +77,11 @@ namespace Robust.Shared.Scripting
         public T res<T>()
         {
             return IoCManager.Resolve<T>();
+        }
+
+        public T ressys<T>() where T : EntitySystem
+        {
+            return esm.GetEntitySystem<T>();
         }
 
         public object? prop(object target, string name)

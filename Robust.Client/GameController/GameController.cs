@@ -21,7 +21,6 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -29,6 +28,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -66,6 +66,7 @@ namespace Robust.Client
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -131,8 +132,9 @@ namespace Robust.Client
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.Initialize();
+            _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            _prototypeManager.Resync();
+            _prototypeManager.ResolveResults();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();
@@ -325,6 +327,8 @@ namespace Robust.Client
             }
 
             ProfileOptSetup.Setup(_configurationManager);
+
+            _parallelMgr.Initialize();
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 

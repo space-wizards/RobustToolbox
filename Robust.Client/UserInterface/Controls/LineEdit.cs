@@ -65,18 +65,22 @@ namespace Robust.Client.UserInterface.Controls
             get => _text;
             set
             {
-                if (value == null)
-                {
-                    value = "";
-                }
+                // Save cursor position or -1 for end
+                var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
 
-                if (!SetText(value))
+                if (!InternalSetText(value))
                 {
                     return;
                 }
 
-                _cursorPosition = 0;
-                _selectionStart = 0;
+                var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
+                while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
+                {
+                    clamped++;
+                }
+
+                _cursorPosition = clamped;
+                _selectionStart = _cursorPosition;
                 _updatePseudoClass();
             }
         }
@@ -203,7 +207,7 @@ namespace Robust.Client.UserInterface.Controls
             var lower = SelectionLower;
             var newContents = Text[..lower] + text + Text[SelectionUpper..];
 
-            if (!SetText(newContents))
+            if (!InternalSetText(newContents))
             {
                 return;
             }
@@ -216,7 +220,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         /// Does not fix cursor positions, those will have to be adjusted manually.
         /// </remarks>>
-        protected bool SetText(string newText)
+        private bool InternalSetText(string newText)
         {
             if (IsValid != null && !IsValid(newText))
             {

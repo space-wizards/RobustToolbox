@@ -70,23 +70,6 @@ namespace Robust.Shared.GameObjects
         GameTick LastModifiedTick { get; }
 
         /// <summary>
-        ///     Handles a local incoming component message.
-        /// </summary>
-        /// <param name="message">Incoming event message.</param>
-        /// <param name="component">The local component that sent the message.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        void HandleMessage(ComponentMessage message, IComponent? component);
-
-        /// <summary>
-        ///     Handles an incoming component message from the server.
-        /// </summary>
-        /// <param name="message">Incoming event message.</param>
-        /// <param name="netChannel">The channel of the remote client that sent the message.</param>
-        /// <param name="session">The session data for the player who sent this message. Null if this is a client.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null);
-
-        /// <summary>
         ///     Get the component's state for replicating on the client.
         /// </summary>
         /// <returns>ComponentState object</returns>

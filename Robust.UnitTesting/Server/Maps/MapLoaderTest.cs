@@ -1,12 +1,8 @@
 using System.Linq;
-using Moq;
 using NUnit.Framework;
-using Robust.Server.Containers;
 using Robust.Server.GameObjects;
-using Robust.Server.GameStates;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
-using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -78,13 +74,14 @@ entities:
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
             resourceManager.MountString("/TestMap.yml", MapData);
-            resourceManager.MountString("/Prototypes/TestMapEntity.yml", Prototype);
+            resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
             protoMan.RegisterType(typeof(EntityPrototype));
 
+            protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
             protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
-            protoMan.Resync();
+            protoMan.ResolveResults();
         }
 
         [Test]
@@ -102,11 +99,12 @@ entities:
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
             var mapLoad = IoCManager.Resolve<IMapLoader>();
-            var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
+            var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml").gridId;
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetComponent<TransformComponent>(grid!.GridEntityId).Children.Single().Owner;
+            var geid = map.GetGridEuid(grid!.Value);
+            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

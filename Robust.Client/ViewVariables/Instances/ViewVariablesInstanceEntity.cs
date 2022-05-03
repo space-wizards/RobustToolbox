@@ -142,7 +142,7 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 ViewVariablesTraitMembers.CreateMemberGroupHeader(
                     ref first,
-                    TypeAbbreviation.Abbreviate(group.Key),
+                    PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
                     clientVBox);
 
                 foreach (var control in group)
@@ -206,7 +206,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var component in componentList)
             {
-                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
+                var button = new Button {Text = PrettyPrint.PrintUserFacingTypeShort(component.GetType(), 2), TextAlign = Label.AlignMode.Left};
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },

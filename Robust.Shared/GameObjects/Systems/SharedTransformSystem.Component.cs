@@ -570,5 +570,4 @@ public abstract partial class SharedTransformSystem
 
         return xform.MapID;
     }
-
 }

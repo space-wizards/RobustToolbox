@@ -210,11 +210,10 @@ namespace Robust.UnitTesting.Server
             container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
+            container.Register<IAuthManager, AuthManager>();
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
-
-            container.Resolve<INetManager>().Initialize(true);
 
             // Because of CVarDef, we have to load every one through reflection
             // just in case a system needs one of them.
@@ -270,6 +269,7 @@ namespace Robust.UnitTesting.Server
             entityMan.Startup();
             mapManager.Startup();
 
+            container.Resolve<INetManager>().Initialize(true);
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();

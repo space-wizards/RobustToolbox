@@ -6,8 +6,10 @@ using System.Linq;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 using static Robust.Shared.Serialization.Manager.SerializationManager;
 
@@ -15,6 +17,20 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public sealed partial class DataDefinition
     {
+        private readonly struct FieldInterfaceInfo
+        {
+            public readonly (bool Value, bool Sequence, bool Mapping) Reader;
+            public readonly bool Writer;
+            public readonly bool Copier;
+
+            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier)
+            {
+                Reader = reader;
+                Writer = writer;
+                Copier = copier;
+            }
+        }
+
         private readonly PopulateDelegateSignature _populate;
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
@@ -45,6 +61,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
             var fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
+            var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
 
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
@@ -52,10 +69,62 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
                 fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
+
+                //reader (value, sequence, mapping), writer, copier
+                var reader = (false, false, false);
+                var writer = false;
+                var copier = false;
+                if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                {
+                    foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
+                    {
+                        var genericTypedef = @interface.GetGenericTypeDefinition();
+                        if (genericTypedef == typeof(ITypeWriter<>))
+                        {
+                            if (@interface.GenericTypeArguments[0] == type)
+                            {
+                                writer = true;
+                            }
+                        }
+                        else if ( genericTypedef == typeof(ITypeCopier<>))
+                        {
+                            if (@interface.GenericTypeArguments[0] == type)
+                            {
+                                copier = true;
+                            }
+                        }
+                        else if (@interface.GetGenericTypeDefinition() == typeof(ITypeReader<,>))
+                        {
+                            if (@interface.GenericTypeArguments[0] == type)
+                            {
+                                if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
+                                {
+                                    reader.Item1 = true;
+                                }else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                {
+                                    reader.Item2 = true;
+                                }else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                {
+                                    reader.Item3 = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                    }
+
+                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
+                }
+
             }
 
             FieldAccessors = fieldAccessors.ToImmutableArray();
             FieldAssigners = fieldAssigners.ToImmutableArray();
+            FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
         }
 
         public Type Type { get; }
@@ -67,6 +136,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private ImmutableArray<AssignField<object, object?>> FieldAssigners { get; }
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
+        private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 
         public object Populate(
             object target,

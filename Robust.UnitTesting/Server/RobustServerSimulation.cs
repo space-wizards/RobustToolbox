@@ -20,6 +20,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Prototypes;
@@ -208,9 +209,12 @@ namespace Robust.UnitTesting.Server
             container.Register<IMapManagerInternal, MapManager>();
             container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
+            container.Register<INetManager, NetManager>();
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
+
+            container.Resolve<INetManager>().Initialize(true);
 
             // Because of CVarDef, we have to load every one through reflection
             // just in case a system needs one of them.

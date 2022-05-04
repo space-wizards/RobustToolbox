@@ -71,32 +71,32 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
                 fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
 
-                //reader (value, sequence, mapping), writer, copier
-                var reader = (false, false, false);
-                var writer = false;
-                var copier = false;
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {
+                    //reader (value, sequence, mapping), writer, copier
+                    var reader = (false, false, false);
+                    var writer = false;
+                    var copier = false;
                     foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
                     {
                         var genericTypedef = @interface.GetGenericTypeDefinition();
                         if (genericTypedef == typeof(ITypeWriter<>))
                         {
-                            if (@interface.GenericTypeArguments[0] == type)
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
                             {
                                 writer = true;
                             }
                         }
-                        else if ( genericTypedef == typeof(ITypeCopier<>))
+                        else if (genericTypedef == typeof(ITypeCopier<>))
                         {
-                            if (@interface.GenericTypeArguments[0] == type)
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
                             {
                                 copier = true;
                             }
                         }
-                        else if (@interface.GetGenericTypeDefinition() == typeof(ITypeReader<,>))
+                        else if (genericTypedef == typeof(ITypeReader<,>))
                         {
-                            if (@interface.GenericTypeArguments[0] == type)
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
                             {
                                 if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
                                 {
@@ -120,7 +120,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
                 }
-
             }
 
             FieldAccessors = fieldAccessors.ToImmutableArray();

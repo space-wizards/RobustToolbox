@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -35,7 +36,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
 
-        public DataDefinition(Type type)
+        public DataDefinition(Type type, IDependencyCollection collection)
         {
             Type = type;
 
@@ -55,7 +56,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             BaseFieldDefinitions = fields.ToImmutableArray();
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
-            _populate = EmitPopulateDelegate();
+            _populate = EmitPopulateDelegate(collection);
             _serialize = EmitSerializeDelegate();
             _copy = EmitCopyDelegate();
 
@@ -114,7 +115,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
                     {
                         throw new InvalidOperationException(
-                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition.Attribute.Tag}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
                     interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);

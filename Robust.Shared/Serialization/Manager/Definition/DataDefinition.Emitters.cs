@@ -15,9 +15,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private PopulateDelegateSignature EmitPopulateDelegate()
+        private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
         {
-            var isServer = !IoCManager.Resolve<INetManager>().IsServer;
+            var isServer = !collection.Resolve<INetManager>().IsServer;
 
             object PopulateDelegate(
                 object target,

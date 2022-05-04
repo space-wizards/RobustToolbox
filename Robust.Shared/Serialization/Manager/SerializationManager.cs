@@ -113,7 +113,7 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                DataDefinitions.GetValue(type, CreateDefinitionCallback);
+                DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
             var error = new StringBuilder();
@@ -167,12 +167,9 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private static readonly ConditionalWeakTable<Type, DataDefinition>.CreateValueCallback
-            CreateDefinitionCallback = CreateDataDefinition;
-
-        private static DataDefinition CreateDataDefinition(Type t)
+        private static DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
         {
-            return new(t);
+            return new(t, collection);
         }
 
         public void Shutdown()

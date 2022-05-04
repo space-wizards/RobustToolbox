@@ -24,7 +24,6 @@ namespace Robust.Shared.GameObjects
          * TOI Solver (continuous collision detection)
          * Poly cutting
          * Chain shape
-         * A bunch of objects have collision on round start
          */
 
         public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
@@ -42,7 +41,6 @@ namespace Robust.Shared.GameObjects
             });
 
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
@@ -88,7 +86,7 @@ namespace Robust.Shared.GameObjects
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             IoCManager.InjectDependencies(component);
-            component.BroadphaseSystem = _broadphaseSystem;
+            component.BroadphaseSystem = _broadphase;
             component._physics = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
@@ -161,8 +159,8 @@ namespace Robust.Shared.GameObjects
 
             if (xform.ChildCount == 0 ||
                 (oldMap == null && map == null) ||
-                _mapManager.IsGrid(body.Owner) ||
-                _mapManager.IsMap(body.Owner)) return;
+                MapManager.IsGrid(body.Owner) ||
+                MapManager.IsMap(body.Owner)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
@@ -215,12 +213,12 @@ namespace Robust.Shared.GameObjects
 
         private void HandlePhysicsUpdateMessage(CollisionChangeMessage message)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Owner).MapID;
+            var mapId = Transform(message.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
+            var physicsMap = Comp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
 
             if (Deleted(message.Owner) || !message.CanCollide)
             {

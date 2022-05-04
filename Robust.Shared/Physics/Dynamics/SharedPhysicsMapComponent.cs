@@ -120,15 +120,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void AddBody(PhysicsComponent body)
         {
-            if (Bodies.Contains(body)) return;
-
-            // TODO: Kinda dodgy with this and wake shit.
-            if (body.Awake && body.BodyType != BodyType.Static)
-            {
-                AwakeBodies.Add(body);
-            }
-
-            Bodies.Add(body);
+            if (!Bodies.Add(body)) return;
             body.PhysicsMap = this;
         }
 

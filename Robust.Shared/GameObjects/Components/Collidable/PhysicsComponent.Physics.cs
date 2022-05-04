@@ -104,7 +104,6 @@ namespace Robust.Shared.GameObjects
 
                 var oldType = _bodyType;
                 _bodyType = value;
-
                 ResetMassData();
 
                 if (_bodyType == BodyType.Static)
@@ -767,7 +766,7 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;
             }
@@ -787,11 +786,6 @@ namespace Robust.Shared.GameObjects
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
-            }
-
-            if (BodyType == BodyType.Static)
-            {
-                return;
             }
 
             if (_mass > 0.0f)

@@ -1,11 +1,47 @@
 using System;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class SharedPhysicsSystem
 {
+    private void OnPhysicsInit(EntityUid uid, PhysicsComponent component, ComponentInit args)
+    {
+        var xform = Transform(uid);
+
+        if (xform.MapID != MapId.Nullspace)
+        {
+            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
+            physicsMap.AddBody(component);
+
+            if (component.BodyType != BodyType.Static &&
+                (physicsMap.Gravity != Vector2.Zero ||
+                 !component.LinearVelocity.Equals(Vector2.Zero) ||
+                 !component.AngularVelocity.Equals(0f)))
+            {
+                component._awake = true;
+            }
+            else
+            {
+                component._awake = false;
+            }
+
+            if (component._awake)
+                physicsMap.AddAwakeBody(component);
+        }
+        else
+        {
+            component._awake = false;
+        }
+
+        // Gets added to broadphase via fixturessystem
+        var startup = new PhysicsInitializedEvent(uid);
+        EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+    }
+
     public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity)
     {
         if (body.BodyType == BodyType.Static ||

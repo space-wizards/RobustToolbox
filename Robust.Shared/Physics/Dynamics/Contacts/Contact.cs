@@ -164,9 +164,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Is this contact a sensor?
             if (sensor)
             {
-                IPhysShape shapeA = FixtureA.Shape;
-                IPhysShape shapeB = FixtureB.Shape;
-                touching = _manifoldManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
+                var shapeA = FixtureA.Shape;
+                var shapeB = FixtureB.Shape;
+                touching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
@@ -275,17 +275,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 case ContactType.Circle:
                     _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;
-                // Custom ones
-                // This is kind of shitcodey and originally I just had the poly version but if we get an AABB -> whatever version directly you'll get good optimisations over a cast.
-                case ContactType.Aabb:
-                    _manifoldManager.CollideAabbs(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeAabb) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.AabbAndCircle:
-                    _manifoldManager.CollideAabbAndCircle(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.AabbAndPolygon:
-                    _manifoldManager.CollideAabbAndPolygon(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException($"Collision between {FixtureA!.Shape.GetType()} and {FixtureB!.Shape.GetType()} not supported");
             }
@@ -301,10 +290,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             EdgeAndCircle,
             ChainAndPolygon,
             ChainAndCircle,
-            // Custom
-            Aabb,
-            AabbAndPolygon,
-            AabbAndCircle,
         }
 
         public bool Equals(Contact? other)

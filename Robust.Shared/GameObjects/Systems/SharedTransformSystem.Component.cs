@@ -226,6 +226,9 @@ public abstract partial class SharedTransformSystem
 
         // Keep the cached matrices in sync with the fields.
         Dirty(component);
+
+        var ev = new TransformStartupEvent(component);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     #endregion

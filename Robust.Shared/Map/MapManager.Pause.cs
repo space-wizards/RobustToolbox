@@ -159,16 +159,6 @@ namespace Robust.Shared.Map
             return mapComp.MapPreInit;
         }
 
-        private void ClearMapPreInit(MapId mapId)
-        {
-            if(mapId == MapId.Nullspace)
-                return;
-
-            var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
-            mapComp.MapPreInit = false;
-        }
-
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {

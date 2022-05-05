@@ -128,13 +128,20 @@ namespace Robust.Server.Maps
             }
             else if (_mapManager.IsMapInitialized(mapId))
             {
-
                 foreach (var entity in context.Entities)
                 {
                     var meta = query.GetComponent(entity);
                     _serverEntityManager.RunMapInit(entity, meta);
                     if (isPaused)
                         meta.EntityPaused = true;
+                }
+            }
+            else if (isPaused)
+            {
+                foreach (var entity in context.Entities)
+                {
+                    var meta = query.GetComponent(entity);
+                    meta.EntityPaused = true;
                 }
             }
         }

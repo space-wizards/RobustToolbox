@@ -242,7 +242,8 @@ namespace Robust.Shared.Physics
 
             if (broadphase != null)
             {
-                _broadphaseSystem.DestroyProxies(broadphase, fixture);
+                var mapId = Transform(broadphase.Owner).MapID;
+                _broadphaseSystem.DestroyProxies(broadphase, fixture, mapId);
             }
 
             if (updates)

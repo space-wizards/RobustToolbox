@@ -18,6 +18,7 @@ namespace Robust.Shared.GameObjects
     {
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadOnly)]
+        [Obsolete("Resolve IComponentFactory and call GetComponentName instead")]
         public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />

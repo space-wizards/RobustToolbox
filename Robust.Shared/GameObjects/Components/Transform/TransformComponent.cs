@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log; //Needed for release build, do not remove
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -60,9 +57,9 @@ namespace Robust.Shared.GameObjects
         ///     Returns the index of the map which this object is on
         /// </summary>
         [ViewVariables]
-        public MapId MapID { get; private set; }
+        public MapId MapID { get; internal set; }
 
-        private bool _mapIdInitialized;
+        internal bool _mapIdInitialized;
 
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
@@ -76,7 +73,7 @@ namespace Robust.Shared.GameObjects
         public GridId GridID
         {
             get => _gridId;
-            private set
+            internal set
             {
                 if (_gridId.Equals(value)) return;
 
@@ -450,18 +447,6 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (LifeStage == ComponentLifeStage.Starting)
-                {
-                    if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
-                    {
-                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                    }
-                    // If no grid found then unanchor it.
-                    else
-                    {
-                        _anchored = false;
-                    }
-                }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
@@ -526,66 +511,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            // Children MAY be initialized here before their parents are.
-            // We do this whole dance to handle this recursively,
-            // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
-            static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
-            {
-                if (xform._mapIdInitialized)
-                {
-                    return xform.MapID;
-                }
-
-                MapId value;
-
-                if (xform._parent.IsValid())
-                {
-                    value = FindMapIdAndSet(xformQuery.GetComponent(xform._parent), entMan, xformQuery);
-                }
-                else
-                {
-                    // second level node, terminates recursion up the branch of the tree
-                    if (entMan.TryGetComponent(xform.Owner, out IMapComponent? mapComp))
-                    {
-                        value = mapComp.WorldMap;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-                    }
-                }
-
-                xform.MapID = value;
-                xform._mapIdInitialized = true;
-                return value;
-            }
-
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-            if (!_mapIdInitialized)
-            {
-                FindMapIdAndSet(this, _entMan, xformQuery);
-
-                _mapIdInitialized = true;
-            }
-
-            // Has to be done if _parent is set from ExposeData.
-            if (_parent.IsValid())
-            {
-                // Note that _children is a SortedSet<EntityUid>,
-                // so duplicate additions (which will happen) don't matter.
-                xformQuery.GetComponent(_parent)._children.Add(Owner);
-            }
-
-            GridID = GetGridIndex(xformQuery);
-            RebuildMatrices();
-        }
-
-        private GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
+        internal GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
         {
             if (_entMan.HasComponent<IMapComponent>(Owner))
             {
@@ -603,25 +529,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
-        }
-
-        protected override void Startup()
-        {
-            // Re-Anchor the entity if needed.
-            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
-            {
-                if (!grid.IsAnchored(Coordinates, Owner))
-                {
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                }
-            }
-            else
-                _anchored = false;
-
-            base.Startup();
-
-            // Keep the cached matrices in sync with the fields.
-            Dirty(_entMan);
         }
 
         /// <summary>
@@ -918,28 +825,6 @@ namespace Robust.Shared.GameObjects
             var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
 
             return (worldPosition, worldRot, worldMatrix, invMatrix);
-        }
-
-        /// <summary>
-        ///     Returns whether the given entity is a child of this transform or one of its descendants.
-        /// </summary>
-        public bool ContainsEntity(TransformComponent entityTransform)
-        {
-            if (entityTransform.Parent == null) //Is the entity the scene root
-            {
-                return false;
-            }
-
-            if (this == entityTransform.Parent) //Is this the direct parent of the entity
-            {
-                return true;
-            }
-            else
-            {
-                return
-                    ContainsEntity(entityTransform
-                        .Parent); //Recursively search up the parents for this object
-            }
         }
 
         internal void RebuildMatrices()

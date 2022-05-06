@@ -75,23 +75,23 @@ namespace Robust.Server.Console.Commands
 
             var player = (IPlayerSession) shell.Player;
             Action testbed;
+            SetupPlayer(mapId, shell, player, mapManager);
 
             switch (args[1])
             {
                 case "boxstack":
-                    SetupPlayer(mapId, shell, player, mapManager);
                     testbed = () => CreateBoxStack(mapId);
                     break;
                 case "circlestack":
-                    SetupPlayer(mapId, shell, player, mapManager);
                     testbed = () => CreateCircleStack(mapId);
                     break;
+                case "com":
+                    testbed = () => CreateCom(mapId);
+                    break;
                 case "pyramid":
-                    SetupPlayer(mapId, shell, player, mapManager);
                     testbed = () => CreatePyramid(mapId);
                     break;
                 case "tumbler":
-                    SetupPlayer(mapId, shell, player, mapManager);
                     testbed = () => CreateTumbler(mapId);
                     break;
                 default:

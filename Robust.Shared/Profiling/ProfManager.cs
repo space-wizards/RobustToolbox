@@ -85,10 +85,11 @@ public sealed class ProfManager
         return idx;
     }
 
-    public long WriteSample(string text, in ProfSampler sampler)
-    {
-        return WriteSample(text, ProfData.TimeAlloc(sampler));
-    }
+    public long WriteSample(string text, in ProfSampler sampler) => WriteSample(text, ProfData.TimeAlloc(sampler));
+
+    public long WriteSample(string text, int int32) => WriteSample(text, ProfData.Int32(int32));
+
+    public long WriteSample(string text, long int64) => WriteSample(text, ProfData.Int64(int64));
 
     public long WriteGroupStart()
     {

@@ -14,6 +14,7 @@ using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -111,6 +112,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -450,12 +452,16 @@ namespace Robust.Shared.Network
             var stored = 0L;
             */
 
+            var countProcessed = 0;
+            var countDataProcessed = 0;
+
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
                 var recycle = true;
                 while ((msg = peer.Peer.ReadMessage()) != null)
                 {
+                    countProcessed += 1;
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
@@ -484,6 +490,7 @@ namespace Robust.Shared.Network
                             break;
 
                         case NetIncomingMessageType.Data:
+                            countDataProcessed += 1;
                             recycle = DispatchNetMessage(msg);
                             break;
 
@@ -543,6 +550,9 @@ namespace Robust.Shared.Network
             MessagesResentDelayMetrics.IncTo(resentDelays);
             MessagesResentHoleMetrics.IncTo(resentHoles);
             MessagesDroppedMetrics.IncTo(dropped);
+
+            _prof.WriteSample("Count Processed", countProcessed);
+            _prof.WriteSample("Count Data Processed", countDataProcessed);
 
             /*
             MessagesUnsentMetrics.Set(unsent);

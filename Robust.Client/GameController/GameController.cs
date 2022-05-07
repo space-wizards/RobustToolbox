@@ -457,20 +457,20 @@ namespace Robust.Client
 
         private void Input(FrameEventArgs frameEventArgs)
         {
-            var sw = ProfSampler.StartNew();
+            using (_prof.Group("Input Events"))
+            {
+                _clyde.ProcessInput(frameEventArgs);
+            }
 
-            _clyde.ProcessInput(frameEventArgs);
-            _prof.WriteSample("Input Events", sw);
+            using (_prof.Group("Network"))
+            {
+                _networkManager.ProcessPackets();
+            }
 
-            sw.Restart();
-
-            _networkManager.ProcessPackets();
-            _prof.WriteSample("Network", sw);
-
-            sw.Restart();
-
-            _taskManager.ProcessPendingTasks(); // tasks like connect
-            _prof.WriteSample("Async", sw);
+            using (_prof.Group("Async"))
+            {
+                _taskManager.ProcessPendingTasks(); // tasks like connect
+            }
         }
 
         private void Tick(FrameEventArgs frameEventArgs)

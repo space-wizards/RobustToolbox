@@ -246,45 +246,68 @@ namespace Robust.Client.UserInterface
         public void FrameUpdate(FrameEventArgs args)
         {
             // Process queued style & layout updates.
-            while (_styleUpdateQueue.Count != 0)
+            using (_prof.Group("Style"))
             {
-                var control = _styleUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_styleUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _styleUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    control.DoStyleUpdate();
+                    total += 1;
                 }
 
-                control.DoStyleUpdate();
+                _prof.WriteSample("Total", ProfData.Int32(total));
             }
 
-            while (_measureUpdateQueue.Count != 0)
+            using (_prof.Group("Measure"))
             {
-                var control = _measureUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_measureUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _measureUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    RunMeasure(control);
+                    total += 1;
                 }
 
-                RunMeasure(control);
+                _prof.WriteSample("Total", ProfData.Int32(total));
             }
 
-            while (_arrangeUpdateQueue.Count != 0)
+            using (_prof.Group("Arrange"))
             {
-                var control = _arrangeUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_arrangeUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _arrangeUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    RunArrange(control);
+                    total += 1;
                 }
 
-                RunArrange(control);
+                _prof.WriteSample("Total", ProfData.Int32(total));
             }
 
-            foreach (var root in _roots)
+            using (_prof.Group("Update"))
             {
-                root.DoFrameUpdate(args);
+                foreach (var root in _roots)
+                {
+                    using (_prof.Group("Root"))
+                    {
+                        var totalUpdated = root.DoFrameUpdateRecursive(args);
+
+                        _prof.WriteSample("Total", ProfData.Int32(totalUpdated));
+                    }
+                }
             }
 
             // count down tooltip delay if we're not showing one yet and

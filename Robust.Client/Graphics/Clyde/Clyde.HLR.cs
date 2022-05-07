@@ -14,6 +14,7 @@ using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Profiling;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -109,6 +110,16 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // And finally, swap those buffers!
                 SwapAllBuffers();
+            }
+
+            using (_prof.Group("Stats"))
+            {
+                _prof.WriteSample("GL Draw Calls", ProfData.Int32(_debugStats.LastGLDrawCalls));
+                _prof.WriteSample("Clyde Draw Calls", ProfData.Int32(_debugStats.LastClydeDrawCalls));
+                _prof.WriteSample("Batches", ProfData.Int32(_debugStats.LastBatches));
+                _prof.WriteSample("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
+                _prof.WriteSample("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
+                _prof.WriteSample("Lights", ProfData.Int32(_debugStats.TotalLights));
             }
         }
 

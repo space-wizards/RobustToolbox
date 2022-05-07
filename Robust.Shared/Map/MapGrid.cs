@@ -985,11 +985,15 @@ namespace Robust.Shared.Map
                 }
             }
 
+            if (!_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) ||
+                _entityManager.Deleted(GridEntityId)) return;
+
             // TryGet because unit tests YAY
-            if (mapChunk.FilledTiles > 0 &&
-                _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) &&
-                !_entityManager.Deleted(GridEntityId))
+            if (mapChunk.FilledTiles > 0)
                 system.RegenerateCollision(GridEntityId, mapChunk, rectangles, checkSplit);
+            // if the chunk gets annihilated we still want to update the neighbours.
+            else
+                system.GenerateSplitNode(GridEntityId, mapChunk);
         }
 
         /// <summary>

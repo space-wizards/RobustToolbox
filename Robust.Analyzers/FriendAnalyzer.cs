@@ -45,7 +45,8 @@ namespace Robust.Analyzers
             true,
             "Make sure to only specify one of these two attributes.");
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(FriendRule, BestFriendRule, MutuallyExclusiveFriendAttributesRule);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+            ImmutableArray.Create(FriendRule, BestFriendRule, MutuallyExclusiveFriendAttributesRule);
 
         public override void Initialize(AnalysisContext context)
         {

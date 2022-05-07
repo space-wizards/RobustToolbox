@@ -61,6 +61,9 @@ namespace Robust.Shared.GameObjects
 
         internal bool _mapIdInitialized;
 
+        // TODO: Cache this.
+        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
+
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
         /// </summary>
@@ -89,6 +92,9 @@ namespace Robust.Shared.GameObjects
         }
 
         internal GridId _gridId = GridId.Invalid;
+
+        // TODO: Cache this.
+        public EntityUid? GridUid => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : null;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.

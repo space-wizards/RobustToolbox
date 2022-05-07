@@ -146,7 +146,7 @@ internal partial class MapManager
 
         // oh boy
         // Want gridinit / gridremoval to handle this hence specialcase those situations.
-        if (lifestage < EntityLifeStage.Initialized) return;
+        if (lifestage is < EntityLifeStage.Initialized or >= EntityLifeStage.Terminating) return;
 
         var oldMapId = args.OldParent == null
             ? MapId.Nullspace

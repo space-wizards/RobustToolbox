@@ -12,8 +12,8 @@ namespace Robust.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class FriendAnalyzer : DiagnosticAnalyzer
     {
-        public const string BestFriendAttribute = "Robust.Shared.Analyzers.BestFriendAttribute";
-        public const string FriendAttribute = "Robust.Shared.Analyzers.FriendAttribute";
+        private const string BestFriendAttribute = "Robust.Shared.Analyzers.BestFriendAttribute";
+        private const string FriendAttribute = "Robust.Shared.Analyzers.FriendAttribute";
 
         [SuppressMessage("ReSharper", "RS2008")]
         private static readonly DiagnosticDescriptor FriendRule = new (
@@ -56,50 +56,6 @@ namespace Robust.Analyzers
                 SyntaxKind.ClassDeclaration,
                 SyntaxKind.InterfaceDeclaration,
                 SyntaxKind.StructDeclaration);
-        }
-
-        private void CheckFriendshipAttributes(SyntaxNodeAnalysisContext context)
-        {
-            if (context.Node is not TypeDeclarationSyntax typeDeclaration)
-                return;
-
-            // Get the attributes
-            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
-            var bestFriendAttr = context.Compilation.GetTypeByMetadataName(BestFriendAttribute);
-
-            var friendFound = false;
-            var bestFriendFound = false;
-
-            foreach (var attributeList in typeDeclaration.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    if (context.SemanticModel.GetTypeInfo(attribute).ConvertedType is not {} type)
-                        continue;
-
-                    if (SymbolEqualityComparer.Default.Equals(type, friendAttr))
-                    {
-                        friendFound = true;
-                    }
-
-                    if (SymbolEqualityComparer.Default.Equals(type, bestFriendAttr))
-                    {
-                        bestFriendFound = true;
-                    }
-
-                    if (!friendFound || !bestFriendFound)
-                        continue;
-
-                    // Mutually exclusive attributes! Report error.
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(MutuallyExclusiveFriendAttributesRule, attribute.GetLocation(),
-                            $"{typeDeclaration.Identifier.Text}"));
-
-                    return;
-                }
-            }
-
-
         }
 
         private void CheckFriendship(SyntaxNodeAnalysisContext context)
@@ -184,6 +140,48 @@ namespace Robust.Analyzers
                     context.ReportDiagnostic(
                         Diagnostic.Create(bestFriend ? BestFriendRule : FriendRule, context.Node.GetLocation(),
                             $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
+                }
+            }
+        }
+
+        private void CheckFriendshipAttributes(SyntaxNodeAnalysisContext context)
+        {
+            if (context.Node is not TypeDeclarationSyntax typeDeclaration)
+                return;
+
+            // Get the attributes
+            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
+            var bestFriendAttr = context.Compilation.GetTypeByMetadataName(BestFriendAttribute);
+
+            var friendFound = false;
+            var bestFriendFound = false;
+
+            foreach (var attributeList in typeDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    if (context.SemanticModel.GetTypeInfo(attribute).ConvertedType is not {} type)
+                        continue;
+
+                    if (SymbolEqualityComparer.Default.Equals(type, friendAttr))
+                    {
+                        friendFound = true;
+                    }
+
+                    if (SymbolEqualityComparer.Default.Equals(type, bestFriendAttr))
+                    {
+                        bestFriendFound = true;
+                    }
+
+                    if (!friendFound || !bestFriendFound)
+                        continue;
+
+                    // Mutually exclusive attributes! Report error.
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(MutuallyExclusiveFriendAttributesRule, attribute.GetLocation(),
+                            $"{typeDeclaration.Identifier.Text}"));
+
+                    return;
                 }
             }
         }

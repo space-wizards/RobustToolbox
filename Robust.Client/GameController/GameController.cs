@@ -335,6 +335,9 @@ namespace Robust.Client
 
             _parallelMgr.Initialize();
             _prof.Initialize();
+#if !FULL_RELEASE
+            _configurationManager.OverrideDefault(CVars.ProfEnabled, true);
+#endif
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 

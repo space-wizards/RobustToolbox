@@ -29,19 +29,22 @@ namespace Robust.Shared.Map
             var mapEnt = GetMapEntityId(mapId);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
-            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery);
+            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery, in metaSystem);
         }
 
         private static void RecursiveSetPaused(EntityUid entity, bool paused,
             in EntityQuery<TransformComponent> xformQuery,
-            in EntityQuery<MetaDataComponent> metaQuery)
+            in EntityQuery<MetaDataComponent> metaQuery,
+            in MetaDataSystem system)
         {
-            metaQuery.GetComponent(entity).EntityPaused = paused;
+            system.SetEntityPaused(entity, paused, metaQuery.GetComponent(entity));
+            var childEnumerator = xformQuery.GetComponent(entity).ChildEnumerator;
 
-            foreach (var child in xformQuery.GetComponent(entity)._children)
+            while (childEnumerator.MoveNext(out var child))
             {
-                RecursiveSetPaused(child, paused, in xformQuery, in metaQuery);
+                RecursiveSetPaused(child.Value, paused, in xformQuery, in metaQuery, in system);
             }
         }
 
@@ -58,16 +61,18 @@ namespace Robust.Shared.Map
             var mapComp = EntityManager.GetComponent<IMapComponent>(mapEnt);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
             mapComp.MapPreInit = false;
             mapComp.MapPaused = false;
 
-            RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery);
+            RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery, in metaSystem);
         }
 
         private void RecursiveDoMapInit(EntityUid entity,
             in EntityQuery<TransformComponent> xformQuery,
-            in EntityQuery<MetaDataComponent> metaQuery)
+            in EntityQuery<MetaDataComponent> metaQuery,
+            in MetaDataSystem system)
         {
             // RunMapInit can modify the TransformTree
             // ToArray caches deleted euids, we check here if they still exist.
@@ -75,11 +80,11 @@ namespace Robust.Shared.Map
                 return;
 
             EntityManager.RunMapInit(entity, meta);
-            meta.EntityPaused = false;
+            system.SetEntityPaused(entity, false, meta);
 
             foreach (var child in xformQuery.GetComponent(entity)._children.ToArray())
             {
-                RecursiveDoMapInit(child, in xformQuery, in metaQuery);
+                RecursiveDoMapInit(child, in xformQuery, in metaQuery, in system);
             }
         }
 

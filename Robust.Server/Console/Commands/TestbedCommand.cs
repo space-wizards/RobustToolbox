@@ -85,9 +85,6 @@ namespace Robust.Server.Console.Commands
                 case "circlestack":
                     testbed = () => CreateCircleStack(mapId);
                     break;
-                case "com":
-                    testbed = () => CreateCom(mapId);
-                    break;
                 case "pyramid":
                     testbed = () => CreatePyramid(mapId);
                     break;

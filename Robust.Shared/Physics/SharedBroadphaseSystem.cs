@@ -392,6 +392,8 @@ namespace Robust.Shared.Physics
                 return;
             }
 
+            // TODO: This should do an embed check... somehow... unfortunately we can't just awaken all pairs
+            // because it makes stacks unstable...
             CreateProxies(body, manager);
         }
 
@@ -462,11 +464,11 @@ namespace Robust.Shared.Physics
 
         private void TouchProxies(MapId mapId, BroadphaseComponent broadphase, Fixture fixture)
         {
-            var broadphasePos = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).WorldPosition;
+            var broadphasePos = Transform(broadphase.Owner).WorldMatrix;
 
             foreach (var proxy in fixture.Proxies)
             {
-                AddToMoveBuffer(mapId, proxy, proxy.AABB.Translated(broadphasePos));
+                AddToMoveBuffer(mapId, proxy, broadphasePos.TransformBox(proxy.AABB));
             }
         }
 
@@ -474,7 +476,7 @@ namespace Robust.Shared.Physics
         {
             if (!component.CanCollide || !EntityManager.TryGetComponent(uid, out FixturesComponent? manager)) return;
 
-            var worldRot = EntityManager.GetComponent<TransformComponent>(uid).WorldRotation;
+            var worldRot = Transform(uid).WorldRotation;
 
             SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta, manager);
         }

@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
-    public sealed class PointLightComponent : SharedPointLightComponent, ISerializationHooks
+    public sealed class PointLightComponent : SharedPointLightComponent
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 

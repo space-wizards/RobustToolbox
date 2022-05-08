@@ -51,11 +51,11 @@ internal sealed partial class ProfTree : Control
         }
 
         // Index for this frame's data.
-        ref var index = ref _snapshot.Buffer.IndexIdx(indexIdx);
+        ref var index = ref _snapshot.Buffer.Index(indexIdx);
 
         // The frame must be wrapped in a whole group. We display this group.
         var i = index.EndPos - 1;
-        ref var logEnd = ref buf.BufferIdx(i);
+        ref var logEnd = ref buf.Log(i);
         var controls = new ValueList<Control>();
 
         // Create child controls.
@@ -65,7 +65,7 @@ internal sealed partial class ProfTree : Control
 
         for (; i >= index.StartPos; i--)
         {
-            ref var log = ref buf.BufferIdx(i);
+            ref var log = ref buf.Log(i);
             RebuildTreeAddControls(
                 buf,
                 index,
@@ -156,7 +156,7 @@ internal sealed partial class ProfTree : Control
     {
         switch (log.Type)
         {
-            case ProfLogType.Sample:
+            case ProfLogType.Value:
                 TreeInsertSample(totalFrameTime, ref insertInto, log.Value.StringId, log.Value.Value, margin);
                 break;
 
@@ -236,7 +236,7 @@ internal sealed partial class ProfTree : Control
 
         for (; i >= index.StartPos; i--)
         {
-            ref var log = ref buffer.BufferIdx(i);
+            ref var log = ref buffer.Log(i);
             if (log.Type == ProfLogType.GroupStart)
                 break;
 
@@ -270,9 +270,9 @@ internal sealed partial class ProfTree : Control
 
         for (; i > startIdx; i--)
         {
-            ref var log = ref buffer.BufferIdx(i);
+            ref var log = ref buffer.Log(i);
 
-            anyChildren |= log.Type is ProfLogType.GroupEnd or ProfLogType.Sample;
+            anyChildren |= log.Type is ProfLogType.GroupEnd or ProfLogType.Value;
 
             if (log.Type != ProfLogType.GroupEnd)
                 continue;

@@ -300,7 +300,7 @@ namespace Robust.Shared.GameObjects
 #endif
                     var sw = ProfSampler.StartNew();
                     updReg.System.Update(frameTime);
-                    _profManager.WriteSample(updReg.System.GetType().Name, sw);
+                    _profManager.WriteValue(updReg.System.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -327,7 +327,7 @@ namespace Robust.Shared.GameObjects
 #endif
                     var sw = ProfSampler.StartNew();
                     system.FrameUpdate(frameTime);
-                    _profManager.WriteSample(system.GetType().Name, sw);
+                    _profManager.WriteValue(system.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

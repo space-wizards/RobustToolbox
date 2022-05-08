@@ -11,11 +11,17 @@ using Robust.Shared.Utility.Collections;
 namespace Robust.Shared.Profiling;
 
 // No interfaces here, don't want the interface dispatch overhead.
+
+// See ProfData.cs for description of profiling data layout.
+
 public sealed class ProfManager
 {
     [IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
 
-    public bool IsEnabled;
+    /// <summary>
+    /// Proxy to <c>prof.enabled</c> CVar.
+    /// </summary>
+    public bool IsEnabled { get; private set; }
 
     // I don't care that this isn't a tree I will call upon the string tree just like in BYOND.
     private readonly Dictionary<string, int> _stringTreeIndices = new();
@@ -33,7 +39,7 @@ public sealed class ProfManager
                 i = BufferHelpers.FittingPowerOfTwo(i);
             }
 
-            Buffer.Index = new ProfIndex[i];
+            Buffer.IndexBuffer = new ProfIndex[i];
             Buffer.IndexWriteOffset = 0;
         }, true);
 
@@ -45,15 +51,20 @@ public sealed class ProfManager
                 i = BufferHelpers.FittingPowerOfTwo(i);
             }
 
-            Buffer.Buffer = new ProfLog[i];
+            Buffer.LogBuffer = new ProfLog[i];
             // Invalidate all indices by artificially incrementing the write position.
-            Buffer.BufferWriteOffset += i;
+            Buffer.LogWriteOffset += i;
         }, true);
 
         _cfg.OnValueChanged(CVars.ProfEnabled, b => IsEnabled = b, true);
     }
 
-    public void MarkIndex(long start)
+    /// <summary>
+    /// Write an index covering the region from <paramref name="start"/> to the current write position.
+    /// </summary>
+    /// <param name="start">The absolute start index of </param>
+    /// <param name="type">The type of index to mark.</param>
+    public void MarkIndex(long start, ProfIndexType type)
     {
         if (!IsEnabled)
             return;
@@ -63,40 +74,69 @@ public sealed class ProfManager
 
         ProfIndex index = default;
         index.StartPos = start;
-        index.EndPos = Buffer.BufferWriteOffset;
+        index.EndPos = Buffer.LogWriteOffset;
+        index.Type = type;
 
-        Buffer.IndexIdx(indexIdx) = index;
+        Buffer.Index(indexIdx) = index;
     }
 
-    public long WriteSample(string text, in ProfValue value)
+    /// <summary>
+    /// Write a single profiling value to the log.
+    /// </summary>
+    /// <param name="text">The name of the entry.</param>
+    /// <param name="value">The value to write.</param>
+    /// <returns>The absolute position of the written log entry.</returns>
+    public long WriteValue(string text, in ProfValue value)
     {
         if (!IsEnabled)
             return 0;
 
         var stringRef = InsertString(text);
 
-        var idx = Buffer.BufferWriteOffset;
+        var idx = Buffer.LogWriteOffset;
         ref var cmd = ref WriteCmd();
         cmd = default;
-        cmd.Type = ProfLogType.Sample;
+        cmd.Type = ProfLogType.Value;
         cmd.Value.Value = value;
         cmd.Value.StringId = stringRef;
 
         return idx;
     }
 
-    public long WriteSample(string text, in ProfSampler sampler) => WriteSample(text, ProfData.TimeAlloc(sampler));
+    /// <summary>
+    /// Write a single profiling value to the log. Automatically samples the given sampler.
+    /// </summary>
+    /// <param name="text">The name of the entry.</param>
+    /// <param name="sampler">The value of the sampler is measured to store a <see cref="TimeAndAllocSample"/>.</param>
+    /// <returns>The absolute position of the written log entry.</returns>
+    public long WriteValue(string text, in ProfSampler sampler) => WriteValue(text, ProfData.TimeAlloc(sampler));
 
-    public long WriteSample(string text, int int32) => WriteSample(text, ProfData.Int32(int32));
+    /// <summary>
+    /// Write a single profiling value to the log.
+    /// </summary>
+    /// <param name="text">The name of the entry.</param>
+    /// <param name="int32">The value to write.</param>
+    /// <returns>The absolute position of the written log entry.</returns>
+    public long WriteValue(string text, int int32) => WriteValue(text, ProfData.Int32(int32));
 
-    public long WriteSample(string text, long int64) => WriteSample(text, ProfData.Int64(int64));
+    /// <summary>
+    /// Write a single profiling value to the log.
+    /// </summary>
+    /// <param name="text">The name of the entry.</param>
+    /// <param name="int64">The value to write.</param>
+    /// <returns>The absolute position of the written log entry.</returns>
+    public long WriteValue(string text, long int64) => WriteValue(text, ProfData.Int64(int64));
 
+    /// <summary>
+    /// Write the start of a new log group.
+    /// </summary>
+    /// <returns>The absolute position of the written log entry.</returns>
     public long WriteGroupStart()
     {
         if (!IsEnabled)
             return 0;
 
-        var idx = Buffer.BufferWriteOffset;
+        var idx = Buffer.LogWriteOffset;
         ref var cmd = ref WriteCmd();
         cmd = default;
         cmd.Type = ProfLogType.GroupStart;
@@ -104,6 +144,12 @@ public sealed class ProfManager
         return idx;
     }
 
+    /// <summary>
+    /// Write the end of a log group.
+    /// </summary>
+    /// <param name="startIndex">The index of the matching group start.</param>
+    /// <param name="text">The name of the group.</param>
+    /// <param name="value">The value of the group.</param>
     public void WriteGroupEnd(long startIndex, string text, in ProfValue value)
     {
         if (!IsEnabled)
@@ -118,20 +164,34 @@ public sealed class ProfManager
         cmd.GroupEnd.StartIndex = startIndex;
         cmd.GroupEnd.Value = value;
     }
-
+    /// <summary>
+    /// Write the end of a log group.
+    /// </summary>
+    /// <param name="startIndex">The index of the matching group start.</param>
+    /// <param name="text">The name of the group.</param>
+    /// <param name="sampler">The value of the sampler is measured to store a <see cref="TimeAndAllocSample"/>.</param>
     public void WriteGroupEnd(long startIndex, string text, in ProfSampler sampler)
     {
         WriteGroupEnd(startIndex, text, ProfData.TimeAlloc(sampler));
     }
 
+    /// <summary>
+    /// Make a guarded group for usage with using blocks.
+    /// </summary>
     public GroupGuard Group(string name)
     {
         var start = WriteGroupStart();
         return new GroupGuard(this, start, name);
     }
 
-    public string GetString(int stringIdx) => _stringTree[stringIdx];
+    /// <summary>
+    /// Get the value for a string in the string tree.
+    /// </summary>
+    public string GetString(int stringId) => _stringTree[stringId];
 
+    /// <summary>
+    /// Get the index of a string in the string tree.
+    /// </summary>
     public int? GetStringIdx(string stringValue)
     {
         if (_stringTreeIndices.TryGetValue(stringValue, out var idx))
@@ -155,12 +215,12 @@ public sealed class ProfManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref ProfLog WriteCmd()
     {
-        var buf = Buffer.Buffer;
+        var buf = Buffer.LogBuffer;
         // This uses LongLength because it saves a single instruction to load the value from memory.
         // I spent more time on this function in sharplab than was probably worth it.
-        var idx = Buffer.BufferWriteOffset & (buf.LongLength - 1);
+        var idx = Buffer.LogWriteOffset & (buf.LongLength - 1);
 
-        Buffer.BufferWriteOffset += 1;
+        Buffer.LogWriteOffset += 1;
 
         return ref buf[(int)idx];
     }

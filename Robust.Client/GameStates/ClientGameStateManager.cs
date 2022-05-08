@@ -408,7 +408,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            _prof.WriteSample("Reset count", ProfData.Int32(countReset));
+            _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }
 
         private void MergeImplicitData(List<EntityUid> createdEntities)
@@ -592,8 +592,8 @@ namespace Robust.Client.GameStates
             }
 #endif
 
-            _prof.WriteSample("Created", ProfData.Int32(created.Count));
-            _prof.WriteSample("Applied", ProfData.Int32(toApply.Count));
+            _prof.WriteValue("Created", ProfData.Int32(created.Count));
+            _prof.WriteValue("Applied", ProfData.Int32(toApply.Count));
 
             return created;
         }

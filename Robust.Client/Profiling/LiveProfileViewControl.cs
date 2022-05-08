@@ -35,7 +35,7 @@ public sealed class LiveProfileViewControl : Control
         ref var buffer = ref UseBuffer ? ref Buffer : ref _profManager.Buffer;
         var baseLine = new Vector2(0, font.GetAscent(UIScale));
 
-        var index = buffer.IndexIdx(UseIndex ?? buffer.IndexWriteOffset - 1);
+        var index = buffer.Index(UseIndex ?? buffer.IndexWriteOffset - 1);
         var i = index.StartPos;
 
         DrawCmds(ref buffer, ref i, ref baseLine, in index, 0, font, handle);
@@ -52,7 +52,7 @@ public sealed class LiveProfileViewControl : Control
     {
         for (; i < index.EndPos; i++)
         {
-            ref var cmd = ref list.BufferIdx(i);
+            ref var cmd = ref list.Log(i);
             DrawCmd(ref list, ref i, ref baseline, index, ref cmd, depth, font, handle);
         }
     }
@@ -103,7 +103,7 @@ public sealed class LiveProfileViewControl : Control
     {
         switch (log.Type)
         {
-            case ProfLogType.Sample:
+            case ProfLogType.Value:
                 DrawCmdSample(ref log.Value, ref baseline, font, handle);
                 break;
             case ProfLogType.GroupStart:
@@ -135,7 +135,7 @@ public sealed class LiveProfileViewControl : Control
             // Skip contents of this group.
             for (; i < index.EndPos; i++)
             {
-                ref var cmd = ref buffer.BufferIdx(i);
+                ref var cmd = ref buffer.Log(i);
                 if (cmd.Type != ProfLogType.GroupEnd)
                     continue;
 
@@ -149,7 +149,7 @@ public sealed class LiveProfileViewControl : Control
 
             for (; i < index.EndPos; i++)
             {
-                ref var cmd = ref buffer.BufferIdx(i);
+                ref var cmd = ref buffer.Log(i);
                 if (cmd.Type == ProfLogType.GroupEnd)
                     break;
 
@@ -161,7 +161,7 @@ public sealed class LiveProfileViewControl : Control
         if (i == index.EndPos)
             return;
 
-        ref var cmdEnd = ref buffer.BufferIdx(i).GroupEnd;
+        ref var cmdEnd = ref buffer.Log(i).GroupEnd;
 
         baseline -= (indentSize, 0);
 

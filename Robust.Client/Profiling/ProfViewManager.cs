@@ -63,13 +63,13 @@ public sealed class ProfViewManager
     {
         // Any commands further back than this index are invalid.
         // Indices in their range are thus also invalid and to be ignored.
-        var cmdBufferStartValid = buffer.BufferWriteOffset - buffer.Buffer.LongLength;
+        var cmdBufferStartValid = buffer.LogWriteOffset - buffer.LogBuffer.LongLength;
 
         // Just scan over the index ring buffer in reverse to find the earliest index that's still valid.
-        var min = buffer.IndexWriteOffset - buffer.Index.LongLength;
+        var min = buffer.IndexWriteOffset - buffer.IndexBuffer.LongLength;
         for (var i = buffer.IndexWriteOffset - 1; i >= min; i--)
         {
-            ref var index = ref buffer.IndexIdx(i);
+            ref var index = ref buffer.Index(i);
             if (index.StartPos < cmdBufferStartValid)
                 return i + 1;
         }
@@ -84,10 +84,10 @@ public sealed class ProfViewManager
 
     private long GetFrameOfIndex(long index, in ProfBuffer buffer)
     {
-        ref var indexRef = ref buffer.IndexIdx(index);
-        ref var firstLog = ref buffer.BufferIdx(indexRef.StartPos);
+        ref var indexRef = ref buffer.Index(index);
+        ref var firstLog = ref buffer.Log(indexRef.StartPos);
 
-        if (firstLog.Type != ProfLogType.Sample ||
+        if (firstLog.Type != ProfLogType.Value ||
             _profManager.GetString(firstLog.Value.StringId) != GameLoop.ProfTextStartFrame)
             throw new InvalidOperationException("Unable to find start frame");
 

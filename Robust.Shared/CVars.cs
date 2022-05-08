@@ -1179,7 +1179,7 @@ namespace Robust.Shared
         /// <summary>
         /// Enabled the profiling system.
         /// </summary>
-        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", !ConstFullRelease);
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
 
         /// <summary>
         /// Event log buffer size for the profiling system.

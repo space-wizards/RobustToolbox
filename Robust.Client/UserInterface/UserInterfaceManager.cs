@@ -260,7 +260,7 @@ namespace Robust.Client.UserInterface
                     total += 1;
                 }
 
-                _prof.WriteSample("Total", ProfData.Int32(total));
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
             using (_prof.Group("Measure"))
@@ -277,7 +277,7 @@ namespace Robust.Client.UserInterface
                     total += 1;
                 }
 
-                _prof.WriteSample("Total", ProfData.Int32(total));
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
             using (_prof.Group("Arrange"))
@@ -294,7 +294,7 @@ namespace Robust.Client.UserInterface
                     total += 1;
                 }
 
-                _prof.WriteSample("Total", ProfData.Int32(total));
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
             using (_prof.Group("Update"))
@@ -305,7 +305,7 @@ namespace Robust.Client.UserInterface
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);
 
-                        _prof.WriteSample("Total", ProfData.Int32(totalUpdated));
+                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
                     }
                 }
             }
@@ -714,7 +714,7 @@ namespace Robust.Client.UserInterface
                 if (root.Window != _clyde.MainWindow)
                 {
                     using var _ = _prof.Group("Window");
-                    _prof.WriteSample("ID", ProfData.Int32((int) root.Window.Id));
+                    _prof.WriteValue("ID", ProfData.Int32((int) root.Window.Id));
 
                     renderHandle.RenderInRenderTarget(
                         root.Window.RenderTarget,
@@ -736,7 +736,7 @@ namespace Robust.Client.UserInterface
                 drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
 
-                _prof.WriteSample("Controls rendered", ProfData.Int32(total));
+                _prof.WriteValue("Controls rendered", ProfData.Int32(total));
             }
         }
 

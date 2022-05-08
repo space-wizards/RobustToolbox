@@ -6,6 +6,10 @@ using SStopwatch = System.Diagnostics.Stopwatch;
 
 // That's "Robust Stopwatch", so that it doesn't conflict with the BCL.
 // Ignore the other one it sucks.
+
+/// <summary>
+/// Struct equivalent to <see cref="SStopwatch"/>, avoids allocating.
+/// </summary>
 public struct RStopwatch
 {
     // If IsRunning, then _curTicks is the tick we started counting at.

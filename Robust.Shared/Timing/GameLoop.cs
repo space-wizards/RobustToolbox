@@ -2,7 +2,6 @@
 using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Prometheus;
 using Robust.Shared.Profiling;
@@ -129,7 +128,7 @@ namespace Robust.Shared.Timing
 
             while (Running)
             {
-                var profFrameStart = _prof.WriteSample(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
+                var profFrameStart = _prof.WriteValue(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
                 var profFrameGroupStart = _prof.WriteGroupStart();
                 var profFrameSw = ProfSampler.StartNew();
                 var profFrameGcGen0 = GC.CollectionCount(0);
@@ -203,7 +202,7 @@ namespace Robust.Shared.Timing
                     {
 #endif
                         using var tickGroup = _prof.Group("Tick");
-                        _prof.WriteSample("Tick", ProfData.Int64(_timing.CurTick.Value));
+                        _prof.WriteValue("Tick", ProfData.Int64(_timing.CurTick.Value));
 
                         if (EnableMetrics)
                         {
@@ -244,7 +243,7 @@ namespace Robust.Shared.Timing
                             _timing.Paused = true;
                     }
 
-                    _prof.WriteSample("Tick count", ProfData.Int32(countTicksRan));
+                    _prof.WriteValue("Tick count", ProfData.Int32(countTicksRan));
                 }
 
                 // if not paused, save how close to the next tick we are so interpolation works
@@ -290,13 +289,13 @@ namespace Robust.Shared.Timing
                 {
                     using var gc = _prof.Group("GC Overview");
 
-                    _prof.WriteSample("Gen 0 Count", ProfData.Int32(GC.CollectionCount(0) - profFrameGcGen0));
-                    _prof.WriteSample("Gen 1 Count", ProfData.Int32(GC.CollectionCount(1) - profFrameGcGen1));
-                    _prof.WriteSample("Gen 2 Count", ProfData.Int32(GC.CollectionCount(2) - profFrameGcGen2));
+                    _prof.WriteValue("Gen 0 Count", ProfData.Int32(GC.CollectionCount(0) - profFrameGcGen0));
+                    _prof.WriteValue("Gen 1 Count", ProfData.Int32(GC.CollectionCount(1) - profFrameGcGen1));
+                    _prof.WriteValue("Gen 2 Count", ProfData.Int32(GC.CollectionCount(2) - profFrameGcGen2));
                 }
 
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
-                _prof.MarkIndex(profFrameStart);
+                _prof.MarkIndex(profFrameStart, ProfIndexType.Frame);
 
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.

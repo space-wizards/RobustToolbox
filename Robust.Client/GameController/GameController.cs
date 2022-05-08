@@ -157,7 +157,6 @@ namespace Robust.Client
             }
 
             _authManager.LoadFromEnv();
-            _prof.IsEnabled = true;
 
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();

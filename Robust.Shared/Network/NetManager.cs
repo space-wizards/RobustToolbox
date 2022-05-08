@@ -551,8 +551,8 @@ namespace Robust.Shared.Network
             MessagesResentHoleMetrics.IncTo(resentHoles);
             MessagesDroppedMetrics.IncTo(dropped);
 
-            _prof.WriteSample("Count Processed", countProcessed);
-            _prof.WriteSample("Count Data Processed", countDataProcessed);
+            _prof.WriteValue("Count Processed", countProcessed);
+            _prof.WriteValue("Count Data Processed", countDataProcessed);
 
             /*
             MessagesUnsentMetrics.Set(unsent);

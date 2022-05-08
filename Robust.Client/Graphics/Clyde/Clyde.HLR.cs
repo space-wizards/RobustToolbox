@@ -114,12 +114,12 @@ namespace Robust.Client.Graphics.Clyde
 
             using (_prof.Group("Stats"))
             {
-                _prof.WriteSample("GL Draw Calls", ProfData.Int32(_debugStats.LastGLDrawCalls));
-                _prof.WriteSample("Clyde Draw Calls", ProfData.Int32(_debugStats.LastClydeDrawCalls));
-                _prof.WriteSample("Batches", ProfData.Int32(_debugStats.LastBatches));
-                _prof.WriteSample("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
-                _prof.WriteSample("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
-                _prof.WriteSample("Lights", ProfData.Int32(_debugStats.TotalLights));
+                _prof.WriteValue("GL Draw Calls", ProfData.Int32(_debugStats.LastGLDrawCalls));
+                _prof.WriteValue("Clyde Draw Calls", ProfData.Int32(_debugStats.LastClydeDrawCalls));
+                _prof.WriteValue("Batches", ProfData.Int32(_debugStats.LastBatches));
+                _prof.WriteValue("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
+                _prof.WriteValue("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
+                _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
             }
         }
 

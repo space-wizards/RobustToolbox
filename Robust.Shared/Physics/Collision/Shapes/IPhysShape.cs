@@ -10,8 +10,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Edge = 1,
         Polygon = 2,
         Chain = 3,
-        Aabb = 4,
-        TypeCount = 5, // Obviously increment this if you add something
+        TypeCount = 4, // Obviously increment this if you add something
     }
 
     /// <summary>

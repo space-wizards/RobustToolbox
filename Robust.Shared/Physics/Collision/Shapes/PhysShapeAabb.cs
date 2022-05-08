@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
-        public ShapeType ShapeType => ShapeType.Aabb;
+        public ShapeType ShapeType => ShapeType.Unknown;
 
         [DataField("bounds")]
         [ViewVariables(VVAccess.ReadWrite)]

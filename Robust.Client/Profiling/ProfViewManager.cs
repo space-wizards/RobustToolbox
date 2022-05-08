@@ -47,7 +47,7 @@ public sealed class ProfViewManager
             EndFrame = end,
             LowestValidIndex = lowestIndex,
             Buffer = buffer,
-            Identifier = _nextId
+            Identifier = _nextId++
         });
 
         SnapshotsUpdated?.Invoke();

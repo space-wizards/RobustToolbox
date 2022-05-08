@@ -28,6 +28,13 @@ internal sealed partial class ProfTree : Control
     {
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
+
+        Header.Text.Text = "Thing";
+        Header.SideLabel.Text = "Misc";
+        Header.TimeLabel.Text = "Time";
+        Header.PercentTimeLabel.Text = "Time%";
+        Header.AllocLabel.Text = "Alloc";
+        Header.PercentAllocLabel.Text = "Alloc%";
     }
 
     public void LoadSnapshot(ProfViewManager.Snapshot snapshot)
@@ -63,49 +70,30 @@ internal sealed partial class ProfTree : Control
         var totalFrameTime = ProfGraphView.GetFrameTime(buf, index);
         var (totalCounts, _) = GetTotalGroupCounts(buf, i, logEnd.GroupEnd.StartIndex);
 
+        BuildData data = default;
+        data.Buffer = buf;
+        data.Index = index;
+        data.TotalFrameTime = totalFrameTime;
+
+        // We traverse the log backwards because we can use GroupEnd nodes to skip over data entirely.
+
         for (; i >= index.StartPos; i--)
         {
+            // Recursively build the tree.
             ref var log = ref buf.Log(i);
             RebuildTreeAddControls(
-                buf,
-                index,
-                totalFrameTime,
-                ref i,
-                ref log,
+                in data,
                 ref controls,
+                ref i,
+                in log,
                 totalCounts,
                 countDict,
                 _treeExpand,
                 2);
         }
 
-        /*
-        TreeInsertGroup(
-            buf,
-            index,
-            ProfGraphView.GetFrameTime(buf, index),
-            ref i,
-            ref logEnd.GroupEnd,
-            ref controls,
-            (logEnd.GroupEnd.StringId, 1),
-            _treeExpand,
-            2f);
-            */
-
-        // Header.
-        // Yeah we destroy this every time I bodged it in.
-        TreeRoot.AddChild(new ProfAltBackground { Children = { new ProfTreeLine
-        {
-            Text = { Text = "Thing" },
-            SideLabel = { Text = "Misc" },
-            TimeLabel = { Text = "Time" },
-            PercentTimeLabel = { Text = "Time%" },
-            AllocLabel = { Text = "Alloc" },
-            PercentAllocLabel = { Text = "Alloc%" },
-        } } });
-
-        // Reverse insert to fix backwards order.
-        // This shouldn't even have more than 1 element but whatever.
+        // Because we traversed backwards, the control list is backwards too.
+        // Insert backwards again to fix that.
         for (var c = controls.Count - 1; c >= 0; c--)
         {
             TreeRoot.AddChild(controls[c]);
@@ -113,42 +101,27 @@ internal sealed partial class ProfTree : Control
 
         // Do a final pass to assign the alternating background colors.
         // Easier to do here than to do it while we're creating the controls.
-        var alt = true;
+        var alt = false;
         foreach (var child in TreeRoot.Children)
         {
-            DoAltBackgroundsRecursive(child, ref alt);
+            DoAltBackgrounds(child, ref alt);
         }
     }
 
-    private static void DoAltBackgroundsRecursive(Control control, ref bool alt)
+    private static void DoAltBackgrounds(Control control, ref bool alt)
     {
-        switch (control)
-        {
-            case ProfAltBackground altBg:
-                altBg.IsAltBackground = alt;
-                alt ^= true;
-                break;
+        if (control is not ProfAltBackground altBg)
+            return;
 
-            case ProfTreeEntry entry:
-                entry.AltBG.IsAltBackground = alt;
-                alt ^= true;
-
-                foreach (var child in entry.ChildEntryContainer.Children)
-                {
-                    DoAltBackgroundsRecursive(child, ref alt);
-                }
-
-                break;
-        }
+        altBg.IsAltBackground = alt;
+        alt = !alt;
     }
 
     private void RebuildTreeAddControls(
-        in ProfBuffer buffer,
-        in ProfIndex index,
-        in TimeAndAllocSample totalFrameTime,
-        ref long i,
-        ref ProfLog log,
+        in BuildData data,
         ref ValueList<Control> insertInto,
+        ref long i,
+        in ProfLog log,
         Dictionary<int, int> totalCounts,
         Dictionary<int, int> countDict,
         TreeExpand expandParent,
@@ -157,7 +130,7 @@ internal sealed partial class ProfTree : Control
         switch (log.Type)
         {
             case ProfLogType.Value:
-                TreeInsertSample(totalFrameTime, ref insertInto, log.Value.StringId, log.Value.Value, margin);
+                TreeInsertSample(in data, ref insertInto, log.Value.StringId, log.Value.Value, margin);
                 break;
 
             case ProfLogType.GroupEnd:
@@ -170,12 +143,10 @@ internal sealed partial class ProfTree : Control
                 var stringI = totalCount - count;
 
                 TreeInsertGroup(
-                    buffer,
-                    index,
-                    totalFrameTime,
-                    ref i,
-                    ref log.GroupEnd,
+                    in data,
                     ref insertInto,
+                    ref i,
+                    in log.GroupEnd,
                     (stringId, stringI),
                     expandParent,
                     margin);
@@ -183,41 +154,44 @@ internal sealed partial class ProfTree : Control
         }
     }
 
-    private void TreeInsertSample(in TimeAndAllocSample totalFrameTime, ref ValueList<Control> insertInto, int stringId, in ProfValue value, float margin)
+    private void TreeInsertSample(
+        in BuildData data,
+        ref ValueList<Control> insertInto,
+        int stringId,
+        in ProfValue value,
+        float margin)
     {
         var treeLine = new ProfTreeLine();
         treeLine.Margin = new Thickness(treeLine.Margin.Left + margin + 12 + 2, 0, 0, 0);
-        FillTreeLine(totalFrameTime, treeLine, stringId, value);
+        FillTreeLine(in data, treeLine, stringId, value);
         insertInto.Add(new ProfAltBackground { Children = { treeLine } });
     }
 
     private void TreeInsertGroup(
-        in ProfBuffer buffer,
-        in ProfIndex index,
-        in TimeAndAllocSample totalFrameTime,
-        ref long i,
-        ref ProfLogGroupEnd logEnd,
+        in BuildData data,
         ref ValueList<Control> insertInto,
+        ref long i,
+        in ProfLogGroupEnd logEnd,
         (int str, int i) expandId,
         TreeExpand expandParent,
         float margin)
     {
         i -= 1;
 
-        var (totalCounts, anyChildren) = GetTotalGroupCounts(buffer, i, logEnd.StartIndex);
+        var (totalCounts, anyChildren) = GetTotalGroupCounts(data.Buffer, i, logEnd.StartIndex);
 
         if (!anyChildren)
         {
             // Node has no children we can display. Just insert it as if it's a sample and move along.
-            TreeInsertSample(totalFrameTime, ref insertInto, logEnd.StringId, logEnd.Value, margin);
+            TreeInsertSample(in data, ref insertInto, logEnd.StringId, logEnd.Value, margin);
             i = logEnd.StartIndex;
             return;
         }
 
         var groupControl = new ProfTreeEntry(this, expandParent, expandId, margin);
-        FillTreeLine(totalFrameTime, groupControl.TextLine, logEnd.StringId, logEnd.Value);
+        var altBg = new ProfAltBackground { Children = { groupControl } };
+        FillTreeLine(in data, groupControl.TextLine, logEnd.StringId, logEnd.Value);
 
-        insertInto.Add(groupControl);
 
         // Look up in the parent's expand data whether we're expanded.
         var expand = expandParent.ExpandedItems.GetValueOrDefault(expandId);
@@ -225,39 +199,33 @@ internal sealed partial class ProfTree : Control
         {
             // Note expanded. Skip!
             i = logEnd.StartIndex;
+            insertInto.Add(altBg);
             return;
         }
 
         groupControl.Arrow.Rotated = true;
 
         // Create child controls.
-        var children = new ValueList<Control>();
         var countDict = new Dictionary<int, int>();
 
-        for (; i >= index.StartPos; i--)
+        for (; i >= data.Index.StartPos; i--)
         {
-            ref var log = ref buffer.Log(i);
+            ref var log = ref data.Buffer.Log(i);
             if (log.Type == ProfLogType.GroupStart)
                 break;
 
             RebuildTreeAddControls(
-                buffer,
-                index,
-                totalFrameTime,
+                in data,
+                ref insertInto,
                 ref i,
-                ref log,
-                ref children,
+                in log,
                 totalCounts,
                 countDict,
                 expand,
                 margin + TreeLevelMargin);
         }
 
-        // Insert child controls in reverse so the order checks out.
-        for (var c = children.Count - 1; c >= 0; c--)
-        {
-            groupControl.ChildEntryContainer.AddChild(children[c]);
-        }
+        insertInto.Add(altBg);
     }
 
     private static (Dictionary<int, int> counts, bool anyChildren) GetTotalGroupCounts(
@@ -286,7 +254,7 @@ internal sealed partial class ProfTree : Control
     }
 
     private void FillTreeLine(
-        in TimeAndAllocSample totalFrameTime,
+        in BuildData data,
         ProfTreeLine line,
         int stringId,
         in ProfValue value)
@@ -297,9 +265,9 @@ internal sealed partial class ProfTree : Control
         {
             case ProfValueType.TimeAllocSample:
                 line.TimeLabel.Text = $"{value.TimeAllocSample.Time * 1000:N2} ms";
-                line.PercentTimeLabel.Text = $"{value.TimeAllocSample.Time / totalFrameTime.Time:P2}";
+                line.PercentTimeLabel.Text = $"{value.TimeAllocSample.Time / data.TotalFrameTime.Time:P2}";
                 line.AllocLabel.Text = $"{value.TimeAllocSample.Alloc} B";
-                line.PercentAllocLabel.Text = $"{value.TimeAllocSample.Alloc / (float) totalFrameTime.Alloc:P2}";
+                line.PercentAllocLabel.Text = $"{value.TimeAllocSample.Alloc / (float)data.TotalFrameTime.Alloc:P2}";
                 break;
             case ProfValueType.Int32:
                 line.SideLabel.Text = value.Int32.ToString();
@@ -317,5 +285,12 @@ internal sealed partial class ProfTree : Control
     {
         public bool Enabled = true;
         public readonly Dictionary<(int str, int i), TreeExpand> ExpandedItems = new();
+    }
+
+    private struct BuildData
+    {
+        public ProfBuffer Buffer;
+        public ProfIndex Index;
+        public TimeAndAllocSample TotalFrameTime;
     }
 }

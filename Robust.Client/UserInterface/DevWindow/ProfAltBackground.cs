@@ -5,7 +5,7 @@ namespace Robust.Client.UserInterface;
 
 internal sealed class ProfAltBackground : Control
 {
-    public bool IsAltBackground;
+    public bool IsAltBackground { get; set; }
 
     protected internal override void Draw(DrawingHandleScreen handle)
     {

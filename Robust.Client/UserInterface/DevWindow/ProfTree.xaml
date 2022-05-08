@@ -4,6 +4,12 @@
          MinHeight="64">
     <ScrollContainer Name="TreeScroll"
                      HScrollEnabled="False" VScrollEnabled="True">
-        <BoxContainer Orientation="Vertical" Name="TreeRoot" />
+        <BoxContainer Orientation="Vertical">
+            <!-- Header values filled in in constructor -->
+            <ProfAltBackground IsAltBackground="True">
+                <ProfTreeLine Name="Header" />
+            </ProfAltBackground>
+            <BoxContainer Orientation="Vertical" Name="TreeRoot" />
+        </BoxContainer>
     </ScrollContainer>
 </Control>

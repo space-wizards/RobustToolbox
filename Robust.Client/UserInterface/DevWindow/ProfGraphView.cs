@@ -11,8 +11,11 @@ using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 
-public sealed class ProfGraphView : Control
+internal sealed class ProfGraphView : Control
 {
+    private const int HeightFps = 15;
+    private const float MaxHeightMs = 1 / (float) HeightFps;
+
     [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     private ProfViewManager.Snapshot? _snapshot;
@@ -94,9 +97,7 @@ public sealed class ProfGraphView : Control
         {
             var valueSeconds = GetFrameTime(buffer, buffer.Index(i)).Time;
 
-            const float peak = 0.016f * 4;
-
-            var height = controlHeight * (valueSeconds / peak);
+            var height = controlHeight * (valueSeconds / MaxHeightMs);
 
             var rect = UIBox2.FromDimensions(x, (controlHeight - height), barWidth, height);
             var color = HighlightFrame == frame ? Color.Pink : FrameGraph.FrameTimeColor(valueSeconds, targetFps);

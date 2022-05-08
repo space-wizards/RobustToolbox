@@ -68,80 +68,63 @@ namespace Robust.Analyzers
             var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
             var bestFriendAttr = context.Compilation.GetTypeByMetadataName(BestFriendAttribute);
 
-            // Get the type that is containing this expression, or, the class where this is happening.
-            if (context.ContainingSymbol?.ContainingType is not { } containingType)
+            // Get the type that is containing this expression, or, the type where this is happening.
+            if (context.ContainingSymbol?.ContainingType is not {} containingType)
                 return;
 
-            // We check all of our children and get only the identifiers.
-            foreach (var identifier in memberAccess.ChildNodes().Select(node => node as IdentifierNameSyntax))
+            // True if read access, false if write or execute access.
+            var read =
+                // Being invoked.
+                context.Node.Parent is not InvocationExpressionSyntax &&
+                // Being assigned.
+                !(context.Node.Parent is AssignmentExpressionSyntax assignParent && assignParent.Left == memberAccess);
+
+            // Get the expression representing the object that the member being accessed belongs to.
+            var identifier = memberAccess.Expression;
+
+            // Get the info of the type defining the member, so we can check the attributes...
+            if (context.SemanticModel.GetTypeInfo(identifier).ConvertedType is not { } type)
+                return;
+
+            // Same-type access is always fine.
+            if (SymbolEqualityComparer.Default.Equals(type, containingType))
+                return;
+
+            // Finally, get all attributes of the type, to check if we have any friend types.
+            foreach (var attribute in type.GetAttributes())
             {
-                if (identifier == null)
-                    continue;
+                var bestFriend = false;
 
-                // Get the type info of the identifier, so we can check the attributes...
-                if (context.SemanticModel.GetTypeInfo(identifier).ConvertedType is not { } type)
-                    continue;
-
-                // Same-type access is always fine.
-                if (SymbolEqualityComparer.Default.Equals(type, containingType))
-                    continue;
-
-                // Finally, get all attributes of the type, to check if we have any friend types.
-                foreach (var attribute in type.GetAttributes())
+                // If the attribute isn't the friend attribute, continue.
+                if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttr))
                 {
-                    var bestFriend = false;
+                    if(!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, bestFriendAttr))
+                        continue;
 
-                    // If the attribute isn't the friend attribute, continue.
-                    if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttr))
-                    {
-                        if(!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, bestFriendAttr))
-                            continue;
-
-                        // This is the best friend attribute instead!
-                        bestFriend = true;
-                    }
-
-                    // If we're working with a Friend attribute, we only care about write/execute.
-                    if (!bestFriend)
-                    {
-                        // We only do something if our parent is one of a few types.
-                        switch (context.Node.Parent)
-                        {
-                            // If we're being assigned...
-                            case AssignmentExpressionSyntax assignParent:
-                            {
-                                if (assignParent.Left != memberAccess)
-                                    return;
-                                break;
-                            }
-
-                            // If we're being invoked...
-                            case InvocationExpressionSyntax:
-                                break;
-
-                            // Otherwise, do nothing.
-                            default:
-                                continue;
-                        }
-                    }
-
-                    // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
-                    foreach (var constant in attribute.ConstructorArguments[0].Values)
-                    {
-                        // Check if the value is a type...
-                        if (constant.Value is not INamedTypeSymbol t)
-                            continue;
-
-                        // If we find that the containing class is specified in the attribute, return! All is good.
-                        if (InheritsFromOrEquals(containingType, t))
-                            return;
-                    }
-
-                    // Not in a friend class! Report an error.
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(bestFriend ? BestFriendRule : FriendRule, context.Node.GetLocation(),
-                            $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
+                    // This is the best friend attribute instead!
+                    bestFriend = true;
                 }
+
+                // If we're working with a Friend attribute, we only care about write/execute.
+                if (!bestFriend && read)
+                    return;
+
+                // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
+                foreach (var constant in attribute.ConstructorArguments[0].Values)
+                {
+                    // Check if the value is a type...
+                    if (constant.Value is not INamedTypeSymbol t)
+                        continue;
+
+                    // If we find that the containing type is specified in the attribute, return! All is good.
+                    if (InheritsFromOrEquals(containingType, t))
+                        return;
+                }
+
+                // Not in a friend type! Report an error.
+                context.ReportDiagnostic(
+                    Diagnostic.Create(bestFriend ? BestFriendRule : FriendRule, context.Node.GetLocation(),
+                        $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
             }
         }
 

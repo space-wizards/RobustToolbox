@@ -781,7 +781,7 @@ namespace Robust.Shared.GameObjects
                 if (fixture.Mass <= 0.0f) continue;
 
                 var data = new MassData {Mass = fixture.Mass};
-                shapeManager.GetMassData(fixture.Shape, ref data);
+                FixtureSystem.GetMassData(fixture.Shape, ref data);
 
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;

@@ -119,11 +119,15 @@ namespace Robust.Client.Physics
 
             private Color GetColor(MapChunk chunk, int index)
             {
-                var red = Math.Abs(chunk.Indices.X * 30 % 255);
-                var green = Math.Abs(chunk.Indices.Y * 30 % 255);
-                var blue = index * 30 % 255;
+                // Just want something that doesn't give similar indices at 0,0 but is also deterministic.
+                // Add an offset to yIndex so we at least have some colour that isn't grey at 0,0
+                var actualIndex = chunk.Indices.X * 20 + (chunk.Indices.Y + 20) * 35 + index * 50;
 
-                return new Color(red, green, blue, 0.3f);
+                var red = (byte) (actualIndex % 255);
+                var green = (byte) (actualIndex * 20 % 255);
+                var blue = (byte) (actualIndex * 30 % 255);
+
+                return new Color(red, green, blue, 85);
             }
         }
     }

@@ -39,7 +39,7 @@ namespace Robust.Analyzers
         private static readonly DiagnosticDescriptor MutuallyExclusiveFriendAttributesRule = new (
             Diagnostics.IdMutuallyExclusiveFriendAttributes,
             "Tried to define both the Friend and BestFriend attributes on the same type",
-            "Tried to define the mutually-exclusive \"Friend\" and \"BestFriend\" attributes in the same type \"{0}\"",
+            "\"Friend\" and \"BestFriend\" are mutually exclusive on a single element (\"{0}\")",
             "Usage",
             DiagnosticSeverity.Error,
             true,
@@ -53,10 +53,7 @@ namespace Robust.Analyzers
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
             context.RegisterSyntaxNodeAction(CheckFriendship, SyntaxKind.SimpleMemberAccessExpression);
-            context.RegisterSyntaxNodeAction(CheckFriendshipAttributes,
-                SyntaxKind.ClassDeclaration,
-                SyntaxKind.InterfaceDeclaration,
-                SyntaxKind.StructDeclaration);
+            context.RegisterSyntaxNodeAction(CheckFriendshipAttributes, SyntaxKind.AttributeList);
         }
 
         private void CheckFriendship(SyntaxNodeAnalysisContext context)
@@ -79,27 +76,34 @@ namespace Robust.Analyzers
                 // Being assigned.
                 !(context.Node.Parent is AssignmentExpressionSyntax assignParent && assignParent.Left == memberAccess);
 
+            // Get the syntax representing the member being accessed
+            var memberIdentifier = memberAccess.Name;
+
             // Get the expression representing the object that the member being accessed belongs to.
-            var identifier = memberAccess.Expression;
+            var typeIdentifier = memberAccess.Expression;
+
+            if (context.SemanticModel.GetSymbolInfo(memberIdentifier).Symbol is not {} member)
+                return;
 
             // Get the info of the type defining the member, so we can check the attributes...
-            if (context.SemanticModel.GetTypeInfo(identifier).ConvertedType is not { } type)
+            if (context.SemanticModel.GetTypeInfo(typeIdentifier).ConvertedType is not { } type)
                 return;
 
             // Same-type access is always fine.
             if (SymbolEqualityComparer.Default.Equals(type, containingType))
                 return;
 
-            // Finally, get all attributes of the type, to check if we have any friend types.
-            foreach (var attribute in type.GetAttributes())
+            // Helper function to deduplicate attribute-checking code.
+            bool CheckAttributeFriendship(AttributeData attribute)
             {
                 var bestFriend = false;
 
-                // If the attribute isn't the friend attribute, continue.
+                // If the attribute isn't the friend attribute, we don't care about it.
+                // We also assume there's only one Friend/BestFriend attribute here, as they're mutually exclusive.
                 if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttr))
                 {
                     if(!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, bestFriendAttr))
-                        continue;
+                        return false;
 
                     // This is the best friend attribute instead!
                     bestFriend = true;
@@ -107,10 +111,16 @@ namespace Robust.Analyzers
 
                 // If we're working with a Friend attribute, we only care about write/execute.
                 if (!bestFriend && read)
-                    return;
+                    return true;
 
                 // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
-                foreach (var constant in attribute.ConstructorArguments[0].Values)
+                var types = attribute.ConstructorArguments[0].Values;
+
+                // There are no specified types, therefore
+                if (types.Length == 0)
+                    return true;
+
+                foreach (var constant in types)
                 {
                     // Check if the value is a type...
                     if (constant.Value is not INamedTypeSymbol t)
@@ -118,19 +128,39 @@ namespace Robust.Analyzers
 
                     // If we find that the containing type is specified in the attribute, return! All is good.
                     if (InheritsFromOrEquals(containingType, t))
-                        return;
+                        return true;
                 }
 
                 // Not in a friend type! Report an error.
                 context.ReportDiagnostic(
                     Diagnostic.Create(bestFriend ? BestFriendRule : FriendRule, context.Node.GetLocation(),
                         $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
+
+                // Only return ONE error.
+                return true;
+            }
+
+            // Check attributes in the member first, since they take priority and can override type restrictions.
+            foreach (var attribute in member.GetAttributes())
+            {
+                if(CheckAttributeFriendship(attribute))
+                    return;
+            }
+
+            // Check attributes in the type containing the member last.
+            foreach (var attribute in type.GetAttributes())
+            {
+                if(CheckAttributeFriendship(attribute))
+                    return;
             }
         }
 
         private void CheckFriendshipAttributes(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not TypeDeclarationSyntax typeDeclaration)
+            if (context.Node is not AttributeListSyntax attributeListSyntax)
+                return;
+
+            if (context.Node.Parent is not {} parent)
                 return;
 
             // Get the attributes
@@ -140,8 +170,11 @@ namespace Robust.Analyzers
             var friendFound = false;
             var bestFriendFound = false;
 
-            foreach (var attributeList in typeDeclaration.AttributeLists)
+            foreach (var child in parent.ChildNodes())
             {
+                if (child is not AttributeListSyntax attributeList)
+                    continue;
+
                 foreach (var attribute in attributeList.Attributes)
                 {
                     if (context.SemanticModel.GetTypeInfo(attribute).ConvertedType is not {} type)
@@ -163,7 +196,7 @@ namespace Robust.Analyzers
                     // Mutually exclusive attributes! Report error.
                     context.ReportDiagnostic(
                         Diagnostic.Create(MutuallyExclusiveFriendAttributesRule, attribute.GetLocation(),
-                            $"{typeDeclaration.Identifier.Text}"));
+                            $"{GetPrettyNodeName(parent)}"));
 
                     return;
                 }
@@ -189,6 +222,19 @@ namespace Robust.Analyzers
                 yield return current;
                 current = current.BaseType;
             }
+        }
+
+        private string GetPrettyNodeName(SyntaxNode node)
+        {
+            return node switch
+            {
+                TypeDeclarationSyntax type => type.Identifier.Text,
+                PropertyDeclarationSyntax property => property.Identifier.Text,
+                MethodDeclarationSyntax method => method.Identifier.Text,
+                ConstructorDeclarationSyntax constructor => constructor.Identifier.Text,
+                FieldDeclarationSyntax field => field.Declaration.Variables.ToString(),
+                _ => node.ToString()
+            };
         }
     }
 }

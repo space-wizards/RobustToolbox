@@ -16,6 +16,10 @@ namespace Robust.UnitTesting
         {
         }
 
+        public void Redial(string address, string? reason = null)
+        {
+        }
+
         public void SetCommandLineArgs(CommandLineArgs args)
         {
         }

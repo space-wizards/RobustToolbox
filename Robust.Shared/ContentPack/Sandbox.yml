@@ -207,6 +207,7 @@ Types:
       - "SixLabors.ImageSharp.Image`1<!!0> CloneAs<>(SixLabors.ImageSharp.Configuration)"
       - "SixLabors.ImageSharp.Image`1<!0> Clone()"
       - "SixLabors.ImageSharp.Image`1<!0> Clone(SixLabors.ImageSharp.Configuration)"
+      - "void set_Item(int, int, !0)"
       - "void .ctor(int, int)"
       - "void .ctor(int, int, !0)"
       - "void .ctor(SixLabors.ImageSharp.Configuration, int, int)"

@@ -46,6 +46,8 @@ internal partial class GameController
 
         if (Interlocked.Increment(ref _hasRedialled) != 1)
         {
+            // Don't let it overflow or anything
+            Interlocked.Decrement(ref _hasRedialled);
             throw new Exception("Attempted a redial after one already succeeded or while one is in progress, this is never acceptable");
         }
 

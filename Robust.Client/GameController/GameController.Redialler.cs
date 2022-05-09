@@ -11,14 +11,10 @@ namespace Robust.Client;
 
 internal partial class GameController
 {
-    /// <summary>
-    ///     Try to cause the launcher to either reconnect to the same server or connect to a new server.
-    ///     *The engine will shutdown on success.*
-    ///     Will throw an exception if contacting the launcher failed (success indicates it is now the launcher's responsibility).
-    ///     To redial the same server, retrieve the server's address from `LaunchState.Ss14Address`.
-    /// </summary>
-    /// <param name="address">The server address, such as "ss14://localhost:1212/".</param>
-    /// <param name="text">Informational text on the cause of the reconnect. Empty or null gives a default reason.</param>
+    // A little paranoia goes a long way.
+    // This is static on purpose - the whole process shouldn't redial more than once, ever.
+    private static int _hasRedialled = 0;
+
     public void Redial(string address, string? text = null)
     {
         // -- ATTENTION, YE WOULD-BE TRESPASSERS! --
@@ -48,7 +44,20 @@ internal partial class GameController
             throw new Exception("Attempted a redial when redialling was not supported by the loader (Outdated launcher?)");
         }
 
-        _loaderArgs!.RedialApi!.Redial(new Uri(address), text ?? "");
+        if (Interlocked.Increment(ref _hasRedialled) != 1)
+        {
+            throw new Exception("Attempted a redial after one already succeeded or while one is in progress, this is never acceptable");
+        }
+
+        try
+        {
+            _loaderArgs!.RedialApi!.Redial(new Uri(address), text ?? "");
+        }
+        catch (Exception ex)
+        {
+            Interlocked.Decrement(ref _hasRedialled);
+            throw ex;
+        }
 
         Shutdown("Redial");
     }

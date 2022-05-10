@@ -48,14 +48,25 @@ namespace Robust.Client.Graphics
 
         public abstract void UseShader(ShaderInstance? shader);
 
+        // ---- DrawPrimitives: Vector2 API ----
+
         /// <summary>
         ///     Draws arbitrary geometry primitives with a flat color.
         /// </summary>
         /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
         /// <param name="vertices">The set of vertices to render.</param>
         /// <param name="color">The color to draw with.</param>
-        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
-            Color color);
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
+            Color color)
+        {
+            var realColor = color * Modulate;
+
+            // TODO: Maybe don't stackalloc if the data is too large.
+            Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+            PadVerticesV2(vertices, drawVertices, realColor);
+
+            DrawPrimitives(primitiveTopology, Texture.White, drawVertices);
+        }
 
         /// <summary>
         ///     Draws arbitrary indexed geometry primitives with a flat color.
@@ -64,8 +75,28 @@ namespace Robust.Client.Graphics
         /// <param name="indices">The indices into <paramref name="vertices"/> to render.</param>
         /// <param name="vertices">The set of vertices to render.</param>
         /// <param name="color">The color to draw with.</param>
-        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
-            ReadOnlySpan<Vector2> vertices, Color color);
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
+            ReadOnlySpan<Vector2> vertices, Color color)
+        {
+            var realColor = color * Modulate;
+
+            // TODO: Maybe don't stackalloc if the data is too large.
+            Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+            PadVerticesV2(vertices, drawVertices, realColor);
+
+            DrawPrimitives(primitiveTopology, Texture.White, indices, drawVertices);
+        }
+
+        private void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
+        {
+            Color colorLinear = Color.FromSrgb(color);
+            for (var i = 0; i < output.Length; i++)
+            {
+                output[i] = new DrawVertexUV2DColor(input[i], (0.5f, 0.5f), colorLinear);
+            }
+        }
+
+        // ---- DrawPrimitives: DrawVertexUV2D API ----
 
         /// <summary>
         ///     Draws arbitrary geometry primitives with a texture.
@@ -74,20 +105,70 @@ namespace Robust.Client.Graphics
         /// <param name="texture">The texture to render with.</param>
         /// <param name="vertices">The set of vertices to render.</param>
         /// <param name="color">The color to draw with.</param>
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<DrawVertexUV2D> vertices,
+            Color? color = null)
+        {
+            var realColor = (color ?? Color.White) * Modulate;
+
+            // TODO: Maybe don't stackalloc if the data is too large.
+            Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+            PadVerticesUV(vertices, drawVertices, realColor);
+
+            DrawPrimitives(primitiveTopology, texture, drawVertices);
+        }
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a texture.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="texture">The texture to render with.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
+        /// <param name="indices">The indices into <paramref name="vertices"/> to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<ushort> indices,
+            ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null)
+        {
+            var realColor = (color ?? Color.White) * Modulate;
+
+            // TODO: Maybe don't stackalloc if the data is too large.
+            Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+            PadVerticesUV(vertices, drawVertices, realColor);
+
+            DrawPrimitives(primitiveTopology, texture, indices, drawVertices);
+        }
+
+        private void PadVerticesUV(ReadOnlySpan<DrawVertexUV2D> input, Span<DrawVertexUV2DColor> output, Color color)
+        {
+            Color colorLinear = Color.FromSrgb(color);
+            for (var i = 0; i < output.Length; i++)
+            {
+                output[i] = new DrawVertexUV2DColor(input[i], colorLinear);
+            }
+        }
+
+        // ---- End wrappers ----
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a texture.
+        ///     Be aware that this ignores the Modulate property! Apply it yourself if necessary.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="texture">The texture to render with.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
         public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
-            ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null);
+            ReadOnlySpan<DrawVertexUV2DColor> vertices);
 
         /// <summary>
         ///     Draws arbitrary geometry primitives with a flat color.
+        ///     Be aware that this ignores the Modulate property! Apply it yourself if necessary.
         /// </summary>
         /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
         /// <param name="texture">The texture to render with.</param>
         /// <param name="indices">The indices into <paramref name="vertices"/> to render.</param>
         /// <param name="vertices">The set of vertices to render.</param>
-        /// <param name="color">The color to draw with.</param>
         public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
             ReadOnlySpan<ushort> indices,
-            ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null);
+            ReadOnlySpan<DrawVertexUV2DColor> vertices);
 
         [DebuggerStepThrough]
         protected void CheckDisposed()
@@ -121,7 +202,7 @@ namespace Robust.Client.Graphics
     }
 
     /// <summary>
-    ///     2D Vertex that contains both position and UV coordinates.
+    ///     2D Vertex that contains position and UV coordinates, and a modulation colour (Linear!!!)
     ///     NOTE: This is directly cast into Clyde Vertex2D!!!!
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -129,9 +210,16 @@ namespace Robust.Client.Graphics
     {
         public Vector2 Position;
         public Vector2 UV;
-        // Note that this color is in linear space.
+        /// <summary>
+        ///     Modulation colour for this vertex.
+        ///     Note that this color is in linear space.
+        /// </summary>
         public Color Color;
 
+        /// <param name="position">The location.</param>
+        /// <param name="uv">The texture coordinate.</param>
+        /// <param name="col">Modulation colour (In linear space, use Color.FromSrgb if needed)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DrawVertexUV2DColor(Vector2 position, Vector2 uv, Color col)
         {
             Position = position;
@@ -139,6 +227,19 @@ namespace Robust.Client.Graphics
             Color = col;
         }
 
+        /// <param name="position">The location.</param>
+        /// <param name="col">Modulation colour (In linear space, use Color.FromSrgb if needed)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DrawVertexUV2DColor(Vector2 position, Color col)
+        {
+            Position = position;
+            UV = new Vector2(0.5f, 0.5f);
+            Color = col;
+        }
+
+        /// <param name="b">The existing position/UV pair.</param>
+        /// <param name="col">Modulation colour (In linear space, use Color.FromSrgb if needed)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DrawVertexUV2DColor(DrawVertexUV2D b, Color col)
         {
             Position = b.Position;

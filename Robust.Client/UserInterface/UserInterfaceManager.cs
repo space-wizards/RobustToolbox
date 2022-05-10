@@ -781,9 +781,10 @@ namespace Robust.Client.UserInterface
             if (_rendering || control.AlwaysRender)
             {
                 // Handle modulation with care.
+                var oldMod = handle.Modulate;
                 handle.Modulate = modulate * control.ActualModulateSelf;
                 control.DrawInternal(renderHandle);
-                handle.Modulate = Color.White;
+                handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
 

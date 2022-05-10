@@ -14,6 +14,15 @@ namespace Robust.Client.Graphics
         //private protected IRenderHandle _renderHandle;
         private protected readonly int _handleId;
         public bool Disposed { get; private set; }
+        /// <summary>
+        ///     Drawing commands that do NOT receive per-vertex modulation get modulated by this.
+        ///     Specifically, *DrawPrimitives w/ DrawVertexUV2DColor IS NOT AFFECTED BY THIS*.
+        ///     The only code that should ever be setting this is UserInterfaceManager.
+        ///     It's absolutely evil statefulness.
+        ///     I understand it's existence and operation.
+        ///     I understand that removing it would require rewriting all the UI controls everywhere.
+        ///     I still wish it a prolonged death - it's a performance nightmare. - 20kdc
+        /// </summary>
         public Color Modulate { get; set; } = Color.White;
 
         public void Dispose()

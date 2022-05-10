@@ -756,7 +756,6 @@ namespace Robust.Client.UserInterface
             var handle = renderHandle.DrawingHandleScreen;
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             modulate *= control.Modulate;
-            handle.Modulate = modulate * control.ActualModulateSelf;
             var clip = control.RectClipContent;
             var scissorRegion = scissorBox;
             if (clip)
@@ -781,7 +780,10 @@ namespace Robust.Client.UserInterface
 
             if (_rendering || control.AlwaysRender)
             {
+                // Handle modulation with care.
+                handle.Modulate = modulate * control.ActualModulateSelf;
                 control.DrawInternal(renderHandle);
+                handle.Modulate = Color.White;
                 handle.UseShader(null);
             }
 

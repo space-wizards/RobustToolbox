@@ -29,6 +29,6 @@ jobs:
         username: robust-benchmark-runner
         key: ${{ secrets.CENTCOMM_ROBUST_BENCHMARK_RUNNER_KEY }}
         script: |
-          wget https://github.com/space-wizards/RobustToolbox/blob/master/Tools/run_benchmarks.py
+          wget https://raw.githubusercontent.com/space-wizards/RobustToolbox/$GITHUB_SHA/Tools/run_benchmarks.py
           python3 run_benchmarks.py ${{ secrets.BENCHMARKS_WRITE_ADDRESS }} ${{ secrets.BENCHMARKS_WRITE_PORT }} ${{ secrets.BENCHMARKS_WRITE_USER }} ${{ secrets.BENCHMARKS_WRITE_PASSWORD }} $GITHUB_SHA
           rm run_benchmarks.py

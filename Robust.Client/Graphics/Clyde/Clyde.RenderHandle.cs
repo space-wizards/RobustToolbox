@@ -208,60 +208,98 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawClear(color);
             }
 
+            // ---- DrawPrimitives: Vector2 API ----
+
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
                 Color color)
             {
                 // TODO: Maybe don't stackalloc if the data is too large.
-                Span<DrawVertexUV2D> drawVertices = stackalloc DrawVertexUV2D[vertices.Length];
-                PadVertices(vertices, drawVertices);
+                Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+                PadVerticesV2(vertices, drawVertices, color);
 
-                DrawPrimitives(primitiveTopology, Texture.White, drawVertices, color);
+                DrawPrimitives(primitiveTopology, Texture.White, drawVertices);
             }
 
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
                 ReadOnlySpan<Vector2> vertices, Color color)
             {
                 // TODO: Maybe don't stackalloc if the data is too large.
-                Span<DrawVertexUV2D> drawVertices = stackalloc DrawVertexUV2D[vertices.Length];
-                PadVertices(vertices, drawVertices);
+                Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+                PadVerticesV2(vertices, drawVertices, color);
 
-                DrawPrimitives(primitiveTopology, Texture.White, indices, drawVertices, color);
+                DrawPrimitives(primitiveTopology, Texture.White, indices, drawVertices);
             }
 
-            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+            private void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
+            {
+                Color colorLinear = Color.FromSrgb(color);
+                for (var i = 0; i < output.Length; i++)
+                {
+                    output[i] = new DrawVertexUV2DColor(input[i], (0.5f, 0.5f), colorLinear);
+                }
+            }
+
+            // ---- DrawPrimitives: DrawVertexUV2D API ----
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<DrawVertexUV2D> vertices,
+                Color color)
+            {
+                // TODO: Maybe don't stackalloc if the data is too large.
+                Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+                PadVerticesUV(vertices, drawVertices, color);
+
+                DrawPrimitives(primitiveTopology, texture, drawVertices);
+            }
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<ushort> indices,
                 ReadOnlySpan<DrawVertexUV2D> vertices, Color color)
+            {
+                // TODO: Maybe don't stackalloc if the data is too large.
+                Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
+                PadVerticesUV(vertices, drawVertices, color);
+
+                DrawPrimitives(primitiveTopology, texture, indices, drawVertices);
+            }
+
+            private void PadVerticesUV(ReadOnlySpan<DrawVertexUV2D> input, Span<DrawVertexUV2DColor> output, Color color)
+            {
+                Color colorLinear = Color.FromSrgb(color);
+                for (var i = 0; i < output.Length; i++)
+                {
+                    output[i] = new DrawVertexUV2DColor(input[i], colorLinear);
+                }
+            }
+
+            // ---- DrawPrimitives: DrawVertexUV2DColor API (Underlying) ----
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                ReadOnlySpan<DrawVertexUV2DColor> vertices)
             {
                 if (!(texture is ClydeTexture clydeTexture))
                 {
                     throw new ArgumentException("Texture must be a basic texture.");
                 }
 
-                var castSpan = MemoryMarshal.Cast<DrawVertexUV2D, Vertex2D>(vertices);
+                var castSpan = MemoryMarshal.Cast<DrawVertexUV2DColor, Vertex2D>(vertices);
 
-                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, castSpan, color);
+                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, castSpan);
             }
 
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
                 ReadOnlySpan<ushort> indices,
-                ReadOnlySpan<DrawVertexUV2D> vertices, Color color)
+                ReadOnlySpan<DrawVertexUV2DColor> vertices)
             {
                 if (!(texture is ClydeTexture clydeTexture))
                 {
                     throw new ArgumentException("Texture must be a basic texture.");
                 }
 
-                var castSpan = MemoryMarshal.Cast<DrawVertexUV2D, Vertex2D>(vertices);
+                var castSpan = MemoryMarshal.Cast<DrawVertexUV2DColor, Vertex2D>(vertices);
 
-                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, indices, castSpan, color);
+                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, indices, castSpan);
             }
 
-            private void PadVertices(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2D> output)
-            {
-                for (var i = 0; i < output.Length; i++)
-                {
-                    output[i] = new DrawVertexUV2D(input[i], (0.5f, 0.5f));
-                }
-            }
+            // ---- (end) ----
 
             private sealed class DrawingHandleScreenImpl : DrawingHandleScreen
             {

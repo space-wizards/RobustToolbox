@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -106,6 +108,33 @@ namespace Robust.Client.Graphics
         {
             Position = position;
             UV = uv;
+        }
+    }
+
+    /// <summary>
+    ///     2D Vertex that contains both position and UV coordinates.
+    ///     NOTE: This is directly cast into Clyde Vertex2D!!!!
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DrawVertexUV2DColor
+    {
+        public Vector2 Position;
+        public Vector2 UV;
+        // Note that this color is in linear space.
+        public Color Color;
+
+        public DrawVertexUV2DColor(Vector2 position, Vector2 uv, Color col)
+        {
+            Position = position;
+            UV = uv;
+            Color = col;
+        }
+
+        public DrawVertexUV2DColor(DrawVertexUV2D b, Color col)
+        {
+            Position = b.Position;
+            UV = b.UV;
+            Color = col;
         }
     }
 }

@@ -31,4 +31,4 @@ jobs:
         script: |
           wget https://raw.githubusercontent.com/space-wizards/RobustToolbox/${{ github.sha }}/Tools/run_benchmarks.py
           python3 run_benchmarks.py ${{ secrets.BENCHMARKS_WRITE_ADDRESS }} ${{ secrets.BENCHMARKS_WRITE_PORT }} ${{ secrets.BENCHMARKS_WRITE_USER }} ${{ secrets.BENCHMARKS_WRITE_PASSWORD }} ${{ github.sha }}
-          rm run_benchmarks.py
+          # rm run_benchmarks.py

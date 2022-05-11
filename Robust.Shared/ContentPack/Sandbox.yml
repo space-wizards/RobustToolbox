@@ -321,6 +321,8 @@ Types:
     ExcludeFromCodeCoverageAttribute: { All: True }
     MaybeNullAttribute: { All: True }
     MaybeNullWhenAttribute: { All: True }
+    MemberNotNullAttribute: { All: True }
+    MemberNotNullWhenAttribute: { All: True }
     NotNullAttribute: { All: True }
     NotNullIfNotNullAttribute: { All: True }
     NotNullWhenAttribute: { All: True }

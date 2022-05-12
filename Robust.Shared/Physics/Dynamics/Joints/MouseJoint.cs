@@ -66,7 +66,9 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     private float _gamma;
 
     /// <summary>
-    /// The linear stiffness in N/m.
+    /// The maximum constraint force that can be exerted
+    /// to move the candidate body. Usually you will express
+    /// as some multiple of the weight (multiplier * mass * gravity).
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField("maxForce")]
@@ -122,7 +124,11 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     private float _damping;
 
-    public Vector2 TargetA =>
+    /// <summary>
+    /// The initial world target point. This is assumed
+    /// to coincide with the body anchor initially.
+    /// </summary>
+    public Vector2 Target =>
         IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(BodyAUid).WorldPosition;
 
     public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB)
@@ -163,10 +169,12 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     internal override void InitVelocityConstraints(SolverData data)
     {
-        _indexB = BodyB.IslandIndex[data.IslandIndex];
-        _localCenterB = BodyB.LocalCenter;
-        _invMassB = BodyB.InvMass;
-        _invIB = BodyA.InvI;
+        var bodyB = BodyB;
+
+        _indexB = bodyB.IslandIndex[data.IslandIndex];
+        _localCenterB = bodyB.LocalCenter;
+        _invMassB = bodyB.InvMass;
+        _invIB = bodyB.InvI;
 
         var cB = data.Positions[_indexB];
         var aB = data.Angles[_indexB];
@@ -204,7 +212,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
         _mass = K.GetInverse();
 
-        _C = cB + _rB - TargetA;
+        _C = cB + _rB - Target;
         _C *= _beta;
 
         // Cheat with some damping

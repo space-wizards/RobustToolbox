@@ -241,7 +241,7 @@ Types:
     SizeF: { All: True }
   System.Buffers:
     SpanAction`2: { All: True }
-  System.Buffers.Binary
+  System.Buffers.Binary:
     BinaryPrimitives: { All: True }
   System.Collections.Generic:
     CollectionExtensions: { All: True }

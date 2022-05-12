@@ -61,10 +61,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 {
     public override JointType JointType => JointType.Mouse;
 
-    private Vector2 _impulse;
-    private float _beta;
-    private float _gamma;
-
     /// <summary>
     /// The maximum constraint force that can be exerted
     /// to move the candidate body. Usually you will express
@@ -130,6 +126,15 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     /// </summary>
     public Vector2 Target =>
         IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(BodyAUid).WorldPosition;
+
+    private float _invMassB;
+    private float _invIB;
+    private Vector2 _rB;
+    private Vector2 _C;
+    private Matrix22 _mass;
+    private Vector2 _impulse;
+    private float _beta;
+    private float _gamma;
 
     public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB)
     {
@@ -232,12 +237,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         data.LinearVelocities[_indexB] = vB;
         data.AngularVelocities[_indexB] = wB;
     }
-
-    private float _invMassB;
-    private float _invIB;
-    private Vector2 _rB;
-    private Vector2 _C;
-    private Matrix22 _mass;
 
     internal override void SolveVelocityConstraints(SolverData data)
     {

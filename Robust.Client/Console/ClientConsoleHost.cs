@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Log;
 using Robust.Client.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
-using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -41,9 +41,10 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed class ClientConsoleHost : ConsoleHost, IClientConsoleHost
+    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         private bool _requestedCommands;
 
@@ -53,6 +54,8 @@ namespace Robust.Client.Console
             NetManager.RegisterNetMessage<MsgConCmdReg>(HandleConCmdReg);
             NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
             NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCompletion>();
+            NetManager.RegisterNetMessage<MsgConCompletionResp>(ProcessCompletionResp);
 
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;

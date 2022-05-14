@@ -1147,6 +1147,25 @@ namespace Robust.Shared
             CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
 
         /*
+         * CON
+         */
+
+        /// <summary>
+        /// Add artificial delay (in seconds) to console completion fetching, even for local commands.
+        /// </summary>
+        /// <remarks>
+        /// Intended for debugging the console completion system.
+        /// </remarks>
+        public static readonly CVarDef<float> ConCompletionDelay =
+            CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<int> ConCompletionCount =
+            CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<int> ConCompletionMargin =
+            CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
+
+        /*
          * THREAD
          */
 

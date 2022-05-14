@@ -11,6 +11,7 @@ namespace Robust.Shared.Console
     /// <param name="argStr">Unparsed text of the complete command with arguments.</param>
     /// <param name="args">An array of all the parsed arguments.</param>
     public delegate void ConCommandCallback(IConsoleShell shell, string argStr, string[] args);
+    public delegate CompletionResult ConCommandCompletionCallback(IConsoleShell shell, string[] args);
 
     public delegate void ConAnyCommandCallback(IConsoleShell shell, string commandName, string argStr, string[] args);
 
@@ -60,10 +61,16 @@ namespace Robust.Shared.Console
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
         /// <param name="callback"></param>
-        void RegisterCommand(string command, string description, string help, ConCommandCallback callback);
+        /// <param name="completionCallback"></param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback? completionCallback = null);
 
         /// <summary>
-        /// Unregisters a console command that has been registered previously with <see cref="RegisterCommand"/>.
+        /// Unregisters a console command that has been registered previously with <see cref="RegisterCommand(string,string,string,Robust.Shared.Console.ConCommandCallback)"/>.
         /// If the specified command was registered automatically or isn't registered at all, the method will throw.
         /// </summary>
         /// <param name="command">The string identifier for the command.</param>

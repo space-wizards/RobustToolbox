@@ -23,8 +23,7 @@ namespace Robust.Shared.Console
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
 
-        [ViewVariables]
-        protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
@@ -53,7 +52,7 @@ namespace Robust.Shared.Console
             // search for all client commands in all assemblies, and register them
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand) _typeFactory.CreateInstanceUnchecked(type, true);
+                var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
                 if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
@@ -65,12 +64,17 @@ namespace Robust.Shared.Console
         }
 
         /// <inheritdoc />
-        public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback? completionCallback = null)
         {
             if (AvailableCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
-            var newCmd = new RegisteredCommand(command, description, help, callback);
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
             AvailableCommands.Add(command, newCmd);
         }
 
@@ -81,7 +85,8 @@ namespace Robust.Shared.Console
                 throw new KeyNotFoundException($"Command {command} is not registered.");
 
             if (cmd is not RegisteredCommand)
-                throw new InvalidOperationException("You cannot unregister commands that have been registered automatically.");
+                throw new InvalidOperationException(
+                    "You cannot unregister commands that have been registered automatically.");
 
             AvailableCommands.Remove(command);
         }
@@ -157,6 +162,7 @@ namespace Robust.Shared.Console
         public sealed class RegisteredCommand : IConsoleCommand
         {
             public ConCommandCallback Callback { get; }
+            public ConCommandCompletionCallback? CompletionCallback { get; }
 
             /// <inheritdoc />
             public string Command { get; }
@@ -174,19 +180,31 @@ namespace Robust.Shared.Console
             /// <param name="description">Short description of the command.</param>
             /// <param name="help">Extended description for the command.</param>
             /// <param name="callback">Callback function that is ran when the command is executed.</param>
-            public RegisteredCommand(string command, string description, string help, ConCommandCallback callback)
+            /// <param name="completionCallback">Callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback,
+                ConCommandCompletionCallback? completionCallback = null)
             {
                 Command = command;
                 // Should these two be localized somehow?
                 Description = description;
                 Help = help;
                 Callback = callback;
+                CompletionCallback = completionCallback;
             }
 
             /// <inheritdoc />
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 Callback(shell, argStr, args);
+            }
+
+            public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+            {
+                return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
             }
         }
     }

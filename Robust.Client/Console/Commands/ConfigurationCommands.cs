@@ -56,6 +56,20 @@ namespace Robust.Client.Console.Commands
                 }
             }
         }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            var cfg = IoCManager.Resolve<IConfigurationManager>();
+            if (args.Length == 1)
+                return CompletionResult.FromOptions(cfg.GetRegisteredCVars().ToArray());
+
+            var cvar = args[0];
+            if (!cfg.IsCVarRegistered(cvar))
+                return CompletionResult.Empty;
+
+            var type = cfg.GetCVarType(cvar);
+            return CompletionResult.FromHint(type.Name);
+        }
     }
 
     [UsedImplicitly]

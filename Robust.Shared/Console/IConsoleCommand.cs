@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Console
@@ -40,5 +41,7 @@ namespace Robust.Shared.Console
         /// <param name="argStr">Unparsed text of the complete command with arguments.</param>
         /// <param name="args">An array of all the parsed arguments.</param>
         void Execute(IConsoleShell shell, string argStr, string[] args);
+
+        CompletionResult GetCompletion(IConsoleShell shell, string[] args) => CompletionResult.Empty;
     }
 }

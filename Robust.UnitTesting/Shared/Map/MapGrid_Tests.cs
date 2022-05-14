@@ -56,7 +56,7 @@ namespace Robust.UnitTesting.Shared.Map
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            var bounds = grid.WorldBounds;
+            var bounds = grid.WorldAABB;
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -82,7 +82,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             grid.SetTile(new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = grid.WorldBounds;
+            var bounds = grid.WorldAABB;
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));

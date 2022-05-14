@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -470,7 +471,7 @@ namespace Robust.Shared.Physics
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
-                    contact.FilterFlag = true;
+                    contact.Flags |= ContactFlags.Filter;
                 }
             }
         }

@@ -20,6 +20,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Profiling;
@@ -210,6 +211,8 @@ namespace Robust.UnitTesting.Server
             container.Register<IMapManagerInternal, MapManager>();
             container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
+            container.Register<INetManager, NetManager>();
+            container.Register<IAuthManager, AuthManager>();
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -269,6 +272,7 @@ namespace Robust.UnitTesting.Server
             entityMan.Startup();
             mapManager.Startup();
 
+            container.Resolve<INetManager>().Initialize(true);
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -125,11 +127,14 @@ namespace Robust.Shared.Physics
 
         private void InitJoint(Joint joint)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            var aUid = joint.BodyAUid;
+            var bUid = joint.BodyBUid;
 
-            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
-            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
+            if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
+                !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+
+            var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
+            var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 
@@ -466,7 +471,7 @@ namespace Robust.Shared.Physics
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
-                    contact.FilterFlag = true;
+                    contact.Flags |= ContactFlags.Filter;
                 }
             }
         }

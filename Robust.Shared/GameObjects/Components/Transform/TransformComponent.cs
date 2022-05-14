@@ -683,19 +683,23 @@ namespace Robust.Shared.GameObjects
             if (newMapId == MapID)
                 return;
 
-            var oldMapId = MapID;
-
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
             var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
             var metaData = metaEnts.GetComponent(Owner);
-            metaData.EntityPaused = mapPaused;
+            var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
+            metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
 
             MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+        private void UpdateChildMapIdsRecursive(
+            MapId newMapId,
+            bool mapPaused,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            MetaDataSystem system)
         {
             var childEnumerator = ChildEnumerator;
 
@@ -703,16 +707,15 @@ namespace Robust.Shared.GameObjects
             {
                 //Set Paused state
                 var metaData = metaQuery.GetComponent(child.Value);
-                metaData.EntityPaused = mapPaused;
+                system.SetEntityPaused(child.Value, mapPaused, metaData);
 
                 var concrete = xformQuery.GetComponent(child.Value);
-                var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
                 }
             }
         }

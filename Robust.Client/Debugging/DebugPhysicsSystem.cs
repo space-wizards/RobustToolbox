@@ -52,6 +52,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
@@ -88,6 +89,7 @@ namespace Robust.Client.Debugging
                             EntityManager,
                             IoCManager.Resolve<IEyeManager>(),
                             IoCManager.Resolve<IInputManager>(),
+                            IoCManager.Resolve<IMapManager>(),
                             IoCManager.Resolve<IResourceCache>(),
                             this,
                             Get<SharedPhysicsSystem>()));
@@ -176,6 +178,7 @@ namespace Robust.Client.Debugging
         private IEntityManager _entityManager = default!;
         private IEyeManager _eyeManager = default!;
         private IInputManager _inputManager = default!;
+        private IMapManager _mapManager = default!;
         private DebugPhysicsSystem _debugPhysicsSystem = default!;
         private SharedPhysicsSystem _physicsSystem = default!;
 
@@ -187,11 +190,12 @@ namespace Robust.Client.Debugging
 
         private HashSet<Joint> _drawnJoints = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedPhysicsSystem physicsSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IResourceCache cache, DebugPhysicsSystem system, SharedPhysicsSystem physicsSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
+            _mapManager = mapManager;
             _debugPhysicsSystem = system;
             _physicsSystem = physicsSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
@@ -246,26 +250,21 @@ namespace Robust.Client.Debugging
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.COM) != 0)
             {
+                const float Alpha = 0.25f;
+
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    Color color;
-                    const float Alpha = 0.25f;
-                    float size;
-
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner))
-                    {
-                        color = Color.Orange.WithAlpha(Alpha);
-                        size = 1f;
-                    }
-                    else
-                    {
-                        color = Color.Purple.WithAlpha(Alpha);
-                        size = 0.2f;
-                    }
-
+                    var color = Color.Purple.WithAlpha(Alpha);
                     var transform = physBody.GetTransform();
+                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 0.2f, color);
+                }
 
-                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), size, color);
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, viewBounds))
+                {
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+                    var color = Color.Orange.WithAlpha(Alpha);
+                    var transform = physBody.GetTransform();
+                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
 

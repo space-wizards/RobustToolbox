@@ -23,6 +23,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -157,6 +158,7 @@ namespace Robust.UnitTesting.Server
             container.Register<ILocalizationManager, LocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
+            container.Register<ProfManager, ProfManager>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
 
             var realReflection = new ServerReflectionManager();
@@ -260,6 +262,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
+            entitySystemMan.LoadExtraSystemType<MetaDataSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

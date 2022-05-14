@@ -33,7 +33,6 @@ internal partial class MapManager
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>(OnGridParentChange);
-        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
     private void ShutdownGridTrees()
@@ -43,7 +42,6 @@ internal partial class MapManager
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>();
-        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>();
 
         DebugTools.Assert(_gridTrees.Count == 0);
         DebugTools.Assert(_movedGrids.Count == 0);
@@ -71,7 +69,7 @@ internal partial class MapManager
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-        return new Box2Rotated(grid.LocalBounds.Translated(worldPos), worldRot, worldPos).CalcBoundingBox();
+        return new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
     }
 
     private void OnGridInit(GridInitializeEvent args)
@@ -171,15 +169,14 @@ internal partial class MapManager
         }
     }
 
-    private void OnGridBoundsChange(EntityUid uid, MapGridComponent component, GridFixtureChangeEvent args)
+    public void OnGridBoundsChange(EntityUid uid, MapGrid grid)
     {
-        var grid = (MapGrid) component.Grid;
-
         // Just MapLoader things.
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
+        _movedGrids[xform.MapID].Add(grid);
     }
 }

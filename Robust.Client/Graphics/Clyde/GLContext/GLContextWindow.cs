@@ -195,11 +195,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private void BlitThreadDoSecondaryWindowBlit(WindowData window)
             {
-                var rt = window.RenderTexture!;
-
                 if (Clyde._hasGLFenceSync)
                 {
                     // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
+                    var rt = window.Reg.RenderTarget;
                     var sync = rt.LastGLSync;
                     GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
                     Clyde.CheckGlError();
@@ -221,6 +220,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Clyde._windowing!.GLMakeContextCurrent(reg.Reg);
                 Clyde._windowing.GLSwapInterval(0);
+
+                Clyde.SetupDebugCallback();
 
                 if (!Clyde._isGLES)
                     GL.Enable(EnableCap.FramebufferSrgb);

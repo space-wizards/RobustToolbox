@@ -42,7 +42,7 @@ namespace Robust.Shared.Map
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
+                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)

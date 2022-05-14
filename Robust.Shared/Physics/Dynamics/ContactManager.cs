@@ -64,7 +64,6 @@ namespace Robust.Shared.Physics.Dynamics
                                                                Contact.ContactType.EdgeAndCircle,
                                                                Contact.ContactType.PolygonAndCircle,
                                                                Contact.ContactType.ChainAndCircle,
-                                                               Contact.ContactType.AabbAndCircle,
                                                            },
                                                            {
                                                                // Edge register
@@ -72,7 +71,6 @@ namespace Robust.Shared.Physics.Dynamics
                                                                Contact.ContactType.NotSupported, // Edge
                                                                Contact.ContactType.EdgeAndPolygon,
                                                                Contact.ContactType.NotSupported, // Chain
-                                                               Contact.ContactType.NotSupported, // Aabb
                                                            },
                                                            {
                                                                // Polygon register
@@ -80,7 +78,6 @@ namespace Robust.Shared.Physics.Dynamics
                                                                Contact.ContactType.EdgeAndPolygon,
                                                                Contact.ContactType.Polygon,
                                                                Contact.ContactType.ChainAndPolygon,
-                                                               Contact.ContactType.AabbAndPolygon,
                                                            },
                                                            {
                                                                // Chain register
@@ -88,15 +85,6 @@ namespace Robust.Shared.Physics.Dynamics
                                                                Contact.ContactType.NotSupported, // Edge
                                                                Contact.ContactType.ChainAndPolygon,
                                                                Contact.ContactType.NotSupported, // Chain
-                                                               Contact.ContactType.NotSupported, // Aabb - TODO Just cast to poly
-                                                           },
-                                                           {
-                                                               // Aabb register
-                                                               Contact.ContactType.AabbAndCircle,
-                                                               Contact.ContactType.NotSupported, // Edge - TODO Just cast to poly
-                                                               Contact.ContactType.AabbAndPolygon,
-                                                               Contact.ContactType.NotSupported, // Chain - TODO Just cast to poly
-                                                               Contact.ContactType.Aabb,
                                                            }
                                                        };
 

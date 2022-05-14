@@ -11,7 +11,7 @@ namespace Robust.Server.GameObjects
 
         void FinishEntityLoad(EntityUid entity, IEntityLoadContext? context = null);
 
-        void FinishEntityInitialization(EntityUid entity);
+        void FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta = null);
 
         void FinishEntityStartup(EntityUid entity);
     }

@@ -1,8 +1,8 @@
 using System;
-using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 
@@ -45,9 +45,12 @@ public sealed class ScaleCommand : IConsoleCommand
         var entManager = IoCManager.Resolve<IEntityManager>();
         entManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        if (entManager.TryGetComponent(uid, out SpriteComponent? spriteComponent))
+        if (entManager.TryGetComponent(uid, out AppearanceComponent? appearanceComponent))
         {
-            spriteComponent.Scale *= scale;
+            if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
+                oldScale = Vector2.One;
+
+            appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
         }
 
         if (entManager.TryGetComponent(uid, out FixturesComponent? manager))

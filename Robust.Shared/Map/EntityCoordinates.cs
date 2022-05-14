@@ -215,6 +215,17 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
+        ///     Returns the Grid EntityUid these coordinates are on.
+        ///     If none of the ancestors are a grid, returns null instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Grid EntityUid this entity is on or null</returns>
+        public EntityUid? GetGridUid(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
+        }
+
+        /// <summary>
         ///     Returns the Map Id these coordinates are on.
         ///     If the relative entity is not valid, returns <see cref="MapId.Nullspace"/> instead.
         /// </summary>
@@ -223,6 +234,17 @@ namespace Robust.Shared.Map
         public MapId GetMapId(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
+        }
+
+        /// <summary>
+        ///     Returns the Map Id these coordinates are on.
+        ///     If the relative entity is not valid, returns null instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Map Id these coordinates are on or null</returns>
+        public EntityUid? GetMapUid(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).MapUid;
         }
 
         /// <summary>

@@ -82,10 +82,5 @@ namespace Robust.Client
         ///     Whether to load config and user data.
         /// </summary>
         public bool LoadConfigAndUserData { get; init; } = true;
-
-        /// <summary>
-        ///     Whether to disable command line args server auto-connecting.
-        /// </summary>
-        public bool DisableCommandLineConnect { get; init; } = false;
     }
 }

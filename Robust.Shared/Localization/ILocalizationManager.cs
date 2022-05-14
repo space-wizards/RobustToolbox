@@ -23,6 +23,12 @@ namespace Robust.Shared.Localization
     public interface ILocalizationManager
     {
         /// <summary>
+        ///     Checks if localization manager has string represented by the supplied messageId.
+        /// </summary>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
+        bool HasString(string messageId);
+
+        /// <summary>
         ///     Gets a language approrpiate string represented by the supplied messageId.
         /// </summary>
         /// <param name="messageId">Unique Identifier for a translated message.</param>

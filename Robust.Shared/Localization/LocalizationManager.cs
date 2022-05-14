@@ -110,6 +110,11 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public bool HasString(string messageId)
+        {
+            return HasMessage(messageId, out _);
+        }
+
         private bool HasMessage(
             string messageId,
             [NotNullWhen(true)] out FluentBundle? bundle)

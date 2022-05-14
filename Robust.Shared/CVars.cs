@@ -188,7 +188,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
-#if DEBUG
         /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
         /// 0 = no packet loss, 1 = all packets dropped
@@ -213,7 +212,6 @@ namespace Robust.Shared
         /// 0 = no packets duplicated, 1 = all packets duplicated.
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /**
          * SUS

@@ -46,25 +46,12 @@ namespace Robust.Shared.Physics.Collision
         /// must remain in scope while the proxy is in use.
         /// </summary>
         /// <param name="shape">The shape.</param>
-        /// <param name="index">The index.</param>
         public void Set(IPhysShape shape, int index)
         {
             Vertices.Clear();
 
             switch (shape.ShapeType)
             {
-                case ShapeType.Aabb:
-                    var aabb = (PhysShapeAabb) shape;
-                    var bounds = aabb.LocalBounds;
-
-                    Vertices.Add(bounds.BottomRight);
-                    Vertices.Add(bounds.TopRight);
-                    Vertices.Add(bounds.TopLeft);
-                    Vertices.Add(bounds.BottomLeft);
-
-                    Radius = aabb.Radius;
-
-                    break;
                 case ShapeType.Circle:
                     PhysShapeCircle circle = (PhysShapeCircle) shape;
                     // TODO: Circle's position offset to entity, someday.

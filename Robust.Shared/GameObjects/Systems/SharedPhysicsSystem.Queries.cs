@@ -14,8 +14,6 @@ namespace Robust.Shared.GameObjects
      */
     public partial class SharedPhysicsSystem
     {
-        [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
-
         /// <summary>
         ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
         /// </summary>
@@ -40,7 +38,7 @@ namespace Robust.Shared.GameObjects
         {
             var state = (collider, mapId, found: false);
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, collider))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, collider))
             {
                 var gridCollider = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(collider);
 
@@ -142,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldAABB))
             {
                 var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
@@ -164,7 +162,7 @@ namespace Robust.Shared.GameObjects
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
                 var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
@@ -249,7 +247,7 @@ namespace Robust.Shared.GameObjects
             var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
                 Vector2.ComponentMax(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
                 var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
 
@@ -333,7 +331,7 @@ namespace Robust.Shared.GameObjects
             var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
                 Vector2.ComponentMax(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
                 var (_, rot, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationInvMatrix();
 

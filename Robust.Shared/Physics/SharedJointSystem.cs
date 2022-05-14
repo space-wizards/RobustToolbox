@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -125,11 +126,14 @@ namespace Robust.Shared.Physics
 
         private void InitJoint(Joint joint)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            var aUid = joint.BodyAUid;
+            var bUid = joint.BodyBUid;
 
-            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
-            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
+            if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
+                !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+
+            var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
+            var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 

@@ -16,9 +16,9 @@ public sealed class ScaleVisualsSystem : EntitySystem
         if (!ev.AppearanceData.TryGetValue(ScaleVisuals.Scale, out var scale) ||
             !TryComp<SpriteComponent>(ev.Component.Owner, out var spriteComponent)) return;
 
-        var floatScale = (float) scale;
+        var vecScale = (Vector2)scale;
 
         // Set it directly because prediction may call this multiple times.
-        spriteComponent.Scale = new Vector2(floatScale, floatScale);
+        spriteComponent.Scale = vecScale;
     }
 }

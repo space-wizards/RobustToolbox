@@ -23,7 +23,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     public void SetCollisionMask(FixturesComponent component, Fixture fixture, int mask)
@@ -38,7 +38,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     public void RemoveCollisionMask(FixturesComponent component, Fixture fixture, int mask)
@@ -53,7 +53,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     public void AddCollisionLayer(FixturesComponent component, Fixture fixture, int layer)
@@ -68,7 +68,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     public void SetCollisionLayer(FixturesComponent component, Fixture fixture, int layer)
@@ -83,7 +83,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     public void RemoveCollisionLayer(FixturesComponent component, Fixture fixture, int layer)
@@ -98,7 +98,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(component, body);
         }
 
-        _broadphaseSystem.Refilter(fixture);
+        _broadphase.Refilter(fixture);
     }
 
     #endregion

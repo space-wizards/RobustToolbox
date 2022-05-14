@@ -81,5 +81,13 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="reason">Reason why it was disconnected.</param>
         void Disconnect(string reason);
+
+        /// <summary>
+        ///     Disconnects this channel from the remote peer.
+        /// </summary>
+        /// <param name="reason">Reason why it was disconnected.</param>
+        /// <param name="sendBye">If false, we ghost the remote client and don't tell them they got disconnected properly.</param>
+        void Disconnect(string reason, bool sendBye);
+
     }
 }

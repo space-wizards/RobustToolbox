@@ -130,6 +130,11 @@ namespace Robust.Shared.Physics
             DebugTools.Assert(A.Length == 2);
             return new Vector2(A[0].X * v.X + A[1].X * v.Y, A[0].Y * v.X + A[1].Y * v.Y);
         }
+
+        public static Vector2 Mul(Matrix22 A, Vector2 v)
+        {
+            return new Vector2(A.EX.X * v.X + A.EY.X * v.Y, A.EX.Y * v.X + A.EY.Y * v.Y);
+        }
     }
 
     public struct Quaternion2D

@@ -53,7 +53,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 2)
             {
-                shell.WriteLine("Require 2 args for testbed!");
+                shell.WriteError("Require 2 args for testbed!");
                 return;
             }
 
@@ -61,47 +61,46 @@ namespace Robust.Server.Console.Commands
 
             if (!int.TryParse(args[0], out var mapInt))
             {
-                shell.WriteLine($"Unable to parse map {args[0]}");
+                shell.WriteError($"Unable to parse map {args[0]}");
                 return;
             }
 
             var mapId = new MapId(mapInt);
-            if (!mapManager.MapExists(mapId))
-            {
-                shell.WriteLine("Unable to find map {mapId}");
-                return;
-            }
 
             if (shell.Player == null)
             {
-                shell.WriteLine("No player found");
+                shell.WriteError("No player found");
                 return;
             }
 
             var player = (IPlayerSession) shell.Player;
+            Action testbed;
+            SetupPlayer(mapId, shell, player, mapManager);
 
             switch (args[1])
             {
                 case "boxstack":
-                    SetupPlayer(mapId, shell, player, mapManager);
-                    CreateBoxStack(mapId);
+                    testbed = () => CreateBoxStack(mapId);
                     break;
                 case "circlestack":
-                    SetupPlayer(mapId, shell, player, mapManager);
-                    CreateCircleStack(mapId);
+                    testbed = () => CreateCircleStack(mapId);
                     break;
                 case "pyramid":
-                    SetupPlayer(mapId, shell, player, mapManager);
-                    CreatePyramid(mapId);
+                    testbed = () => CreatePyramid(mapId);
                     break;
                 case "tumbler":
-                    SetupPlayer(mapId, shell, player, mapManager);
-                    CreateTumbler(mapId);
+                    testbed = () => CreateTumbler(mapId);
                     break;
                 default:
-                    shell.WriteLine($"testbed {args[0]} not found!");
+                    shell.WriteError($"testbed {args[0]} not found!");
                     return;
             }
+
+            Timer.Spawn(1000, () =>
+            {
+                if (!mapManager.MapExists(mapId)) return;
+                testbed();
+            });
 
             shell.WriteLine($"Testbed on map {mapId}");
         }
@@ -109,9 +108,19 @@ namespace Robust.Server.Console.Commands
         private void SetupPlayer(MapId mapId, IConsoleShell shell, IPlayerSession? player, IMapManager mapManager)
         {
             if (mapId == MapId.Nullspace) return;
+
+            if (!mapManager.MapExists(mapId))
+            {
+                mapManager.CreateMap(mapId);
+            }
+
             mapManager.SetMapPaused(mapId, false);
             var mapUid = mapManager.GetMapEntityIdOrThrow(mapId);
             IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
+
+            shell.ExecuteCommand("aghost");
+            shell.ExecuteCommand($"tp 0 0 {mapId}");
+            shell.RemoteExecuteCommand($"physics shapes");
 
             return;
         }

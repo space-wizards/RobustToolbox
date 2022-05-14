@@ -207,6 +207,7 @@ Types:
       - "SixLabors.ImageSharp.Image`1<!!0> CloneAs<>(SixLabors.ImageSharp.Configuration)"
       - "SixLabors.ImageSharp.Image`1<!0> Clone()"
       - "SixLabors.ImageSharp.Image`1<!0> Clone(SixLabors.ImageSharp.Configuration)"
+      - "void set_Item(int, int, !0)"
       - "void .ctor(int, int)"
       - "void .ctor(int, int, !0)"
       - "void .ctor(SixLabors.ImageSharp.Configuration, int, int)"
@@ -240,6 +241,8 @@ Types:
     SizeF: { All: True }
   System.Buffers:
     SpanAction`2: { All: True }
+  System.Buffers.Binary:
+    BinaryPrimitives: { All: True }
   System.Collections.Generic:
     CollectionExtensions: { All: True }
     Comparer`1: { All: True }
@@ -296,6 +299,11 @@ Types:
     ImmutableSortedStack`1: { All: True }
   System.Collections.Specialized:
     NameValueCollection: { All: True }
+  System.Collections.Concurrent:
+    ConcurrentBag`1: { All: True }
+    ConcurrentDictionary`2: { All: True }
+    ConcurrentQueue`1: { All: True }
+    ConcurrentStack`1: { All: True }
   System.Collections:
     IEnumerable: { All: True }
     IEnumerator: { All: True }
@@ -823,9 +831,7 @@ Types:
     Attribute: { All: True }
     AttributeTargets: { }
     AttributeUsageAttribute: { All: True }
-    BitConverter:
-      Methods:
-      - "uint ToUInt32(System.ReadOnlySpan`1<byte>)"
+    BitConverter: { All: True } # None of these APIs can do anything more complex than make funny looking NaNs and hex strings.
     Base64FormattingOptions: { } # Enum
     Boolean: { All: True }
     Byte: { All: True }

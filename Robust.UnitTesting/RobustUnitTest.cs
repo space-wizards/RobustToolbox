@@ -79,6 +79,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<ContainerSystem>();
             systems.LoadExtraSystemType<TransformSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
+            systems.LoadExtraSystemType<MetaDataSystem>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();

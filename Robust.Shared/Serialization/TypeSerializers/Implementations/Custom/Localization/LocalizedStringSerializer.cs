@@ -6,7 +6,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Localization;
 
 public sealed class LocalizedStringSerializer : ITypeSerializer<string, ValueDataNode>
 {

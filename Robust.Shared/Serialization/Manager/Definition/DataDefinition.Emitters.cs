@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
     {
         private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
         {
-            var isServer = !collection.Resolve<INetManager>().IsServer;
+            var isServer = collection.Resolve<INetManager>().IsServer;
 
             object PopulateDelegate(
                 object target,

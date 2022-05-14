@@ -118,6 +118,7 @@ namespace Robust.Server.Maps
         {
             var isPaused = _mapManager.IsMapPaused(mapId);
             var query = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
+            var metaSystem = _serverEntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
             if (context.MapIsPostInit)
             {
@@ -133,7 +134,7 @@ namespace Robust.Server.Maps
                     var meta = query.GetComponent(entity);
                     _serverEntityManager.RunMapInit(entity, meta);
                     if (isPaused)
-                        meta.EntityPaused = true;
+                        metaSystem.SetEntityPaused(entity, true, meta);
                 }
             }
             else if (isPaused)
@@ -141,7 +142,7 @@ namespace Robust.Server.Maps
                 foreach (var entity in context.Entities)
                 {
                     var meta = query.GetComponent(entity);
-                    meta.EntityPaused = true;
+                    metaSystem.SetEntityPaused(entity, true, meta);
                 }
             }
         }

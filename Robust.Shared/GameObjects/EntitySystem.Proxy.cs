@@ -249,7 +249,7 @@ public partial class EntitySystem
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        metaData.EntityPaused = paused;
+        EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(uid, paused, metaData);
     }
 
     /// <summary>

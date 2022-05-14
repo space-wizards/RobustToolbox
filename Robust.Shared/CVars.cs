@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -1156,5 +1163,24 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ThreadParallelCount =
             CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

@@ -55,6 +55,22 @@ namespace Robust.Shared.Configuration
         void SetCVar<T>(CVarDef<T> def, T value) where T : notnull;
 
         /// <summary>
+        /// Change the default value for a CVar.
+        /// This means the CVar value is changed *only* if it has not been changed by config file or <c>OverrideConVars</c>.
+        /// </summary>
+        /// <param name="name">The name of the CVar to change the default for.</param>
+        /// <param name="value">The new default value of the CVar.</param>
+        void OverrideDefault(string name, object value);
+
+        /// <summary>
+        /// Change the default value for a CVar.
+        /// This means the CVar value is changed *only* if it has not been changed by config file or <c>OverrideConVars</c>.
+        /// </summary>
+        /// <param name="def">The definition of the CVar to change the default for.</param>
+        /// <param name="value">The new default value of the CVar.</param>
+        void OverrideDefault<T>(CVarDef<T> def, T value) where T : notnull;
+
+        /// <summary>
         /// Get the value of a CVar.
         /// </summary>
         /// <typeparam name="T">The Type of the CVar value.</typeparam>

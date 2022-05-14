@@ -28,6 +28,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -89,6 +90,7 @@ namespace Robust.Server
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -478,7 +480,7 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time)
+                _mainLoop = new GameLoop(_time, _runtimeLog, _prof)
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,

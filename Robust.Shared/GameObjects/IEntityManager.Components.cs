@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
         /// </summary>
-        void InitializeComponents(EntityUid uid);
+        void InitializeComponents(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Calls Startup() on all registered components of the entity.

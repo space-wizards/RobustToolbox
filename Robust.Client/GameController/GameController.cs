@@ -204,7 +204,7 @@ namespace Robust.Client
 
             _clyde.Ready();
 
-            if (!Options.DisableCommandLineConnect &&
+            if (_resourceManifest!.AutoConnect &&
                 (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
                 && LaunchState.ConnectEndpoint != null)
             {
@@ -220,7 +220,7 @@ namespace Robust.Client
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
             if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
 
             var yamlStream = new YamlStream();
             using (stream)
@@ -230,7 +230,7 @@ namespace Robust.Client
             }
 
             if (yamlStream.Documents.Count == 0)
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
 
             if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
             {
@@ -265,7 +265,11 @@ namespace Robust.Client
             if (mapping.TryGetNode("splashLogo", out var splashNode))
                 splashLogo = splashNode.AsString();
 
-            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo);
+            bool autoConnect = true;
+            if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
+                autoConnect = autoConnectNode.AsBool();
+
+            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
         }
 
         internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
@@ -672,7 +676,8 @@ namespace Robust.Client
             string? AssemblyPrefix,
             string? DefaultWindowTitle,
             string? WindowIconSet,
-            string? SplashLogo
+            string? SplashLogo,
+            bool AutoConnect
         );
     }
 }

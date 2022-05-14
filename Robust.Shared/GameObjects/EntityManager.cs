@@ -8,6 +8,7 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -30,6 +31,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public GameTick CurrentTick => _gameTiming.CurTick;
+
+        public static readonly MapInitEvent MapInitEventInstance = new();
 
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
@@ -444,12 +447,13 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                InitializeEntity(entity);
+                var meta = GetComponent<MetaDataComponent>(entity);
+                InitializeEntity(entity, meta);
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
                 if (_mapManager.IsMapInitialized(mapId))
-                    entity.RunMapInit();
+                    RunMapInit(entity, meta);
             }
             catch (Exception e)
             {
@@ -458,9 +462,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(EntityUid entity)
+        protected void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
-            InitializeComponents(entity);
+            InitializeComponents(entity, meta);
             EntityInitialized?.Invoke(this, entity);
         }
 
@@ -468,6 +472,17 @@ namespace Robust.Shared.GameObjects
         {
             StartComponents(entity);
             EntityStarted?.Invoke(this, entity);
+        }
+
+        public void RunMapInit(EntityUid entity, MetaDataComponent meta)
+        {            
+            if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
+                return; // Already map initialized, do nothing.
+
+            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
+            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+
+            EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
         }
 
         /// <inheritdoc />

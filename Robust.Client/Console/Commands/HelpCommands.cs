@@ -1,49 +1,9 @@
 using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
-    sealed class HelpCommand : IConsoleCommand
-    {
-        public string Command => "help";
-        public string Help => "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
-        public string Description => "Display help text.";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            switch (args.Length)
-            {
-                case 0:
-                    shell.WriteLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
-                    break;
-
-                case 1:
-                    string commandname = args[0];
-                    if (!shell.ConsoleHost.RegisteredCommands.ContainsKey(commandname))
-                    {
-                        if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
-                        {
-                            // No server so nothing to respond with unknown command.
-                            shell.WriteError("Unknown command: " + commandname);
-                            return;
-                        }
-                        // TODO: Maybe have a server side help?
-                        return;
-                    }
-                    IConsoleCommand command = shell.ConsoleHost.RegisteredCommands[commandname];
-                    shell.WriteLine(string.Format("{0} - {1}", command.Command, command.Description));
-                    shell.WriteLine(command.Help);
-                    break;
-
-                default:
-                    shell.WriteError("Invalid amount of arguments.");
-                    break;
-            }
-        }
-    }
-
     sealed class ListCommand : IConsoleCommand
     {
         public string Command => "list";

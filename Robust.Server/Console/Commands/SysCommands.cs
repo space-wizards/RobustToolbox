@@ -72,41 +72,6 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    sealed class HelpCommand : IConsoleCommand
-    {
-        public string Command => "help";
-
-        public string Description =>
-            "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
-
-        public string Help => "Help";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            switch (args.Length)
-            {
-                case 0:
-                    shell.WriteLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
-                    break;
-
-                case 1:
-                    var commandName = args[0];
-                    if (!shell.ConsoleHost.RegisteredCommands.TryGetValue(commandName, out var cmd))
-                    {
-                        shell.WriteLine($"Unknown command: {commandName}");
-                        return;
-                    }
-
-                    shell.WriteLine($"Use: {cmd.Help}\n{cmd.Description}");
-                    break;
-
-                default:
-                    shell.WriteLine("Invalid amount of arguments.");
-                    break;
-            }
-        }
-    }
-
     sealed class ShowTimeCommand : IConsoleCommand
     {
         public string Command => "showtime";

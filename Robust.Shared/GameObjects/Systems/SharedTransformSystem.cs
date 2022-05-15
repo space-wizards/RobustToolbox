@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
 
         // Needed on release no remove.
+        // ReSharper disable once NotAccessedField.Local
         private ISawmill _logger = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();

@@ -357,12 +357,12 @@ namespace Robust.Shared.GameObjects
                     var oldMapId = MapID;
                     ChangeMapId(newParent.MapID, xformQuery);
 
+                    // Cache new GridID before raising the event.
+                    GridID = GetGridIndex(xformQuery);
+
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
                         LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
-
-                    // Cache new GridID before raising the event.
-                    GridID = GetGridIndex(xformQuery);
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
@@ -626,6 +626,11 @@ namespace Robust.Shared.GameObjects
                 DebugTools.Assert(!Anchored);
                 return;
             }
+
+            // Stop any active lerps
+            _nextPosition = null;
+            _nextRotation = null;
+            LerpParent = EntityUid.Invalid;
 
             // TODO: When ECSing this can just pass it into the anchor setter
             if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))

@@ -249,7 +249,7 @@ public sealed partial class DebugConsole
     {
         if (args.Function == EngineKeyFunctions.TextTabComplete)
         {
-            if (_compFiltered != null)
+            if (_compFiltered != null && _compSelected < _compFiltered.Count)
             {
                 // Figure out typing word so we know how much to replace.
                 var completion = _compFiltered[_compSelected];

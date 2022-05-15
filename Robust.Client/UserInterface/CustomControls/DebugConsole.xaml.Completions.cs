@@ -16,8 +16,10 @@ public sealed partial class DebugConsole
 {
     private readonly DebugConsoleCompletion _compPopup;
 
-    private CompletionResult? _compCurrentResult;
+    private CompletionResult? _compCurResult;
+
     private int _compParamCount;
+
     // The filtered set of completions currently shown to the user.
     private List<string>? _compFiltered;
     private int _compSelected;
@@ -44,7 +46,7 @@ public sealed partial class DebugConsole
 
     private void CommandBarOnOnTextTyped(GUITextEventArgs obj)
     {
-        if (_compCurrentResult == null)
+        if (_compCurResult == null)
         {
             TypeUpdateCompletions(true);
             return;
@@ -52,7 +54,7 @@ public sealed partial class DebugConsole
 
         // var filtered = FilterCompletions(_completionsCurrentResult.Options, typingArg);
         // if (filtered.Count == 1 && filtered[0] == typingArg)
-            TypeUpdateCompletions(true);
+        TypeUpdateCompletions(true);
         // else
         //     TypeUpdateCompletions(false);
     }
@@ -72,7 +74,7 @@ public sealed partial class DebugConsole
             return;
         }
 
-        if (_compCurrentResult == null)
+        if (_compCurResult == null)
         {
             TypeUpdateCompletions(true);
             return;
@@ -84,7 +86,7 @@ public sealed partial class DebugConsole
 
     private void AbortActiveCompletions()
     {
-        _compCurrentResult = null;
+        _compCurResult = null;
         _compFiltered = null;
         _compSelected = 0;
         _compVerticalOffset = 0;
@@ -136,7 +138,7 @@ public sealed partial class DebugConsole
             }
 
             _compSeqRecv = seq;
-            _compCurrentResult = result;
+            _compCurResult = result;
         }
 
         UpdateFilteredCompletions();
@@ -144,13 +146,13 @@ public sealed partial class DebugConsole
 
     private void UpdateFilteredCompletions()
     {
-        if (_compCurrentResult == null)
+        if (_compCurResult == null)
             return;
 
         var (_, curTyping) = CalcTypingArgs();
 
         var curSelected = _compFiltered?.Count > 0 ? _compFiltered[_compSelected] : null;
-        _compFiltered = FilterCompletions(_compCurrentResult.Options, curTyping);
+        _compFiltered = FilterCompletions(_compCurResult.Options, curTyping);
         if (curSelected == null)
         {
             _compSelected = 0;
@@ -173,43 +175,52 @@ public sealed partial class DebugConsole
         if (_compFiltered == null)
             return;
 
-        DebugTools.AssertNotNull(_compCurrentResult);
+        DebugTools.AssertNotNull(_compCurResult);
 
         var (_, curTyping) = CalcTypingArgs();
 
         var offset = CommandBar.GetOffsetAtIndex(CommandBar.CursorPosition - curTyping.Length);
         // Logger.Debug($"Offset: {offset}");
 
-        _compPopup.Open(
-            UIBox2.FromDimensions(
-                offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y + CommandBar.Height+2,
-                5, 5));
+        _compPopup.Close();
 
         _compPopup.Contents.RemoveAllChildren();
 
-        var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
-
-        if (_compCurrentResult!.Hint != null && _compCurrentResult.Options.Length == 0)
+        if (_compFiltered.Count == 0)
         {
+            if (_compCurResult!.Hint == null)
+            {
+                // Nothing to show!
+                return;
+            }
+
             // Show a type hint only, no list completions.
-            var hint = _compCurrentResult.Hint;
+            var hint = _compCurResult.Hint;
             _compPopup.Contents.AddChild(new Label
             {
-                Text = $"<{hint}>",
+                Text = hint,
                 FontColorOverride = Color.DarkGray
             });
         }
-
-        // Fill out list completions.
-        var c = 0;
-        for (var i = _compVerticalOffset; i < _compFiltered.Count && c < maxCount; i++, c++)
+        else
         {
-            _compPopup.Contents.AddChild(new Label
+            // Fill out list completions.
+            var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
+            var c = 0;
+            for (var i = _compVerticalOffset; i < _compFiltered.Count && c < maxCount; i++, c++)
             {
-                Text = _compFiltered[i],
-                FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
-            });
+                _compPopup.Contents.AddChild(new Label
+                {
+                    Text = _compFiltered[i],
+                    FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
+                });
+            }
         }
+
+        _compPopup.Open(
+            UIBox2.FromDimensions(
+                offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y + CommandBar.Height + 2,
+                5, 5));
     }
 
     private (List<string> args, string curTyping) CalcTypingArgs()

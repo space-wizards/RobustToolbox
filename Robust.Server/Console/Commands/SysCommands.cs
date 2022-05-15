@@ -82,24 +82,4 @@ namespace Robust.Server.Console.Commands
             shell.WriteLine($"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
         }
     }
-
-    internal sealed class SerializeStatsCommand : IConsoleCommand
-    {
-
-        public string Command => "szr_stats";
-
-        public string Description => "Report serializer statistics.";
-
-        public string Help => "szr_stats";
-
-        public void Execute(IConsoleShell console, string argStr, string[] args)
-        {
-
-            console.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
-            console.WriteLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
-            console.WriteLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
-            console.WriteLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
-        }
-
-    }
 }

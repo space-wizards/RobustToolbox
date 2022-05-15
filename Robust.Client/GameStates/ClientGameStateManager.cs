@@ -365,13 +365,15 @@ namespace Robust.Client.GameStates
             using var _ = _prof.Group("ResetPredictedEntities");
 
             var countReset = 0;
+            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            var system = _entitySystemManager.GetEntitySystem<PVSSystem>();
 
-            foreach (var meta in _entityManager.EntityQuery<MetaDataComponent>(true))
+            foreach (var entity in system.GetDirtyEntities(curTick))
             {
-                var entity = meta.Owner;
-
                 // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() || meta.EntityLastModifiedTick < curTick)
+                if (entity.IsClientSide() ||
+                    !metaQuery.TryGetComponent(entity, out var meta) ||
+                    meta.EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }
@@ -407,6 +409,8 @@ namespace Robust.Client.GameStates
                     comp.HandleComponentState(compState, null);
                 }
             }
+
+            _entitySystemManager.GetEntitySystem<PVSSystem>().Reset(curTick);
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }

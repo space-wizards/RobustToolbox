@@ -159,4 +159,9 @@ namespace Robust.Shared.Console
         /// </summary>
         void ClearLocalConsole();
     }
+
+    internal interface IConsoleHostInternal : IConsoleHost
+    {
+        bool IsCmdServer(IConsoleCommand cmd);
+    }
 }

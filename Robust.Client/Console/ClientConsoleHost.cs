@@ -41,7 +41,7 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost
+    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -89,6 +89,11 @@ namespace Robust.Client.Console
         public override void WriteError(ICommonSession? session, string text)
         {
             OutputText(text, true, true);
+        }
+
+        public bool IsCmdServer(IConsoleCommand cmd)
+        {
+            return cmd is ServerDummyCommand;
         }
 
         public override event ConAnyCommandCallback? AnyCommandExecuted;

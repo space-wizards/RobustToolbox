@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
-    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost
+    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
@@ -56,6 +56,8 @@ namespace Robust.Server.Console
             else
                 OutputText(null, text, true);
         }
+
+        public bool IsCmdServer(IConsoleCommand cmd) => true;
 
         /// <inheritdoc />
         public void Initialize()

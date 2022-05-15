@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
@@ -115,13 +113,13 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
-        public string Help => "loadbp <MapID> <Path> [storeUids] [x y] [rotation]";
+        public string Help => "loadbp <MapID> <Path> [x y] [rotation] [storeUids]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length != 2 && args.Length != 3 && args.Length != 5 && args.Length != 6)
+            if (args.Length < 2 || args.Length == 3 || args.Length > 6)
             {
-                shell.WriteError("Must have either 2, 3, 5, or 6 arguments.");
+                shell.WriteError("Must have either 2, 4, 5, or 6 arguments.");
                 return;
             }
 
@@ -148,43 +146,43 @@ namespace Robust.Server.Console.Commands
             }
 
             var loadOptions = new MapLoadOptions();
-            if (args.Length > 2)
+            if (args.Length >= 4)
             {
-                if (!Boolean.TryParse(args[2], out var storeUids))
+                if (!int.TryParse(args[2], out var x))
                 {
-                    shell.WriteError($"{args[2]} is not a valid boolean..");
+                    shell.WriteError($"{args[2]} is not a valid integer.");
                     return;
                 }
 
-                loadOptions.StoreMapUids = storeUids;
-            }
-
-            if (args.Length >= 5)
-            {
-                if (!int.TryParse(args[3], out var x))
+                if (!int.TryParse(args[3], out var y))
                 {
                     shell.WriteError($"{args[3]} is not a valid integer.");
-                    return;
-                }
-
-                if (!int.TryParse(args[4], out var y))
-                {
-                    shell.WriteError($"{args[4]} is not a valid integer.");
                     return;
                 }
 
                 loadOptions.Offset = new Vector2(x, y);
             }
 
-            if (args.Length == 6)
+            if (args.Length >= 5)
             {
-                if (!float.TryParse(args[5], out var rotation))
+                if (!float.TryParse(args[4], out var rotation))
                 {
-                    shell.WriteError($"{args[5]} is not a valid integer.");
+                    shell.WriteError($"{args[4]} is not a valid integer.");
                     return;
                 }
 
                 loadOptions.Rotation = new Angle(rotation);
+            }
+
+            if (args.Length >= 6)
+            {
+                if (!bool.TryParse(args[5], out var storeUids))
+                {
+                    shell.WriteError($"{args[5]} is not a valid boolean..");
+                    return;
+                }
+
+                loadOptions.StoreMapUids = storeUids;
             }
 
             var mapLoader = IoCManager.Resolve<IMapLoader>();
@@ -228,13 +226,14 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadmap";
         public string Description => "Loads a map from disk into the game.";
-        public string Help => "loadmap <MapID> <Path> [x y] [rotation]";
+        public string Help => "loadmap <MapID> <Path> [x y] [rotation] [storeUids]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length != 2 && args.Length != 4 && args.Length != 5)
+            if (args.Length < 2 || args.Length == 3 || args.Length > 6)
             {
-                shell.WriteError($"Must have either 2, 4, or 5 arguments.");
+                shell.WriteError("Must have either 2, 4, 5, or 6 arguments.");
+                return;
             }
 
             if (!int.TryParse(args[0], out var intMapId))
@@ -261,7 +260,7 @@ namespace Robust.Server.Console.Commands
 
             var loadOptions = new MapLoadOptions();
 
-            if (args.Length >= 3)
+            if (args.Length >= 4)
             {
                 if (!int.TryParse(args[2], out var x))
                 {
@@ -277,7 +276,7 @@ namespace Robust.Server.Console.Commands
                 loadOptions.Offset = new Vector2(x, y);
             }
 
-            if (args.Length == 4)
+            if (args.Length >= 5)
             {
                 if (!float.TryParse(args[4], out var rotation))
                 {
@@ -286,6 +285,17 @@ namespace Robust.Server.Console.Commands
                 }
 
                 loadOptions.Rotation = new Angle(rotation);
+            }
+
+            if (args.Length >= 6)
+            {
+                if (!bool.TryParse(args[5], out var storeUids))
+                {
+                    shell.WriteError($"{args[5]} is not a valid boolean.");
+                    return;
+                }
+
+                loadOptions.StoreMapUids = storeUids;
             }
 
             IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);

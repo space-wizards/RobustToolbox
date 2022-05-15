@@ -15,6 +15,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Profiling;
+using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -210,6 +211,12 @@ namespace Robust.Client.Graphics.Clyde
                 if (lastFrameSize != texture.Size)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int)OGLTextureWrapMode.MirroredRepeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int)OGLTextureWrapMode.MirroredRepeat);
+
                     GL.TexImage2D(TextureTarget.Texture2D, 0,
                         _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, texture.Size.X,
                         texture.Size.Y, 0,

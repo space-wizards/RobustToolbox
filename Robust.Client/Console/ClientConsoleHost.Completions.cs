@@ -38,10 +38,7 @@ internal sealed partial class ClientConsoleHost
         if (!RegisteredCommands.TryGetValue(args[0], out var cmd))
             return Task.FromResult(CompletionResult.Empty);
 
-        if (cmd is ServerDummyCommand)
-            return DoServerCompletions(args, cancel);
-
-        return Task.FromResult(cmd.GetCompletion(LocalShell, args.ToArray()[1..]));
+        return cmd.GetCompletionAsync(LocalShell, args.ToArray()[1..], cancel).AsTask();
     }
 
     private Task<CompletionResult> DoServerCompletions(List<string> args, CancellationToken cancel)

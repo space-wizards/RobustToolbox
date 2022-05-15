@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
@@ -73,7 +74,9 @@ namespace Robust.Server.Console
 
                 // Logger.Debug($"A: {string.Join(", ", args)}");
 
+#pragma warning disable CA2012
                 return CalcCompletions(sudoShell, args);
+#pragma warning restore CA2012
             });
 
             LoadConsoleCommands();
@@ -177,12 +180,12 @@ namespace Robust.Server.Console
             return session != null ? $"{session.Name}" : "[HOST]";
         }
 
-        private void HandleConCompletions(MsgConCompletion message)
+        private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
             var shell = new ConsoleShell(this, session);
 
-            var result = CalcCompletions(shell, message.Args);
+            var result = await CalcCompletions(shell, message.Args);
 
             var msg = new MsgConCompletionResp
             {
@@ -190,27 +193,30 @@ namespace Robust.Server.Console
                 Seq = message.Seq
             };
 
+            if (!message.MsgChannel.IsConnected)
+                return;
+
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private CompletionResult CalcCompletions(IConsoleShell shell, string[] args)
+        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args)
         {
             // Logger.Debug(string.Join(", ", args));
 
             if (args.Length <= 1)
             {
                 // Typing out command name, handle this ourselves.
-                return CompletionResult.FromOptions(AvailableCommands.Keys.ToArray());
+                return ValueTask.FromResult(CompletionResult.FromOptions(AvailableCommands.Keys.ToArray()));
             }
 
             var cmdName = args[0];
             if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
-                return CompletionResult.Empty;
+                return ValueTask.FromResult(CompletionResult.Empty);
 
             if (!ShellCanExecute(shell, cmdName))
-                return CompletionResult.Empty;
+                return ValueTask.FromResult(CompletionResult.Empty);
 
-            return cmd.GetCompletion(shell, args[1..]);
+            return cmd.GetCompletionAsync(shell, args[1..], default);
         }
 
         private sealed class SudoShell : IConsoleShell

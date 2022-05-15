@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -63,13 +64,39 @@ namespace Robust.Shared.Console
             }
         }
 
-        /// <inheritdoc />
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback)
+        {
+            if (AvailableCommands.ContainsKey(command))
+                throw new InvalidOperationException($"Command already registered: {command}");
+
+            var newCmd = new RegisteredCommand(command, description, help, callback);
+            AvailableCommands.Add(command, newCmd);
+        }
+
         public void RegisterCommand(
             string command,
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionCallback? completionCallback = null)
+            ConCommandCompletionCallback completionCallback)
+        {
+            if (AvailableCommands.ContainsKey(command))
+                throw new InvalidOperationException($"Command already registered: {command}");
+
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
+            AvailableCommands.Add(command, newCmd);
+        }
+
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback)
         {
             if (AvailableCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
@@ -163,6 +190,7 @@ namespace Robust.Shared.Console
         {
             public ConCommandCallback Callback { get; }
             public ConCommandCompletionCallback? CompletionCallback { get; }
+            public ConCommandCompletionAsyncCallback? CompletionCallbackAsync { get; }
 
             /// <inheritdoc />
             public string Command { get; }
@@ -185,16 +213,52 @@ namespace Robust.Shared.Console
                 string command,
                 string description,
                 string help,
-                ConCommandCallback callback,
-                ConCommandCompletionCallback? completionCallback = null)
+                ConCommandCallback callback)
             {
                 Command = command;
                 // Should these two be localized somehow?
                 Description = description;
                 Help = help;
                 Callback = callback;
+            }
+
+            /// <summary>
+            /// Constructs a new instance of <see cref="RegisteredCommand"/>.
+            /// </summary>
+            /// <param name="command">Name of the command.</param>
+            /// <param name="description">Short description of the command.</param>
+            /// <param name="help">Extended description for the command.</param>
+            /// <param name="callback">Callback function that is ran when the command is executed.</param>
+            /// <param name="completionCallback">Callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback,
+                ConCommandCompletionCallback completionCallback) : this(command, description, help, callback)
+            {
                 CompletionCallback = completionCallback;
             }
+
+            /// <summary>
+            /// Constructs a new instance of <see cref="RegisteredCommand"/>.
+            /// </summary>
+            /// <param name="command">Name of the command.</param>
+            /// <param name="description">Short description of the command.</param>
+            /// <param name="help">Extended description for the command.</param>
+            /// <param name="callback">Callback function that is ran when the command is executed.</param>
+            /// <param name="completionCallback">Asynchronous callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback,
+                ConCommandCompletionAsyncCallback completionCallback)
+                : this(command, description, help, callback)
+            {
+                CompletionCallbackAsync = completionCallback;
+            }
+
 
             /// <inheritdoc />
             public void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -202,9 +266,15 @@ namespace Robust.Shared.Console
                 Callback(shell, argStr, args);
             }
 
-            public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+            public ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args)
             {
-                return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
+                if (CompletionCallbackAsync != null)
+                    return CompletionCallbackAsync(shell, args);
+
+                if (CompletionCallback != null)
+                    return ValueTask.FromResult(CompletionCallback(shell, args));
+
+                return ValueTask.FromResult(CompletionResult.Empty);
             }
         }
     }

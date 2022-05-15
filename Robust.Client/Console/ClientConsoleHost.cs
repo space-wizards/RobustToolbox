@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Client.Log;
 using Robust.Client.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -211,31 +215,61 @@ namespace Robust.Client.Console
 
             _requestedCommands = true;
         }
-    }
 
-    /// <summary>
-    /// These dummies are made purely so list and help can list server-side commands.
-    /// </summary>
-    [Reflect(false)]
-    internal sealed class ServerDummyCommand : IConsoleCommand
-    {
-        internal ServerDummyCommand(string command, string help, string description)
+        /// <summary>
+        /// These dummies are made purely so list and help can list server-side commands.
+        /// </summary>
+        [Reflect(false)]
+        private sealed class ServerDummyCommand : IConsoleCommand
         {
-            Command = command;
-            Help = help;
-            Description = description;
+            internal ServerDummyCommand(string command, string help, string description)
+            {
+                Command = command;
+                Help = help;
+                Description = description;
+            }
+
+            public string Command { get; }
+
+            public string Description { get; }
+
+            public string Help { get; }
+
+            // Always forward to server.
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            {
+                shell.RemoteExecuteCommand(argStr);
+            }
+
+            public async ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
+            {
+                var host = (ClientConsoleHost)shell.ConsoleHost;
+                return await host.DoServerCompletions(args.ToList(), cancel);
+            }
         }
 
-        public string Command { get; }
-
-        public string Description { get; }
-
-        public string Help { get; }
-
-        // Always forward to server.
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        private sealed class RemoteExecCommand : IConsoleCommand
         {
-            shell.RemoteExecuteCommand(argStr);
+            public string Command => ">";
+            public string Description => Loc.GetString("cmd-remoteexec-desc");
+            public string Help => Loc.GetString("cmd-remoteexec-help");
+
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            {
+                shell.RemoteExecuteCommand(argStr["> ".Length..]);
+            }
+
+            public async ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
+            {
+                var host = (ClientConsoleHost)shell.ConsoleHost;
+                return await host.DoServerCompletions(args.ToList(), cancel);
+            }
         }
     }
 }

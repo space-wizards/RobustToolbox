@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console
@@ -12,6 +13,7 @@ namespace Robust.Shared.Console
     /// <param name="args">An array of all the parsed arguments.</param>
     public delegate void ConCommandCallback(IConsoleShell shell, string argStr, string[] args);
     public delegate CompletionResult ConCommandCompletionCallback(IConsoleShell shell, string[] args);
+    public delegate ValueTask<CompletionResult> ConCommandCompletionAsyncCallback(IConsoleShell shell, string[] args);
 
     public delegate void ConAnyCommandCallback(IConsoleShell shell, string commandName, string argStr, string[] args);
 
@@ -61,13 +63,43 @@ namespace Robust.Shared.Console
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
         /// <param name="callback"></param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to
+        /// creating an <see cref="IConsoleCommand"/> class.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="description">Short one sentence description of the command.</param>
+        /// <param name="help">Command format string.</param>
+        /// <param name="callback"></param>
         /// <param name="completionCallback"></param>
         void RegisterCommand(
             string command,
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionCallback? completionCallback = null);
+            ConCommandCompletionCallback completionCallback);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to
+        /// creating an <see cref="IConsoleCommand"/> class.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="description">Short one sentence description of the command.</param>
+        /// <param name="help">Command format string.</param>
+        /// <param name="callback"></param>
+        /// <param name="completionCallback"></param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback);
 
         /// <summary>
         /// Unregisters a console command that has been registered previously with <see cref="RegisterCommand(string,string,string,Robust.Shared.Console.ConCommandCallback)"/>.

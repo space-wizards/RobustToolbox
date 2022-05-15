@@ -1,4 +1,5 @@
-using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Console
@@ -43,5 +44,10 @@ namespace Robust.Shared.Console
         void Execute(IConsoleShell shell, string argStr, string[] args);
 
         CompletionResult GetCompletion(IConsoleShell shell, string[] args) => CompletionResult.Empty;
+
+        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+        {
+            return ValueTask.FromResult(GetCompletion(shell, args));
+        }
     }
 }

@@ -30,3 +30,8 @@ cmd-list-help = Usage: list [filter]
 cmd-list-heading = SIDE NAME            DESC{"\u000A"}-------------------------{"\u000A"}
 
 cmd-list-arg-filter = [filter]
+
+## '>' command, aka remote exec
+cmd-remoteexec-desc = Executes server-side commands
+cmd-remoteexec-help = Usage: > <command> [arg] [arg] [arg...]
+    Executes a command on the server. This is necessary if a command with the same name exists on the client, as simply running the command would run the client command first.

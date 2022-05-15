@@ -12,8 +12,8 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
-using Robust.Shared.IoC;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Profiling;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 

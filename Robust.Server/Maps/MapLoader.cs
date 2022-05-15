@@ -527,10 +527,12 @@ namespace Robust.Server.Maps
                 // get ents that the grids will bind to
                 var gridComps = new Dictionary<GridId, MapGridComponent>(_readGridIndices.Count);
 
+                var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
+
                 // linear search for new grid comps
                 foreach (var tuple in _entitiesToDeserialize)
                 {
-                    if (!_serverEntityManager.TryGetComponent(tuple.Item1, out MapGridComponent gridComp))
+                    if (!gridQuery.TryGetComponent(tuple.Item1, out var gridComp))
                         continue;
 
                     // These should actually be new, pre-init
@@ -611,17 +613,14 @@ namespace Robust.Server.Maps
             private void FixMapEntities()
             {
                 var pvs = EntitySystem.Get<PVSSystem>();
-                foreach (var entity in Entities)
+                foreach (var grid in Grids)
                 {
-                    if (_serverEntityManager.TryGetComponent(entity, out IMapGridComponent? grid))
-                    {
-                        pvs?.EntityPVSCollection.UpdateIndex(entity);
-                        // The problem here is that the grid is initialising at the same time as everything else which
-                        // is bad for slothcoin because a bunch of components are only added
-                        // to the grid during its initialisation hence you get exceptions
-                        // hence this 1 snowflake thing.
-                        _serverEntityManager.EnsureComponent<EntityLookupComponent>(entity);
-                    }
+                    pvs?.EntityPVSCollection.UpdateIndex(grid.GridEntityId);
+                    // The problem here is that the grid is initialising at the same time as everything else which
+                    // is bad for slothcoin because a bunch of components are only added
+                    // to the grid during its initialisation hence you get exceptions
+                    // hence this 1 snowflake thing.
+                    _serverEntityManager.EnsureComponent<EntityLookupComponent>(grid.GridEntityId);
                 }
             }
 
@@ -698,6 +697,8 @@ namespace Robust.Server.Maps
                         type = typeNode.Value;
                     }
 
+                    // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
+                    // "uid" node, then defaulting to Entities.Count will error.
                     var uid = Entities.Count;
                     if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
                     {
@@ -1107,14 +1108,14 @@ namespace Robust.Server.Maps
 
                 var val = int.Parse(node.Value);
 
-                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrNull(e => e == UidEntityMap[val], out var entity))
+                if (!UidEntityMap.TryGetValue(val, out var entity))
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                     return EntityUid.Invalid;
                 }
                 else
                 {
-                    return entity!.Value;
+                    return entity;
                 }
             }
 

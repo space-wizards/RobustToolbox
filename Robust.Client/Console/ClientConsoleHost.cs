@@ -247,7 +247,10 @@ namespace Robust.Client.Console
                 CancellationToken cancel)
             {
                 var host = (ClientConsoleHost)shell.ConsoleHost;
-                return await host.DoServerCompletions(args.ToList(), cancel);
+                var argsList = args.ToList();
+                argsList.Insert(0, Command);
+
+                return await host.DoServerCompletions(argsList, cancel);
             }
         }
 

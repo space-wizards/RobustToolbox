@@ -25,7 +25,7 @@ public sealed class MsgConCompletionResp : NetMessage
 
         var hint = buffer.ReadString();
 
-        Result = new CompletionResult(options, hint);
+        Result = new CompletionResult(options, hint == "" ? null : hint);
     }
 
     public override void WriteToBuffer(NetOutgoingMessage buffer)

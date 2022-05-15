@@ -1,5 +1,3 @@
-using System;
-using System.Runtime;
 using System.Text;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
@@ -85,72 +83,6 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal sealed class GcCommand : IConsoleCommand
-    {
-        public string Command => "gc";
-        public string Description => "Run the GC.";
-        public string Help => "gc [generation]";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            if (args.Length == 0)
-            {
-                GC.Collect();
-            }
-            else
-            {
-                if(int.TryParse(args[0], out int result))
-                    GC.Collect(result);
-                else
-                    shell.WriteLine("Failed to parse argument.");
-            }
-        }
-    }
-
-    internal sealed class GcModeCommand : IConsoleCommand
-    {
-
-        public string Command => "gc_mode";
-
-        public string Description => "Change the GC Latency mode.";
-
-        public string Help => "gc_mode [type]";
-
-        public void Execute(IConsoleShell console, string argStr, string[] args)
-        {
-            var prevMode = GCSettings.LatencyMode;
-            if (args.Length == 0)
-            {
-                console.WriteLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
-                console.WriteLine("possible modes:");
-                foreach (var mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
-                {
-                    console.WriteLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
-                }
-            }
-            else
-            {
-                GCLatencyMode mode;
-                if (char.IsDigit(args[0][0]) && int.TryParse(args[0], out var modeNum))
-                {
-                    mode = (GCLatencyMode) modeNum;
-                }
-                else if (!Enum.TryParse(args[0], true, out mode))
-                {
-                    console.WriteLine($"unknown gc latency mode: {args[0]}");
-                    return;
-                }
-
-                console.WriteLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
-                GCSettings.LatencyMode = mode;
-                console.WriteLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
-            }
-
-            return;
-        }
-
-    }
-
     internal sealed class SerializeStatsCommand : IConsoleCommand
     {
 
@@ -169,30 +101,5 @@ namespace Robust.Server.Console.Commands
             console.WriteLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
         }
 
-    }
-
-    internal sealed class MemCommand : IConsoleCommand
-    {
-        public string Command => "mem";
-        public string Description => "prints memory info";
-        public string Help => "mem";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-#if !NETCOREAPP
-            shell.SendText(player, "Memory info is only available on .NET Core");
-#else
-            var info = GC.GetGCMemoryInfo();
-
-            shell.WriteLine($@"Heap Size: {FormatBytes(info.HeapSizeBytes)} Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}");
-#endif
-        }
-
-#if NETCOREAPP
-        private static string FormatBytes(long bytes)
-        {
-            return $"{bytes / 1024} KiB";
-        }
-#endif
     }
 }

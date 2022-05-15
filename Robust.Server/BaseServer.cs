@@ -19,6 +19,7 @@ using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console.ReflectionCommands;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Enums;
 using Robust.Shared.Exceptions;
@@ -338,6 +339,8 @@ namespace Robust.Server
 
             IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
+
+            IoCManager.Resolve<CommandManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared

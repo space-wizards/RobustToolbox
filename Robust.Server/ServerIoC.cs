@@ -15,6 +15,7 @@ using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Console;
+using Robust.Shared.Console.ReflectionCommands;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -75,6 +76,7 @@ namespace Robust.Server
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IBqlQueryManager, BqlQueryManager>();
             IoCManager.Register<HubManager, HubManager>();
+            IoCManager.Register<CommandManager>();
         }
     }
 }

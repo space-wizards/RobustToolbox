@@ -259,7 +259,7 @@ namespace Robust.Shared.Localization
                 EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity)),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan)),
-                bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
+                bool or Enum => (FluentString)obj.ToString()!,
                 string str => (FluentString)str,
                 byte num => (FluentNumber)num,
                 sbyte num => (FluentNumber)num,

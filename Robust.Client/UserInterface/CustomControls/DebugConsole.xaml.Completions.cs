@@ -6,7 +6,6 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared;
 using Robust.Shared.Console;
 using Robust.Shared.Input;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -165,7 +164,7 @@ public sealed partial class DebugConsole
 
         FixScrollMargins();
 
-        Logger.Debug($"Filtered completions: {string.Join(", ", _compFiltered)}");
+        // Logger.Debug($"Filtered completions: {string.Join(", ", _compFiltered)}");
 
         UpdateCompletionsPopup();
     }

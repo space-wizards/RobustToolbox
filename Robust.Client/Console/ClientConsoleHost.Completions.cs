@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.Console;
-using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 
 namespace Robust.Client.Console;
@@ -19,7 +18,7 @@ internal sealed partial class ClientConsoleHost
     {
         // Last element is the command currently being typed. May be empty.
 
-        Logger.Debug($"Running completions: {string.Join(", ", args)}");
+        // Logger.Debug($"Running completions: {string.Join(", ", args)}");
 
         var delay = _cfg.GetCVar(CVars.ConCompletionDelay);
         if (delay > 0)

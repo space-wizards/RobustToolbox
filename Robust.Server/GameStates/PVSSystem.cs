@@ -11,6 +11,7 @@ using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -20,7 +21,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-internal sealed partial class PVSSystem : EntitySystem
+internal sealed partial class PVSSystem : SharedPVSSystem
 {
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;

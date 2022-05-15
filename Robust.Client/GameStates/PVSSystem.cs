@@ -1,13 +1,15 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates;
 
-internal sealed class PVSSystem : EntitySystem
+internal sealed class PVSSystem : SharedPVSSystem
 {
     // Why is tracking dirty entities for prediction on PVS, you ask?
     // Because the server does something identical in PVS sooooo
@@ -18,6 +20,9 @@ internal sealed class PVSSystem : EntitySystem
 
     private ObjectPool<HashSet<EntityUid>> _dirtyPool =
         new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), 64);
+
+    // Keep it out of the pool because it's probably going to be a lot bigger.
+    private HashSet<EntityUid> _dirty = new(256);
 
     public override void Initialize()
     {
@@ -53,14 +58,15 @@ internal sealed class PVSSystem : EntitySystem
 
     public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
     {
-        var ents = _dirtyPool.Get();
+        _dirty.Clear();
 
+        // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
         {
             if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
-                ents.Add(ent);
+                _dirty.Add(ent);
             }
         }
 
@@ -77,13 +83,7 @@ internal sealed class PVSSystem : EntitySystem
 #endif
         */
 
-        foreach (var ent in ents)
-        {
-            yield return ent;
-        }
-
-        ents.Clear();
-        _dirtyPool.Return(ents);
+        return _dirty;
     }
 
     private void OnEntityDirty(object? sender, EntityUid e)

@@ -410,7 +410,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            _entitySystemManager.GetEntitySystem<PVSSystem>().Reset(curTick);
+            system.Reset(curTick);
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }

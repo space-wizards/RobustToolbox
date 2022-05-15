@@ -847,13 +847,17 @@ namespace Robust.Client.UserInterface
             OnResized?.Invoke();
         }
 
-        internal void DoFrameUpdate(FrameEventArgs args)
+        internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            var total = 1;
             FrameUpdate(args);
+
             foreach (var child in Children)
             {
-                child.DoFrameUpdate(args);
+                total += child.DoFrameUpdateRecursive(args);
             }
+
+            return total;
         }
 
         /// <summary>

@@ -25,16 +25,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -44,7 +41,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent(), ComponentProtoName("Physics")]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
+    public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IEntitySystemManager _sysMan = default!;
@@ -57,6 +54,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool Island { get; set; }
 
+        [ViewVariables]
         internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>
@@ -104,7 +102,6 @@ namespace Robust.Shared.GameObjects
 
                 var oldType = _bodyType;
                 _bodyType = value;
-
                 ResetMassData();
 
                 if (_bodyType == BodyType.Static)
@@ -141,7 +138,8 @@ namespace Robust.Shared.GameObjects
             if (_awake || _bodyType == BodyType.Static) return;
 
             _awake = true;
-            _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+            var ev = new PhysicsWakeEvent(this);
+            _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
         }
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
@@ -168,11 +166,13 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsWakeMessage(this));
+                var ev = new PhysicsWakeEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
             }
             else
             {
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsSleepMessage(this));
+                var ev = new PhysicsSleepEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -227,34 +227,6 @@ namespace Robust.Shared.GameObjects
         public void WakeBody()
         {
             Awake = true;
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _linearVelocity, _angularVelocity, _bodyType);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState is not PhysicsComponentState newState)
-                return;
-
-            SleepingAllowed = newState.SleepingAllowed;
-            FixedRotation = newState.FixedRotation;
-            CanCollide = newState.CanCollide;
-            BodyStatus = newState.Status;
-
-            // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
-            // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-
-            Dirty(_entMan);
-            LinearVelocity = newState.LinearVelocity;
-            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
-            AngularVelocity = newState.AngularVelocity;
-            BodyType = newState.BodyType;
-            Predict = false;
         }
 
         /// <summary>
@@ -688,7 +660,12 @@ namespace Robust.Shared.GameObjects
 
         public Transform GetTransform()
         {
-            var (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+            return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));
+        }
+
+        public Transform GetTransform(TransformComponent xform)
+        {
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
             var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
@@ -751,11 +728,6 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(Contacts.Count == 0);
         }
 
-        IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
-        {
-            return _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
-        }
-
         public void ResetMassData(FixturesComponent? fixtures = null)
         {
             _mass = 0.0f;
@@ -764,7 +736,7 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;
             }
@@ -779,16 +751,11 @@ namespace Robust.Shared.GameObjects
                 if (fixture.Mass <= 0.0f) continue;
 
                 var data = new MassData {Mass = fixture.Mass};
-                shapeManager.GetMassData(fixture.Shape, ref data);
+                FixtureSystem.GetMassData(fixture.Shape, ref data);
 
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
-            }
-
-            if (BodyType == BodyType.Static)
-            {
-                return;
             }
 
             if (_mass > 0.0f)

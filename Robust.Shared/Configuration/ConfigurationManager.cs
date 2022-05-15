@@ -266,8 +266,7 @@ namespace Robust.Shared.Configuration
 
             _configVars.Add(name, new ConfigVar(name, defaultValue, flags)
             {
-                Registered = true,
-                Value = defaultValue,
+                Registered = true
             });
         }
 
@@ -399,6 +398,31 @@ namespace Robust.Shared.Configuration
             SetCVar(def.Name, value);
         }
 
+        public void OverrideDefault(string name, object value)
+        {
+            ValueChangedInvoke? invoke = null;
+
+            using (Lock.WriteGuard())
+            {
+                //TODO: Make flags work, required non-derpy net system.
+                if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
+                    throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+
+                cVar.DefaultValue = value;
+
+                if (cVar.OverrideValue == null && cVar.Value == null)
+                    invoke = SetupInvokeValueChanged(cVar, value);
+            }
+
+            if (invoke != null)
+                InvokeValueChanged(invoke.Value);
+        }
+
+        public void OverrideDefault<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            OverrideDefault(def.Name, value);
+        }
+
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
@@ -424,7 +448,7 @@ namespace Robust.Shared.Configuration
             }
 
             // If it's null it's a string, since the rest is primitives which aren't null.
-            return cVar.Value?.GetType() ?? typeof(string);
+            return cVar.DefaultValue.GetType();
         }
 
         protected static object GetConfigVarValue(ConfigVar cVar)

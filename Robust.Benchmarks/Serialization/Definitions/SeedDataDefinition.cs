@@ -19,6 +19,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
   name: tobacco
   seedName: tobacco
   displayName: tobacco plant
+  plantRsi: Objects/Specific/Hydroponics/tobacco.rsi
   productPrototypes:
     - LeavesTobacco
   harvestRepeat: Repeat

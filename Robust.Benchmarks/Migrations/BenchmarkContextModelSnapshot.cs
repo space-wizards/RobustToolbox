@@ -24,9 +24,11 @@ namespace Robust.Benchmarks.Migrations
 
             modelBuilder.Entity("Robust.Benchmarks.Exporters.BenchmarkRun", b =>
                 {
-                    b.Property<decimal>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("GitHash")
                         .IsRequired()
@@ -41,7 +43,7 @@ namespace Robust.Benchmarks.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<DateTime>("RunDate")
-                        .HasColumnType("Date");
+                        .HasColumnType("timestamptz");
 
                     b.HasKey("Id");
 

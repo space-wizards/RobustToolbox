@@ -11,6 +11,7 @@ using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
@@ -75,6 +76,7 @@ namespace Robust.Client
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<ProfViewManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             switch (mode)
             {

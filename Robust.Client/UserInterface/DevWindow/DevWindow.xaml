@@ -4,5 +4,6 @@
     <TabContainer>
         <DebugConsole Name="DebugConsole" />
         <DevWindowTabUI Name="UI" />
+        <DevWindowTabPerf Name="Perf" />
     </TabContainer>
 </Control>

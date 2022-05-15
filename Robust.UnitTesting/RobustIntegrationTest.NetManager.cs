@@ -445,6 +445,12 @@ namespace Robust.UnitTesting
 
                     IsConnected = false;
                 }
+
+                public void Disconnect(string reason, bool sendBye)
+                {
+                    // Don't handle bye sending in here I guess.
+                    Disconnect(reason);
+                }
             }
 
             private sealed class ConnectMessage

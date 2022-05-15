@@ -7,7 +7,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -16,6 +15,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
 
+        // Needed on release no remove.
         private ISawmill _logger = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
@@ -29,6 +29,8 @@ namespace Robust.Shared.GameObjects
             UpdatesOutsidePrediction = true;
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
+            SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
+            SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
         }
@@ -55,7 +57,7 @@ namespace Robust.Shared.GameObjects
             var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices, LookupFlags.Anchored).ToList())
             {
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
@@ -162,6 +164,33 @@ namespace Robust.Shared.GameObjects
             // Parented to grid so convert their pos back to the grid.
             var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
             return new EntityCoordinates(grid.GridEntityId, gridPos);
+        }
+
+        /// <summary>
+        ///     Helper method that returns the grid or map tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridOrMapTilePosition(EntityUid uid, TransformComponent? xform = null)
+        {
+            if(!Resolve(uid, ref xform, false))
+                return Vector2i.Zero;
+
+            // Fast path, we're not on a grid.
+            if (xform.GridID == GridId.Invalid)
+                return (Vector2i) xform.WorldPosition;
+
+            // We're on a grid, need to convert the coordinates to grid tiles.
+            return _mapManager.GetGrid(xform.GridID).CoordinatesToTile(xform.Coordinates);
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct TransformStartupEvent
+    {
+        public readonly TransformComponent Component;
+
+        public TransformStartupEvent(TransformComponent component)
+        {
+            Component = component;
         }
     }
 

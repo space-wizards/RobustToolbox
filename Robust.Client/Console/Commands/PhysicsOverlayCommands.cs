@@ -8,12 +8,12 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "physics";
         public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
-        public string Help => $"{Command} <aabbs / contactnormals / contactpoints / joints / shapeinfo / shapes>";
+        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / joints / shapeinfo / shapes>";
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
-                shell.WriteLine($"Invalid number of args supplied");
+                shell.WriteError($"Invalid number of args supplied");
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace Robust.Client.Console.Commands
                     system.Flags ^= PhysicsDebugFlags.Shapes;
                     break;
                 default:
-                    shell.WriteLine($"{args[0]} is not a recognised overlay");
+                    shell.WriteError($"{args[0]} is not a recognised overlay");
                     return;
             }
 

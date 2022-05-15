@@ -170,6 +170,20 @@ public struct ValueList<T> : IEnumerable<T>
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T AddRef()
+    {
+        var array = _items;
+        var size = Count;
+        if ((uint)size < (uint)Capacity)
+        {
+            Count = size + 1;
+            return ref array![size];
+        }
+
+        return ref AddRefWithResize();
+    }
+
     // Non-inline from List.Add to improve its code quality as uncommon path
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddWithResize(T item)
@@ -180,6 +194,18 @@ public struct ValueList<T> : IEnumerable<T>
         Grow(size + 1);
         Count = size + 1;
         _items![size] = item;
+    }
+
+    // Non-inline from List.Add to improve its code quality as uncommon path
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ref T AddRefWithResize()
+    {
+        Debug.Assert(Count == Capacity);
+
+        var size = Count;
+        Grow(size + 1);
+        Count = size + 1;
+        return ref _items![size];
     }
 
     // Clears the contents of List.

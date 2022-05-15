@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(result, Is.EqualTo(new TileRef(grid.Index, grid.GridEntityId, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Robust.UnitTesting.Shared.Map
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            var bounds = grid.WorldBounds;
+            var bounds = grid.WorldAABB;
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -82,7 +82,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             grid.SetTile(new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = grid.WorldBounds;
+            var bounds = grid.WorldAABB;
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -151,7 +151,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(foundTile, Is.True);
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Index, grid.GridEntityId, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         [Test]

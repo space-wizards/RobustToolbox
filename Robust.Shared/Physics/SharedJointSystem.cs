@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -125,11 +127,14 @@ namespace Robust.Shared.Physics
 
         private void InitJoint(Joint joint)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            var aUid = joint.BodyAUid;
+            var bUid = joint.BodyBUid;
 
-            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
-            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
+            if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
+                !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+
+            var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
+            var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 
@@ -162,6 +167,8 @@ namespace Robust.Shared.Physics
                 FilterContactsForJoint(joint);
             }
 
+            bodyA.CanCollide = true;
+            bodyB.CanCollide = true;
             bodyA.WakeBody();
             bodyB.WakeBody();
             Dirty(bodyA);
@@ -189,9 +196,9 @@ namespace Robust.Shared.Physics
         }
 
         #region Helpers
+
         /// <summary>
         /// Create a DistanceJoint between 2 bodies. This should be called content-side whenever you need one.
-        /// BodyA and BodyB on the joint are sorted so may not necessarily match what you pass in.
         /// </summary>
         public DistanceJoint CreateDistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)
         {
@@ -199,6 +206,22 @@ namespace Robust.Shared.Physics
             anchorB ??= Vector2.Zero;
 
             var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        /// <summary>
+        /// Create a MouseJoint between 2 bodies. This should be called content-side whenever you need one.
+        /// </summary>
+        public MouseJoint CreateMouseJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)
+        {
+            anchorA ??= Vector2.Zero;
+            anchorB ??= Vector2.Zero;
+
+            var joint = new MouseJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -388,12 +411,14 @@ namespace Robust.Shared.Physics
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
                 MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
+                bodyA.CanCollide = true;
                 bodyA.Awake = true;
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
                 MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
+                bodyB.CanCollide = true;
                 bodyB.Awake = true;
             }
 
@@ -446,7 +471,7 @@ namespace Robust.Shared.Physics
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
-                    contact.FilterFlag = true;
+                    contact.Flags |= ContactFlags.Filter;
                 }
             }
         }

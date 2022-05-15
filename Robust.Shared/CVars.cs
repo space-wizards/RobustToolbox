@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -125,12 +132,6 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// The amount of new entities that can be sent to a client in a single game state, under PVS.
-        /// </summary>
-        public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
-
-        /// <summary>
         /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
@@ -194,7 +195,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
-#if DEBUG
         /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
         /// 0 = no packet loss, 1 = all packets dropped
@@ -219,7 +219,6 @@ namespace Robust.Shared
         /// 0 = no packets duplicated, 1 = all packets duplicated.
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /**
          * SUS
@@ -889,6 +888,12 @@ namespace Robust.Shared
             CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
 
         /// <summary>
+        /// Can grids split if not connected by cardinals
+        /// </summary>
+        public static readonly CVarDef<bool> GridSplitting =
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+
+        /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
         /// </summary>
         public static readonly CVarDef<float> GridFixtureEnlargement =
@@ -1158,5 +1163,24 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ThreadParallelCount =
             CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

@@ -4,7 +4,6 @@ using System.Linq;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -72,7 +71,7 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
-                Logger.Debug($"A: {string.Join(", ", args)}");
+                // Logger.Debug($"A: {string.Join(", ", args)}");
 
                 return CalcCompletions(sudoShell, args);
             });
@@ -196,7 +195,7 @@ namespace Robust.Server.Console
 
         private CompletionResult CalcCompletions(IConsoleShell shell, string[] args)
         {
-            Logger.Debug(string.Join(", ", args));
+            // Logger.Debug(string.Join(", ", args));
 
             if (args.Length <= 1)
             {

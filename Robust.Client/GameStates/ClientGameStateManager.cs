@@ -365,19 +365,10 @@ namespace Robust.Client.GameStates
             using var _ = _prof.Group("ResetPredictedEntities");
 
             var countReset = 0;
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             var system = _entitySystemManager.GetEntitySystem<PVSSystem>();
 
             foreach (var entity in system.GetDirtyEntities(curTick))
             {
-                // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() ||
-                    !metaQuery.TryGetComponent(entity, out var meta) ||
-                    meta.EntityLastModifiedTick < curTick)
-                {
-                    continue;
-                }
-
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
                     _sawmill.Debug($"Entity {entity} was made dirty.");

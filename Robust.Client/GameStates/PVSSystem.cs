@@ -59,6 +59,7 @@ internal sealed class PVSSystem : SharedPVSSystem
     public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
     {
         _dirty.Clear();
+        var metaQuery = GetEntityQuery<MetaDataComponent>();
 
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
@@ -66,6 +67,11 @@ internal sealed class PVSSystem : SharedPVSSystem
             if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
+                // DebugTools.Assert(!ent.IsClientSide());
+
+                if (!metaQuery.TryGetComponent(ent, out var meta) ||
+                    meta.EntityLastModifiedTick < currentTick) continue;
+
                 _dirty.Add(ent);
             }
         }
@@ -88,6 +94,8 @@ internal sealed class PVSSystem : SharedPVSSystem
 
     private void OnEntityDirty(object? sender, EntityUid e)
     {
+        if (e.IsClientSide()) return;
+
         var tick = _timing.CurTick;
         if (!_dirtyEntities.TryGetValue(tick, out var ents))
         {

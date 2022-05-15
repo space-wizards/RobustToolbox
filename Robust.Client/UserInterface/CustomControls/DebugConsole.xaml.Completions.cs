@@ -186,15 +186,8 @@ public sealed partial class DebugConsole
 
         _compPopup.Contents.RemoveAllChildren();
 
-        if (_compFiltered.Count == 0)
+        if (_compCurResult!.Hint != null)
         {
-            if (_compCurResult!.Hint == null)
-            {
-                // Nothing to show!
-                return;
-            }
-
-            // Show a type hint only, no list completions.
             var hint = _compCurResult.Hint;
             _compPopup.Contents.AddChild(new Label
             {
@@ -202,25 +195,26 @@ public sealed partial class DebugConsole
                 FontColorOverride = Color.DarkGray
             });
         }
-        else
+
+        // Fill out list completions.
+        var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
+        var c = 0;
+        for (var i = _compVerticalOffset; i < _compFiltered.Count && c < maxCount; i++, c++)
         {
-            // Fill out list completions.
-            var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
-            var c = 0;
-            for (var i = _compVerticalOffset; i < _compFiltered.Count && c < maxCount; i++, c++)
+            _compPopup.Contents.AddChild(new Label
             {
-                _compPopup.Contents.AddChild(new Label
-                {
-                    Text = _compFiltered[i],
-                    FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
-                });
-            }
+                Text = _compFiltered[i],
+                FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
+            });
         }
 
-        _compPopup.Open(
-            UIBox2.FromDimensions(
-                offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y + CommandBar.Height + 2,
-                5, 5));
+        if (_compPopup.Contents.ChildCount != 0)
+        {
+            _compPopup.Open(
+                UIBox2.FromDimensions(
+                    offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y + CommandBar.Height + 2,
+                    5, 5));
+        }
     }
 
     private (List<string> args, string curTyping) CalcTypingArgs()

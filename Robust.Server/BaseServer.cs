@@ -604,7 +604,8 @@ namespace Robust.Server
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
-            _network.Shutdown($"Server shutting down: {_shutdownReason}");
+            var shutdownReasonWithRedial = NetStructuredDisconnectMessages.Encode($"Server shutting down: {_shutdownReason}", true);
+            _network.Shutdown(shutdownReasonWithRedial);
 
             // shutdown entities
             _entityManager.Cleanup();

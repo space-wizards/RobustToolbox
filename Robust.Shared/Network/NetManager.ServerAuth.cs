@@ -16,6 +16,8 @@ namespace Robust.Shared.Network
 {
     partial class NetManager
     {
+        private readonly static string DisconnectReasonWrongKey = NetStructuredDisconnectMessages.Encode("Token decryption failed.\nPlease reconnect to this server from the launcher.", true);
+
         private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 
         public byte[] CryptoPublicKey { get; } = new byte[CryptoBox.PublicKeyBytes];
@@ -93,8 +95,7 @@ namespace Robust.Shared.Network
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
                         // In that case, the decrypt can fail here.
-                        connection.Disconnect(
-                            "Token decryption failed.\nPlease reconnect to this server from the launcher.");
+                        connection.Disconnect(DisconnectReasonWrongKey);
                         return;
                     }
 

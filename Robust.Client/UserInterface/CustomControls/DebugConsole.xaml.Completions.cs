@@ -183,7 +183,7 @@ public sealed partial class DebugConsole
             _compPopup.Contents.AddChild(new Label
             {
                 Text = hint,
-                FontColorOverride = Color.DarkGray
+                FontColorOverride = Color.Gray
             });
         }
 

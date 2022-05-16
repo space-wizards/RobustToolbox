@@ -304,7 +304,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-                _entMan.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
+                var ev = new CollisionChangeEvent(this, _canCollide);
+                _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
                 Dirty(_entMan);
             }
         }

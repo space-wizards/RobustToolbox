@@ -69,6 +69,18 @@ public partial class EntitySystem
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        if (!metaQuery.TryGetComponent(uid, out var meta))
+            return true;
+
+        return meta.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted([NotNullWhen(false)] EntityUid? uid)
     {
         return !uid.HasValue || Deleted(uid.Value);

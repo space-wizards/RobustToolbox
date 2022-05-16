@@ -67,7 +67,7 @@ namespace Robust.Shared.Physics
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
-            SubscribeLocalEvent<CollisionChangeMessage>(OnPhysicsUpdate);
+            SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
@@ -444,7 +444,7 @@ namespace Robust.Shared.Physics
             body.Broadphase = null;
         }
 
-        private void OnPhysicsUpdate(CollisionChangeMessage ev)
+        private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
             var lifestage = ev.Body.LifeStage;
 

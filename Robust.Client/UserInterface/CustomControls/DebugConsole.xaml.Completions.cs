@@ -218,7 +218,15 @@ public sealed partial class DebugConsole
         if (args.Count == 0 || ranges[^1].end != text.Length)
             args.Add("");
 
-        return (args, args[^1], ranges.Count == 0 ? default : ranges[^1]);
+        (int, int) lastRange;
+        if (ranges.Count == 0)
+            lastRange = default;
+        else if (ranges.Count == args.Count)
+            lastRange = ranges[^1];
+        else
+            lastRange = (cursor, cursor);
+
+        return (args, args[^1], lastRange);
     }
 
     private string[] FilterCompletions(IEnumerable<string> completions, string curTyping)

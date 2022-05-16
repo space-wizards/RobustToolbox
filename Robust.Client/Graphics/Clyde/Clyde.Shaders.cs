@@ -162,6 +162,8 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
                     }
+
+                    versionHeader += "#define NO_ARRAY_PRECISION\n";
                 }
 
             }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -37,21 +38,12 @@ internal sealed class PVSSystem : SharedPVSSystem
         _dirtyEntities.Clear();
     }
 
-    internal void Reset(GameTick curTick)
+    internal void Reset()
     {
-        var toRemove = new RemQueue<GameTick>();
-
-        foreach (var (tick, _) in _dirtyEntities)
+        foreach (var (tick, sets) in _dirtyEntities.ToArray())
         {
-            if (tick >= curTick - 1) continue;
-            toRemove.Add(tick);
-        }
-
-        foreach (var tick in toRemove)
-        {
-            var ents = _dirtyEntities[tick];
-            ents.Clear();
-            _dirtyPool.Return(ents);
+            sets.Clear();
+            _dirtyPool.Return(sets);
             _dirtyEntities.Remove(tick);
         }
     }
@@ -59,7 +51,6 @@ internal sealed class PVSSystem : SharedPVSSystem
     public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
     {
         _dirty.Clear();
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
 
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
@@ -67,11 +58,6 @@ internal sealed class PVSSystem : SharedPVSSystem
             if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
-                // DebugTools.Assert(!ent.IsClientSide());
-
-                if (!metaQuery.TryGetComponent(ent, out var meta) ||
-                    meta.EntityLastModifiedTick < currentTick) continue;
-
                 _dirty.Add(ent);
             }
         }

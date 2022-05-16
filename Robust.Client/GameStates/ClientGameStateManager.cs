@@ -401,7 +401,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            system.Reset(curTick);
+            system.Reset();
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }

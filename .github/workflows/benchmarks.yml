@@ -1,11 +1,13 @@
 ﻿name: Benchmarks
-#on:
-#  push
-  #schedule:
-  #  - cron: '0 5 * * *'
-  #push:
-  #  tags:
-  #    - 'v*'
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'
+  push:
+    tags:
+      - 'v*'
+
+concurrency: benchmarks
 
 env:
   ROBUST_BENCHMARKS_ENABLE_SQL: 1
@@ -20,14 +22,14 @@ jobs:
     name: Run Benchmarks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-      - name: Install dependencies
-        run: dotnet restore
-      - name: Run benchmark
-        run: cd Robust.Benchmarks && sudo dotnet run --filter '*' --configuration Release
+    - name: Run script on centcomm
+      uses: appleboy/ssh-action@master
+      with:
+        host: centcomm.spacestation14.io
+        username: robust-benchmark-runner
+        key: ${{ secrets.CENTCOMM_ROBUST_BENCHMARK_RUNNER_KEY }}
+        command_timeout: 100000m 
+        script: |
+          wget https://raw.githubusercontent.com/space-wizards/RobustToolbox/${{ github.sha }}/Tools/run_benchmarks.py
+          python3 run_benchmarks.py "${{ secrets.BENCHMARKS_WRITE_ADDRESS }}" "${{ secrets.BENCHMARKS_WRITE_PORT }}" "${{ secrets.BENCHMARKS_WRITE_USER }}" "${{ secrets.BENCHMARKS_WRITE_PASSWORD }}" "${{ github.sha }}"
+          rm run_benchmarks.py

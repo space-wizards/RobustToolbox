@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -36,6 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -347,7 +349,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void SetupDebugCallback()
+        private unsafe void SetupDebugCallback()
         {
             if (!_hasGLKhrDebug)
             {
@@ -358,18 +360,15 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
-            GCHandle.Alloc(_debugMessageCallbackInstance);
+            _debugMessageCallbackInstance ??= DebugMessageCallback;
 
             // OpenTK seemed to have trouble marshalling the delegate so do it manually.
 
             var procName = _isGLKhrDebugESExtension ? "glDebugMessageCallbackKHR" : "glDebugMessageCallback";
-            LoadGLProc(procName, out DebugMessageCallbackDelegate proc);
-            _debugMessageCallbackInstance = DebugMessageCallback;
+            var glDebugMessageCallback = (delegate* unmanaged[Stdcall] <nint, nint, void>) LoadGLProc(procName);
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);
-            proc(funcPtr, new IntPtr(0x3005));
+            glDebugMessageCallback(funcPtr, new IntPtr(0x3005));
         }
-
-        private delegate void DebugMessageCallbackDelegate(IntPtr funcPtr, IntPtr userParam);
 
         private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)

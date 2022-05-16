@@ -14,6 +14,7 @@ using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -111,6 +112,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -248,12 +250,11 @@ namespace Robust.Shared.Network
             {
                 _config.OnValueChanged(CVars.AuthMode, OnAuthModeChanged, invokeImmediately: true);
             }
-#if DEBUG
+
             _config.OnValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
             _config.OnValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
             _config.OnValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
             _config.OnValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
-#endif
 
             _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
                 UpdateNetMessageFunctions);
@@ -416,12 +417,11 @@ namespace Robust.Shared.Network
             {
                 _config.UnsubValueChanged(CVars.AuthMode, OnAuthModeChanged);
             }
-#if DEBUG
+
             _config.UnsubValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
             _config.UnsubValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
             _config.UnsubValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
             _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
-#endif
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -450,12 +450,16 @@ namespace Robust.Shared.Network
             var stored = 0L;
             */
 
+            var countProcessed = 0;
+            var countDataProcessed = 0;
+
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
                 var recycle = true;
                 while ((msg = peer.Peer.ReadMessage()) != null)
                 {
+                    countProcessed += 1;
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
@@ -484,6 +488,7 @@ namespace Robust.Shared.Network
                             break;
 
                         case NetIncomingMessageType.Data:
+                            countDataProcessed += 1;
                             recycle = DispatchNetMessage(msg);
                             break;
 
@@ -544,6 +549,9 @@ namespace Robust.Shared.Network
             MessagesResentHoleMetrics.IncTo(resentHoles);
             MessagesDroppedMetrics.IncTo(dropped);
 
+            _prof.WriteValue("Count Processed", countProcessed);
+            _prof.WriteValue("Count Data Processed", countDataProcessed);
+
             /*
             MessagesUnsentMetrics.Set(unsent);
             MessagesStoredMetrics.Set(stored);
@@ -589,7 +597,6 @@ namespace Robust.Shared.Network
             }
 
 
-#if DEBUG
             //Simulate Latency
             netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);
             netConfig.SimulatedMinimumLatency = _config.GetCVar(CVars.NetFakeLagMin);
@@ -597,11 +604,10 @@ namespace Robust.Shared.Network
             netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
             netConfig.ConnectionTimeout = 30000f;
-#endif
+
             return netConfig;
         }
 
-#if DEBUG
         private void _fakeLossChanged(float newValue)
         {
             foreach (var peer in _netPeers)
@@ -633,7 +639,6 @@ namespace Robust.Shared.Network
                 peer.Peer.Configuration.SimulatedDuplicatesChance = newValue;
             }
         }
-#endif
 
         /// <summary>
         ///     Gets the NetChannel of a peer NetConnection.

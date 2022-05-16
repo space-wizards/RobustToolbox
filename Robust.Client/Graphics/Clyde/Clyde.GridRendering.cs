@@ -49,7 +49,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                grid.GetMapChunks(worldBounds, out var enumerator);
+                var enumerator = grid.GetMapChunks(worldBounds);
 
                 while (enumerator.MoveNext(out var chunk))
                 {

@@ -343,11 +343,15 @@ public abstract partial class SharedTransformSystem
         {
             var newParentId = newState.ParentID;
             var rebuildMatrices = false;
+
+            // Update to new parent.
+            // if the new one isn't valid (e.g. PVS) then we'll just return early after yeeting them to nullspace.
             if (component.ParentUid != newParentId)
             {
                 if (!newParentId.IsValid())
                 {
                     component.DetachParentToNull();
+                    return;
                 }
                 else
                 {
@@ -393,7 +397,7 @@ public abstract partial class SharedTransformSystem
             {
                 var iGrid = Comp<MapGridComponent>(_mapManager.GetGridEuid(component.GridID));
                 AnchorEntity(component, iGrid);
-                component.SetAnchored(true);
+                DebugTools.Assert(component.Anchored);
             }
             else
             {

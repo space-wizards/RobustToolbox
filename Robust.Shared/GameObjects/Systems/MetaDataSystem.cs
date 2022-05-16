@@ -31,6 +31,16 @@ public sealed class MetaDataSystem : EntitySystem
             component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
     }
 
+    public void SetEntityPaused(EntityUid uid, bool value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata)) return;
+
+        if (metadata._entityPaused == value) return;
+
+        metadata._entityPaused = value;
+        RaiseLocalEvent(uid, new EntityPausedEvent(uid, value));
+    }
+
     public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
         if (!Resolve(uid, ref component)) return;

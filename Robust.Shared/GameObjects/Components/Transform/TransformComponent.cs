@@ -61,6 +61,9 @@ namespace Robust.Shared.GameObjects
 
         internal bool _mapIdInitialized;
 
+        // TODO: Cache this.
+        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
+
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
         /// </summary>
@@ -89,6 +92,9 @@ namespace Robust.Shared.GameObjects
         }
 
         internal GridId _gridId = GridId.Invalid;
+
+        // TODO: Cache this.
+        public EntityUid? GridUid => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : null;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -351,12 +357,12 @@ namespace Robust.Shared.GameObjects
                     var oldMapId = MapID;
                     ChangeMapId(newParent.MapID, xformQuery);
 
+                    // Cache new GridID before raising the event.
+                    GridID = GetGridIndex(xformQuery);
+
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
                         LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
-
-                    // Cache new GridID before raising the event.
-                    GridID = GetGridIndex(xformQuery);
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
@@ -621,6 +627,11 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            // Stop any active lerps
+            _nextPosition = null;
+            _nextRotation = null;
+            LerpParent = EntityUid.Invalid;
+
             // TODO: When ECSing this can just pass it into the anchor setter
             if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
             {
@@ -677,19 +688,23 @@ namespace Robust.Shared.GameObjects
             if (newMapId == MapID)
                 return;
 
-            var oldMapId = MapID;
-
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
             var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
             var metaData = metaEnts.GetComponent(Owner);
-            metaData.EntityPaused = mapPaused;
+            var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
+            metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
 
             MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+        private void UpdateChildMapIdsRecursive(
+            MapId newMapId,
+            bool mapPaused,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            MetaDataSystem system)
         {
             var childEnumerator = ChildEnumerator;
 
@@ -697,16 +712,15 @@ namespace Robust.Shared.GameObjects
             {
                 //Set Paused state
                 var metaData = metaQuery.GetComponent(child.Value);
-                metaData.EntityPaused = mapPaused;
+                system.SetEntityPaused(child.Value, mapPaused, metaData);
 
                 var concrete = xformQuery.GetComponent(child.Value);
-                var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
                 }
             }
         }

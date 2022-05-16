@@ -142,7 +142,5 @@ namespace Robust.Shared.Physics
         void ApplyLinearImpulse(in Vector2 impulse);
 
         void ApplyAngularImpulse(float impulse);
-
-        IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

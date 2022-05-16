@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
@@ -48,6 +49,21 @@ namespace Robust.Shared.Utility
 
         /// <summary>
         ///     An assertion that will <see langword="throw" /> an exception if the
+        ///     <paramref name="condition" /> is not true.
+        /// </summary>
+        /// <param name="condition">Condition that must be true.</param>
+        /// <param name="message">Exception message.</param>
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
+            bool condition, [InterpolatedStringHandlerArgument("condition")] ref AssertInterpolatedStringHandler message)
+        {
+            if (!condition)
+                throw new DebugAssertException(message.ToStringAndClear());
+        }
+
+        /// <summary>
+        ///     An assertion that will <see langword="throw" /> an exception if the
         ///     <paramref name="arg" /> is <see langword="null" />.
         /// </summary>
         /// <param name="arg">Condition that must be true.</param>
@@ -85,6 +101,32 @@ namespace Robust.Shared.Utility
         public static void Break()
         {
             Debugger.Break();
+        }
+
+        [InterpolatedStringHandler]
+        public ref struct AssertInterpolatedStringHandler
+        {
+            private DefaultInterpolatedStringHandler _handler;
+
+            public AssertInterpolatedStringHandler(int literalLength, int formattedCount, bool condition, out bool shouldAppend)
+            {
+                if (condition)
+                {
+                    shouldAppend = false;
+                    _handler = default;
+                }
+                else
+                {
+                    shouldAppend = true;
+                    _handler = new DefaultInterpolatedStringHandler(literalLength, formattedCount);
+                }
+            }
+
+            public string ToStringAndClear() => _handler.ToStringAndClear();
+            public override string ToString() => _handler.ToString();
+            public void AppendLiteral(string value) => _handler.AppendLiteral(value);
+            public void AppendFormatted<T>(T value) => _handler.AppendFormatted(value);
+            public void AppendFormatted<T>(T value, string? format) => _handler.AppendFormatted(value, format);
         }
     }
 

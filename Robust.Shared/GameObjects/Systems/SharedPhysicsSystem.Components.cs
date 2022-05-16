@@ -1,11 +1,87 @@
 using System;
+using Robust.Shared.GameStates;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class SharedPhysicsSystem
 {
+    private void OnPhysicsInit(EntityUid uid, PhysicsComponent component, ComponentInit args)
+    {
+        var xform = Transform(uid);
+
+        if (component._canCollide && xform.MapID != MapId.Nullspace)
+        {
+            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
+            physicsMap.AddBody(component);
+
+            if (component.BodyType != BodyType.Static &&
+                (physicsMap.Gravity != Vector2.Zero ||
+                 !component.LinearVelocity.Equals(Vector2.Zero) ||
+                 !component.AngularVelocity.Equals(0f)))
+            {
+                component._awake = true;
+            }
+            else
+            {
+                component._awake = false;
+            }
+
+            if (component._awake)
+                physicsMap.AddAwakeBody(component);
+        }
+        else
+        {
+            component._awake = false;
+        }
+
+        // Gets added to broadphase via fixturessystem
+        var startup = new PhysicsInitializedEvent(uid);
+        EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+
+        // Issue the event for stuff that needs it.
+        if (component._canCollide)
+        {
+            component._canCollide = false;
+            component.CanCollide = true;
+        }
+    }
+
+    private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
+    {
+        args.State = new PhysicsComponentState(
+            component._canCollide,
+            component.SleepingAllowed,
+            component.FixedRotation,
+            component.BodyStatus,
+            component.LinearVelocity,
+            component.AngularVelocity,
+            component.BodyType);
+    }
+
+    private void OnPhysicsHandleState(EntityUid uid, PhysicsComponent component, ref ComponentHandleState args)
+    {
+        if (args.Current is not PhysicsComponentState newState)
+            return;
+
+        component.SleepingAllowed = newState.SleepingAllowed;
+        component.FixedRotation = newState.FixedRotation;
+        component.CanCollide = newState.CanCollide;
+        component.BodyStatus = newState.Status;
+
+        // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
+        // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
+
+        Dirty(component);
+        component.LinearVelocity = newState.LinearVelocity;
+        component.AngularVelocity = newState.AngularVelocity;
+        component.BodyType = newState.BodyType;
+        component.Predict = false;
+    }
+
     public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity)
     {
         if (body.BodyType == BodyType.Static ||

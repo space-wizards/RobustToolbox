@@ -21,6 +21,8 @@ cmd-cvar-help = Usage: cvar <name | ?> [value]
 cmd-cvar-invalid-args = Must provide exactly one or two arguments.
 cmd-cvar-not-registered = CVar '{ $cvar }' is not registered. Use 'cvar ?' to get a list of all registered CVars.
 cmd-cvar-parse-error = Input value is in incorrect format for type { $type }
+cmd-cvar-compl-list = List available CVars
+cmd-cvar-arg-name = <name | ?>
 
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter

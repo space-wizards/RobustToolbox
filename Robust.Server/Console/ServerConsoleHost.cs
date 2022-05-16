@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -72,7 +73,7 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
-                // Logger.Debug($"A: {string.Join(", ", args)}");
+                Logger.Debug($"A: {string.Join(", ", args)}");
 
 #pragma warning disable CA2012
                 return CalcCompletions(sudoShell, args);
@@ -206,7 +207,8 @@ namespace Robust.Server.Console
             if (args.Length <= 1)
             {
                 // Typing out command name, handle this ourselves.
-                return ValueTask.FromResult(CompletionResult.FromOptions(AvailableCommands.Keys.ToArray()));
+                return ValueTask.FromResult(CompletionResult.FromOptions(
+                    RegisteredCommands.Values.Select(c => new CompletionOption(c.Command, c.Description))));
             }
 
             var cmdName = args[0];

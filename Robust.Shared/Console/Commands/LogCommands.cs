@@ -50,10 +50,13 @@ internal sealed class LogSetLevelCommand : IConsoleCommand
         switch (args.Length)
         {
             case 1:
-                return new CompletionResult(logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c).ToArray(),
+                return CompletionResult.FromHintOptions(
+                    logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c),
                     "<sawmill>");
             case 2:
-                return new CompletionResult(Enum.GetNames<LogLevel>(), "<level>");
+                return CompletionResult.FromHintOptions(
+                    Enum.GetNames<LogLevel>(),
+                    "<level>");
 
             default:
                 return CompletionResult.Empty;
@@ -100,10 +103,13 @@ internal sealed class TestLog : IConsoleCommand
         switch (args.Length)
         {
             case 1:
-                return new CompletionResult(logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c).ToArray(),
+                return CompletionResult.FromHintOptions(
+                    logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c),
                     "<sawmill>");
             case 2:
-                return new CompletionResult(Enum.GetNames<LogLevel>(), "<level>");
+                return CompletionResult.FromHintOptions(
+                    Enum.GetNames<LogLevel>(),
+                    "<level>");
 
             case 3:
                 return CompletionResult.FromHint("<message>");

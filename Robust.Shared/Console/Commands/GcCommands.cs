@@ -77,7 +77,8 @@ internal sealed class GcModeCommand : IConsoleCommand
                 return;
             }
 
-            shell.WriteLine(Loc.GetString("cmd-gc_mode-attempt", ("prevMode", prevMode.ToString()), ("mode", mode.ToString())));
+            shell.WriteLine(Loc.GetString("cmd-gc_mode-attempt", ("prevMode", prevMode.ToString()),
+                ("mode", mode.ToString())));
             GCSettings.LatencyMode = mode;
             shell.WriteLine(Loc.GetString("cmd-gc_mode-result", ("mode", GCSettings.LatencyMode.ToString())));
         }
@@ -86,7 +87,11 @@ internal sealed class GcModeCommand : IConsoleCommand
     public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
-            return new CompletionResult(Enum.GetNames<GCLatencyMode>(), Loc.GetString("cmd-gc_mode-arg-type"));
+        {
+            return CompletionResult.FromHintOptions(
+                Enum.GetNames<GCLatencyMode>(),
+                Loc.GetString("cmd-gc_mode-arg-type"));
+        }
 
         return CompletionResult.Empty;
     }

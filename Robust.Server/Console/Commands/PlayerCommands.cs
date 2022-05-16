@@ -220,7 +220,7 @@ namespace Robust.Server.Console.Commands
                 var playerManager = IoCManager.Resolve<IPlayerManager>();
                 var options = playerManager.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
 
-                return new CompletionResult(options, "<PlayerIndex>");
+                return CompletionResult.FromHintOptions(options, "<PlayerIndex>");
             }
 
             if (args.Length > 1)

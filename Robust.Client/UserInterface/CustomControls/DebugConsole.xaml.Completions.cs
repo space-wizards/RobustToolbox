@@ -18,14 +18,17 @@ public sealed partial class DebugConsole
 
     // Last valid completion result we got.
     private CompletionResult? _compCurResult;
+
     // The parameter count for the above completion result.
     // Used to immediately invalidate it if the amount changes.
     private int _compParamCount;
 
     // The filtered set of completions currently shown to the user.
-    private string[]? _compFiltered;
+    private CompletionOption[]? _compFiltered;
+
     // Which completion is currently selected, index into _compFiltered.
     private int _compSelected;
+
     // Vertical scroll offset of the completion list.
     private int _compVerticalOffset;
 
@@ -139,9 +142,9 @@ public sealed partial class DebugConsole
 
         var (_, curTyping, _) = CalcTypingArgs();
 
-        var curSelected = _compFiltered?.Length > 0 ? _compFiltered[_compSelected] : null;
+        var curSelected = _compFiltered?.Length > 0 ? _compFiltered[_compSelected] : default;
         _compFiltered = FilterCompletions(_compCurResult.Options, curTyping);
-        if (curSelected == null)
+        if (curSelected == default)
         {
             _compSelected = 0;
         }
@@ -189,11 +192,34 @@ public sealed partial class DebugConsole
         var c = 0;
         for (var i = _compVerticalOffset; i < _compFiltered.Length && c < maxCount; i++, c++)
         {
-            _compPopup.Contents.AddChild(new Label
+            var (value, hint, _) = _compFiltered[i];
+
+            var labelValue = new Label
             {
-                Text = _compFiltered[i],
+                Text = value,
                 FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
-            });
+            };
+
+            if (hint != null)
+            {
+                _compPopup.Contents.AddChild(new BoxContainer
+                {
+                    Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                    Children =
+                    {
+                        labelValue,
+                        new Label
+                        {
+                            Text = $" - {hint}",
+                            FontColorOverride = Color.Gray
+                        }
+                    }
+                });
+            }
+            else
+            {
+                _compPopup.Contents.AddChild(labelValue);
+            }
         }
 
         if (_compPopup.Contents.ChildCount != 0)
@@ -229,10 +255,10 @@ public sealed partial class DebugConsole
         return (args, args[^1], lastRange);
     }
 
-    private string[] FilterCompletions(IEnumerable<string> completions, string curTyping)
+    private CompletionOption[] FilterCompletions(IEnumerable<CompletionOption> completions, string curTyping)
     {
         return completions
-            .Where(c => c.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
+            .Where(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
     }
 
@@ -243,14 +269,18 @@ public sealed partial class DebugConsole
             if (_compFiltered != null && _compSelected < _compFiltered.Length)
             {
                 // Figure out typing word so we know how much to replace.
-                var completion = _compFiltered[_compSelected];
+                var (completion, _, completionFlags) = _compFiltered[_compSelected];
                 var (_, _, lastRange) = CalcTypingArgs();
 
                 // Replace the full word from the start.
                 // This means that letter casing will match the completion suggestion.
                 CommandBar.CursorPosition = lastRange.end;
                 CommandBar.SelectionStart = lastRange.start;
-                CommandBar.InsertAtCursor(CommandParsing.Escape(completion) + " ");
+                var insertValue = CommandParsing.Escape(completion);
+                if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
+                    insertValue += " ";
+
+                CommandBar.InsertAtCursor(insertValue);
 
                 TypeUpdateCompletions(true);
 

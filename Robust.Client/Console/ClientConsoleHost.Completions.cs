@@ -32,7 +32,9 @@ internal sealed partial class ClientConsoleHost
         if (args.Count == 1)
         {
             // Typing out command name, handle this ourselves.
-            return Task.FromResult(CompletionResult.FromOptions(RegisteredCommands.Keys.ToArray()));
+            var cmdOptions = CompletionResult.FromOptions(
+                RegisteredCommands.Values.Select(c => new CompletionOption(c.Command, c.Description)));
+            return Task.FromResult(cmdOptions);
         }
 
         if (!RegisteredCommands.TryGetValue(args[0], out var cmd))

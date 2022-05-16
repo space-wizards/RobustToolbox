@@ -17,10 +17,17 @@ public sealed class MsgConCompletionResp : NetMessage
         Seq = buffer.ReadInt32();
 
         var len = buffer.ReadVariableInt32();
-        var options = new string[len];
+        var options = new CompletionOption[len];
         for (var i = 0; i < len; i++)
         {
-            options[i] = buffer.ReadString();
+            var optValue = buffer.ReadString();
+            var optHint = buffer.ReadString();
+            var optFlags = buffer.ReadInt32();
+
+            options[i] = new CompletionOption(
+                optValue,
+                optHint == "" ? null : optHint,
+                (CompletionOptionFlags) optFlags);
         }
 
         var hint = buffer.ReadString();
@@ -35,7 +42,9 @@ public sealed class MsgConCompletionResp : NetMessage
         buffer.WriteVariableInt32(Result.Options.Length);
         foreach (var option in Result.Options)
         {
-            buffer.Write(option);
+            buffer.Write(option.Value);
+            buffer.Write(option.Hint);
+            buffer.Write((int) option.Flags);
         }
 
         buffer.Write(Result.Hint);

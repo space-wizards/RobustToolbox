@@ -67,7 +67,16 @@ namespace Robust.Shared.Configuration
         {
             var cfg = IoCManager.Resolve<IConfigurationManager>();
             if (args.Length == 1)
-                return new CompletionResult(cfg.GetRegisteredCVars().Union(new []{"?"}).OrderBy(c => c).ToArray(), "<cvar name | ?>");
+            {
+                var helpQuestion = Loc.GetString("cmd-cvar-compl-list");
+
+                return CompletionResult.FromHintOptions(
+                    cfg.GetRegisteredCVars()
+                        .Select(c => new CompletionOption(c))
+                        .Union(new[] { new CompletionOption("?", helpQuestion) })
+                        .OrderBy(c => c.Value),
+                    Loc.GetString("cmd-cvar-arg-name"));
+            }
 
             var cvar = args[0];
             if (!cfg.IsCVarRegistered(cvar))

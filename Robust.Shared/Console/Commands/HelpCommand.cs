@@ -25,7 +25,8 @@ internal sealed class HelpCommand : IConsoleCommand
                     return;
                 }
 
-                shell.WriteLine(Loc.GetString("cmd-help-top", ("command", cmd.Command), ("description", cmd.Description)));
+                shell.WriteLine(Loc.GetString("cmd-help-top", ("command", cmd.Command),
+                    ("description", cmd.Description)));
                 shell.WriteLine(cmd.Help);
                 break;
 
@@ -40,7 +41,9 @@ internal sealed class HelpCommand : IConsoleCommand
         if (args.Length == 1)
         {
             var host = shell.ConsoleHost;
-            return new CompletionResult(host.RegisteredCommands.Keys.OrderBy(c => c).ToArray(), Loc.GetString("cmd-help-arg-cmdname"));
+            return CompletionResult.FromHintOptions(
+                host.RegisteredCommands.Values.OrderBy(c => c).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
+                Loc.GetString("cmd-help-arg-cmdname"));
         }
 
         return CompletionResult.Empty;

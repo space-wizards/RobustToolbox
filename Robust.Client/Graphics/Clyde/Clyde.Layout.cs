@@ -1,3 +1,4 @@
+using OpenToolkit.Graphics.OpenGL4;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
@@ -8,6 +9,26 @@ namespace Robust.Client.Graphics.Clyde
     // Contains various layout/rendering structs used inside Clyde.
     internal partial class Clyde
     {
+        /// <summary>
+        ///     Sets up VAO layout for Vertex2D for base and raw shader types.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetupVAOLayout()
+        {
+            // Vertex Coords
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.EnableVertexAttribArray(0);
+            // Texture Coords.
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+            // Colour Modulation.
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
+            GL.EnableVertexAttribArray(2);
+        }
+
+        // NOTE: This is:
+        // + Directly cast from DrawVertexUV2DColor!!!
+        // + GLContextWindow does it's own thing with this for winblit, be careful!
         [StructLayout(LayoutKind.Sequential)]
         [PublicAPI]
         private readonly struct Vertex2D
@@ -16,6 +37,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
+            // Note that this color is in linear space.
+            public readonly Color Modulate;
 
             static Vertex2D()
             {
@@ -26,27 +49,34 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(Vector2 position, Vector2 textureCoordinates)
+            public Vertex2D(Vector2 position, Vector2 textureCoordinates, Color modulate)
             {
                 Position = position;
                 TextureCoordinates = textureCoordinates;
+                Modulate = modulate;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(float x, float y, float u, float v)
-                : this(new Vector2(x, y), new Vector2(u, v))
+            public Vertex2D(float x, float y, float u, float v, float r, float g, float b, float a)
+                : this(new Vector2(x, y), new Vector2(u, v), new Color(r, g, b, a))
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(Vector2 position, float u, float v)
-                : this(position, new Vector2(u, v))
+            public Vertex2D(float x, float y, float u, float v, Color modulate)
+                : this(new Vector2(x, y), new Vector2(u, v), modulate)
+            {
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Vertex2D(Vector2 position, float u, float v, Color modulate)
+                : this(position, new Vector2(u, v), modulate)
             {
             }
 
             public override string ToString()
             {
-                return $"Vertex2D: {Position}, {TextureCoordinates}";
+                return $"Vertex2D: {Position}, {TextureCoordinates}, {Modulate}";
             }
         }
 

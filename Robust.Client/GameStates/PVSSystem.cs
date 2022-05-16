@@ -58,6 +58,11 @@ internal sealed class PVSSystem : SharedPVSSystem
             if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
+                /*
+#if DEBUG
+                DebugTools.Assert(Comp<MetaDataComponent>(ent).EntityLastModifiedTick >= currentTick);
+#endif
+                */
                 _dirty.Add(ent);
             }
         }

@@ -92,43 +92,35 @@ namespace Robust.Shared.GameObjects
         public bool Destroyed => !Created;
     }
 
-    public sealed class GridStartupEvent : EntityEventArgs
+    public abstract class GridEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
         public GridId GridId { get; }
 
-        public GridStartupEvent(EntityUid uid, GridId gridId)
+        protected GridEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
             GridId = gridId;
         }
     }
 
-    public sealed class GridRemovalEvent : EntityEventArgs
+    public sealed class GridStartupEvent : GridEvent
     {
-        public EntityUid EntityUid { get; }
-        public GridId GridId { get; }
+        public GridStartupEvent(EntityUid uid, GridId gridId) : base(uid, gridId) { }
+    }
 
-        public GridRemovalEvent(EntityUid uid, GridId gridId)
-        {
-            EntityUid = uid;
-            GridId = gridId;
-        }
+    public sealed class GridRemovalEvent : GridEvent
+    {
+        public GridRemovalEvent(EntityUid uid, GridId gridId) : base(uid, gridId) { }
     }
 
     /// <summary>
     /// Raised whenever a grid is being initialized.
     /// </summary>
-    public sealed class GridInitializeEvent : EntityEventArgs
+    public sealed class GridInitializeEvent : GridEvent
     {
-        public EntityUid EntityUid { get; }
-        public GridId GridId { get; }
+        public GridInitializeEvent(EntityUid uid, GridId gridId) : base(uid, gridId) { }
 
-        public GridInitializeEvent(EntityUid uid, GridId gridId)
-        {
-            EntityUid = uid;
-            GridId = gridId;
-        }
     }
 
     /// <summary>

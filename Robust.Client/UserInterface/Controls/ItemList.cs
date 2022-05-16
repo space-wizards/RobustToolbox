@@ -338,6 +338,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var bg = iconBg;
 
+                if (!item.Visible)
+                    continue;
+
                 if (item.Disabled)
                     bg = iconDisabledBg;
 
@@ -591,6 +594,7 @@ namespace Robust.Client.UserInterface.Controls
 
             private bool _selected = false;
             private bool _disabled = false;
+            private bool _visible = true;
 
             public ItemList Owner { get; }
             public string? Text { get; set; }
@@ -603,6 +607,15 @@ namespace Robust.Client.UserInterface.Controls
             public UIBox2? Region { get; set; }
             public object? Metadata { get; set; }
 
+            public bool Visible
+            {
+                get => _visible;
+                set
+                {
+                    _visible = value;
+                    if (Selected && !_visible) Selected = false;
+                }
+            }
             public bool Disabled
             {
                 get => _disabled;

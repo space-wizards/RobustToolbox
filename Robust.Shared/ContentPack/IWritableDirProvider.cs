@@ -46,6 +46,8 @@ namespace Robust.Shared.ContentPack
         (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
             bool recursive = true);
 
+        IEnumerable<string> DirectoryEntries(ResourcePath path);
+
         /// <summary>
         /// Tests if a path is a directory.
         /// </summary>

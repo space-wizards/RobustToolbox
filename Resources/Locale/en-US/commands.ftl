@@ -78,3 +78,9 @@ cmd-mem-report = Heap Size: { TOSTRING($heapSize, "N0") }
 cmd-lsasm-desc = Lists loaded assemblies by load context
 cmd-lsasm-help = Usage: lsasm
 
+## 'exec' command
+cmd-exec-desc = Executes a script file from the game's writeable user data
+cmd-exec-help = Usage: exec <fileName>
+    Each line in the file is executed as a single command, unless it starts with a #
+
+cmd-exec-arg-filename = <fileName>

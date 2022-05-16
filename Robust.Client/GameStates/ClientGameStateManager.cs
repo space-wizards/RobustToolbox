@@ -365,7 +365,7 @@ namespace Robust.Client.GameStates
             using var _ = _prof.Group("ResetPredictedEntities");
 
             var countReset = 0;
-            var system = _entitySystemManager.GetEntitySystem<PVSSystem>();
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
 
             foreach (var entity in system.GetDirtyEntities(curTick))
             {

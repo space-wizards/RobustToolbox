@@ -10,11 +10,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates;
 
-internal sealed class PVSSystem : SharedPVSSystem
+/// <summary>
+/// Tracks dirty entities on the client for the purposes of gamestatemanager.
+/// </summary>
+internal sealed class ClientDirtySystem : SharedPVSSystem
 {
-    // Why is tracking dirty entities for prediction on PVS, you ask?
-    // Because the server does something identical in PVS sooooo
-
     [Dependency] private readonly IGameTiming _timing = default!;
 
     private readonly Dictionary<GameTick, HashSet<EntityUid>> _dirtyEntities = new();
@@ -59,27 +59,9 @@ internal sealed class PVSSystem : SharedPVSSystem
             if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
-                /*
-#if DEBUG
-                DebugTools.Assert(Comp<MetaDataComponent>(ent).EntityLastModifiedTick >= currentTick);
-#endif
-                */
                 _dirty.Add(ent);
             }
         }
-
-        /*
-#if DEBUG
-        foreach (var comp in EntityQuery<MetaDataComponent>())
-        {
-            if (comp.Owner.IsClientSide() || comp.EntityLastModifiedTick < currentTick)
-            {
-                continue;
-            }
-            DebugTools.Assert(ents.Contains(comp.Owner));
-        }
-#endif
-        */
 
         return _dirty;
     }

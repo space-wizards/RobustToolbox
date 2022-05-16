@@ -365,17 +365,10 @@ namespace Robust.Client.GameStates
             using var _ = _prof.Group("ResetPredictedEntities");
 
             var countReset = 0;
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
 
-            foreach (var meta in _entityManager.EntityQuery<MetaDataComponent>(true))
+            foreach (var entity in system.GetDirtyEntities(curTick))
             {
-                var entity = meta.Owner;
-
-                // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() || meta.EntityLastModifiedTick < curTick)
-                {
-                    continue;
-                }
-
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
                     _sawmill.Debug($"Entity {entity} was made dirty.");
@@ -407,6 +400,8 @@ namespace Robust.Client.GameStates
                     comp.HandleComponentState(compState, null);
                 }
             }
+
+            system.Reset();
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }

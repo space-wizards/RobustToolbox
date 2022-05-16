@@ -13,7 +13,7 @@ namespace Robust.Client.GameStates;
 /// <summary>
 /// Tracks dirty entities on the client for the purposes of gamestatemanager.
 /// </summary>
-internal sealed class ClientDirtySystem : SharedPVSSystem
+internal sealed class ClientDirtySystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
 

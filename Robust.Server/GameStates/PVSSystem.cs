@@ -21,7 +21,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-internal sealed partial class PVSSystem : SharedPVSSystem
+internal sealed partial class PVSSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;

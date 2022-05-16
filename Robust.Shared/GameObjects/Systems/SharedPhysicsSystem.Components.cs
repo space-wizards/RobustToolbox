@@ -13,7 +13,7 @@ public partial class SharedPhysicsSystem
     {
         var xform = Transform(uid);
 
-        if (xform.MapID != MapId.Nullspace)
+        if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
             physicsMap.AddBody(component);
@@ -41,6 +41,13 @@ public partial class SharedPhysicsSystem
         // Gets added to broadphase via fixturessystem
         var startup = new PhysicsInitializedEvent(uid);
         EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+
+        // Issue the event for stuff that needs it.
+        if (component._canCollide)
+        {
+            component._canCollide = false;
+            component.CanCollide = true;
+        }
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)

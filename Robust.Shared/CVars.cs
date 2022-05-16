@@ -1159,9 +1159,15 @@ namespace Robust.Shared
         public static readonly CVarDef<float> ConCompletionDelay =
             CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The amount of completions to show in console completion drop downs.
+        /// </summary>
         public static readonly CVarDef<int> ConCompletionCount =
             CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The minimum margin of options to keep on either side of the completion cursor, when scrolling through.
+        /// </summary>
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 

@@ -12,7 +12,15 @@ namespace Robust.Shared.Console
     /// <param name="argStr">Unparsed text of the complete command with arguments.</param>
     /// <param name="args">An array of all the parsed arguments.</param>
     public delegate void ConCommandCallback(IConsoleShell shell, string argStr, string[] args);
+
+    /// <summary>
+    /// Called to fetch completions for a console command. See <see cref="IConsoleCommand.GetCompletion"/> for details.
+    /// </summary>
     public delegate CompletionResult ConCommandCompletionCallback(IConsoleShell shell, string[] args);
+
+    /// <summary>
+    /// Called to fetch completions for a console command (async). See <see cref="IConsoleCommand.GetCompletionAsync"/> for details.
+    /// </summary>
     public delegate ValueTask<CompletionResult> ConCommandCompletionAsyncCallback(IConsoleShell shell, string[] args);
 
     public delegate void ConAnyCommandCallback(IConsoleShell shell, string commandName, string argStr, string[] args);
@@ -62,7 +70,9 @@ namespace Robust.Shared.Console
         /// <param name="command">A string as identifier for this command.</param>
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
-        /// <param name="callback"></param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
         void RegisterCommand(
             string command,
             string description,
@@ -76,8 +86,12 @@ namespace Robust.Shared.Console
         /// <param name="command">A string as identifier for this command.</param>
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
-        /// <param name="callback"></param>
-        /// <param name="completionCallback"></param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with.
+        /// </param>
         void RegisterCommand(
             string command,
             string description,
@@ -92,8 +106,12 @@ namespace Robust.Shared.Console
         /// <param name="command">A string as identifier for this command.</param>
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
-        /// <param name="callback"></param>
-        /// <param name="completionCallback"></param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with (async variant).
+        /// </param>
         void RegisterCommand(
             string command,
             string description,
@@ -194,6 +212,10 @@ namespace Robust.Shared.Console
 
     internal interface IConsoleHostInternal : IConsoleHost
     {
+        /// <summary>
+        /// Is this command executed on the server?
+        /// Always true when ran from server, true for server-proxy commands on the client.
+        /// </summary>
         bool IsCmdServer(IConsoleCommand cmd);
     }
 }

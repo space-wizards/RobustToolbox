@@ -16,13 +16,17 @@ public sealed partial class DebugConsole
 {
     private readonly DebugConsoleCompletion _compPopup;
 
+    // Last valid completion result we got.
     private CompletionResult? _compCurResult;
-
+    // The parameter count for the above completion result.
+    // Used to immediately invalidate it if the amount changes.
     private int _compParamCount;
 
     // The filtered set of completions currently shown to the user.
-    private List<string>? _compFiltered;
+    private string[]? _compFiltered;
+    // Which completion is currently selected, index into _compFiltered.
     private int _compSelected;
+    // Vertical scroll offset of the completion list.
     private int _compVerticalOffset;
 
     // Used for sequencing to nicely handle out-of-order completion responses.
@@ -46,17 +50,7 @@ public sealed partial class DebugConsole
 
     private void CommandBarOnOnTextTyped(GUITextEventArgs obj)
     {
-        if (_compCurResult == null)
-        {
-            TypeUpdateCompletions(true);
-            return;
-        }
-
-        // var filtered = FilterCompletions(_completionsCurrentResult.Options, typingArg);
-        // if (filtered.Count == 1 && filtered[0] == typingArg)
         TypeUpdateCompletions(true);
-        // else
-        //     TypeUpdateCompletions(false);
     }
 
     private void CommandBarOnOnBackspace(LineEdit.LineEditBackspaceEventArgs eventArgs)
@@ -71,12 +65,6 @@ public sealed partial class DebugConsole
         {
             // Don't do completions if you have nothing typed.
             AbortActiveCompletions();
-            return;
-        }
-
-        if (_compCurResult == null)
-        {
-            TypeUpdateCompletions(true);
             return;
         }
 
@@ -151,7 +139,7 @@ public sealed partial class DebugConsole
 
         var (_, curTyping, _) = CalcTypingArgs();
 
-        var curSelected = _compFiltered?.Count > 0 ? _compFiltered[_compSelected] : null;
+        var curSelected = _compFiltered?.Length > 0 ? _compFiltered[_compSelected] : null;
         _compFiltered = FilterCompletions(_compCurResult.Options, curTyping);
         if (curSelected == null)
         {
@@ -159,7 +147,7 @@ public sealed partial class DebugConsole
         }
         else
         {
-            var foundIdx = _compFiltered.IndexOf(curSelected);
+            var foundIdx = Array.IndexOf(_compFiltered, curSelected);
             _compSelected = foundIdx > 0 ? foundIdx : 0;
         }
 
@@ -199,7 +187,7 @@ public sealed partial class DebugConsole
         // Fill out list completions.
         var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
         var c = 0;
-        for (var i = _compVerticalOffset; i < _compFiltered.Count && c < maxCount; i++, c++)
+        for (var i = _compVerticalOffset; i < _compFiltered.Length && c < maxCount; i++, c++)
         {
             _compPopup.Contents.AddChild(new Label
             {
@@ -233,18 +221,18 @@ public sealed partial class DebugConsole
         return (args, args[^1], ranges.Count == 0 ? default : ranges[^1]);
     }
 
-    private List<string> FilterCompletions(IEnumerable<string> completions, string curTyping)
+    private string[] FilterCompletions(IEnumerable<string> completions, string curTyping)
     {
         return completions
             .Where(c => c.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
-            .ToList();
+            .ToArray();
     }
 
     private void CompletionKeyDown(GUIBoundKeyEventArgs args)
     {
         if (args.Function == EngineKeyFunctions.TextTabComplete)
         {
-            if (_compFiltered != null && _compSelected < _compFiltered.Count)
+            if (_compFiltered != null && _compSelected < _compFiltered.Length)
             {
                 // Figure out typing word so we know how much to replace.
                 var completion = _compFiltered[_compSelected];
@@ -270,7 +258,7 @@ public sealed partial class DebugConsole
                 return;
 
             args.Handle();
-            var len = _compFiltered.Count;
+            var len = _compFiltered.Length;
             var pos = (_compSelected + 1) % len;
             _compSelected = pos;
 
@@ -287,7 +275,7 @@ public sealed partial class DebugConsole
                 return;
 
             args.Handle();
-            var len = _compFiltered.Count;
+            var len = _compFiltered.Length;
             var pos = MathHelper.Mod(_compSelected - 1, len);
             _compSelected = pos;
 
@@ -305,12 +293,12 @@ public sealed partial class DebugConsole
             return;
 
         var maxCount = _cfg.GetCVar(CVars.ConCompletionCount);
-        var showCount = Math.Min(maxCount, _compFiltered.Count);
+        var showCount = Math.Min(maxCount, _compFiltered.Length);
         var margin = _cfg.GetCVar(CVars.ConCompletionMargin);
 
         var posBottom = showCount + _compVerticalOffset - margin;
         if (_compSelected >= posBottom)
-            _compVerticalOffset = Math.Min(_compFiltered.Count - showCount, _compSelected + 1 + margin - showCount);
+            _compVerticalOffset = Math.Min(_compFiltered.Length - showCount, _compSelected + 1 + margin - showCount);
 
         if (_compSelected < _compVerticalOffset + margin)
             _compVerticalOffset = Math.Max(0, _compSelected - margin);

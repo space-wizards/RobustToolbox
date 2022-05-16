@@ -12,7 +12,7 @@ namespace Robust.Shared.Network;
 /// these should be encoded at the "highest level".
 /// Whatever generates the final "reason" value is responsible for performing NetStructuredDisco.Encode.
 /// </summary>
-public static class NetStructuredDisco
+public static class NetStructuredDisconnectMessages
 {
     public const string ReasonKey = "reason";
     public const string RedialKey = "redial";

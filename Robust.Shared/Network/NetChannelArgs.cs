@@ -80,7 +80,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed class NetConnectFailArgs : EventArgs, INetStructuredReason
     {
-        public NetConnectFailArgs(string reason) : this(NetStructuredDisco.Decode(reason))
+        public NetConnectFailArgs(string reason) : this(NetStructuredDisconnectMessages.Decode(reason))
         {
         }
 
@@ -90,13 +90,13 @@ namespace Robust.Shared.Network
         }
 
         public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisco.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisco.RedialFlagOf(StructuredReason);
+        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
+        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
     }
 
     public sealed class NetDisconnectedArgs : NetChannelArgs, INetStructuredReason
     {
-        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetStructuredDisco.Decode(reason))
+        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetStructuredDisconnectMessages.Decode(reason))
         {
         }
 
@@ -106,7 +106,7 @@ namespace Robust.Shared.Network
         }
 
         public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisco.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisco.RedialFlagOf(StructuredReason);
+        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
+        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
     }
 }

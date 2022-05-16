@@ -16,7 +16,7 @@ namespace Robust.Shared.Network
 {
     partial class NetManager
     {
-        private readonly static string DisconnectReasonWrongKey = NetStructuredDisco.Encode("Token decryption failed.\nPlease reconnect to this server from the launcher.", true);
+        private readonly static string DisconnectReasonWrongKey = NetStructuredDisconnectMessages.Encode("Token decryption failed.\nPlease reconnect to this server from the launcher.", true);
 
         private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 

@@ -8,6 +8,9 @@ namespace Robust.Shared.Network;
 /// <summary>
 /// Structured disconnection utilities.
 /// These use JsonNode so that Content may add it's own data.
+/// Note that to prevent encoding a NetStructuredDisco value within a NetStructuredDisco value,
+/// these should be encoded at the "highest level".
+/// Whatever generates the final "reason" value is responsible for performing NetStructuredDisco.Encode.
 /// </summary>
 public static class NetStructuredDisco
 {

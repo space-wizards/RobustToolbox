@@ -374,10 +374,9 @@ namespace Robust.Shared.Network
 
         public void Reset(string reason)
         {
-            var redialEnabledReason = NetStructuredDisco.Encode(reason, true);
             foreach (var kvChannel in _channels)
             {
-                DisconnectChannel(kvChannel.Value, redialEnabledReason);
+                DisconnectChannel(kvChannel.Value, reason);
             }
 
             // request shutdown of the netPeer

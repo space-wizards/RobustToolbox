@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
@@ -266,7 +267,10 @@ namespace Robust.Shared.Console
                 Callback(shell, argStr, args);
             }
 
-            public ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args)
+            public ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
             {
                 if (CompletionCallbackAsync != null)
                     return CompletionCallbackAsync(shell, args);

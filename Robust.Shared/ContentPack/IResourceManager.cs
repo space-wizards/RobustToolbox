@@ -124,6 +124,18 @@ namespace Robust.Shared.ContentPack
         IEnumerable<ResourcePath> ContentFindFiles(string path);
 
         /// <summary>
+        /// Gets entries in a content directory.
+        /// </summary>
+        /// <remarks>
+        /// This is not a performant API; the VFS does not work natively with these kinds of directory entries.
+        /// This is intended for development tools such as console command completions,
+        /// not for general-purpose resource management.
+        /// </remarks>
+        /// <param name="path"></param>
+        /// <returns>A sequence of entry names. If the entry name ends in a slash, it's a directory.</returns>
+        IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path);
+
+        /// <summary>
         ///     Returns a list of paths to all top-level content directories
         /// </summary>
         /// <returns></returns>

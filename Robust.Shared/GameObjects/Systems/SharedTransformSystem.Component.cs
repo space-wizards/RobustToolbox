@@ -397,7 +397,7 @@ public abstract partial class SharedTransformSystem
             {
                 var iGrid = Comp<MapGridComponent>(_mapManager.GetGridEuid(component.GridID));
                 AnchorEntity(component, iGrid);
-                component.SetAnchored(true);
+                DebugTools.Assert(component.Anchored);
             }
             else
             {

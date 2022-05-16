@@ -136,6 +136,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     private float _beta;
     private float _gamma;
 
+    public MouseJoint() {}
+
     public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB)
     {
         BodyAUid = uidA;

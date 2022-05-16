@@ -8,6 +8,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.Utility.Collections;
 
 namespace Robust.Client.UserInterface.CustomControls;
 
@@ -98,7 +99,7 @@ public sealed partial class DebugConsole
 
     private async void TypeUpdateCompletions(bool fullUpdate)
     {
-        var (args, _) = CalcTypingArgs();
+        var (args, _, _) = CalcTypingArgs();
 
         if (args.Count != _compParamCount)
         {
@@ -148,7 +149,7 @@ public sealed partial class DebugConsole
         if (_compCurResult == null)
             return;
 
-        var (_, curTyping) = CalcTypingArgs();
+        var (_, curTyping, _) = CalcTypingArgs();
 
         var curSelected = _compFiltered?.Count > 0 ? _compFiltered[_compSelected] : null;
         _compFiltered = FilterCompletions(_compCurResult.Options, curTyping);
@@ -176,9 +177,9 @@ public sealed partial class DebugConsole
 
         DebugTools.AssertNotNull(_compCurResult);
 
-        var (_, curTyping) = CalcTypingArgs();
+        var (_, _, endRange) = CalcTypingArgs();
 
-        var offset = CommandBar.GetOffsetAtIndex(CommandBar.CursorPosition - curTyping.Length);
+        var offset = CommandBar.GetOffsetAtIndex(endRange.start);
         // Logger.Debug($"Offset: {offset}");
 
         _compPopup.Close();
@@ -216,19 +217,20 @@ public sealed partial class DebugConsole
         }
     }
 
-    private (List<string> args, string curTyping) CalcTypingArgs()
+    private (List<string> args, string curTyping, (int start, int end) lastRange) CalcTypingArgs()
     {
         var cursor = CommandBar.CursorPosition;
         // Don't consider text after the cursor.
-        var text = CommandBar.Text[..cursor];
+        var text = CommandBar.Text.AsSpan(0, cursor);
 
         var args = new List<string>();
-        CommandParsing.ParseArguments(text, args);
+        var ranges = new ValueList<(int start, int end)>();
+        CommandParsing.ParseArguments(text, args, ref ranges);
 
-        if (args.Count == 0 || text[^1] == ' ')
+        if (args.Count == 0 || ranges[^1].end != text.Length)
             args.Add("");
 
-        return (args, args[^1]);
+        return (args, args[^1], ranges.Count == 0 ? default : ranges[^1]);
     }
 
     private List<string> FilterCompletions(IEnumerable<string> completions, string curTyping)
@@ -246,13 +248,13 @@ public sealed partial class DebugConsole
             {
                 // Figure out typing word so we know how much to replace.
                 var completion = _compFiltered[_compSelected];
-                var (_, typing) = CalcTypingArgs();
+                var (_, _, lastRange) = CalcTypingArgs();
 
                 // Replace the full word from the start.
                 // This means that letter casing will match the completion suggestion.
-                CommandBar.CursorPosition = CommandBar.Text.Length;
-                CommandBar.SelectionStart = CommandBar.Text.Length - typing.Length;
-                CommandBar.InsertAtCursor(completion + " ");
+                CommandBar.CursorPosition = lastRange.end;
+                CommandBar.SelectionStart = lastRange.start;
+                CommandBar.InsertAtCursor(CommandParsing.Escape(completion) + " ");
 
                 TypeUpdateCompletions(true);
 

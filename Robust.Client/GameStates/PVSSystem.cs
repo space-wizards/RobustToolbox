@@ -40,12 +40,13 @@ internal sealed class PVSSystem : SharedPVSSystem
 
     internal void Reset()
     {
-        foreach (var (tick, sets) in _dirtyEntities.ToArray())
+        foreach (var (_, sets) in _dirtyEntities)
         {
             sets.Clear();
             _dirtyPool.Return(sets);
-            _dirtyEntities.Remove(tick);
         }
+
+        _dirtyEntities.Clear();
     }
 
     public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)

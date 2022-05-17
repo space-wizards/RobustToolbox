@@ -135,7 +135,7 @@ namespace Robust.Client.Graphics
         {
             if (CurrentEye.Position.MapId != point.MapId)
             {
-                Logger.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map (${CurrentEye.Position.MapId})");
+                Logger.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map ({CurrentEye.Position.MapId})");
                 return new(default, WindowId.Invalid);
             }
 

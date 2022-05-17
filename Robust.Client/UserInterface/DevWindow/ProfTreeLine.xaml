@@ -1,0 +1,13 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.ProfTreeLine"
+         Margin="4 0 0 0" >
+    <BoxContainer Orientation="Horizontal">
+        <Label Name="Text" Access="Public" HorizontalExpand="True" ClipText="True" />
+        <Label Name="SideLabel" Access="Public" Margin="2 0" MinWidth="120" />
+        <Label Name="TimeLabel" Access="Public" Margin="2 0" MinWidth="120" />
+        <Label Name="PercentTimeLabel" Access="Public" Margin="2 0" MinWidth="72" />
+        <Label Name="AllocLabel" Access="Public" MinWidth="120" />
+        <Label Name="PercentAllocLabel" Access="Public" Margin="2 0" MinWidth="72" />
+    </BoxContainer>
+</Control>

@@ -2,6 +2,8 @@
 /*layout (location = 0)*/ attribute vec2 aPos;
 // Texture coordinates.
 /*layout (location = 1)*/ attribute vec2 tCoord;
+// Colour modulation.
+/*layout (location = 2)*/ attribute vec4 modulate;
 
 varying vec2 UV;
 

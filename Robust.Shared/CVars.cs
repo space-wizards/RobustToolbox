@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -188,7 +195,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
-#if DEBUG
         /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
         /// 0 = no packet loss, 1 = all packets dropped
@@ -213,7 +219,6 @@ namespace Robust.Shared
         /// 0 = no packets duplicated, 1 = all packets duplicated.
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /**
          * SUS
@@ -1149,6 +1154,31 @@ namespace Robust.Shared
             CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
 
         /*
+         * CON
+         */
+
+        /// <summary>
+        /// Add artificial delay (in seconds) to console completion fetching, even for local commands.
+        /// </summary>
+        /// <remarks>
+        /// Intended for debugging the console completion system.
+        /// </remarks>
+        public static readonly CVarDef<float> ConCompletionDelay =
+            CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The amount of completions to show in console completion drop downs.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionCount =
+            CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum margin of options to keep on either side of the completion cursor, when scrolling through.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionMargin =
+            CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
+
+        /*
          * THREAD
          */
 
@@ -1158,5 +1188,24 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ThreadParallelCount =
             CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

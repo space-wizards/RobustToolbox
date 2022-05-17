@@ -2177,7 +2177,7 @@ namespace Robust.Client.GameObjects
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy);
+            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
 
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)

@@ -69,6 +69,18 @@ public partial class EntitySystem
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        if (!metaQuery.TryGetComponent(uid, out var meta))
+            return true;
+
+        return meta.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted([NotNullWhen(false)] EntityUid? uid)
     {
         return !uid.HasValue || Deleted(uid.Value);
@@ -249,7 +261,7 @@ public partial class EntitySystem
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        metaData.EntityPaused = paused;
+        EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(uid, paused, metaData);
     }
 
     /// <summary>

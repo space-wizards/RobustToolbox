@@ -6,6 +6,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <OutputPath>../bin/Benchmarks</OutputPath>
         <OutputType>Exe</OutputType>
+        <NoWarn>RA0003</NoWarn>
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
@@ -18,7 +19,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-rc.2" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
     </ItemGroup>
     <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

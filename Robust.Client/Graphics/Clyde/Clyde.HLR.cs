@@ -14,6 +14,8 @@ using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Profiling;
+using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -97,6 +99,7 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
 
             using (DebugGroup("UI"))
+            using (_prof.Group("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);
                 FlushRenderQueue();
@@ -104,8 +107,21 @@ namespace Robust.Client.Graphics.Clyde
 
             TakeScreenshot(ScreenshotType.Final);
 
-            // And finally, swap those buffers!
-            SwapAllBuffers();
+            using (_prof.Group("Swap buffers"))
+            {
+                // And finally, swap those buffers!
+                SwapAllBuffers();
+            }
+
+            using (_prof.Group("Stats"))
+            {
+                _prof.WriteValue("GL Draw Calls", ProfData.Int32(_debugStats.LastGLDrawCalls));
+                _prof.WriteValue("Clyde Draw Calls", ProfData.Int32(_debugStats.LastClydeDrawCalls));
+                _prof.WriteValue("Batches", ProfData.Int32(_debugStats.LastBatches));
+                _prof.WriteValue("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
+                _prof.WriteValue("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
+                _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
+            }
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -140,6 +156,8 @@ namespace Robust.Client.Graphics.Clyde
             OverlaySpace space,
             in UIBox2i bounds)
         {
+            using var _ = _prof.Group($"Overlays SS {space}");
+
             var list = GetOverlaysForSpace(space);
 
             var worldAABB = CalcWorldAABB(vp);
@@ -193,6 +211,12 @@ namespace Robust.Client.Graphics.Clyde
                 if (lastFrameSize != texture.Size)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int)OGLTextureWrapMode.MirroredRepeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int)OGLTextureWrapMode.MirroredRepeat);
+
                     GL.TexImage2D(TextureTarget.Texture2D, 0,
                         _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, texture.Size.X,
                         texture.Size.Y, 0,
@@ -450,6 +474,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            using var _ = _prof.Group("Viewport");
+
             RenderInRenderTarget(viewport.RenderTarget, () =>
             {
                 using var _ = DebugGroup($"Viewport: {viewport.Name}");
@@ -471,24 +497,33 @@ namespace Robust.Client.Graphics.Clyde
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
+                    using (_prof.Group("Lights"))
                     {
                         DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB, worldBounds);
+                    using (_prof.Group("Overlays WSBW"))
+                    {
+                        RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB, worldBounds);
+                    }
 
                     using (DebugGroup("Grids"))
+                    using (_prof.Group("Grids"))
                     {
                         _drawGrids(viewport, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
+                    using (_prof.Group("Entities"))
                     {
                         DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
+                    using (_prof.Group("Overlays WSBFOV"))
+                    {
+                        RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
+                    }
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -521,7 +556,10 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                using (_prof.Group("Overlays WS"))
+                {
+                    RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                }
 
                 _currentViewport = oldVp;
             }, viewport.ClearColor);

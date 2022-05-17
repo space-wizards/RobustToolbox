@@ -178,9 +178,6 @@ namespace Robust.Client.Graphics.Clyde
                     case UniIModUV:
                         name = UniModUV;
                         break;
-                    case UniIModulate:
-                        name = UniModulate;
-                        break;
                     case UniILightTexture:
                         name = UniLightTexture;
                         break;

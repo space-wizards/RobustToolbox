@@ -67,7 +67,7 @@ internal partial class MapManager
 
                 if (physicsQuery.HasComponent(grid.GridEntityId))
                 {
-                    grid.GetLocalMapChunks(localAABB, out var enumerator);
+                    var enumerator = grid.GetLocalMapChunks(localAABB);
 
                     var transform = new Transform(worldPos, worldRot);
 

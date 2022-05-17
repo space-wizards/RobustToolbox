@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -68,6 +70,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var deps = new DependencyCollection();
             deps.Register<IRuntimeLog, RuntimeLog>();
             deps.Register<ILogManager, LogManager>();
+            deps.Register<IConfigurationManager, ConfigurationManager>();
+            deps.Register<ProfManager, ProfManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);

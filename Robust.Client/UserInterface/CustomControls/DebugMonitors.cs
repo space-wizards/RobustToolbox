@@ -2,6 +2,7 @@
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.Profiling;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
@@ -72,6 +73,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 HorizontalAlignment = HAlignment.Left
             });
+
+            AddChild(new LiveProfileViewControl());
         }
     }
 }

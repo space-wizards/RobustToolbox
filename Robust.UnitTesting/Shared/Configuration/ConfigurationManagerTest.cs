@@ -35,5 +35,33 @@ namespace Robust.UnitTesting.Shared.Configuration
 
             Assert.That(timesRan, Is.EqualTo(1), "UnsubValueChanged did not unsubscribe!");
         }
+
+        [Test]
+        public void TestOverrideDefaultValue()
+        {
+            var mgr = new ConfigurationManager();
+            mgr.RegisterCVar("foo.bar", 5);
+
+            var value = 0;
+            mgr.OnValueChanged<int>("foo.bar", v => value = v);
+
+            // Change default value, this fires the value changed callback.
+            mgr.OverrideDefault("foo.bar", 10);
+
+            Assert.That(value, Is.EqualTo(10));
+            Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(10));
+
+            // Modify the cvar programmatically, also fires the callback.
+            mgr.SetCVar("foo.bar", 7);
+
+            Assert.That(value, Is.EqualTo(7));
+            Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
+
+            // We have a value set now, so changing the default won't do anything.
+            mgr.OverrideDefault("foo.bar", 15);
+
+            Assert.That(value, Is.EqualTo(7));
+            Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
+        }
     }
 }

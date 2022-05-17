@@ -36,6 +36,8 @@ namespace Robust.UnitTesting
 
             private int _clientConnectingUid;
 
+            private Task? _doConnection;
+
             // This isn't used for anything except a log message somewhere, so we kinda ignore it.
             public int Port => default;
             public IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; } = new Dictionary<Type, long>();
@@ -98,6 +100,11 @@ namespace Robust.UnitTesting
 
             public void ProcessPackets()
             {
+                if(_doConnection != null && !_doConnection.IsCompleted)
+                {
+                    return;
+                }
+                _doConnection = null;
                 while (_messageChannel.Reader.TryRead(out var item))
                 {
                     switch (item)
@@ -106,7 +113,7 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsServer);
 
-                            async void DoConnect()
+                            async Task DoConnect()
                             {
                                 var writer = connect.ChannelWriter;
 
@@ -139,7 +146,7 @@ namespace Robust.UnitTesting
                                 Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
 
-                            DoConnect();
+                            _doConnection =  DoConnect();
 
                             break;
                         }

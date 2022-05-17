@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -74,6 +75,16 @@ namespace Robust.Shared.ContentPack
             }
 
             return (resFiles, resDirs);
+        }
+
+        public IEnumerable<string> DirectoryEntries(ResourcePath path)
+        {
+            var fullPath = GetFullPath(path);
+
+            foreach (var entry in Directory.EnumerateFileSystemEntries(fullPath))
+            {
+                yield return Path.GetRelativePath(fullPath, entry);
+            }
         }
 
         /// <inheritdoc />

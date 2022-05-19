@@ -5,6 +5,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -152,6 +153,8 @@ namespace Robust.Client.Player
             var metadata = IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(entity.Value);
             if (metadata == null || metadata.EntityDeleted)
             {
+                Logger.ErrorS("playermanager",
+                    $"Updating the attached entity ({entity}) failed, because the metadata was null, or the entity was deleted");
                 LocalPlayer.DetachEntity();
                 return;
             }

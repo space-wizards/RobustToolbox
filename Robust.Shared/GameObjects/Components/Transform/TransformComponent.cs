@@ -664,6 +664,15 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
+        public void AttachParent(EntityUid parent)
+        {
+            // If no parent change OR we're the root entity already.
+            if (_parent == parent) return;
+
+            // offset position from world to parent, and set
+            AttachParent(_entMan.GetComponent<TransformComponent>(parent));
+        }
+
         /// <summary>
         /// Sets another entity as the parent entity, maintaining world position.
         /// </summary>
@@ -723,12 +732,6 @@ namespace Robust.Shared.GameObjects
                     concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
                 }
             }
-        }
-
-        public void AttachParent(EntityUid parent)
-        {
-            var transform = _entMan.GetComponent<TransformComponent>(parent);
-            AttachParent(transform);
         }
 
         /// <summary>

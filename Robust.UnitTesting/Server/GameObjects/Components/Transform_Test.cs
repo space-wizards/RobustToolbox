@@ -474,6 +474,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
         }
 
+        [Test]
+        public void TestNullspaceSpawn()
+        {
+            var ent = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
+            Assert.That(!EntityManager.Deleted(ent));
+        }
+
         /*
          * There used to be a TestMapInitOrder test here. The problem is that the actual game will probably explode if
          * you start initialising children before parents and the test only worked because of specific setup being done

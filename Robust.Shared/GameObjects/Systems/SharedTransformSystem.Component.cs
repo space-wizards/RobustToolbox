@@ -167,7 +167,7 @@ public abstract partial class SharedTransformSystem
             if (xform._mapIdInitialized)
                 return xform.MapID;
 
-            MapId value;
+            var value = MapId.Nullspace;
 
             if (xform.ParentUid.IsValid())
             {
@@ -175,15 +175,12 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-                // second level node, terminates recursion up the branch of the tree
+                // Entity is the Map so set the value to itself.
                 if (entMan.TryGetComponent(xform.Owner, out IMapComponent? mapComp))
                 {
                     value = mapComp.WorldMap;
                 }
-                else
-                {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-                }
+                // If that fails then entity was spawned in nullspace.
             }
 
             xform.MapID = value;

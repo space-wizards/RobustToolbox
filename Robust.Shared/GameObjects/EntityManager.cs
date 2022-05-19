@@ -190,10 +190,16 @@ namespace Robust.Shared.GameObjects
             transform.AttachParent(_mapManager.GetMapEntityId(coordinates.MapId));
 
             // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
+            // Soon Vera...
             var oldAnchored = transform.Anchored;
-            transform.Anchored = false;
-            transform.WorldPosition = coordinates.Position;
-            transform.Anchored = oldAnchored;
+
+            if (oldAnchored)
+            {
+                transform.Anchored = false;
+                transform.WorldPosition = coordinates.Position;
+                transform.Anchored = oldAnchored;
+            }
+
             return newEntity;
         }
 
@@ -475,7 +481,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)
-        {            
+        {
             if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
                 return; // Already map initialized, do nothing.
 

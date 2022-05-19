@@ -70,11 +70,12 @@ namespace Robust.UnitTesting.Shared.Map
             entMan.InitializeComponents(oldEntity);
 
             mapMan.Restart();
-
-            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
-            Assert.That(entMan.Deleted(oldEntity), Is.True);
-
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
+                Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
+                Assert.That(entMan.Deleted(oldEntity), Is.True);
+            });
         }
 
         /// <summary>

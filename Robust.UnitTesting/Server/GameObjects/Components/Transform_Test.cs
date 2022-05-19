@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using Moq;
@@ -475,7 +476,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         }
 
         [Test]
-        public void TestNullspaceSpawn()
+        public void TestMapNullspaceSpawn()
         {
             var ent = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
             Assert.That(!EntityManager.Deleted(ent));

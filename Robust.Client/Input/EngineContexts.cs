@@ -61,6 +61,8 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
             common.AddFunction(EngineKeyFunctions.TextDelete);
             common.AddFunction(EngineKeyFunctions.TextTabComplete);
+            common.AddFunction(EngineKeyFunctions.TextCompleteNext);
+            common.AddFunction(EngineKeyFunctions.TextCompletePrev);
 
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);

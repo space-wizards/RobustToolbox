@@ -787,7 +787,6 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-
             var clip = control.RectClipContent;
             var scissorRegion = scissorBox;
             if (clip)
@@ -815,11 +814,14 @@ namespace Robust.Client.UserInterface
             var handle = renderHandle.DrawingHandleScreen;
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             modulate *= control.Modulate;
-            handle.Modulate = modulate * control.ActualModulateSelf;
 
             if (_rendering || control.AlwaysRender)
             {
+                // Handle modulation with care.
+                var oldMod = handle.Modulate;
+                handle.Modulate = modulate * control.ActualModulateSelf;
                 control.DrawInternal(renderHandle);
+                handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
 

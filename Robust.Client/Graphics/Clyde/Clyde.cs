@@ -14,6 +14,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -275,10 +276,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Span<Vertex2D> quadVertices = stackalloc[]
                 {
-                    new Vertex2D(1, 0, 1, 1),
-                    new Vertex2D(0, 0, 0, 1),
-                    new Vertex2D(1, 1, 1, 0),
-                    new Vertex2D(0, 1, 0, 0)
+                    new Vertex2D(1, 0, 1, 1, Color.White),
+                    new Vertex2D(0, 0, 0, 1, Color.White),
+                    new Vertex2D(1, 1, 1, 0, Color.White),
+                    new Vertex2D(0, 1, 0, 0, Color.White)
                 };
 
                 QuadVBO = new GLBuffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw,
@@ -294,10 +295,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Span<Vertex2D> winVertices = stackalloc[]
                 {
-                    new Vertex2D(-1, 1, 0, 1),
-                    new Vertex2D(-1, -1, 0, 0),
-                    new Vertex2D(1, 1, 1, 1),
-                    new Vertex2D(1, -1, 1, 0),
+                    new Vertex2D(-1, 1, 0, 1, Color.White),
+                    new Vertex2D(-1, -1, 0, 0, Color.White),
+                    new Vertex2D(1, 1, 1, 1, Color.White),
+                    new Vertex2D(1, -1, 1, 0, Color.White),
                 };
 
                 WindowVBO = new GLBuffer<Vertex2D>(
@@ -318,12 +319,7 @@ namespace Robust.Client.Graphics.Clyde
                 BatchVAO = new GLHandle(GenVertexArray());
                 BindVertexArray(BatchVAO.Handle);
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, nameof(BatchVAO));
-                // Vertex Coords
-                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-                GL.EnableVertexAttribArray(0);
-                // Texture Coords.
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
+                SetupVAOLayout();
 
                 CheckGlError();
 
@@ -347,12 +343,7 @@ namespace Robust.Client.Graphics.Clyde
             BindVertexArray(vao.Handle);
             ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, nameof(QuadVAO));
             GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.ObjectHandle);
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
+            SetupVAOLayout();
 
             return vao;
         }

@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
             });
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
-            SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdateEvent);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
@@ -214,22 +214,22 @@ namespace Robust.Shared.GameObjects
 
         protected abstract void HandleMapCreated(MapChangedEvent eventArgs);
 
-        private void HandlePhysicsUpdateMessage(CollisionChangeMessage message)
+        private void OnPhysicsUpdateEvent(ref CollisionChangeEvent @event)
         {
-            var mapId = Transform(message.Owner).MapID;
+            var mapId = Transform(@event.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             var physicsMap = Comp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
 
-            if (Deleted(message.Owner) || !message.CanCollide)
+            if (Deleted(@event.Body.Owner) || !@event.CanCollide)
             {
-                physicsMap.RemoveBody(message.Body);
+                physicsMap.RemoveBody(@event.Body);
             }
             else
             {
-                physicsMap.AddBody(message.Body);
+                physicsMap.AddBody(@event.Body);
             }
         }
 

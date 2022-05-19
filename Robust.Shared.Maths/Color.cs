@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using JetBrains.Annotations;
 using SysVector3 = System.Numerics.Vector3;
@@ -44,6 +45,7 @@ namespace Robust.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
     public struct Color : IEquatable<Color>
     {
         /// <summary>

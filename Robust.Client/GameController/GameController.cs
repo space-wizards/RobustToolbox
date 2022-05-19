@@ -108,7 +108,8 @@ namespace Robust.Client
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!ContentStart);
-            _modLoader.SetEnableSandboxing(Options.Sandboxing);
+            var disableSandbox = Environment.GetEnvironmentVariable("ROBUST_DISABLE_SANDBOX") == "1";
+            _modLoader.SetEnableSandboxing(!disableSandbox && Options.Sandboxing);
 
             var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
             if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))

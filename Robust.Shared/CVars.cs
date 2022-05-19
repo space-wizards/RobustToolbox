@@ -736,6 +736,12 @@ namespace Robust.Shared
             CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Force ANGLE to create a context from a D3D11 FL 10_0 device.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForce10_0 =
+            CVarDef.Create("display.angle_force_10_0", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleDxgi1 =
@@ -768,6 +774,12 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
             CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Enable allowES3OnFL10_0 on ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleEs3On10_0 =
+            CVarDef.Create("display.angle_es3_on_10_0", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Base DPI to render fonts at. This can be further scaled based on <c>display.uiScale</c>.
@@ -1152,6 +1164,31 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> AczManifestCompressLevel =
             CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
+
+        /*
+         * CON
+         */
+
+        /// <summary>
+        /// Add artificial delay (in seconds) to console completion fetching, even for local commands.
+        /// </summary>
+        /// <remarks>
+        /// Intended for debugging the console completion system.
+        /// </remarks>
+        public static readonly CVarDef<float> ConCompletionDelay =
+            CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The amount of completions to show in console completion drop downs.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionCount =
+            CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum margin of options to keep on either side of the completion cursor, when scrolling through.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionMargin =
+            CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 
         /*
          * THREAD

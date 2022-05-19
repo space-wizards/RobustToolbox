@@ -52,7 +52,8 @@ namespace Robust.Client.GameObjects
 
                 // Only lerp if parent didn't change.
                 // E.g. entering lockers would do it.
-                if (transform.LerpParent == transform.ParentUid)
+                if (transform.LerpParent == transform.ParentUid &&
+                    transform.ParentUid.IsValid())
                 {
                     if (transform.LerpDestination != null)
                     {

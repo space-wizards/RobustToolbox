@@ -8,8 +8,6 @@ public static class Diagnostics
     public const string IdSerializable = "RA0001";
     public const string IdFriend = "RA0002";
     public const string IdExplicitVirtual = "RA0003";
-    public const string IdBestFriend = "RA0004";
-    public const string IdMutuallyExclusiveFriendAttributes = "RA0005";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

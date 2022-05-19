@@ -25,35 +25,14 @@ namespace Robust.Analyzers
             true,
             "Make sure to specify the accessing type in the friends attribute.");
 
-        [SuppressMessage("ReSharper", "RS2008")]
-        private static readonly DiagnosticDescriptor BestFriendRule = new (
-            Diagnostics.IdBestFriend,
-            "Tried to access best-friends-only member",
-            "Tried to access member \"{0}\" in type \"{1}\" which can only be accessed by best-friend types",
-            "Usage",
-            DiagnosticSeverity.Error,
-            true,
-            "Make sure to specify the accessing type in the best-friends attribute.");
-
-        [SuppressMessage("ReSharper", "RS2008")]
-        private static readonly DiagnosticDescriptor MutuallyExclusiveFriendAttributesRule = new (
-            Diagnostics.IdMutuallyExclusiveFriendAttributes,
-            "Tried to define both the Friend and BestFriend attributes on the same type",
-            "\"Friend\" and \"BestFriend\" are mutually exclusive on a single element (\"{0}\")",
-            "Usage",
-            DiagnosticSeverity.Error,
-            true,
-            "Make sure to only specify one of these two attributes.");
-
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-            ImmutableArray.Create(FriendRule, BestFriendRule, MutuallyExclusiveFriendAttributesRule);
+            ImmutableArray.Create(FriendRule);
 
         public override void Initialize(AnalysisContext context)
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
             context.RegisterSyntaxNodeAction(CheckFriendship, SyntaxKind.SimpleMemberAccessExpression);
-            context.RegisterSyntaxNodeAction(CheckFriendshipAttributes, SyntaxKind.AttributeList);
         }
 
         private void CheckFriendship(SyntaxNodeAnalysisContext context)
@@ -133,7 +112,7 @@ namespace Robust.Analyzers
 
                 // Not in a friend type! Report an error.
                 context.ReportDiagnostic(
-                    Diagnostic.Create(bestFriend ? BestFriendRule : FriendRule, context.Node.GetLocation(),
+                    Diagnostic.Create(FriendRule, context.Node.GetLocation(),
                         $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
 
                 // Only return ONE error.
@@ -152,54 +131,6 @@ namespace Robust.Analyzers
             {
                 if(CheckAttributeFriendship(attribute))
                     return;
-            }
-        }
-
-        private void CheckFriendshipAttributes(SyntaxNodeAnalysisContext context)
-        {
-            if (context.Node is not AttributeListSyntax attributeListSyntax)
-                return;
-
-            if (context.Node.Parent is not {} parent)
-                return;
-
-            // Get the attributes
-            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
-            var bestFriendAttr = context.Compilation.GetTypeByMetadataName(BestFriendAttribute);
-
-            var friendFound = false;
-            var bestFriendFound = false;
-
-            foreach (var child in parent.ChildNodes())
-            {
-                if (child is not AttributeListSyntax attributeList)
-                    continue;
-
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    if (context.SemanticModel.GetTypeInfo(attribute).ConvertedType is not {} type)
-                        continue;
-
-                    if (SymbolEqualityComparer.Default.Equals(type, friendAttr))
-                    {
-                        friendFound = true;
-                    }
-
-                    if (SymbolEqualityComparer.Default.Equals(type, bestFriendAttr))
-                    {
-                        bestFriendFound = true;
-                    }
-
-                    if (!friendFound || !bestFriendFound)
-                        continue;
-
-                    // Mutually exclusive attributes! Report error.
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(MutuallyExclusiveFriendAttributesRule, attribute.GetLocation(),
-                            $"{GetPrettyNodeName(parent)}"));
-
-                    return;
-                }
             }
         }
 

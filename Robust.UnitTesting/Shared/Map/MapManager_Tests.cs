@@ -66,8 +66,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
-            var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
-            entMan.InitializeComponents(oldEntity);
+            var oldEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             mapMan.Restart();
             Assert.Multiple(() =>

@@ -52,10 +52,11 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
         Logger.DebugS("map", "Stopping...");
 
-        foreach (var mapComp in EntityManager.EntityQuery<IMapComponent>())
+        foreach (var entity in EntityManager.GetEntities())
         {
-            EntityManager.DeleteEntity(mapComp.Owner);
+            EntityManager.DeleteEntity(entity);
         }
+
         ShutdownGridTrees();
 
 #if DEBUG

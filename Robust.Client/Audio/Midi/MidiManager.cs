@@ -84,9 +84,11 @@ internal sealed partial class MidiManager : IMidiManager
     private static readonly string[] LinuxSoundfonts =
     {
         "/usr/share/soundfonts/default.sf2",
+        "/usr/share/soundfonts/default.dls",
         "/usr/share/soundfonts/FluidR3_GM.sf2",
         "/usr/share/soundfonts/freepats-general-midi.sf2",
         "/usr/share/sounds/sf2/default.sf2",
+        "/usr/share/sounds/sf2/default.dls",
         "/usr/share/sounds/sf2/FluidR3_GM.sf2",
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };

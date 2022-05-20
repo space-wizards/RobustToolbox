@@ -67,6 +67,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new();
 
+        private bool _isClient;
+
         /// <inheritdoc />
         public event Action<IComponentRegistration>? ComponentAdded;
 
@@ -86,8 +88,10 @@ namespace Robust.Shared.GameObjects
 
         public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
         {
+
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
+            _isClient = conHost.IsClient;
 
             conHost.RegisterCommand("dump_net_comps", "Prints the table of networked components.", "dump_net_comps", (shell, argStr, args) =>
             {
@@ -266,7 +270,7 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (IgnoredComponentNames.Contains(componentName))
+            if (_isClient || IgnoredComponentNames.Contains(componentName))
             {
                 return ComponentAvailability.Ignore;
             }

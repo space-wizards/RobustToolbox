@@ -30,7 +30,7 @@ namespace Robust.Shared.Console
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
         /// <inheritdoc />
-        public bool IsServer => NetManager.IsServer;
+        public bool IsServer { get; }
 
         /// <inheritdoc />
         public IConsoleShell LocalShell { get; }
@@ -40,8 +40,9 @@ namespace Robust.Shared.Console
 
         public abstract event ConAnyCommandCallback? AnyCommandExecuted;
 
-        protected ConsoleHost()
+        protected ConsoleHost(bool isServer)
         {
+            IsServer = isServer;
             LocalShell = new ConsoleShell(this, null);
         }
 

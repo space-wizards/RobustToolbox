@@ -325,7 +325,7 @@ internal sealed partial class MidiManager : IMidiManager
                             pos.Position,
                             sourceRelative.Normalized,
                             OcclusionCollisionMask),
-                        sourceRelative.Length,
+                        sourceRelative.Length, // TODO: Limit this to a certain maximum
                         renderer.TrackingEntity);
                 }
 

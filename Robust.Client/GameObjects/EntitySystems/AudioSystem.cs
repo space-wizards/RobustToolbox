@@ -156,7 +156,7 @@ namespace Robust.Client.GameObjects
                                         pos.Position,
                                         sourceRelative.Normalized,
                                         OcclusionCollisionMask),
-                                    sourceRelative.Length,
+                                    MathF.Min(sourceRelative.Length, stream.MaxDistance),
                                     stream.TrackingEntity);
                             }
 

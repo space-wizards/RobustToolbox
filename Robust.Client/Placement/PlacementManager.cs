@@ -292,7 +292,7 @@ namespace Robust.Client.Placement
                 && EntityManager.TryGetComponent(uid, out MetaDataComponent? comp)
                 && !comp.EntityDeleted)
             {
-                if (comp.EntityPrototype == null)
+                if (comp.EntityPrototype == null || comp.EntityPrototype.NoSpawn || comp.EntityPrototype.Abstract)
                     return false;
 
                 Eraser = false;

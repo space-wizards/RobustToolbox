@@ -81,10 +81,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            var texNode = ((ITypeReader<Texture, ValueDataNode>) this).Validate(serializationManager, node, dependencies, context);
-            if (texNode is ErrorNode) return texNode;
-
-            return new ValidatedValueNode(node);
+            return ((ITypeReader<Texture, ValueDataNode>) this).Validate(serializationManager, node, dependencies, context);
         }
 
         ValidationNode ITypeValidator<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -92,7 +89,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return !IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
+            return !dependencies.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }
@@ -110,8 +107,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            if (node.TryGet("entity", out var entityNode) && entityNode is ValueDataNode entityValueNode)
-                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Validate(serializationManager, entityValueNode, dependencies, context);
+            if (node.TryGet("entity", out var entityNode))
+            {
+                if (entityNode is ValueDataNode entityValueNode)
+                    return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Validate(serializationManager, entityValueNode, dependencies, context);
+                else
+                    return new ErrorNode(node, "Sprite specifier entity node must be a ValueDataNode");
+            }
 
             return ((ITypeReader<Rsi, MappingDataNode>) this).Validate(serializationManager, node, dependencies, context);
         }
@@ -123,12 +125,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             if (!node.TryGet("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
             {
-                return new ErrorNode(node, "Missing/Invalid sprite node");
+                return new ErrorNode(node, "Sprite specifier has missing/invalid sprite node");
             }
 
             if (!node.TryGet("state", out var stateNode) || stateNode is not ValueDataNode)
             {
-                return new ErrorNode(node, "Missing/Invalid state node");
+                return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
             }
 
             var path = serializationManager.ValidateNode(typeof(ResourcePath),

@@ -74,6 +74,9 @@ cmd-mem-help = Usage: mem
 cmd-mem-report = Heap Size: { TOSTRING($heapSize, "N0") }
     Total Allocated: { TOSTRING($totalAllocated, "N0") }
 
+## 'physics' command
+cmd-physics-overlay = {$overlay} is not a recognised overlay
+
 ## 'lsasm' command
 cmd-lsasm-desc = Lists loaded assemblies by load context
 cmd-lsasm-help = Usage: lsasm

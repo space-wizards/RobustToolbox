@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.Placement.Modes;
 using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
@@ -15,6 +16,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -267,6 +269,7 @@ namespace Robust.Client.Placement
                     {
                         if (IsActive && !Eraser) Rotate();
                     }))
+                .Bind(EngineKeyFunctions.EditorCopyObject, new PointerInputCmdHandler(OnCopy))
                 .Bind(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
                     session =>
                     {
@@ -280,6 +283,42 @@ namespace Robust.Client.Placement
 
             var localPlayer = PlayerManager.LocalPlayer;
             localPlayer!.EntityAttached += OnEntityAttached;
+        }
+
+        private bool OnCopy(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
+        {
+            // Try copy entity
+            if (uid.IsValid()
+                && EntityManager.TryGetComponent(uid, out MetaDataComponent? comp)
+                && !comp.EntityDeleted)
+            {
+                if (comp.EntityPrototype == null)
+                    return false;
+
+                Eraser = false;
+                BeginPlacing(new()
+                {
+                    EntityType = comp.EntityPrototype.ID,
+                    IsTile = false,
+                    TileType = 0,
+                    PlacementOption = comp.EntityPrototype.PlacementMode
+                });
+                return true;
+            }
+
+            // Try copy tile
+            if (!MapManager.TryFindGridAt(coords.ToMap(EntityManager), out var grid) || !grid.TryGetTileRef(coords, out var tileRef))
+                return false;
+
+            Eraser = false;
+            BeginPlacing(new()
+            {
+                EntityType = null,
+                IsTile = true,
+                TileType = tileRef.Tile.TypeId,
+                PlacementOption = nameof(AlignTileAny)
+            });
+            return true;
         }
 
         private void TearDownInput()

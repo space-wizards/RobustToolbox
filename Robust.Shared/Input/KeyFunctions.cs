@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Input
@@ -36,6 +36,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorPlaceObject = "EditorPlaceObject";
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
+        public static readonly BoundKeyFunction EditorCopyObject = "EditorCopyObject";
 
         // Buttons to navigate between UI controls.
         public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";

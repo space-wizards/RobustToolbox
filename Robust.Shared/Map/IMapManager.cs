@@ -92,6 +92,7 @@ namespace Robust.Shared.Map
 
         IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
         IMapGrid GetGrid(GridId gridId);
+        IMapGrid GetGrid(EntityUid gridId);
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(GridId gridId);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);

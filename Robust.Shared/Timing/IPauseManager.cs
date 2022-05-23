@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 
 namespace Robust.Shared.Timing
@@ -27,6 +28,9 @@ namespace Robust.Shared.Timing
 
         [Pure]
         bool IsGridPaused(GridId gridId);
+        
+        [Pure]
+        bool IsGridPaused(EntityUid gridId);
 
         [Pure]
         bool IsMapInitialized(MapId mapId);

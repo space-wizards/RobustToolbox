@@ -1,19 +1,15 @@
-#nullable enable
-using System;
-
 namespace Robust.Shared.GameObjects
 {
 
     /// <summary>
     /// Arguments for an event related to a component.
     /// </summary>
-    public abstract class ComponentEventArgs : EventArgs
+    public readonly struct ComponentEventArgs
     {
-
         /// <summary>
         /// Component that this event relates to.
         /// </summary>
-        public IComponent Component { get; }
+        public Component Component { get; }
 
         /// <summary>
         /// EntityUid of the entity this component belongs to.
@@ -24,50 +20,11 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        /// <param name="Owner">EntityUid of the entity this component belongs to.</param>
-        protected ComponentEventArgs(IComponent component, EntityUid owner)
+        /// <param name="owner">EntityUid of the entity this component belongs to.</param>
+        public ComponentEventArgs(Component component, EntityUid owner)
         {
             Component = component;
             Owner = owner;
         }
-    }
-
-    /// <summary>
-    /// Arguments for an event related to a component being added.
-    /// </summary>
-    public sealed class AddedComponentEventArgs : ComponentEventArgs
-    {
-        /// <summary>
-        /// Constructs a new instance of <see cref="AddedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public AddedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
-    }
-
-    /// <summary>
-    /// Arguments for an event related to a component being removed.
-    /// </summary>
-    public sealed class RemovedComponentEventArgs : ComponentEventArgs
-    {
-        /// <summary>
-        /// Constructs a new instance of <see cref="RemovedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public RemovedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
-    }
-
-    /// <summary>
-    /// Arguments for an event related to a component being deleted.
-    /// </summary>
-    public sealed class DeletedComponentEventArgs : ComponentEventArgs
-    {
-        /// <summary>
-        /// Constructs a new instance of <see cref="DeletedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public DeletedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
     }
 }

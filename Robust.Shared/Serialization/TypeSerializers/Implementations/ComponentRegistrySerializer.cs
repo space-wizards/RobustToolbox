@@ -204,9 +204,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return newCompReg;
         }
 
-        private Dictionary<IComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
+        private Dictionary<ComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
         {
-            var dict = new Dictionary<IComponentRegistration, int>();
+            var dict = new Dictionary<ComponentRegistration, int>();
             for (var i = 0; i < node.Count; i++)
             {
                 var mapping = (MappingDataNode)node[i];

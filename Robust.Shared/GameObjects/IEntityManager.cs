@@ -45,11 +45,11 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        event EventHandler<EntityUid>? EntityAdded;
-        event EventHandler<EntityUid>? EntityInitialized;
-        event EventHandler<EntityUid>? EntityStarted;
-        event EventHandler<EntityUid>? EntityDeleted;
-        event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
+        event Action<EntityUid>? EntityAdded;
+        event Action<EntityUid>? EntityInitialized;
+        event Action<EntityUid>? EntityStarted;
+        event Action<EntityUid>? EntityDeleted;
+        event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
 

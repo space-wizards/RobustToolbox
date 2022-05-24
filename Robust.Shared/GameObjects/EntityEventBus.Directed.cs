@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
+using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.GameObjects
 {
@@ -255,24 +256,24 @@ namespace Robust.Shared.GameObjects
                 _subscriptionLock = false;
             }
 
-            private void OnEntityAdded(object? sender, EntityUid e)
+            private void OnEntityAdded(EntityUid e)
             {
                 AddEntity(e);
             }
 
-            private void OnEntityDeleted(object? sender, EntityUid e)
+            private void OnEntityDeleted(EntityUid e)
             {
                 RemoveEntity(e);
             }
 
-            private void OnComponentAdded(object? sender, ComponentEventArgs e)
+            private void OnComponentAdded(ComponentEventArgs e)
             {
                 _subscriptionLock = true;
 
                 AddComponent(e.Owner, e.Component.GetType());
             }
 
-            private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+            private void OnComponentRemoved(ComponentEventArgs e)
             {
                 RemoveComponent(e.Owner, e.Component.GetType());
             }
@@ -500,11 +501,11 @@ namespace Robust.Shared.GameObjects
             private struct ReferencesEnumerator
             {
                 private readonly Type _baseType;
-                private readonly IReadOnlyList<Type> _list;
+                private readonly ValueList<Type> _list;
                 private readonly int _totalLength;
                 private int _idx;
 
-                public ReferencesEnumerator(Type baseType, IReadOnlyList<Type> list)
+                public ReferencesEnumerator(Type baseType, ValueList<Type> list)
                 {
                     _baseType = baseType;
                     _list = list;

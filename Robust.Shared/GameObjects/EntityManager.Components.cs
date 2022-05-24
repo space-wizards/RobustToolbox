@@ -51,13 +51,13 @@ namespace Robust.Shared.GameObjects
             new(ComponentCollectionCapacity);
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs>? ComponentAdded;
+        public event Action<ComponentEventArgs>? ComponentAdded;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs>? ComponentRemoved;
+        public event Action<ComponentEventArgs>? ComponentRemoved;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs>? ComponentDeleted;
+        public event Action<ComponentEventArgs>? ComponentDeleted;
 
         public void InitializeComponents()
         {
@@ -92,14 +92,14 @@ namespace Robust.Shared.GameObjects
             _entTraitArray[index] = dict;
         }
 
-        private void OnComponentAdded(IComponentRegistration obj)
+        private void OnComponentAdded(ComponentRegistration obj)
         {
             AddComponentRefType(obj.Type);
         }
 
-        private void OnComponentReferenceAdded((IComponentRegistration, Type type) obj)
+        private void OnComponentReferenceAdded(ComponentRegistration reg, Type type)
         {
-            AddComponentRefType(obj.Item2);
+            AddComponentRefType(type);
         }
 
         private static int GetCompIdIndex(Type type)
@@ -305,7 +305,7 @@ namespace Robust.Shared.GameObjects
                 Dirty(component);
             }
 
-            ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
+            ComponentAdded?.Invoke(new ComponentEventArgs(component, uid));
 
             component.LifeAddToEntity(this);
 
@@ -437,7 +437,7 @@ namespace Robust.Shared.GameObjects
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 component.LifeRemoveFromEntity(this);
-            ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
+            ComponentRemoved?.Invoke(new ComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -471,7 +471,7 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this); // Sets delete
 
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
+                ComponentRemoved?.Invoke(new ComponentEventArgs(component, uid));
             }
 #if EXCEPTION_TOLERANCE
             }
@@ -520,7 +520,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _entCompIndex.Remove(entityUid, component);
-            ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component, entityUid));
+            ComponentDeleted?.Invoke(new ComponentEventArgs(component, entityUid));
         }
 
         /// <inheritdoc />

@@ -10,18 +10,18 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     A component was added to the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentAdded;
+        event Action<ComponentEventArgs>? ComponentAdded;
 
         /// <summary>
         ///     A component was removed from the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentRemoved;
+        event Action<ComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
         ///     A component was deleted. This is usually deferred until some time after it was removed.
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentDeleted;
+        event Action<ComponentEventArgs>? ComponentDeleted;
 
         /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         ///     This function returns a disposable initialize handle that you can use in a <see langword="using" /> statement, to set up a component
-        ///     before initialization is ran on it. 
+        ///     before initialization is ran on it.
         /// </remarks>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <param name="uid">Entity being modified.</param>

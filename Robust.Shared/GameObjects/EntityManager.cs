@@ -57,11 +57,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
 
-        public event EventHandler<EntityUid>? EntityAdded;
-        public event EventHandler<EntityUid>? EntityInitialized;
-        public event EventHandler<EntityUid>? EntityStarted;
-        public event EventHandler<EntityUid>? EntityDeleted;
-        public event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
+        public event Action<EntityUid>? EntityAdded;
+        public event Action<EntityUid>? EntityInitialized;
+        public event Action<EntityUid>? EntityStarted;
+        public event Action<EntityUid>? EntityDeleted;
+        public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         public bool Started { get; protected set; }
         public bool Initialized { get; protected set; }
@@ -244,7 +244,7 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityLifeStage > EntityLifeStage.Initializing)
             {
-                EntityDirtied?.Invoke(this, uid);
+                EntityDirtied?.Invoke(uid);
             }
         }
 
@@ -322,7 +322,7 @@ namespace Robust.Shared.GameObjects
             DisposeComponents(uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
-            EntityDeleted?.Invoke(this, uid);
+            EntityDeleted?.Invoke(uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
             Entities.Remove(uid);
         }
@@ -378,9 +378,10 @@ namespace Robust.Shared.GameObjects
                 prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             }
 
-            var entity = AllocEntity(uid);
+            var entity = AllocEntity(out var metadata, uid);
 
-            GetComponent<MetaDataComponent>(entity).EntityPrototype = prototype;
+            metadata._entityPrototype = prototype;
+            Dirty(metadata);
 
             return entity;
         }
@@ -388,7 +389,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(EntityUid uid = default)
+        private protected EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
         {
             if (uid == default)
             {
@@ -401,9 +402,9 @@ namespace Robust.Shared.GameObjects
             }
 
             // we want this called before adding components
-            EntityAdded?.Invoke(this, uid);
+            EntityAdded?.Invoke(uid);
 
-            var metadata = new MetaDataComponent { Owner = uid };
+            metadata = new MetaDataComponent { Owner = uid };
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
@@ -421,7 +422,7 @@ namespace Robust.Shared.GameObjects
         private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             if (prototypeName == null)
-                return AllocEntity(uid);
+                return AllocEntity(out _, uid);
 
             var entity = AllocEntity(prototypeName, uid);
             try
@@ -465,17 +466,17 @@ namespace Robust.Shared.GameObjects
         protected void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
             InitializeComponents(entity, meta);
-            EntityInitialized?.Invoke(this, entity);
+            EntityInitialized?.Invoke(entity);
         }
 
         protected void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
-            EntityStarted?.Invoke(this, entity);
+            EntityStarted?.Invoke(entity);
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)
-        {            
+        {
             if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
                 return; // Already map initialized, do nothing.
 

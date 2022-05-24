@@ -144,13 +144,13 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        private void OnEntityRemoved(object? sender, EntityUid e)
+        private void OnEntityRemoved(EntityUid e)
         {
             if (_componentDeletionHistory.ContainsKey(e))
                 _componentDeletionHistory.Remove(e);
         }
 
-        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        private void OnComponentRemoved(ComponentEventArgs e)
         {
             var reg = ComponentFactory.GetRegistration(e.Component.GetType());
 

@@ -42,6 +42,11 @@ public readonly struct CompIdx : IEquatable<CompIdx>
 
     internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)
     {
+        RefArray(ref array, idx) = value;
+    }
+
+    internal static ref T RefArray<T>(ref T[] array, CompIdx idx)
+    {
         var curLength = array.Length;
         if (curLength <= idx.Value)
         {
@@ -49,7 +54,7 @@ public readonly struct CompIdx : IEquatable<CompIdx>
             Array.Resize(ref array, newLength);
         }
 
-        array[idx.Value] = value;
+        return ref array[idx.Value];
     }
 
     private static int _CompIdxMaster = -1;

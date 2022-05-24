@@ -1,16 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Robust.Shared.Maths;
 using Robust.Shared.Log;
 using System.Diagnostics;
@@ -83,41 +79,21 @@ namespace Robust.Shared.GameObjects
             FillComponentDict();
         }
 
-        private void AddComponentRefType(Type type)
+        private void AddComponentRefType(CompIdx type)
         {
             var dict = new Dictionary<EntityUid, Component>();
-            _entTraitDict.Add(type, dict);
-            var index = GetCompIdIndex(type);
-            EnsureEntTraitIndexCapacity(index);
-            _entTraitArray[index] = dict;
+            _entTraitDict.Add(_componentFactory.IdxToType(type), dict);
+            CompIdx.AssignArray(ref _entTraitArray, type, dict);
         }
 
         private void OnComponentAdded(ComponentRegistration obj)
         {
-            AddComponentRefType(obj.Type);
+            AddComponentRefType(obj.Idx);
         }
 
-        private void OnComponentReferenceAdded(ComponentRegistration reg, Type type)
+        private void OnComponentReferenceAdded(ComponentRegistration reg, CompIdx type)
         {
             AddComponentRefType(type);
-        }
-
-        private static int GetCompIdIndex(Type type)
-        {
-            return (int)typeof(CompArrayIndex<>)
-                .MakeGenericType(type)
-                .GetField(nameof(CompArrayIndex<int>.Index), BindingFlags.Static | BindingFlags.Public)!
-                .GetValue(null)!;
-        }
-
-        private void EnsureEntTraitIndexCapacity(int index)
-        {
-            var curLength = _entTraitArray.Length;
-            if (curLength > index)
-                return;
-
-            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, index));
-            Array.Resize(ref _entTraitArray, newLength);
         }
 
         #region Component Management
@@ -265,7 +241,7 @@ namespace Robust.Shared.GameObjects
             // Check that there are no overlapping references.
             foreach (var type in reg.References)
             {
-                var dict = _entTraitDict[type];
+                var dict = _entTraitArray[type.Value];
                 if (!dict.TryGetValue(uid, out var duplicate))
                     continue;
 
@@ -279,7 +255,7 @@ namespace Robust.Shared.GameObjects
             // add the component to the grid
             foreach (var type in reg.References)
             {
-                _entTraitDict[type].Add(uid, component);
+                _entTraitArray[type.Value].Add(uid, component);
                 _entCompIndex.Add(uid, component);
             }
 
@@ -512,7 +488,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var refType in reg.References)
             {
-                _entTraitDict[refType].Remove(entityUid);
+                _entTraitArray[refType.Value].Remove(entityUid);
             }
 
             _entCompIndex.Remove(entityUid, component);
@@ -523,7 +499,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return _entTraitArray[ArrayIndexFor<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
+            return _entTraitArray[CompIdx.ArrayIndex<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -603,7 +579,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            var dict = _entTraitArray[ArrayIndexFor<T>()];
+            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             if (dict.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
@@ -613,6 +589,18 @@ namespace Robust.Shared.GameObjects
             }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
+        }
+
+        public IComponent GetComponent(EntityUid uid, CompIdx type)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                    return comp;
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {_componentFactory.IdxToType(type)}");
         }
 
         /// <inheritdoc />
@@ -640,7 +628,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
-            var dict = _entTraitArray[ArrayIndexFor<T>()];
+            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             if (dict.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
@@ -754,7 +742,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
         {
-            return new EntityQuery<TComp1>(_entTraitArray[ArrayIndexFor<TComp1>()]);
+            return new EntityQuery<TComp1>(_entTraitArray[CompIdx.ArrayIndex<TComp1>()]);
         }
 
         /// <inheritdoc />
@@ -792,7 +780,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
-            var comps = _entTraitArray[ArrayIndexFor<T>()];
+            var comps = _entTraitArray[CompIdx.ArrayIndex<T>()];
 
             if (includePaused)
             {
@@ -805,7 +793,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
                 foreach (var t1Comp in comps.Values)
                 {
@@ -826,8 +814,8 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
         {
             // this would prob be faster if trait1 was a list (or an array of structs hue).
-            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
-            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
 
             // you really want trait1 to be the smaller set of components
             if (includePaused)
@@ -844,7 +832,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
                 foreach (var (uid, t1Comp) in trait1)
                 {
@@ -871,9 +859,9 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
-            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
-            var trait3 = _entTraitArray[ArrayIndexFor<TComp3>()];
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
 
             if (includePaused)
             {
@@ -893,7 +881,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
                 foreach (var (uid, t1Comp) in trait1)
                 {
@@ -926,10 +914,10 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
-            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
-            var trait3 = _entTraitArray[ArrayIndexFor<TComp3>()];
-            var trait4 = _entTraitArray[ArrayIndexFor<TComp4>()];
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
+            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
             if (includePaused)
             {
@@ -953,7 +941,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
                 foreach (var (uid, t1Comp) in trait1)
                 {
@@ -1039,16 +1027,6 @@ namespace Robust.Shared.GameObjects
             {
                 AddComponentRefType(refType);
             }
-        }
-
-        private static int ArrayIndexFor<T>() => CompArrayIndex<T>.Index.Value;
-
-        private static int _compIndexMaster = -1;
-
-        private static class CompArrayIndex<T>
-        {
-            // ReSharper disable once StaticMemberInGenericType
-            public static readonly ComponentIndex Index = new(Interlocked.Increment(ref _compIndexMaster));
         }
     }
 

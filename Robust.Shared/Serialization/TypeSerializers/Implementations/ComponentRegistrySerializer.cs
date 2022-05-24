@@ -63,7 +63,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 components[compType] = read;
             }
 
-            var referenceTypes = new List<Type>();
+            var referenceTypes = new List<CompIdx>();
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)
             {
@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 list.Add(serializationManager.ValidateNode(type, copy, context));
             }
 
-            var referenceTypes = new List<Type>();
+            var referenceTypes = new List<CompIdx>();
 
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)

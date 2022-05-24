@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects
     public interface IComponentFactory
     {
         event Action<ComponentRegistration> ComponentAdded;
-        event Action<ComponentRegistration, Type> ComponentReferenceAdded;
+        event Action<ComponentRegistration, CompIdx> ComponentReferenceAdded;
         event Action<string> ComponentIgnoreAdded;
 
         /// <summary>
@@ -99,6 +99,8 @@ namespace Robust.Shared.GameObjects
         ///     Thrown if no component of type <see cref="componentType"/> is registered.
         /// </exception>
         IComponent GetComponent(Type componentType);
+
+        IComponent GetComponent(CompIdx componentType);
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.
@@ -191,6 +193,8 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         ComponentRegistration GetRegistration(IComponent component);
 
+        ComponentRegistration GetRegistration(CompIdx idx);
+
         /// <summary>
         ///     Tries to get the registration belonging to a component.
         /// </summary>
@@ -237,7 +241,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         void DoAutoRegistrations();
 
-        IEnumerable<Type> GetAllRefTypes();
+        IEnumerable<CompIdx> GetAllRefTypes();
         void GenerateNetIds();
+
+        Type IdxToType(CompIdx idx);
     }
 }

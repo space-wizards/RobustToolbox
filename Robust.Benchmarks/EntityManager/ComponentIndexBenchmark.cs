@@ -50,21 +50,21 @@ public class ComponentIndexBenchmark
     [Benchmark]
     public int BenchDictDirect() => _dictFetcherDirect.Get<TestType50>();
 
-    private static ComponentIndex ArrayIndexFor<T>() => CompArrayIndex<T>.Index;
+    private static CompIdx ArrayIndexFor<T>() => CompArrayIndex<T>.Idx;
 
     private static int _compIndexMaster = -1;
 
     private static class CompArrayIndex<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly ComponentIndex Index = new(Interlocked.Increment(ref _compIndexMaster));
+        public static readonly CompIdx Idx = new(Interlocked.Increment(ref _compIndexMaster));
     }
 
-    private static ComponentIndex GetCompIdIndex(Type type)
+    private static CompIdx GetCompIdIndex(Type type)
     {
-        return (ComponentIndex)typeof(CompArrayIndex<>)
+        return (CompIdx)typeof(CompArrayIndex<>)
             .MakeGenericType(type)
-            .GetField(nameof(CompArrayIndex<int>.Index), BindingFlags.Static | BindingFlags.Public)!
+            .GetField(nameof(CompArrayIndex<int>.Idx), BindingFlags.Static | BindingFlags.Public)!
             .GetValue(null)!;
     }
 
@@ -94,7 +94,7 @@ public class ComponentIndexBenchmark
 
         public int Get<T>()
         {
-            return _values[CompArrayIndex<T>.Index.Value];
+            return _values[CompArrayIndex<T>.Idx.Value];
         }
     }
 

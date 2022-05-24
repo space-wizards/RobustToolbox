@@ -19,7 +19,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
 
-            var compRegistration = new ComponentRegistration("MetaData", typeof(MetaDataComponent));
+            var compRegistration = new ComponentRegistration(
+                "MetaData",
+                typeof(MetaDataComponent),
+                CompIdx.Index<MetaDataComponent>());
 
             var entManMock = new Mock<IEntityManager>();
 
@@ -70,7 +73,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
 
-            var compRegistration = new ComponentRegistration("MetaData", typeof(MetaDataComponent));
+            var compRegistration = new ComponentRegistration(
+                "MetaData",
+                typeof(MetaDataComponent),
+                CompIdx.Index<MetaDataComponent>());
 
             var compFacMock = new Mock<IComponentFactory>();
 
@@ -119,7 +125,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compInstance.Owner = entUid;
 
-            var compRegistration = new ComponentRegistration("MetaData", typeof(MetaDataComponent));
+            var compRegistration = new ComponentRegistration(
+                "MetaData",
+                typeof(MetaDataComponent),
+                CompIdx.Index<MetaDataComponent>());
 
             var compFacMock = new Mock<IComponentFactory>();
 
@@ -168,7 +177,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             void Setup<T>(out T instance) where T : IComponent, new()
             {
                 IComponent? inst = instance = new T();
-                var reg = new ComponentRegistration(typeof(T).Name, typeof(T));
+                var reg = new ComponentRegistration(
+                    typeof(T).Name,
+                    typeof(T),
+                    CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(typeof(T))).Returns(reg);
                 entManMock.Setup(m => m.TryGetComponent(entUid, typeof(T), out inst)).Returns(true);

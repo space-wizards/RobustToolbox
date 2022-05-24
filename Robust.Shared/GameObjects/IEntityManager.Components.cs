@@ -195,6 +195,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to look on.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>The component of Type from the Entity.</returns>
+        IComponent GetComponent(EntityUid uid, CompIdx type);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to look on.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>The component of Type from the Entity.</returns>
         IComponent GetComponent(EntityUid uid, Type type);
 
         /// <summary>

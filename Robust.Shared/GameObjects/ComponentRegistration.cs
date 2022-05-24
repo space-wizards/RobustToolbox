@@ -19,6 +19,8 @@ public sealed class ComponentRegistration
     /// <seealso cref="IComponent.Name" />
     public string Name { get; }
 
+    public CompIdx Idx { get; }
+
     /// <summary>
     /// ID used to reference the component type across the network.
     /// If null, no network synchronization will be available for this component.
@@ -31,13 +33,14 @@ public sealed class ComponentRegistration
     /// </summary>
     public Type Type { get; }
 
-    public ValueList<Type> References;
+    public ValueList<CompIdx> References;
 
-    public ComponentRegistration(string name, Type type)
+    public ComponentRegistration(string name, Type type, CompIdx idx)
     {
         Name = name;
         Type = type;
-        References.Add(type);
+        Idx = idx;
+        References.Add(idx);
     }
 
     public override string ToString()

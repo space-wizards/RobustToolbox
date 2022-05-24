@@ -40,16 +40,20 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private readonly Dictionary<Type, ComponentRegistration> types = new();
 
+        private ComponentRegistration[] _array = Array.Empty<ComponentRegistration>();
+
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new();
 
+        private readonly Dictionary<CompIdx, Type> _idxToType = new();
+
         /// <inheritdoc />
         public event Action<ComponentRegistration>? ComponentAdded;
 
         /// <inheritdoc />
-        public event Action<ComponentRegistration, Type>? ComponentReferenceAdded;
+        public event Action<ComponentRegistration, CompIdx>? ComponentReferenceAdded;
 
         /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
@@ -131,10 +135,15 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            var registration = new ComponentRegistration(name, type);
+            var idx = CompIdx.Index(type);
+            _idxToType[idx] = type;
+
+            var registration = new ComponentRegistration(name, type, idx);
+
             names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
+            CompIdx.AssignArray(ref _array, idx, registration);
 
             ComponentAdded?.Invoke(registration);
 
@@ -193,13 +202,16 @@ namespace Robust.Shared.GameObjects
             if (@interface == typeof(MetaDataComponent) || @interface == typeof(TransformComponent))
                 throw new InvalidOperationException("Cannot make Transform or Metadata a reference type!");
 
+            var idx = CompIdx.Index(@interface);
+            _idxToType[idx] = @interface;
+
             var registration = types[target];
-            if (registration.References.Contains(@interface))
+            if (registration.References.Contains(idx))
             {
                 throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
-            registration.References.Add(@interface);
-            ComponentReferenceAdded?.Invoke(registration, @interface);
+            registration.References.Add(idx);
+            ComponentReferenceAdded?.Invoke(registration, idx);
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
@@ -262,6 +274,11 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
             return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
+        }
+
+        public IComponent GetComponent(CompIdx componentType)
+        {
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(_array[componentType.Value].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -346,6 +363,8 @@ namespace Robust.Shared.GameObjects
         {
             return GetRegistration(component.GetType());
         }
+
+        public ComponentRegistration GetRegistration(CompIdx idx) => _array[idx.Value];
 
         public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out ComponentRegistration? registration, bool ignoreCase = false)
         {
@@ -439,7 +458,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IEnumerable<Type> GetAllRefTypes()
+        public IEnumerable<CompIdx> GetAllRefTypes()
         {
             return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
@@ -475,6 +494,8 @@ namespace Robust.Shared.GameObjects
 
             _networkedComponents = networkedRegs;
         }
+
+        public Type IdxToType(CompIdx idx) => _idxToType[idx];
     }
 
     [Serializable]

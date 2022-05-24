@@ -7,7 +7,6 @@ using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Maths;
 using Robust.Shared.Log;
 using System.Diagnostics;
 #if EXCEPTION_TOLERANCE
@@ -104,22 +103,31 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 
-            // Initialize() can modify the collection of components.
-            var components = GetComponents(uid)
-                .OrderBy(x => x switch
-                {
-                    TransformComponent _ => 0,
-                    IPhysBody _ => 1,
-                    _ => int.MaxValue
-                });
+            // Initialize() can modify the collection of components. Copy them.
+            FixedArray32<Component?> compsFixed = default;
 
-            foreach (var component in components)
+            var comps = compsFixed.AsSpan;
+            CopyComponentsInto(ref comps, uid);
+
+            // TODO: please for the love of god remove these initialization order hacks.
+
+            // Init transform first, we always have it.
+            var transform = GetComponent<TransformComponent>(uid);
+            if (transform.LifeStage < ComponentLifeStage.Initialized)
+                transform.LifeInitialize(this);
+
+            // Init physics second if it exists.
+            if (TryGetComponent<PhysicsComponent>(uid, out var phys)
+                && phys.LifeStage < ComponentLifeStage.Initialized)
             {
-                var comp = (Component)component;
-                if (comp.Initialized)
-                    continue;
+                phys.LifeInitialize(this);
+            }
 
-                comp.LifeInitialize(this);
+            // Do rest of components.
+            foreach (var comp in comps)
+            {
+                if (comp is { LifeStage: < ComponentLifeStage.Initialized })
+                    comp.LifeInitialize(this);
             }
 
 #if DEBUG
@@ -141,24 +149,32 @@ namespace Robust.Shared.GameObjects
 
         public void StartComponents(EntityUid uid)
         {
-            // TODO: Move this to EntityManager.
             // Startup() can modify _components
             // This code can only handle additions to the list. Is there a better way? Probably not.
-            var comps = GetComponents(uid)
-                .OrderBy(x => x switch
-                {
-                    TransformComponent _ => 0,
-                    IPhysBody _ => 1,
-                    _ => int.MaxValue
-                });
+            FixedArray32<Component?> compsFixed = default;
 
-            foreach (var component in comps)
+            var comps = compsFixed.AsSpan;
+            CopyComponentsInto(ref comps, uid);
+
+            // TODO: please for the love of god remove these initialization order hacks.
+
+            // Init transform first, we always have it.
+            var transform = GetComponent<TransformComponent>(uid);
+            if (transform.LifeStage == ComponentLifeStage.Initialized)
+                transform.LifeStartup(this);
+
+            // Init physics second if it exists.
+            if (TryGetComponent<PhysicsComponent>(uid, out var phys)
+                && phys.LifeStage == ComponentLifeStage.Initialized)
             {
-                var comp = (Component)component;
-                if (comp.LifeStage == ComponentLifeStage.Initialized)
-                {
+                phys.LifeStartup(this);
+            }
+
+            // Do rest of components.
+            foreach (var comp in comps)
+            {
+                if (comp is { LifeStage: ComponentLifeStage.Initialized })
                     comp.LifeStartup(this);
-                }
             }
         }
 
@@ -754,6 +770,25 @@ namespace Robust.Shared.GameObjects
                 if (comp.Deleted) continue;
 
                 yield return comp;
+            }
+        }
+
+        /// <summary>
+        /// Copy the components for an entity into the given span,
+        /// or re-allocate the span as an array if there's not enough space.
+        /// </summary>
+        private void CopyComponentsInto(ref Span<Component?> comps, EntityUid uid)
+        {
+            var set = _entCompIndex[uid];
+            if (set.Count > comps.Length)
+            {
+                comps = new Component[set.Count];
+            }
+
+            var i = 0;
+            foreach (var c in set)
+            {
+                comps[i++] = c;
             }
         }
 

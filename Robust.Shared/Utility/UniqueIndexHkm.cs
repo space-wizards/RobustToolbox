@@ -1,8 +1,6 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -29,10 +27,10 @@ namespace Robust.Shared.Utility
     {
 
         [NotNull]
-        private readonly Dictionary<TKey, ISet<TValue>> _index;
+        private readonly Dictionary<TKey, HashSet<TValue>> _index;
 
         public UniqueIndexHkm(int capacity)
-            => _index = new Dictionary<TKey, ISet<TValue>>(capacity);
+            => _index = new Dictionary<TKey, HashSet<TValue>>(capacity);
 
         /// <inheritdoc />
         public int KeyCount => _index.Count;
@@ -143,26 +141,11 @@ namespace Robust.Shared.Utility
         }
 
         /// <inheritdoc />
-        public bool Freeze(TKey key)
-        {
-            InitializedCheck();
-
-            if (!_index.TryGetValue(key, out var set)
-                || set is ImmutableHashSet<TValue>)
-            {
-                return false;
-            }
-
-            _index[key] = ImmutableHashSet.CreateRange(set);
-            return true;
-        }
-
-        /// <inheritdoc />
         public void Initialize(IEnumerable<TKey> keys)
-            => Initialize(keys.Select(k => new KeyValuePair<TKey, ISet<TValue>>(k, new HashSet<TValue>())));
+            => Initialize(keys.Select(k => new KeyValuePair<TKey, HashSet<TValue>>(k, new HashSet<TValue>())));
 
         /// <inheritdoc />
-        public void Initialize(IEnumerable<KeyValuePair<TKey, ISet<TValue>>> index)
+        public void Initialize(IEnumerable<KeyValuePair<TKey, HashSet<TValue>>> index)
         {
             InitializedCheck();
 
@@ -175,7 +158,7 @@ namespace Robust.Shared.Utility
         }
 
         /// <inheritdoc />
-        public ISet<TValue> this[TKey key]
+        public HashSet<TValue> this[TKey key]
         {
             get
             {
@@ -191,7 +174,7 @@ namespace Robust.Shared.Utility
 
         /// <inheritdoc cref="IEnumerable{T}"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator()
+        public IEnumerator<KeyValuePair<TKey, HashSet<TValue>>> GetEnumerator()
         {
             InitializedCheck();
 

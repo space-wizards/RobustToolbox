@@ -112,6 +112,7 @@ namespace Robust.Server.Player
 
             _network.RegisterNetMessage<MsgPlayerListReq>(HandlePlayerListReq);
             _network.RegisterNetMessage<MsgPlayerList>();
+            _network.RegisterNetMessage<MsgSyncTimeBase>();
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;
@@ -403,6 +404,11 @@ namespace Robust.Server.Player
             }
 
             PlayerCountMetric.Set(PlayerCount);
+
+            // Synchronize base time.
+            var msgTimeBase = new MsgSyncTimeBase();
+            (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
+            _network.ServerSendMessage(msgTimeBase, args.Channel);
 
             IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
         }

@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -45,6 +46,8 @@ namespace Robust.Client
 
         public string? LastDisconnectReason { get; private set; }
 
+        private (TimeSpan, GameTick) _timeBase;
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -52,20 +55,30 @@ namespace Robust.Client
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
+            _net.RegisterNetMessage<MsgSyncTimeBase>(
+                SyncTimeBase,
+                NetMessageAccept.Handshake | NetMessageAccept.Client);
+
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
             Reset();
         }
 
-        private void TickRateChanged(int tickrate)
+        private void SyncTimeBase(MsgSyncTimeBase message)
+        {
+            Logger.DebugS("client", $"Synchronized time base: {message.Tick}: {message.Time}");
+            _timeBase = (message.Time, message.Tick);
+        }
+
+        private void TickRateChanged(int tickrate, in CVarChangeInfo info)
         {
             if (GameInfo != null)
             {
                 GameInfo.TickRate = (byte) tickrate;
             }
 
-            _timing.TickRate = (byte) tickrate;
+            _timing.SetTickRateAt((byte) tickrate, info.TickChanged);
             Logger.InfoS("client", $"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
         }
 
@@ -213,7 +226,7 @@ namespace Robust.Client
             _entityManager.Startup();
             _mapManager.Startup();
 
-            _timing.ResetSimTime();
+            _timing.ResetSimTime(_timeBase);
             _timing.Paused = false;
         }
 

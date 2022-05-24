@@ -76,6 +76,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="args">Event arguments for the event.</param>
         internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
             where TEvent : notnull;
+
+        public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
     }
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
@@ -112,6 +114,11 @@ namespace Robust.Shared.GameObjects
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
             _eventTables.DispatchComponent<TEvent>(component.Owner, component, ref unitRef, true);
+        }
+
+        public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare()
+        {
+            _eventTables.IgnoreUnregisteredComponents = true;
         }
 
         /// <inheritdoc />
@@ -276,6 +283,7 @@ namespace Robust.Shared.GameObjects
                 _entMan.ComponentAdded += OnComponentAdded;
                 _entMan.ComponentRemoved += OnComponentRemoved;
 
+                // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
                 _comFac.ComponentAdded += ComFacOnComponentAdded;
                 _comFac.ComponentReferenceAdded += ComFacOnComponentReferenceAdded;
 
@@ -285,6 +293,8 @@ namespace Robust.Shared.GameObjects
 
                 InitSubscriptionsArray();
             }
+
+            public bool IgnoreUnregisteredComponents;
 
             private void InitSubscriptionsArray()
             {
@@ -337,9 +347,13 @@ namespace Robust.Shared.GameObjects
                     throw new InvalidOperationException(
                         $"Attempted to subscribe by-ref and by-value to the same directed event! comp={compTypeObj.Name}, event={eventType.Name} eventIsByRef={referenceEvent} subscriptionIsByRef={registration.ReferenceEvent}");
 
-                var compSubs = _subscriptions[compType.Value];
-                if (compSubs == null)
+                if (compType.Value >= _subscriptions.Length || _subscriptions[compType.Value] is not { } compSubs)
+                {
+                    if (IgnoreUnregisteredComponents)
+                        return;
+
                     throw new InvalidOperationException($"Component is not a valid reference type: {compTypeObj.Name}");
+                }
 
                 if (compSubs.ContainsKey(eventType))
                     throw new InvalidOperationException(
@@ -369,9 +383,13 @@ namespace Robust.Shared.GameObjects
                 if (_subscriptionLock)
                     throw new InvalidOperationException("Subscription locked.");
 
-                var compSubs = _subscriptions[compType.Value];
-                if (compSubs == null)
+                if (compType.Value >= _subscriptions.Length || _subscriptions[compType.Value] is not { } compSubs)
+                {
+                    if (IgnoreUnregisteredComponents)
+                        return;
+
                     throw new InvalidOperationException("Trying to unsubscribe from unregistered component!");
+                }
 
                 compSubs.Remove(eventType);
             }
@@ -614,10 +632,8 @@ namespace Robust.Shared.GameObjects
                 public bool MoveNext(
                     [NotNullWhen(true)] out (IComponent Component, DirectedRegistration Registration)? tuple)
                 {
-                    _enumerator.MoveNext();
-
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                    if (_enumerator.Current == default)
+                    if (!_enumerator.MoveNext())
                     {
                         tuple = null;
                         return false;

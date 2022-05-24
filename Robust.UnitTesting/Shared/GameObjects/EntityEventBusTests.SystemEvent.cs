@@ -11,7 +11,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
         private static EntityEventBus BusFactory()
         {
+            var compFacMock = new Mock<IComponentFactory>();
             var entManMock = new Mock<IEntityManager>();
+            entManMock.SetupGet(e => e.ComponentFactory).Returns(compFacMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
             return bus;
         }

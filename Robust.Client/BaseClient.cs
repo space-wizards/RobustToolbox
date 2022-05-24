@@ -68,7 +68,11 @@ namespace Robust.Client
         private void SyncTimeBase(MsgSyncTimeBase message)
         {
             Logger.DebugS("client", $"Synchronized time base: {message.Tick}: {message.Time}");
-            _timeBase = (message.Time, message.Tick);
+
+            if (RunLevel >= ClientRunLevel.Connected)
+                _timing.TimeBase = (message.Time, message.Tick);
+            else
+                _timeBase = (message.Time, message.Tick);
         }
 
         private void TickRateChanged(int tickrate, in CVarChangeInfo info)

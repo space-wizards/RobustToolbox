@@ -190,6 +190,9 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Unregistered type: {target}");
             }
 
+            if (@interface == typeof(MetaDataComponent) || @interface == typeof(TransformComponent))
+                throw new InvalidOperationException("Cannot make Transform or Metadata a reference type!");
+
             var registration = types[target];
             if (registration.References.Contains(@interface))
             {

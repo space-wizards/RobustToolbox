@@ -273,10 +273,6 @@ namespace Robust.Shared.GameObjects
                     throw new InvalidOperationException(
                         $"Component reference type {type} already occupied by {duplicate}");
 
-                // these two components are required on all entities and cannot be overwritten.
-                if (duplicate is TransformComponent || duplicate is MetaDataComponent)
-                    throw new InvalidOperationException("Tried to overwrite a protected component.");
-
                 RemoveComponentImmediate(duplicate, uid, false);
             }
 
@@ -1045,14 +1041,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static int ArrayIndexFor<T>() => CompArrayIndex<T>.Index;
+        private static int ArrayIndexFor<T>() => CompArrayIndex<T>.Index.Value;
 
         private static int _compIndexMaster = -1;
 
         private static class CompArrayIndex<T>
         {
             // ReSharper disable once StaticMemberInGenericType
-            public static readonly int Index = Interlocked.Increment(ref _compIndexMaster);
+            public static readonly ComponentIndex Index = new(Interlocked.Increment(ref _compIndexMaster));
         }
     }
 

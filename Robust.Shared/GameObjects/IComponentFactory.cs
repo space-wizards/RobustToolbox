@@ -91,6 +91,11 @@ namespace Robust.Shared.GameObjects
         void RegisterIgnore(string name, bool overwrite = false);
 
         /// <summary>
+        /// Disabled throwing on missing components that have not been ignored
+        /// </summary>
+        void IgnoreMissingComponents();
+
+        /// <summary>
         /// Gets a new component instantiated of the specified type.
         /// </summary>
         /// <param name="componentType">type of component to make</param>

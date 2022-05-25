@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects
     [Virtual]
     internal class ComponentFactory : IComponentFactory
     {
+        private bool _ignoreMissingComponents;
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
 
@@ -67,8 +68,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new();
 
-        private bool _isClient;
-
         /// <inheritdoc />
         public event Action<IComponentRegistration>? ComponentAdded;
 
@@ -91,7 +90,6 @@ namespace Robust.Shared.GameObjects
 
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
-            _isClient = conHost.IsClient;
 
             conHost.RegisterCommand("dump_net_comps", "Prints the table of networked components.", "dump_net_comps", (shell, argStr, args) =>
             {
@@ -225,6 +223,11 @@ namespace Robust.Shared.GameObjects
             ComponentReferenceAdded?.Invoke((registration, @interface));
         }
 
+        public void IgnoreMissingComponents()
+        {
+            _ignoreMissingComponents = true;
+        }
+
         public void RegisterIgnore(string name, bool overwrite = false)
         {
             if (IgnoredComponentNames.Contains(name))
@@ -270,7 +273,7 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (_isClient || IgnoredComponentNames.Contains(componentName))
+            if (_ignoreMissingComponents || IgnoredComponentNames.Contains(componentName))
             {
                 return ComponentAvailability.Ignore;
             }

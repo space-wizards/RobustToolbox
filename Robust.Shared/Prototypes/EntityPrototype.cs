@@ -164,6 +164,12 @@ namespace Robust.Shared.Prototypes
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : IComponent
+        {
+            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T));
+            return TryGetComponent<T>(compName, out component);
+        }
+
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
         {
             if (!Components.TryGetValue(name, out var componentUnCast))

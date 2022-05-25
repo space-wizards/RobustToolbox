@@ -38,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpriteView(IEntitySystemManager sysMan)
         {
-            IoCManager.Resolve(ref sysMan);
             _spriteSystem = sysMan.GetEntitySystem<SpriteSystem>();
             RectClipContent = true;
         }

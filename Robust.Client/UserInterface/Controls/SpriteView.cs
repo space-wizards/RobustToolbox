@@ -36,10 +36,16 @@ namespace Robust.Client.UserInterface.Controls
         /// </remarks>
         public Direction? OverrideDirection { get; set; }
 
-        public SpriteView(IEntitySystemManager? sysMan = null)
+        public SpriteView(IEntitySystemManager sysMan)
         {
             IoCManager.Resolve(ref sysMan);
             _spriteSystem = sysMan.GetEntitySystem<SpriteSystem>();
+            RectClipContent = true;
+        }
+
+        public SpriteView()
+        {
+            _spriteSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             RectClipContent = true;
         }
 

@@ -225,14 +225,14 @@ namespace Robust.Shared.GameObjects
         {
             if (IgnoredComponentNames.Contains(name))
             {
-                throw new InvalidOperationException($"{name} is already registered as ignored");
+                throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as ignored");
             }
 
             if (names.ContainsKey(name))
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException($"{name} is already registered as a component");
+                    throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as a component");
                 }
 
                 RemoveComponent(name);

@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -146,8 +147,7 @@ namespace Robust.Server.ServerStatus
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
 
-            var outStream = new MemoryStream();
-            var archive = new ZipArchive(outStream, ZipArchiveMode.Create);
+            var archive = new Dictionary<string, byte[]>();
 
             foreach (var assemblyName in assemblyNames)
             {
@@ -164,9 +164,9 @@ namespace Robust.Server.ServerStatus
                 AttemptPullFromDisk(relPath, path);
             }
 
-            archive.Dispose();
+            var res = SSAZip.MakeZip(archive);
             _aczSawmill.Info("StatusHost synthesized client zip in {Elapsed} ms!", sw.ElapsedMilliseconds);
-            return outStream.ToArray();
+            return res;
 
             void AttemptPullFromDisk(string pathTo, string pathFrom)
             {
@@ -175,12 +175,7 @@ namespace Robust.Server.ServerStatus
                 if (!File.Exists(res))
                     return;
 
-                var entry = archive.CreateEntry(pathTo);
-
-                using var file = File.OpenRead(res);
-                using var entryStream = entry.Open();
-
-                file.CopyTo(entryStream);
+                archive[pathTo] = File.ReadAllBytes(res);
             }
         }
 

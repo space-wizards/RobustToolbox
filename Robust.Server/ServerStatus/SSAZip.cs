@@ -33,7 +33,7 @@ internal static class SSAZip
         return MakeZip(entries);
     }
 
-    private static uint CRC32Content(byte[] data)
+    private static uint CRC32Content(Span<byte> data)
     {
         // CRC32 skipped for now (can we afford to do this?)
         // it'll be fine
@@ -68,20 +68,23 @@ internal static class SSAZip
         for (int i = 0; i < files.Length; i++)
         {
             var pair = files[i];
-            var content = pair.Value.Content;
-            crc[i] = CRC32Content(content);
+            var content = pair.Value;
+            // Write the data before we actually write the header, because we need the CRC
+            var dataBlock = resultWriter.Slice(30 + pair.Key.Length);
+            var dataSlice = dataBlock.Slice(0, (int) content.Length);
+            content.ReadExact(dataSlice);
+            crc[i] = CRC32Content(dataSlice);
+            // Write the header
             BinaryPrimitives.WriteInt32LittleEndian(resultWriter, 0x04034b50);
             BinaryPrimitives.WriteUInt32LittleEndian(resultWriter.Slice(14), crc[i]);
-            BinaryPrimitives.WriteInt32LittleEndian(resultWriter.Slice(18), (int) pair.Value.Length);
-            BinaryPrimitives.WriteInt32LittleEndian(resultWriter.Slice(22), (int) pair.Value.Length);
+            BinaryPrimitives.WriteInt32LittleEndian(resultWriter.Slice(18), (int) content.Length);
+            BinaryPrimitives.WriteInt32LittleEndian(resultWriter.Slice(22), (int) content.Length);
             BinaryPrimitives.WriteUInt16LittleEndian(resultWriter.Slice(26), (ushort) pair.Key.Length);
             resultWriter = resultWriter.Slice(30);
             // filename
             pair.Key.CopyTo(resultWriter);
-            resultWriter = resultWriter.Slice(pair.Key.Length);
-            // data
-            content.CopyTo(resultWriter);
-            resultWriter = resultWriter.Slice((int) pair.Value.Length);
+            // And now we're done
+            resultWriter = dataBlock.Slice((int) content.Length);
         }
         // CDFH
         for (int i = 0; i < files.Length; i++)

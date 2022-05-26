@@ -21,42 +21,75 @@ namespace Robust.Server.ServerStatus;
 /// An attempt to mitigate the amount of RAM usage caused by ACZ-related operations.
 /// The idea is that Dictionary<string, OnDemandFile> should become the standard interchange.
 /// </summary>
-internal interface OnDemandFile
+internal abstract class OnDemandFile
 {
     /// <summary>
     /// Length of the target file. Assumed to be cached.
     /// </summary>
-    long Length { get; }
+    public long Length { get; }
 
     /// <summary>
     /// Content of the target file. Assumed to not be cached.
     /// Length should be equal to above length.
     /// </summary>
-    byte[] Content { get; }
+    public byte[] Content
+    {
+        get
+        {
+            byte[] data = new byte[Length];
+            ReadExact(data);
+            return data;
+        }
+    }
+
+    public OnDemandFile(long len)
+    {
+        Length = len;
+    }
+
+    public abstract void ReadExact(Span<byte> data);
 }
 
 internal sealed class OnDemandDiskFile : OnDemandFile
 {
     private readonly string _diskPath;
 
-    public long Length { get; }
-    public byte[] Content
-    {
-        get
-        {
-            var data = File.ReadAllBytes(_diskPath);
-            if (data.Length != Length)
-            {
-                throw new Exception($"Unexpected change in length of {_diskPath} from {Length} to {data.Length}!");
-            }
-            return data;
-        }
-    }
-
-    public OnDemandDiskFile(string fileName)
+    public OnDemandDiskFile(string fileName) : base(new FileInfo(fileName).Length)
     {
         _diskPath = fileName;
-        Length = new FileInfo(fileName).Length;
+    }
+
+    public override void ReadExact(Span<byte> data)
+    {
+        try
+        {
+            using (FileStream fs = File.OpenRead(_diskPath))
+            {
+                fs.ReadExact(data);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"During OnDemandDiskFile.ReadExact: {_diskPath} (expected length {Length}, span length {data.Length})", ex);
+        }
+    }
+}
+
+internal sealed class OnDemandZipArchiveEntryFile : OnDemandFile
+{
+    private readonly ZipArchiveEntry _entry;
+
+    public OnDemandZipArchiveEntryFile(ZipArchiveEntry src) : base(src.Length)
+    {
+        _entry = src;
+    }
+
+    public override void ReadExact(Span<byte> data)
+    {
+        using (var stream = _entry.Open())
+        {
+            stream.ReadExact(data);
+        }
     }
 }
 

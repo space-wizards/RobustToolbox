@@ -20,29 +20,22 @@ using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus
 {
-    // Contains primary logic for ACZ (Automatic Client Zip)
-    // This entails the following:
-    // * Automatic generation of client zip on development servers.
-    // * Loading of pre-built client zip on release servers. ("Hybrid ACZ")
-    // * Distribution of the above two via status host, to facilitate easier server setup.
-    // * Manifest-based download system from the above.
+    // Contains primary logic for ACM (Automatic Client Manifest)
+    // This handles the conversion from client zips (see StatusHost.ACZip) to the Manifest-based system.
 
     internal sealed partial class StatusHost
     {
-        // Lock used while working on the ACZ.
-        private readonly SemaphoreSlim _aczLock = new(1, 1);
+        // Lock used while working on the ACM.
+        private readonly SemaphoreSlim _acManifestLock = new(1, 1);
 
-        // If an attempt has been made to prepare the ACZ.
-        private bool _aczPrepareAttempted = false;
+        // If an attempt has been made to prepare the ACM.
+        private bool _acManifestPrepareAttempted = false;
 
-        // Automatic Client Zip
-        private AutomaticClientZipInfo? _aczPrepared;
+        // Automatic Client Manifest
+        private AczManifestInfo? _acManifestPrepared;
 
-        private (string binFolder, string[] assemblies)? _aczInfo;
-
-        private void AddAczHandlers()
+        private void AddACManifestHandlers()
         {
-            AddHandler(HandleAutomaticClientZip);
             AddHandler(HandleAczManifest);
             AddHandler(HandleAczManifestDownload);
         }
@@ -60,40 +53,15 @@ namespace Robust.Server.ServerStatus
 
         private void InvalidateAcz()
         {
-            using var _ = _aczLock.WaitGuard();
+            using var _ = _acManifestLock.WaitGuard();
 
-            if (_aczPrepared == null)
+            if (_acManifestPrepared == null)
                 return;
 
             _aczSawmill.Info("ACZ CVars changed, invalidating ACZ data.");
 
-            _aczPrepared = null;
-            _aczPrepareAttempted = false;
-        }
-
-        private async Task<bool> HandleAutomaticClientZip(IStatusHandlerContext context)
-        {
-            if (!context.IsGetLike || context.Url!.AbsolutePath != "/client.zip")
-            {
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(_cfg.GetCVar(CVars.BuildDownloadUrl)))
-            {
-                await context.RespondAsync("This server has a build download URL.", HttpStatusCode.NotFound);
-                return true;
-            }
-
-            var result = await PrepareACZ();
-            if (result == null)
-            {
-                await context.RespondAsync("Automatic Client Zip was not preparable.",
-                    HttpStatusCode.InternalServerError);
-                return true;
-            }
-
-            await context.RespondAsync(result.ZipData, HttpStatusCode.OK, "application/zip");
-            return true;
+            _acManifestPrepared = null;
+            _acManifestPrepareAttempted = false;
         }
 
         private async Task<bool> HandleAczManifest(IStatusHandlerContext context)
@@ -107,7 +75,7 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var result = await PrepareACZ();
+            var result = await PrepareACManifest();
             if (result == null)
             {
                 await context.RespondAsync("Automatic Client Zip was not preparable.",
@@ -175,10 +143,10 @@ namespace Robust.Server.ServerStatus
             if (context.RequestMethod != HttpMethod.Post)
                 return false;
 
-            var aczInfo = await PrepareACZ();
+            var aczInfo = await PrepareACManifest();
             if (aczInfo == null)
             {
-                await context.RespondAsync("Automatic Client Zip was not preparable.",
+                await context.RespondAsync("Automatic Client Manifest was not preparable.",
                     HttpStatusCode.InternalServerError);
                 return true;
             }
@@ -339,53 +307,57 @@ namespace Robust.Server.ServerStatus
         }
 
         // Only call this if the download URL is not available!
-        private async Task<AutomaticClientZipInfo?> PrepareACZ()
+        private async Task<AczManifestInfo?> PrepareACManifest()
         {
             // Take the ACZ lock asynchronously
-            await _aczLock.WaitAsync();
+            await _acManifestLock.WaitAsync();
             try
             {
                 // Setting this now ensures that it won't fail repeatedly on exceptions/etc.
-                if (_aczPrepareAttempted)
-                    return _aczPrepared;
+                if (_acManifestPrepareAttempted)
+                    return _acManifestPrepared;
 
-                _aczPrepareAttempted = true;
+                _acManifestPrepareAttempted = true;
                 // ACZ hasn't been prepared, prepare it
                 try
                 {
-                    // Run actual ACZ generation via Task.Run because it's synchronous
-                    var maybeData = await Task.Run(PrepareACZInnards);
-                    if (maybeData == null)
+                    // Get the zip itself
+                    var zipInfo = await PrepareACZip();
+                    if (zipInfo == null)
                     {
-                        _aczSawmill.Error("StatusHost PrepareACZ failed (server will not be usable from launcher!)");
+                        // Error message will have come from PrepareACZip, so we don't need to make our own.
                         return null;
                     }
 
-                    _aczPrepared = maybeData;
+                    // Run actual ACZ generation via Task.Run because it's synchronous
+                    var maybeData = await Task.Run(() => PrepareACManifestInnards(zipInfo.ZipData));
+                    if (maybeData == null)
+                    {
+                        _aczSawmill.Error("StatusHost PrepareACManifest failed (server may not be usable from launcher!)");
+                        return null;
+                    }
+
+                    _acManifestPrepared = maybeData;
                     return maybeData;
                 }
                 catch (Exception e)
                 {
                     _aczSawmill.Error(
-                        $"Exception in StatusHost PrepareACZ (server will not be usable from launcher!): {e}");
+                        $"Exception in StatusHost PrepareACManifest (server may not be usable from launcher!): {e}");
                     return null;
                 }
             }
             finally
             {
-                _aczLock.Release();
+                _acManifestLock.Release();
             }
         }
 
         // -- All methods from this point forward do not access the ACZ global state --
 
-        private AutomaticClientZipInfo? PrepareACZInnards()
+        private AczManifestInfo? PrepareACManifestInnards(byte[] zipData)
         {
-            _aczSawmill.Info("Preparing ACZ...");
-            // All of these should Info on success and Error on null-return failure
-            var zipData = PrepareACZViaFile() ?? PrepareACZViaMagic();
-            if (zipData == null)
-                return null;
+            _aczSawmill.Debug("Making ACZ manifest...");
 
             var streamCompression = _cfg.GetCVar(CVars.AczStreamCompress);
             var blobCompress = _cfg.GetCVar(CVars.AczBlobCompress);
@@ -396,9 +368,6 @@ namespace Robust.Server.ServerStatus
 
             // Stream compression disables individual compression.
             blobCompress &= !streamCompression;
-
-            _aczSawmill.Debug("Making ACZ manifest...");
-            var dataHash = Convert.ToHexString(SHA256.HashData(zipData));
 
             using var zip = OpenZip(zipData);
             var (manifestData, manifestEntries, manifestBlobData) = CalcManifestData(
@@ -431,9 +400,7 @@ namespace Robust.Server.ServerStatus
                     beforeSize, manifestData.Length, manifestData.Length / (float) beforeSize);
             }
 
-            return new AutomaticClientZipInfo(
-                zipData,
-                dataHash,
+            return new AczManifestInfo(
                 manifestData,
                 manifestCompress,
                 manifestHashString,
@@ -547,75 +514,6 @@ namespace Robust.Server.ServerStatus
             return new ZipArchive(ms, ZipArchiveMode.Read, leaveOpen: false);
         }
 
-        private byte[]? PrepareACZViaFile()
-        {
-            var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-            if (!File.Exists(path)) return null;
-            _aczSawmill.Info($"StatusHost found client zip: {path}");
-            return File.ReadAllBytes(path);
-        }
-
-        private byte[]? PrepareACZViaMagic()
-        {
-            var sw = Stopwatch.StartNew();
-
-            var (binFolderPath, assemblyNames) =
-                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
-
-            var outStream = new MemoryStream();
-            var archive = new ZipArchive(outStream, ZipArchiveMode.Create);
-
-            foreach (var assemblyName in assemblyNames)
-            {
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
-            }
-
-            var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
-            foreach (var path in PathHelpers.GetFiles(prefix))
-            {
-                var relPath = Path.GetRelativePath(prefix, path);
-                if (OperatingSystem.IsWindows())
-                    relPath = relPath.Replace('\\', '/');
-                AttemptPullFromDisk(relPath, path);
-            }
-
-            archive.Dispose();
-            _aczSawmill.Info("StatusHost synthesized client zip in {Elapsed} ms!", sw.ElapsedMilliseconds);
-            return outStream.ToArray();
-
-            void AttemptPullFromDisk(string pathTo, string pathFrom)
-            {
-                // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
-                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
-                if (!File.Exists(res))
-                    return;
-
-                var entry = archive.CreateEntry(pathTo);
-
-                using var file = File.OpenRead(res);
-                using var entryStream = entry.Open();
-
-                file.CopyTo(entryStream);
-            }
-        }
-
-        public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
-        {
-            _aczLock.Wait();
-            try
-            {
-                if (_aczPrepared != null)
-                    throw new InvalidOperationException("ACZ already prepared");
-
-                _aczInfo = (clientBinFolder, clientAssemblyNames);
-            }
-            finally
-            {
-                _aczLock.Release();
-            }
-        }
-
         [Flags]
         private enum DownloadStreamHeaderFlags
         {
@@ -628,14 +526,10 @@ namespace Robust.Server.ServerStatus
             PreCompressed = 1 << 0
         }
 
-        /// <param name="ZipData">Byte array containing the raw zip file data.</param>
-        /// <param name="ZipHash">Hex SHA256 hash of <see cref="ZipData"/>.</param>
         /// <param name="ManifestData">Data for the content manifest</param>
         /// <param name="ManifestHash">Hex BLAKE2B 256-bit hash of <see cref="ManifestData"/>.</param>
         /// <param name="ManifestEntries">Manifest -> zip entry map.</param>
-        internal sealed record AutomaticClientZipInfo(
-            byte[] ZipData,
-            string ZipHash,
+        internal sealed record AczManifestInfo(
             byte[] ManifestData,
             bool ManifestCompressed,
             string ManifestHash,
@@ -644,9 +538,9 @@ namespace Robust.Server.ServerStatus
             bool PreCompressed);
 
         /// <param name="BlobLength">Length of the uncompressed blob.</param>
-        /// <param name="DataOffset">Offset into <see cref="AutomaticClientZipInfo.ManifestBlobData"/> that this blob's (possibly compressed) data starts at.</param>
+        /// <param name="DataOffset">Offset into <see cref="AczManifestInfo.ManifestBlobData"/> that this blob's (possibly compressed) data starts at.</param>
         /// <param name="DataLength">
-        /// Length in <see cref="AutomaticClientZipInfo.ManifestBlobData"/> for this blob's (possibly compressed) data.
+        /// Length in <see cref="AczManifestInfo.ManifestBlobData"/> for this blob's (possibly compressed) data.
         /// If this is zero, it means the file is not stored uncompressed and you should use <see cref="BlobLength"/>.
         /// </param>
         internal record struct AczManifestEntry(int BlobLength, int DataOffset, int DataLength);

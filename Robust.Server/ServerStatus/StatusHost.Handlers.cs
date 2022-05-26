@@ -15,7 +15,6 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleTeapot);
             AddHandler(HandleStatus);
             AddHandler(HandleInfo);
-            AddACZipHandlers();
             AddACManifestHandlers();
         }
 
@@ -144,15 +143,6 @@ namespace Robust.Server.ServerStatus
 
         private async Task<JsonObject?> PrepareACZBuildInfo()
         {
-            // We need both of these to get the complete build info (because of hashing)
-            // (That said, if we're trying to avoid making a client.zip then, well, we don't need a client.zip)
-            var aczLegacy = _cfg.GetCVar(CVars.AczLegacyLauncherSupport);
-            AutomaticClientZipInfo? acz = null;
-            if (aczLegacy)
-            {
-                acz = await PrepareACZip();
-            }
-
             var acm = await PrepareACManifest();
             if (acm == null) return null;
 
@@ -174,7 +164,8 @@ namespace Robust.Server.ServerStatus
                 ["manifest_url"] = "",
                 // Pass acz so the launcher knows where to find the downloads.
                 ["acz"] = true,
-                ["hash"] = acz?.ZipHash,
+                // Needs to be an empty 'hash' here or the launcher complains, this is from back when ACZ used zips
+                ["hash"] = "",
                 ["manifest_hash"] = acm.ManifestHash
             };
         }

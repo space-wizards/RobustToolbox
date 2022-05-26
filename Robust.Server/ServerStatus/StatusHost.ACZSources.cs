@@ -30,73 +30,18 @@ namespace Robust.Server.ServerStatus
     {
         private (string binFolder, string[] assemblies)? _aczInfo;
 
-        // -- string path methods --
-
-        private string? SourceACZipPathViaHybrid()
-        {
-            var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-            if (!File.Exists(path)) return null;
-            _aczSawmill.Info($"StatusHost found client zip: {path}");
-            return path;
-        }
-
-        // -- byte[] methods --
-
-        private byte[]? SourceACZip()
-        {
-            return SourceACZipViaFile() ?? SourceACZipViaMagic();
-        }
-
-        private byte[]? SourceACZipViaFile()
-        {
-            var path = SourceACZipPathViaHybrid();
-            return path != null ? File.ReadAllBytes(path) : null;
-        }
-
-        private byte[]? SourceACZipViaMagic()
-        {
-            var sw = Stopwatch.StartNew();
-
-            var archive = SourceACDictionaryViaMagic();
-            if (archive == null)
-                return null;
-            var res = SSAZip.MakeZip(archive);
-
-            _aczSawmill.Info("StatusHost synthesized client zip in {Elapsed} ms!", sw.ElapsedMilliseconds);
-            return res;
-        }
-
         // -- Dictionary<string, OnDemandFile> methods --
 
         private Dictionary<string, OnDemandFile>? SourceACDictionary()
         {
-            return SourceACDictionaryViaExistingZip() ?? SourceACDictionaryViaFile() ?? SourceACDictionaryViaMagic();
-        }
-
-        private Dictionary<string, OnDemandFile>? SourceACDictionaryViaExistingZip()
-        {
-            // If we already generated or acquired a zip, there's no reason to read from disk again.
-            // Opportunistically grab it.
-            _acZipLock.Wait();
-            byte[] zipData;
-            try
-            {
-                if (_acZipPrepared == null) return null;
-                zipData = _acZipPrepared.ZipData;
-            }
-            finally
-            {
-                _acZipLock.Release();
-            }
-            _aczSawmill.Info("StatusHost importing dictionary from existing zip...");
-            var ms = new MemoryStream(zipData, false);
-            return SourceACDictionaryViaZipStream(ms);
+            return SourceACDictionaryViaFile() ?? SourceACDictionaryViaMagic();
         }
 
         private Dictionary<string, OnDemandFile>? SourceACDictionaryViaFile()
         {
-            var path = SourceACZipPathViaHybrid();
-            if (path == null) return null;
+            var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
+            if (!File.Exists(path)) return null;
+            _aczSawmill.Info($"StatusHost found client zip: {path}");
             // Note: We don't want to explicitly close this, as the OnDemandFiles will hold references to this.
             // Let it be cleaned up by GC eventually.
             FileStream fs = File.OpenRead(path);
@@ -156,27 +101,17 @@ namespace Robust.Server.ServerStatus
 
         public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
         {
-            _acZipLock.Wait();
+            _acManifestLock.Wait();
             try
             {
-                _acManifestLock.Wait();
-                try
-                {
-                    if (_acZipPrepared != null)
-                        throw new InvalidOperationException("ACZip already prepared");
-                    if (_acManifestPrepared != null)
-                        throw new InvalidOperationException("ACManifest already prepared");
+                if (_acManifestPrepared != null)
+                    throw new InvalidOperationException("ACManifest already prepared");
 
-                    _aczInfo = (clientBinFolder, clientAssemblyNames);
-                }
-                finally
-                {
-                    _acManifestLock.Release();
-                }
+                _aczInfo = (clientBinFolder, clientAssemblyNames);
             }
             finally
             {
-                _acZipLock.Release();
+                _acManifestLock.Release();
             }
         }
     }

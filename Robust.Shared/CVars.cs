@@ -1119,13 +1119,6 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        /// Whether to generate a client.zip hash (and thereby enforcing creation of a client.zip at all).
-        /// IMPORTANT: If you're using ACZ (hybrid or not), disabling this reduces your RAM usage!!!
-        /// </summary>
-        public static readonly CVarDef<bool> AczLegacyLauncherSupport =
-            CVarDef.Create("acz.legacy_launcher_support", true, CVar.SERVERONLY);
-
-        /// <summary>
         /// Whether to use stream compression instead of per-file compression when transmitting ACZ data.
         /// Enabling stream compression significantly reduces bandwidth usage of downloads,
         /// but increases server and launcher CPU load. It also makes final files stored on the client compressed less.

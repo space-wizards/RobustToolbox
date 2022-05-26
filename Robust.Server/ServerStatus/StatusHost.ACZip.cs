@@ -21,12 +21,11 @@ using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus
 {
-    // Contains primary logic for ACZ (Automatic Client Zip)
+    // Contains the zip-file logic for ACZ (Automatic Client Zip)
     // This entails the following:
-    // * Automatic generation of client zip on development servers.
-    // * Loading of pre-built client zip on release servers. ("Hybrid ACZ")
-    // * Distribution of the above two via status host, to facilitate easier server setup.
+    // * Distribution of zip files via status host, to facilitate easier server setup.
     // For the manifest system, see: StatusHost.ACManifest.cs
+    // For sources of ACZ data, see: StatusHost.ACZSources.cs
     //
     // BIG IMPORTANT NOTE:
     //  At some future point there may be no reason to bother keeping the legacy zip-based download method going.
@@ -43,8 +42,6 @@ namespace Robust.Server.ServerStatus
 
         // Automatic Client Zip
         private AutomaticClientZipInfo? _acZipPrepared;
-
-        private (string binFolder, string[] assemblies)? _aczInfo;
 
         private void AddACZipHandlers()
         {
@@ -120,79 +117,18 @@ namespace Robust.Server.ServerStatus
         private AutomaticClientZipInfo? PrepareACZipInnards()
         {
             _aczSawmill.Info("Preparing ACZ...");
-            // All of these should Info on success and Error on null-return failure
-            var zipData = PrepareACZipViaFile() ?? PrepareACZipViaMagic();
+            var zipData = SourceACZip();
             if (zipData == null)
+            {
+                _aczSawmill.Error("All ACZip methods failed.");
                 return null;
+            }
 
             var dataHash = Convert.ToHexString(SHA256.HashData(zipData));
 
             return new AutomaticClientZipInfo(
                 zipData,
                 dataHash);
-        }
-
-        private byte[]? PrepareACZipViaFile()
-        {
-            var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-            if (!File.Exists(path)) return null;
-            _aczSawmill.Info($"StatusHost found client zip: {path}");
-            return File.ReadAllBytes(path);
-        }
-
-        private byte[]? PrepareACZipViaMagic()
-        {
-            var sw = Stopwatch.StartNew();
-
-            var (binFolderPath, assemblyNames) =
-                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
-
-            var archive = new Dictionary<string, OnDemandFile>();
-
-            foreach (var assemblyName in assemblyNames)
-            {
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
-            }
-
-            var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
-            foreach (var path in PathHelpers.GetFiles(prefix))
-            {
-                var relPath = Path.GetRelativePath(prefix, path);
-                if (OperatingSystem.IsWindows())
-                    relPath = relPath.Replace('\\', '/');
-                AttemptPullFromDisk(relPath, path);
-            }
-
-            var res = SSAZip.MakeZip(archive);
-            _aczSawmill.Info("StatusHost synthesized client zip in {Elapsed} ms!", sw.ElapsedMilliseconds);
-            return res;
-
-            void AttemptPullFromDisk(string pathTo, string pathFrom)
-            {
-                // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
-                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
-                if (!File.Exists(res))
-                    return;
-
-                archive[pathTo] = new OnDemandDiskFile(res);
-            }
-        }
-
-        public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
-        {
-            _acZipLock.Wait();
-            try
-            {
-                if (_acZipPrepared != null)
-                    throw new InvalidOperationException("ACZ already prepared");
-
-                _aczInfo = (clientBinFolder, clientAssemblyNames);
-            }
-            finally
-            {
-                _acZipLock.Release();
-            }
         }
 
         /// <param name="ZipData">Byte array containing the raw zip file data.</param>

@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -21,7 +22,9 @@ using SpaceWizards.Sodium;
 namespace Robust.Server.ServerStatus
 {
     // Contains primary logic for ACM (Automatic Client Manifest)
-    // This handles the conversion from client zips (see StatusHost.ACZip) to the Manifest-based system.
+    // This handles the conversion from client zips to the Manifest-based system.
+    // For the zip-based system, see: StatusHost.ACZip.cs
+    // For sources of ACZ data, see: StatusHost.ACZSources.cs
 
     internal sealed partial class StatusHost
     {
@@ -321,16 +324,19 @@ namespace Robust.Server.ServerStatus
                 // ACZ hasn't been prepared, prepare it
                 try
                 {
-                    // Get the zip itself
-                    var zipInfo = await PrepareACZip();
-                    if (zipInfo == null)
-                    {
-                        // Error message will have come from PrepareACZip, so we don't need to make our own.
-                        return null;
-                    }
-
                     // Run actual ACZ generation via Task.Run because it's synchronous
-                    var maybeData = await Task.Run(() => PrepareACManifestInnards(zipInfo.ZipData));
+                    var maybeData = await Task.Run(() =>
+                    {
+                        var sw = Stopwatch.StartNew();
+
+                        var gen = SourceACDictionary();
+                        if (gen == null) return null;
+                        var results = PrepareACManifestInnards(gen);
+
+                        _aczSawmill.Info("StatusHost synthesized client manifest in {Elapsed} ms!", sw.ElapsedMilliseconds);
+
+                        return results;
+                    });
                     if (maybeData == null)
                     {
                         _aczSawmill.Error("StatusHost PrepareACManifest failed (server may not be usable from launcher!)");
@@ -355,7 +361,7 @@ namespace Robust.Server.ServerStatus
 
         // -- All methods from this point forward do not access the ACZ global state --
 
-        private AczManifestInfo? PrepareACManifestInnards(byte[] zipData)
+        private AczManifestInfo? PrepareACManifestInnards(Dictionary<string, OnDemandFile> zipData)
         {
             _aczSawmill.Debug("Making ACZ manifest...");
 
@@ -369,9 +375,8 @@ namespace Robust.Server.ServerStatus
             // Stream compression disables individual compression.
             blobCompress &= !streamCompression;
 
-            using var zip = OpenZip(zipData);
             var (manifestData, manifestEntries, manifestBlobData) = CalcManifestData(
-                zip,
+                zipData,
                 blobCompress,
                 blobCompressLevel,
                 blobCompressSaveThresh);
@@ -411,7 +416,7 @@ namespace Robust.Server.ServerStatus
 
         private static (byte[] manifestContent, AczManifestEntry[] manifestEntries, byte[] blobData)
             CalcManifestData(
-                ZipArchive zip,
+                Dictionary<string, OnDemandFile> zipEntries,
                 bool blobCompress,
                 int blobCompressLevel,
                 int blobCompressSaveThresh)
@@ -439,22 +444,15 @@ namespace Robust.Server.ServerStatus
 
                 var manifestEntries = new ValueList<AczManifestEntry>();
 
-                foreach (var entry in zip.Entries.OrderBy(e => e.FullName, StringComparer.Ordinal))
+                foreach (var (fullName, entry) in zipEntries.OrderBy((e) => e.Key, StringComparer.Ordinal))
                 {
-                    // Ignore directory entries.
-                    if (entry.Name == "")
-                        continue;
-
                     var length = (int)entry.Length;
                     var startPos = (int)blobData.Position;
 
                     BufferHelpers.EnsurePooledBuffer(ref decompressBuffer, ArrayPool<byte>.Shared, length);
                     var data = decompressBuffer.AsSpan(0, length);
 
-                    using (var stream = entry.Open())
-                    {
-                        stream.ReadExact(data);
-                    }
+                    entry.ReadExact(data);
 
                     // Calculate hash.
                     CryptoGenericHashBlake2B.Hash(entryHash, data, ReadOnlySpan<byte>.Empty);
@@ -491,7 +489,7 @@ namespace Robust.Server.ServerStatus
                         dataLength = 0;
                     }
 
-                    manifestWriter.Write($"{Convert.ToHexString(entryHash)} {entry.FullName}\n");
+                    manifestWriter.Write($"{Convert.ToHexString(entryHash)} {fullName}\n");
 
                     manifestEntries.Add(new AczManifestEntry(length, startPos, dataLength));
                 }

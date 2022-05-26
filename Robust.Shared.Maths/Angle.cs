@@ -235,9 +235,12 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns the shortest distance between two angles.
         /// </summary>
+        /// <remarks>
+        ///     This does not reduce either angle. It is up to the caller to reduce the input angles.
+        /// </remarks>
         public static Angle ShortestDistance(in Angle a, in Angle b)
         {
-            var delta = (b - a) % Math.Tau;
+            var delta = b - a;
             return 2 * delta % Math.Tau - delta;
         }
 

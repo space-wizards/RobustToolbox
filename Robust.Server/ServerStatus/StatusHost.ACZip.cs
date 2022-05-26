@@ -61,6 +61,12 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
+            if (!_cfg.GetCVar(CVars.AczLegacyLauncherSupport))
+            {
+                await context.RespondAsync("ACZ legacy download has been disabled, update your launcher!", HttpStatusCode.NotFound);
+                return true;
+            }
+
             var result = await PrepareACZip();
             if (result == null)
             {

@@ -147,7 +147,7 @@ namespace Robust.Server.ServerStatus
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
 
-            var archive = new Dictionary<string, byte[]>();
+            var archive = new Dictionary<string, OnDemandFile>();
 
             foreach (var assemblyName in assemblyNames)
             {
@@ -175,7 +175,7 @@ namespace Robust.Server.ServerStatus
                 if (!File.Exists(res))
                     return;
 
-                archive[pathTo] = File.ReadAllBytes(res);
+                archive[pathTo] = new OnDemandDiskFile(res);
             }
         }
 

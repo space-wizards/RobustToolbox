@@ -19,100 +19,99 @@ using Robust.Shared.Utility.Collections;
 using SharpZstd.Interop;
 using SpaceWizards.Sodium;
 
-namespace Robust.Server.ServerStatus
+namespace Robust.Server.ServerStatus;
+
+// Contains source logic for ACZ (Automatic Client Zip)
+// This entails the following:
+// * Automatic generation of client zip on development servers.
+// * Loading of pre-built client zip on release servers. ("Hybrid ACZ")
+
+internal sealed partial class StatusHost
 {
-    // Contains source logic for ACZ (Automatic Client Zip)
-    // This entails the following:
-    // * Automatic generation of client zip on development servers.
-    // * Loading of pre-built client zip on release servers. ("Hybrid ACZ")
+    private (string binFolder, string[] assemblies)? _aczInfo;
 
-    internal sealed partial class StatusHost
+    // -- Dictionary<string, OnDemandFile> methods --
+
+    private Dictionary<string, OnDemandFile>? SourceAczDictionary()
     {
-        private (string binFolder, string[] assemblies)? _aczInfo;
+        return SourceAczDictionaryViaFile() ?? SourceAczDictionaryViaMagic();
+    }
 
-        // -- Dictionary<string, OnDemandFile> methods --
+    private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaFile()
+    {
+        var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
+        if (!File.Exists(path)) return null;
+        _aczSawmill.Info($"StatusHost found client zip: {path}");
+        // Note: We don't want to explicitly close this, as the OnDemandFiles will hold references to this.
+        // Let it be cleaned up by GC eventually.
+        FileStream fs = File.OpenRead(path);
+        return SourceAczDictionaryViaZipStream(fs);
+    }
 
-        private Dictionary<string, OnDemandFile>? SourceAczDictionary()
+    private Dictionary<string, OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
+    {
+        var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+        var archive = new Dictionary<string, OnDemandFile>();
+        foreach (var entry in zip.Entries)
         {
-            return SourceAczDictionaryViaFile() ?? SourceAczDictionaryViaMagic();
+            // Ignore directory entries.
+            if (entry.Name == "")
+                continue;
+            archive[entry.FullName] = new OnDemandZipArchiveEntryFile(entry);
+        }
+        return archive;
+    }
+
+    private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaMagic()
+    {
+        var (binFolderPath, assemblyNames) =
+            _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+
+        var archive = new Dictionary<string, OnDemandFile>();
+
+        foreach (var assemblyName in assemblyNames)
+        {
+            AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
+            AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
         }
 
-        private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaFile()
+        var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
+        foreach (var path in PathHelpers.GetFiles(prefix))
         {
-            var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-            if (!File.Exists(path)) return null;
-            _aczSawmill.Info($"StatusHost found client zip: {path}");
-            // Note: We don't want to explicitly close this, as the OnDemandFiles will hold references to this.
-            // Let it be cleaned up by GC eventually.
-            FileStream fs = File.OpenRead(path);
-            return SourceAczDictionaryViaZipStream(fs);
+            var relPath = Path.GetRelativePath(prefix, path);
+            if (OperatingSystem.IsWindows())
+                relPath = relPath.Replace('\\', '/');
+            AttemptPullFromDisk(relPath, path);
         }
 
-        private Dictionary<string, OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
+        return archive;
+
+        void AttemptPullFromDisk(string pathTo, string pathFrom)
         {
-            var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-            var archive = new Dictionary<string, OnDemandFile>();
-            foreach (var entry in zip.Entries)
-            {
-                // Ignore directory entries.
-                if (entry.Name == "")
-                    continue;
-                archive[entry.FullName] = new OnDemandZipArchiveEntryFile(entry);
-            }
-            return archive;
+            // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
+            var res = PathHelpers.ExecutableRelativeFile(pathFrom);
+            if (!File.Exists(res))
+                return;
+
+            archive[pathTo] = new OnDemandDiskFile(res);
         }
+    }
 
-        private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaMagic()
+    // -- Information Input --
+
+    public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
+    {
+        _aczLock.Wait();
+        try
         {
-            var (binFolderPath, assemblyNames) =
-                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+            if (_aczPrepared != null)
+                throw new InvalidOperationException("ACZ already prepared");
 
-            var archive = new Dictionary<string, OnDemandFile>();
-
-            foreach (var assemblyName in assemblyNames)
-            {
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
-                AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
-            }
-
-            var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
-            foreach (var path in PathHelpers.GetFiles(prefix))
-            {
-                var relPath = Path.GetRelativePath(prefix, path);
-                if (OperatingSystem.IsWindows())
-                    relPath = relPath.Replace('\\', '/');
-                AttemptPullFromDisk(relPath, path);
-            }
-
-            return archive;
-
-            void AttemptPullFromDisk(string pathTo, string pathFrom)
-            {
-                // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
-                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
-                if (!File.Exists(res))
-                    return;
-
-                archive[pathTo] = new OnDemandDiskFile(res);
-            }
+            _aczInfo = (clientBinFolder, clientAssemblyNames);
         }
-
-        // -- Information Input --
-
-        public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
+        finally
         {
-            _aczLock.Wait();
-            try
-            {
-                if (_aczPrepared != null)
-                    throw new InvalidOperationException("ACZ already prepared");
-
-                _aczInfo = (clientBinFolder, clientAssemblyNames);
-            }
-            finally
-            {
-                _aczLock.Release();
-            }
+            _aczLock.Release();
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects
     [Virtual]
     internal class ComponentFactory : IComponentFactory
     {
+        private bool _ignoreMissingComponents;
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
 
@@ -86,6 +87,7 @@ namespace Robust.Shared.GameObjects
 
         public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
         {
+
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
 
@@ -221,6 +223,11 @@ namespace Robust.Shared.GameObjects
             ComponentReferenceAdded?.Invoke((registration, @interface));
         }
 
+        public void IgnoreMissingComponents()
+        {
+            _ignoreMissingComponents = true;
+        }
+
         public void RegisterIgnore(string name, bool overwrite = false)
         {
             if (IgnoredComponentNames.Contains(name))
@@ -266,7 +273,7 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (IgnoredComponentNames.Contains(componentName))
+            if (_ignoreMissingComponents || IgnoredComponentNames.Contains(componentName))
             {
                 return ComponentAvailability.Ignore;
             }

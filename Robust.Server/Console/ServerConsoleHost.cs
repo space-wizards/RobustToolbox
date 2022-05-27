@@ -20,6 +20,8 @@ namespace Robust.Server.Console
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
 
+        public ServerConsoleHost() : base(isServer: true) {}
+
         public override event ConAnyCommandCallback? AnyCommandExecuted;
 
         /// <inheritdoc />

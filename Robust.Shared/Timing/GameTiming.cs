@@ -67,7 +67,7 @@ namespace Robust.Shared.Timing
                 //DebugTools.Assert(CurTick >= lastTimeTick);
                 //TODO: turns out prediction leaves CurTick at the last predicted tick, and not at the last processed server tick
                 //so time gets rewound when processing events like TickRate.
-                time += TickPeriod * (CurTick.Value - lastTimeTick.Value);
+                time += TickPeriod.Mul(CurTick.Value - lastTimeTick.Value);
 
                 if (!InSimulation) // rendering can draw frames between ticks
                 {
@@ -198,12 +198,7 @@ namespace Robust.Shared.Timing
         {
             var (cachedTime, lastTimeTick) = TimeBase;
 
-            TimeSpan newTime;
-
-            if (atTick.Value >= lastTimeTick.Value)
-              newTime = cachedTime + (TickPeriod * (atTick.Value - lastTimeTick.Value));
-            else
-              newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - atTick.Value));
+            var newTime = cachedTime + TickPeriod.Mul(atTick.Value - lastTimeTick.Value);
 
             DebugTools.Assert(TimeSpan.Zero <= newTime);
             TimeBase = (newTime, atTick);

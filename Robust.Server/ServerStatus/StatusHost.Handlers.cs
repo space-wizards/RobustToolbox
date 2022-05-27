@@ -15,7 +15,7 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleTeapot);
             AddHandler(HandleStatus);
             AddHandler(HandleInfo);
-            AddACManifestHandlers();
+            AddAczHandlers();
         }
 
         private static async Task<bool> HandleTeapot(IStatusHandlerContext context)
@@ -143,7 +143,7 @@ namespace Robust.Server.ServerStatus
 
         private async Task<JsonObject?> PrepareACZBuildInfo()
         {
-            var acm = await PrepareACManifest();
+            var acm = await PrepareAcz();
             if (acm == null) return null;
 
             // Fork ID is an interesting case, we don't want to cause too many redownloads but we also don't want to pollute disk.

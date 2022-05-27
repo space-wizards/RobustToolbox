@@ -28,16 +28,16 @@ namespace Robust.Server.ServerStatus
 
     internal sealed partial class StatusHost
     {
-        // Lock used while working on the ACM.
-        private readonly SemaphoreSlim _acManifestLock = new(1, 1);
+        // Lock used while working on the ACZ.
+        private readonly SemaphoreSlim _aczLock = new(1, 1);
 
         // If an attempt has been made to prepare the ACM.
-        private bool _acManifestPrepareAttempted = false;
+        private bool _aczPrepareAttempted = false;
 
         // Automatic Client Manifest
-        private AczManifestInfo? _acManifestPrepared;
+        private AczManifestInfo? _aczPrepared;
 
-        private void AddACManifestHandlers()
+        private void AddAczHandlers()
         {
             AddHandler(HandleAczManifest);
             AddHandler(HandleAczManifestDownload);
@@ -56,15 +56,15 @@ namespace Robust.Server.ServerStatus
 
         private void InvalidateAcz()
         {
-            using var _ = _acManifestLock.WaitGuard();
+            using var _ = _aczLock.WaitGuard();
 
-            if (_acManifestPrepared == null)
+            if (_aczPrepared == null)
                 return;
 
             _aczSawmill.Info("ACZ CVars changed, invalidating ACZ data.");
 
-            _acManifestPrepared = null;
-            _acManifestPrepareAttempted = false;
+            _aczPrepared = null;
+            _aczPrepareAttempted = false;
         }
 
         private async Task<bool> HandleAczManifest(IStatusHandlerContext context)
@@ -78,7 +78,7 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var result = await PrepareACManifest();
+            var result = await PrepareAcz();
             if (result == null)
             {
                 await context.RespondAsync("Automatic Client Zip was not preparable.",
@@ -146,10 +146,10 @@ namespace Robust.Server.ServerStatus
             if (context.RequestMethod != HttpMethod.Post)
                 return false;
 
-            var aczInfo = await PrepareACManifest();
+            var aczInfo = await PrepareAcz();
             if (aczInfo == null)
             {
-                await context.RespondAsync("Automatic Client Manifest was not preparable.",
+                await context.RespondAsync("Automatic Client Zip was not preparable.",
                     HttpStatusCode.InternalServerError);
                 return true;
             }
@@ -310,17 +310,17 @@ namespace Robust.Server.ServerStatus
         }
 
         // Only call this if the download URL is not available!
-        private async Task<AczManifestInfo?> PrepareACManifest()
+        private async Task<AczManifestInfo?> PrepareAcz()
         {
             // Take the ACZ lock asynchronously
-            await _acManifestLock.WaitAsync();
+            await _aczLock.WaitAsync();
             try
             {
                 // Setting this now ensures that it won't fail repeatedly on exceptions/etc.
-                if (_acManifestPrepareAttempted)
-                    return _acManifestPrepared;
+                if (_aczPrepareAttempted)
+                    return _aczPrepared;
 
-                _acManifestPrepareAttempted = true;
+                _aczPrepareAttempted = true;
                 // ACZ hasn't been prepared, prepare it
                 try
                 {
@@ -329,9 +329,9 @@ namespace Robust.Server.ServerStatus
                     {
                         var sw = Stopwatch.StartNew();
 
-                        var gen = SourceACDictionary();
+                        var gen = SourceAczDictionary();
                         if (gen == null) return null;
-                        var results = PrepareACManifestInnards(gen);
+                        var results = PrepareAczInnards(gen);
 
                         _aczSawmill.Info("StatusHost synthesized client manifest in {Elapsed} ms!", sw.ElapsedMilliseconds);
 
@@ -339,29 +339,29 @@ namespace Robust.Server.ServerStatus
                     });
                     if (maybeData == null)
                     {
-                        _aczSawmill.Error("StatusHost PrepareACManifest failed (server may not be usable from launcher!)");
+                        _aczSawmill.Error("StatusHost PrepareAcz failed (server will not be usable from launcher!)");
                         return null;
                     }
 
-                    _acManifestPrepared = maybeData;
+                    _aczPrepared = maybeData;
                     return maybeData;
                 }
                 catch (Exception e)
                 {
                     _aczSawmill.Error(
-                        $"Exception in StatusHost PrepareACManifest (server may not be usable from launcher!): {e}");
+                        $"Exception in StatusHost PrepareAcz (server will not be usable from launcher!): {e}");
                     return null;
                 }
             }
             finally
             {
-                _acManifestLock.Release();
+                _aczLock.Release();
             }
         }
 
         // -- All methods from this point forward do not access the ACZ global state --
 
-        private AczManifestInfo? PrepareACManifestInnards(Dictionary<string, OnDemandFile> zipData)
+        private AczManifestInfo? PrepareAczInnards(Dictionary<string, OnDemandFile> zipData)
         {
             _aczSawmill.Debug("Making ACZ manifest...");
 

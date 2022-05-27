@@ -32,12 +32,12 @@ namespace Robust.Server.ServerStatus
 
         // -- Dictionary<string, OnDemandFile> methods --
 
-        private Dictionary<string, OnDemandFile>? SourceACDictionary()
+        private Dictionary<string, OnDemandFile>? SourceAczDictionary()
         {
-            return SourceACDictionaryViaFile() ?? SourceACDictionaryViaMagic();
+            return SourceAczDictionaryViaFile() ?? SourceAczDictionaryViaMagic();
         }
 
-        private Dictionary<string, OnDemandFile>? SourceACDictionaryViaFile()
+        private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaFile()
         {
             var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
             if (!File.Exists(path)) return null;
@@ -45,10 +45,10 @@ namespace Robust.Server.ServerStatus
             // Note: We don't want to explicitly close this, as the OnDemandFiles will hold references to this.
             // Let it be cleaned up by GC eventually.
             FileStream fs = File.OpenRead(path);
-            return SourceACDictionaryViaZipStream(fs);
+            return SourceAczDictionaryViaZipStream(fs);
         }
 
-        private Dictionary<string, OnDemandFile> SourceACDictionaryViaZipStream(Stream stream)
+        private Dictionary<string, OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
         {
             var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
             var archive = new Dictionary<string, OnDemandFile>();
@@ -62,7 +62,7 @@ namespace Robust.Server.ServerStatus
             return archive;
         }
 
-        private Dictionary<string, OnDemandFile>? SourceACDictionaryViaMagic()
+        private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaMagic()
         {
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
@@ -101,18 +101,19 @@ namespace Robust.Server.ServerStatus
 
         public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
         {
-            _acManifestLock.Wait();
+            _aczLock.Wait();
             try
             {
-                if (_acManifestPrepared != null)
-                    throw new InvalidOperationException("ACManifest already prepared");
+                if (_aczPrepared != null)
+                    throw new InvalidOperationException("ACZ already prepared");
 
                 _aczInfo = (clientBinFolder, clientAssemblyNames);
             }
             finally
             {
-                _acManifestLock.Release();
+                _aczLock.Release();
             }
         }
     }
 }
+

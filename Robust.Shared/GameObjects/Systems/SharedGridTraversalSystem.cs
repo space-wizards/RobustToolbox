@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Utility;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -12,6 +11,7 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private Stack<MoveEvent> _queuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
@@ -21,7 +21,19 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent((ref MoveEvent ev) => _queuedEvents.Push(ev));
+            SubscribeLocalEvent<MoveEvent>(OnMove);
+        }
+
+        private void OnMove(ref MoveEvent ev)
+        {
+            // If move event arose from state handling, don't bother to run grid traversal logic.
+            if (ev.FromStateHandling)
+                return;
+
+            if (ev.Component.MapID == MapId.Nullspace)
+                return;
+
+            _queuedEvents.Push(ev);
         }
 
         public override void Update(float frameTime)

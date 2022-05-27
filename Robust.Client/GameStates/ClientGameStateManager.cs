@@ -222,6 +222,7 @@ namespace Robust.Client.GameStates
                     // Disable IsFirstTimePredicted while re-running HandleComponentState here.
                     // Helps with debugging.
                     using var resetArea = _timing.StartPastPredictionArea();
+                    using var _ = _timing.StartStateApplicationArea();
 
                     ResetPredictedEntities(_timing.CurTick);
                 }
@@ -449,6 +450,8 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
+            using var _ = _timing.StartStateApplicationArea();
+
             using (_prof.Group("Config"))
             {
                 _config.TickProcessMessages();

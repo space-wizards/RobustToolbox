@@ -8,12 +8,23 @@ namespace Robust.Client.Timing
         void StartPastPrediction();
         void EndPastPrediction();
 
+        void StartStateApplication();
+        void EndStateApplication();
+
         [MustUseReturnValue]
         PredictionGuard StartPastPredictionArea()
         {
             StartPastPrediction();
 
             return new PredictionGuard(this);
+        }
+
+        [MustUseReturnValue]
+        StateApplicationGuard StartStateApplicationArea()
+        {
+            StartStateApplication();
+
+            return new StateApplicationGuard(this);
         }
     }
 }

@@ -134,9 +134,14 @@ namespace Robust.Shared.Timing
         bool IsFirstTimePredicted { get; }
 
         /// <summary>
-        /// Is CurTick ahead of LastRealTick, meaning we are inside predicted ticks?
+        /// True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
         /// </summary>
         bool InPrediction { get; }
+
+        /// <summary>
+        /// If true, the game is currently in the process of applying a game server-state.
+        /// </summary>
+        bool ApplyingState { get; }
 
         /// <summary>
         /// The last real non-predicted tick that was processed.

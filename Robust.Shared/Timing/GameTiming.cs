@@ -249,7 +249,10 @@ namespace Robust.Shared.Timing
         public bool IsFirstTimePredicted { get; protected set; } = true;
 
         /// <inheritdoc />
-        public bool InPrediction => CurTick > LastRealTick;
+        public bool InPrediction => !ApplyingState && CurTick > LastRealTick;
+
+        /// <inheritdoc />
+        public bool ApplyingState {get; protected set; }
 
         /// <inheritdoc />
         public GameTick LastRealTick { get; set; }

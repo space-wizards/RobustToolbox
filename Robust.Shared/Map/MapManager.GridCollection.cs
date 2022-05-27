@@ -145,6 +145,13 @@ internal partial class MapManager
         return GetGridComp(euid).Grid;
     }
 
+    public IMapGrid GetGrid(EntityUid gridId)
+    {
+        DebugTools.Assert(gridId.IsValid());
+        
+        return GetGridComp(gridId).Grid;
+    }
+
     public bool IsGrid(EntityUid uid)
     {
         return EntityManager.HasComponent<IMapGridComponent>(uid);

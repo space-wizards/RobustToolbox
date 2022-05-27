@@ -81,7 +81,7 @@ internal sealed class ClientDirtySystem : EntitySystem
     internal IEnumerable<Type> GetRemovedComponents(GameTick afterTick, EntityUid uid)
     {
         // partial resets requires changing `Reset()`, and how predicted component additions are handled.
-        DebugTools.Assert(afterTick == _timing.LastRealTick, "Partial resets not yet supported.");
+        DebugTools.Assert(afterTick <= _timing.LastRealTick, "Partial resets not yet supported.");
 
         if (!_removedComponents.TryGetValue(uid, out var ticks))
             return Array.Empty<Type>();
@@ -104,7 +104,7 @@ internal sealed class ClientDirtySystem : EntitySystem
     public IEnumerable<EntityUid> GetDirtyEntities(GameTick afterTick)
     {
         // partial resets require fixing `Reset()` to not clear out everything.
-        DebugTools.Assert(afterTick == _timing.LastRealTick, "Partial resets not yet supported.");
+        DebugTools.Assert(afterTick <= _timing.LastRealTick, "Partial resets not yet supported.");
 
         _dirty.Clear();
 

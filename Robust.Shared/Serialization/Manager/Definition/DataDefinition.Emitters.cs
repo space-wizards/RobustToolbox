@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -79,7 +79,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate()
+        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -100,7 +100,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     if (fieldDefinition.Attribute.ServerOnly &&
-                        !IoCManager.Resolve<INetManager>().IsServer)
+                        !collection.Resolve<INetManager>().IsServer)
                     {
                         continue;
                     }

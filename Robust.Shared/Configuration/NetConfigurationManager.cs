@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -158,7 +157,7 @@ namespace Robust.Shared.Configuration
             if (toApply.Count == 0)
                 return;
 
-            toApply.Sort();
+            toApply.Sort((a, b) => a.Tick.CompareTo(b.Tick));
 
             foreach (var msg in toApply)
             {

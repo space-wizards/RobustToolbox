@@ -20,7 +20,8 @@ internal sealed class ClientDirtySystem : EntitySystem
     private ObjectPool<HashSet<EntityUid>> _dirtyPool =
         new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), 64);
 
-    // TODO maybe have a pool for this as well? But comp/entity deletion will occur much less frequently than generic dirying.
+    // TODO maybe have a pool for this as well? But comp/entity deletion will occur much less frequently than general
+    // dirtying. So maybe not required?
     private readonly Dictionary<EntityUid, Dictionary<GameTick, HashSet<Type>>> _removedComponents = new();
 
     // Keep it out of the pool because it's probably going to be a lot bigger.
@@ -43,15 +44,15 @@ internal sealed class ClientDirtySystem : EntitySystem
 
     private void OnCompRemoved(object? sender, ComponentEventArgs args)
     {
-        if (args.Owner.IsClientSide() || !args.Component.NetSyncEnabled)
-            return;
-
         // TODO if ever entity deletion gets predicted... add an arg to comp removal that specifies whether removal is
-        // occcuring because of entity deletion.
-        if (!_timing.InPrediction)
+        // occcuring because of entity deletion, to speed this function up, as it will get called once for each
+        // component the entity had.
+
+        if (args.Owner.IsClientSide() || !args.Component.NetSyncEnabled || !_timing.InPrediction)
             return;
 
-        // Was this component added during prediction? If yes, there is no need to re-add it when resetting.
+        // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.
+        // Note that this means a partial reset to anything other than `_timing.LastRealTick` isn't supported
         if (args.Component.CreationTick > _timing.LastRealTick)
             return;
 
@@ -77,8 +78,11 @@ internal sealed class ClientDirtySystem : EntitySystem
         _removedComponents.Clear();
     }
 
-    internal IEnumerable<Type> GetRemovedComponents(GameTick currentTick, EntityUid uid)
+    internal IEnumerable<Type> GetRemovedComponents(GameTick afterTick, EntityUid uid)
     {
+        // partial resets requires changing `Reset()`, and how predicted component additions are handled.
+        DebugTools.Assert(afterTick == _timing.LastRealTick, "Partial resets not yet supported.");
+
         if (!_removedComponents.TryGetValue(uid, out var ticks))
             return Array.Empty<Type>();
 
@@ -87,7 +91,7 @@ internal sealed class ClientDirtySystem : EntitySystem
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, rem) in ticks)
         {
-            if (tick < currentTick) continue;
+            if (tick < afterTick) continue;
             foreach (var ent in rem)
             {
                 removed.Add(ent);
@@ -97,14 +101,17 @@ internal sealed class ClientDirtySystem : EntitySystem
         return removed;
     }
 
-    public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
+    public IEnumerable<EntityUid> GetDirtyEntities(GameTick afterTick)
     {
+        // partial resets require fixing `Reset()` to not clear out everything.
+        DebugTools.Assert(afterTick == _timing.LastRealTick, "Partial resets not yet supported.");
+
         _dirty.Clear();
 
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
         {
-            if (tick < currentTick) continue;
+            if (tick < afterTick) continue;
             foreach (var ent in dirty)
             {
                 _dirty.Add(ent);

@@ -367,6 +367,7 @@ namespace Robust.Client.GameStates
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var query = _entityManager.GetEntityQuery<MetaDataComponent>();
+            RemQueue<Component> toRemove = new();
 
             foreach (var entity in system.GetDirtyEntities(curTick))
             {
@@ -382,10 +383,26 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                // TODO: handle component deletions/creations.
+                var removed = system.GetRemovedComponents(curTick, entity);
+
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
+                    if (!comp.NetSyncEnabled)
+                        continue;
+
+                    // Was this component added during prediction?
+                    if (comp.CreationTick > curTick)
+                    {
+                        // TODO check if this component was previously removed during prediction.
+                        // If it was, we don't need to remove then re-add it, just apply the server state.
+                        // This might speed things up... or maybe doing the check for each comp will slow things down?
+
+                        toRemove.Add(comp);
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                        continue;
+                    }
 
                     if (comp.LastModifiedTick < curTick || !last.TryGetValue(netId, out var compState))
                     {
@@ -393,7 +410,7 @@ namespace Robust.Client.GameStates
                     }
 
                     if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
@@ -401,6 +418,41 @@ namespace Robust.Client.GameStates
                     comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = curTick;
                 }
+
+                // Remove predicted additions
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(comp.Owner, comp);
+                }
+
+                // Re-add predicted removals
+                foreach (var type in system.GetRemovedComponents(curTick, entity))
+                {
+                    if (_sawmill.Level <= LogLevel.Debug)
+                        _sawmill.Debug($"  A component was removed: {type}");
+
+                    // Sometimes predicted removal is un-done by the application of other component states. E.g. if the
+                    // end of a status effect was predicted, then we will be applying a status effect while resetting
+                    // the state, which may add a component, thus undoing a removal. Hence we need to check if the
+                    // component was already re-added.
+                    if (!_entityManager.TryGetComponent(entity, type, out var comp))
+                        comp = _entityManager.AddComponent(entity, type);
+
+                    var reg = _compFactory.GetRegistration(type);
+                    if (reg.NetID == null)
+                        continue;
+
+                    if (!last.TryGetValue(reg.NetID.Value, out var compState))
+                        continue;
+
+                    var handleState = new ComponentHandleState(compState, null);
+                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                    comp.HandleComponentState(compState, null);
+
+                    // Thanks IComponent
+                    ((Component) comp).LastModifiedTick = curTick;
+                }
+
                 query.GetComponent(entity).EntityLastModifiedTick = curTick;
             }
 

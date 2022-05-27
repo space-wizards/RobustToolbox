@@ -42,6 +42,12 @@ namespace Robust.Shared.GameObjects
         T AddComponent<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
+        ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
+        ///     automatically be Initialized and Started.
+        /// </summary>
+        Component AddComponent(EntityUid uid, Type type);
+
+        /// <summary>
         ///     Adds an uninitialized Component type to an entity.
         /// </summary>
         /// <remarks>

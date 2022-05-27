@@ -186,6 +186,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        public Component AddComponent(EntityUid uid, Type type)
+        {
+            var newComponent = (Component) _componentFactory.GetComponent(type);
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
+        }
+
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();

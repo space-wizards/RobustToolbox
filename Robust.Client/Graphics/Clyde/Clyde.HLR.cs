@@ -13,7 +13,6 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Profiling;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
@@ -124,25 +123,29 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private void RenderSingleOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        {
+            if (overlay.RequestScreenTexture)
+            {
+                FlushRenderQueue();
+                UpdateOverlayScreenTexture(space, vp.RenderTarget);
+            }
+
+            if (overlay.OverwriteTargetFrameBuffer())
+            {
+                ClearFramebuffer(default);
+            }
+
+            overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+        }
+
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
-                var list = GetOverlaysForSpace(space);
-                foreach (var overlay in list)
+                foreach (var overlay in GetOverlaysForSpace(space))
                 {
-                    if (overlay.RequestScreenTexture)
-                    {
-                        FlushRenderQueue();
-                        UpdateOverlayScreenTexture(space, vp.RenderTarget);
-                    }
-
-                    if (overlay.OverwriteTargetFrameBuffer())
-                    {
-                        ClearFramebuffer(default);
-                    }
-
-                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+                    RenderSingleOverlay(overlay, vp, space, worldBox, worldBounds);
                 }
 
                 FlushRenderQueue();
@@ -237,7 +240,6 @@ namespace Robust.Client.Graphics.Clyde
             return false;
         }
 
-
         private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
@@ -252,17 +254,7 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessSpriteEntities(mapId, viewport, eye, worldBounds, _drawingSpriteList);
 
-            var worldOverlays = new List<Overlay>();
-
-            foreach (var overlay in _overlayManager.AllOverlays)
-            {
-                if ((overlay.Space & OverlaySpace.WorldSpace) != 0)
-                {
-                    worldOverlays.Add(overlay);
-                }
-            }
-
-            worldOverlays.Sort(OverlayComparer.Instance);
+            var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
@@ -275,36 +267,29 @@ namespace Robust.Client.Graphics.Clyde
             var overlayIndex = 0;
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
+            bool flushed = false;
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
-                var flushed = false;
 
                 for (var j = overlayIndex; j < worldOverlays.Count; j++)
                 {
+                    overlayIndex = j;
                     var overlay = worldOverlays[j];
 
-                    if (overlay.ZIndex <= entry.sprite.DrawDepth)
+                    if (overlay.ZIndex > entry.sprite.DrawDepth)
                     {
-                        if (!flushed)
-                        {
-                            FlushRenderQueue();
-                            flushed = true;
-                        }
-
-                        overlay.ClydeRender(
-                            _renderHandle,
-                            OverlaySpace.WorldSpace,
-                            null,
-                            viewport,
-                            new UIBox2i((0, 0), viewport.Size),
-                            worldAABB,
-                            worldBounds);
-                        overlayIndex = j;
-                        continue;
+                        flushed = false;
+                        break;
                     }
 
-                    break;
+                    if (!flushed)
+                    {
+                        FlushRenderQueue();
+                        flushed = true;
+                    }
+
+                    RenderSingleOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
                 RenderTexture? entityPostRenderTarget = null;
@@ -371,6 +356,18 @@ namespace Robust.Client.Graphics.Clyde
                     // TODO: cache this properly across frames.
                     entityPostRenderTarget.DisposeDeferred();
                 }
+            }
+
+            // draw remainder of overlays
+            for (var j = overlayIndex; j < worldOverlays.Count; j++)
+            {
+                if (!flushed)
+                {
+                    FlushRenderQueue();
+                    flushed = true;
+                }
+
+                RenderSingleOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
             ArrayPool<int>.Shared.Return(indexList);

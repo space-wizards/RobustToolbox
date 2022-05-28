@@ -48,13 +48,16 @@ public static class NetStructuredDisconnectMessages
     public static JsonObject Decode(string text)
     {
         var start = text.AsSpan().TrimStart();
+        // Lidgren generates this prefix internally.
+        var lidgrenDisconnectedPrefix = "Disconnected: ";
+        if (start.StartsWith(lidgrenDisconnectedPrefix))
+            start = start.Slice(lidgrenDisconnectedPrefix.Length);
         // If it starts with { it's probably a JSON object.
         if (start.StartsWith("{"))
         {
             try
             {
-
-                var node = JsonNode.Parse(text);
+                var node = JsonNode.Parse(new string(start));
                 if (node != null)
                     return (JsonObject)node;
             }

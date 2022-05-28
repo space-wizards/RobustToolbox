@@ -265,6 +265,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var overlayIndex = 0;
+            RenderTexture? entityPostRenderTarget = null;
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
             bool flushed = false;
@@ -292,7 +293,6 @@ namespace Robust.Client.Graphics.Clyde
                     RenderSingleOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
-                RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
@@ -310,10 +310,27 @@ namespace Robust.Client.Graphics.Clyde
                     // check that sprite size is valid
                     if (screenSpriteSize.X > 0 && screenSpriteSize.Y > 0)
                     {
-                        // create new render texture with correct sprite size
-                        entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
-                            new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                            name: nameof(entityPostRenderTarget));
+                        // This is really bare-bones render target re-use logic. One problem is that if it ever draws a
+                        // single large entity in a frame, the render target may be way to big for every subsequent
+                        // entity. But the vast majority of sprites are currently all 32x32, so it doesn't matter all that
+                        // much.
+                        //
+                        // Also, if there are many differenty sizes, and they all happen to be drawn in order of
+                        // increasing size, then this will still generate a whole bunch of render targets. So maybe
+                        // iterate once _drawingSpriteList, check sprite sizes, and decide what render targets to create
+                        // based off of that?
+                        //
+                        // TODO PERFORMANCE better renderTarget re-use / caching.
+
+                        if (entityPostRenderTarget == null
+                            || entityPostRenderTarget.Size.X < screenSpriteSize.X
+                            || entityPostRenderTarget.Size.Y < screenSpriteSize.Y)
+                        {
+                            entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
+                                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                                name: nameof(entityPostRenderTarget));
+                        }
+                        
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
                         _renderHandle.Clear(new Color());
 
@@ -352,9 +369,6 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.SetProjView(oldProj, oldView);
                     _renderHandle.UseShader(null);
-
-                    // TODO: cache this properly across frames.
-                    entityPostRenderTarget.DisposeDeferred();
                 }
             }
 
@@ -371,6 +385,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             ArrayPool<int>.Shared.Return(indexList);
+            entityPostRenderTarget?.DisposeDeferred();
 
             _drawingSpriteList.Clear();
             FlushRenderQueue();

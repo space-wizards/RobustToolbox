@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.GameStates;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.GameObjects;
 

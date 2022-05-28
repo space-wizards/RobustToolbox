@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.GameObjects
 {

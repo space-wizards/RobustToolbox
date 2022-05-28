@@ -11,7 +11,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.Configuration
 {

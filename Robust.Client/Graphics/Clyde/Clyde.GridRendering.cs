@@ -135,13 +135,13 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
             CheckGlError();
 
-            var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
+            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,

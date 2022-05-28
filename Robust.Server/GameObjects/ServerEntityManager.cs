@@ -44,7 +44,7 @@ namespace Robust.Server.GameObjects
 
         EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
-            return AllocEntity(prototypeName, uid);
+            return AllocEntity(prototypeName, out _, uid);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -146,21 +146,21 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        private void OnEntityRemoved(object? sender, EntityUid e)
+        private void OnEntityRemoved(EntityUid e)
         {
             if (_componentDeletionHistory.ContainsKey(e))
                 _componentDeletionHistory.Remove(e);
         }
 
-        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        private void OnComponentRemoved(RemovedComponentEventArgs e)
         {
-            var reg = ComponentFactory.GetRegistration(e.Component.GetType());
+            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
 
             // We only keep track of networked components being removed.
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.Owner;
+            var uid = e.BaseArgs.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {

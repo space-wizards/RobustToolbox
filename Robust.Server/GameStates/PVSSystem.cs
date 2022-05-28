@@ -216,7 +216,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #region PVSCollection Event Updates
 
-    private void OnEntityDeleted(object? sender, EntityUid e)
+    private void OnEntityDeleted(EntityUid e)
     {
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, e);
     }

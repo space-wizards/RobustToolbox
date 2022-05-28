@@ -204,7 +204,7 @@ namespace Robust.Shared.GameObjects
             RemoveFromEntityTree(args.Owner, false);
         }
 
-        private void OnEntityInit(object? sender, EntityUid uid)
+        private void OnEntityInit(EntityUid uid)
         {
             if (_container.IsEntityInContainer(uid)) return;
 

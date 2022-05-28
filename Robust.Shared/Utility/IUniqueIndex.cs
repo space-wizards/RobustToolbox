@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -18,7 +17,7 @@ namespace Robust.Shared.Utility
     /// <typeparam name="TKey">The type of key.</typeparam>
     /// <typeparam name="TValue">The type of value.</typeparam>
     /// <seealso cref="UniqueIndexExtensions"/>
-    internal interface IUniqueIndex<TKey, TValue> : IEnumerable<KeyValuePair<TKey, ISet<TValue>>> where TKey : notnull
+    internal interface IUniqueIndex<TKey, TValue> : IEnumerable<KeyValuePair<TKey, HashSet<TValue>>> where TKey : notnull
     {
 
         /// <summary>
@@ -89,13 +88,6 @@ namespace Robust.Shared.Utility
         void Touch(TKey key);
 
         /// <summary>
-        /// Makes a given key's set immutable.
-        /// </summary>
-        /// <param name="key">A given key.</param>
-        [CollectionAccess(CollectionAccessType.UpdatedContent)]
-        bool Freeze(TKey key);
-
-        /// <summary>
         /// Initializes the index from a collection of keys.
         /// </summary>
         /// <param name="keys">A collection of keys.</param>
@@ -109,7 +101,7 @@ namespace Robust.Shared.Utility
         /// <param name="index">An equivalent collection.</param>
         /// <exception cref="InvalidOperationException">Already initialized.</exception>
         [CollectionAccess(CollectionAccessType.UpdatedContent)]
-        void Initialize(IEnumerable<KeyValuePair<TKey, ISet<TValue>>> index);
+        void Initialize(IEnumerable<KeyValuePair<TKey, HashSet<TValue>>> index);
 
     }
 

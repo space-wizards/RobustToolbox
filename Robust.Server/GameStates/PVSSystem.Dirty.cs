@@ -42,13 +42,13 @@ namespace Robust.Server.GameStates
             EntityManager.EntityDirtied -= OnEntityDirty;
         }
 
-        private void OnEntityAdd(object? sender, EntityUid e)
+        private void OnEntityAdd(EntityUid e)
         {
             DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize);
             _addEntities[_currentIndex].Add(e);
         }
 
-        private void OnEntityDirty(object? sender, EntityUid uid)
+        private void OnEntityDirty(EntityUid uid)
         {
             if (!_addEntities[_currentIndex].Contains(uid))
                 _dirtyEntities[_currentIndex].Add(uid);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
@@ -350,7 +351,7 @@ namespace Robust.Shared.GameObjects
             return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
-        public bool Deleted(EntityUid? uid)
+        public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
             return !uid.HasValue || !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }

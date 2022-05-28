@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null,  entUid);
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(compInstance, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid)));
 
             // Raise
             var evntArgs = new TestEvent(5);
@@ -107,7 +107,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entUid);
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(compInstance, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid)));
 
             // Raise
             var evntArgs = new TestEvent(5);
@@ -160,7 +160,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entUid);
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(compInstance, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid)));
 
             // Raise
             ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
@@ -236,9 +236,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entUid);
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(instA, entUid));
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(instB, entUid));
-            entManMock.Raise(m => m.ComponentAdded += null, new ComponentEventArgs(instC, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid)));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid)));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(instC, entUid)));
 
             // Raise
             var evntArgs = new TestEvent(5);

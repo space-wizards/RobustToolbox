@@ -44,12 +44,57 @@ internal partial class UserInterfaceManager
 
         private void RegisterAutoscaleCVarListeners()
         {
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleEnabled, i => _autoScaleEnabled= i, true);
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowX, i => _resolutionAutoScaleLower.X = i, true);
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowY, i => _resolutionAutoScaleLower.Y = i, true);
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperX, i => _resolutionAutoScaleUpper.X = i, true);
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperY, i => _resolutionAutoScaleUpper.Y = i, true);
-            _configurationManager.OnValueChanged(CVars.ResAutoScaleMin, i => _resolutionAutoScaleMinValue= i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleEnabled, i =>
+            {
+                _autoScaleEnabled = i;
+                foreach (var root in _roots)
+                {
+                    root.UIScaleSet = 1;
+                    _propagateUIScaleChanged(root);
+                    root.InvalidateMeasure();
+                }
+
+            }, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowX, i =>
+            {
+                _resolutionAutoScaleLower.X = i;
+                foreach (var root in _roots)
+                {
+                    UpdateUIScale(root);
+                }
+            }, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowY, i =>
+            {
+                _resolutionAutoScaleLower.Y = i;
+                foreach (var root in _roots)
+                {
+                    UpdateUIScale(root);
+                }
+            }, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperX, i =>
+            {
+                _resolutionAutoScaleUpper.X = i;
+                foreach (var root in _roots)
+                {
+                    UpdateUIScale(root);
+                }
+            }, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperY, i =>
+            {
+                _resolutionAutoScaleUpper.Y = i;
+                foreach (var root in _roots)
+                {
+                    UpdateUIScale(root);
+                }
+            }, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleMin, i =>
+            {
+                _resolutionAutoScaleMinValue = i;
+                foreach (var root in _roots)
+                {
+                    UpdateUIScale(root);
+                }
+            }, true);
         }
 
         private float CalculateAutoScale(WindowRoot root)

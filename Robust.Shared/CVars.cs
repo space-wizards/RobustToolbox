@@ -1019,31 +1019,31 @@ namespace Robust.Shared
         ///Minimum resolution to start clamping autoscale to 1
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleUpperX =
-            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX",1080 , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX",1080 , CVar.CLIENTONLY);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleUpperY =
-            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY",720 , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY",720 , CVar.CLIENTONLY);
 
         /// <summary>
         ///Maximum resolution to start clamping autos scale to autoscale minimum
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleLowX =
-            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX",520 , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX",520 , CVar.CLIENTONLY);
 
         /// <summary>
         ///Maximum resolution to start clamping autos scale to autoscale minimum
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleLowY =
-            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY",520 , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY",520 , CVar.CLIENTONLY);
 
         /// <summary>
         /// The minimum ui scale value that autoscale will scale to
         /// </summary>
         public static readonly CVarDef<float> ResAutoScaleMin =
-            CVarDef.Create("interface.resolutionAutoScaleMinimum",0.5f , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleMinimum",0.5f , CVar.CLIENTONLY);
 
         /// <summary>
         ///Enable the UI autoscale system on this control, this will scale down the UI for lower resolutions

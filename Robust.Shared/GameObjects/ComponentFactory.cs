@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects
     [Virtual]
     internal class ComponentFactory : IComponentFactory
     {
+        private bool _ignoreMissingComponents;
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
 
@@ -68,6 +69,7 @@ namespace Robust.Shared.GameObjects
 
         public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
         {
+
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
 
@@ -150,7 +152,9 @@ namespace Robust.Shared.GameObjects
             static string CalculateComponentName(Type type)
             {
                 // Backward compatible fallback
+#pragma warning disable CS0618
                 if (type.GetProperty(nameof(Component.Name))!.DeclaringType != typeof(Component))
+#pragma warning restore CS0618
                 {
                     var instance = (IComponent) Activator.CreateInstance(type)!;
                     return instance.Name;
@@ -214,18 +218,23 @@ namespace Robust.Shared.GameObjects
             ComponentReferenceAdded?.Invoke(registration, idx);
         }
 
+        public void IgnoreMissingComponents()
+        {
+            _ignoreMissingComponents = true;
+        }
+
         public void RegisterIgnore(string name, bool overwrite = false)
         {
             if (IgnoredComponentNames.Contains(name))
             {
-                throw new InvalidOperationException($"{name} is already registered as ignored");
+                throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as ignored");
             }
 
             if (names.ContainsKey(name))
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException($"{name} is already registered as a component");
+                    throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as a component");
                 }
 
                 RemoveComponent(name);
@@ -259,7 +268,7 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (IgnoredComponentNames.Contains(componentName))
+            if (_ignoreMissingComponents || IgnoredComponentNames.Contains(componentName))
             {
                 return ComponentAvailability.Ignore;
             }

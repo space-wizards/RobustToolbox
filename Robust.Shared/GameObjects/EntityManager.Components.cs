@@ -1083,7 +1083,7 @@ namespace Robust.Shared.GameObjects
 
         public bool MoveNext() => _dictEnum.MoveNext();
 
-        public (ushort netId, IComponent component) Current
+        public (ushort netId, Component component) Current
         {
             get
             {

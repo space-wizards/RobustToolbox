@@ -292,7 +292,7 @@ public sealed partial class DebugConsole
 
         if (args.Function == EngineKeyFunctions.TextCompleteNext)
         {
-            if (_compFiltered == null)
+            if (_compFiltered == null || _compFiltered.Length == 0)
                 return;
 
             args.Handle();
@@ -309,7 +309,7 @@ public sealed partial class DebugConsole
 
         if (args.Function == EngineKeyFunctions.TextCompletePrev)
         {
-            if (_compFiltered == null)
+            if (_compFiltered == null || _compFiltered.Length == 0)
                 return;
 
             args.Handle();

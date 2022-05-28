@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
             _populate = EmitPopulateDelegate(collection);
-            _serialize = EmitSerializeDelegate();
+            _serialize = EmitSerializeDelegate(collection);
             _copy = EmitCopyDelegate();
 
             var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];

@@ -100,6 +100,8 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
+    private const float MaxDistanceForOcclusion = 1000;
+
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
     private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
@@ -325,7 +327,7 @@ internal sealed partial class MidiManager : IMidiManager
                             pos.Position,
                             sourceRelative.Normalized,
                             OcclusionCollisionMask),
-                        sourceRelative.Length,
+                        MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
                         renderer.TrackingEntity);
                 }
 

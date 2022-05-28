@@ -157,6 +157,12 @@ namespace Robust.Shared
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Offset CurTime at server start by this amount (in seconds).
+        /// </summary>
+        public static readonly CVarDef<int> NetTimeStartOffset =
+            CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
+
+        /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
         /// </summary>
         public static readonly CVarDef<float> ConnectionTimeout =

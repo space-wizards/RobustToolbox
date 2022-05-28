@@ -20,6 +20,8 @@ namespace Robust.Server.Console
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
 
+        public ServerConsoleHost() : base(isServer: true) {}
+
         public override event ConAnyCommandCallback? AnyCommandExecuted;
 
         /// <inheritdoc />
@@ -72,8 +74,6 @@ namespace Robust.Server.Console
             {
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
-
-                Logger.Debug($"A: {string.Join(", ", args)}");
 
 #pragma warning disable CA2012
                 return CalcCompletions(sudoShell, args);

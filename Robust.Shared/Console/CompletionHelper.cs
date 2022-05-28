@@ -13,7 +13,7 @@ public static class CompletionHelper
     public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
     {
         var curPath = arg;
-        if (curPath == "")
+        if (!curPath.StartsWith("/"))
             curPath = "/";
 
         var resPath = new ResourcePath(curPath);

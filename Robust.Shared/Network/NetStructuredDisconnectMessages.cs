@@ -47,16 +47,23 @@ public static class NetStructuredDisconnectMessages
     /// </summary>
     public static JsonObject Decode(string text)
     {
-        try
+        var start = text.AsSpan().TrimStart();
+        // If it starts with { it's probably a JSON object.
+        if (start.StartsWith("{"))
         {
-            var node = JsonNode.Parse(text);
-            if (node != null)
-                return (JsonObject) node;
+            try
+            {
+
+                var node = JsonNode.Parse(text);
+                if (node != null)
+                    return (JsonObject)node;
+            }
+            catch (Exception)
+            {
+                // Discard the exception
+            }
         }
-        catch (Exception)
-        {
-            // Discard the exception
-        }
+
         // Something went wrong, so...
         JsonObject fallback = new();
         fallback[ReasonKey] = text;

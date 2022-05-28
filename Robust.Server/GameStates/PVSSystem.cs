@@ -501,7 +501,8 @@ internal sealed partial class PVSSystem : EntitySystem
             MapChunkLocation mapChunkLocation => _entityPvsCollection.TryGetChunk(mapChunkLocation.MapId,
                 mapChunkLocation.ChunkIndices, out var mapChunk)
                 ? mapChunk
-                : null
+                : null,
+            _ => null
         };
         if (chunk == null)
         {

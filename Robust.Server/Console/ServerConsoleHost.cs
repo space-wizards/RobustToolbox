@@ -75,8 +75,6 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
-                Logger.Debug($"A: {string.Join(", ", args)}");
-
 #pragma warning disable CA2012
                 return CalcCompletions(sudoShell, args);
 #pragma warning restore CA2012

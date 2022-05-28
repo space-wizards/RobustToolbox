@@ -324,16 +324,16 @@ namespace Robust.Shared.GameObjects
                 RemoveEntity(e);
             }
 
-            private void OnComponentAdded(ComponentEventArgs e)
+            private void OnComponentAdded(AddedComponentEventArgs e)
             {
                 _subscriptionLock = true;
 
-                AddComponent(e.Owner, CompIdx.Index(e.Component.GetType()));
+                AddComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
             }
 
-            private void OnComponentRemoved(ComponentEventArgs e)
+            private void OnComponentRemoved(RemovedComponentEventArgs e)
             {
-                RemoveComponent(e.Owner, CompIdx.Index(e.Component.GetType()));
+                RemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
             }
 
             private void AddSubscription(CompIdx compType, Type compTypeObj, Type eventType, DirectedRegistration registration)

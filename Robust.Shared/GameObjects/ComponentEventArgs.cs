@@ -27,4 +27,34 @@ namespace Robust.Shared.GameObjects
             Owner = owner;
         }
     }
+
+    public readonly struct AddedComponentEventArgs
+    {
+        public readonly ComponentEventArgs BaseArgs;
+
+        public AddedComponentEventArgs(ComponentEventArgs baseArgs)
+        {
+            BaseArgs = baseArgs;
+        }
+    }
+
+    public readonly struct RemovedComponentEventArgs
+    {
+        public readonly ComponentEventArgs BaseArgs;
+
+        public RemovedComponentEventArgs(ComponentEventArgs baseArgs)
+        {
+            BaseArgs = baseArgs;
+        }
+    }
+
+    public readonly struct DeletedComponentEventArgs
+    {
+        public readonly ComponentEventArgs BaseArgs;
+
+        public DeletedComponentEventArgs(ComponentEventArgs baseArgs)
+        {
+            BaseArgs = baseArgs;
+        }
+    }
 }

@@ -152,15 +152,15 @@ namespace Robust.Server.GameObjects
                 _componentDeletionHistory.Remove(e);
         }
 
-        private void OnComponentRemoved(ComponentEventArgs e)
+        private void OnComponentRemoved(RemovedComponentEventArgs e)
         {
-            var reg = ComponentFactory.GetRegistration(e.Component.GetType());
+            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
 
             // We only keep track of networked components being removed.
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.Owner;
+            var uid = e.BaseArgs.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {

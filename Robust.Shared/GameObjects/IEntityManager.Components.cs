@@ -10,18 +10,18 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     A component was added to the manager.
         /// </summary>
-        event Action<ComponentEventArgs>? ComponentAdded;
+        event Action<AddedComponentEventArgs>? ComponentAdded;
 
         /// <summary>
         ///     A component was removed from the manager.
         /// </summary>
-        event Action<ComponentEventArgs>? ComponentRemoved;
+        event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
         ///     A component was deleted. This is usually deferred until some time after it was removed.
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
-        event Action<ComponentEventArgs>? ComponentDeleted;
+        event Action<DeletedComponentEventArgs>? ComponentDeleted;
 
         /// <summary>
         ///     Calls Initialize() on all registered components of the entity.

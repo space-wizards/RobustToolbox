@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface;
 
@@ -10,6 +13,45 @@ namespace Robust.Client.UserInterface;
 [PublicAPI]
 public abstract class UIScreen : LayoutContainer
 {
+    private IConfigurationManager _configManager = IoCManager.Resolve<IConfigurationManager>();
+    public Vector2i AutoscaleMaxResolution
+    {
+        get =>
+            new (_configManager.GetCVar<int>("interface.resolutionAutoScaleUpperCutoffX"),
+                _configManager.GetCVar<int>("interface.resolutionAutoScaleUpperCutoffY"));
+        protected set
+        {
+            _configManager.SetCVar("interface.resolutionAutoScaleUpperCutoffX", value.X);
+            _configManager.SetCVar("interface.resolutionAutoScaleUpperCutoffY", value.Y);
+        }
+    }
+    public Vector2i AutoscaleMinResolution
+    {
+        get
+        {
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            return new Vector2i(configManager.GetCVar<int>("interface.resolutionAutoScaleLowerCutoffX"),
+                configManager.GetCVar<int>("interface.resolutionAutoScaleLowerCutoffY"));
+        }
+        protected set
+        {
+            _configManager.SetCVar("interface.resolutionAutoScaleLowerCutoffX", value.X);
+            _configManager.SetCVar("interface.resolutionAutoScaleLowerCutoffY", value.Y);
+        }
+    }
+    public float AutoscaleFloor
+    {
+        get
+        {
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            return configManager.GetCVar<float>("interface.resolutionAutoScaleMinimum");
+        }
+        protected set
+        {
+            _configManager.SetCVar("interface.interface.resolutionAutoScaleMinimum", value);
+        }
+    }
+
     private readonly Dictionary<Type, UIWidget> _widgets = new();
     protected UIScreen()
     {

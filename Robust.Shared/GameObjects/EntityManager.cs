@@ -369,7 +369,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(string? prototypeName, EntityUid uid = default)
+        private protected EntityUid AllocEntity(
+            string? prototypeName,
+            out MetaDataComponent metadata,
+            EntityUid uid = default)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -378,7 +381,7 @@ namespace Robust.Shared.GameObjects
                 prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             }
 
-            var entity = AllocEntity(out var metadata, uid);
+            var entity = AllocEntity(out metadata, uid);
 
             metadata._entityPrototype = prototype;
             Dirty(metadata);
@@ -424,10 +427,10 @@ namespace Robust.Shared.GameObjects
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            var entity = AllocEntity(prototypeName, uid);
+            var entity = AllocEntity(prototypeName, out var metadata, uid);
             try
             {
-                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
+                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)

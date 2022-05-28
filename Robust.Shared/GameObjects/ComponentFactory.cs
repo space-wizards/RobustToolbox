@@ -165,7 +165,9 @@ namespace Robust.Shared.GameObjects
             static string CalculateComponentName(Type type)
             {
                 // Backward compatible fallback
+#pragma warning disable CS0618
                 if (type.GetProperty(nameof(Component.Name))!.DeclaringType != typeof(Component))
+#pragma warning restore CS0618
                 {
                     var instance = (IComponent) Activator.CreateInstance(type)!;
                     return instance.Name;

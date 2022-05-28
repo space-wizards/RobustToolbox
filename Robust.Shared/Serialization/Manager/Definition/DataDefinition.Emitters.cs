@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -52,7 +52,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         {
                             ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
                             SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
-                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping
+                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                            _ => throw new InvalidOperationException()
                         })
                     {
                         result = serializationManager.ReadWithTypeSerializer(type,

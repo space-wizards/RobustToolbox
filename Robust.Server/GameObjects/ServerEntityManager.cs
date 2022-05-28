@@ -52,7 +52,7 @@ namespace Robust.Server.GameObjects
             LoadEntity(entity, context);
         }
 
-        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta = null)
+        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
         {
             InitializeEntity(entity, meta);
         }
@@ -79,7 +79,9 @@ namespace Robust.Server.GameObjects
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
                     // And those aren't guaranteed to exist on the client, so don't clear them.
-                    if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+                    var compName = ComponentFactory.GetComponentName(component.GetType());
+                    if (prototype.Components.ContainsKey(compName))
+                        component.ClearTicks();
                 }
             }
 

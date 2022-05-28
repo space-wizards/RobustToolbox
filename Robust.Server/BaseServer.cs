@@ -691,8 +691,13 @@ namespace Robust.Server
         private void FrameUpdate(FrameEventArgs frameEventArgs)
         {
             ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
     }
 }

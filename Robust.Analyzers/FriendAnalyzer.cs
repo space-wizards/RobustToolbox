@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -33,50 +32,51 @@ namespace Robust.Analyzers
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
-            context.RegisterSyntaxNodeAction(CheckFriendship, SyntaxKind.SimpleMemberAccessExpression);
+            context.RegisterSyntaxNodeAction(CheckFriendship, SyntaxKind.ExpressionStatement);
         }
 
         private void CheckFriendship(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not MemberAccessExpressionSyntax memberAccess)
+            if (context.Node is not ExpressionStatementSyntax expr)
                 return;
 
+            // The syntax representing the member being accessed
+            if (context.SemanticModel.GetSymbolInfo(expr.Expression.ChildNodes().First()).Symbol is not {} member)
+                return;
+
+            // Get the info of the type defining the member, so we can check the attributes later...
+            var accessedType = member.ContainingType;
+
+            // Expression representing the object that the member being accessed belongs to.
+            var typeIdentifier = expr.Expression;
+
+            // The syntax to target when determining access attempt type.
+            var targetAccess = typeIdentifier;
+
             // Get the attributes
-            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
+            var friendAttribute = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
 
             // Get the type that is containing this expression, or, the type where this is happening.
-            if (context.ContainingSymbol?.ContainingType is not {} accesingType)
+            if (context.ContainingSymbol?.ContainingType is not {} accessingType)
                 return;
 
             // Determine which type of access is happening here.
-            var accessAttempt = context.Node.Parent switch
+            var accessAttempt = targetAccess switch
             {
                 InvocationExpressionSyntax => AccessPermissions.Execute,
-                AssignmentExpressionSyntax assign when assign.Left == memberAccess => AccessPermissions.Write,
+                AssignmentExpressionSyntax assign when assign.Left == typeIdentifier => AccessPermissions.Write,
                 _ => AccessPermissions.Read
             };
 
-            // Get the syntax representing the member being accessed
-            var memberIdentifier = memberAccess.Name;
-
-            // Get the expression representing the object that the member being accessed belongs to.
-            var typeIdentifier = memberAccess.Expression;
-
-            if (context.SemanticModel.GetSymbolInfo(memberIdentifier).Symbol is not {} member)
-                return;
-
-            // Get the info of the type defining the member, so we can check the attributes...
-            if (context.SemanticModel.GetTypeInfo(typeIdentifier).ConvertedType is not { } accessedType)
-                return;
 
             // Check whether this is a "self" access.
-            var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accesingType);
+            var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accessingType);
 
             // Helper function to deduplicate attribute-checking code.
-            bool CheckAttributeFriendship(AttributeData attribute, bool member = false)
+            bool CheckAttributeFriendship(AttributeData attribute, bool isMember = false)
             {
                 // If the attribute isn't the friend attribute, we don't care about it.
-                if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttr))
+                if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttribute))
                     return false;
 
                 var self    = FriendAttribute.SelfDefaultPermissions;
@@ -121,10 +121,6 @@ namespace Robust.Analyzers
                     // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
                     var types = attribute.ConstructorArguments[0].Values;
 
-                    // There are no specified types, therefore
-                    if (types.Length == 0)
-                        return true;
-
                     foreach (var constant in types)
                     {
                         // Check if the value is a type...
@@ -132,7 +128,7 @@ namespace Robust.Analyzers
                             continue;
 
                         // Check if the accessing type is specified in the attribute...
-                        if (!InheritsFromOrEquals(accesingType, friendType))
+                        if (!InheritsFromOrEquals(accessingType, friendType))
                             continue;
 
                         // Set the permissions check to the friend permissions!
@@ -156,10 +152,10 @@ namespace Robust.Analyzers
                 context.ReportDiagnostic(
                     Diagnostic.Create(FriendRule, context.Node.GetLocation(),
                         $"a{(accessAttempt == AccessPermissions.Execute ? "n" : "")} \"{accessAttempt}\" {accessingRelation}",
-                        $"{context.Node.ToString().Split('.').LastOrDefault()}",
+                        $"{member.Name}",
                         $"{accessedType.Name}",
                         $"{(permissionCheck == AccessPermissions.None ? "having no" : $"only having \"{permissionCheck}\"")}",
-                        $"{(member ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
+                        $"{(isMember ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
 
                 // Only return ONE error.
                 return true;
@@ -199,19 +195,6 @@ namespace Robust.Analyzers
                 yield return current;
                 current = current.BaseType;
             }
-        }
-
-        private string GetPrettyNodeName(SyntaxNode node)
-        {
-            return node switch
-            {
-                TypeDeclarationSyntax type => type.Identifier.Text,
-                PropertyDeclarationSyntax property => property.Identifier.Text,
-                MethodDeclarationSyntax method => method.Identifier.Text,
-                ConstructorDeclarationSyntax constructor => constructor.Identifier.Text,
-                FieldDeclarationSyntax field => field.Declaration.Variables.ToString(),
-                _ => node.ToString()
-            };
         }
     }
 }

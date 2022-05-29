@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -6,24 +7,24 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Robust.Shared.Analyzers;
 
 namespace Robust.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class FriendAnalyzer : DiagnosticAnalyzer
     {
-        private const string BestFriendAttribute = "Robust.Shared.Analyzers.BestFriendAttribute";
-        private const string FriendAttribute = "Robust.Shared.Analyzers.FriendAttribute";
+        private const string FriendAttributeType = "Robust.Shared.Analyzers.FriendAttribute";
 
         [SuppressMessage("ReSharper", "RS2008")]
         private static readonly DiagnosticDescriptor FriendRule = new (
             Diagnostics.IdFriend,
-            "Tried to access friend-only member",
-            "Tried to access member \"{0}\" in type \"{1}\" which can only be accessed by friend types",
+            "Invalid member access",
+            "Tried to perform {0} access to member \"{1}\" in type \"{2}\", despite {3} access. {4}",
             "Usage",
             DiagnosticSeverity.Error,
             true,
-            "Make sure to specify the accessing type in the friends attribute.");
+            "Make sure to give the accessing type the correct access permissions.");
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
             ImmutableArray.Create(FriendRule);
@@ -41,19 +42,19 @@ namespace Robust.Analyzers
                 return;
 
             // Get the attributes
-            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
-            var bestFriendAttr = context.Compilation.GetTypeByMetadataName(BestFriendAttribute);
+            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
 
             // Get the type that is containing this expression, or, the type where this is happening.
-            if (context.ContainingSymbol?.ContainingType is not {} containingType)
+            if (context.ContainingSymbol?.ContainingType is not {} accesingType)
                 return;
 
-            // True if read access, false if write or execute access.
-            var read =
-                // Being invoked.
-                context.Node.Parent is not InvocationExpressionSyntax &&
-                // Being assigned.
-                !(context.Node.Parent is AssignmentExpressionSyntax assignParent && assignParent.Left == memberAccess);
+            // Determine which type of access is happening here.
+            var accessAttempt = context.Node.Parent switch
+            {
+                InvocationExpressionSyntax => AccessPermissions.Execute,
+                AssignmentExpressionSyntax assign when assign.Left == memberAccess => AccessPermissions.Write,
+                _ => AccessPermissions.Read
+            };
 
             // Get the syntax representing the member being accessed
             var memberIdentifier = memberAccess.Name;
@@ -65,55 +66,100 @@ namespace Robust.Analyzers
                 return;
 
             // Get the info of the type defining the member, so we can check the attributes...
-            if (context.SemanticModel.GetTypeInfo(typeIdentifier).ConvertedType is not { } type)
+            if (context.SemanticModel.GetTypeInfo(typeIdentifier).ConvertedType is not { } accessedType)
                 return;
 
-            // Same-type access is always fine.
-            if (SymbolEqualityComparer.Default.Equals(type, containingType))
-                return;
+            // Check whether this is a "self" access.
+            var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accesingType);
 
             // Helper function to deduplicate attribute-checking code.
-            bool CheckAttributeFriendship(AttributeData attribute)
+            bool CheckAttributeFriendship(AttributeData attribute, bool member = false)
             {
-                var bestFriend = false;
-
                 // If the attribute isn't the friend attribute, we don't care about it.
-                // We also assume there's only one Friend/BestFriend attribute here, as they're mutually exclusive.
                 if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttr))
+                    return false;
+
+                var self    = FriendAttribute.SelfDefaultPermissions;
+                var friends = FriendAttribute.FriendDefaultPermissions;
+                var others  = FriendAttribute.OtherDefaultPermissions;
+
+                foreach (var kv in attribute.NamedArguments)
                 {
-                    if(!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, bestFriendAttr))
-                        return false;
-
-                    // This is the best friend attribute instead!
-                    bestFriend = true;
-                }
-
-                // If we're working with a Friend attribute, we only care about write/execute.
-                if (!bestFriend && read)
-                    return true;
-
-                // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
-                var types = attribute.ConstructorArguments[0].Values;
-
-                // There are no specified types, therefore
-                if (types.Length == 0)
-                    return true;
-
-                foreach (var constant in types)
-                {
-                    // Check if the value is a type...
-                    if (constant.Value is not INamedTypeSymbol t)
+                    if (kv.Value.Value is not byte value)
                         continue;
 
-                    // If we find that the containing type is specified in the attribute, return! All is good.
-                    if (InheritsFromOrEquals(containingType, t))
-                        return true;
+                    var permissions = (AccessPermissions) value;
+
+                    switch (kv.Key)
+                    {
+                        case nameof(FriendAttribute.Self):
+                            self = permissions;
+                            break;
+
+                        case nameof(FriendAttribute.Friend):
+                            friends = permissions;
+                            break;
+
+                        case nameof(FriendAttribute.Other):
+                            others = permissions;
+                            break;
+
+                        default:
+                            continue;
+                    }
                 }
 
-                // Not in a friend type! Report an error.
+                // By default, we will check the "other" permissions unless we find we're dealing with a friend or self.
+                var permissionCheck = others;
+
+                // Human-readable relation between accessing and accessed types.
+                var accessingRelation = "other-type";
+
+                if (!selfAccess)
+                {
+                    // This is not a self-access, so we need to determine whether the accessing type is a friend.
+                    // Check all types allowed in the friend attribute. (We assume there's only one constructor arg.)
+                    var types = attribute.ConstructorArguments[0].Values;
+
+                    // There are no specified types, therefore
+                    if (types.Length == 0)
+                        return true;
+
+                    foreach (var constant in types)
+                    {
+                        // Check if the value is a type...
+                        if (constant.Value is not INamedTypeSymbol friendType)
+                            continue;
+
+                        // Check if the accessing type is specified in the attribute...
+                        if (!InheritsFromOrEquals(accesingType, friendType))
+                            continue;
+
+                        // Set the permissions check to the friend permissions!
+                        permissionCheck = friends;
+                        accessingRelation = "friend-type";
+                        break;
+                    }
+                }
+                else
+                {
+                    // Self-access, so simply set the permissions check to self.
+                    permissionCheck = self;
+                    accessingRelation = "same-type";
+                }
+
+                // If we allow this access, return! All is good.
+                if ((accessAttempt & permissionCheck) != 0)
+                    return true;
+
+                // Access denied! Report an error.
                 context.ReportDiagnostic(
                     Diagnostic.Create(FriendRule, context.Node.GetLocation(),
-                        $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
+                        $"a{(accessAttempt == AccessPermissions.Execute ? "n" : "")} \"{accessAttempt}\" {accessingRelation}",
+                        $"{context.Node.ToString().Split('.').LastOrDefault()}",
+                        $"{accessedType.Name}",
+                        $"{(permissionCheck == AccessPermissions.None ? "having no" : $"only having \"{permissionCheck}\"")}",
+                        $"{(member ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
 
                 // Only return ONE error.
                 return true;
@@ -122,12 +168,12 @@ namespace Robust.Analyzers
             // Check attributes in the member first, since they take priority and can override type restrictions.
             foreach (var attribute in member.GetAttributes())
             {
-                if(CheckAttributeFriendship(attribute))
+                if(CheckAttributeFriendship(attribute, true))
                     return;
             }
 
             // Check attributes in the type containing the member last.
-            foreach (var attribute in type.GetAttributes())
+            foreach (var attribute in accessedType.GetAttributes())
             {
                 if(CheckAttributeFriendship(attribute))
                     return;

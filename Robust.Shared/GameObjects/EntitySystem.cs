@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager;
+        [Dependency] protected readonly EntityManager EntityManager;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
 
         protected EntitySystem(IEntityManager entityManager)
         {
-            EntityManager = entityManager;
+            EntityManager = (EntityManager)entityManager;
             Subs = new Subscriptions(this);
         }
 

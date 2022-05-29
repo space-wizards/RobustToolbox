@@ -157,6 +157,12 @@ namespace Robust.Shared
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Offset CurTime at server start by this amount (in seconds).
+        /// </summary>
+        public static readonly CVarDef<int> NetTimeStartOffset =
+            CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
+
+        /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
         /// </summary>
         public static readonly CVarDef<float> ConnectionTimeout =
@@ -736,6 +742,12 @@ namespace Robust.Shared
             CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Force ANGLE to create a context from a D3D11 FL 10_0 device.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForce10_0 =
+            CVarDef.Create("display.angle_force_10_0", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleDxgi1 =
@@ -768,6 +780,12 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
             CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Enable allowES3OnFL10_0 on ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleEs3On10_0 =
+            CVarDef.Create("display.angle_es3_on_10_0", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Base DPI to render fonts at. This can be further scaled based on <c>display.uiScale</c>.

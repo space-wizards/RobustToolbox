@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Robust.Shared.Utility.Collections;
+namespace Robust.Shared.Collections;
 
 /// <summary>
 /// Implementation of <see cref="List{T}"/> that is stored in a struct instead.

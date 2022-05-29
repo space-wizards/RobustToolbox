@@ -225,11 +225,13 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Similar to Lerp but makes sure the angle wraps around to 360 degrees.
+        ///     Similar to Lerp but, but defaults to making sure that lerping from 1 to 359 degrees doesn't wrap around
+        ///     the whole circle.
         /// </summary>
-        public static Angle Lerp(in Angle a, in Angle b, float factor)
+        public static Angle Lerp(in Angle a, in Angle b, float factor, bool reduce = true)
         {
-            return a + ShortestDistance(a, b) * factor;
+            return reduce ? a + ShortestDistance(a, b) * factor
+                : new(a.Theta + (a.Theta - b.Theta) * factor);
         }
 
         /// <summary>

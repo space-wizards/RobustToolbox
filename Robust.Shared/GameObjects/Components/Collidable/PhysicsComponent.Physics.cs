@@ -122,7 +122,8 @@ namespace Robust.Shared.GameObjects
 
                 _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
             }
         }
 
@@ -856,22 +857,29 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    [ByRefEvent]
+    public readonly struct PhysicsBodyTypeChangedEvent
     {
+        public readonly EntityUid Entity;
+
         /// <summary>
         ///     New BodyType of the entity.
         /// </summary>
-        public BodyType New { get; }
+        public readonly BodyType New;
 
         /// <summary>
         ///     Old BodyType of the entity.
         /// </summary>
-        public BodyType Old { get; }
+        public readonly BodyType Old;
 
-        public PhysicsBodyTypeChangedEvent(BodyType newType, BodyType oldType)
+        public readonly PhysicsComponent Component;
+
+        public PhysicsBodyTypeChangedEvent(EntityUid entity, BodyType newType, BodyType oldType, PhysicsComponent component)
         {
+            Entity = entity;
             New = newType;
             Old = oldType;
+            Component = component;
         }
     }
 }

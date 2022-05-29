@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Console;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Client.UserInterface.CustomControls;
 
@@ -292,7 +292,7 @@ public sealed partial class DebugConsole
 
         if (args.Function == EngineKeyFunctions.TextCompleteNext)
         {
-            if (_compFiltered == null)
+            if (_compFiltered == null || _compFiltered.Length == 0)
                 return;
 
             args.Handle();
@@ -309,7 +309,7 @@ public sealed partial class DebugConsole
 
         if (args.Function == EngineKeyFunctions.TextCompletePrev)
         {
-            if (_compFiltered == null)
+            if (_compFiltered == null || _compFiltered.Length == 0)
                 return;
 
             args.Handle();

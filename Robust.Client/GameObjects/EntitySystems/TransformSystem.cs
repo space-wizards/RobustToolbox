@@ -72,7 +72,7 @@ namespace Robust.Client.GameObjects
                     {
                         var lerpDest = transform.LerpAngle.Value;
                         var lerpSource = transform.LerpSourceAngle;
-                        if (lerpDest.Theta - lerpSource.Theta < MaxInterpolationAngle)
+                        if (Math.Abs(Angle.ShortestDistance(lerpDest, lerpSource)) < MaxInterpolationAngle)
                         {
                             transform.LocalRotation = Angle.Lerp(lerpSource, lerpDest, step);
                             // Setting LocalRotation clears LerpAngle so fix that.

@@ -268,6 +268,9 @@ namespace Robust.Shared.GameObjects
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
+                    if (!proxy.Fixture.Body.Hard)
+                        return true;
+
                     if (predicate.Invoke(proxy.Fixture.Body.Owner, state) == true)
                         return true;
 
@@ -345,13 +348,14 @@ namespace Robust.Shared.GameObjects
                 {
                     if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt) return true;
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
+                    if (!proxy.Fixture.Hard)
                         return true;
-                    }
+
+                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                        return true;
 
                     if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
-                        proxy.AABB, out _, out var exitPoint))
+                            proxy.AABB, out _, out var exitPoint))
                     {
                         penetration += (point - exitPoint).Length;
                     }

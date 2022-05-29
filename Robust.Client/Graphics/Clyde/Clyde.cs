@@ -314,7 +314,7 @@ namespace Robust.Client.Graphics.Clyde
             // Batch rendering
             {
                 BatchVBO = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                    Vertex2D.SizeOf * BatchVertexData.Length, nameof(BatchVBO));
+                    sizeof(Vertex2D) * BatchVertexData.Length, nameof(BatchVBO));
 
                 BatchVAO = new GLHandle(GenVertexArray());
                 BindVertexArray(BatchVAO.Handle);

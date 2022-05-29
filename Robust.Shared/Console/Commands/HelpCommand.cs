@@ -42,7 +42,7 @@ internal sealed class HelpCommand : IConsoleCommand
         {
             var host = shell.ConsoleHost;
             return CompletionResult.FromHintOptions(
-                host.RegisteredCommands.Values.OrderBy(c => c).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
+                host.RegisteredCommands.Values.OrderBy(c => c.Command).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
                 Loc.GetString("cmd-help-arg-cmdname"));
         }
 

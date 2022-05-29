@@ -366,6 +366,7 @@ namespace Robust.Client.GameStates
 
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var query = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             foreach (var entity in system.GetDirtyEntities(curTick))
             {
@@ -398,7 +399,9 @@ namespace Robust.Client.GameStates
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
+                    comp.LastModifiedTick = curTick;
                 }
+                query.GetComponent(entity).EntityLastModifiedTick = curTick;
             }
 
             system.Reset();

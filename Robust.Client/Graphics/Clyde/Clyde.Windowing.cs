@@ -95,6 +95,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
+            if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngleEs3On10_0))
+            {
+                Environment.SetEnvironmentVariable("ANGLE_FEATURE_OVERRIDES_ENABLED", "allowES3OnFL10_0");
+            }
+
             var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
             if (!string.IsNullOrWhiteSpace(iconPath))
                 _windowIconPath = new ResourcePath(iconPath);

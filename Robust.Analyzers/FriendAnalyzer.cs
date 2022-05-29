@@ -32,26 +32,85 @@ namespace Robust.Analyzers
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
-            context.RegisterSyntaxNodeAction(CheckFriendship, SyntaxKind.ExpressionStatement);
+            context.RegisterSyntaxNodeAction(CheckFriendship,
+                SyntaxKind.ExpressionStatement,
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxKind.PointerMemberAccessExpression,
+                SyntaxKind.ObjectInitializerExpression,
+                SyntaxKind.ArrayInitializerExpression,
+                SyntaxKind.CollectionInitializerExpression,
+                SyntaxKind.WithInitializerExpression,
+                SyntaxKind.ComplexElementInitializerExpression);
         }
 
         private void CheckFriendship(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not ExpressionStatementSyntax expr)
-                return;
+            // The symbol(s) representing the member(s) being accessed.
+            ISymbol[] members;
 
-            // The syntax representing the member being accessed
-            if (context.SemanticModel.GetSymbolInfo(expr.Expression.ChildNodes().First()).Symbol is not {} member)
-                return;
+            // The syntax to target when determining access type.
+            SyntaxNode targetAccess;
+
+            // TODO: Object initializer.
+            switch (context.Node)
+            {
+                case ExpressionStatementSyntax expr:
+                {
+                    if (context.SemanticModel.GetSymbolInfo(expr.Expression.ChildNodes().First()).Symbol is not {} symbol)
+                        return;
+
+                    members = new []{symbol};
+                    targetAccess = expr.Expression;
+                    break;
+                }
+
+                case MemberAccessExpressionSyntax mem:
+                {
+                    // If our grandparent is an ExpressionStatementSyntax, it'll be handled by the other case already.
+                    if (mem.Parent is {Parent: ExpressionStatementSyntax})
+                        return;
+
+                    if (context.SemanticModel.GetSymbolInfo(mem.Name).Symbol is not { } symbol)
+                        return;
+
+                    members = new[] {symbol};
+                    targetAccess = mem.Parent;
+                    break;
+            }
+
+                case InitializerExpressionSyntax init:
+                {
+                    // No expressions, no need to analyze this.
+                    if (init.Expressions.Count == 0)
+                        return;
+
+                    targetAccess = init;
+
+                    var list = new List<ISymbol>();
+
+                    foreach (var exprSyn in init.Expressions)
+                    {
+                        if (context.SemanticModel.GetSymbolInfo(exprSyn.ChildNodes().First()).Symbol is not {} symbol)
+                            continue;
+
+                        list.Add(symbol);
+                    }
+
+                    // Should never be the case, but let's be extra safe.
+                    if (list.Count == 0)
+                        return;
+
+                    members = list.ToArray();
+
+                    break;
+                }
+
+                default:
+                    return;
+            }
 
             // Get the info of the type defining the member, so we can check the attributes later...
-            var accessedType = member.ContainingType;
-
-            // Expression representing the object that the member being accessed belongs to.
-            var typeIdentifier = expr.Expression;
-
-            // The syntax to target when determining access attempt type.
-            var targetAccess = typeIdentifier;
+            var accessedType = members[0].ContainingType;
 
             // Get the attributes
             var friendAttribute = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
@@ -63,9 +122,10 @@ namespace Robust.Analyzers
             // Determine which type of access is happening here.
             var accessAttempt = targetAccess switch
             {
-                InvocationExpressionSyntax => AccessPermissions.Execute,
-                AssignmentExpressionSyntax assign when assign.Left == typeIdentifier => AccessPermissions.Write,
-                _ => AccessPermissions.Read
+                InvocationExpressionSyntax  => AccessPermissions.Execute,
+                AssignmentExpressionSyntax  => AccessPermissions.Write,
+                InitializerExpressionSyntax => AccessPermissions.Write,
+                _                           => AccessPermissions.Read
             };
 
 
@@ -73,7 +133,7 @@ namespace Robust.Analyzers
             var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accessingType);
 
             // Helper function to deduplicate attribute-checking code.
-            bool CheckAttributeFriendship(AttributeData attribute, bool isMember = false)
+            bool CheckAttributeFriendship(AttributeData attribute, ISymbol member, bool isMemberAttribute)
             {
                 // If the attribute isn't the friend attribute, we don't care about it.
                 if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttribute))
@@ -155,24 +215,28 @@ namespace Robust.Analyzers
                         $"{member.Name}",
                         $"{accessedType.Name}",
                         $"{(permissionCheck == AccessPermissions.None ? "having no" : $"only having \"{permissionCheck}\"")}",
-                        $"{(isMember ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
+                        $"{(isMemberAttribute ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
 
                 // Only return ONE error.
                 return true;
             }
 
-            // Check attributes in the member first, since they take priority and can override type restrictions.
-            foreach (var attribute in member.GetAttributes())
+            // Check all members... Usually though, there'll only be one.
+            foreach (var member in members)
             {
-                if(CheckAttributeFriendship(attribute, true))
-                    return;
-            }
+                // Check attributes in the member first, since they take priority and can override type restrictions.
+                foreach (var attribute in member.GetAttributes())
+                {
+                    if(CheckAttributeFriendship(attribute, member, true))
+                        return;
+                }
 
-            // Check attributes in the type containing the member last.
-            foreach (var attribute in accessedType.GetAttributes())
-            {
-                if(CheckAttributeFriendship(attribute))
-                    return;
+                // Check attributes in the type containing the member last.
+                foreach (var attribute in accessedType.GetAttributes())
+                {
+                    if(CheckAttributeFriendship(attribute, member, false))
+                        return;
+                }
             }
         }
 

@@ -211,7 +211,7 @@ namespace Robust.Shared
         /// Add fake extra delay to all outgoing UDP network packets, in seconds.
         /// </summary>
         /// <seealso cref="NetFakeLagRand"/>
-        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
+        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0.15f, CVar.CHEAT);
 
         /// <summary>
         /// Add fake extra random delay to all outgoing UDP network packets, in seconds.

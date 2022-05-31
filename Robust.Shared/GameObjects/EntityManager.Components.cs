@@ -330,6 +330,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public void RemoveComponentDeferred(EntityUid owner, Component component)
+        {
+            RemoveComponentDeferred(component, owner, false);
+        }
+
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool RemoveComponent(EntityUid uid, ushort netId)
         {
@@ -400,6 +406,9 @@ namespace Robust.Shared.GameObjects
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool removeProtected)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
+
+            if (component.Owner != uid)
+                throw new InvalidOperationException("Component is not owned by entity.");
 
             if (component.Deleted) return;
 

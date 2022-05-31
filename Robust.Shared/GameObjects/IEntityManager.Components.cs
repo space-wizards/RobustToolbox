@@ -94,7 +94,14 @@ namespace Robust.Shared.GameObjects
         void RemoveComponent(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes the specified component. Throws if the given component does not belong to the entity.
+        ///     Removes the specified component at a later time. Throws if the given component does not belong to the entity.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="component">Component to remove.</param>
+        void RemoveComponentDeferred(EntityUid uid, Component component);
+
+        /// <summary>
+        ///     Removes the specified component at a later time. Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="component">Component to remove.</param>

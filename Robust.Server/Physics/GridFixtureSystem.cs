@@ -190,7 +190,6 @@ namespace Robust.Server.Physics
             var splitFrontier = new Queue<ChunkSplitNode>(4);
             var grids = new List<HashSet<ChunkSplitNode>>(1);
 
-            // TODO: At this point detect splits.
             while (dirtyNodes.Count > 0)
             {
                 var originEnumerator = dirtyNodes.GetEnumerator();
@@ -234,10 +233,11 @@ namespace Robust.Server.Physics
 
                 var xformQuery = GetEntityQuery<TransformComponent>();
                 var bodyQuery = GetEntityQuery<PhysicsComponent>();
+                var gridQuery = GetEntityQuery<MapGridComponent>();
                 var oldGridXform = xformQuery.GetComponent(mapGrid.GridEntityId);
                 var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
-                var oldGridComp = Comp<MapGridComponent>(mapGrid.GridEntityId);
+                var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
                 var newGrids = new GridId[grids.Count - 1];
 
                 for (var i = 0; i < grids.Count - 1; i++)
@@ -254,7 +254,7 @@ namespace Robust.Server.Physics
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
-                    var gridComp = Comp<MapGridComponent>(splitGrid.GridEntityId);
+                    var gridComp = gridQuery.GetComponent(splitGrid.GridEntityId);
                     var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));
 
                     // Gather all tiles up front and set once to minimise fixture change events

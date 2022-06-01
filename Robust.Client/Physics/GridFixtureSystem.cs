@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
             {
                 if (_enableDebug == value) return;
 
-                Sawmill.Info($"Set grid fixture debug to {value}");
+                Logger.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
                 var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
@@ -37,8 +37,6 @@ namespace Robust.Client.Physics
                 }
             }
         }
-
-        private ISawmill Sawmill = default!;
 
         private bool _enableDebug = false;
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, List<List<Vector2i>>>> _nodes = new();
@@ -59,7 +57,7 @@ namespace Robust.Client.Physics
 
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
-            Sawmill.Info($"Received grid fixture debug data");
+            Logger.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;

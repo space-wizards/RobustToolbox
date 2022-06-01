@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
 
-        private ISawmill _logger = default!;
+        protected readonly ISawmill Logger = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
         private bool _convexHulls = true;
@@ -28,7 +28,6 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Logger.GetSawmill("physics");
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -70,13 +69,13 @@ namespace Robust.Shared.GameObjects
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                Logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                Logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 
@@ -105,13 +104,13 @@ namespace Robust.Shared.GameObjects
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                Logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                Logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 

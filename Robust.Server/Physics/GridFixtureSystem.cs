@@ -187,6 +187,7 @@ namespace Robust.Server.Physics
             if (_isSplitting || !_splitAllowed) return;
 
             _isSplitting = true;
+            _logger.Debug($"Started split check for {ToPrettyString(uid)}");
             var splitFrontier = new Queue<ChunkSplitNode>(4);
             var grids = new List<HashSet<ChunkSplitNode>>(1);
 
@@ -222,6 +223,7 @@ namespace Robust.Server.Physics
             // Split time
             if (grids.Count > 1)
             {
+                _logger.Info($"Splitting {ToPrettyString(uid)} into {grids.Count} grids.");
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -352,6 +354,7 @@ namespace Robust.Server.Physics
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
 
+            _logger.Debug($"Stopped split check for {ToPrettyString(uid)}");
             _isSplitting = false;
             SendNodeDebug(mapGrid.GridEntityId);
         }

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -48,6 +49,8 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
+        [Dependency] private readonly SharedContainerSystem Container = default!;
+
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();
@@ -409,14 +412,16 @@ namespace Robust.Shared.Physics
 
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !Container.IsEntityInContainer(bodyAUid))
             {
                 bodyA.CanCollide = true;
                 bodyA.Awake = true;
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !Container.IsEntityInContainer(bodyBUid))
             {
                 bodyB.CanCollide = true;
                 bodyB.Awake = true;

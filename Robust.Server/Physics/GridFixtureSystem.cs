@@ -44,7 +44,7 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Logger.GetSawmill("gsplit");
+            _logger = Shared.Log.Logger.GetSawmill("gsplit");
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);

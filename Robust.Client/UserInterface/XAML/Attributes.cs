@@ -1,11 +1,14 @@
 ﻿using System;
 
-namespace Robust.Client.UserInterface.XAML
+namespace Avalonia.Metadata
 {
     public sealed class ContentAttribute : Attribute
     {
     }
+}
 
+namespace Robust.Client.UserInterface.XAML
+{
     public sealed class UsableDuringInitializationAttribute : Attribute
     {
         public UsableDuringInitializationAttribute(bool usable)

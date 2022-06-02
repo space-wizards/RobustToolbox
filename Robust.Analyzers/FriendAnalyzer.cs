@@ -12,6 +12,7 @@ namespace Robust.Analyzers
     public class FriendAnalyzer : DiagnosticAnalyzer
     {
         private const string FriendAttributeType = "Robust.Shared.Analyzers.FriendAttribute";
+        private const string PureAttributeType = "System.Diagnostics.Contracts.PureAttribute";
 
         [SuppressMessage("ReSharper", "RS2008")]
         private static readonly DiagnosticDescriptor FriendRule = new (
@@ -78,7 +79,7 @@ namespace Robust.Analyzers
                 return;
 
             // Determine which type of access is happening here... Read, write or execute?
-            var accessAttempt = DetermineAccess(targetAccess, operation);
+            var accessAttempt = DetermineAccess(context, targetAccess, operation);
 
             // Check whether this is a "self" access, including inheritors.
             var selfAccess = InheritsFromOrEquals(accessingType, accessedType);
@@ -193,19 +194,39 @@ namespace Robust.Analyzers
             }
         }
 
-        private static AccessPermissions DetermineAccess(IOperation operation, IOperation original)
+        private static AccessPermissions DetermineAccess(OperationAnalysisContext context, IOperation operation, IOperation original)
         {
-            return operation switch
+            switch (operation)
             {
-                IAssignmentOperation assign => assign.Target.Equals(original)
-                    ? AccessPermissions.Write : AccessPermissions.Read,
+                case IAssignmentOperation assign:
+                {
+                    return assign.Target.Equals(original) ? AccessPermissions.Write : AccessPermissions.Read;
+                }
 
-                IInvocationOperation => AccessPermissions.Execute,
+                case IInvocationOperation invoke:
+                {
+                    var pureAttribute = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
 
-                IMemberReferenceOperation member => DetermineAccess(member.Parent, operation),
+                    foreach (var attribute in invoke.TargetMethod.GetAttributes())
+                    {
+                        // Pure methods are treated as read accesses.
+                        if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, pureAttribute))
+                            return AccessPermissions.Read;
+                    }
 
-                _ => AccessPermissions.Read
-            };
+                    return AccessPermissions.Execute;
+                }
+
+                case IMemberReferenceOperation member:
+                {
+                    return DetermineAccess(context, member.Parent, operation);
+                }
+
+                default:
+                {
+                    return AccessPermissions.Read;
+                }
+            }
         }
 
         private bool InheritsFromOrEquals(INamedTypeSymbol type, INamedTypeSymbol baseType)

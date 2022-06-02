@@ -47,6 +47,7 @@ namespace Robust.Shared.Physics
             body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
+            body.PhysicsMap = null;
         }
         #region Public
 
@@ -67,6 +68,8 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
+            DebugTools.Assert(MetaData(body.Owner).EntityLifeStage < EntityLifeStage.Terminating);
+
             if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);

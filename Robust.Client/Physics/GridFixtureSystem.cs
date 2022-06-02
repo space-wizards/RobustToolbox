@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
             {
                 if (_enableDebug == value) return;
 
-                Logger.Info($"Set grid fixture debug to {value}");
+                Sawmill.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
                 var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
@@ -57,7 +57,7 @@ namespace Robust.Client.Physics
 
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
-            Logger.Info($"Received grid fixture debug data");
+            Sawmill.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;

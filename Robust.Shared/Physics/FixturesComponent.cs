@@ -36,6 +36,7 @@ namespace Robust.Shared.Physics
 
         [DataField("fixtures")]
         [NeverPushInheritance]
+        [Friend(Other = AccessPermissions.ReadExecute)] // FIXME Friends
         internal List<Fixture> SerializedFixtures = new();
 
         void ISerializationHooks.BeforeSerialization()

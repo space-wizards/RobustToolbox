@@ -18,7 +18,7 @@ namespace Robust.Analyzers
         private static readonly DiagnosticDescriptor FriendRule = new (
             Diagnostics.IdFriend,
             "Invalid member access",
-            "Tried to perform {0} access to member '{1}' in type '{2}', despite {3} access. {4}",
+            "Tried to perform {0} access to member '{1}' in type '{2}', despite {3} access. {4}.",
             "Usage",
             DiagnosticSeverity.Error,
             true,
@@ -205,7 +205,7 @@ namespace Robust.Analyzers
 
                 case IInvocationOperation invoke:
                 {
-                    var pureAttribute = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
+                    var pureAttribute = context.Compilation.GetTypeByMetadataName(PureAttributeType);
 
                     foreach (var attribute in invoke.TargetMethod.GetAttributes())
                     {

@@ -753,7 +753,7 @@ public sealed class OtherClass
         obj.Data2.MyMethod();
         obj.Data2.MyField.ToString();
     }
-} ";
+}";
 
         await Verifier(code,
             // AUTO-GENERATED DIAGNOSTICS BELOW //

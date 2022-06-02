@@ -540,7 +540,7 @@ public abstract partial class SharedTransformSystem
         }
 
         // world coords to parent coords
-        var newPos = GetInvWorldMatrix(component.ParentUid, xformQuery).Transform(worldPos);
+        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
         component.LocalPosition = newPos;
     }
 

@@ -31,6 +31,7 @@ namespace Robust.Shared.Physics
         public int FixtureCount => Fixtures.Count;
 
         [ViewVariables]
+        [Friend(Other = AccessPermissions.ReadExecute)] // FIXME Friends
         public readonly Dictionary<string, Fixture> Fixtures = new();
 
         [DataField("fixtures")]

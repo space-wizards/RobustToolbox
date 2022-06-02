@@ -80,8 +80,8 @@ namespace Robust.Analyzers
             // Determine which type of access is happening here... Read, write or execute?
             var accessAttempt = DetermineAccess(targetAccess, operation);
 
-            // Check whether this is a "self" access.
-            var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accessingType);
+            // Check whether this is a "self" access, including inheritors.
+            var selfAccess = InheritsFromOrEquals(accessingType, accessedType);
 
             // Helper function to deduplicate attribute-checking code.
             bool CheckAttributeFriendship(AttributeData attribute, bool isMemberAttribute)

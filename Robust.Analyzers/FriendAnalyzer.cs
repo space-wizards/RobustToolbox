@@ -17,7 +17,7 @@ namespace Robust.Analyzers
         private static readonly DiagnosticDescriptor FriendRule = new (
             Diagnostics.IdFriend,
             "Invalid member access",
-            "Tried to perform {0} access to member \"{1}\" in type \"{2}\", despite {3} access. {4}",
+            "Tried to perform {0} access to member '{1}' in type '{2}', despite {3} access. {4}",
             "Usage",
             DiagnosticSeverity.Error,
             true,
@@ -49,24 +49,10 @@ namespace Robust.Analyzers
 
             switch (operation)
             {
-                case IFieldReferenceOperation fieldRef:
+                case IMemberReferenceOperation memberRef:
                 {
-                    member = fieldRef.Field;
-                    targetAccess = fieldRef.Parent;
-                    break;
-                }
-
-                case IPropertyReferenceOperation propertyRef:
-                {
-                    member = propertyRef.Property;
-                    targetAccess = propertyRef.Parent;
-                    break;
-                }
-
-                case IMethodReferenceOperation methodRef:
-                {
-                    member = methodRef.Method;
-                    targetAccess = methodRef.Parent;
+                    member = memberRef.Member;
+                    targetAccess = memberRef.Parent;
                     break;
                 }
 
@@ -92,17 +78,7 @@ namespace Robust.Analyzers
                 return;
 
             // Determine which type of access is happening here... Read, write or execute?
-            var accessAttempt = targetAccess switch
-            {
-                // If we're the target, that means we're being written into. Otherwise, we're being read.
-                IAssignmentOperation assign => assign.Target.Equals(operation)
-                    ? AccessPermissions.Write : AccessPermissions.Read,
-
-                // Invocation always means execution.
-                IInvocationOperation => AccessPermissions.Execute,
-
-                _ => AccessPermissions.Read
-            };
+            var accessAttempt = DetermineAccess(targetAccess, operation);
 
             // Check whether this is a "self" access.
             var selfAccess = SymbolEqualityComparer.Default.Equals(accessedType, accessingType);
@@ -128,16 +104,22 @@ namespace Robust.Analyzers
                     switch (kv.Key)
                     {
                         case nameof(FriendAttribute.Self):
+                        {
                             self = permissions;
                             break;
+                        }
 
                         case nameof(FriendAttribute.Friend):
+                        {
                             friends = permissions;
                             break;
+                        }
 
                         case nameof(FriendAttribute.Other):
+                        {
                             others = permissions;
                             break;
+                        }
 
                         default:
                             continue;
@@ -186,10 +168,10 @@ namespace Robust.Analyzers
                 // Access denied! Report an error.
                 context.ReportDiagnostic(
                     Diagnostic.Create(FriendRule, operation.Syntax.GetLocation(),
-                        $"a{(accessAttempt == AccessPermissions.Execute ? "n" : "")} \"{accessAttempt}\" {accessingRelation}",
+                        $"a{(accessAttempt == AccessPermissions.Execute ? "n" : "")} '{accessAttempt}' {accessingRelation}",
                         $"{member.Name}",
                         $"{accessedType.Name}",
-                        $"{(permissionCheck == AccessPermissions.None ? "having no" : $"only having \"{permissionCheck}\"")}",
+                        $"{(permissionCheck == AccessPermissions.None ? "having no" : $"only having '{permissionCheck}'")}",
                         $"{(isMemberAttribute ? "Member" : "Type")} Permissions: {self.ToUnixPermissions()}{friends.ToUnixPermissions()}{others.ToUnixPermissions()}"));
 
                 // Only return ONE error.
@@ -209,6 +191,21 @@ namespace Robust.Analyzers
                 if(CheckAttributeFriendship(attribute, false))
                     return;
             }
+        }
+
+        private static AccessPermissions DetermineAccess(IOperation operation, IOperation original)
+        {
+            return operation switch
+            {
+                IAssignmentOperation assign => assign.Target.Equals(original)
+                    ? AccessPermissions.Write : AccessPermissions.Read,
+
+                IInvocationOperation => AccessPermissions.Execute,
+
+                IMemberReferenceOperation member => DetermineAccess(member.Parent, operation),
+
+                _ => AccessPermissions.Read
+            };
         }
 
         private bool InheritsFromOrEquals(INamedTypeSymbol type, INamedTypeSymbol baseType)

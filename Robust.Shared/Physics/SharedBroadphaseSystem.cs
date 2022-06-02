@@ -631,8 +631,6 @@ namespace Robust.Shared.Physics
 
         private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
         {
-            DebugTools.Assert(!proxy.Fixture.Body.Deleted);
-
             if(mapId == MapId.Nullspace)
                 return;
 

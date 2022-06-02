@@ -47,7 +47,7 @@ namespace Robust.Shared.Physics
             body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
-            body.PhysicsMap = null;
+            DebugTools.Assert(body.PhysicsMap == null);
         }
         #region Public
 

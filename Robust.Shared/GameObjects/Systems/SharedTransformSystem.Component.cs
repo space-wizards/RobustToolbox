@@ -503,6 +503,47 @@ public abstract partial class SharedTransformSystem
         return component.WorldPosition;
     }
 
+    public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
+    {
+        var xform = Transform(uid);
+        SetWorldPosition(xform, worldPos);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPosition(TransformComponent component, Vector2 worldPos)
+    {
+        if (!component._parent.IsValid())
+        {
+            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
+            return;
+        }
+
+        // world coords to parent coords
+        var newPos = component.Parent!.InvWorldMatrix.Transform(worldPos);
+        component.LocalPosition = newPos;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPosition(EntityUid uid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    {
+        var component = xformQuery.GetComponent(uid);
+        SetWorldPosition(component, worldPos, xformQuery);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPosition(TransformComponent component, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (!component._parent.IsValid())
+        {
+            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
+            return;
+        }
+
+        // world coords to parent coords
+        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
+        component.LocalPosition = newPos;
+    }
+
     #endregion
 
     #region World Rotation
@@ -533,6 +574,34 @@ public abstract partial class SharedTransformSystem
     public Angle GetWorldRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
         return component.WorldRotation;
+    }
+
+    public void SetWorldRotation(EntityUid uid, Angle angle)
+    {
+        var component = Transform(uid);
+        SetWorldRotation(component, angle);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldRotation(TransformComponent component, Angle angle)
+    {
+        var current = GetWorldRotation(component);
+        var diff = angle - current;
+        component.LocalRotation += diff;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldRotation(EntityUid uid, Angle angle, EntityQuery<TransformComponent> xformQuery)
+    {
+        SetWorldRotation(xformQuery.GetComponent(uid), angle, xformQuery);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldRotation(TransformComponent component, Angle angle, EntityQuery<TransformComponent> xformQuery)
+    {
+        var current = GetWorldRotation(component, xformQuery);
+        var diff = angle - current;
+        component.LocalRotation += diff;
     }
 
     #endregion

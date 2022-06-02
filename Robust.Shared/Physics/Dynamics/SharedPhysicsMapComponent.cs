@@ -132,11 +132,24 @@ namespace Robust.Shared.Physics.Dynamics
                 return;
             }
 
-            DebugTools.Assert(Bodies.Contains(body));
-            if (!Bodies.Contains(body))
+            if (Bodies.Add(body))
             {
-                Logger.ErrorS("physics", $"Tried to add {_entityManager.ToPrettyString(body.Owner)} as an awake body to map when it's not contained on the map!");
-                return;
+                var oldMap = body.PhysicsMap?.Owner;
+
+                if (oldMap != null)
+                {
+                    if (_entityManager.TryGetComponent<SharedPhysicsMapComponent>(oldMap.Value, out var oldPhysicsMap))
+                        oldPhysicsMap.RemoveBody(body);
+                }
+                else
+                {
+                    oldMap ??= EntityUid.Invalid;
+                }
+
+                Logger.ErrorS("physics",
+                    $"Tried to add {_entityManager.ToPrettyString(body.Owner)} as an awake body to map when it's not contained on the map! Its old map was {_entityManager.ToPrettyString(oldMap.Value)}");
+                AddBody(body);
+                DebugTools.Assert(false);
             }
 
             AwakeBodies.Add(body);

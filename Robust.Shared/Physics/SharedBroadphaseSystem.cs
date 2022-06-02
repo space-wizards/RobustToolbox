@@ -413,27 +413,6 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null) return;
 
-            // Juussttt in case anything slips through
-            if (!broadphase.Owner.IsValid() ||
-                !TryComp(broadphase.Owner, out MetaDataComponent? meta) ||
-                meta.EntityLifeStage >= EntityLifeStage.Terminating)
-            {
-                // Don't log because this may happen due to recursive deletions.
-                body.Broadphase = null;
-
-                foreach (var (_, fixture) in manager.Fixtures)
-                {
-                    foreach (var proxy in fixture.Proxies)
-                    {
-                        proxy.ProxyId = DynamicTree.Proxy.Free;
-                    }
-
-                    fixture.ProxyCount = 0;
-                }
-
-                return;
-            }
-
             var mapId = Transform(broadphase.Owner).MapID;
 
             foreach (var (_, fixture) in manager.Fixtures)

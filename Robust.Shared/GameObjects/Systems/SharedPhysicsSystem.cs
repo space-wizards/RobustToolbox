@@ -143,6 +143,10 @@ namespace Robust.Shared.GameObjects
             SharedPhysicsMapComponent? oldMap = null;
             SharedPhysicsMapComponent? map = null;
 
+            // Set these to false so they don't accidentally get added to the old map.
+            var canCollide = body.CanCollide;
+            body.CanCollide = false;
+
             if (oldMapId != MapId.Nullspace)
             {
                 var oldMapEnt = MapManager.GetMapEntityId(oldMapId);
@@ -159,6 +163,8 @@ namespace Robust.Shared.GameObjects
                 map = Comp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
                 map.AddBody(body);
             }
+
+            body.CanCollide = canCollide | body._canCollide;
 
             if (xform.ChildCount == 0 ||
                 (oldMap == null && map == null) ||

@@ -119,5 +119,26 @@ namespace Robust.Shared.GameObjects
                 Ordering = ordering;
             }
         }
+
+        /// <summary>
+        /// Ensure all ordered events are sorted out and verified.
+        /// </summary>
+        /// <remarks>
+        /// Internal sorting for ordered events is normally deferred until raised
+        /// (since broadcast event subscriptions can be edited at any time).
+        ///
+        /// Calling this gets all the sorting done ahead of time,
+        /// and makes sure that there are no problems with cycles and such.
+        /// </remarks>
+        public void CalcOrdering()
+        {
+            foreach (var (type, sub) in _eventSubscriptions)
+            {
+                if (sub.IsOrdered && !sub.OrderingUpToDate)
+                {
+                    UpdateOrderSeq(type, sub);
+                }
+            }
+        }
     }
 }

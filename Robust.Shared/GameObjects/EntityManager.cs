@@ -94,6 +94,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
+            _eventBus.CalcOrdering();
         }
 
         public virtual void Shutdown()

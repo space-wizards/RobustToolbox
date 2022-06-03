@@ -1,98 +1,123 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
     internal partial class EntityEventBus
     {
-        // TODO: Topological sort is currently done every time an event is emitted.
-        // This should be fine for low-volume stuff like interactions, but definitely not for anything high volume.
-        // Not sure if we could pre-cache the topological sort, here.
-
-        // Ordered event raising is slow so if this event has any ordering dependencies we use a slower path.
-        private readonly HashSet<Type> _orderedEvents = new();
-
-        private void ProcessSingleEventOrdered(EventSource source, ref Unit eventArgs, Type eventType, bool byRef)
-        {
-            var found = new List<(RefEventHandler, OrderingData?)>();
-
-            CollectBroadcastOrdered(source, eventType, found, byRef);
-
-            DispatchOrderedEvents(ref eventArgs, found);
-        }
-
-        private void CollectBroadcastOrdered(
+        private static void CollectBroadcastOrdered(
             EventSource source,
-            Type eventType,
-            List<(RefEventHandler, OrderingData?)> found,
+            EventSubscriptions sub,
+            ref ValueList<OrderedEventDispatch> found,
             bool byRef)
         {
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
-                return;
-
-            foreach (var handler in subs)
+            foreach (var handler in sub.Registrations)
             {
                 if (handler.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 
                 if ((handler.Mask & source) != 0)
-                    found.Add((handler.Handler, handler.Ordering));
+                    found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
             }
         }
 
-        private void RaiseLocalOrdered(EntityUid uid,
+        private void RaiseLocalOrdered(
+            EntityUid uid,
             Type eventType,
+            EventSubscriptions subs,
             ref Unit unitRef,
-            bool broadcast, bool byRef)
+            bool broadcast,
+            bool byRef)
         {
-            var found = new List<(RefEventHandler, OrderingData?)>();
+            if (!subs.OrderingUpToDate)
+                UpdateOrderSeq(eventType, subs);
+
+            var found = new ValueList<OrderedEventDispatch>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, eventType, found, byRef);
+                CollectBroadcastOrdered(EventSource.Local, subs, ref found, byRef);
 
-            _eventTables.CollectOrdered(uid, eventType, found, byRef);
+            EntCollectOrdered(uid, eventType, ref found, byRef);
 
-            DispatchOrderedEvents(ref unitRef, found);
-
-            if (broadcast)
-                ProcessAwaitingMessages(EventSource.Local, ref unitRef, eventType);
+            DispatchOrderedEvents(ref unitRef, ref found);
         }
 
-        private static void DispatchOrderedEvents(ref Unit eventArgs, List<(RefEventHandler, OrderingData?)> found)
+        private static void DispatchOrderedEvents(ref Unit eventArgs, ref ValueList<OrderedEventDispatch> found)
         {
-            var nodes = TopologicalSort.FromBeforeAfter(
-                found.Where(f => f.Item2 != null),
-                n => n.Item2!.OrderType,
-                n => n.Item1!,
-                n => n.Item2!.Before ?? Array.Empty<Type>(),
-                n => n.Item2!.After ?? Array.Empty<Type>(),
-                allowMissing: true);
+            found.Sort(OrderedEventDispatchComparer.Instance);
 
-            foreach (var handler in TopologicalSort.Sort(nodes))
+            foreach (var (handler, orderData) in found)
             {
                 handler(ref eventArgs);
             }
-
-            // Go over all handlers that don't have ordering so weren't included in the sort.
-            foreach (var (handler, orderData) in found)
-            {
-                if (orderData == null)
-                    handler(ref eventArgs);
-            }
         }
 
-        private void HandleOrderRegistration(Type eventType, OrderingData? data)
+        private void UpdateOrderSeq(Type eventType, EventSubscriptions sub)
         {
-            if (data == null)
-                return;
+            IEnumerable<OrderedRegistration> regs = sub.Registrations;
+            if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
+            {
+                regs = regs.Concat(comps
+                        .Select(c => _entSubscriptions[c.Value])
+                        .Where(c => c != null)
+                        .Select(c => c![eventType]));
+            }
 
-            if (data.Before != null || data.After != null)
-                _orderedEvents.Add(eventType);
+            var nodes = TopologicalSort.FromBeforeAfter(
+                regs.Where(f => f.Ordering != null),
+                n => n.Ordering!.OrderType,
+                n => n,
+                n => n.Ordering!.Before ?? Array.Empty<Type>(),
+                n => n.Ordering!.After ?? Array.Empty<Type>(),
+                allowMissing: true);
+
+            var i = 1;
+            foreach (var node in TopologicalSort.Sort(nodes))
+            {
+                node.Order = i++;
+            }
+
+            sub.OrderingUpToDate = true;
+
+            sub.Registrations.Sort(RegistrationOrderComparer.Instance);
         }
 
         private sealed record OrderingData(Type OrderType, Type[]? Before, Type[]? After);
 
+        private sealed class RegistrationOrderComparer : IComparer<Registration>
+        {
+            public static readonly RegistrationOrderComparer Instance = new();
+
+            public int Compare(Registration? x, Registration? y)
+            {
+                return x!.Order.CompareTo(y!.Order);
+            }
+        }
+
+        private record struct OrderedEventDispatch(RefEventHandler Handler, int Order);
+
+        private sealed class OrderedEventDispatchComparer : IComparer<OrderedEventDispatch>
+        {
+            public static readonly OrderedEventDispatchComparer Instance = new();
+
+            public int Compare(OrderedEventDispatch x, OrderedEventDispatch y)
+            {
+                return x.Order.CompareTo(y.Order);
+            }
+        }
+
+        private abstract class OrderedRegistration
+        {
+            public int Order;
+            public readonly OrderingData? Ordering;
+
+            protected OrderedRegistration(OrderingData? ordering)
+            {
+                Ordering = ordering;
+            }
+        }
     }
 }

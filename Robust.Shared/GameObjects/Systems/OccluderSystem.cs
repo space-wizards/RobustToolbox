@@ -120,7 +120,7 @@ namespace Robust.Shared.GameObjects
                 switch (occluderUpdate)
                 {
                     case OccluderAddEvent:
-                        if (component.Tree != null) break;
+                        if (component.Tree != null || component.Deleted) break;
                         tree = GetOccluderTree(component);
                         if (tree == null) break;
                         component.Tree = tree;
@@ -131,6 +131,7 @@ namespace Robust.Shared.GameObjects
                         });
                         break;
                     case OccluderUpdateEvent:
+                        if (component.Deleted) break;
                         var oldTree = component.Tree;
                         tree = GetOccluderTree(component);
                         var entry = new ComponentTreeEntry<OccluderComponent>()

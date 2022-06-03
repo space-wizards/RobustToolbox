@@ -99,12 +99,6 @@ namespace Robust.Shared.GameObjects
             _entMan = entMan;
             _comFac = entMan.ComponentFactory;
 
-            _entMan.EntityAdded += ETOnEntityAdded;
-            _entMan.EntityDeleted += ETOnEntityDeleted;
-
-            _entMan.ComponentAdded += ETOnComponentAdded;
-            _entMan.ComponentRemoved += ETOnComponentRemoved;
-
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
             _comFac.ComponentAdded += ETComFacOnComponentAdded;
             _comFac.ComponentReferenceAdded += ETComFacOnComponentReferenceAdded;
@@ -289,24 +283,24 @@ namespace Robust.Shared.GameObjects
             CompIdx.RefArray(ref _entSubscriptions, obj.Idx) ??= new Dictionary<Type, DirectedRegistration>();
         }
 
-        private void ETOnEntityAdded(EntityUid e)
+        public void OnEntityAdded(EntityUid e)
         {
             EntAddEntity(e);
         }
 
-        private void ETOnEntityDeleted(EntityUid e)
+        public void OnEntityDeleted(EntityUid e)
         {
             EntRemoveEntity(e);
         }
 
-        private void ETOnComponentAdded(AddedComponentEventArgs e)
+        public void OnComponentAdded(AddedComponentEventArgs e)
         {
             _subscriptionLock = true;
 
             EntAddComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
         }
 
-        private void ETOnComponentRemoved(RemovedComponentEventArgs e)
+        public void OnComponentRemoved(RemovedComponentEventArgs e)
         {
             EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
         }
@@ -342,6 +336,8 @@ namespace Robust.Shared.GameObjects
 
             var invSubs = _entSubscriptionsInv.GetOrNew(eventType);
             invSubs.Add(compType);
+
+            RegisterCommon(eventType, registration.Ordering, out _);
         }
 
         private void EntSubscribe<TEvent>(
@@ -540,12 +536,6 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _entMan.EntityAdded -= ETOnEntityAdded;
-            _entMan.EntityDeleted -= ETOnEntityDeleted;
-
-            _entMan.ComponentAdded -= ETOnComponentAdded;
-            _entMan.ComponentRemoved -= ETOnComponentRemoved;
-
             _comFac.ComponentAdded -= ETComFacOnComponentAdded;
             _comFac.ComponentReferenceAdded -= ETComFacOnComponentReferenceAdded;
 

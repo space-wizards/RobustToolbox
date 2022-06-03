@@ -61,23 +61,42 @@ namespace Robust.Shared.GameObjects
             if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
             {
                 regs = regs.Concat(comps
-                        .Select(c => _entSubscriptions[c.Value])
-                        .Where(c => c != null)
-                        .Select(c => c![eventType]));
+                    .Select(c => _entSubscriptions[c.Value])
+                    .Where(c => c != null)
+                    .Select(c => c![eventType]));
+            }
+
+            var groups = regs.Where(r => r.Ordering != null).GroupBy(b => b.Ordering!.OrderType).ToArray();
+
+            var orderGroups = new List<OrderedRegistration[]>();
+            foreach (var group in groups)
+            {
+                var firstOrder = group.First().Ordering;
+                if (!group.All(e => e.Ordering!.Equals(firstOrder)))
+                {
+                    throw new InvalidOperationException(
+                        $"{group.Key} uses different ordering constraints for different subscriptions to the same event {eventType}. " +
+                        "All subscriptions to the same event from the same registrar must use the same ordering.");
+                }
+
+                orderGroups.Add(group.ToArray());
             }
 
             var nodes = TopologicalSort.FromBeforeAfter(
-                regs.Where(f => f.Ordering != null),
-                n => n.Ordering!.OrderType,
+                orderGroups,
+                n => n[0].Ordering!.OrderType,
                 n => n,
-                n => n.Ordering!.Before ?? Array.Empty<Type>(),
-                n => n.Ordering!.After ?? Array.Empty<Type>(),
+                n => n[0].Ordering!.Before,
+                n => n[0].Ordering!.After,
                 allowMissing: true);
 
             var i = 1;
-            foreach (var node in TopologicalSort.Sort(nodes))
+            foreach (var group in TopologicalSort.Sort(nodes))
             {
-                node.Order = i++;
+                foreach (var registration in group)
+                {
+                    registration.Order = i++;
+                }
             }
 
             sub.OrderingUpToDate = true;
@@ -85,7 +104,27 @@ namespace Robust.Shared.GameObjects
             sub.Registrations.Sort(RegistrationOrderComparer.Instance);
         }
 
-        private sealed record OrderingData(Type OrderType, Type[]? Before, Type[]? After);
+        private sealed record OrderingData(Type OrderType, Type[] Before, Type[] After)
+        {
+            public bool Equals(OrderingData? other)
+            {
+                if (other == null)
+                    return false;
+
+                return other.OrderType == OrderType
+                       && Before.AsSpan().SequenceEqual(other.Before)
+                       && After.AsSpan().SequenceEqual(other.After);
+            }
+
+            public override int GetHashCode()
+            {
+                var hc = new HashCode();
+                hc.Add(OrderType);
+                hc.AddArray(Before);
+                hc.AddArray(After);
+                return hc.ToHashCode();
+            }
+        }
 
         private sealed class RegistrationOrderComparer : IComparer<Registration>
         {

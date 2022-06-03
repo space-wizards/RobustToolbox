@@ -49,7 +49,7 @@ namespace Robust.Shared.GameObjects
         {
             found.Sort(OrderedEventDispatchComparer.Instance);
 
-            foreach (var (handler, orderData) in found)
+            foreach (var (handler, _) in found)
             {
                 handler(ref eventArgs);
             }

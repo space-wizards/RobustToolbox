@@ -82,9 +82,6 @@ namespace Robust.Shared.GameObjects
 
     internal partial class EntityEventBus : IDisposable
     {
-        private const string ValueDispatchError = "Tried to dispatch a value event to a by-reference subscription.";
-        private const string RefDispatchError = "Tried to dispatch a ref event to a by-value subscription.";
-
         private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
 
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)

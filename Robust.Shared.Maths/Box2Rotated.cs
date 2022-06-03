@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -28,6 +28,9 @@ namespace Robust.Shared.Maths
         public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
         public readonly Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
+        public readonly Vector2 Centre => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
+
+        public Matrix3 Transform => Matrix3.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight))

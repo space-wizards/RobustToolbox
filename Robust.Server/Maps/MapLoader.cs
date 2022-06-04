@@ -689,6 +689,10 @@ namespace Robust.Server.Maps
             private void AllocEntities()
             {
                 var entities = RootNode.Get<SequenceDataNode>("entities");
+                Entities.EnsureCapacity(entities.Count);
+                UidEntityMap.EnsureCapacity(entities.Count);
+                _entitiesToDeserialize.EnsureCapacity(entities.Count);
+
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
                     string? type = null;

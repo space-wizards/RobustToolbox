@@ -290,7 +290,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
+            if (!TryGetComponent(uid, out MetaDataComponent? metadata) || metadata.EntityDeleted)
                 return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);

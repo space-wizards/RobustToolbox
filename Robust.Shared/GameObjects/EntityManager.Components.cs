@@ -642,7 +642,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             if (dict.TryGetValue(uid, out var comp))
@@ -654,12 +654,12 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            component = default!;
+            component = default;
             return false;
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
         {
             if (!uid.HasValue)
             {
@@ -676,7 +676,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            component = default!;
+            component = default;
             return false;
         }
 

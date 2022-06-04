@@ -57,7 +57,7 @@ namespace Robust.Server.GameObjects
             }
 
             // Check if there was a player attached to the entity already...
-            if (EntityManager.TryGetComponent(uid, out ActorComponent actor))
+            if (EntityManager.TryGetComponent(uid, out ActorComponent? actor))
             {
                 // If we're not forcing the attach, this fails.
                 if (!force)

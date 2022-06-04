@@ -261,11 +261,13 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Connect to body A
             DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
+            DebugTools.Assert(bodyA.PhysicsMap != null);
             fixtureA.Contacts.Add(fixtureB, contact);
             contact.BodyANode = bodyA.Contacts.AddLast(contact);
 
             // Connect to body B
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
+            DebugTools.Assert(bodyB.PhysicsMap != null);
             fixtureB.Contacts.Add(fixtureA, contact);
             contact.BodyBNode = bodyB.Contacts.AddLast(contact);
         }

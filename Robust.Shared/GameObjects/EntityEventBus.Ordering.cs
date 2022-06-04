@@ -10,11 +10,11 @@ namespace Robust.Shared.GameObjects
     {
         private static void CollectBroadcastOrdered(
             EventSource source,
-            EventSubscriptions sub,
+            EventData sub,
             ref ValueList<OrderedEventDispatch> found,
             bool byRef)
         {
-            foreach (var handler in sub.Registrations)
+            foreach (var handler in sub.BroadcastRegistrations)
             {
                 if (handler.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects
         private void RaiseLocalOrdered(
             EntityUid uid,
             Type eventType,
-            EventSubscriptions subs,
+            EventData subs,
             ref Unit unitRef,
             bool broadcast,
             bool byRef)
@@ -55,9 +55,15 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void UpdateOrderSeq(Type eventType, EventSubscriptions sub)
+        /// <summary>
+        /// Calculate sequence order for all event subscriptions, broadcast and directed.
+        /// </summary>
+        private void UpdateOrderSeq(Type eventType, EventData sub)
         {
-            IEnumerable<OrderedRegistration> regs = sub.Registrations;
+            DebugTools.Assert(sub.IsOrdered);
+
+            // Collect all subscriptions, broadcast and ordered.
+            IEnumerable<OrderedRegistration> regs = sub.BroadcastRegistrations;
             if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
             {
                 regs = regs.Concat(comps
@@ -66,9 +72,18 @@ namespace Robust.Shared.GameObjects
                     .Select(c => c![eventType]));
             }
 
+            // A hard problem in EventBus' design is that ordering is keyed on a single Type instance
+            // (probably just the type of the EntitySystem).
+            // This is problematic if a system listens to the same directed event multiple times for the same component,
+            // as there are now two distinct subscriptions with the same key.
+            // To solve this, I decided that *this is allowed*, but all ordering on the same key must be the same.
+            // So you can't have different Before/After on two subscriptions to an event on the same system.
+            //
+            // Group by ordering types, also filter out un-ordered ones.
+
             var groups = regs.Where(r => r.Ordering != null).GroupBy(b => b.Ordering!.OrderType).ToArray();
 
-            var orderGroups = new List<OrderedRegistration[]>();
+            // Verify that all groups of order types have the same ordering info for Before/After.
             foreach (var group in groups)
             {
                 var firstOrder = group.First().Ordering;
@@ -78,21 +93,23 @@ namespace Robust.Shared.GameObjects
                         $"{group.Key} uses different ordering constraints for different subscriptions to the same event {eventType}. " +
                         "All subscriptions to the same event from the same registrar must use the same ordering.");
                 }
-
-                orderGroups.Add(group.ToArray());
             }
 
+            // Set up topological sort.
             var nodes = TopologicalSort.FromBeforeAfter(
-                orderGroups,
+                groups.Select(g => g.ToArray()),
                 n => n[0].Ordering!.OrderType,
                 n => n,
                 n => n[0].Ordering!.Before,
                 n => n[0].Ordering!.After,
                 allowMissing: true);
 
+            // Start at 1, if only so events with no Ordering data at all have a distinct position.
+            // Doesn't really matter.
             var i = 1;
             foreach (var group in TopologicalSort.Sort(nodes))
             {
+                // Assign indices to all registrations in order of the topological sort.
                 foreach (var registration in group)
                 {
                     registration.Order = i++;
@@ -101,7 +118,13 @@ namespace Robust.Shared.GameObjects
 
             sub.OrderingUpToDate = true;
 
-            sub.Registrations.Sort(RegistrationOrderComparer.Instance);
+            // Sort the broadcast registrations ahead of time.
+            // This means ordered broadcast events have no overhead from unordered ones.
+            sub.BroadcastRegistrations.Sort(RegistrationOrderComparer.Instance);
+
+            // We still need Order indices on the OrderedRegistrations for directed ordered events.
+            // Since we sort those at submission time.
+            // Still, it's a single .Sort() now for those instead of the whole topological short shebang.
         }
 
         private sealed record OrderingData(Type OrderType, Type[] Before, Type[] After)
@@ -126,11 +149,11 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private sealed class RegistrationOrderComparer : IComparer<Registration>
+        private sealed class RegistrationOrderComparer : IComparer<OrderedRegistration>
         {
             public static readonly RegistrationOrderComparer Instance = new();
 
-            public int Compare(Registration? x, Registration? y)
+            public int Compare(OrderedRegistration? x, OrderedRegistration? y)
             {
                 return x!.Order.CompareTo(y!.Order);
             }
@@ -148,6 +171,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// Base type for directed and broadcast subscriptions. Contains ordering data.
+        /// </summary>
         private abstract class OrderedRegistration
         {
             public int Order;
@@ -171,7 +197,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         public void CalcOrdering()
         {
-            foreach (var (type, sub) in _eventSubscriptions)
+            foreach (var (type, sub) in _eventData)
             {
                 if (sub.IsOrdered && !sub.OrderingUpToDate)
                 {

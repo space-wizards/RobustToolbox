@@ -215,12 +215,12 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException(
                     $"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType} eventIsByRef={eventReference} subscriptionIsByRef={byRef}");
 
-            var subscriptionTuple = new Registration(source, handler, equalityToken, order, byRef);
+            var subscriptionTuple = new BroadcastRegistration(source, handler, equalityToken, order, byRef);
 
             RegisterCommon(eventType, order, out var subscriptions);
 
-            if (!subscriptions.Registrations.Contains(subscriptionTuple))
-                subscriptions.Registrations.Add(subscriptionTuple);
+            if (!subscriptions.BroadcastRegistrations.Contains(subscriptionTuple))
+                subscriptions.BroadcastRegistrations.Add(subscriptionTuple);
 
             var inverseSubscription = _inverseEventSubscriptions.GetOrNew(subscriber);
             if (!inverseSubscription.ContainsKey(eventType))
@@ -283,11 +283,11 @@ namespace Robust.Shared.GameObjects
             _eventQueue.Enqueue((source, toRaise));
         }
 
-        private void UnsubscribeEvent(Type eventType, Registration tuple, IEntityEventSubscriber subscriber)
+        private void UnsubscribeEvent(Type eventType, BroadcastRegistration tuple, IEntityEventSubscriber subscriber)
         {
-            if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions)
-                && subscriptions.Registrations.Contains(tuple))
-                subscriptions.Registrations.Remove(tuple);
+            if (_eventData.TryGetValue(eventType, out var subscriptions)
+                && subscriptions.BroadcastRegistrations.Contains(tuple))
+                subscriptions.BroadcastRegistrations.Remove(tuple);
 
             if (_inverseEventSubscriptions.TryGetValue(subscriber, out var inverse) && inverse.ContainsKey(eventType))
                 inverse.Remove(eventType);
@@ -295,7 +295,7 @@ namespace Robust.Shared.GameObjects
 
         private void ProcessSingleEvent(EventSource source, ref Unit unitRef, Type eventType, bool byRef)
         {
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
+            if (!_eventData.TryGetValue(eventType, out var subs))
                 return;
 
             if (subs.IsOrdered && !subs.OrderingUpToDate)
@@ -312,10 +312,10 @@ namespace Robust.Shared.GameObjects
         private static void ProcessSingleEventCore(
             EventSource source,
             ref Unit unitRef,
-            EventSubscriptions subs,
+            EventData subs,
             bool byRef)
         {
-            foreach (var handler in subs.Registrations)
+            foreach (var handler in subs.BroadcastRegistrations)
             {
                 if (handler.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
@@ -323,6 +323,39 @@ namespace Robust.Shared.GameObjects
                 if ((handler.Mask & source) != 0)
                     handler.Handler(ref unitRef);
             }
+        }
+
+        private sealed class BroadcastRegistration : OrderedRegistration, IEquatable<BroadcastRegistration>
+        {
+            public readonly object EqualityToken;
+            public readonly RefEventHandler Handler;
+            public readonly EventSource Mask;
+            public readonly bool ReferenceEvent;
+
+            public BroadcastRegistration(
+                EventSource mask,
+                RefEventHandler handler,
+                object equalityToken,
+                OrderingData? ordering,
+                bool referenceEvent) : base(ordering)
+            {
+                Mask = mask;
+                Handler = handler;
+                EqualityToken = equalityToken;
+                ReferenceEvent = referenceEvent;
+            }
+
+            public bool Equals(BroadcastRegistration? other)
+            {
+                return other != null && Mask == other.Mask && Equals(EqualityToken, other.EqualityToken);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is BroadcastRegistration other && Equals(other);
+            }
+
+            public override int GetHashCode() => HashCode.Combine(Mask, EqualityToken);
         }
     }
 }

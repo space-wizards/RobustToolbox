@@ -97,8 +97,8 @@ namespace Robust.Shared.GameObjects
             _comFac = entMan.ComponentFactory;
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
-            _comFac.ComponentAdded += ETComFacOnComponentAdded;
-            _comFac.ComponentReferenceAdded += ETComFacOnComponentReferenceAdded;
+            _comFac.ComponentAdded += ComFacOnComponentAdded;
+            _comFac.ComponentReferenceAdded += ComFacOnComponentReferenceAdded;
 
             InitEntSubscriptionsArray();
         }
@@ -170,7 +170,7 @@ namespace Robust.Shared.GameObjects
 
         private void RaiseLocalEventCore(EntityUid uid, ref Unit unitRef, Type type, bool broadcast, bool byRef)
         {
-            if (!_eventSubscriptions.TryGetValue(type, out var subs))
+            if (!_eventData.TryGetValue(type, out var subs))
                 return;
 
             if (subs.IsOrdered)
@@ -270,12 +270,12 @@ namespace Robust.Shared.GameObjects
             EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
         }
 
-        private void ETComFacOnComponentReferenceAdded(ComponentRegistration arg1, CompIdx arg2)
+        private void ComFacOnComponentReferenceAdded(ComponentRegistration arg1, CompIdx arg2)
         {
             CompIdx.RefArray(ref _entSubscriptions, arg2) ??= new Dictionary<Type, DirectedRegistration>();
         }
 
-        private void ETComFacOnComponentAdded(ComponentRegistration obj)
+        private void ComFacOnComponentAdded(ComponentRegistration obj)
         {
             CompIdx.RefArray(ref _entSubscriptions, obj.Idx) ??= new Dictionary<Type, DirectedRegistration>();
         }
@@ -533,8 +533,8 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _comFac.ComponentAdded -= ETComFacOnComponentAdded;
-            _comFac.ComponentReferenceAdded -= ETComFacOnComponentReferenceAdded;
+            _comFac.ComponentAdded -= ComFacOnComponentAdded;
+            _comFac.ComponentReferenceAdded -= ComFacOnComponentReferenceAdded;
 
             // punishment for use-after-free
             _entMan = null!;

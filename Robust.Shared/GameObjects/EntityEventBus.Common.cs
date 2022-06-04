@@ -10,15 +10,18 @@ namespace Robust.Shared.GameObjects;
 
 internal sealed partial class EntityEventBus : IEventBus
 {
-    private readonly Dictionary<Type, EventSubscriptions> _eventSubscriptions = new();
-
-    private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Registration>> _inverseEventSubscriptions
-        = new();
-
-    private readonly Queue<(EventSource source, object args)> _eventQueue = new();
-
     private IEntityManager _entMan;
     private IComponentFactory _comFac;
+
+    // Data on individual events. Used to check ordering info and fire broadcast events.
+    private readonly Dictionary<Type, EventData> _eventData = new();
+
+    // Inverse subscriptions to be able to unsubscribe an IEntityEventSubscriber.
+    private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, BroadcastRegistration>> _inverseEventSubscriptions
+        = new();
+
+    // For queued message broadcast.
+    private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
     // eUid -> EventType -> { CompType1, ... CompTypeN }
     private Dictionary<EntityUid, Dictionary<Type, HashSet<CompIdx>>> _entEventTables = new();
@@ -50,9 +53,9 @@ internal sealed partial class EntityEventBus : IEventBus
             : ref Unsafe.As<object, Unit>(ref obj);
     }
 
-    private void RegisterCommon(Type eventType, OrderingData? data, out EventSubscriptions subs)
+    private void RegisterCommon(Type eventType, OrderingData? data, out EventData subs)
     {
-        subs = _eventSubscriptions.GetOrNew(eventType);
+        subs = _eventData.GetOrNew(eventType);
 
         if (data == null)
             return;
@@ -64,50 +67,14 @@ internal sealed partial class EntityEventBus : IEventBus
         }
     }
 
-    private sealed class Registration : OrderedRegistration, IEquatable<Registration>
-    {
-        public readonly object EqualityToken;
-        public readonly RefEventHandler Handler;
-        public readonly EventSource Mask;
-        public readonly bool ReferenceEvent;
-
-        public Registration(
-            EventSource mask,
-            RefEventHandler handler,
-            object equalityToken,
-            OrderingData? ordering,
-            bool referenceEvent) : base(ordering)
-        {
-            Mask = mask;
-            Handler = handler;
-            EqualityToken = equalityToken;
-            ReferenceEvent = referenceEvent;
-        }
-
-        public bool Equals(Registration? other)
-        {
-            return other != null && Mask == other.Mask && Equals(EqualityToken, other.EqualityToken);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is Registration other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((int)Mask * 397) ^ EqualityToken.GetHashCode();
-            }
-        }
-    }
-
-    private sealed class EventSubscriptions
+    /// <summary>
+    /// Information for a single event type handled by EventBus. Not specific to broadcast registrations.
+    /// </summary>
+    private sealed class EventData
     {
         public bool IsOrdered;
         public bool OrderingUpToDate;
-        public ValueList<Registration> Registrations;
+        public ValueList<BroadcastRegistration> BroadcastRegistrations;
     }
 
     // This is not a real type. Whenever you see a "ref Unit" it means it's a ref to *some* kind of other type.

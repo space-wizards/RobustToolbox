@@ -27,6 +27,8 @@ SOFTWARE.
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Robust.Shared.Maths
 {
@@ -939,45 +941,73 @@ namespace Robust.Shared.Maths
             return Transform(this, vector);
         }
 
-        // TODO: These 2 are big-ass SIMD candidates. Trying to make it use the existing Box2Rotated SIMD seemed jank
-        // These are also gonna be called a decent amount.
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Box2 TransformBox(in Box2Rotated box)
+        public readonly Box2 TransformBox(in Box2Rotated box)
         {
-            Span<Vector2> vertices = stackalloc Vector2[4];
-            vertices[0] = Transform(box.BottomLeft);
-            vertices[1] = Transform(box.BottomRight);
-            vertices[2] = Transform(box.TopRight);
-            vertices[3] = Transform(box.TopLeft);
+            return (box.Transform * this).TransformBox(box.Box);
+        }
 
-            var botLeft = vertices[0];
-            var topRight = vertices[0];
-
-            for (var i = 0; i < 4; i++)
+        public readonly Box2 TransformBox(in Box2 box)
+        {
+            if (Sse.IsSupported && NumericsHelpers.Enabled)
             {
-                var vertex = vertices[i];
-
-                botLeft = Vector2.ComponentMin(vertex, botLeft);
-                topRight = Vector2.ComponentMax(vertex, topRight);
+                return TransformBoxSse(box);
             }
 
-            return new Box2(botLeft, topRight);
+            return TransformBoxSlow(box);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Box2 TransformBox(in Box2 box)
+        internal readonly unsafe Box2 TransformBoxSse(in Box2 box)
+        {
+            // This code was largely pilfered from Box2Rotated.CalcBoundingBox(), but instead of transforming the
+            // corners using the rotated box transform, this applies a general matrix transform before obtaining the
+            // bounding box.
+
+            Vector128<float> boxVec;
+            fixed (float* lPtr = &box.Left)
+            {
+                boxVec = Sse.LoadVector128(lPtr);
+            }
+
+            // Convert box into list of X and Y values for each of the 4 corners
+            var allX = Sse.Shuffle(boxVec, boxVec, 0b10_10_00_00);
+            var allY = Sse.Shuffle(boxVec, boxVec, 0b01_11_11_01);
+
+            // Transform coordinates
+            var modX = Sse.Multiply(allX, Vector128.Create(R0C0));
+            var modY = Sse.Multiply(allX, Vector128.Create(R1C0));
+            modX = Sse.Add(modX, Sse.Multiply(allY, Vector128.Create(R0C1)));
+            modY = Sse.Add(modY, Sse.Multiply(allY, Vector128.Create(R1C1)));
+            modX = Sse.Add(modX, Vector128.Create(R0C2));
+            modY = Sse.Add(modY, Vector128.Create(R1C2));
+
+            // Get bounding box by finding the min and max X and Y values.
+            var l = SimdHelpers.MinHorizontalSse(modX);
+            var b = SimdHelpers.MinHorizontalSse(modY);
+            var r = SimdHelpers.MaxHorizontalSse(modX);
+            var t = SimdHelpers.MaxHorizontalSse(modY);
+
+            // Convert to Box2
+            var lb = Sse.UnpackLow(l, b);
+            var rt = Sse.UnpackLow(r, t);
+            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+            return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal readonly Box2 TransformBoxSlow(in Box2 box)
         {
             Span<Vector2> vertices = stackalloc Vector2[4];
             vertices[0] = Transform(box.BottomLeft);
             vertices[1] = Transform(box.BottomRight);
             vertices[2] = Transform(box.TopRight);
-            vertices[3] = Transform(box.TopLeft);
+            vertices[3] = vertices[0] + vertices[2] - vertices[1]; // Transformed TopLeft
 
             var botLeft = vertices[0];
             var topRight = vertices[0];
 
-            for (var i = 0; i < 4; i++)
+            for (var i = 1; i < 4; i++)
             {
                 var vertex = vertices[i];
 

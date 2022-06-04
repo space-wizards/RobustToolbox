@@ -941,7 +941,7 @@ namespace Robust.Client.Graphics.Clyde
                         var tl = worldTransform.Transform(box.TopLeft);
                         var tr = worldTransform.Transform(box.TopRight);
                         var br = worldTransform.Transform(box.BottomRight);
-                        var bl = worldTransform.Transform(box.BottomLeft);
+                        var bl = tl + br - tr;
 
                         // Faces.
                         var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
@@ -983,7 +983,7 @@ namespace Robust.Client.Graphics.Clyde
                         var dTl = eyeTransform.Transform(tl);
                         var dTr = eyeTransform.Transform(tr);
                         var dBl = eyeTransform.Transform(bl);
-                        var dBr = eyeTransform.Transform(br);
+                        var dBr = dBl + dTr - dTl;
 
                         // Get which neighbors are occluding.
                         var no = (occluder.Occluding & OccluderDir.North) != 0;

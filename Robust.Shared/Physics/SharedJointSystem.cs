@@ -446,11 +446,22 @@ namespace Robust.Shared.Physics
                 FilterContactsForJoint(joint);
             }
 
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            if (bodyA == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyAUid)} without a physics component?");
+            }
+            else if (bodyB == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyBUid)} without a physics component?");
+            }
+            else
+            {
+                var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            }
 
             // We can't just check up front due to how prediction works.
             _dirtyJoints.Add(jointComponentA);

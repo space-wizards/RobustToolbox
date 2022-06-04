@@ -15,6 +15,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Profiling;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -396,6 +397,7 @@ namespace Robust.Client.Graphics.Clyde
             RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list)
         {
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
 
             // Construct a matrix equivalent for Viewport.WorldToLocal()
             eye.GetViewMatrix(out var viewMatrix, view.RenderScale);
@@ -412,16 +414,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> state,
-                    in SpriteComponent value) =>
+                    in ComponentTreeEntry<SpriteComponent> value) =>
                 {
-                    var entity = value.Owner;
-                    var transform = xforms.GetComponent(entity);
-
                     ref var entry = ref state.AllocAdd();
-                    entry.sprite = value;
-                    (entry.worldPos, entry.worldRot) = transform.GetWorldPositionRotation();
+                    entry.sprite = value.Component;
+                    (entry.worldPos, entry.worldRot) = xformSys.GetWorldPositionRotation(value.Transform, xforms);
 
-                    var spriteWorldBB = value.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, eye);
+                    var spriteWorldBB = entry.sprite.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, eye);
                     entry.spriteScreenBB = worldToLocal.TransformBox(spriteWorldBB);
                     return true;
 

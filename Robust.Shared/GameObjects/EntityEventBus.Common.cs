@@ -57,7 +57,7 @@ internal sealed partial class EntityEventBus : IEventBus
         if (data == null)
             return;
 
-        if (data.Before != null || data.After != null)
+        if (data.Before.Length > 0 || data.After.Length > 0)
         {
             subs.IsOrdered = true;
             subs.OrderingUpToDate = false;

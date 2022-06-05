@@ -87,3 +87,10 @@ cmd-exec-help = Usage: exec <fileName>
     Each line in the file is executed as a single command, unless it starts with a #
 
 cmd-exec-arg-filename = <fileName>
+
+## 'dump_net_comps' command
+cmd-dump_net_comps-desc = Prints the table of networked components.
+cmd-dump_net_comps-help = Usage: dump_net-comps
+
+cmd-dump_net_comps-error-writeable = Registration still writeable, network ids have not been generated.
+cmd-dump_net_comps-header = Networked Component Registrations:

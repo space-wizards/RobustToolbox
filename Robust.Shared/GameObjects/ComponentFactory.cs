@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
-using JetBrains.Annotations;
-using Robust.Shared.Console;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -67,28 +65,10 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
-        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
+        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
         {
-
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
-
-            conHost.RegisterCommand("dump_net_comps", "Prints the table of networked components.", "dump_net_comps", (shell, argStr, args) =>
-            {
-                if (_networkedComponents is null)
-                {
-                    shell.WriteError("Registration still writeable, network ids have not been generated.");
-                    return;
-                }
-
-                shell.WriteLine("Networked Component Registrations:");
-
-                for (int netId = 0; netId < _networkedComponents.Count; netId++)
-                {
-                    var registration = _networkedComponents[netId];
-                    shell.WriteLine($"  [{netId,4}] {registration.Name,-16} {registration.Type.Name}");
-                }
-            });
         }
 
         private void Register(Type type, bool overwrite = false)

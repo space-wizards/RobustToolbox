@@ -279,6 +279,11 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
+        public IComponent GetComponent(ComponentRegistration reg)
+        {
+            return (IComponent) _typeFactory.CreateInstanceUnchecked(reg.Type);
+        }
+
         public IComponent GetComponent(string componentName, bool ignoreCase = false)
         {
             if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))

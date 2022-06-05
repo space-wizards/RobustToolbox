@@ -114,20 +114,20 @@ namespace Robust.Shared.GameObjects
             // Init transform first, we always have it.
             var transform = GetComponent<TransformComponent>(uid);
             if (transform.LifeStage < ComponentLifeStage.Initialized)
-                transform.LifeInitialize(this);
+                transform.LifeInitialize(this, CompIdx.Index<TransformComponent>());
 
             // Init physics second if it exists.
             if (TryGetComponent<PhysicsComponent>(uid, out var phys)
                 && phys.LifeStage < ComponentLifeStage.Initialized)
             {
-                phys.LifeInitialize(this);
+                phys.LifeInitialize(this, CompIdx.Index<PhysicsComponent>());
             }
 
             // Do rest of components.
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage: < ComponentLifeStage.Initialized })
-                    comp.LifeInitialize(this);
+                    comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
             }
 
 #if DEBUG
@@ -190,12 +190,14 @@ namespace Robust.Shared.GameObjects
             where T : Component
         {
             private readonly IEntityManager _entMan;
+            public readonly CompIdx CompType;
             public readonly T Comp;
 
-            public CompInitializeHandle(IEntityManager entityManager, T comp)
+            public CompInitializeHandle(IEntityManager entityManager, T comp, CompIdx compType)
             {
                 _entMan = entityManager;
                 Comp = comp;
+                CompType = compType;
             }
 
             public void Dispose()
@@ -206,7 +208,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (!Comp.Initialized)
-                    Comp.LifeInitialize(_entMan);
+                    Comp.LifeInitialize(_entMan, CompType);
 
                 if (metadata.EntityInitialized && !Comp.Running)
                     Comp.LifeStartup(_entMan);
@@ -221,7 +223,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
         {
-            var newComponent = _componentFactory.GetComponent<T>();
+            var reg = _componentFactory.GetRegistration<T>();
+            var newComponent = (T)_componentFactory.GetComponent(reg);
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
@@ -233,7 +236,7 @@ namespace Robust.Shared.GameObjects
 
             AddComponentInternal(uid, newComponent, false, true);
 
-            return new CompInitializeHandle<T>(this, newComponent);
+            return new CompInitializeHandle<T>(this, newComponent, reg.Idx);
         }
 
         /// <inheritdoc />
@@ -293,11 +296,11 @@ namespace Robust.Shared.GameObjects
                 Dirty(component);
             }
 
-            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid));
+            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
 
-            component.LifeAddToEntity(this);
+            component.LifeAddToEntity(this, reg.Idx);
 
             if (skipInit)
                 return;
@@ -307,7 +310,7 @@ namespace Robust.Shared.GameObjects
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
-            component.LifeInitialize(this);
+            component.LifeInitialize(this, reg.Idx);
 
             if (metadata.EntityInitialized)
                 component.LifeStartup(this);

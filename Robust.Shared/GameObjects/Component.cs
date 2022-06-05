@@ -38,13 +38,13 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
         /// after raising a <see cref="ComponentAdd"/> event.
         /// </summary>
-        internal void LifeAddToEntity(IEntityManager entManager)
+        internal void LifeAddToEntity(IEntityManager entManager, CompIdx type)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
 
             LifeStage = ComponentLifeStage.Adding;
             CreationTick = entManager.CurrentTick;
-            entManager.EventBus.RaiseComponentEvent(this, CompAddInstance);
+            entManager.EventBus.RaiseComponentEvent(this, type, CompAddInstance);
             LifeStage = ComponentLifeStage.Added;
         }
 
@@ -52,12 +52,12 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
         /// calling <see cref="Initialize" />.
         /// </summary>
-        internal void LifeInitialize(IEntityManager entManager)
+        internal void LifeInitialize(IEntityManager entManager, CompIdx type)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
             LifeStage = ComponentLifeStage.Initializing;
-            entManager.EventBus.RaiseComponentEvent(this, CompInitInstance);
+            entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
             Initialize();
 
 #if DEBUG

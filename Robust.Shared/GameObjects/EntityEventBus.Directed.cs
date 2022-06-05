@@ -66,6 +66,20 @@ namespace Robust.Shared.GameObjects
             where TEvent : notnull;
 
         /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="idx">Type of the component, for faster lookups.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
+            where TEvent : notnull;
+
+        /// <summary>
         /// Dispatches an event directly to a specific component, by-ref.
         /// </summary>
         /// <remarks>
@@ -117,7 +131,24 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            DispatchComponent<TEvent>(component.Owner, component, ref unitRef, false);
+            DispatchComponent<TEvent>(
+                component.Owner,
+                component,
+                CompIdx.Index(component.GetType()),
+                ref unitRef,
+                false);
+        }
+
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, CompIdx type, TEvent args)
+        {
+            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+
+            DispatchComponent<TEvent>(
+                component.Owner,
+                component,
+                type,
+                ref unitRef,
+                false);
         }
 
         /// <inheritdoc />
@@ -125,7 +156,12 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            DispatchComponent<TEvent>(component.Owner, component, ref unitRef, true);
+            DispatchComponent<TEvent>(
+                component.Owner,
+                component,
+                CompIdx.Index(component.GetType()),
+                ref unitRef,
+                true);
         }
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare()
@@ -291,14 +327,14 @@ namespace Robust.Shared.GameObjects
             EntRemoveEntity(e);
         }
 
-        public void OnComponentAdded(AddedComponentEventArgs e)
+        public void OnComponentAdded(in AddedComponentEventArgs e)
         {
             _subscriptionLock = true;
 
-            EntAddComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
+            EntAddComponent(e.BaseArgs.Owner, e.ComponentType);
         }
 
-        public void OnComponentRemoved(RemovedComponentEventArgs e)
+        public void OnComponentRemoved(in RemovedComponentEventArgs e)
         {
             EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
         }
@@ -531,11 +567,15 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void DispatchComponent<TEvent>(EntityUid euid, IComponent component, ref Unit args,
+        private void DispatchComponent<TEvent>(
+            EntityUid euid,
+            IComponent component,
+            CompIdx baseType,
+            ref Unit args,
             bool dispatchByReference)
             where TEvent : notnull
         {
-            var enumerator = EntGetReferences(CompIdx.Index(component.GetType()));
+            var enumerator = EntGetReferences(baseType);
             while (enumerator.MoveNext(out var type))
             {
                 var compSubs = _entSubscriptions[type.Value]!;

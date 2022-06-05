@@ -12,6 +12,6 @@ public sealed class ByRefEventAttribute : Attribute
 /// This allows extra optimizations.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class ComponentEventAttribute : Attribute
+internal sealed class ComponentEventAttribute : Attribute
 {
 }

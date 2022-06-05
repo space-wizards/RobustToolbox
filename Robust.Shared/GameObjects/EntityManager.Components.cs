@@ -707,6 +707,22 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
         /// <inheritdoc />
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type,
             [NotNullWhen(true)] out IComponent? component)

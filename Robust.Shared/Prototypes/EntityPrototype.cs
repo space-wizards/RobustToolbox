@@ -297,11 +297,12 @@ namespace Robust.Shared.Prototypes
             IEntityManager entityManager,
             ISerializationManager serManager,
             string compName,
-            MappingDataNode data, ISerializationContext? context)
+            MappingDataNode data,
+            ISerializationContext? context)
         {
-            var compType = factory.GetRegistration(compName).Type;
+            var compReg = factory.GetRegistration(compName);
 
-            if (!entityManager.TryGetComponent(entity, compType, out var component))
+            if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;
@@ -310,7 +311,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            serManager.Read(compType, data, context, value: component);
+            serManager.Read(compReg.Type, data, context, value: component);
         }
 
         public override string ToString()

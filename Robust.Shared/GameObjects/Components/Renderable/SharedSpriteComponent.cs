@@ -67,27 +67,17 @@ namespace Robust.Shared.GameObjects
             [DataField("state")]
             public string? State;
             [DataField("scale")]
-            public Vector2 Scale = Vector2.One;
+            public Vector2? Scale;
             [DataField("rotation")]
-            public Angle Rotation = Angle.Zero;
+            public Angle? Rotation;
             [DataField("offset")]
-            public Vector2 Offset = Vector2.Zero;
+            public Vector2? Offset;
             [DataField("visible")]
-            public bool Visible = true;
+            public bool? Visible;
             [DataField("color")]
-            public Color Color = Color.White;
+            public Color? Color;
             [DataField("map")]
             public HashSet<string>? MapKeys;
-
-            public static PrototypeLayerData New()
-            {
-                return new()
-                {
-                    Scale = Vector2.One,
-                    Color = Color.White,
-                    Visible = true,
-                };
-            }
         }
     }
 }

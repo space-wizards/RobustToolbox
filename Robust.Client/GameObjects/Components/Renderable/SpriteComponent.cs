@@ -236,17 +236,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
-        // TODO: this should absolutely not be static.
-        private static ShaderInstance? _defaultShader;
-
-        [ViewVariables]
-        private ShaderInstance? DefaultShader => _defaultShader ??= prototypes
-            .Index<ShaderPrototype>("shaded")
-            .Instance();
-
         public const string LogCategory = "go.comp.sprite";
-        const string LayerSerializationCache = "spritelayer";
-        const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
 
@@ -404,7 +394,7 @@ namespace Robust.Client.GameObjects
 
         public int AddBlankLayer(int? newIndex = null)
         {
-            var layer = new Layer(this) { Visible = false };
+            var layer = new Layer(this);
             return AddLayer(layer, newIndex);
         }
 
@@ -603,7 +593,7 @@ namespace Robust.Client.GameObjects
             _bounds = new Box2();
             foreach (var layer in Layers)
             {
-                if (!layer.Visible) continue;
+                if (!layer.Visible || layer.Blank) continue;
 
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
@@ -623,8 +613,6 @@ namespace Robust.Client.GameObjects
 
             var layer = Layers[index];
 
-            var anyTextureAttempted = false;
-
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
                 var path = TextureRoot / layerDatum.RsiPath;
@@ -641,7 +629,6 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.State))
             {
-                anyTextureAttempted = true;
                 var theRsi = layer.RSI ?? BaseRSI;
                 if (theRsi == null)
                 {
@@ -669,7 +656,6 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
             {
-                anyTextureAttempted = true;
                 if (layer.State.IsValid)
                 {
                     Logger.ErrorS(LogCategory,
@@ -724,14 +710,14 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            layer.Color = layerDatum.Color;
-            layer._rotation = layerDatum.Rotation;
-            layer._offset = layerDatum.Offset;
-            layer._scale = layerDatum.Scale;
+            layer.Color = layerDatum.Color ?? layer.Color;
+            layer._rotation = layerDatum.Rotation ?? layer._rotation;
+            layer._offset = layerDatum.Offset ?? layer._offset;
+            layer._scale = layerDatum.Scale ?? layer._scale;
             layer.UpdateLocalMatrix();
 
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
-            layer.Visible = anyTextureAttempted && layerDatum.Visible;
+            layer.Visible = layerDatum.Visible ?? layer.Visible;
 
             RebuildBounds();
         }
@@ -1404,7 +1390,7 @@ namespace Robust.Client.GameObjects
             {
                 var layer = t;
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1503,7 +1489,7 @@ namespace Robust.Client.GameObjects
             foreach (var layer in Layers)
             {
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1678,6 +1664,9 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
+            [ViewVariables]
+            public bool Blank => !State.IsValid && Texture == null;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
@@ -2049,7 +2038,7 @@ namespace Robust.Client.GameObjects
 
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
-                if (!Visible)
+                if (!Visible || Blank)
                     return;
 
                 var rsiState = GetActualState();

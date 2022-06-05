@@ -299,29 +299,34 @@ namespace Robust.Shared.GameObjects
     /// The component has been added to the entity. This is the first function
     /// to be called after the component has been allocated and (optionally) deserialized.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentAdd : EntityEventArgs { }
 
     /// <summary>
     /// Raised when all of the entity's other components have been added and are available,
     /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentInit : EntityEventArgs { }
 
     /// <summary>
     /// Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
     /// This can be called multiple times during the component's life, and at any time.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentStartup : EntityEventArgs { }
 
     /// <summary>
     /// Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
     /// the component's life, and at any time.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentShutdown : EntityEventArgs { }
 
     /// <summary>
     /// The component has been removed from the entity. This is the last function
     /// that is called before the component is freed.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentRemove : EntityEventArgs { }
 }

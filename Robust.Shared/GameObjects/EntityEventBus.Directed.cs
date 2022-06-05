@@ -334,7 +334,8 @@ namespace Robust.Shared.GameObjects
             var invSubs = _entSubscriptionsInv.GetOrNew(eventType);
             invSubs.Add(compType);
 
-            RegisterCommon(eventType, registration.Ordering, out _);
+            RegisterCommon(eventType, registration.Ordering, out var data);
+            data.ComponentEvent = eventType.HasCustomAttribute<ComponentEventAttribute>();
         }
 
         private void EntSubscribe<TEvent>(
@@ -392,12 +393,16 @@ namespace Robust.Shared.GameObjects
             {
                 var compSubs = _entSubscriptions[type.Value]!;
 
-                foreach (var kvSub in compSubs)
+                foreach (var (evType, _) in compSubs)
                 {
-                    if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                    // Skip adding this to significantly reduce memory use and GC noise on entity create.
+                    if (_eventData[evType].ComponentEvent)
+                        continue;
+
+                    if (!eventTable.TryGetValue(evType, out var subscribedComps))
                     {
                         subscribedComps = new HashSet<CompIdx>();
-                        eventTable.Add(kvSub.Key, subscribedComps);
+                        eventTable.Add(evType, subscribedComps);
                     }
 
                     subscribedComps.Add(type);

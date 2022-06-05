@@ -30,13 +30,17 @@ internal sealed class DumpEventTablesCommand : IConsoleCommand
         var eventBus = (EntityEventBus)entMgr.EventBus;
 
         var table = eventBus._entEventTables[entity];
-        foreach (var (evType, comps) in table)
+        foreach (var (evType, comps) in table.EventIndices)
         {
             shell.WriteLine($"{evType}:");
 
-            foreach (var comp in comps)
+            var idx = comps;
+            while (idx != -1)
             {
-                var reg = compFactory.IdxToType(comp);
+                ref var entry = ref table.ComponentLists[idx];
+                idx = entry.Next;
+
+                var reg = compFactory.IdxToType(entry.Component);
                 shell.WriteLine($"    {reg.Name}");
             }
         }

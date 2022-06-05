@@ -24,7 +24,8 @@ internal sealed partial class EntityEventBus : IEventBus
     private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
     // eUid -> EventType -> { CompType1, ... CompTypeN }
-    internal Dictionary<EntityUid, Dictionary<Type, HashSet<CompIdx>>> _entEventTables = new();
+    // See EventTable declaration for layout details
+    internal Dictionary<EntityUid, EventTable> _entEventTables = new();
 
     // CompType -> EventType -> Handler
     internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptions =

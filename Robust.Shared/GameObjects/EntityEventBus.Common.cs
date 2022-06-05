@@ -24,10 +24,10 @@ internal sealed partial class EntityEventBus : IEventBus
     private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
     // eUid -> EventType -> { CompType1, ... CompTypeN }
-    private Dictionary<EntityUid, Dictionary<Type, HashSet<CompIdx>>> _entEventTables = new();
+    internal Dictionary<EntityUid, Dictionary<Type, HashSet<CompIdx>>> _entEventTables = new();
 
     // CompType -> EventType -> Handler
-    private Dictionary<Type, DirectedRegistration>?[] _entSubscriptions =
+    internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptions =
         Array.Empty<Dictionary<Type, DirectedRegistration>?>();
 
     // EventType -> { CompType1, ... CompType N }
@@ -85,7 +85,7 @@ internal sealed partial class EntityEventBus : IEventBus
 
     // It should always be cast to/from with Unsafe.As<,>
 
-    private readonly struct Unit
+    internal readonly struct Unit
     {
     }
 

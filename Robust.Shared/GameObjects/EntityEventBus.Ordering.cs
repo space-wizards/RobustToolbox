@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
             // Still, it's a single .Sort() now for those instead of the whole topological short shebang.
         }
 
-        private sealed record OrderingData(Type OrderType, Type[] Before, Type[] After)
+        internal sealed record OrderingData(Type OrderType, Type[] Before, Type[] After)
         {
             public bool Equals(OrderingData? other)
             {
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Base type for directed and broadcast subscriptions. Contains ordering data.
         /// </summary>
-        private abstract class OrderedRegistration
+        internal abstract class OrderedRegistration
         {
             public int Order;
             public readonly OrderingData? Ordering;

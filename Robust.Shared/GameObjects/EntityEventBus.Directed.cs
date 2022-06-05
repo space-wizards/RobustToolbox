@@ -82,7 +82,7 @@ namespace Robust.Shared.GameObjects
 
     internal partial class EntityEventBus : IDisposable
     {
-        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
+        internal delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
 
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
             where TEvent : notnull;
@@ -637,7 +637,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private sealed class DirectedRegistration : OrderedRegistration
+        internal sealed class DirectedRegistration : OrderedRegistration
         {
             public readonly Delegate Original;
             public readonly DirectedEventHandler Handler;

@@ -13,6 +13,7 @@ namespace Robust.Server.GameObjects
         {
             RegisterIgnore("Input");
             RegisterIgnore("AnimationPlayer");
+            RegisterIgnore("GenericVisualizer");
 
             RegisterClass<MetaDataComponent>();
             RegisterClass<TransformComponent>();

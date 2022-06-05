@@ -17,7 +17,7 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
         if (args.Sprite == null)
             return;
 
-        foreach (var (appearanceKey, layerDict) in component.Data)
+        foreach (var (appearanceKey, layerDict) in component.Visuals)
         {
             if (!_appearanceSys.TryGetData(uid, appearanceKey, out var appearanceValue, args.Component))
                 continue;

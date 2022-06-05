@@ -78,6 +78,10 @@ namespace Robust.Shared.GameObjects
             public Color? Color;
             [DataField("map")]
             public HashSet<string>? MapKeys;
+
+            // TODO delete this.
+            // requires content PR and I cbf the current PR to a content one.
+            public static PrototypeLayerData New() => new();
         }
     }
 }

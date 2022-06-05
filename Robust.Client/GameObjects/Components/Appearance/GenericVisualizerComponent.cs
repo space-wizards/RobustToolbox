@@ -20,6 +20,6 @@ public sealed class GenericVisualizerComponent : Component
     ///
     ///     In most instances, each of these dictionaries will probably only have a single entry.
     /// </summary>
-    [DataField("data", required:true)]
-    public Dictionary<string, Dictionary<string, Dictionary<string, PrototypeLayerData>>> Data = default!;
+    [DataField("visuals", required:true)]
+    public Dictionary<string, Dictionary<string, Dictionary<string, PrototypeLayerData>>> Visuals = default!;
 }

@@ -15,4 +15,4 @@
 	url = https://github.com/space-wizards/cefglue.git
 [submodule "YamlDotNet"]
 	path = YamlDotNet
-	url = https://github.com/space-wizards/YamlDotNet.git
+	url = https://github.com/wrexbe/YamlDotNet.git

@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             Assert.That(deserializedRegistry.Count, Is.EqualTo(1));
             Assert.That(deserializedRegistry.ContainsKey("Test"));
-            Assert.IsInstanceOf<TestComponent>(deserializedRegistry["Test"]);
+            Assert.IsInstanceOf<TestComponent>(deserializedRegistry["Test"].Component);
         }
     }
 

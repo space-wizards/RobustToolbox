@@ -153,7 +153,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
-                var node = serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
+                var node = serializationManager.WriteValue(
+                    component.Component.GetType(),
+                    component.Component,
+                    alwaysWrite,
+                    context);
+
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
 
                 mapping.Add("type", new ValueDataNode(type));

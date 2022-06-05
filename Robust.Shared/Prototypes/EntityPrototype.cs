@@ -333,6 +333,7 @@ namespace Robust.Shared.Prototypes
         public sealed class ComponentRegistryEntry
         {
             public readonly IComponent Component;
+            // Mapping is just a quick reference to speed up entity creation.
             public readonly MappingDataNode Mapping;
 
             public ComponentRegistryEntry(IComponent component, MappingDataNode mapping)

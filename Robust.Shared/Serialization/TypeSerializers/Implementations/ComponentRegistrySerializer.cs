@@ -60,7 +60,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 var type = factory.GetRegistration(compType).Type;
                 var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
 
-                components[compType] = read;
+                components[compType] = new ComponentRegistryEntry(read, copy);
             }
 
             var referenceTypes = new List<CompIdx>();

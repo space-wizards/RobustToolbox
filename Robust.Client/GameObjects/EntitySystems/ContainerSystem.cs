@@ -25,14 +25,14 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<UpdateContainerOcclusionMessage>(UpdateContainerOcclusion);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
         }
 
-        private void UpdateContainerOcclusion(UpdateContainerOcclusionMessage ev)
+        private void OnParentChange(ref EntParentChangedMessage ev)
         {
             _updateQueue.Add(ev.Entity);
         }

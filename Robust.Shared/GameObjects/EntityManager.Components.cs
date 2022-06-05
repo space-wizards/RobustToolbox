@@ -651,6 +651,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];

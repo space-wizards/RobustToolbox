@@ -76,7 +76,7 @@ namespace Robust.Build.Tasks
                 },
                 ContentAttributes =
                 {
-                    typeSystem.GetType("Robust.Client.UserInterface.XAML.ContentAttribute")
+                    typeSystem.GetType("Avalonia.Metadata.ContentAttribute")
                 },
                 UsableDuringInitializationAttributes =
                 {

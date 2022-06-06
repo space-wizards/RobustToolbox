@@ -63,7 +63,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 components[compType] = read;
             }
 
-            var referenceTypes = new List<Type>();
+            var referenceTypes = new List<CompIdx>();
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)
             {
@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 list.Add(serializationManager.ValidateNode(type, copy, context));
             }
 
-            var referenceTypes = new List<Type>();
+            var referenceTypes = new List<CompIdx>();
 
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)
@@ -204,9 +204,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return newCompReg;
         }
 
-        private Dictionary<IComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
+        private Dictionary<ComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
         {
-            var dict = new Dictionary<IComponentRegistration, int>();
+            var dict = new Dictionary<ComponentRegistration, int>();
             for (var i = 0; i < node.Count; i++)
             {
                 var mapping = (MappingDataNode)node[i];

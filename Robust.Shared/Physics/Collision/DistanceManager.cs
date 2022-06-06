@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics.Collision
     {
         private const byte MaxGJKIterations = 20;
 
-        public static void ComputeDistance(out DistanceOutput output, out SimplexCache cache, DistanceInput input)
+        public static void ComputeDistance(out DistanceOutput output, out SimplexCache cache, in DistanceInput input)
         {
             cache = new SimplexCache();
 
@@ -41,14 +41,18 @@ namespace Robust.Shared.Physics.Collision
 
             // Initialize the simplex.
             Simplex simplex = new Simplex();
-            simplex.ReadCache(ref cache, input.ProxyA, ref input.TransformA, input.ProxyB, ref input.TransformB);
+            simplex.ReadCache(ref cache, input.ProxyA, in input.TransformA, input.ProxyB, in input.TransformB);
 
             // These store the vertices of the last simplex so that we
             // can check for duplicates and prevent cycling.
-            var saveA = new int[3];
-            var saveB = new int[3];
+            Span<int> saveA = stackalloc int[3];
+            Span<int> saveB = stackalloc int[3];
+            saveA.Clear();
+            saveB.Clear();
 
             //float distanceSqr1 = Settings.MaxFloat;
+
+            var vSpan = simplex.V.AsSpan;
 
             // Main iteration loop.
             int iter = 0;
@@ -58,8 +62,8 @@ namespace Robust.Shared.Physics.Collision
                 int saveCount = simplex.Count;
                 for (var i = 0; i < saveCount; ++i)
                 {
-                    saveA[i] = simplex.V[i].IndexA;
-                    saveB[i] = simplex.V[i].IndexB;
+                    saveA[i] = vSpan[i].IndexA;
+                    saveB[i] = vSpan[i].IndexB;
                 }
 
                 switch (simplex.Count)
@@ -110,14 +114,14 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 // Compute a tentative new simplex vertex using support points.
-                SimplexVertex vertex = simplex.V[simplex.Count];
+                SimplexVertex vertex = vSpan[simplex.Count];
                 vertex.IndexA = input.ProxyA.GetSupport(Transform.MulT(input.TransformA.Quaternion2D, -d));
                 vertex.WA = Transform.Mul(input.TransformA, input.ProxyA.Vertices[vertex.IndexA]);
 
                 vertex.IndexB = input.ProxyB.GetSupport(Transform.MulT(input.TransformB.Quaternion2D, d));
                 vertex.WB = Transform.Mul(input.TransformB, input.ProxyB.Vertices[vertex.IndexB]);
                 vertex.W = vertex.WB - vertex.WA;
-                simplex.V[simplex.Count] = vertex;
+                vSpan[simplex.Count] = vertex;
 
                 // Iteration count is equated to the number of support point calls.
                 ++iter;

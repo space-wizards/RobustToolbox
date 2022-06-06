@@ -53,6 +53,8 @@ namespace Robust.Client.Console
 
         private bool _requestedCommands;
 
+        public ClientConsoleHost() : base(isServer: false) {}
+
         /// <inheritdoc />
         public void Initialize()
         {

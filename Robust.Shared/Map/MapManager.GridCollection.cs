@@ -159,7 +159,7 @@ internal partial class MapManager
 
     public bool TryGetGrid(EntityUid euid, [MaybeNullWhen(false)] out IMapGrid grid)
     {
-        if (EntityManager.TryGetComponent(euid, out IMapGridComponent comp))
+        if (EntityManager.TryGetComponent(euid, out IMapGridComponent? comp))
         {
             grid = comp.Grid;
             return true;
@@ -231,7 +231,7 @@ internal partial class MapManager
         }
 
         var entityId = grid.GridEntityId;
-        if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent metaComp))
+        if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} with {gridId}, but there was no allocated entity.");
             return; // Silently fail on release

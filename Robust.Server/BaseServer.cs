@@ -545,6 +545,8 @@ namespace Robust.Server
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
 
+            var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
+            _time.TimeBase = (startOffset, GameTick.First);
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
@@ -689,8 +691,13 @@ namespace Robust.Server
         private void FrameUpdate(FrameEventArgs frameEventArgs)
         {
             ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
     }
 }

@@ -299,10 +299,6 @@ namespace Robust.Shared.GameObjects
                 // world coords to parent coords
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
 
-                // float rounding error guard, if the offset is less than 1mm ignore it
-                //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
-                //    return;
-
                 LocalPosition = newPos;
             }
         }

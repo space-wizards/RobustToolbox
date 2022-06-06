@@ -49,7 +49,7 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(ev.Entity);
         }
 
-        private void OnEntityInit(object? sender, EntityUid uid)
+        private void OnEntityInit(EntityUid uid)
         {
             RefreshVisibility(uid);
         }

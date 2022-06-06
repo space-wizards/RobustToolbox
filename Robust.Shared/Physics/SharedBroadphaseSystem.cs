@@ -330,6 +330,8 @@ namespace Robust.Shared.Physics
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<BroadphaseComponent> broadphaseQuery)
         {
+            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+
             var proxyBody = proxy.Fixture.Body;
 
             // Broadphase can't intersect with entities on itself so skip.
@@ -354,6 +356,7 @@ namespace Robust.Shared.Physics
 
             foreach (var other in broadphaseComp.Tree.QueryAabb(_queryBuffer, aabb))
             {
+                DebugTools.Assert(other.Fixture.Body.CanCollide);
                 // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
 
                 // Do fast checks first and slower checks after (in ContactManager).
@@ -412,27 +415,6 @@ namespace Robust.Shared.Physics
             var broadphase = body.Broadphase;
 
             if (broadphase == null) return;
-
-            // Juussttt in case anything slips through
-            if (!broadphase.Owner.IsValid() ||
-                !TryComp(broadphase.Owner, out MetaDataComponent? meta) ||
-                meta.EntityLifeStage >= EntityLifeStage.Terminating)
-            {
-                // Don't log because this may happen due to recursive deletions.
-                body.Broadphase = null;
-
-                foreach (var (_, fixture) in manager.Fixtures)
-                {
-                    foreach (var proxy in fixture.Proxies)
-                    {
-                        proxy.ProxyId = DynamicTree.Proxy.Free;
-                    }
-
-                    fixture.ProxyCount = 0;
-                }
-
-                return;
-            }
 
             var mapId = Transform(broadphase.Owner).MapID;
 
@@ -655,6 +637,8 @@ namespace Robust.Shared.Physics
             if(mapId == MapId.Nullspace)
                 return;
 
+            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+
             _moveBuffer[mapId][proxy] = aabb;
         }
 
@@ -737,6 +721,7 @@ namespace Robust.Shared.Physics
             {
                 var bounds = fixture.Shape.ComputeAABB(transform, i);
                 var proxy = new FixtureProxy(bounds, fixture, i);
+                DebugTools.Assert(fixture.Body.CanCollide);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
 

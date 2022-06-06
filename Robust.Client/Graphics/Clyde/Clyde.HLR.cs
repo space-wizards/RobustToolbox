@@ -13,9 +13,9 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Profiling;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -124,25 +124,29 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private void RenderSingleOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        {
+            if (overlay.RequestScreenTexture)
+            {
+                FlushRenderQueue();
+                UpdateOverlayScreenTexture(space, vp.RenderTarget);
+            }
+
+            if (overlay.OverwriteTargetFrameBuffer())
+            {
+                ClearFramebuffer(default);
+            }
+
+            overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+        }
+
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
-                var list = GetOverlaysForSpace(space);
-                foreach (var overlay in list)
+                foreach (var overlay in GetOverlaysForSpace(space))
                 {
-                    if (overlay.RequestScreenTexture)
-                    {
-                        FlushRenderQueue();
-                        UpdateOverlayScreenTexture(space, vp.RenderTarget);
-                    }
-
-                    if (overlay.OverwriteTargetFrameBuffer())
-                    {
-                        ClearFramebuffer(default);
-                    }
-
-                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+                    RenderSingleOverlay(overlay, vp, space, worldBox, worldBounds);
                 }
 
                 FlushRenderQueue();
@@ -237,7 +241,6 @@ namespace Robust.Client.Graphics.Clyde
             return false;
         }
 
-
         private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
@@ -252,17 +255,7 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessSpriteEntities(mapId, viewport, eye, worldBounds, _drawingSpriteList);
 
-            var worldOverlays = new List<Overlay>();
-
-            foreach (var overlay in _overlayManager.AllOverlays)
-            {
-                if ((overlay.Space & OverlaySpace.WorldSpace) != 0)
-                {
-                    worldOverlays.Add(overlay);
-                }
-            }
-
-            worldOverlays.Sort(OverlayComparer.Instance);
+            var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
@@ -273,41 +266,34 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var overlayIndex = 0;
+            RenderTexture? entityPostRenderTarget = null;
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
+            bool flushed = false;
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
-                var flushed = false;
 
                 for (var j = overlayIndex; j < worldOverlays.Count; j++)
                 {
+                    overlayIndex = j;
                     var overlay = worldOverlays[j];
 
-                    if (overlay.ZIndex <= entry.sprite.DrawDepth)
+                    if (overlay.ZIndex > entry.sprite.DrawDepth)
                     {
-                        if (!flushed)
-                        {
-                            FlushRenderQueue();
-                            flushed = true;
-                        }
-
-                        overlay.ClydeRender(
-                            _renderHandle,
-                            OverlaySpace.WorldSpace,
-                            null,
-                            viewport,
-                            new UIBox2i((0, 0), viewport.Size),
-                            worldAABB,
-                            worldBounds);
-                        overlayIndex = j;
-                        continue;
+                        flushed = false;
+                        break;
                     }
 
-                    break;
+                    if (!flushed)
+                    {
+                        FlushRenderQueue();
+                        flushed = true;
+                    }
+
+                    RenderSingleOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
-                RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
@@ -325,10 +311,27 @@ namespace Robust.Client.Graphics.Clyde
                     // check that sprite size is valid
                     if (screenSpriteSize.X > 0 && screenSpriteSize.Y > 0)
                     {
-                        // create new render texture with correct sprite size
-                        entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
-                            new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                            name: nameof(entityPostRenderTarget));
+                        // This is really bare-bones render target re-use logic. One problem is that if it ever draws a
+                        // single large entity in a frame, the render target may be way to big for every subsequent
+                        // entity. But the vast majority of sprites are currently all 32x32, so it doesn't matter all that
+                        // much.
+                        //
+                        // Also, if there are many differenty sizes, and they all happen to be drawn in order of
+                        // increasing size, then this will still generate a whole bunch of render targets. So maybe
+                        // iterate once _drawingSpriteList, check sprite sizes, and decide what render targets to create
+                        // based off of that?
+                        //
+                        // TODO PERFORMANCE better renderTarget re-use / caching.
+
+                        if (entityPostRenderTarget == null
+                            || entityPostRenderTarget.Size.X < screenSpriteSize.X
+                            || entityPostRenderTarget.Size.Y < screenSpriteSize.Y)
+                        {
+                            entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
+                                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                                name: nameof(entityPostRenderTarget));
+                        }
+                        
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
                         _renderHandle.Clear(new Color());
 
@@ -367,13 +370,23 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.SetProjView(oldProj, oldView);
                     _renderHandle.UseShader(null);
-
-                    // TODO: cache this properly across frames.
-                    entityPostRenderTarget.DisposeDeferred();
                 }
             }
 
+            // draw remainder of overlays
+            for (var j = overlayIndex; j < worldOverlays.Count; j++)
+            {
+                if (!flushed)
+                {
+                    FlushRenderQueue();
+                    flushed = true;
+                }
+
+                RenderSingleOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+            }
+
             ArrayPool<int>.Shared.Return(indexList);
+            entityPostRenderTarget?.DisposeDeferred();
 
             _drawingSpriteList.Clear();
             FlushRenderQueue();
@@ -384,6 +397,7 @@ namespace Robust.Client.Graphics.Clyde
             RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list)
         {
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
 
             // Construct a matrix equivalent for Viewport.WorldToLocal()
             eye.GetViewMatrix(out var viewMatrix, view.RenderScale);
@@ -400,16 +414,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> state,
-                    in SpriteComponent value) =>
+                    in ComponentTreeEntry<SpriteComponent> value) =>
                 {
-                    var entity = value.Owner;
-                    var transform = xforms.GetComponent(entity);
-
                     ref var entry = ref state.AllocAdd();
-                    entry.sprite = value;
-                    (entry.worldPos, entry.worldRot) = transform.GetWorldPositionRotation();
+                    entry.sprite = value.Component;
+                    (entry.worldPos, entry.worldRot) = xformSys.GetWorldPositionRotation(value.Transform, xforms);
 
-                    var spriteWorldBB = value.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, eye);
+                    var spriteWorldBB = entry.sprite.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, eye);
                     entry.spriteScreenBB = worldToLocal.TransformBox(spriteWorldBB);
                     return true;
 

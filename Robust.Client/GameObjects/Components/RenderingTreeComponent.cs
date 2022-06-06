@@ -6,7 +6,7 @@ namespace Robust.Client.GameObjects
     [RegisterComponent]
     public sealed class RenderingTreeComponent : Component
     {
-        internal DynamicTree<SpriteComponent> SpriteTree { get; set; } = default!;
-        internal DynamicTree<PointLightComponent> LightTree { get; set; } = default!;
+        internal DynamicTree<ComponentTreeEntry<SpriteComponent>> SpriteTree { get; set; } = default!;
+        internal DynamicTree<ComponentTreeEntry<PointLightComponent>> LightTree { get; set; } = default!;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -56,24 +57,26 @@ namespace Robust.Client.GameObjects
                 return;
 
             // Delete now-gone containers.
-            List<string>? toDelete = null;
+            var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                if (!cast.ContainerSet.Any(data => data.Id == id))
+                // TODO: This is usually O(n^2) to the amount of containers.
+                foreach (var stateContainer in cast.ContainerSet)
                 {
-                    container.EmptyContainer(true, entMan: EntityManager);
-                    container.Shutdown();
-                    toDelete ??= new List<string>();
-                    toDelete.Add(id);
+                    if (stateContainer.Id == id)
+                        goto skip;
                 }
+
+                container.EmptyContainer(true, entMan: EntityManager);
+                container.Shutdown();
+                toDelete.Add(id);
+
+                skip: ;
             }
 
-            if (toDelete != null)
+            foreach (var dead in toDelete)
             {
-                foreach (var dead in toDelete)
-                {
-                    component.Containers.Remove(dead);
-                }
+                component.Containers.Remove(dead);
             }
 
             // Add new containers and update existing contents.
@@ -91,37 +94,33 @@ namespace Robust.Client.GameObjects
                 container.OccludesLight = occludesLight;
 
                 // Remove gone entities.
-                List<EntityUid>? toRemove = null;
+                var toRemove = new ValueList<EntityUid>();
                 foreach (var entity in container.ContainedEntities)
                 {
                     if (!entityUids.Contains(entity))
                     {
-                        toRemove ??= new List<EntityUid>();
                         toRemove.Add(entity);
                     }
                 }
 
-                if (toRemove != null)
+                foreach (var goner in toRemove)
                 {
-                    foreach (var goner in toRemove)
-                        container.Remove(goner);
+                    container.Remove(goner);
                 }
 
                 // Remove entities that were expected, but have been removed from the container.
-                List<EntityUid>? removedExpected = null;
+                var removedExpected = new ValueList<EntityUid>();
                 foreach (var entityUid in container.ExpectedEntities)
                 {
                     if (!entityUids.Contains(entityUid))
                     {
-                        removedExpected ??= new List<EntityUid>();
                         removedExpected.Add(entityUid);
                     }
                 }
 
-                if (removedExpected != null)
+                foreach (var entityUid in removedExpected)
                 {
-                    foreach (var entityUid in removedExpected)
-                        RemoveExpectedEntity(entityUid);
+                    RemoveExpectedEntity(entityUid);
                 }
 
                 // Add new entities.

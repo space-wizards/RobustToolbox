@@ -539,16 +539,14 @@ namespace Robust.Client.Graphics.Clyde
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
             tr = _currentMatrixModel.Transform(tr);
-            tl = _currentMatrixModel.Transform(tl);
-
-            var modulateLinear = Color.FromSrgb(modulate);
+            tl = tr + bl - br;
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, modulateLinear);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, modulateLinear);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, modulateLinear);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, modulateLinear);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
@@ -645,12 +643,10 @@ namespace Robust.Client.Graphics.Clyde
             a = _currentMatrixModel.Transform(a);
             b = _currentMatrixModel.Transform(b);
 
-            var colorLinear = Color.FromSrgb(color);
-
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero, colorLinear);
-            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero, colorLinear);
+            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero, color);
+            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero, color);
             BatchVertexIndex += 2;
 
             _debugStats.LastClydeDrawCalls += 1;

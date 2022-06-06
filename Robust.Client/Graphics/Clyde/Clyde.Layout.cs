@@ -13,16 +13,16 @@ namespace Robust.Client.Graphics.Clyde
         ///     Sets up VAO layout for Vertex2D for base and raw shader types.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetupVAOLayout()
+        private static unsafe void SetupVAOLayout()
         {
             // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 0);
             GL.EnableVertexAttribArray(0);
             // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
             // Colour Modulation.
-            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 4 * sizeof(float));
             GL.EnableVertexAttribArray(2);
         }
 
@@ -33,20 +33,10 @@ namespace Robust.Client.Graphics.Clyde
         [PublicAPI]
         private readonly struct Vertex2D
         {
-            public static readonly int SizeOf;
-
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
             // Note that this color is in linear space.
             public readonly Color Modulate;
-
-            static Vertex2D()
-            {
-                unsafe
-                {
-                    SizeOf = sizeof(Vertex2D);
-                }
-            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vertex2D(Vector2 position, Vector2 textureCoordinates, Color modulate)

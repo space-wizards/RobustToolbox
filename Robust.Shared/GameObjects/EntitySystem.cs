@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager;
+        [Dependency] protected readonly EntityManager EntityManager;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
 
         protected EntitySystem(IEntityManager entityManager)
         {
-            EntityManager = entityManager;
+            EntityManager = (EntityManager)entityManager;
             Subs = new Subscriptions(this);
         }
 
@@ -96,12 +96,6 @@ namespace Robust.Shared.GameObjects
             {
                 EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
             }
-        }
-
-        protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
-            where T : EntityEventArgs
-        {
-            return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)

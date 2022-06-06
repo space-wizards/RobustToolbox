@@ -84,18 +84,6 @@ namespace Robust.UnitTesting
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();
 
-            // So by default EntityManager does its own EntitySystemManager initialize during Startup.
-            // We want to bypass this and load our own systems hence we will manually initialize it here.
-            entMan.Initialize();
-            mapMan.Initialize();
-            systems.Initialize();
-
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
-
-            var modLoader = IoCManager.Resolve<TestingModLoader>();
-            modLoader.Assemblies = contentAssemblies;
-            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
-
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
@@ -123,6 +111,26 @@ namespace Robust.UnitTesting
             {
                 compFactory.RegisterClass<FixturesComponent>();
             }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
+            {
+                compFactory.RegisterClass<EntityLookupComponent>();
+            }
+
+            // So by default EntityManager does its own EntitySystemManager initialize during Startup.
+            // We want to bypass this and load our own systems hence we will manually initialize it here.
+            entMan.Initialize();
+            // RobustUnitTest is complete hot garbage.
+            // This makes EventTables ignore *all* the screwed up component abuse it causes.
+            entMan.EventBus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
+            mapMan.Initialize();
+            systems.Initialize();
+
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+
+            var modLoader = IoCManager.Resolve<TestingModLoader>();
+            modLoader.Assemblies = contentAssemblies;
+            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 
             entMan.Startup();
             mapMan.Startup();

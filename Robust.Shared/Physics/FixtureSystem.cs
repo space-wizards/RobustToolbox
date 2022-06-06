@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -47,6 +47,7 @@ namespace Robust.Shared.Physics
             body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
+            DebugTools.Assert(body.PhysicsMap == null);
         }
         #region Public
 
@@ -67,6 +68,8 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
+            DebugTools.Assert(MetaData(body.Owner).EntityLifeStage < EntityLifeStage.Terminating);
+
             if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
@@ -268,7 +271,7 @@ namespace Robust.Shared.Physics
         {
             args.State = new FixtureManagerComponentState
             {
-                Fixtures = component.Fixtures.Values.ToList(),
+                Fixtures = component.Fixtures.Values.ToArray(),
             };
         }
 
@@ -283,18 +286,19 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var toAddFixtures = new List<Fixture>();
-            var toRemoveFixtures = new List<Fixture>();
+            var toAddFixtures = new ValueList<Fixture>();
+            var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new List<Fixture>(state.Fixtures.Count);
-            foreach (var fixture in state.Fixtures)
+            var newFixtures = new Fixture[state.Fixtures.Length];
+            for (var i = 0; i < state.Fixtures.Length; i++)
             {
+                var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixture.Body = physics;
-                newFixtures.Add(newFixture);
+                newFixtures[i] = newFixture;
             }
 
             // Add / update new fixtures
@@ -439,7 +443,7 @@ namespace Robust.Shared.Physics
         [Serializable, NetSerializable]
         private sealed class FixtureManagerComponentState : ComponentState
         {
-            public List<Fixture> Fixtures = default!;
+            public Fixture[] Fixtures = default!;
         }
     }
 }

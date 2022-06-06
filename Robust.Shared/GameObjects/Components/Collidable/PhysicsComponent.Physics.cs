@@ -88,8 +88,6 @@ namespace Robust.Shared.GameObjects
         [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
 
-        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType
@@ -152,6 +150,13 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType == BodyType.Static) return;
+
+                // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+                if (value && !_canCollide)
+                {
+                    CanCollide = true;
+                    if (!_canCollide) return;
+                }
 
                 SetAwake(value);
             }
@@ -227,6 +232,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void WakeBody()
         {
+            CanCollide = true;
+
+            if (!_canCollide) return;
+
             Awake = true;
         }
 
@@ -300,9 +309,12 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value ||
-                    value && Owner.IsInContainer(_entMan))
+                if (_canCollide == value)
                     return;
+
+                // If we're recursively in a container then never set this.
+                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
+                    .IsEntityOrParentInContainer(Owner)) return;
 
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
@@ -713,21 +725,6 @@ namespace Robust.Shared.GameObjects
 
             Awake = true;
             Force += force;
-        }
-
-        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
-        public void DestroyContacts()
-        {
-            var node = Contacts.First;
-
-            while (node != null)
-            {
-                var contact = node.Value;
-                node = node.Next;
-                PhysicsMap?.ContactManager.Destroy(contact);
-            }
-
-            DebugTools.Assert(Contacts.Count == 0);
         }
 
         public void ResetMassData(FixturesComponent? fixtures = null)

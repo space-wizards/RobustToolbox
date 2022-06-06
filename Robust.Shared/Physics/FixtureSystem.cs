@@ -20,6 +20,7 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly SharedContainerSystem _containers = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
         {
@@ -44,10 +45,9 @@ namespace Robust.Shared.Physics
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            body.DestroyContacts();
+            _physics.DestroyContacts(body);
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
-            DebugTools.Assert(body.PhysicsMap == null);
         }
         #region Public
 
@@ -193,9 +193,12 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            foreach (var (_, contact) in fixture.Contacts.ToArray())
+            if (TryComp<SharedPhysicsMapComponent>(Transform(body.Owner).MapUid, out var physicsMap))
             {
-                body.PhysicsMap?.ContactManager.Destroy(contact);
+                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                {
+                    physicsMap.ContactManager.Destroy(contact);
+                }
             }
 
             var broadphase = body.Broadphase;

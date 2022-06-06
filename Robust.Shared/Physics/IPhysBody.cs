@@ -50,11 +50,6 @@ namespace Robust.Shared.Physics
         int CollisionMask { get; }
 
         /// <summary>
-        ///     Removes all of the currently active contacts for this body.
-        /// </summary>
-        void DestroyContacts();
-
-        /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }

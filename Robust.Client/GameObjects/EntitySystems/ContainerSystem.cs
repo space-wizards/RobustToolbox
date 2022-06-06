@@ -25,16 +25,10 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage ev)
-        {
-            _updateQueue.Add(ev.Entity);
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
@@ -152,9 +146,14 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        protected override void HandleParentChanged(ref EntParentChangedMessage message)
+        protected override void OnParentChanged(ref EntParentChangedMessage message)
         {
-            base.HandleParentChanged(ref message);
+            base.OnParentChanged(ref message);
+
+            var xform = Transform(message.Entity);
+
+            if (xform.MapID != MapId.Nullspace)
+                _updateQueue.Add(message.Entity);
 
             // If an entity warped in from null-space (i.e., re-entered PVS) and got attached to a container, do the same checks as for newly initialized entities.
             if (message.OldParent != null && message.OldParent.Value.IsValid())
@@ -163,7 +162,7 @@ namespace Robust.Client.GameObjects
             if (!ExpectedEntities.TryGetValue(message.Entity, out var container))
                 return;
 
-            if (Transform(message.Entity).ParentUid != container.Owner)
+            if (xform.ParentUid != container.Owner)
             {
                 // This container is expecting an entity... but it got parented to some other entity???
                 // Ah well, the sever should send a new container state that updates expected entities so just ignore it for now.
@@ -240,7 +239,7 @@ namespace Robust.Client.GameObjects
             var spriteOccluded = false;
             var lightOccluded = false;
 
-            while (parent.IsValid() && !spriteOccluded && !lightOccluded)
+            while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
                 var parentXform = xformQuery.GetComponent(parent);
                 if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))

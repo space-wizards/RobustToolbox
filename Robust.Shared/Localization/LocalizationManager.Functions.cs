@@ -59,10 +59,25 @@ namespace Robust.Shared.Localization
             else return new LocValueString("");
         }
 
-        private static string[] IndefExceptions = { "euler", "heir", "honest" };
-        private static char[] IndefCharList = { 'a', 'e', 'd', 'h', 'i', 'l', 'm', 'n', 'o', 'r', 's', 'x' };
-        private static string[] IndefRegexes = { "^e[uw]", "^onc?e\b", "^uni([^nmd]|mo)", "^u[bcfhjkqrst][aeiou]" };
-        private static char[] IndefVowels = { 'a', 'e', 'i', 'o', 'u' };
+        private static readonly string[] IndefExceptions = { "euler", "heir", "honest" };
+        private static readonly char[] IndefCharList = { 'a', 'e', 'd', 'h', 'i', 'l', 'm', 'n', 'o', 'r', 's', 'x' };
+        private static readonly Regex[] IndefRegexes =
+        {
+            new ("^e[uw]"),
+            new ("^onc?e\b"),
+            new ("^uni([^nmd]|mo)"),
+            new ("^u[bcfhjkqrst][aeiou]")
+        };
+
+        private static readonly Regex IndefRegexFjo =
+            new("(?!FJO|[HLMNS]Y.|RY[EO]|SQU|(F[LR]?|[HL]|MN?|N|RH?|S[CHKLMNPTVW]?|X(YL)?)[AEIOU])[FHLMNRSX][A-Z]");
+
+        private static readonly Regex IndefRegexU = new("^U[NK][AIEO]");
+
+        private static readonly Regex IndefRegexY =
+            new("^y(b[lor]|cl[ea]|fere|gg|p[ios]|rou|tt)");
+
+        private static readonly char[] IndefVowels = { 'a', 'e', 'i', 'o', 'u' };
 
         private ILocValue FuncIndefinite(LocArgs args)
         {
@@ -114,8 +129,7 @@ namespace Robust.Shared.Localization
                 return wordi.IndexOfAny(IndefCharList) == 0 ? an : a;
             }
 
-            if (Regex.Match(word,
-                    "(?!FJO|[HLMNS]Y.|RY[EO]|SQU|(F[LR]?|[HL]|MN?|N|RH?|S[CHKLMNPTVW]?|X(YL)?)[AEIOU])[FHLMNRSX][A-Z]")
+            if (IndefRegexFjo.Match(word)
                 .Success)
             {
                 return an;
@@ -123,11 +137,11 @@ namespace Robust.Shared.Localization
 
             foreach (var regex in IndefRegexes)
             {
-                if (Regex.IsMatch(wordi, regex))
+                if (regex.IsMatch(wordi))
                     return a;
             }
 
-            if (Regex.IsMatch(word, "^U[NK][AIEO]"))
+            if (IndefRegexU.IsMatch(word))
             {
                 return a;
             }
@@ -142,7 +156,7 @@ namespace Robust.Shared.Localization
                 return an;
             }
 
-            return Regex.IsMatch(wordi, "^y(b[lor]|cl[ea]|fere|gg|p[ios]|rou|tt)") ? an : a;
+            return IndefRegexY.IsMatch(wordi) ? an : a;
         }
 
         /// <summary>

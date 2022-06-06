@@ -20,9 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -40,7 +38,6 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
-        internal SharedPhysicsSystem _physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
@@ -105,11 +102,12 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private List<Joint> _joints = new();
 
+        private Stack<PhysicsComponent> _bodyStack = new(64);
+
         /// <summary>
         ///     Temporarily store island-bodies for easier iteration.
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
-
         private List<PhysicsComponent> _islandBodies = new(64);
         private List<Contact> _islandContacts = new(32);
         private List<Joint> _islandJoints = new(8);
@@ -218,7 +216,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Build and simulated islands from awake bodies.
             // Ideally you don't need a stack size for all bodies but we'll TODO: optimise it later.
-            var bodyStack = new Stack<PhysicsComponent>(AwakeBodies.Count);
+            _bodyStack.EnsureCapacity(AwakeBodies.Count);
 
             _islandSet.EnsureCapacity(AwakeBodies.Count);
             _awakeBodyList.AddRange(AwakeBodies);
@@ -248,12 +246,12 @@ namespace Robust.Shared.Physics.Dynamics
                 _islandBodies.Clear();
                 _islandContacts.Clear();
                 _islandJoints.Clear();
-                bodyStack.Push(seed);
+                _bodyStack.Push(seed);
 
                 // TODO: Probably don't need _islandSet anymore.
                 seed.Island = true;
 
-                while (bodyStack.TryPop(out var body))
+                while (_bodyStack.TryPop(out var body))
                 {
                     _islandBodies.Add(body);
                     _islandSet.Add(body);
@@ -290,7 +288,7 @@ namespace Robust.Shared.Physics.Dynamics
                         // Was the other body already added to this island?
                         if (other.Island) continue;
 
-                        bodyStack.Push(other);
+                        _bodyStack.Push(other);
                         other.Island = true;
                     }
 
@@ -310,7 +308,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                         if (other.Island) continue;
 
-                        bodyStack.Push(other);
+                        _bodyStack.Push(other);
                         other.Island = true;
                     }
                 }

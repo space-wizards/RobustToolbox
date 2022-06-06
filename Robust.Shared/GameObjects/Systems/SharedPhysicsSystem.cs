@@ -9,7 +9,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -50,7 +49,6 @@ namespace Robust.Shared.GameObjects
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
         public bool MetricsEnabled { get; protected set; }
-        private readonly Stopwatch _stopwatch = new();
 
         private ISawmill _sawmill = default!;
 
@@ -103,7 +101,6 @@ namespace Robust.Shared.GameObjects
         {
             IoCManager.InjectDependencies(component);
             component.BroadphaseSystem = _broadphase;
-            component._physics = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;

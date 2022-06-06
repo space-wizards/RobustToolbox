@@ -131,10 +131,9 @@ namespace Robust.Shared.GameObjects
             var meta = MetaData(uid);
 
             if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
-            {
                 return;
-            }
 
+            // TODO: need to suss out this particular bit + containers + body.Broadphase.
             if (body._canCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
 

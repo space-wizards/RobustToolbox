@@ -187,13 +187,12 @@ namespace Robust.Shared.GameObjects
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            RecursiveMapUpdate(xform, oldMap, map, xformQuery, bodyQuery, metaQuery);
+            RecursiveMapUpdate(xform, oldMapId, xformQuery, bodyQuery, metaQuery);
         }
 
         private void RecursiveMapUpdate(
             TransformComponent xform,
-            SharedPhysicsMapComponent? oldMap,
-            SharedPhysicsMapComponent? map,
+            MapId oldMap,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<MetaDataComponent> metaQuery)
@@ -206,8 +205,9 @@ namespace Robust.Shared.GameObjects
                     !xformQuery.TryGetComponent(child.Value, out var childXform) ||
                     metaQuery.GetComponent(child.Value).EntityLifeStage == EntityLifeStage.Deleted) continue;
 
+                DestroyContacts(childBody, oldMap);
                 _joints.ClearJoints(childBody);
-                RecursiveMapUpdate(childXform, oldMap, map, xformQuery, bodyQuery, metaQuery);
+                RecursiveMapUpdate(childXform, oldMap, xformQuery, bodyQuery, metaQuery);
             }
         }
 

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -11,7 +10,6 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private Stack<MoveEvent> _queuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();

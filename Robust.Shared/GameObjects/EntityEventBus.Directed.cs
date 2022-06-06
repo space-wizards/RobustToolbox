@@ -502,11 +502,14 @@ namespace Robust.Shared.GameObjects
                     if (Unsafe.IsNullRef(ref dictIdx))
                         continue;
 
+                    ref var updateNext = ref dictIdx;
+
                     // Go over linked list to find index of component.
                     var entryIdx = dictIdx;
+                    ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
                     while (true)
                     {
-                        ref var entry = ref eventTable.ComponentLists[entryIdx];
+                        entry = ref eventTable.ComponentLists[entryIdx];
                         if (entry.Component == type)
                         {
                             // Found
@@ -514,22 +517,22 @@ namespace Robust.Shared.GameObjects
                         }
 
                         entryIdx = entry.Next;
+                        updateNext = ref entry.Next;
                     }
 
-                    ref var foundEntry = ref eventTable.ComponentLists[entryIdx];
-                    if (foundEntry.Next == -1)
+                    if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
                     {
                         // Last entry for this event type, remove from dict.
                         eventTable.EventIndices.Remove(evType);
                     }
                     else
                     {
-                        // Rewrite dictionary to point to next in chain.
-                        dictIdx = foundEntry.Next;
+                        // Rewrite previous index to point to next in chain.
+                        updateNext = entry.Next;
                     }
 
                     // Push entry back onto free list.
-                    foundEntry.Next = eventTable.Free;
+                    entry.Next = eventTable.Free;
                     eventTable.Free = entryIdx;
                 }
             }

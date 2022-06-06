@@ -367,8 +367,8 @@ namespace Robust.Shared.Maths
             var result = Identity;
 
             /* column major
-             0 0 x
-             0 0 y
+             1 0 x
+             0 1 y
              0 0 1
             */
             result.R0C2 = x;
@@ -434,7 +434,8 @@ namespace Robust.Shared.Maths
         {
             // returns a matrix that is equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY)
 
-            var (sin, cos) = MathF.SinCos(angle);
+            var sin = MathF.Sin(angle);
+            var cos = MathF.Cos(angle);
 
             return new Matrix3
             {
@@ -453,7 +454,8 @@ namespace Robust.Shared.Maths
         {
             // returns a matrix that is equivalent to returning CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY)
 
-            var (sin, cos) = MathF.SinCos(angle);
+            var sin = MathF.Sin(angle);
+            var cos = MathF.Cos(angle);
 
             return new Matrix3
             {

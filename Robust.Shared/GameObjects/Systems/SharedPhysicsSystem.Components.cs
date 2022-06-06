@@ -4,6 +4,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -15,23 +16,24 @@ public partial class SharedPhysicsSystem
 
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
+            bool awake;
+            component._awake = false;
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
-            physicsMap.AddBody(component);
 
             if (component.BodyType != BodyType.Static &&
                 (physicsMap.Gravity != Vector2.Zero ||
                  !component.LinearVelocity.Equals(Vector2.Zero) ||
                  !component.AngularVelocity.Equals(0f)))
             {
-                component._awake = true;
+                awake = true;
             }
             else
             {
-                component._awake = false;
+                awake = false;
             }
 
-            if (component._awake)
-                physicsMap.AddAwakeBody(component);
+            if (awake)
+                component.Awake = true;
         }
         else
         {
@@ -82,15 +84,20 @@ public partial class SharedPhysicsSystem
         component.Predict = false;
     }
 
+    /// <summary>
+    /// Attempts to set the body to collidable, wake it, then move it.
+    /// </summary>
+    /// <param name="body"></param>
+    /// <param name="velocity"></param>
     public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity)
     {
-        if (body.BodyType == BodyType.Static ||
-            !body.CanCollide) return;
+        if (body.BodyType == BodyType.Static) return;
 
         if (Vector2.Dot(velocity, velocity) > 0.0f)
-            body.Awake = true;
+            body.WakeBody();
 
-        if (body._linearVelocity.EqualsApprox(velocity, 0.0001f))
+        if (!body.CanCollide ||
+            body._linearVelocity.EqualsApprox(velocity, 0.0001f))
             return;
 
         body._linearVelocity = velocity;
@@ -115,6 +122,31 @@ public partial class SharedPhysicsSystem
         }
 
         return bounds;
+    }
+
+    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null)
+    {
+        if (body.Contacts.Count == 0) return;
+
+        mapId ??= Transform(body.Owner).MapID;
+
+        if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
+        {
+            DebugTools.Assert(body.Contacts.Count == 0);
+            return;
+        }
+
+        var node = body.Contacts.First;
+
+        while (node != null)
+        {
+            var contact = node.Value;
+            node = node.Next;
+            // Destroy last so the linked-list doesn't get touched.
+            map.ContactManager.Destroy(contact);
+        }
+
+        DebugTools.Assert(body.Contacts.Count == 0);
     }
 
     public Box2 GetHardAABB(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)

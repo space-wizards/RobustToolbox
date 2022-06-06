@@ -478,16 +478,7 @@ namespace Robust.Shared.Physics
 
         public void RegenerateContacts(PhysicsComponent body)
         {
-            // TODO: PhysicsMap actually needs to be made nullable (or needs a re-design to not be on the body).
-            // Eventually it'll be a component on the map so nullspace won't have one anyway and we need to handle that scenario.
-            // Technically it is nullable coz of networking (previously it got away with being able to ignore it
-            // but anchoring can touch BodyType in HandleComponentState so we need to handle this here).
-            if (body.PhysicsMap != null)
-            {
-                body.DestroyContacts();
-            }
-
-            DebugTools.Assert(body.Contacts.Count == 0);
+            Get<SharedPhysicsSystem>().DestroyContacts(body);
 
             var broadphase = body.Broadphase;
 

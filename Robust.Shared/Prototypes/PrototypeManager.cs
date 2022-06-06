@@ -716,9 +716,7 @@ namespace Robust.Shared.Prototypes
 
         public bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            var ret = _prototypeResults[type].TryGetValue(id, out var originalMappings);
-            mappings = originalMappings?.Copy();
-            return ret;
+            return _prototypeResults[type].TryGetValue(id, out mappings);
         }
 
         /// <inheritdoc />

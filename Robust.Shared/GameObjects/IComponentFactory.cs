@@ -118,6 +118,12 @@ namespace Robust.Shared.GameObjects
         T GetComponent<T>() where T : IComponent, new();
 
         /// <summary>
+        /// Gets a new component instantiated from the specified component registration.
+        /// </summary>
+        /// <returns>A Component</returns>
+        IComponent GetComponent(ComponentRegistration reg);
+
+        /// <summary>
         /// Gets a new component instantiated of the specified <see cref="IComponent.Name"/>.
         /// </summary>
         /// <param name="componentName">name of component to make</param>

@@ -94,3 +94,12 @@ cmd-dump_net_comps-help = Usage: dump_net-comps
 
 cmd-dump_net_comps-error-writeable = Registration still writeable, network ids have not been generated.
 cmd-dump_net_comps-header = Networked Component Registrations:
+
+## 'dump_event_tables' command
+cmd-dump_event_tables-desc = Prints directed event tables for an entity.
+cmd-dump_event_tables-help = Usage: dump_event_tables <entityUid>
+
+cmd-dump_event_tables-missing-arg-entity = Missing entity argument
+cmd-dump_event_tables-error-entity = Invalid entity
+cmd-dump_event_tables-arg-entity = <entityUid>
+

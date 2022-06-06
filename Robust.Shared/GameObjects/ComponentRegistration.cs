@@ -35,7 +35,9 @@ public sealed class ComponentRegistration
 
     public ValueList<CompIdx> References;
 
-    public ComponentRegistration(string name, Type type, CompIdx idx)
+    // Internal for sandboxing.
+    // Avoid content passing an instance of this to ComponentFactory to get any type they want instantiated.
+    internal ComponentRegistration(string name, Type type, CompIdx idx)
     {
         Name = name;
         Type = type;

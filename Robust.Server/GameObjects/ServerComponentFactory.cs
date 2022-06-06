@@ -1,4 +1,3 @@
-using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -8,8 +7,8 @@ namespace Robust.Server.GameObjects
 {
     internal sealed class ServerComponentFactory : ComponentFactory
     {
-        public ServerComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
-            : base(typeFactory, reflectionManager, conHost)
+        public ServerComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
+            : base(typeFactory, reflectionManager)
         {
             RegisterIgnore("Input");
             RegisterIgnore("AnimationPlayer");

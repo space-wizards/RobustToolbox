@@ -293,7 +293,9 @@ namespace Robust.Shared.GameObjects
                 Dirty(component);
             }
 
-            ComponentAdded?.Invoke(new AddedComponentEventArgs(new ComponentEventArgs(component, uid)));
+            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid));
+            ComponentAdded?.Invoke(eventArgs);
+            _eventBus.OnComponentAdded(eventArgs);
 
             component.LifeAddToEntity(this);
 
@@ -425,7 +427,11 @@ namespace Robust.Shared.GameObjects
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 component.LifeRemoveFromEntity(this);
-            ComponentRemoved?.Invoke(new RemovedComponentEventArgs(new ComponentEventArgs(component, uid)));
+
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
+            ComponentRemoved?.Invoke(eventArgs);
+            _eventBus.OnComponentRemoved(eventArgs);
+
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -459,7 +465,10 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this); // Sets delete
 
-                ComponentRemoved?.Invoke(new RemovedComponentEventArgs(new ComponentEventArgs(component, uid)));
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
+
             }
 #if EXCEPTION_TOLERANCE
             }
@@ -642,6 +651,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];

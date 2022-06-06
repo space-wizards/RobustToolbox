@@ -84,6 +84,12 @@ namespace Robust.Shared.Physics
         float InvMass { get; }
 
         /// <summary>
+        /// Mass of the entities fixtures in kilograms
+        /// Ignores body type
+        /// </summary>
+        float FixturesMass { get; }
+
+        /// <summary>
         /// Mass of the entity in kilograms
         /// Set this via fixtures.
         /// </summary>

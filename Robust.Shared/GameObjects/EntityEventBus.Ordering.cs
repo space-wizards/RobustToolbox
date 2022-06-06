@@ -1,98 +1,209 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
     internal partial class EntityEventBus
     {
-        // TODO: Topological sort is currently done every time an event is emitted.
-        // This should be fine for low-volume stuff like interactions, but definitely not for anything high volume.
-        // Not sure if we could pre-cache the topological sort, here.
-
-        // Ordered event raising is slow so if this event has any ordering dependencies we use a slower path.
-        private readonly HashSet<Type> _orderedEvents = new();
-
-        private void ProcessSingleEventOrdered(EventSource source, ref Unit eventArgs, Type eventType, bool byRef)
-        {
-            var found = new List<(RefEventHandler, OrderingData?)>();
-
-            CollectBroadcastOrdered(source, eventType, found, byRef);
-
-            DispatchOrderedEvents(ref eventArgs, found);
-        }
-
-        private void CollectBroadcastOrdered(
+        private static void CollectBroadcastOrdered(
             EventSource source,
-            Type eventType,
-            List<(RefEventHandler, OrderingData?)> found,
+            EventData sub,
+            ref ValueList<OrderedEventDispatch> found,
             bool byRef)
         {
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
-                return;
-
-            foreach (var handler in subs)
+            foreach (var handler in sub.BroadcastRegistrations)
             {
                 if (handler.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 
                 if ((handler.Mask & source) != 0)
-                    found.Add((handler.Handler, handler.Ordering));
+                    found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
             }
         }
 
-        private void RaiseLocalOrdered(EntityUid uid,
+        private void RaiseLocalOrdered(
+            EntityUid uid,
             Type eventType,
+            EventData subs,
             ref Unit unitRef,
-            bool broadcast, bool byRef)
+            bool broadcast,
+            bool byRef)
         {
-            var found = new List<(RefEventHandler, OrderingData?)>();
+            if (!subs.OrderingUpToDate)
+                UpdateOrderSeq(eventType, subs);
+
+            var found = new ValueList<OrderedEventDispatch>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, eventType, found, byRef);
+                CollectBroadcastOrdered(EventSource.Local, subs, ref found, byRef);
 
-            _eventTables.CollectOrdered(uid, eventType, found, byRef);
+            EntCollectOrdered(uid, eventType, ref found, byRef);
 
-            DispatchOrderedEvents(ref unitRef, found);
-
-            if (broadcast)
-                ProcessAwaitingMessages(EventSource.Local, ref unitRef, eventType);
+            DispatchOrderedEvents(ref unitRef, ref found);
         }
 
-        private static void DispatchOrderedEvents(ref Unit eventArgs, List<(RefEventHandler, OrderingData?)> found)
+        private static void DispatchOrderedEvents(ref Unit eventArgs, ref ValueList<OrderedEventDispatch> found)
         {
-            var nodes = TopologicalSort.FromBeforeAfter(
-                found.Where(f => f.Item2 != null),
-                n => n.Item2!.OrderType,
-                n => n.Item1!,
-                n => n.Item2!.Before ?? Array.Empty<Type>(),
-                n => n.Item2!.After ?? Array.Empty<Type>(),
-                allowMissing: true);
+            found.Sort(OrderedEventDispatchComparer.Instance);
 
-            foreach (var handler in TopologicalSort.Sort(nodes))
+            foreach (var (handler, _) in found)
             {
                 handler(ref eventArgs);
             }
+        }
 
-            // Go over all handlers that don't have ordering so weren't included in the sort.
-            foreach (var (handler, orderData) in found)
+        /// <summary>
+        /// Calculate sequence order for all event subscriptions, broadcast and directed.
+        /// </summary>
+        private void UpdateOrderSeq(Type eventType, EventData sub)
+        {
+            DebugTools.Assert(sub.IsOrdered);
+
+            // Collect all subscriptions, broadcast and ordered.
+            IEnumerable<OrderedRegistration> regs = sub.BroadcastRegistrations;
+            if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
             {
-                if (orderData == null)
-                    handler(ref eventArgs);
+                regs = regs.Concat(comps
+                    .Select(c => _entSubscriptions[c.Value])
+                    .Where(c => c != null)
+                    .Select(c => c![eventType]));
+            }
+
+            // A hard problem in EventBus' design is that ordering is keyed on a single Type instance
+            // (probably just the type of the EntitySystem).
+            // This is problematic if a system listens to the same directed event multiple times for the same component,
+            // as there are now two distinct subscriptions with the same key.
+            // To solve this, I decided that *this is allowed*, but all ordering on the same key must be the same.
+            // So you can't have different Before/After on two subscriptions to an event on the same system.
+            //
+            // Group by ordering types, also filter out un-ordered ones.
+
+            var groups = regs.Where(r => r.Ordering != null).GroupBy(b => b.Ordering!.OrderType).ToArray();
+
+            // Verify that all groups of order types have the same ordering info for Before/After.
+            foreach (var group in groups)
+            {
+                var firstOrder = group.First().Ordering;
+                if (!group.All(e => e.Ordering!.Equals(firstOrder)))
+                {
+                    throw new InvalidOperationException(
+                        $"{group.Key} uses different ordering constraints for different subscriptions to the same event {eventType}. " +
+                        "All subscriptions to the same event from the same registrar must use the same ordering.");
+                }
+            }
+
+            // Set up topological sort.
+            var nodes = TopologicalSort.FromBeforeAfter(
+                groups.Select(g => g.ToArray()),
+                n => n[0].Ordering!.OrderType,
+                n => n,
+                n => n[0].Ordering!.Before,
+                n => n[0].Ordering!.After,
+                allowMissing: true);
+
+            // Start at 1, if only so events with no Ordering data at all have a distinct position.
+            // Doesn't really matter.
+            var i = 1;
+            foreach (var group in TopologicalSort.Sort(nodes))
+            {
+                // Assign indices to all registrations in order of the topological sort.
+                foreach (var registration in group)
+                {
+                    registration.Order = i++;
+                }
+            }
+
+            sub.OrderingUpToDate = true;
+
+            // Sort the broadcast registrations ahead of time.
+            // This means ordered broadcast events have no overhead from unordered ones.
+            sub.BroadcastRegistrations.Sort(RegistrationOrderComparer.Instance);
+
+            // We still need Order indices on the OrderedRegistrations for directed ordered events.
+            // Since we sort those at submission time.
+            // Still, it's a single .Sort() now for those instead of the whole topological short shebang.
+        }
+
+        private sealed record OrderingData(Type OrderType, Type[] Before, Type[] After)
+        {
+            public bool Equals(OrderingData? other)
+            {
+                if (other == null)
+                    return false;
+
+                return other.OrderType == OrderType
+                       && Before.AsSpan().SequenceEqual(other.Before)
+                       && After.AsSpan().SequenceEqual(other.After);
+            }
+
+            public override int GetHashCode()
+            {
+                var hc = new HashCode();
+                hc.Add(OrderType);
+                hc.AddArray(Before);
+                hc.AddArray(After);
+                return hc.ToHashCode();
             }
         }
 
-        private void HandleOrderRegistration(Type eventType, OrderingData? data)
+        private sealed class RegistrationOrderComparer : IComparer<OrderedRegistration>
         {
-            if (data == null)
-                return;
+            public static readonly RegistrationOrderComparer Instance = new();
 
-            if (data.Before != null || data.After != null)
-                _orderedEvents.Add(eventType);
+            public int Compare(OrderedRegistration? x, OrderedRegistration? y)
+            {
+                return x!.Order.CompareTo(y!.Order);
+            }
         }
 
-        private sealed record OrderingData(Type OrderType, Type[]? Before, Type[]? After);
+        private record struct OrderedEventDispatch(RefEventHandler Handler, int Order);
 
+        private sealed class OrderedEventDispatchComparer : IComparer<OrderedEventDispatch>
+        {
+            public static readonly OrderedEventDispatchComparer Instance = new();
+
+            public int Compare(OrderedEventDispatch x, OrderedEventDispatch y)
+            {
+                return x.Order.CompareTo(y.Order);
+            }
+        }
+
+        /// <summary>
+        /// Base type for directed and broadcast subscriptions. Contains ordering data.
+        /// </summary>
+        private abstract class OrderedRegistration
+        {
+            public int Order;
+            public readonly OrderingData? Ordering;
+
+            protected OrderedRegistration(OrderingData? ordering)
+            {
+                Ordering = ordering;
+            }
+        }
+
+        /// <summary>
+        /// Ensure all ordered events are sorted out and verified.
+        /// </summary>
+        /// <remarks>
+        /// Internal sorting for ordered events is normally deferred until raised
+        /// (since broadcast event subscriptions can be edited at any time).
+        ///
+        /// Calling this gets all the sorting done ahead of time,
+        /// and makes sure that there are no problems with cycles and such.
+        /// </remarks>
+        public void CalcOrdering()
+        {
+            foreach (var (type, sub) in _eventData)
+            {
+                if (sub.IsOrdered && !sub.OrderingUpToDate)
+                {
+                    UpdateOrderSeq(type, sub);
+                }
+            }
+        }
     }
 }

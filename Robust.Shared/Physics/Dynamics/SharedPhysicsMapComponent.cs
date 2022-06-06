@@ -215,9 +215,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Build and simulated islands from awake bodies.
-            // Ideally you don't need a stack size for all bodies but we'll TODO: optimise it later.
             _bodyStack.EnsureCapacity(AwakeBodies.Count);
-
             _islandSet.EnsureCapacity(AwakeBodies.Count);
             _awakeBodyList.AddRange(AwakeBodies);
 

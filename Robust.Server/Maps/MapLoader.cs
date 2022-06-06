@@ -937,7 +937,7 @@ namespace Robust.Server.Maps
                             prototypeCompCache[prototype.ID] = cache =  new Dictionary<string, MappingDataNode>();
                             foreach (var (compType, comp) in prototype.Components)
                             {
-                                cache.Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                                cache.Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
                             }
                         }
                     }

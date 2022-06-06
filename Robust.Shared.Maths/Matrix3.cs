@@ -818,7 +818,7 @@ namespace Robust.Shared.Maths
 
         #region Functions
 
-        public readonly float Determinant
+        public readonly double Determinant
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => R0C0 * R1C1 * R2C2 - R0C0 * R1C2 * R2C1 - R0C1 * R1C0 * R2C2 + R0C2 * R1C0 * R2C1 + R0C1 * R1C2 * R2C0 - R0C2 * R1C1 * R2C0;
@@ -891,15 +891,15 @@ namespace Robust.Shared.Maths
 
             var invdet = 1 / det;
 
-            minv.R0C0 = (m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet;
-            minv.R0C1 = (m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet;
-            minv.R0C2 = (m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet;
-            minv.R1C0 = (m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet;
-            minv.R1C1 = (m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet;
-            minv.R1C2 = (m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet;
-            minv.R2C0 = (m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet;
-            minv.R2C1 = (m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet;
-            minv.R2C2 = (m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet;
+            minv.R0C0 = (float) ((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
+            minv.R0C1 = (float) ((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
+            minv.R0C2 = (float) ((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
+            minv.R1C0 = (float) ((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
+            minv.R1C1 = (float) ((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
+            minv.R1C2 = (float) ((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
+            minv.R2C0 = (float) ((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
+            minv.R2C1 = (float) ((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
+            minv.R2C2 = (float) ((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
         }
 
         #endregion Functions

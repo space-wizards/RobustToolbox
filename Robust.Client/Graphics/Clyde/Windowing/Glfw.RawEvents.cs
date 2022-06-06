@@ -218,6 +218,8 @@ namespace Robust.Client.Graphics.Clyde
             (
                 int Id
             ) : EventBase;
+
+            private sealed record EventSetFullscreenAck : EventBase;
         }
     }
 }

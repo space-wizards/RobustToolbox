@@ -83,6 +83,9 @@ namespace Robust.Client.Graphics.Clyde
                     case EventWindowContentScale cs:
                         ProcessEventWindowContentScale(cs);
                         break;
+                    case EventSetFullscreenAck:
+                        ProcessEventSetFullscreenAck();
+                        break;
                     default:
                         _sawmill.Error($"Unknown GLFW event type: {evb.GetType()}");
                         break;
@@ -249,6 +252,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 windowReg.IsFocused = ev.Focused;
                 _clyde.SendWindowFocus(new WindowFocusedEventArgs(ev.Focused, windowReg.Handle));
+            }
+
+            private void ProcessEventSetFullscreenAck()
+            {
+                // As far as I can tell, sometimes entering fullscreen just disables vsync.
+                // Hilarious!
+                _clyde._glContext?.UpdateVSync();
             }
         }
     }

@@ -227,9 +227,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), CompIdx.Index<MetaDataComponent>()));
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), CompIdx.Index<MetaDataComponent>()));
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instC, entUid), CompIdx.Index<MetaDataComponent>()));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), CompIdx.Index<OrderAComponent>()));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), CompIdx.Index<OrderBComponent>()));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instC, entUid), CompIdx.Index<OrderCComponent>()));
 
             // Raise
             var evntArgs = new TestEvent(5);

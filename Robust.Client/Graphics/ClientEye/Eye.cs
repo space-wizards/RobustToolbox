@@ -78,8 +78,8 @@ namespace Robust.Client.Graphics
         public void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale)
         {
             viewMatrixInv = Matrix3.CreateTransform(
-                _coords.Position.X,
-                _coords.Position.Y,
+                _coords.Position.X + Offset.X,
+                _coords.Position.Y + Offset.Y,
                 (float)-Rotation.Theta,
                 1 / (_scale.X * renderScale.X),
                 1 / (_scale.Y * renderScale.Y));

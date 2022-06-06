@@ -1357,7 +1357,7 @@ namespace Robust.Client.GameObjects
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
             var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation);
 
-            Matrix3.Multiply(ref LocalMatrix, ref entityMatrix, out var transform);
+            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
 
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             foreach (var layer in Layers)
@@ -2030,7 +2030,7 @@ namespace Robust.Client.GameObjects
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    Matrix3.Multiply(ref _rsiDirectionMatrices[(int)dir], ref LocalMatrix, out layerDrawMatrix);
+                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
                 }
             }
 
@@ -2060,7 +2060,7 @@ namespace Robust.Client.GameObjects
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
-                Matrix3.Multiply(ref layerMatrix, ref spriteMatrix, out var transformMatrix);
+                Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
                 // The direction used to draw the sprite can differ from the one that the angle would naively suggest,

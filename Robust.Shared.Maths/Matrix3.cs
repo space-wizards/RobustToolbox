@@ -72,7 +72,7 @@ namespace Robust.Shared.Maths
         public float this[int row, int column]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
+            readonly get
             {
                 switch (row)
                 {
@@ -173,7 +173,7 @@ namespace Robust.Shared.Maths
         public float this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
+            readonly get
             {
                 switch (index)
                 {
@@ -230,7 +230,7 @@ namespace Robust.Shared.Maths
         /// <param name="matrix">The matrix to convert.</param>
         /// <returns>An array of floats for the matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static explicit operator float[](Matrix3 matrix)
+        public static explicit operator float[](in Matrix3 matrix)
         {
             return new[]
             {
@@ -253,7 +253,7 @@ namespace Robust.Shared.Maths
         /// <summary>Constructs left matrix with the same components as the given matrix.</summary>
         /// <param name="matrix">The matrix whose components to copy.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix3(ref Matrix3 matrix)
+        public Matrix3(in Matrix3 matrix)
         {
             R0C0 = matrix.R0C0;
             R0C1 = matrix.R0C1;
@@ -324,7 +324,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="matrix">A Matrix4 to take the upper-left 3x3 from.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix3(Matrix4 matrix)
+        public Matrix3(in Matrix4 matrix)
         {
             R0C0 = matrix.Row0.X;
             R0C1 = matrix.Row0.Y;
@@ -346,7 +346,7 @@ namespace Robust.Shared.Maths
         /// <param name="y">A Vector2 for the second, conventionally Y basis, vector.</param>
         /// <param name="origin">A Vector2 for the third, conventionally origin vector.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix3(ref Vector2 x, ref Vector2 y, ref Vector2 origin)
+        public Matrix3(in Vector2 x, in Vector2 y, in Vector2 origin)
         {
             R0C0 = x.X;
             R0C1 = y.X;
@@ -498,7 +498,7 @@ namespace Robust.Shared.Maths
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
         /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
-        public bool Equals(Matrix3 other)
+        public readonly bool Equals(Matrix3 other)
         {
             return
                 R0C0 == other.R0C0 &&
@@ -515,7 +515,7 @@ namespace Robust.Shared.Maths
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
         /// <param name="matrix">The Matrix3 structure to compare to.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
-        public bool Equals(ref Matrix3 matrix)
+        public readonly bool Equals(in Matrix3 matrix)
         {
             return
                 R0C0 == matrix.R0C0 &&
@@ -533,7 +533,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left-hand operand.</param>
         /// <param name="right">The right-hand operand.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
-        public static bool Equals(ref Matrix3 left, ref Matrix3 right)
+        public static bool Equals(in Matrix3 left, in Matrix3 right)
         {
             return
                 left.R0C0 == right.R0C0 &&
@@ -550,20 +550,20 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EqualsApprox(Matrix3 other)
         {
-            return EqualsApprox(ref other, 1.0E-6f);
+            return EqualsApprox(in other, 1.0E-6f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EqualsApprox(Matrix3 other, double tolerance)
         {
-            return EqualsApprox(ref other, (float) tolerance);
+            return EqualsApprox(in other, (float) tolerance);
         }
 
         /// <summary>Indicates whether the current matrix is approximately equal to another matrix.</summary>
         /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <param name="tolerance">The limit below which the matrices are considered equal.</param>
         /// <returns>true if the current matrix is approximately equal to the matrix parameter; otherwise, false.</returns>
-        public bool EqualsApprox(ref Matrix3 matrix, float tolerance)
+        public readonly bool EqualsApprox(in Matrix3 matrix, float tolerance)
         {
             return
                 Math.Abs(R0C0 - matrix.R0C0) <= tolerance &&
@@ -582,7 +582,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">The right-hand operand.</param>
         /// <param name="tolerance">The limit below which the matrices are considered equal.</param>
         /// <returns>true if the current matrix is approximately equal to the matrix parameter; otherwise, false.</returns>
-        public static bool EqualsApprox(ref Matrix3 left, ref Matrix3 right, float tolerance)
+        public static bool EqualsApprox(in Matrix3 left, in Matrix3 right, float tolerance)
         {
             return
                 Math.Abs(left.R0C0 - right.R0C0) <= tolerance &&
@@ -603,7 +603,7 @@ namespace Robust.Shared.Maths
         /// <summary>Add left matrix to this matrix.</summary>
         /// <param name="matrix">The matrix to add.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(ref Matrix3 matrix)
+        public void Add(in Matrix3 matrix)
         {
             R0C0 = R0C0 + matrix.R0C0;
             R0C1 = R0C1 + matrix.R0C1;
@@ -620,7 +620,7 @@ namespace Robust.Shared.Maths
         /// <param name="matrix">The matrix to add.</param>
         /// <param name="result">The resulting matrix of the addition.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(ref Matrix3 matrix, out Matrix3 result)
+        public readonly void Add(in Matrix3 matrix, out Matrix3 result)
         {
             result.R0C0 = R0C0 + matrix.R0C0;
             result.R0C1 = R0C1 + matrix.R0C1;
@@ -638,7 +638,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the addition.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Add(ref Matrix3 left, ref Matrix3 right, out Matrix3 result)
+        public static void Add(in Matrix3 left, in Matrix3 right, out Matrix3 result)
         {
             result.R0C0 = left.R0C0 + right.R0C0;
             result.R0C1 = left.R0C1 + right.R0C1;
@@ -654,7 +654,7 @@ namespace Robust.Shared.Maths
         /// <summary>Subtract matrix from this matrix.</summary>
         /// <param name="matrix">The matrix to subtract.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Subtract(ref Matrix3 matrix)
+        public void Subtract(in Matrix3 matrix)
         {
             R0C0 = R0C0 - matrix.R0C0;
             R0C1 = R0C1 - matrix.R0C1;
@@ -671,7 +671,7 @@ namespace Robust.Shared.Maths
         /// <param name="matrix">The matrix to subtract.</param>
         /// <param name="result">The resulting matrix of the subtraction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Subtract(ref Matrix3 matrix, out Matrix3 result)
+        public readonly void Subtract(in Matrix3 matrix, out Matrix3 result)
         {
             result.R0C0 = R0C0 - matrix.R0C0;
             result.R0C1 = R0C1 - matrix.R0C1;
@@ -689,7 +689,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the subtraction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Subtract(ref Matrix3 left, ref Matrix3 right, out Matrix3 result)
+        public static void Subtract(in Matrix3 left, in Matrix3 right, out Matrix3 result)
         {
             result.R0C0 = left.R0C0 - right.R0C0;
             result.R0C1 = left.R0C1 - right.R0C1;
@@ -732,7 +732,7 @@ namespace Robust.Shared.Maths
         /// <param name="matrix">The matrix to multiply.</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Multiply(ref Matrix3 matrix, out Matrix3 result)
+        public readonly void Multiply(in Matrix3 matrix, out Matrix3 result)
         {
             result.R0C0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
             result.R0C1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;
@@ -750,7 +750,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Multiply(ref Matrix3 left, ref Matrix3 right, out Matrix3 result)
+        public static void Multiply(in Matrix3 left, in Matrix3 right, out Matrix3 result)
         {
             result.R0C0 = right.R0C0 * left.R0C0 + right.R0C1 * left.R1C0 + right.R0C2 * left.R2C0;
             result.R0C1 = right.R0C0 * left.R0C1 + right.R0C1 * left.R1C1 + right.R0C2 * left.R2C1;
@@ -783,7 +783,7 @@ namespace Robust.Shared.Maths
         /// <param name="scalar">The scalar to multiply.</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Multiply(float scalar, out Matrix3 result)
+        public readonly void Multiply(float scalar, out Matrix3 result)
         {
             result.R0C0 = scalar * R0C0;
             result.R0C1 = scalar * R0C1;
@@ -801,7 +801,7 @@ namespace Robust.Shared.Maths
         /// <param name="scalar">The scalar on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Multiply(ref Matrix3 matrix, float scalar, out Matrix3 result)
+        public static void Multiply(in Matrix3 matrix, float scalar, out Matrix3 result)
         {
             result.R0C0 = scalar * matrix.R0C0;
             result.R0C1 = scalar * matrix.R0C1;
@@ -818,7 +818,7 @@ namespace Robust.Shared.Maths
 
         #region Functions
 
-        public float Determinant
+        public readonly float Determinant
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => R0C0 * R1C1 * R2C2 - R0C0 * R1C2 * R2C1 - R0C1 * R1C0 * R2C2 + R0C2 * R1C0 * R2C1 + R0C1 * R1C2 * R2C0 - R0C2 * R1C1 * R2C0;
@@ -833,7 +833,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Transpose(out Matrix3 result)
+        public readonly void Transpose(out Matrix3 result)
         {
             result.R0C0 = R0C0;
             result.R0C1 = R1C0;
@@ -847,7 +847,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Transpose(ref Matrix3 matrix, out Matrix3 result)
+        public static void Transpose(in Matrix3 matrix, out Matrix3 result)
         {
             result.R0C0 = matrix.R0C0;
             result.R0C1 = matrix.R1C0;
@@ -867,40 +867,39 @@ namespace Robust.Shared.Maths
         /// <returns>The inverse of the given matrix if it has one, or the input if it is singular</returns>
         /// <exception cref="InvalidOperationException">Thrown if the Matrix4 is singular.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 Invert(Matrix3 mat)
+        public static Matrix3 Invert(in Matrix3 mat)
         {
-            var result = new Matrix3();
-            mat.Invert(ref result);
+            Invert(mat, out var result);
             return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Invert(ref Matrix3 minv)
+        public readonly Matrix3 Invert()
+        {
+            Invert(this, out var result);
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Invert(in Matrix3 m, out Matrix3 minv)
         {
             //Credit: https://stackoverflow.com/a/18504573
 
-            var d = Determinant;
-            if (MathHelper.CloseToPercent(d, 0))
+            var det = m.Determinant;
+            if (MathHelper.CloseToPercent(det, 0))
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
-
-            var m = this;
-
-            // computes the inverse of a matrix m
-            double det = m.R0C0 * (m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) -
-                         m.R0C1 * (m.R1C0 * m.R2C2 - m.R1C2 * m.R2C0) +
-                         m.R0C2 * (m.R1C0 * m.R2C1 - m.R1C1 * m.R2C0);
 
             var invdet = 1 / det;
 
-            minv.R0C0 = (float) ((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
-            minv.R0C1 = (float) ((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
-            minv.R0C2 = (float) ((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
-            minv.R1C0 = (float) ((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
-            minv.R1C1 = (float) ((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
-            minv.R1C2 = (float) ((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
-            minv.R2C0 = (float) ((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
-            minv.R2C1 = (float) ((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
-            minv.R2C2 = (float) ((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
+            minv.R0C0 = (m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet;
+            minv.R0C1 = (m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet;
+            minv.R0C2 = (m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet;
+            minv.R1C0 = (m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet;
+            minv.R1C1 = (m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet;
+            minv.R1C2 = (m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet;
+            minv.R2C0 = (m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet;
+            minv.R2C1 = (m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet;
+            minv.R2C2 = (m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet;
         }
 
         #endregion Functions
@@ -908,7 +907,7 @@ namespace Robust.Shared.Maths
         #region Transformation Functions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Transform(ref Vector3 vector)
+        public readonly void Transform(ref Vector3 vector)
         {
             var x = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
             var y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
@@ -1030,11 +1029,9 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Transform(ref Vector3 vector, out Vector3 result)
+        public void Transform(in Vector3 vector, out Vector3 result)
         {
-            result.X = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
-            result.Y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
-            result.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
+            Transform(this, vector, out result);
         }
 
         /// <summary>
@@ -1046,10 +1043,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(in Matrix3 matrix, in Vector3 vector, out Vector3 result)
         {
-            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
-            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
-            var z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
-            result = new Vector3(x, y, z);
+            result.X = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
+            result.Y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
+            result.Z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
         }
 
         /// <summary>
@@ -1062,9 +1058,8 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(in Matrix3 matrix, in Vector2 vector, out Vector2 result)
         {
-            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
-            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
-            result = new Vector2(x, y);
+            result.X = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
+            result.Y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
         }
 
         /// <summary>
@@ -1076,10 +1071,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(in Vector3 vector, in Matrix3 matrix, out Vector3 result)
         {
-            var x = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (vector.Z * matrix.R2C0);
-            var y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (vector.Z * matrix.R2C1);
-            var z = (vector.X * matrix.R0C2) + (vector.Y * matrix.R1C2) + (vector.Z * matrix.R2C2);
-            result = new Vector3(x, y, z);
+            result.X = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (vector.Z * matrix.R2C0);
+            result.Y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (vector.Z * matrix.R2C1);
+            result.Z = (vector.X * matrix.R0C2) + (vector.Y * matrix.R1C2) + (vector.Z * matrix.R2C2);
         }
 
         /// <summary>
@@ -1092,9 +1086,8 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(in Vector2 vector, in Matrix3 matrix, out Vector2 result)
         {
-            var x = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (matrix.R2C0);
-            var y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (matrix.R2C1);
-            result = new Vector2(x, y);
+            result.X = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (matrix.R2C0);
+            result.Y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (matrix.R2C1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1217,7 +1210,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 operator *(in Matrix3 matrix, in Vector2 vector)
         {
-            Transform(in matrix, in vector, out var result);
+            Transform(in matrix, vector, out var result);
             return result;
         }
 
@@ -1240,9 +1233,9 @@ namespace Robust.Shared.Maths
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <returns>The resulting matrix of the multiplication.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 operator *(Matrix3 left, Matrix3 right)
+        public static Matrix3 operator *(in Matrix3 left, in Matrix3 right)
         {
-            Multiply(ref left, ref right, out var result);
+            Multiply(in left, in right, out var result);
             return result;
         }
 
@@ -1270,7 +1263,7 @@ namespace Robust.Shared.Maths
 
         /// <summary>Returns the hash code for this instance.</summary>
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return
                 R0C0.GetHashCode() ^ R0C1.GetHashCode() ^ R0C2.GetHashCode() ^
@@ -1284,7 +1277,7 @@ namespace Robust.Shared.Maths
 
         /// <summary>Returns the fully qualified type name of this instance.</summary>
         /// <returns>A System.String containing left fully qualified type name.</returns>
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"|{R0C0}, {R0C1}, {R0C2}|\n"
                    + $"|{R1C0}, {R1C1}, {R1C2}|\n"

@@ -103,3 +103,14 @@ cmd-dump_event_tables-missing-arg-entity = Missing entity argument
 cmd-dump_event_tables-error-entity = Invalid entity
 cmd-dump_event_tables-arg-entity = <entityUid>
 
+## 'monitor' command
+cmd-monitor-desc = Toggles a debug monitor in the F3 menu.
+cmd-monitor-help = Usage: monitor <name>
+    Possible monitors are: { $monitors }
+    You can also use the special values "-all" and "+all" to hide or show all monitors, respectively.
+
+cmd-monitor-arg-monitor = <monitor>
+cmd-monitor-invalid-name = Invalid monitor name
+cmd-monitor-arg-count = Missing monitor argument
+cmd-monitor-minus-all-hint = Hides all monitors
+cmd-monitor-plus-all-hint = Shows all monitors

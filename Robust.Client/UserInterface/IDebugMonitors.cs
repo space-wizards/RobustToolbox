@@ -1,16 +1,39 @@
-namespace Robust.Client.UserInterface
+namespace Robust.Client.UserInterface;
+
+/// <summary>
+/// Manages the debug monitors overlay, AKA "F3 screen".
+/// </summary>
+public interface IDebugMonitors
 {
-    public interface IDebugMonitors
-    {
-        bool Visible { get; set; }
-        bool ShowFPS { get; set; }
-        bool ShowCoords { get; set; }
-        bool ShowNet { get; set; }
-        bool ShowTime { get; set; }
-        bool ShowFrameGraph { get; set; }
-        bool ShowMemory { get; set; }
-        bool ShowClyde { get; set; }
-        bool ShowInput { get; set; }
-        bool ShowNetBandwidth { get; set; }
-    }
+    /// <summary>
+    /// Whether debug monitors are currently visible.
+    /// </summary>
+    bool Visible { get; set; }
+
+    /// <summary>
+    /// Toggle visibility of a specific debug monitor.
+    /// </summary>
+    void ToggleMonitor(DebugMonitor monitor);
+
+    /// <summary>
+    /// Set visibility of a specific debug monitor.
+    /// </summary>
+    void SetMonitor(DebugMonitor monitor, bool visible);
+}
+
+/// <summary>
+/// Debug monitors available in the debug monitors overlay.
+/// </summary>
+public enum DebugMonitor
+{
+    Fps,
+    Coords,
+    Net,
+    Time,
+    Frames,
+    Memory,
+    Clyde,
+    Input,
+    Bandwidth,
+    Prof
 }

@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <!-- Needed for FriendAnalyzer. -->
-    <Compile Include="..\Robust.Shared\Analyzers\FriendAttribute.cs" />
+    <Compile Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" />
     <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" />
   </ItemGroup>
 

@@ -5,22 +5,22 @@ using Microsoft.CodeAnalysis.Testing.Verifiers;
 using NUnit.Framework;
 using Robust.Analyzers;
 
-using VerifyCS = Microsoft.CodeAnalysis.CSharp.Testing.NUnit.AnalyzerVerifier<Robust.Analyzers.FriendAnalyzer>;
+using VerifyCS = Microsoft.CodeAnalysis.CSharp.Testing.NUnit.AnalyzerVerifier<Robust.Analyzers.AccessAnalyzer>;
 using static Microsoft.CodeAnalysis.Testing.DiagnosticResult;
 
 namespace Robust.UnitTesting.Shared;
 
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 [TestFixture]
-public sealed class FriendAnalyzer_Test
+public sealed class AccessAnalyzer_Test
 {
     public Task Verifier(string code, params DiagnosticResult[] expected)
     {
-        var test = new CSharpAnalyzerTest<FriendAnalyzer, NUnitVerifier>()
+        var test = new CSharpAnalyzerTest<AccessAnalyzer, NUnitVerifier>()
         {
             TestState =
             {
-                AdditionalReferences = { typeof(FriendAnalyzer).Assembly },
+                AdditionalReferences = { typeof(AccessAnalyzer).Assembly },
                 Sources = { code }
             },
         };
@@ -55,7 +55,7 @@ public struct MyData
     public static bool operator !=(MyData lhs, MyData rhs) => lhs.MyField != rhs.MyField;
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.None,
     Friend = AccessPermissions.None,
     Other = AccessPermissions.None)]
@@ -63,7 +63,7 @@ public sealed class TypeNobodyCanRead
 {
     public MyData Data = default;
 
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.Read,
         Friend = AccessPermissions.Read,
         Other = AccessPermissions.Read)]
@@ -115,13 +115,13 @@ public sealed class TypeNobodyCanRead
     }
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.Read,
     Friend = AccessPermissions.Read,
     Other = AccessPermissions.Read)]
 public sealed class MemberNobodyCanRead
 {
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.None,
         Friend = AccessPermissions.None,
         Other = AccessPermissions.None)]
@@ -405,7 +405,7 @@ public struct MyData
     public int MyField;
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.None,
     Friend = AccessPermissions.None,
     Other = AccessPermissions.None)]
@@ -413,7 +413,7 @@ public sealed class TypeNobodyCanWrite
 {
     public MyData Data = default;
 
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.Write,
         Friend = AccessPermissions.Write,
         Other = AccessPermissions.Write)]
@@ -441,13 +441,13 @@ public sealed class TypeNobodyCanWrite
     }
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.Write,
     Friend = AccessPermissions.Write,
     Other = AccessPermissions.Write)]
 public sealed class MemberNobodyCanWrite
 {
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.None,
         Friend = AccessPermissions.None,
         Other = AccessPermissions.None)]
@@ -593,7 +593,7 @@ public struct MyData
     public void MyMethod() {}
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.None,
     Friend = AccessPermissions.None,
     Other = AccessPermissions.None)]
@@ -601,7 +601,7 @@ public sealed class TypeNobodyCanExecute
 {
     public MyData Data = default;
 
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.Execute,
         Friend = AccessPermissions.Execute,
         Other = AccessPermissions.Execute)]
@@ -609,7 +609,7 @@ public sealed class TypeNobodyCanExecute
 
     public void MyMethod() {}
 
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.Execute,
         Friend = AccessPermissions.Execute,
         Other = AccessPermissions.Execute)]
@@ -645,13 +645,13 @@ public sealed class TypeNobodyCanExecute
     }
 }
 
-[Friend(typeof(FriendlyClass),
+[Access(typeof(FriendlyClass),
     Self = AccessPermissions.Execute,
     Friend = AccessPermissions.Execute,
     Other = AccessPermissions.Execute)]
 public sealed class MemberNobodyCanExecute
 {
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.None,
         Friend = AccessPermissions.None,
         Other = AccessPermissions.None)]
@@ -659,7 +659,7 @@ public sealed class MemberNobodyCanExecute
 
     public MyData Data2 = default;
 
-    [Friend(typeof(FriendlyClass),
+    [Access(typeof(FriendlyClass),
         Self = AccessPermissions.None,
         Friend = AccessPermissions.None,
         Other = AccessPermissions.None)]

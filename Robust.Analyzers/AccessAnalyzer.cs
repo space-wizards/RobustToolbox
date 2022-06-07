@@ -9,15 +9,15 @@ using Robust.Shared.Analyzers;
 namespace Robust.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class FriendAnalyzer : DiagnosticAnalyzer
+    public class AccessAnalyzer : DiagnosticAnalyzer
     {
-        private const string FriendAttributeType = "Robust.Shared.Analyzers.FriendAttribute";
+        private const string AccessAttributeType = "Robust.Shared.Analyzers.AccessAttribute";
         private const string PureAttributeType = "System.Diagnostics.Contracts.PureAttribute";
 
         [SuppressMessage("ReSharper", "RS2008")]
-        private static readonly DiagnosticDescriptor FriendRule = new (
-            Diagnostics.IdFriend,
-            "Invalid member access",
+        private static readonly DiagnosticDescriptor AccessRule = new (
+            Diagnostics.IdAccess,
+            "Invalid access",
             "Tried to perform {0} access to member '{1}' in type '{2}', despite {3} access. {4}.",
             "Usage",
             DiagnosticSeverity.Error,
@@ -25,7 +25,7 @@ namespace Robust.Analyzers
             "Make sure to give the accessing type the correct access permissions.");
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-            ImmutableArray.Create(FriendRule);
+            ImmutableArray.Create(AccessRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -72,7 +72,7 @@ namespace Robust.Analyzers
             var accessedType = member.ContainingType;
 
             // Get the attributes
-            var friendAttribute = context.Compilation.GetTypeByMetadataName(FriendAttributeType);
+            var friendAttribute = context.Compilation.GetTypeByMetadataName(AccessAttributeType);
 
             // Get the type that is containing this expression, or, the type where this is happening.
             if (context.ContainingSymbol?.ContainingType is not {} accessingType)
@@ -91,9 +91,9 @@ namespace Robust.Analyzers
                 if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, friendAttribute))
                     return false;
 
-                var self    = FriendAttribute.SelfDefaultPermissions;
-                var friends = FriendAttribute.FriendDefaultPermissions;
-                var others  = FriendAttribute.OtherDefaultPermissions;
+                var self    = AccessAttribute.SelfDefaultPermissions;
+                var friends = AccessAttribute.FriendDefaultPermissions;
+                var others  = AccessAttribute.OtherDefaultPermissions;
 
                 foreach (var kv in attribute.NamedArguments)
                 {
@@ -104,19 +104,19 @@ namespace Robust.Analyzers
 
                     switch (kv.Key)
                     {
-                        case nameof(FriendAttribute.Self):
+                        case nameof(AccessAttribute.Self):
                         {
                             self = permissions;
                             break;
                         }
 
-                        case nameof(FriendAttribute.Friend):
+                        case nameof(AccessAttribute.Friend):
                         {
                             friends = permissions;
                             break;
                         }
 
-                        case nameof(FriendAttribute.Other):
+                        case nameof(AccessAttribute.Other):
                         {
                             others = permissions;
                             break;
@@ -168,7 +168,7 @@ namespace Robust.Analyzers
 
                 // Access denied! Report an error.
                 context.ReportDiagnostic(
-                    Diagnostic.Create(FriendRule, operation.Syntax.GetLocation(),
+                    Diagnostic.Create(AccessRule, operation.Syntax.GetLocation(),
                         $"a{(accessAttempt == AccessPermissions.Execute ? "n" : "")} '{accessAttempt}' {accessingRelation}",
                         $"{member.Name}",
                         $"{accessedType.Name}",

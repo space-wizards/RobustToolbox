@@ -4,7 +4,7 @@ namespace Robust.Shared.Analyzers;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct
                 | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Constructor)]
-public sealed class FriendAttribute : Attribute
+public sealed class AccessAttribute : Attribute
 {
     public readonly Type[] Friends;
 
@@ -19,7 +19,7 @@ public sealed class FriendAttribute : Attribute
     public AccessPermissions Friend { get; set; }  = FriendDefaultPermissions;
     public AccessPermissions Other  { get; set;  } = OtherDefaultPermissions;
 
-    public FriendAttribute(params Type[] friends)
+    public AccessAttribute(params Type[] friends)
     {
         Friends = friends;
     }

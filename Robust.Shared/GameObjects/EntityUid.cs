@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -13,7 +14,7 @@ namespace Robust.Shared.GameObjects
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
     [Serializable, NetSerializable]
-    public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
+    public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
         /// <summary>
         ///     If this bit is set on a UID, it's client sided.
@@ -139,6 +140,28 @@ namespace Robust.Shared.GameObjects
                 return $"c{_uid & ~ClientUid}";
             }
             return _uid.ToString();
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            if (IsClientSide())
+            {
+                return FormatHelpers.TryFormatInto(
+                    destination,
+                    out charsWritten,
+                    $"c{_uid & ~ClientUid}");
+            }
+
+            return _uid.TryFormat(destination, out charsWritten);
         }
 
         /// <inheritdoc />

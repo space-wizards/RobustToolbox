@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -7,7 +8,7 @@ namespace Robust.Shared.Maths
     ///     A representation of an angle, in radians.
     /// </summary>
     [Serializable]
-    public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>
+    public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>, ISpanFormattable
     {
         public static Angle Zero { get; } = new();
 
@@ -290,6 +291,23 @@ namespace Robust.Shared.Maths
         public override string ToString()
         {
             return $"{Theta} rad";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{Theta} rad");
         }
     }
 }

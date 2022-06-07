@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
-    [Friend(typeof(VisibilitySystem))]
+    [Access(typeof(VisibilitySystem))]
     public sealed class VisibilityComponent : Component
     {
         /// <summary>

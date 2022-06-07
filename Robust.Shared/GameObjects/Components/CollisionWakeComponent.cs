@@ -10,7 +10,7 @@ namespace Robust.Shared.GameObjects
     ///     An optimisation component for stuff that should be set as collidable when it's awake and non-collidable when asleep.
     /// </summary>
     [NetworkedComponent()]
-    [Friend(typeof(CollisionWakeSystem))]
+    [Access(typeof(CollisionWakeSystem))]
     public sealed class CollisionWakeComponent : Component
     {
         [DataField("enabled")]

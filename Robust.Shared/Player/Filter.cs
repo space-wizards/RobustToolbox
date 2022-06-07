@@ -355,6 +355,14 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
+        ///     A filter with every player who's PVS overlaps this point except the original player.
+        /// </summary>
+        public static Filter PvsExcept(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
+        {
+            return Pvs(origin, rangeMultiplier, entityManager).RemoveWhereAttachedEntity(e => e == origin);
+        }
+
+        /// <summary>
         ///     A filter with every player attached to the given entities.
         /// </summary>
         public static Filter Entities(params EntityUid[] entities)

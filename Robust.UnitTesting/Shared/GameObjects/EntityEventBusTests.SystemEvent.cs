@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -411,49 +410,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.That(delCallCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public async Task AwaitEvent()
-        {
-            // Arrange
-            var bus = BusFactory();
-            var args = new TestEventArgs();
-
-            // Act
-            var task = bus.AwaitEvent<TestEventArgs>(EventSource.Local);
-            bus.RaiseEvent(EventSource.Local, args);
-            var result = await task;
-
-            // Assert
-            Assert.That(result, Is.EqualTo(args));
-        }
-
-        [Test]
-        public void AwaitEvent_SourceNone_ArgOutOfRange()
-        {
-            // Arrange
-            var bus = BusFactory();
-
-            // Act
-            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.None);
-
-            // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(Code);
-        }
-
-        [Test]
-        public void AwaitEvent_DoubleTask_InvalidException()
-        {
-            // Arrange
-            var bus = BusFactory();
-            bus.AwaitEvent<TestEventArgs>(EventSource.Local);
-
-            // Act
-            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.Local);
-
-            // Assert
-            Assert.Throws<InvalidOperationException>(Code);
         }
 
         [Test]

@@ -66,7 +66,7 @@ namespace Robust.Shared.GameObjects
         {
             var capacity = (int) Math.Min(256, Math.Ceiling(EntityManager.GetComponent<TransformComponent>(component.Owner).ChildCount / TreeGrowthRate) * TreeGrowthRate);
 
-            component.Tree = new DynamicTree<OccluderComponent>(ExtractAabbFunc, capacity: capacity);
+            component.Tree = new(ExtractAabbFunc, capacity: capacity);
         }
 
         private void HandleGridInit(GridInitializeEvent ev)
@@ -111,6 +111,7 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateTrees()
         {
+            var query = GetEntityQuery<TransformComponent>();
             while (_updates.TryDequeue(out var occluderUpdate))
             {
                 OccluderTreeComponent? tree;
@@ -119,29 +120,39 @@ namespace Robust.Shared.GameObjects
                 switch (occluderUpdate)
                 {
                     case OccluderAddEvent:
-                        if (component.Tree != null) break;
+                        if (component.Tree != null || component.Deleted) break;
                         tree = GetOccluderTree(component);
                         if (tree == null) break;
                         component.Tree = tree;
-                        tree.Tree.Add(component);
+                        tree.Tree.Add(new()
+                        {
+                            Component = component,
+                            Transform = query.GetComponent(component.Owner)
+                        });
                         break;
                     case OccluderUpdateEvent:
+                        if (component.Deleted) break;
                         var oldTree = component.Tree;
                         tree = GetOccluderTree(component);
+                        var entry = new ComponentTreeEntry<OccluderComponent>()
+                        {
+                            Component = component,
+                            Transform = query.GetComponent(component.Owner)
+                        };
                         if (oldTree != tree)
                         {
-                            oldTree?.Tree.Remove(component);
-                            tree?.Tree.Add(component);
+                            oldTree?.Tree.Remove(entry);
+                            tree?.Tree.Add(entry);
                             component.Tree = tree;
                             break;
                         }
 
-                        tree?.Tree.Update(component);
+                        tree?.Tree.Update(entry);
 
                         break;
                     case OccluderRemoveEvent:
                         tree = component.Tree;
-                        tree?.Tree.Remove(component);
+                        tree?.Tree.Remove(new() { Component = component });
                         break;
                     default:
                         throw new ArgumentOutOfRangeException($"No implemented occluder update for {occluderUpdate.GetType()}");
@@ -166,9 +177,9 @@ namespace Robust.Shared.GameObjects
             _mapManager.GetMapEntityId(e.Map).EnsureComponent<OccluderTreeComponent>();
         }
 
-        private Box2 ExtractAabbFunc(in OccluderComponent o)
+        private Box2 ExtractAabbFunc(in ComponentTreeEntry<OccluderComponent> entry)
         {
-            return o.BoundingBox.Translated(EntityManager.GetComponent<TransformComponent>(o.Owner).LocalPosition);
+            return entry.Component.BoundingBox.Translated(entry.Transform.LocalPosition);
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
@@ -194,25 +205,25 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
                 var transform = xforms.GetComponent(comp.Owner);
-                var (_, treeRot, matrix) = transform.GetWorldPositionRotationInvMatrix();
+                var (_, treeRot, matrix) = transform.GetWorldPositionRotationInvMatrix(xforms);
 
                 var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
 
                 var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
 
                 comp.Tree.QueryRay(ref list,
-                    (ref List<RayCastResults> listState, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
+                    (ref List<RayCastResults> listState, in ComponentTreeEntry<OccluderComponent> value, in Vector2 point, float distFromOrigin) =>
                     {
                         if (distFromOrigin > maxLength)
                             return true;
 
-                        if (!value.Enabled)
+                        if (!value.Component.Enabled)
                             return true;
 
-                        if (predicate.Invoke(value.Owner, state))
+                        if (predicate.Invoke(value.Uid, state))
                             return true;
 
-                        var result = new RayCastResults(distFromOrigin, point, value.Owner);
+                        var result = new RayCastResults(distFromOrigin, point, value.Uid);
                         listState.Add(result);
                         return !returnOnFirstHit;
                     }, treeRay);

@@ -114,20 +114,20 @@ namespace Robust.Shared.GameObjects
             // Init transform first, we always have it.
             var transform = GetComponent<TransformComponent>(uid);
             if (transform.LifeStage < ComponentLifeStage.Initialized)
-                transform.LifeInitialize(this);
+                transform.LifeInitialize(this, CompIdx.Index<TransformComponent>());
 
             // Init physics second if it exists.
             if (TryGetComponent<PhysicsComponent>(uid, out var phys)
                 && phys.LifeStage < ComponentLifeStage.Initialized)
             {
-                phys.LifeInitialize(this);
+                phys.LifeInitialize(this, CompIdx.Index<PhysicsComponent>());
             }
 
             // Do rest of components.
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage: < ComponentLifeStage.Initialized })
-                    comp.LifeInitialize(this);
+                    comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
             }
 
 #if DEBUG
@@ -190,12 +190,14 @@ namespace Robust.Shared.GameObjects
             where T : Component
         {
             private readonly IEntityManager _entMan;
+            public readonly CompIdx CompType;
             public readonly T Comp;
 
-            public CompInitializeHandle(IEntityManager entityManager, T comp)
+            public CompInitializeHandle(IEntityManager entityManager, T comp, CompIdx compType)
             {
                 _entMan = entityManager;
                 Comp = comp;
+                CompType = compType;
             }
 
             public void Dispose()
@@ -206,7 +208,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (!Comp.Initialized)
-                    Comp.LifeInitialize(_entMan);
+                    Comp.LifeInitialize(_entMan, CompType);
 
                 if (metadata.EntityInitialized && !Comp.Running)
                     Comp.LifeStartup(_entMan);
@@ -221,7 +223,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
         {
-            var newComponent = _componentFactory.GetComponent<T>();
+            var reg = _componentFactory.GetRegistration<T>();
+            var newComponent = (T)_componentFactory.GetComponent(reg);
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
@@ -233,7 +236,7 @@ namespace Robust.Shared.GameObjects
 
             AddComponentInternal(uid, newComponent, false, true);
 
-            return new CompInitializeHandle<T>(this, newComponent);
+            return new CompInitializeHandle<T>(this, newComponent, reg.Idx);
         }
 
         /// <inheritdoc />
@@ -293,9 +296,11 @@ namespace Robust.Shared.GameObjects
                 Dirty(component);
             }
 
-            ComponentAdded?.Invoke(new AddedComponentEventArgs(new ComponentEventArgs(component, uid)));
+            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
+            ComponentAdded?.Invoke(eventArgs);
+            _eventBus.OnComponentAdded(eventArgs);
 
-            component.LifeAddToEntity(this);
+            component.LifeAddToEntity(this, reg.Idx);
 
             if (skipInit)
                 return;
@@ -305,7 +310,7 @@ namespace Robust.Shared.GameObjects
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
-            component.LifeInitialize(this);
+            component.LifeInitialize(this, reg.Idx);
 
             if (metadata.EntityInitialized)
                 component.LifeStartup(this);
@@ -425,7 +430,11 @@ namespace Robust.Shared.GameObjects
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 component.LifeRemoveFromEntity(this);
-            ComponentRemoved?.Invoke(new RemovedComponentEventArgs(new ComponentEventArgs(component, uid)));
+
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
+            ComponentRemoved?.Invoke(eventArgs);
+            _eventBus.OnComponentRemoved(eventArgs);
+
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -459,7 +468,10 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this); // Sets delete
 
-                ComponentRemoved?.Invoke(new RemovedComponentEventArgs(new ComponentEventArgs(component, uid)));
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
+
             }
 #if EXCEPTION_TOLERANCE
             }
@@ -642,7 +654,8 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             if (dict.TryGetValue(uid, out var comp))
@@ -654,12 +667,12 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            component = default!;
+            component = default;
             return false;
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
         {
             if (!uid.HasValue)
             {
@@ -676,7 +689,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            component = default!;
+            component = default;
             return false;
         }
 
@@ -684,6 +697,22 @@ namespace Robust.Shared.GameObjects
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
             var dict = _entTraitDict[type];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
+        public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
+        {
+            var dict = _entTraitArray[type.Value];
             if (dict.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)

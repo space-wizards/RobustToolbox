@@ -63,6 +63,7 @@ namespace Robust.Client
             IoCManager.Register<IResourceCacheInternal, ResourceCache>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<EntityManager, ClientEntityManager>();
+            IoCManager.Register<ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();

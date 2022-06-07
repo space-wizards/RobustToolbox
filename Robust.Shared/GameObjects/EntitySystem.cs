@@ -98,12 +98,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
-            where T : EntityEventArgs
-        {
-            return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
-        }
-
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent : notnull
         {

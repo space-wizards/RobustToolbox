@@ -116,6 +116,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
+            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);

@@ -539,7 +539,7 @@ namespace Robust.Client.Graphics.Clyde
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
             tr = _currentMatrixModel.Transform(tr);
-            tl = _currentMatrixModel.Transform(tl);
+            tl = tr + bl - br;
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;

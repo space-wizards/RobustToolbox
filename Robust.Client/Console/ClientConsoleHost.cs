@@ -123,7 +123,7 @@ namespace Robust.Client.Console
 
             if (AvailableCommands.ContainsKey(commandName))
             {
-#if !DEBUG
+#if FULL_RELEASE
                 var playerManager = IoCManager.Resolve<IPlayerManager>();
                 if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
                 {

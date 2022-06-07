@@ -50,11 +50,6 @@ namespace Robust.Shared.Physics
         int CollisionMask { get; }
 
         /// <summary>
-        ///     Removes all of the currently active contacts for this body.
-        /// </summary>
-        void DestroyContacts();
-
-        /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }
@@ -87,6 +82,12 @@ namespace Robust.Shared.Physics
         ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
+
+        /// <summary>
+        /// Mass of the entities fixtures in kilograms
+        /// Ignores body type
+        /// </summary>
+        float FixturesMass { get; }
 
         /// <summary>
         /// Mass of the entity in kilograms

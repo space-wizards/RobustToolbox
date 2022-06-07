@@ -503,6 +503,12 @@ public abstract partial class SharedTransformSystem
         return component.WorldPosition;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return component.GetWorldPositionRotation(xformQuery);
+    }
+
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {
         var xform = Transform(uid);

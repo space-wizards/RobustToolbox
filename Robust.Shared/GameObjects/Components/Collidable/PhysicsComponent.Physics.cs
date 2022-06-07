@@ -88,8 +88,6 @@ namespace Robust.Shared.GameObjects
         [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
 
-        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType
@@ -152,6 +150,13 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType == BodyType.Static) return;
+
+                // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+                if (value && !_canCollide)
+                {
+                    CanCollide = true;
+                    if (!_canCollide) return;
+                }
 
                 SetAwake(value);
             }
@@ -227,6 +232,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void WakeBody()
         {
+            CanCollide = true;
+
+            if (!_canCollide) return;
+
             Awake = true;
         }
 
@@ -300,9 +309,12 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value ||
-                    value && Owner.IsInContainer(_entMan))
+                if (_canCollide == value)
                     return;
+
+                // If we're recursively in a container then never set this.
+                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
+                    .IsEntityOrParentInContainer(Owner)) return;
 
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
@@ -335,11 +347,17 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public int CollisionMask { get; internal set; }
 
+        /// <summary>
+        ///     The current total mass of the entities fixtures in kilograms. Ignores the body type.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float FixturesMass => _mass;
+
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
-        ///     Current mass of the entity in kilograms.
+        ///     Current mass of the entity in kilograms. This may be 0 depending on the body type.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables(VVAccess.ReadOnly)]
         public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
         private float _mass;
@@ -713,21 +731,6 @@ namespace Robust.Shared.GameObjects
 
             Awake = true;
             Force += force;
-        }
-
-        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
-        public void DestroyContacts()
-        {
-            var node = Contacts.First;
-
-            while (node != null)
-            {
-                var contact = node.Value;
-                node = node.Next;
-                PhysicsMap?.ContactManager.Destroy(contact);
-            }
-
-            DebugTools.Assert(Contacts.Count == 0);
         }
 
         public void ResetMassData(FixturesComponent? fixtures = null)

@@ -29,10 +29,10 @@ namespace Robust.UnitTesting.Shared.Map
                 var grid = mapManager.CreateGrid(mapId);
 
                 // Should be nothing if grid empty
-                Assert.That(entManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent gridBody));
-                Assert.That(entManager.TryGetComponent(grid.GridEntityId, out FixturesComponent manager));
-                Assert.That(manager.FixtureCount, Is.EqualTo(0));
-                Assert.That(gridBody.BodyType, Is.EqualTo(BodyType.Static));
+                Assert.That(entManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? gridBody));
+                Assert.That(entManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? manager));
+                Assert.That(manager!.FixtureCount, Is.EqualTo(0));
+                Assert.That(gridBody!.BodyType, Is.EqualTo(BodyType.Static));
 
                 // 1 fixture if we only ever update the 1 chunk
                 grid.SetTile(Vector2i.Zero, new Tile(1));

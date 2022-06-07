@@ -87,3 +87,30 @@ cmd-exec-help = Usage: exec <fileName>
     Each line in the file is executed as a single command, unless it starts with a #
 
 cmd-exec-arg-filename = <fileName>
+
+## 'dump_net_comps' command
+cmd-dump_net_comps-desc = Prints the table of networked components.
+cmd-dump_net_comps-help = Usage: dump_net-comps
+
+cmd-dump_net_comps-error-writeable = Registration still writeable, network ids have not been generated.
+cmd-dump_net_comps-header = Networked Component Registrations:
+
+## 'dump_event_tables' command
+cmd-dump_event_tables-desc = Prints directed event tables for an entity.
+cmd-dump_event_tables-help = Usage: dump_event_tables <entityUid>
+
+cmd-dump_event_tables-missing-arg-entity = Missing entity argument
+cmd-dump_event_tables-error-entity = Invalid entity
+cmd-dump_event_tables-arg-entity = <entityUid>
+
+## 'monitor' command
+cmd-monitor-desc = Toggles a debug monitor in the F3 menu.
+cmd-monitor-help = Usage: monitor <name>
+    Possible monitors are: { $monitors }
+    You can also use the special values "-all" and "+all" to hide or show all monitors, respectively.
+
+cmd-monitor-arg-monitor = <monitor>
+cmd-monitor-invalid-name = Invalid monitor name
+cmd-monitor-arg-count = Missing monitor argument
+cmd-monitor-minus-all-hint = Hides all monitors
+cmd-monitor-plus-all-hint = Shows all monitors

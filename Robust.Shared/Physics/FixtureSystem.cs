@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -20,6 +20,7 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly SharedContainerSystem _containers = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
         {
@@ -44,10 +45,9 @@ namespace Robust.Shared.Physics
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            body.DestroyContacts();
+            _physics.DestroyContacts(body);
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
-            DebugTools.Assert(body.PhysicsMap == null);
         }
         #region Public
 
@@ -193,9 +193,12 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            foreach (var (_, contact) in fixture.Contacts.ToArray())
+            if (TryComp<SharedPhysicsMapComponent>(Transform(body.Owner).MapUid, out var physicsMap))
             {
-                body.PhysicsMap?.ContactManager.Destroy(contact);
+                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                {
+                    physicsMap.ContactManager.Destroy(contact);
+                }
             }
 
             var broadphase = body.Broadphase;
@@ -271,7 +274,7 @@ namespace Robust.Shared.Physics
         {
             args.State = new FixtureManagerComponentState
             {
-                Fixtures = component.Fixtures.Values.ToList(),
+                Fixtures = component.Fixtures.Values.ToArray(),
             };
         }
 
@@ -286,18 +289,19 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var toAddFixtures = new List<Fixture>();
-            var toRemoveFixtures = new List<Fixture>();
+            var toAddFixtures = new ValueList<Fixture>();
+            var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new List<Fixture>(state.Fixtures.Count);
-            foreach (var fixture in state.Fixtures)
+            var newFixtures = new Fixture[state.Fixtures.Length];
+            for (var i = 0; i < state.Fixtures.Length; i++)
             {
+                var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixture.Body = physics;
-                newFixtures.Add(newFixture);
+                newFixtures[i] = newFixture;
             }
 
             // Add / update new fixtures
@@ -442,7 +446,7 @@ namespace Robust.Shared.Physics
         [Serializable, NetSerializable]
         private sealed class FixtureManagerComponentState : ComponentState
         {
-            public List<Fixture> Fixtures = default!;
+            public Fixture[] Fixtures = default!;
         }
     }
 }

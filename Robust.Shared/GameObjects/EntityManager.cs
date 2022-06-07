@@ -94,6 +94,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
+            _eventBus.CalcOrdering();
         }
 
         public virtual void Shutdown()
@@ -290,7 +291,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
+            if (!TryGetComponent(uid, out MetaDataComponent? metadata) || metadata.EntityDeleted)
                 return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);
@@ -324,6 +325,7 @@ namespace Robust.Shared.GameObjects
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(uid);
+            _eventBus.OnEntityDeleted(uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
             Entities.Remove(uid);
         }
@@ -407,6 +409,7 @@ namespace Robust.Shared.GameObjects
 
             // we want this called before adding components
             EntityAdded?.Invoke(uid);
+            _eventBus.OnEntityAdded(uid);
 
             metadata = new MetaDataComponent { Owner = uid };
 

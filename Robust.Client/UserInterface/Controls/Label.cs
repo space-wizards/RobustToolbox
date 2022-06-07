@@ -23,6 +23,7 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<int> _cachedTextWidths = new();
         private bool _textDimensionCacheValid;
         private string? _text;
+        private ReadOnlyMemory<char> _textMemory;
         private bool _clipText;
         private AlignMode _align;
 
@@ -34,6 +35,9 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     The text to display.
         /// </summary>
+        /// <remarks>
+        /// Replaces <see cref="TextMemory"/> when set.
+        /// </remarks>
         [ViewVariables]
         public string? Text
         {
@@ -41,6 +45,31 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _text = value;
+                _textMemory = value.AsMemory();
+                _textDimensionCacheValid = false;
+                InvalidateMeasure();
+            }
+        }
+
+        /// <summary>
+        /// The text to display, set as a read-only memory.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Note that updating the backing memory while the control is using it can result in incorrect display due to caching of measure information and similar.
+        /// If you modify the backing storage, re-assign the property to invalidate these.
+        /// </para>
+        /// <para>
+        /// Sets <see cref="Text"/> to null when assigned, as there is no backing string instance anymore.
+        /// </para>
+        /// </remarks>
+        public ReadOnlyMemory<char> TextMemory
+        {
+            get => _textMemory;
+            set
+            {
+                _text = null;
+                _textMemory = value;
                 _textDimensionCacheValid = false;
                 InvalidateMeasure();
             }
@@ -124,7 +153,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (_text == null)
+            if (_textMemory.Length == 0)
             {
                 return;
             }
@@ -182,7 +211,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var baseLine = CalcBaseline();
 
-            foreach (var rune in _text.EnumerateRunes())
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
             {
                 if (rune == new Rune('\n'))
                 {
@@ -245,7 +274,7 @@ namespace Robust.Client.UserInterface.Controls
             _cachedTextWidths.Clear();
             _cachedTextWidths.Add(0);
 
-            if (_text == null)
+            if (_textMemory.Length == 0)
             {
                 _cachedTextHeight = 0;
                 _textDimensionCacheValid = true;
@@ -254,7 +283,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var font = ActualFont;
             var height = font.GetHeight(UIScale);
-            foreach (var rune in _text.EnumerateRunes())
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
             {
                 if (rune == new Rune('\n'))
                 {

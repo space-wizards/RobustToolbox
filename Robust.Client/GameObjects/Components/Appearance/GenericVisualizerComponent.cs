@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects;
 ///     data changes.
 /// </summary>
 [RegisterComponent]
-[Friend(typeof(GenericVisualizerSystem))]
+[Access(typeof(GenericVisualizerSystem))]
 public sealed class GenericVisualizerComponent : Component
 {
     /// <summary>

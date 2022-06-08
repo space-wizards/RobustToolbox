@@ -16,21 +16,24 @@ public sealed class LiveProfileViewControl : Control
 
     public int MaxDepth { get; set; } = 2;
 
-    private readonly Font _font;
+    private readonly Font? _font;
     private readonly char[] _sampleBuffer = new char[32];
 
     public LiveProfileViewControl()
     {
         IoCManager.InjectDependencies(this);
 
-        _font = _resourceCache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf").MakeDefault();
+        if (!_resourceCache.TryGetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf", out var font))
+            return;
+
+        _font = font.MakeDefault();
     }
 
     protected internal override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
 
-        if (!_profManager.IsEnabled)
+        if (!_profManager.IsEnabled || _font == null)
             return;
 
         var baseLine = new Vector2(0, _font.GetAscent(UIScale));

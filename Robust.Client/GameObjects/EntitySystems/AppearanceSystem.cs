@@ -121,7 +121,7 @@ namespace Robust.Client.GameObjects
             };
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev, false);
 
             // Eventually visualizers would be nuked and we'd just make them components instead.
             foreach (var visualizer in appearanceComponent.Visualizers)

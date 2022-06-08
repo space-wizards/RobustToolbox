@@ -54,14 +54,14 @@ namespace Robust.Shared.Maths
         ///     where an angle of zero is usually considered "south" (0, -1).
         /// </remarks>
         /// <returns>Unit Direction Vector</returns>
-        public Vector2 ToVec()
+        public readonly Vector2 ToVec()
         {
             var x = Math.Cos(Theta);
             var y = Math.Sin(Theta);
             return new Vector2((float) x, (float) y);
         }
 
-        public Vector2 ToWorldVec()
+        public readonly Vector2 ToWorldVec()
         {
             return (this - MathHelper.PiOver2).ToVec();
         }
@@ -69,7 +69,7 @@ namespace Robust.Shared.Maths
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
-        public Direction GetDir()
+        public readonly Direction GetDir()
         {
             var ang = Theta % (2 * Math.PI);
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Maths
         private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
         private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
 
-        public Direction GetCardinalDir()
+        public readonly Direction GetCardinalDir()
         {
             var ang = Theta % (2 * Math.PI);
 
@@ -98,7 +98,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">Vector to rotate.</param>
         /// <returns>New rotated vector.</returns>
         [Pure]
-        public Vector2 RotateVec(in Vector2 vec)
+        public readonly Vector2 RotateVec(in Vector2 vec)
         {
             // No calculation necessery when theta is zero
             if (Theta == 0) return vec;
@@ -157,7 +157,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Removes revolutions from a positive or negative angle to make it as small as possible.
         /// </summary>
-        public Angle Reduced()
+        public readonly Angle Reduced()
         {
             return new(Reduce(Theta));
         }
@@ -173,20 +173,20 @@ namespace Robust.Shared.Maths
         }
 
         /// <inheritdoc />
-        public bool Equals(Angle other)
+        public readonly bool Equals(Angle other)
         {
-            return this.Theta.Equals(other.Theta);
+            return Theta.Equals(other.Theta);
         }
 
         /// <inheritdoc />
-        public override bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Angle angle && Equals(angle);
         }
 
         /// <inheritdoc />
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
 
             return Theta.GetHashCode();
@@ -203,12 +203,12 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
-        public Angle Opposite()
+        public readonly Angle Opposite()
         {
             return new Angle(FlipPositive(Theta-Math.PI));
         }
 
-        public Angle FlipPositive()
+        public readonly Angle FlipPositive()
         {
             return new(FlipPositive(Theta));
         }

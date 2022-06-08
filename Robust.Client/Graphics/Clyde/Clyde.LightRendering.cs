@@ -882,7 +882,7 @@ namespace Robust.Client.Graphics.Clyde
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            var clipToDiff = new Matrix3(ref uX, ref uY, ref uZero);
+            var clipToDiff = new Matrix3(in uX, in uY, in uZero);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);

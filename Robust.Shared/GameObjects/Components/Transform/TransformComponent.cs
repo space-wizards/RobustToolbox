@@ -234,7 +234,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._localMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
+                    Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -259,7 +259,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._invLocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -760,7 +760,7 @@ namespace Robust.Shared.GameObjects
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
             }
@@ -823,11 +823,11 @@ namespace Robust.Shared.GameObjects
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
                 var parentInvMatrix = xform._invLocalMatrix;
-                Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
+                Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;

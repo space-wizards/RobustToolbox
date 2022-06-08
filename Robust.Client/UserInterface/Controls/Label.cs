@@ -38,10 +38,13 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         /// Replaces <see cref="TextMemory"/> when set.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <see cref="TextMemory"/> was set directly and there is no backing string instance to fetch.
+        /// </exception>
         [ViewVariables]
         public string? Text
         {
-            get => _text;
+            get => _text ?? (_textMemory.Length > 0 ? throw new InvalidOperationException("Label uses TextMemory, cannot fetch string text.") : null);
             set
             {
                 _text = value;
@@ -60,7 +63,7 @@ namespace Robust.Client.UserInterface.Controls
         /// If you modify the backing storage, re-assign the property to invalidate these.
         /// </para>
         /// <para>
-        /// Sets <see cref="Text"/> to null when assigned, as there is no backing string instance anymore.
+        /// Sets <see cref="Text"/> to throw an exception if read, as there is no backing string to retrieve.
         /// </para>
         /// </remarks>
         public ReadOnlyMemory<char> TextMemory

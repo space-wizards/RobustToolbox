@@ -383,12 +383,6 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateRotation(float angle)
-        {
-            return CreateRotation(new Angle(angle));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateRotation(Angle angle)
         {
             var cos = (float) Math.Cos(angle);
@@ -910,11 +904,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Transform(ref Vector3 vector)
         {
-            var x = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
-            var y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
-            vector.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
-            vector.X = x;
-            vector.Y = y;
+            Transform(this, ref vector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -930,9 +920,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(in Matrix3 matrix, ref Vector2 vector)
         {
-            var vec3 = new Vector3(vector.X, vector.Y, 1);
-            Transform(matrix, ref vec3);
-            vector = vec3.Xy;
+            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
+            vector.Y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
+            vector.X = x;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1097,25 +1087,6 @@ namespace Robust.Shared.Maths
             result = new Vector2(x, y);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Rotate(float angle)
-        {
-            var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
-
-            var r0c0 = cos * R0C0 + sin * R1C0;
-            var r0c1 = cos * R0C1 + sin * R1C1;
-            var r0c2 = cos * R0C2 + sin * R1C2;
-
-            R1C0 = cos * R1C0 - sin * R0C0;
-            R1C1 = cos * R1C1 - sin * R0C1;
-            R1C2 = cos * R1C2 - sin * R0C2;
-
-            R0C0 = r0c0;
-            R0C1 = r0c1;
-            R0C2 = r0c2;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Rotate(Angle angle)
@@ -1137,29 +1108,16 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Rotate(float angle, out Matrix3 result)
+        public void Rotate(Angle angle, out Matrix3 result)
         {
-            var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
-
-            result.R0C0 = cos * R0C0 + sin * R1C0;
-            result.R0C1 = cos * R0C1 + sin * R1C1;
-            result.R0C2 = cos * R0C2 + sin * R1C2;
-            result.R1C0 = cos * R1C0 - sin * R0C0;
-            result.R1C1 = cos * R1C1 - sin * R0C1;
-            result.R1C2 = cos * R1C2 - sin * R0C2;
-            result.R2C0 = R2C0;
-            result.R2C1 = R2C1;
-            result.R2C2 = R2C2;
+            Rotate(this, angle, out result);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
+        public static void Rotate(in Matrix3 matrix, Angle angle, out Matrix3 result)
         {
-            var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
 
             result.R0C0 = cos * matrix.R0C0 + sin * matrix.R1C0;
             result.R0C1 = cos * matrix.R0C1 + sin * matrix.R1C1;
@@ -1171,25 +1129,6 @@ namespace Robust.Shared.Maths
             result.R2C1 = matrix.R2C1;
             result.R2C2 = matrix.R2C2;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RotateMatrix(float angle, out Matrix3 result)
-        {
-            var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
-
-            result.R0C0 = cos;
-            result.R0C1 = sin;
-            result.R0C2 = 0;
-            result.R1C0 = -sin;
-            result.R1C1 = cos;
-            result.R1C2 = 0;
-            result.R2C0 = 0;
-            result.R2C1 = 0;
-            result.R2C2 = 1;
-        }
-
         #endregion Transformation Functions
 
         #region Operator Overloads

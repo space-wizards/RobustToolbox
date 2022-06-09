@@ -481,19 +481,21 @@ namespace Robust.Client.GameObjects
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             return Play(filename, audioParams);
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity,
+            AudioParams? audioParams = null)
         {
             return Play(filename, entity, GetFallbackCoordinates(EntityManager.GetComponent<TransformComponent>(entity).MapPosition), audioParams);
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
             return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(_entityManager)), audioParams);
         }

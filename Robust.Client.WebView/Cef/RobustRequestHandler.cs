@@ -113,7 +113,7 @@ namespace Robust.Client.WebView.Cef
                 CefFrame frame,
                 CefRequest request)
             {
-                return null;
+                return new CookieHandler();
             }
 
             protected override CefResourceHandler GetResourceHandler(
@@ -122,6 +122,19 @@ namespace Robust.Client.WebView.Cef
                 CefRequest request)
             {
                 return _handler;
+            }
+        }
+
+        private sealed class CookieHandler : CefCookieAccessFilter
+        {
+            protected override bool CanSendCookie(CefBrowser browser, CefFrame frame, CefRequest request, CefCookie cookie)
+            {
+                return true;
+            }
+
+            protected override bool CanSaveCookie(CefBrowser browser, CefFrame frame, CefRequest request, CefResponse response, CefCookie cookie)
+            {
+                return true;
             }
         }
     }

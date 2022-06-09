@@ -43,6 +43,12 @@ namespace Robust.Client.WebView.Cef
                 Logger.Debug($"{commandLine}");
         }
 
+        protected override void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)
+        {
+            registrar.AddCustomScheme("res", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
+            registrar.AddCustomScheme("usr", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
+        }
+
         private sealed class BrowserProcessHandler : CefBrowserProcessHandler
         {
         }

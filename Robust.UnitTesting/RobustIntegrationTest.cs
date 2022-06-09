@@ -361,7 +361,17 @@ namespace Robust.UnitTesting
             {
                 while (_isAlive && _currentTicksId != _ackTicksId)
                 {
-                    var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
+                    object msg = default!;
+                    try
+                    {
+                        msg = await _fromInstanceReader.ReadAsync(cancellationToken);
+                    }
+                    catch(OperationCanceledException ex)
+                    {
+                        _unhandledException = ex;
+                        _isAlive = false;
+                        break;
+                    }
                     switch (msg)
                     {
                         case ShutDownMessage shutDownMessage:
@@ -526,7 +536,7 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            internal ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
+            public ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
                 ServerOptions = options;
                 DependencyCollection = new DependencyCollection();
@@ -654,7 +664,7 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            internal ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
+            public ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
             {
                 ClientOptions = options;
                 DependencyCollection = new DependencyCollection();

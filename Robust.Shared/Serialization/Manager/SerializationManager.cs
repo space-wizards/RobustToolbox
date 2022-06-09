@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -34,7 +35,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initialized;
 
         // Using CWT<,> here in case we ever want assembly unloading.
-        private static readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
+        private readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -50,6 +51,7 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = true;
 
             DependencyCollection = IoCManager.Instance ?? throw new NullReferenceException();
+            var isServer = DependencyCollection.Resolve<INetManager>().IsServer;
 
             var flagsTypes = new ConcurrentBag<Type>();
             var constantsTypes = new ConcurrentBag<Type>();

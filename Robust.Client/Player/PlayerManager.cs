@@ -144,7 +144,9 @@ namespace Robust.Client.Player
                 return;
             }
 
-            if (entity == null)
+            if (entity == null ||
+                !IoCManager.Resolve<EntityManager>().TryGetComponent<MetaDataComponent>(entity.Value, out var metaData) ||
+                metaData.EntityDeleted)
             {
                 LocalPlayer.DetachEntity();
                 return;

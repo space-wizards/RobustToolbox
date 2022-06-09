@@ -9,7 +9,7 @@ using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
 {
-    internal partial class WebViewManagerCef : IWebViewManagerImpl
+    internal sealed partial class WebViewManagerCef : IWebViewManagerImpl
     {
         private static readonly string BasePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location!)!;
 

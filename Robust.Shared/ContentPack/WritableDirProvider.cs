@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -80,6 +81,9 @@ namespace Robust.Shared.ContentPack
         public IEnumerable<string> DirectoryEntries(ResourcePath path)
         {
             var fullPath = GetFullPath(path);
+
+            if (!Directory.Exists(fullPath))
+                yield break;
 
             foreach (var entry in Directory.EnumerateFileSystemEntries(fullPath))
             {

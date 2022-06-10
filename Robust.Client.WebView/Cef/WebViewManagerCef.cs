@@ -2,8 +2,10 @@ using System;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using Robust.Client.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -20,10 +22,16 @@ namespace Robust.Client.WebView.Cef
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
 
         public void Initialize()
         {
             IoCManager.Instance!.InjectDependencies(this, oneOff: true);
+
+            _consoleHost.RegisterCommand("flushcookies", Loc.GetString("cmd-flushcookies-desc"), Loc.GetString("cmd-flushcookies-help"), (_, _, _) =>
+            {
+                CefCookieManager.GetGlobal(null).FlushStore(null);
+            });
 
             string subProcessName;
             if (OperatingSystem.IsWindows())

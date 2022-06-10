@@ -144,3 +144,10 @@ cmd-hint-loadmap-x-position = [x-position]
 cmd-hint-loadmap-y-position = [y-position]
 cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
+
+## 'flushcookies' command
+# Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.
+
+cmd-flushcookies-desc = Flush CEF cookie storage to disk
+cmd-flushcookies-help = This ensure cookies are properly saved to disk in the event of unclean shutdowns.
+    Note that the actual operation is asynchronous.

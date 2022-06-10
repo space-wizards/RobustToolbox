@@ -225,6 +225,9 @@ namespace Robust.Client.GameStates
                     using var _ = _timing.StartStateApplicationArea();
 
                     ResetPredictedEntities(_timing.CurTick);
+
+                    // This check shouldn't be necessary anymore, but I am paranoid.
+                    DebugTools.Assert(_entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Count == 0);
                 }
 
                 using (_prof.Group("FullRep"))

@@ -76,47 +76,6 @@ namespace Robust.Client.WebView.Cef
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
             // And nothing seemed to work. Odd.
-
-            CefRuntime.RegisterSchemeHandlerFactory("res", "",
-                new ResourceSchemeFactoryHandler(_resourceManager,
-                    _dependencyCollection.Resolve<ILogManager>().RootSawmill));
-        }
-
-        private sealed class ResourceSchemeFactoryHandler : CefSchemeHandlerFactory
-        {
-            private readonly IResourceManager _resourceManager;
-            private readonly ISawmill _sawmill;
-
-            public ResourceSchemeFactoryHandler(IResourceManager resourceManager, ISawmill sawmill)
-            {
-                _resourceManager = resourceManager;
-                _sawmill = sawmill;
-            }
-
-            protected override CefResourceHandler Create(CefBrowser browser, CefFrame frame, string schemeName,
-                CefRequest request)
-            {
-                var uri = new Uri(request.Url);
-
-                _sawmill.Debug($"HANDLING: {request.Url}");
-
-                if (_resourceManager.TryContentFileRead(uri.AbsolutePath, out var stream))
-                {
-                    var mime = "text/plain";
-                    if (uri.AbsolutePath.EndsWith(".png"))
-                        mime = "image/png";
-                    else if (uri.AbsolutePath.EndsWith(".html"))
-                        mime = "text/html";
-
-                    return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();
-                }
-                else
-                {
-                    return new RequestResultStream(_resourceManager.ContentFileRead("/404.txt"), "text/plain",
-                        HttpStatusCode.NotFound).MakeHandler();
-                    // obj.DoRespondStream(_res.ContentFileRead("/404.txt"), "text/plain");
-                }
-            }
         }
 
         private static string? LocateCefResources()

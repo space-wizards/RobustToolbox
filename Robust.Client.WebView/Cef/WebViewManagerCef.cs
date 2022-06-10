@@ -1,15 +1,19 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Reflection;
+using Robust.Client.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
 {
-    internal partial class WebViewManagerCef : IWebViewManagerImpl
+    internal sealed partial class WebViewManagerCef : IWebViewManagerImpl
     {
         private static readonly string BasePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location!)!;
 
@@ -17,10 +21,17 @@ namespace Robust.Client.WebView.Cef
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
 
         public void Initialize()
         {
             IoCManager.Instance!.InjectDependencies(this, oneOff: true);
+
+            _consoleHost.RegisterCommand("flushcookies", Loc.GetString("cmd-flushcookies-desc"), Loc.GetString("cmd-flushcookies-help"), (_, _, _) =>
+            {
+                CefCookieManager.GetGlobal(null).FlushStore(null);
+            });
 
             string subProcessName;
             if (OperatingSystem.IsWindows())
@@ -38,6 +49,10 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
+            var cachePath = "";
+            if (_resourceManager.UserData is WritableDirProvider userData)
+                cachePath = userData.GetFullPath(new ResourcePath("/cef_cache"));
+
             var settings = new CefSettings()
             {
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
@@ -47,6 +62,8 @@ namespace Robust.Client.WebView.Cef
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
                 RemoteDebuggingPort = 9222,
+                CookieableSchemesList = "usr,res",
+                CachePath = cachePath,
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");

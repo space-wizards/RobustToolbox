@@ -101,7 +101,7 @@ namespace Robust.Client
                 ContinueStartupAndLoop(mode);
             }
 
-            Cleanup();
+            CleanupWindowThread();
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
@@ -127,6 +127,8 @@ namespace Robust.Client
 
             DebugTools.AssertNotNull(_mainLoop);
             _mainLoop!.Run();
+
+            CleanupGameThread();
         }
     }
 }

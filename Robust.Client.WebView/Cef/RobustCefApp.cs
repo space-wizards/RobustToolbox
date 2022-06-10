@@ -5,7 +5,7 @@ using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
 {
-    internal class RobustCefApp : CefApp
+    internal sealed class RobustCefApp : CefApp
     {
         private readonly BrowserProcessHandler _browserProcessHandler = new();
         private readonly RenderProcessHandler _renderProcessHandler = new();
@@ -24,12 +24,12 @@ namespace Robust.Client.WebView.Cef
         {
             // Disable zygote on Linux.
             commandLine.AppendSwitch("--no-zygote");
-            
+
             // Work around https://bitbucket.org/chromiumembedded/cef/issues/3213/ozone-egl-initialization-does-not-have
             // Desktop GL force makes Chromium not try to load its own ANGLE/Swiftshader so load paths aren't problematic.
             if (OperatingSystem.IsLinux())
                 commandLine.AppendSwitch("--use-gl", "desktop");
-            
+
             // commandLine.AppendSwitch("--single-process");
 
             //commandLine.AppendSwitch("--disable-gpu");
@@ -43,12 +43,18 @@ namespace Robust.Client.WebView.Cef
                 Logger.Debug($"{commandLine}");
         }
 
-        private class BrowserProcessHandler : CefBrowserProcessHandler
+        protected override void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)
+        {
+            registrar.AddCustomScheme("res", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
+            registrar.AddCustomScheme("usr", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
+        }
+
+        private sealed class BrowserProcessHandler : CefBrowserProcessHandler
         {
         }
 
         // TODO CEF: Research - Is this even needed?
-        private class RenderProcessHandler : CefRenderProcessHandler
+        private sealed class RenderProcessHandler : CefRenderProcessHandler
         {
         }
     }

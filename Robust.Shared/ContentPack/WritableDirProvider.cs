@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -114,7 +114,7 @@ namespace Robust.Shared.ContentPack
 
         #endregion
 
-        private string GetFullPath(ResourcePath path)
+        public string GetFullPath(ResourcePath path)
         {
             if (!path.IsRooted)
             {

@@ -57,6 +57,14 @@ namespace Robust.Client.WebView.Cef
             string requestInitiator,
             ref bool disableDefaultHandling)
         {
+            var url = new Uri(request.Url);
+            if (url.Scheme == "file")
+            {
+                // Deny file:// access.
+                disableDefaultHandling = true;
+                return null;
+            }
+
             lock (_resourceRequestHandlers)
             {
                 _sawmill.Debug($"HANDLING REQUEST: {request.Url}");

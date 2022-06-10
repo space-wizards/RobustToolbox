@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -32,6 +33,8 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             SubscribeLocalEvent<TransformStartLerpMessage>(TransformStartLerpHandler);
+
+            UpdatesBefore.Add(typeof(PhysicsSystem));
         }
 
         private void TransformStartLerpHandler(TransformStartLerpMessage ev)

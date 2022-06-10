@@ -1,9 +1,11 @@
-﻿using Robust.Client.Graphics;
+﻿using System;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Profiling;
 
@@ -14,26 +16,33 @@ public sealed class LiveProfileViewControl : Control
 
     public int MaxDepth { get; set; } = 2;
 
+    private readonly Font? _font;
+    private readonly char[] _sampleBuffer = new char[32];
+
     public LiveProfileViewControl()
     {
         IoCManager.InjectDependencies(this);
+
+        if (!_resourceCache.TryGetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf", out var font))
+            return;
+
+        _font = font.MakeDefault();
     }
 
     protected internal override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
 
-        if (!_profManager.IsEnabled)
+        if (!_profManager.IsEnabled || _font == null)
             return;
 
-        var font = _resourceCache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf").MakeDefault();
-        var baseLine = new Vector2(0, font.GetAscent(UIScale));
+        var baseLine = new Vector2(0, _font.GetAscent(UIScale));
 
         ref readonly var buffer = ref _profManager.Buffer;
         ref readonly var index = ref buffer.Index(buffer.IndexWriteOffset - 1);
 
         DrawData drawData = default;
-        drawData.Font = font;
+        drawData.Font = _font;
         drawData.Buffer = buffer;
         drawData.Index = index;
         drawData.Handle = handle;
@@ -79,13 +88,13 @@ public sealed class LiveProfileViewControl : Control
         var str = value.Type switch
         {
             ProfValueType.TimeAllocSample =>
-                $"{value.TimeAllocSample.Time * 1000:N2} ms, {value.TimeAllocSample.Alloc} B",
-            ProfValueType.Int32 => value.Int32.ToString(),
-            ProfValueType.Int64 => value.Int64.ToString(),
-            _ => "???"
+                FormatHelpers.FormatIntoMem(_sampleBuffer, $"{value.TimeAllocSample.Time * 1000:N2} ms, {value.TimeAllocSample.Alloc} B"),
+            ProfValueType.Int32 => FormatHelpers.FormatIntoMem(_sampleBuffer, $"{value.Int32}"),
+            ProfValueType.Int64 => FormatHelpers.FormatIntoMem(_sampleBuffer, $"{value.Int64}"),
+            _ => "???".AsMemory()
         };
 
-        data.Handle.DrawString(data.Font, baseline, str, UIScale, Color.White);
+        data.Handle.DrawString(data.Font, baseline, str.Span, UIScale, Color.White);
     }
 
     private void DrawCmd(

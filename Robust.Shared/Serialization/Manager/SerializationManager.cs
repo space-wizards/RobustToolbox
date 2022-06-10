@@ -51,7 +51,6 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = true;
 
             DependencyCollection = IoCManager.Instance ?? throw new NullReferenceException();
-            var isServer = DependencyCollection.Resolve<INetManager>().IsServer;
 
             var flagsTypes = new ConcurrentBag<Type>();
             var constantsTypes = new ConcurrentBag<Type>();

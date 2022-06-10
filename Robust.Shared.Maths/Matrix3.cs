@@ -29,12 +29,13 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Matrix3 : IEquatable<Matrix3>, IApproxEquatable<Matrix3>
+    public struct Matrix3 : IEquatable<Matrix3>, IApproxEquatable<Matrix3>, ISpanFormattable
     {
         #region Fields & Access
 
@@ -1223,6 +1224,25 @@ namespace Robust.Shared.Maths
             return $"|{R0C0}, {R0C1}, {R0C2}|\n"
                    + $"|{R1C0}, {R1C1}, {R1C2}|\n"
                    + $"|{R2C0}, {R2C1}, {R2C2}|\n";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"|{R0C0}, {R0C1}, {R0C2}|\n"
+                + $"|{R1C0}, {R1C1}, {R1C2}|\n"
+                + $"|{R2C0}, {R2C1}, {R2C2}|\n");
         }
 
         #endregion String

@@ -2,6 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
-    public readonly struct MapCoordinates : IEquatable<MapCoordinates>
+    public readonly struct MapCoordinates : IEquatable<MapCoordinates>, ISpanFormattable
     {
         public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
 
@@ -58,6 +59,23 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}");
         }
 
         /// <summary>

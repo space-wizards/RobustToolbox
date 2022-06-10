@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>
+    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>, ISpanFormattable
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
@@ -310,9 +311,26 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Bottom}, {Right}, {Top})");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

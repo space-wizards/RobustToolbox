@@ -75,7 +75,7 @@ public sealed partial class SpriteSystem
     {
         // IconComponent takes precedence. If it has a valid icon, return that. Otherwise, continue as normal.
         if (prototype.Components.TryGetValue("Icon", out var compData)
-            && compData.Component is IconComponent {Icon: {} icon})
+            && compData is IconComponent {Icon: {} icon})
         {
             return icon.Default;
         }

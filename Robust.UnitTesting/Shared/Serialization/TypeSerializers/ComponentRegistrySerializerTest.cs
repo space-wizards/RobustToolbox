@@ -29,7 +29,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         public void SerializationTest()
         {
             var component = new TestComponent();
-            var registry = new ComponentRegistry {{"Test", new ComponentRegistryEntry(component, new MappingDataNode())}};
+            var registry = new ComponentRegistry {{"Test", component}};
             var node = Serialization.WriteValueAs<SequenceDataNode>(registry);
 
             Assert.That(node.Sequence.Count, Is.EqualTo(1));
@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             Assert.That(deserializedRegistry.Count, Is.EqualTo(1));
             Assert.That(deserializedRegistry.ContainsKey("Test"));
-            Assert.IsInstanceOf<TestComponent>(deserializedRegistry["Test"].Component);
+            Assert.IsInstanceOf<TestComponent>(deserializedRegistry["Test"]);
         }
     }
 

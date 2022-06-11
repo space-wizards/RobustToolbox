@@ -60,7 +60,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 var type = factory.GetRegistration(compType).Type;
                 var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
 
-                components[compType] = new ComponentRegistryEntry(read, copy);
+                components[compType] = read;
             }
 
             var referenceTypes = new List<CompIdx>();
@@ -153,12 +153,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
-                var node = serializationManager.WriteValue(
-                    component.Component.GetType(),
-                    component.Component,
-                    alwaysWrite,
-                    context);
-
+                var node = serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
 
                 mapping.Add("type", new ValueDataNode(type));

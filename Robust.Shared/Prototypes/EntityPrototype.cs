@@ -154,9 +154,9 @@ namespace Robust.Shared.Prototypes
         public EntityPrototype()
         {
             // Everybody gets a transform component!
-            Components.Add("Transform", new ComponentRegistryEntry(new TransformComponent(), new MappingDataNode()));
+            Components.Add("Transform", new TransformComponent());
             // And a metadata component too!
-            Components.Add("MetaData", new ComponentRegistryEntry(new MetaDataComponent(), new MappingDataNode()));
+            Components.Add("MetaData", new MetaDataComponent());
         }
 
         void ISerializationHooks.AfterDeserialization()
@@ -185,7 +185,7 @@ namespace Robust.Shared.Prototypes
 
             // There are no duplicate component names
             // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast.Component;
+            component = (T) componentUnCast;
             return true;
         }
 
@@ -262,12 +262,25 @@ namespace Robust.Shared.Prototypes
             {
                 prototypeManager.TryGetMapping(typeof(EntityPrototype), prototype.ID, out var prototypeData);
 
-                foreach (var (name, entry) in prototype.Components)
+                foreach (var (name, _) in prototype.Components)
                 {
-                    var fullData = entry.Mapping;
+                    MappingDataNode? fullData = null;
+                    if (prototypeData != null && prototypeData.TryGet<SequenceDataNode>("components", out var compList))
+                    {
+                        foreach (var data in compList)
+                        {
+                            if(data is not MappingDataNode mappingDataNode || !mappingDataNode.TryGet<ValueDataNode>("type", out var typeNode) || typeNode.Value != name ) continue;
+                            fullData = mappingDataNode;
+                            break;
+                        }
+                    }
+
+                    fullData ??= new MappingDataNode();
 
                     if (context != null)
+                    {
                         fullData = context.GetComponentData(name, fullData);
+                    }
 
                     EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
@@ -297,12 +310,11 @@ namespace Robust.Shared.Prototypes
             IEntityManager entityManager,
             ISerializationManager serManager,
             string compName,
-            MappingDataNode data,
-            ISerializationContext? context)
+            MappingDataNode data, ISerializationContext? context)
         {
-            var compReg = factory.GetRegistration(compName);
+            var compType = factory.GetRegistration(compName).Type;
 
-            if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
+            if (!entityManager.TryGetComponent(entity, compType, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;
@@ -311,7 +323,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            serManager.Read(compReg.Type, data, context, value: component);
+            serManager.Read(compType, data, context, value: component);
         }
 
         public override string ToString()
@@ -319,27 +331,14 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public sealed class ComponentRegistry : Dictionary<string, ComponentRegistryEntry>
+        public sealed class ComponentRegistry : Dictionary<string, IComponent>
         {
             public ComponentRegistry()
             {
             }
 
-            public ComponentRegistry(Dictionary<string, ComponentRegistryEntry> components) : base(components)
+            public ComponentRegistry(Dictionary<string, IComponent> components) : base(components)
             {
-            }
-        }
-
-        public sealed class ComponentRegistryEntry
-        {
-            public readonly IComponent Component;
-            // Mapping is just a quick reference to speed up entity creation.
-            public readonly MappingDataNode Mapping;
-
-            public ComponentRegistryEntry(IComponent component, MappingDataNode mapping)
-            {
-                Component = component;
-                Mapping = mapping;
             }
         }
 

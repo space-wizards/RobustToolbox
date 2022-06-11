@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Utility;
 
@@ -66,20 +65,6 @@ namespace Robust.Shared.GameObjects
             where TEvent : notnull;
 
         /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="idx">Type of the component, for faster lookups.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
-            where TEvent : notnull;
-
-        /// <summary>
         /// Dispatches an event directly to a specific component, by-ref.
         /// </summary>
         /// <remarks>
@@ -97,7 +82,7 @@ namespace Robust.Shared.GameObjects
 
     internal partial class EntityEventBus : IDisposable
     {
-        internal delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
+        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
 
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
             where TEvent : notnull;
@@ -131,24 +116,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                CompIdx.Index(component.GetType()),
-                ref unitRef,
-                false);
-        }
-
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, CompIdx type, TEvent args)
-        {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                type,
-                ref unitRef,
-                false);
+            DispatchComponent<TEvent>(component.Owner, component, ref unitRef, false);
         }
 
         /// <inheritdoc />
@@ -156,12 +124,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                CompIdx.Index(component.GetType()),
-                ref unitRef,
-                true);
+            DispatchComponent<TEvent>(component.Owner, component, ref unitRef, true);
         }
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare()
@@ -327,14 +290,14 @@ namespace Robust.Shared.GameObjects
             EntRemoveEntity(e);
         }
 
-        public void OnComponentAdded(in AddedComponentEventArgs e)
+        public void OnComponentAdded(AddedComponentEventArgs e)
         {
             _subscriptionLock = true;
 
-            EntAddComponent(e.BaseArgs.Owner, e.ComponentType);
+            EntAddComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
         }
 
-        public void OnComponentRemoved(in RemovedComponentEventArgs e)
+        public void OnComponentRemoved(RemovedComponentEventArgs e)
         {
             EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
         }
@@ -371,8 +334,7 @@ namespace Robust.Shared.GameObjects
             var invSubs = _entSubscriptionsInv.GetOrNew(eventType);
             invSubs.Add(compType);
 
-            RegisterCommon(eventType, registration.Ordering, out var data);
-            data.ComponentEvent = eventType.HasCustomAttribute<ComponentEventAttribute>();
+            RegisterCommon(eventType, registration.Ordering, out _);
         }
 
         private void EntSubscribe<TEvent>(
@@ -413,7 +375,7 @@ namespace Robust.Shared.GameObjects
         {
             // odds are at least 1 component will subscribe to an event on the entity, so just
             // preallocate the table now. Dispatch does not need to check this later.
-            _entEventTables.Add(euid, new EventTable());
+            _entEventTables.Add(euid, new Dictionary<Type, HashSet<CompIdx>>());
         }
 
         private void EntRemoveEntity(EntityUid euid)
@@ -430,60 +392,16 @@ namespace Robust.Shared.GameObjects
             {
                 var compSubs = _entSubscriptions[type.Value]!;
 
-                foreach (var (evType, _) in compSubs)
+                foreach (var kvSub in compSubs)
                 {
-                    // Skip adding this to significantly reduce memory use and GC noise on entity create.
-                    if (_eventData[evType].ComponentEvent)
-                        continue;
+                    if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                    {
+                        subscribedComps = new HashSet<CompIdx>();
+                        eventTable.Add(kvSub.Key, subscribedComps);
+                    }
 
-                    if (eventTable.Free < 0)
-                        GrowEventTable(eventTable);
-
-                    DebugTools.Assert(eventTable.Free >= 0);
-
-                    ref var eventStartIdx = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                        eventTable.EventIndices,
-                        evType,
-                        out var exists);
-
-                    // Allocate linked list entry by popping free list.
-                    var entryIdx = eventTable.Free;
-                    ref var entry = ref eventTable.ComponentLists[entryIdx];
-                    eventTable.Free = entry.Next;
-
-                    // Set it up
-                    entry.Component = type;
-                    entry.Next = exists ? eventStartIdx : -1;
-
-                    // Assign new list entry to EventIndices dictionary.
-                    eventStartIdx = entryIdx;
+                    subscribedComps.Add(type);
                 }
-            }
-        }
-
-        private static void GrowEventTable(EventTable table)
-        {
-            var newSize = table.ComponentLists.Length * 2;
-
-            var oldArray = table.ComponentLists;
-            var newArray = GC.AllocateUninitializedArray<EventTableListEntry>(newSize);
-            Array.Copy(oldArray, newArray, oldArray.Length);
-
-            InitEventTableFreeList(newArray, newArray.Length, oldArray.Length);
-
-            table.Free = oldArray.Length;
-            table.ComponentLists = newArray;
-        }
-
-        private static void InitEventTableFreeList(EventTableListEntry[] entries, int end, int start)
-        {
-            var lastFree = -1;
-            for (var i = end - 1; i >= start; i--)
-            {
-                ref var entry = ref entries[i];
-                entry.Component = default;
-                entry.Next = lastFree;
-                lastFree = i;
             }
         }
 
@@ -496,44 +414,12 @@ namespace Robust.Shared.GameObjects
             {
                 var compSubs = _entSubscriptions[type.Value]!;
 
-                foreach (var (evType, _) in compSubs)
+                foreach (var kvSub in compSubs)
                 {
-                    ref var dictIdx = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
-                    if (Unsafe.IsNullRef(ref dictIdx))
-                        continue;
+                    if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                        return;
 
-                    ref var updateNext = ref dictIdx;
-
-                    // Go over linked list to find index of component.
-                    var entryIdx = dictIdx;
-                    ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
-                    while (true)
-                    {
-                        entry = ref eventTable.ComponentLists[entryIdx];
-                        if (entry.Component == type)
-                        {
-                            // Found
-                            break;
-                        }
-
-                        entryIdx = entry.Next;
-                        updateNext = ref entry.Next;
-                    }
-
-                    if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
-                    {
-                        // Last entry for this event type, remove from dict.
-                        eventTable.EventIndices.Remove(evType);
-                    }
-                    else
-                    {
-                        // Rewrite previous index to point to next in chain.
-                        updateNext = entry.Next;
-                    }
-
-                    // Push entry back onto free list.
-                    entry.Next = eventTable.Free;
-                    eventTable.Free = entryIdx;
+                    subscribedComps.Remove(type);
                 }
             }
         }
@@ -543,8 +429,9 @@ namespace Robust.Shared.GameObjects
             if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
+            while (enumerator.MoveNext(out var tuple))
             {
+                var (component, reg) = tuple.Value;
                 if (reg.ReferenceEvent != dispatchByReference)
                     ThrowByRefMisMatch();
 
@@ -558,27 +445,32 @@ namespace Robust.Shared.GameObjects
             ref ValueList<OrderedEventDispatch> found,
             bool byRef)
         {
-            if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
+            var eventTable = _entEventTables[euid];
+
+            if (!eventTable.TryGetValue(eventType, out var subscribedComps))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
+            foreach (var compType in subscribedComps)
             {
+                var compSubs = _entSubscriptions[compType.Value]!;
+
+                if (!compSubs.TryGetValue(eventType, out var reg))
+                    return;
+
                 if (reg.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
+
+                var component = _entMan.GetComponent(euid, compType);
 
                 found.Add(new OrderedEventDispatch((ref Unit ev) => reg.Handler(euid, component, ref ev), reg.Order));
             }
         }
 
-        private void DispatchComponent<TEvent>(
-            EntityUid euid,
-            IComponent component,
-            CompIdx baseType,
-            ref Unit args,
+        private void DispatchComponent<TEvent>(EntityUid euid, IComponent component, ref Unit args,
             bool dispatchByReference)
             where TEvent : notnull
         {
-            var enumerator = EntGetReferences(baseType);
+            var enumerator = EntGetReferences(CompIdx.Index(component.GetType()));
             while (enumerator.MoveNext(out var type))
             {
                 var compSubs = _entSubscriptions[type.Value]!;
@@ -613,13 +505,13 @@ namespace Robust.Shared.GameObjects
             }
 
             // No subscriptions to this event type, return null.
-            if (!eventTable.EventIndices.TryGetValue(eventType, out var startEntry))
+            if (!eventTable.TryGetValue(eventType, out var subscribedComps))
             {
                 enumerator = default;
                 return false;
             }
 
-            enumerator = new(eventType, startEntry, eventTable.ComponentLists, _entSubscriptions, euid, _entMan);
+            enumerator = new(eventType, subscribedComps.GetEnumerator(), _entSubscriptions, euid, _entMan);
             return true;
         }
 
@@ -689,60 +581,58 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private struct SubscriptionsEnumerator
+        private struct SubscriptionsEnumerator : IDisposable
         {
             private readonly Type _eventType;
-            private readonly EntityUid _uid;
+            private HashSet<CompIdx>.Enumerator _enumerator;
             private readonly Dictionary<Type, DirectedRegistration>?[] _subscriptions;
+            private readonly EntityUid _uid;
             private readonly IEntityManager _entityManager;
-            private readonly EventTableListEntry[] _list;
-            private int _idx;
 
             public SubscriptionsEnumerator(
                 Type eventType,
-                int startEntry,
-                EventTableListEntry[] list,
+                HashSet<CompIdx>.Enumerator enumerator,
                 Dictionary<Type, DirectedRegistration>?[] subscriptions,
                 EntityUid uid,
                 IEntityManager entityManager)
             {
                 _eventType = eventType;
-                _list = list;
+                _enumerator = enumerator;
                 _subscriptions = subscriptions;
-                _idx = startEntry;
                 _entityManager = entityManager;
                 _uid = uid;
             }
 
             public bool MoveNext(
-                [NotNullWhen(true)] out IComponent? component,
-                [NotNullWhen(true)] out DirectedRegistration? registration)
+                [NotNullWhen(true)] out (IComponent Component, DirectedRegistration Registration)? tuple)
             {
-                if (_idx == -1)
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if (!_enumerator.MoveNext())
                 {
-                    component = null;
-                    registration = null;
+                    tuple = null;
                     return false;
                 }
 
-                ref var entry = ref _list[_idx];
-                _idx = entry.Next;
-
-                var compType = entry.Component;
+                var compType = _enumerator.Current;
                 var compSubs = _subscriptions[compType.Value]!;
 
-                if (!compSubs.TryGetValue(_eventType, out registration))
+                if (!compSubs.TryGetValue(_eventType, out var registration))
                 {
-                    component = default;
+                    tuple = null;
                     return false;
                 }
 
-                component = _entityManager.GetComponent(_uid, compType);
+                tuple = (_entityManager.GetComponent(_uid, compType), registration);
                 return true;
+            }
+
+            public void Dispose()
+            {
+                _enumerator.Dispose();
             }
         }
 
-        internal sealed class DirectedRegistration : OrderedRegistration
+        private sealed class DirectedRegistration : OrderedRegistration
         {
             public readonly Delegate Original;
             public readonly DirectedEventHandler Handler;
@@ -763,32 +653,6 @@ namespace Robust.Shared.GameObjects
             {
                 Order = order;
             }
-        }
-
-        internal sealed class EventTable
-        {
-            private const int InitialListSize = 8;
-
-            // Event -> { Comp, Comp, ... } is stored in a simple linked list.
-            // EventIndices contains indices into ComponentLists where linked list nodes start.
-            // Free contains the first free linked list node, or -1 if there is none.
-            // Free nodes form their own linked list.
-            // ComponentList is the actual region of memory containing linked list nodes.
-            public readonly Dictionary<Type, int> EventIndices = new();
-            public int Free;
-            public EventTableListEntry[] ComponentLists = new EventTableListEntry[InitialListSize];
-
-            public EventTable()
-            {
-                InitEventTableFreeList(ComponentLists, ComponentLists.Length, 0);
-                Free = 0;
-            }
-        }
-
-        internal struct EventTableListEntry
-        {
-            public int Next;
-            public CompIdx Component;
         }
     }
 

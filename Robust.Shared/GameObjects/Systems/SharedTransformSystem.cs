@@ -110,7 +110,7 @@ namespace Robust.Shared.GameObjects
         public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
         {
             // If they're parented directly to the map or grid then just return the coordinates.
-            if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+            if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
             {
                 var mapUid = _mapManager.GetMapEntityId(xform.MapID);
                 var coordinates = xform.Coordinates;
@@ -176,11 +176,11 @@ namespace Robust.Shared.GameObjects
                 return Vector2i.Zero;
 
             // Fast path, we're not on a grid.
-            if (xform.GridID == GridId.Invalid)
+            if (xform.GridUid == null)
                 return (Vector2i) xform.WorldPosition;
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.GetGrid(xform.GridID).CoordinatesToTile(xform.Coordinates);
+            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
         }
     }
 

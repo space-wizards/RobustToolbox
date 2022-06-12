@@ -119,6 +119,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Vector2 WorldPosition
         {
             get
@@ -140,6 +141,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Angle WorldRotation
         {
             get
@@ -161,6 +163,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Matrix3 WorldMatrix
         {
             get
@@ -175,6 +178,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Matrix3 InvWorldMatrix
         {
             get

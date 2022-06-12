@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
             // DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
             // We only do grid-traversal parent changes if the entity is currently parented to a map or a grid.
-            var parentIsMap = xform.GridID == GridId.Invalid && maps.HasComponent(xform.ParentUid);
+            var parentIsMap = xform.GridUid == null && maps.HasComponent(xform.ParentUid);
             if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
                 return;
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
@@ -98,22 +98,22 @@ namespace Robust.Shared.GameObjects
             if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-                if (grid.Index != xform.GridID)
+                if (grid.GridEntityId != xform.GridUid)
                 {
                     xform.AttachParent(grid.GridEntityId);
-                    var ev = new ChangedGridEvent(entity, xform.GridID, grid.Index);
+                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.GridEntityId);
                     RaiseLocalEvent(entity, ref ev);
                 }
             }
             else
             {
-                var oldGridId = xform.GridID;
+                var oldGridId = xform.GridUid;
 
                 // Attach them to map / they are on an invalid grid
-                if (oldGridId != GridId.Invalid)
+                if (oldGridId != null)
                 {
                     xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
-                    var ev = new ChangedGridEvent(entity, oldGridId, GridId.Invalid);
+                    var ev = new ChangedGridEvent(entity, oldGridId, null);
                     RaiseLocalEvent(entity, ref ev);
                 }
             }
@@ -124,10 +124,10 @@ namespace Robust.Shared.GameObjects
     public readonly struct ChangedGridEvent
     {
         public readonly EntityUid Entity;
-        public readonly GridId OldGrid;
-        public readonly GridId NewGrid;
+        public readonly EntityUid? OldGrid;
+        public readonly EntityUid? NewGrid;
 
-        public ChangedGridEvent(EntityUid entity, GridId oldGrid, GridId newGrid)
+        public ChangedGridEvent(EntityUid entity, EntityUid? oldGrid, EntityUid? newGrid)
         {
             Entity = entity;
             OldGrid = oldGrid;

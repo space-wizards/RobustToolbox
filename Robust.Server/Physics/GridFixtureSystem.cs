@@ -5,6 +5,7 @@ using System.Linq;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -39,7 +40,7 @@ namespace Robust.Server.Physics
         /// </summary>
         private bool _isSplitting;
 
-        private bool _splitAllowed = true;
+        internal bool SplitAllowed = true;
 
         public override void Initialize()
         {
@@ -53,7 +54,7 @@ namespace Robust.Server.Physics
             configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 
-        private void SetSplitAllowed(bool value) => _splitAllowed = value;
+        private void SetSplitAllowed(bool value) => SplitAllowed = value;
 
         public override void Shutdown()
         {
@@ -184,7 +185,7 @@ namespace Robust.Server.Physics
         /// </summary>
         private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
-            if (_isSplitting || !_splitAllowed) return;
+            if (_isSplitting || !SplitAllowed) return;
 
             _isSplitting = true;
             _logger.Debug($"Started split check for {ToPrettyString(uid)}");
@@ -272,6 +273,7 @@ namespace Robust.Server.Physics
                     }
 
                     splitGrid.SetTiles(tileData);
+                    DebugTools.Assert(_mapManager.IsGrid(splitGrid.GridEntityId), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
@@ -318,7 +320,7 @@ namespace Robust.Server.Physics
                         _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
 
-                    var eevee = new PostGridSplitEvent(mapGrid.Index, splitGrid.Index);
+                    var eevee = new PostGridSplitEvent(mapGrid.GridEntityId, splitGrid.GridEntityId);
                     RaiseLocalEvent(uid, ref eevee);
 
                     for (var j = 0; j < tileData.Count; j++)
@@ -498,24 +500,96 @@ namespace Robust.Server.Physics
             return group;
         }
 
-        internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
+        /// <summary>
+        /// Checks for grid split with 1 chunk updated.
+        /// </summary>
+        internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
         {
-            if (_isSplitting) return;
+            HashSet<ChunkSplitNode> nodes;
 
-            var grid = (IMapGridInternal) _mapManager.GetGrid(gridEuid);
+            if (chunk.FilledTiles == 0)
+            {
+                nodes = RemoveSplitNode(gridEuid, chunk);
+            }
+            else
+            {
+                nodes = GenerateSplitNode(gridEuid, chunk);
+            }
+
+            CheckSplits(gridEuid, nodes);
+        }
+
+        /// <summary>
+        /// Checks for grid split with many chunks updated.
+        /// </summary>
+        internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks)
+        {
+            var nodes = new HashSet<ChunkSplitNode>();
+
+            foreach (var chunk in removedChunks)
+            {
+                nodes.UnionWith(RemoveSplitNode(gridEuid, chunk));
+            }
+
+            foreach (var (chunk, _) in mapChunks)
+            {
+                nodes.UnionWith(GenerateSplitNode(gridEuid, chunk));
+            }
+
+            var toRemove = new ValueList<ChunkSplitNode>();
+
+            // Some of the neighbour nodes may have been added that were since deleted during the above enumeration
+            // e.g. if NodeA and NodeB both had their counts set to 0 and are neighbours then either might add
+            // the other to dirtynodes.
+            foreach (var node in nodes)
+            {
+                if (node.Indices.Count > 0) continue;
+                toRemove.Add(node);
+            }
+
+            foreach (var node in toRemove)
+            {
+                nodes.Remove(node);
+            }
+
+            CheckSplits(gridEuid, nodes);
+        }
+
+        /// <summary>
+        /// Removes this chunk from nodes and dirties its neighbours.
+        /// </summary>
+        private HashSet<ChunkSplitNode> RemoveSplitNode(EntityUid gridEuid, MapChunk chunk)
+        {
             var dirtyNodes = new HashSet<ChunkSplitNode>();
 
+            if (_isSplitting) return new HashSet<ChunkSplitNode>();
+
             Cleanup(gridEuid, chunk, dirtyNodes);
+            DebugTools.Assert(dirtyNodes.All(o => o.Group.Chunk != chunk));
+            return dirtyNodes;
+        }
+
+        /// <summary>
+        /// Re-adds this chunk to nodes and dirties its neighbours and itself.
+        /// </summary>
+        private HashSet<ChunkSplitNode> GenerateSplitNode(EntityUid gridEuid, MapChunk chunk)
+        {
+            var dirtyNodes = RemoveSplitNode(gridEuid, chunk);
+
+            if (_isSplitting) return dirtyNodes;
+
+            DebugTools.Assert(chunk.FilledTiles > 0);
+
+            var grid = (IMapGridInternal) _mapManager.GetGrid(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
-            _nodes[grid.GridEntityId][chunk.Indices] = group;
+            _nodes[gridEuid][chunk.Indices] = group;
 
             foreach (var chunkNode in group.Nodes)
             {
                 dirtyNodes.Add(chunkNode);
             }
 
-            if (checkSplit)
-                CheckSplits(gridEuid, dirtyNodes);
+            return dirtyNodes;
         }
 
         /// <summary>
@@ -562,13 +636,13 @@ namespace Robust.Server.Physics
             _nodes[gridEuid].Remove(chunk.Indices);
         }
 
-        private sealed class ChunkNodeGroup
+        internal sealed class ChunkNodeGroup
         {
             internal MapChunk Chunk = default!;
             public HashSet<ChunkSplitNode> Nodes = new();
         }
 
-        private sealed class ChunkSplitNode
+        internal sealed class ChunkSplitNode
         {
             public ChunkNodeGroup Group = default!;
             public HashSet<Vector2i> Indices { get; set; } = new();
@@ -643,14 +717,14 @@ public readonly struct PostGridSplitEvent
     /// <summary>
     ///     The grid it was part of previously.
     /// </summary>
-    public readonly GridId OldGrid;
+    public readonly EntityUid OldGrid;
 
     /// <summary>
     ///     The grid that has been split.
     /// </summary>
-    public readonly GridId Grid;
+    public readonly EntityUid Grid;
 
-    public PostGridSplitEvent(GridId oldGrid, GridId grid)
+    public PostGridSplitEvent(EntityUid oldGrid, EntityUid grid)
     {
         OldGrid = oldGrid;
         Grid = grid;

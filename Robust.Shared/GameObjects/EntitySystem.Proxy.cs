@@ -527,6 +527,38 @@ public partial class EntitySystem
 
     #endregion
 
+    #region Component Remove Deferred
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred<T>(EntityUid uid) where T : class, IComponent
+    {
+        return EntityManager.RemoveComponentDeferred<T>(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Type)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred(EntityUid uid, Type type)
+    {
+        return EntityManager.RemoveComponentDeferred(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, IComponent component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+    #endregion
+
+
     #region Component Remove
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>

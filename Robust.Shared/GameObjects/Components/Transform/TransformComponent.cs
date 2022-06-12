@@ -624,11 +624,10 @@ namespace Robust.Shared.GameObjects
             LerpParent = EntityUid.Invalid;
 
             // TODO: When ECSing this can just pass it into the anchor setter
-            if (Anchored
-                && _entMan.TryGetComponent(GridUid, out MetaDataComponent? meta)
-                && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+            if (Anchored && _entMan.TryGetComponent(GridUid, out MetaDataComponent? meta))
             {
-                Anchored = false;
+                if (meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+                    Anchored = false;
             }
             else
             {

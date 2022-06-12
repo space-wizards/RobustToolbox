@@ -454,7 +454,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-        return GetEntitiesIntersecting(grid.Index, gridIndices, flags);
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
     }
 
     /// <summary>
@@ -501,7 +501,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-        return GetEntitiesIntersecting(grid.Index, gridIndices, flags);
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
@@ -538,7 +538,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-        return GetEntitiesIntersecting(grid.Index, worldAABB, flags);
+        return GetEntitiesIntersecting(grid.GridEntityId, worldAABB, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)

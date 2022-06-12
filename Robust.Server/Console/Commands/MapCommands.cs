@@ -250,6 +250,7 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
             IoCManager.Resolve<IMapLoader>().SaveMap(mapId, args[1]);
+            shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }
 

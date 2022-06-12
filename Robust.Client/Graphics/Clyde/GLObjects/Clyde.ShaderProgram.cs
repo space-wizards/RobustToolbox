@@ -259,14 +259,56 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private unsafe void SetUniformDirect(int slot, in Matrix3 value, bool transpose=true)
             {
-                Matrix3 tmpTranspose = value;
+                GlMatrix3 tmpTranspose;
+
                 if (transpose)
                 {
-                    // transposition not supported on GLES2, & no access to _hasGLES
-                    tmpTranspose.Transpose();
+                    tmpTranspose = new()
+                    {
+                        R0C0 = value.R0C0,
+                        R1C0 = value.R1C0,
+                        R2C0 = value.R2C0,
+                        R0C1 = value.R0C1,
+                        R1C1 = value.R1C1,
+                        R2C1 = value.R2C1,
+                        R0C2 = value.R0C2,
+                        R1C2 = value.R1C2,
+                        R2C2 = value.R2C2,
+                    };
                 }
+                else
+                {
+                    tmpTranspose = new()
+                    {
+                        R0C0 = value.R0C0,
+                        R1C0 = value.R0C1,
+                        R2C0 = value.R0C2,
+                        R0C1 = value.R1C0,
+                        R1C1 = value.R1C1,
+                        R2C1 = value.R1C2,
+                        R0C2 = value.R2C0,
+                        R1C2 = value.R2C1,
+                        R2C2 = value.R2C2,
+                    };
+                }
+
                 GL.UniformMatrix3(slot, 1, false, (float*) &tmpTranspose);
                 _clyde.CheckGlError();
+            }
+
+            // GL currently uses matrix 3. This is just temporary to check if the game still works with the simd changes.
+            // If these changes are added, GL needs to be converted to use matrix3x2
+            private struct GlMatrix3
+            {
+                public float R0C0;
+                public float R1C0;
+                public float R2C0;
+                public float R0C1;
+                public float R1C1;
+                public float R2C1;
+                public float R0C2;
+                public float R1C2;
+                public float R2C2;
             }
 
             public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)

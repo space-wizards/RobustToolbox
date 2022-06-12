@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -451,7 +452,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        Cdot.X = Vector2.Dot(_perp, vB - vA) + _s2 * wB - _s1 * wA;
 		        Cdot.Y = wB - wA;
 
-		        Vector2 df = _K.Solve(-Cdot);
+                Unsafe.SkipInit(out Cdot);
+                Vector2 df = _K.Solve(-Cdot);
 		        _impulse += df;
 
 		        Vector2 P = _perp * df.X;
@@ -568,7 +570,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        Matrix22 K;
                 K = new Matrix22(k11, k12, k12, k22);
 
-		        Vector2 impulse1 = K.Solve(-C1);
+                Unsafe.SkipInit(out C1);
+                Vector2 impulse1 = K.Solve(-C1);
 		        impulse.X = impulse1.X;
 		        impulse.Y = impulse1.Y;
 		        impulse.Z = 0.0f;

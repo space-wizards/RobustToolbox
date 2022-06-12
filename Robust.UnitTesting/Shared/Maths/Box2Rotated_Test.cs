@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Intrinsics.X86;
 using NUnit.Framework;
@@ -62,7 +62,7 @@ namespace Robust.UnitTesting.Shared.Maths
             var (baseBox, origin, rotation, expected) = dat;
 
             var rotated = new Box2Rotated(baseBox, rotation, origin);
-            Assert.That(rotated.CalcBoundingBoxSlow(), Is.Approximately(expected));
+            Assert.That(rotated.CalcBoundingBoxNoSimd(), Is.Approximately(expected));
         }
 
         [Test]

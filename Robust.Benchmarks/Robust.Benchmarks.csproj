@@ -6,6 +6,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <OutputPath>../bin/Benchmarks</OutputPath>
         <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>RA0003</NoWarn>
     </PropertyGroup>
     <ItemGroup>

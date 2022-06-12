@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -216,6 +217,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         K.EX.Y = -_invIB * _rB.X * _rB.Y;
         K.EY.X = K.EX.Y;
         K.EY.Y = _invMassB + _invIB * _rB.X * _rB.X + _gamma;
+        Unsafe.SkipInit(out K);
 
         _mass = K.GetInverse();
 

@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Runtime.CompilerServices;
+
 namespace Robust.Shared.Maths
 {
     public struct Matrix33
@@ -83,6 +85,7 @@ namespace Robust.Shared.Maths
             Vector2 x;
             x.X = det * (a22 * b.X - a12 * b.Y);
             x.Y = det * (a11 * b.Y - a21 * b.X);
+            Unsafe.SkipInit(out x);
             return x;
         }
 

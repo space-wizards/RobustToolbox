@@ -65,7 +65,7 @@ namespace Robust.Shared.Maths
                 return CalcBoundingBoxSse();
             }
 
-            return CalcBoundingBoxSlow();
+            return CalcBoundingBoxNoSimd();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,21 +95,15 @@ namespace Robust.Shared.Maths
             allX = Sse.Add(modX, originX);
             allY = Sse.Add(modY, originY);
 
-            var l = SimdHelpers.MinHorizontalSse(allX);
-            var b = SimdHelpers.MinHorizontalSse(allY);
-            var r = SimdHelpers.MaxHorizontalSse(allX);
-            var t = SimdHelpers.MaxHorizontalSse(allY);
-
-            var lb = Sse.UnpackLow(l, b);
-            var rt = Sse.UnpackLow(r, t);
-
-            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+            var lr = SimdHelpers.MinMaxHorizontalSse(allX);
+            var bt = SimdHelpers.MinMaxHorizontalSse(allY);
+            var lbrt = Sse.UnpackLow(lr, bt);
 
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal readonly unsafe Box2 CalcBoundingBoxSlow()
+        internal readonly unsafe Box2 CalcBoundingBoxNoSimd()
         {
             Span<float> allX = stackalloc float[4];
             Span<float> allY = stackalloc float[4];

@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Runtime.CompilerServices;
+
 namespace Robust.Shared.Maths
 {
     public struct Matrix22
@@ -35,6 +37,7 @@ namespace Robust.Shared.Maths
 
         public Matrix22(float a11, float a12, float a21, float a22)
         {
+            Unsafe.SkipInit(out this);
             EX.X = a11; EX.Y = a21;
             EY.X = a12; EY.Y = a22;
         }

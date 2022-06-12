@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
@@ -8,19 +8,26 @@ namespace Robust.Shared.Maths
     /// <summary>
     ///     Represents a float vector with two components (x, y).
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     [Serializable]
     public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, ISpanFormattable
     {
         /// <summary>
         ///     The X component of the vector.
         /// </summary>
+        [FieldOffset(sizeof(float) * 0)]
         public float X;
 
         /// <summary>
         ///     The Y component of the vector.
         /// </summary>
+        [FieldOffset(sizeof(float) * 1)]
         public float Y;
+
+        // Shhhhh don't question it.
+        [FieldOffset(sizeof(float) * 0)]
+        [NonSerialized]
+        public System.Numerics.Vector2 Translation;
 
         /// <summary>
         ///     A zero length vector.
@@ -57,6 +64,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector2(float x, float y)
         {
+            Unsafe.SkipInit(out this);
             X = x;
             Y = y;
         }

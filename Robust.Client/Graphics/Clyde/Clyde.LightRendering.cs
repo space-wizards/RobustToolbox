@@ -994,11 +994,11 @@ namespace Robust.Client.Graphics.Clyde
                         var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                         // Do visibility tests for occluders (described above).
-                        bool CheckFaceEyeVis(Vector2 a, Vector2 b)
+                        static bool CheckFaceEyeVis(Vector2 a, Vector2 b)
                         {
                             // get normal
                             var alongNormal = b - a;
-                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld.Normalized;
+                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld;
                             // determine which side of the plane the face is on
                             // the plane is at the origin of this coordinate system, which is also the eye
                             // the normal of the plane is that of the face

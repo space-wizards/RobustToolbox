@@ -2069,10 +2069,8 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(Shader);
 
                 var layerColor = _parent.color * Color;
-
-                var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter);
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(position, textureSize);
+                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 
                 drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 

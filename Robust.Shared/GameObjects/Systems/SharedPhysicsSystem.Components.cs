@@ -41,8 +41,7 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        var startup = new PhysicsInitializedEvent(uid);
-        EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+        OnPhysicsInitialized(uid);
 
         // Issue the event for stuff that needs it.
         if (component._canCollide)
@@ -51,6 +50,7 @@ public partial class SharedPhysicsSystem
             component.CanCollide = true;
         }
     }
+    protected virtual void OnPhysicsInitialized(EntityUid uid){}
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
     {

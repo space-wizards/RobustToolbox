@@ -9,7 +9,6 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsInitializedEvent>(OnInit);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
@@ -70,7 +69,7 @@ namespace Robust.Shared.GameObjects
             UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
-        private void OnInit(EntityUid uid, CollisionWakeComponent component, ref PhysicsInitializedEvent args)
+        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
         {
             UpdateCanCollide(uid, component, checkTerminating: false);
         }

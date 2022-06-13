@@ -29,7 +29,6 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit, after: new[] { typeof(CollisionWakeSystem) });
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
@@ -225,10 +224,8 @@ namespace Robust.Shared.Physics
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        private void OnPhysicsInit(ref PhysicsInitializedEvent ev)
+        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component)
         {
-            var component = EnsureComp<FixturesComponent>(ev.Uid);
-
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
             foreach (var fixture in component.SerializedFixtures)
@@ -245,7 +242,7 @@ namespace Robust.Shared.Physics
 
             // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
-            if (EntityManager.TryGetComponent(ev.Uid, out PhysicsComponent? body))
+            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
                 foreach (var (_, fixture) in component.Fixtures)
                 {
@@ -257,7 +254,7 @@ namespace Robust.Shared.Physics
 
                 if (body.CanCollide)
                 {
-                    DebugTools.Assert(!_containers.IsEntityInContainer(ev.Uid));
+                    DebugTools.Assert(!_containers.IsEntityInContainer(uid));
                     _broadphaseSystem.AddBody(body, component);
                 }
             }

@@ -463,8 +463,12 @@ namespace Robust.Server.Maps
             private void ApplyGridFixtures()
             {
                 var entManager = _serverEntityManager;
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+                var sysManager = _serverEntityManager.EntitySysManager;
+                var gridFixtures = sysManager.GetEntitySystem<GridFixtureSystem>();
+                var fixtureSystem = sysManager.GetEntitySystem<FixtureSystem>();
+                // Disable splitting temporarily while maploading occurs.
+                var splitEnabled = gridFixtures.SplitAllowed;
+                gridFixtures.SplitAllowed = false;
 
                 foreach (var grid in Grids)
                 {
@@ -473,7 +477,7 @@ namespace Robust.Server.Maps
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
                     gridFixtures.EnsureGrid(grid.GridEntityId);
-                    gridFixtures.ProcessGrid(gridInternal);
+                    gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
                     fixtures.SerializedFixtures.Clear();
 
@@ -510,6 +514,8 @@ namespace Robust.Server.Maps
 
                     fixtureSystem.FixtureUpdate(fixtures, body);
                 }
+
+                gridFixtures.SplitAllowed = splitEnabled;
             }
 
             private void ReadGridSection()

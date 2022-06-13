@@ -94,11 +94,44 @@ namespace Robust.Shared.GameObjects
         void RemoveComponent(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes the specified component. Throws if the given component does not belong to the entity.
+        ///     Removes the specified component at a later time.
+        ///     Without needing to have the component itself.
+        /// </summary>
+        /// <typeparam name="T">The component reference type to remove.</typeparam>
+        /// <param name="uid">Entity UID to modify.</param>
+        bool RemoveComponentDeferred<T>(EntityUid uid);
+
+        /// <summary>
+        ///     Removes the specified component with a specified type at a later time.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Removes the component with a specified network ID at a later time.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="netID">Network ID of the component to remove.</param>
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, ushort netID);
+
+        /// <summary>
+        ///     Removes the specified component at a later time.
+        ///     Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="component">Component to remove.</param>
-        void RemoveComponent(EntityUid uid, Component component);
+        void RemoveComponentDeferred(EntityUid uid, IComponent component);
+
+        /// <summary>
+        ///     Removes the specified component at a later time.
+        ///     Throws if the given component does not belong to the entity.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="component">Component to remove.</param>
+        void RemoveComponentDeferred(EntityUid uid, Component component);
 
         /// <summary>
         ///     Removes all components from an entity, except the required components.

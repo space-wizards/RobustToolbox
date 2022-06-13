@@ -68,7 +68,7 @@ namespace Robust.Server.GameObjects
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -83,7 +83,8 @@ namespace Robust.Server.GameObjects
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
+            AudioParams? audioParams = null)
         {
             if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
                 return null;
@@ -108,7 +109,8 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
 

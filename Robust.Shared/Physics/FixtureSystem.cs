@@ -224,8 +224,9 @@ namespace Robust.Shared.Physics
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component)
+        internal void OnPhysicsInit(EntityUid uid)
         {
+            var component = EntityManager.EnsureComponent<FixturesComponent>(uid);
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
             foreach (var fixture in component.SerializedFixtures)

@@ -13,8 +13,6 @@ namespace Robust.Server.GameObjects
     public sealed class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private CollisionWakeSystem _collisionWakeSystem = default!;
-        [Dependency] private FixtureSystem _fixtureSystem = default!;
 
         public override void Initialize()
         {
@@ -22,18 +20,6 @@ namespace Robust.Server.GameObjects
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             LoadMetricCVar();
             _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
-        }
-
-        protected override void OnPhysicsInitialized(EntityUid uid)
-        {
-            if (EntityManager.TryGetComponent(uid, out CollisionWakeComponent? wakeComp))
-            {
-                _collisionWakeSystem.OnPhysicsInit(uid, wakeComp);
-            }
-            if (EntityManager.TryGetComponent(uid, out FixturesComponent? fixtureComp))
-            {
-                _fixtureSystem.OnPhysicsInit(uid, fixtureComp);
-            }
         }
 
         private void LoadMetricCVar()

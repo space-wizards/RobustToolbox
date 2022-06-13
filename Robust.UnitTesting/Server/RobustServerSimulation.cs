@@ -241,6 +241,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
+            compFactory.RegisterClass<CollisionWakeComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -258,6 +259,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<CollisionWakeSystem>();
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();

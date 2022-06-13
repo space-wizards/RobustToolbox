@@ -88,6 +88,8 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Startup()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Startup() called without Initialized");
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
@@ -103,16 +105,15 @@ namespace Robust.Shared.GameObjects
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
             ClearComponents();
-            Initialized = false;
             Started = false;
         }
 
         public void Cleanup()
         {
-            QueuedDeletions.Clear();
-            QueuedDeletionsSet.Clear();
+            _componentFactory.ComponentAdded -= OnComponentAdded;
+            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
+            FlushEntities();
             _entitySystemManager.Clear();
-            Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
             ClearComponents();
@@ -363,6 +364,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void FlushEntities()
         {
+            QueuedDeletions.Clear();
+            QueuedDeletionsSet.Clear();
             foreach (var e in GetEntities())
             {
                 DeleteEntity(e);

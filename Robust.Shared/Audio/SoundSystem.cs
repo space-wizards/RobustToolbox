@@ -37,36 +37,38 @@ namespace Robust.Shared.Audio
         /// <summary>
         /// Play an audio file globally, without position.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
-            return GetAudio()?.Play(playerFilter, filename, audioParams);
+            return GetAudio()?.Play(filename, playerFilter, audioParams);
         }
 
         /// <summary>
         /// Play an audio file following an entity.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="uid">The UID of the entity "emitting" the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
+            AudioParams? audioParams = null)
         {
-            return GetAudio()?.Play(playerFilter, filename, uid, audioParams);
+            return GetAudio()?.Play(filename, playerFilter, uid, audioParams);
         }
 
         /// <summary>
         /// Play an audio file at a static position.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
-            return GetAudio()?.Play(playerFilter, filename, coordinates, audioParams);
+            return GetAudio()?.Play(filename, playerFilter, coordinates, audioParams);
         }
 
         internal sealed class QueryAudioSystem : EntityEventArgs

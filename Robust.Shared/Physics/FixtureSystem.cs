@@ -29,7 +29,7 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit);
+            SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit, after: new[] { typeof(CollisionWakeSystem) });
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 

@@ -176,8 +176,9 @@ namespace Robust.Shared.Network
 
                 if (keyBytes.Length != CryptoBox.PublicKeyBytes)
                 {
-                    connection.Disconnect("Invalid public key length");
-                    throw new Exception("Invalid public key length");
+                    var msg = $"Invalid public key length. Expected {CryptoBox.PublicKeyBytes}, but was {keyBytes.Length}.";
+                    connection.Disconnect(msg);
+                    throw new Exception(msg);
                 }
 
                 // Data is [shared]+[verify]

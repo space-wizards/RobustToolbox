@@ -325,9 +325,7 @@ public abstract partial class SharedTransformSystem
     private void ActivateLerp(TransformComponent xform)
     {
         if (xform.ActivelyLerping)
-        {
             return;
-        }
 
         xform.ActivelyLerping = true;
         RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform));
@@ -437,11 +435,16 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            // this should cause the lerp to do nothing
-            component._nextPosition = null;
-            component._nextRotation = null;
-            component.LerpParent = EntityUid.Invalid;
+            DeactivateLerp(component);
         }
+    }
+
+    private void DeactivateLerp(TransformComponent component)
+    {
+        // this should cause the lerp to do nothing
+        component._nextPosition = null;
+        component._nextRotation = null;
+        component.LerpParent = EntityUid.Invalid;
     }
 
     #endregion

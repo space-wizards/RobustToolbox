@@ -2198,12 +2198,17 @@ namespace Robust.Client.GameObjects
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
             EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
 
-            var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {
+                if (!layer.Visible) continue;
+
                 if (layer.Texture != null)
+                {
                     results.Add(layer.Texture);
-                if (!layer.RsiState.IsValid || !layer.Visible) continue;
+                    continue;
+                }
+
+                if (!layer.RsiState.IsValid) continue;
 
                 var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
                 if (rsi == null ||
@@ -2211,15 +2216,15 @@ namespace Robust.Client.GameObjects
                     continue;
 
                 results.Add(state);
-                anyTexture = true;
             }
 
             noRot = spriteComponent.NoRotation;
 
             entityManager.DeleteEntity(dummy);
 
-            if (!anyTexture)
+            if (results.Count == 0)
                 results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+
             return results;
         }
 

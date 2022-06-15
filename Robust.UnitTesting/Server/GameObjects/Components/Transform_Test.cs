@@ -405,8 +405,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var worldMat = node4Trans.WorldMatrix;
             var invWorldMat = node4Trans.InvWorldMatrix;
 
-            Matrix3.Multiply(ref worldMat, ref invWorldMat, out var leftVerifyMatrix);
-            Matrix3.Multiply(ref invWorldMat, ref worldMat, out var rightVerifyMatrix);
+            Matrix3.Multiply(in worldMat, in invWorldMat, out var leftVerifyMatrix);
+            Matrix3.Multiply(in invWorldMat, in worldMat, out var rightVerifyMatrix);
 
             //Assert
 

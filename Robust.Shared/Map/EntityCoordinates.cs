@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -12,7 +13,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
-    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>
+    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
@@ -430,6 +431,20 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+            destination,
+            out charsWritten,
+            $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}");
         }
     }
 }

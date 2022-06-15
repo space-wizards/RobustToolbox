@@ -8,7 +8,7 @@ using Robust.Analyzers;
 using VerifyCS = Microsoft.CodeAnalysis.CSharp.Testing.NUnit.AnalyzerVerifier<Robust.Analyzers.AccessAnalyzer>;
 using static Microsoft.CodeAnalysis.Testing.DiagnosticResult;
 
-namespace Robust.UnitTesting.Shared;
+namespace Robust.Analyzers.Tests;
 
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 [TestFixture]

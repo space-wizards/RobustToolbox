@@ -9,7 +9,7 @@ namespace Robust.Client.Graphics
             Value = value;
         }
 
-        public long Value { get; }
+        public readonly long Value;
 
         public static explicit operator ClydeHandle(long x)
         {
@@ -38,12 +38,12 @@ namespace Robust.Client.Graphics
 
         public static bool operator ==(ClydeHandle left, ClydeHandle right)
         {
-            return left.Equals(right);
+            return left.Value == right.Value;
         }
 
         public static bool operator !=(ClydeHandle left, ClydeHandle right)
         {
-            return !left.Equals(right);
+            return left.Value != right.Value;
         }
 
         public override string ToString()

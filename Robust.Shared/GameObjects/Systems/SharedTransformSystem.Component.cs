@@ -2,15 +2,19 @@ using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
+    [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+
     #region Anchoring
 
     internal void ReAnchor(TransformComponent xform,
@@ -38,7 +42,9 @@ public abstract partial class SharedTransformSystem
         // TODO: Ideally shouldn't need to call the moveevent
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
-            new EntityCoordinates(newGrid.Owner, xform._localPosition), xform);
+            new EntityCoordinates(newGrid.Owner, xform._localPosition),
+            xform,
+            _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref movEevee);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
@@ -383,7 +389,7 @@ public abstract partial class SharedTransformSystem
                 var oldPos = component.Coordinates;
                 component._localPosition = newState.LocalPosition;
 
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component);
+                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
                 DeferMoveEvent(ref ev);
 
                 rebuildMatrices = true;

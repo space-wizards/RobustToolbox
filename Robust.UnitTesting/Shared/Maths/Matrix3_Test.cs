@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 
@@ -111,8 +111,8 @@ namespace Robust.UnitTesting.Shared.Maths
             var invMatrix = Matrix3.Invert(normalMatrix);
 
             // multiply it back together
-            Matrix3.Multiply(ref normalMatrix, ref invMatrix, out var leftVerifyMatrix);
-            Matrix3.Multiply(ref invMatrix, ref normalMatrix, out var rightVerifyMatrix);
+            Matrix3.Multiply(in normalMatrix, in invMatrix, out var leftVerifyMatrix);
+            Matrix3.Multiply(in invMatrix, in normalMatrix, out var rightVerifyMatrix);
 
             // these should be the same (A × A-1 = A-1 × A = I)
             Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix, epsilon));
@@ -129,8 +129,8 @@ namespace Robust.UnitTesting.Shared.Maths
             var mat2 = Matrix3.CreateTranslation(new Vector2(-2, -2));
             var mat3 = Matrix3.CreateTranslation(new Vector2(3, 3));
 
-            mat1.Multiply(ref mat2, out var res2);
-            res2.Multiply(ref mat3, out var res3);
+            mat1.Multiply(in mat2, out var res2);
+            res2.Multiply(in mat3, out var res3);
 
             // Act
             Vector3 test = new Vector3(0, 0, 1);
@@ -152,7 +152,7 @@ namespace Robust.UnitTesting.Shared.Maths
 
             // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
             // you will read about it use post-multiplication. So in OpenTK MVP = M*V*P; in OpenGL it is MVP = P*V*M.
-            Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
+            Matrix3.Multiply(in rotateMatrix, in translateMatrix, out var transformMatrix);
 
             // Act
             Matrix3.Transform(in transformMatrix, in startPoint, out var localPoint);

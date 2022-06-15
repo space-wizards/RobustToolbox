@@ -1,8 +1,10 @@
+using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -11,6 +13,9 @@ namespace Robust.Client.UserInterface.CustomControls
         [Dependency] private readonly IClydeInternal _clydeInternal = default!;
 
         private readonly Label _label;
+
+        private readonly StringBuilder _textBuilder = new();
+        private readonly char[] _textBuffer = new char[256];
 
         public DebugClydePanel()
         {
@@ -33,21 +38,23 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
+            _textBuilder.Clear();
+
             var info = _clydeInternal.DebugInfo;
             var stats = _clydeInternal.DebugStats;
 
-            var overridingText = "";
-            if (info.Overriding)
-            {
-                overridingText = $"\nVersion override: {info.OpenGLVersion}";
-            }
-
-            _label.Text = $@"Renderer: {info.Renderer}
+            _textBuilder.Append($@"Renderer: {info.Renderer}
 Vendor: {info.Vendor}
-Version: {info.VersionString}{overridingText}
-Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
-Batches: {stats.LastBatches} Max size: {stats.LargestBatchSize}
-Lights: {stats.TotalLights}";
+Version: {info.VersionString}\n");
+
+            if (info.Overriding)
+                _textBuilder.Append($"Version override: {info.OpenGLVersion}\n");
+
+            _textBuilder.Append($@"Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
+Batches: {stats.LastBatches} Max size: ({stats.LargestBatchSize.vertices} vtx, {stats.LargestBatchSize.vertices} idx)
+Lights: {stats.TotalLights}");
+
+            _label.TextMemory = FormatHelpers.BuilderToMemory(_textBuilder, _textBuffer);
         }
     }
 }

@@ -394,7 +394,7 @@ namespace Robust.Shared.Configuration
             using var _ = Lock.ReadGuard();
             // Have to .ToArray() so the lock is held for the whole iteration operation.
             // This function is only currently used for the cvar ? command so I'm not too worried.
-            return _configVars.Select(p => p.Key).ToArray();
+            return _configVars.Where(c => c.Value.Registered).Select(p => p.Key).ToArray();
         }
 
         /// <inheritdoc />

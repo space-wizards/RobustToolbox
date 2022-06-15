@@ -169,11 +169,12 @@ namespace Robust.Client.GameObjects
             get => _baseRsi;
             set
             {
+                if (value == _baseRsi)
+                    return;
+
                 _baseRsi = value;
                 if (value == null)
-                {
                     return;
-                }
 
                 for (var i = 0; i < Layers.Count; i++)
                 {
@@ -182,6 +183,8 @@ namespace Robust.Client.GameObjects
                     {
                         continue;
                     }
+
+                    layer.UpdateActualState();
 
                     if (value.TryGetState(layer.State, out var state))
                     {
@@ -236,17 +239,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
-        // TODO: this should absolutely not be static.
-        private static ShaderInstance? _defaultShader;
-
-        [ViewVariables]
-        private ShaderInstance? DefaultShader => _defaultShader ??= prototypes
-            .Index<ShaderPrototype>("shaded")
-            .Instance();
-
         public const string LogCategory = "go.comp.sprite";
-        const string LayerSerializationCache = "spritelayer";
-        const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
 
@@ -404,7 +397,7 @@ namespace Robust.Client.GameObjects
 
         public int AddBlankLayer(int? newIndex = null)
         {
-            var layer = new Layer(this) { Visible = false };
+            var layer = new Layer(this);
             return AddLayer(layer, newIndex);
         }
 
@@ -603,7 +596,7 @@ namespace Robust.Client.GameObjects
             _bounds = new Box2();
             foreach (var layer in Layers)
             {
-                if (!layer.Visible) continue;
+                if (!layer.Visible || layer.Blank) continue;
 
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
@@ -623,8 +616,6 @@ namespace Robust.Client.GameObjects
 
             var layer = Layers[index];
 
-            var anyTextureAttempted = false;
-
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
                 var path = TextureRoot / layerDatum.RsiPath;
@@ -641,7 +632,6 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.State))
             {
-                anyTextureAttempted = true;
                 var theRsi = layer.RSI ?? BaseRSI;
                 if (theRsi == null)
                 {
@@ -669,7 +659,6 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
             {
-                anyTextureAttempted = true;
                 if (layer.State.IsValid)
                 {
                     Logger.ErrorS(LogCategory,
@@ -724,14 +713,14 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            layer.Color = layerDatum.Color;
-            layer._rotation = layerDatum.Rotation;
-            layer._offset = layerDatum.Offset;
-            layer._scale = layerDatum.Scale;
+            layer.Color = layerDatum.Color ?? layer.Color;
+            layer._rotation = layerDatum.Rotation ?? layer._rotation;
+            layer._offset = layerDatum.Offset ?? layer._offset;
+            layer._scale = layerDatum.Scale ?? layer._scale;
             layer.UpdateLocalMatrix();
 
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
-            layer.Visible = anyTextureAttempted && layerDatum.Visible;
+            layer.Visible = layerDatum.Visible ?? layer.Visible;
 
             RebuildBounds();
         }
@@ -1357,7 +1346,7 @@ namespace Robust.Client.GameObjects
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
             var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation);
 
-            Matrix3.Multiply(ref LocalMatrix, ref entityMatrix, out var transform);
+            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
 
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             foreach (var layer in Layers)
@@ -1404,7 +1393,7 @@ namespace Robust.Client.GameObjects
             {
                 var layer = t;
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1503,7 +1492,7 @@ namespace Robust.Client.GameObjects
             foreach (var layer in Layers)
             {
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1638,11 +1627,40 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
-            [ViewVariables] public RSI? RSI;
-            [ViewVariables] public RSI.StateId State;
+            private RSI? _rsi;
+            [ViewVariables] public RSI? RSI
+            {
+                get => _rsi;
+                set
+                {
+                    if (_rsi == value)
+                        return;
+
+                    _rsi = value;
+                    UpdateActualState();
+                }
+            }
+
+            private RSI.StateId _state;
+            [ViewVariables] public RSI.StateId State
+            {
+                get => _state;
+                set
+                {
+                    if (_state == value)
+                        return;
+
+                    _state = value;
+                    UpdateActualState();
+                }
+            }
+
             [ViewVariables] public float AnimationTimeLeft;
             [ViewVariables] public float AnimationTime;
             [ViewVariables] public int AnimationFrame;
+
+            private RSI.State? _actualState;
+            [ViewVariables] public RSI.State? ActualState => _actualState;
 
             public Matrix3 LocalMatrix = Matrix3.Identity;
 
@@ -1678,6 +1696,9 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
+            [ViewVariables]
+            public bool Blank => !State.IsValid && Texture == null;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
@@ -1980,13 +2001,11 @@ namespace Robust.Client.GameObjects
                     return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
                 }
 
-                var rsiState = GetActualState();
-
                 var longestSide = MathF.Max(textureSize.X, textureSize.Y);
                 var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
 
                 // Build the bounding box based on how many directions the sprite has
-                var box = (_rotation != 0, rsiState) switch
+                var box = (_rotation != 0, _actualState) switch
                 {
                     // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
                     // any possible rotation.
@@ -2005,19 +2024,23 @@ namespace Robust.Client.GameObjects
                 return _scale == Vector2.One ? box : box.Scale(_scale);
             }
 
-            internal RSI.State? GetActualState()
+            /// <summary>
+            ///     Update Cached RSI state. State is cached to avoid calling this every time an entity gets drawn.
+            /// </summary>
+            internal void UpdateActualState()
             {
                 if (!State.IsValid)
-                    return null;
+                {
+                    _actualState = null;
+                    return;
+                }
 
                 // Pull texture from RSI state
                 var rsi = RSI ?? _parent.BaseRSI;
-                if (rsi == null || !rsi.TryGetState(State, out var rsiState))
+                if (rsi == null || !rsi.TryGetState(State, out _actualState))
                 {
-                    rsiState = GetFallbackState(_parent.resourceCache);
+                    _actualState = GetFallbackState(_parent.resourceCache);
                 }
-
-                return rsiState;
             }
 
             /// <summary>
@@ -2030,7 +2053,7 @@ namespace Robust.Client.GameObjects
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    Matrix3.Multiply(ref _rsiDirectionMatrices[(int)dir], ref LocalMatrix, out layerDrawMatrix);
+                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
                 }
             }
 
@@ -2049,28 +2072,26 @@ namespace Robust.Client.GameObjects
 
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
-                if (!Visible)
+                if (!Visible || Blank)
                     return;
 
-                var rsiState = GetActualState();
-
-                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
+                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
                     ? RSIDirection.South
-                    : angle.ToRsiDirection(rsiState.Directions);
+                    : angle.ToRsiDirection(_actualState.Directions);
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
-                Matrix3.Multiply(ref layerMatrix, ref spriteMatrix, out var transformMatrix);
+                Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
                 // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
                 // due to direction overrides or offsets.
-                if (overrideDirection != null && rsiState != null)
-                    dir = overrideDirection.Value.Convert(rsiState.Directions);
+                if (overrideDirection != null && _actualState != null)
+                    dir = overrideDirection.Value.Convert(_actualState.Directions);
                 dir = dir.OffsetRsiDir(DirOffset);
 
                 // Get the correct directional texture from the state, and draw it!
-                var texture = GetRenderTexture(rsiState, dir);
+                var texture = GetRenderTexture(_actualState, dir);
                 RenderTexture(drawingHandle, texture);
             }
 
@@ -2080,10 +2101,8 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(Shader);
 
                 var layerColor = _parent.color * Color;
-
-                var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter);
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(position, textureSize);
+                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 
                 drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 

@@ -323,7 +323,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this entity.
+        ///     A filter with every player whose PVS overlaps this entity.
         /// </summary>
         public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
@@ -331,7 +331,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
@@ -339,7 +339,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
@@ -347,11 +347,19 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(MapCoordinates origin, float rangeMultiplier = 2f)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier);
+        }
+
+        /// <summary>
+        ///     A filter with every player whose PVS overlaps this point except the original player.
+        /// </summary>
+        public static Filter PvsExcept(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
+        {
+            return Pvs(origin, rangeMultiplier, entityManager).RemoveWhereAttachedEntity(e => e == origin);
         }
 
         /// <summary>

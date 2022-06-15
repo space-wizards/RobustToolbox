@@ -716,7 +716,8 @@ namespace Robust.UnitTesting
                 {
                     var client = Init();
                     GameLoop.Run();
-                    client.Cleanup();
+                    client.CleanupGameThread();
+                    client.CleanupWindowThread();
                 }
                 catch (Exception e)
                 {

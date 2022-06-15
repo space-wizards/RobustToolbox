@@ -72,7 +72,7 @@ namespace Robust.Shared.Configuration
 
                 return CompletionResult.FromHintOptions(
                     cfg.GetRegisteredCVars()
-                        .Select(c => new CompletionOption(c))
+                        .Select(c => new CompletionOption(c, GetCVarValueHint(cfg, c)))
                         .Union(new[] { new CompletionOption("?", helpQuestion) })
                         .OrderBy(c => c.Value),
                     Loc.GetString("cmd-cvar-arg-name"));
@@ -84,6 +84,15 @@ namespace Robust.Shared.Configuration
 
             var type = cfg.GetCVarType(cvar);
             return CompletionResult.FromHint($"<{type.Name}>");
+        }
+
+        private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
+        {
+            var value = cfg.GetCVar<object>(cVar).ToString() ?? "";
+            if (value.Length > 50)
+                value = $"{value[..51]}…";
+
+            return value;
         }
 
         private static object ParseObject(Type type, string input)

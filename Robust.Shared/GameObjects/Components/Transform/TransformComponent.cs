@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -20,6 +21,7 @@ namespace Robust.Shared.GameObjects
     public sealed class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
@@ -234,7 +236,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._localMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
+                    Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -259,7 +261,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._invLocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -380,7 +382,7 @@ namespace Robust.Shared.GameObjects
                     {
                         if (!oldPosition.Equals(Coordinates))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this, _gameTiming.ApplyingState);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                         }
                     }
@@ -426,7 +428,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this);
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 }
                 else
@@ -550,7 +552,7 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, _gameTiming.ApplyingState);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _oldCoords = null;
             }
@@ -760,7 +762,7 @@ namespace Robust.Shared.GameObjects
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
             }
@@ -823,11 +825,11 @@ namespace Robust.Shared.GameObjects
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
                 var parentInvMatrix = xform._invLocalMatrix;
-                Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
+                Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;
@@ -876,18 +878,24 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, bool stateHandling)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
             Component = component;
+            FromStateHandling = stateHandling;
         }
 
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
+
+        /// <summary>
+        ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
+        /// </summary>
+        public readonly bool FromStateHandling;
     }
 
     /// <summary>

@@ -59,11 +59,14 @@ namespace Robust.Shared.GameObjects
             // Just in case there's any deleted we'll ToArray
             foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())
             {
-                gridInternal.RegenerateCollision(chunk, false);
+                gridInternal.RegenerateCollision(chunk);
             }
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, bool checkSplit = true)
+        internal void RegenerateCollision(
+            EntityUid gridEuid,
+            Dictionary<MapChunk, List<Box2i>> mapChunks,
+            List<MapChunk> removedChunks)
         {
             if (!_enabled) return;
 
@@ -90,17 +93,18 @@ namespace Robust.Shared.GameObjects
             _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
             EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures});
 
-            foreach (var (chunk, _) in mapChunks)
-            {
-                GenerateSplitNode(gridEuid, chunk, checkSplit);
-            }
+            CheckSplit(gridEuid, mapChunks, removedChunks);
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, bool checkSplit = true)
+        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
         {
             if (!_enabled) return;
 
-            DebugTools.Assert(chunk.FilledTiles > 0);
+            if (chunk.FilledTiles == 0)
+            {
+                CheckSplit(gridEuid, chunk, rectangles);
+                return;
+            }
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
@@ -118,9 +122,15 @@ namespace Robust.Shared.GameObjects
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
                 EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
-                GenerateSplitNode(gridEuid, chunk, checkSplit);
+
+                CheckSplit(gridEuid, chunk, rectangles);
             }
         }
+
+        internal virtual void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks,
+            List<MapChunk> removedChunks) {}
+
+        internal virtual void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles) {}
 
         private bool UpdateFixture(MapChunk chunk, List<Box2i> rectangles, PhysicsComponent physicsComponent, FixturesComponent fixturesComponent)
         {
@@ -214,8 +224,6 @@ namespace Robust.Shared.GameObjects
 
             return updated;
         }
-
-        internal virtual void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true) {}
     }
 
     public sealed class GridFixtureChangeEvent : EntityEventArgs

@@ -37,7 +37,7 @@ namespace Robust.Client.Animations
 
                 var keyFrame = KeyFrames[keyFrameIndex];
 
-                SoundSystem.Play(Filter.Local(), keyFrame.Resource, entity, keyFrame.AudioParamsFunc.Invoke());
+                SoundSystem.Play(keyFrame.Resource, Filter.Local(), entity, keyFrame.AudioParamsFunc.Invoke());
             }
 
             return (keyFrameIndex, playingTime);

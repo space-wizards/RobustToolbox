@@ -17,27 +17,28 @@ namespace Robust.Shared.Audio
         /// <summary>
         /// Play an audio file globally, without position.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null);
+        IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null);
 
         /// <summary>
         /// Play an audio file following an entity.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="uid">The UID of the entity "emitting" the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null);
+        IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid, AudioParams? audioParams = null);
 
         /// <summary>
         /// Play an audio file at a static position.
         /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null);
+        IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null);
     }
 }

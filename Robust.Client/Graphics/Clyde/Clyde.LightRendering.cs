@@ -882,7 +882,7 @@ namespace Robust.Client.Graphics.Clyde
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            var clipToDiff = new Matrix3(ref uX, ref uY, ref uZero);
+            var clipToDiff = new Matrix3(in uX, in uY, in uZero);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);
@@ -994,17 +994,18 @@ namespace Robust.Client.Graphics.Clyde
                         var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                         // Do visibility tests for occluders (described above).
-                        bool CheckFaceEyeVis(Vector2 a, Vector2 b)
+                        static bool CheckFaceEyeVis(Vector2 a, Vector2 b)
                         {
-                            // get normal
-                            var alongNormal = b - a;
-                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld.Normalized;
                             // determine which side of the plane the face is on
                             // the plane is at the origin of this coordinate system, which is also the eye
                             // the normal of the plane is that of the face
                             // therefore, if the dot <= 0, the face is facing the camera
                             // I don't like this, but rotated occluders started happening
-                            return Vector2.Dot(normal, a) <= 0;
+
+                            // var normal =  (b - a).Rotated90DegreesAnticlockwiseWorld;
+                            // Vector2.Dot(normal, a) <= 0;
+                            // equivalent to:
+                            return a.X * b.Y > a.Y * b.X;
                         }
 
                         var nV = ((!no) && CheckFaceEyeVis(dTl, dTr));

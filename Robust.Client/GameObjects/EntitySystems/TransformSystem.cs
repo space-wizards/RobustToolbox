@@ -20,9 +20,14 @@ namespace Robust.Client.GameObjects
         // TODO: Make these values somehow dependent on server TPS.
         private const float MaxInterpolationDistance = 2.0f;
         private const float MaxInterpolationDistanceSquared = MaxInterpolationDistance * MaxInterpolationDistance;
+
         private const float MinInterpolationDistance = 0.001f;
         private const float MinInterpolationDistanceSquared = MinInterpolationDistance * MinInterpolationDistance;
-        private const double MaxInterpolationAngle = Math.PI / 4; // 45 degrees.
+
+        private const double MinInterpolationAngle = Math.PI / 720;
+
+        // 45 degrees.
+        private const double MaxInterpolationAngle = Math.PI / 4;
 
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
@@ -77,7 +82,9 @@ namespace Robust.Client.GameObjects
                     {
                         var lerpDest = transform.LerpAngle.Value;
                         var lerpSource = transform.LerpSourceAngle;
-                        if (Math.Abs(Angle.ShortestDistance(lerpDest, lerpSource)) < MaxInterpolationAngle)
+                        var distance = Math.Abs(Angle.ShortestDistance(lerpDest, lerpSource));
+
+                        if (distance is > MinInterpolationAngle and < MaxInterpolationAngle)
                         {
                             transform.LocalRotation = Angle.Lerp(lerpSource, lerpDest, step);
                             // Setting LocalRotation clears LerpAngle so fix that.

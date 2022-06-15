@@ -14,11 +14,14 @@ namespace Robust.Client.GameObjects
     ///     Handles interpolation of transform positions.
     /// </summary>
     [UsedImplicitly]
-    public sealed class TransformSystem : SharedTransformSystem
+    public sealed partial class TransformSystem : SharedTransformSystem
     {
         // Max distance per tick how far an entity can move before it is considered teleporting.
         // TODO: Make these values somehow dependent on server TPS.
         private const float MaxInterpolationDistance = 2.0f;
+        private const float MaxInterpolationDistanceSquared = MaxInterpolationDistance * MaxInterpolationDistance;
+        private const float MinInterpolationDistance = 0.001f;
+        private const float MinInterpolationDistanceSquared = MinInterpolationDistance * MinInterpolationDistance;
         private const double MaxInterpolationAngle = Math.PI / 4; // 45 degrees.
 
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -59,7 +62,9 @@ namespace Robust.Client.GameObjects
                     {
                         var lerpDest = transform.LerpDestination.Value;
                         var lerpSource = transform.LerpSource;
-                        if ((lerpDest - lerpSource).LengthSquared < MaxInterpolationDistance * MaxInterpolationDistance)
+                        var distance = (lerpDest - lerpSource).LengthSquared;
+
+                        if (distance is > MinInterpolationDistanceSquared and < MaxInterpolationDistanceSquared)
                         {
                             transform.LocalPosition = Vector2.Lerp(lerpSource, lerpDest, step);
                             // Setting LocalPosition clears LerpPosition so fix that.

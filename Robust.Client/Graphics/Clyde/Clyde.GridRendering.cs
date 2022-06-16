@@ -53,7 +53,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 while (enumerator.MoveNext(out var chunk))
                 {
-                    _updateChunkMesh(grid, chunk);
+                    if (_isChunkDirty(grid, chunk))
+                    {
+                        _updateChunkMesh(grid, chunk);
+                    }
 
                     var datum = _mapChunkData[grid.Index][chunk.Indices];
 
@@ -87,6 +90,7 @@ namespace Robust.Client.Graphics.Clyde
             var i = 0;
             var cSz = grid.ChunkSize;
             var cScaled = chunk.Indices * cSz;
+            Vector2i[] corners = new Vector2i[4];
             for (ushort x = 0; x < cSz; x++)
             {
                 for (ushort y = 0; y < cSz; y++)
@@ -107,56 +111,32 @@ namespace Robust.Client.Graphics.Clyde
                         region = regionMaybe[tile.Variant];
                     }
 
+                    var bottom = y + cScaled.Y;
+                    var top = bottom + 1;
+
+                    int left, right;
+                    if ((tile.Flags & TileRenderFlag.FlipX) == 0)
+                    {
+                        left = x + cScaled.X;
+                        right = left + 1;
+                    }
+                    else
+                    {
+                        right = x + cScaled.X;
+                        left = right + 1;
+                    }
+
+                    var offset = (byte)tile.Flags & 3; // rotate drawn corners
+                    corners[offset] = new(left, bottom);
+                    corners[(offset + 1) % 4] = new(right, bottom);
+                    corners[(offset + 2) % 4] = new(right, top);
+                    corners[(offset + 3) % 4] = new(left, top);
+
                     var vIdx = i * 4;
-
-                    int left, bottom, top, right;
-
-                    if ((tile.Flags & TileRenderFlag.FlipXRotate180) == 0)
-                    {
-                        bottom = y + cScaled.Y;
-                        top = bottom + 1;
-                        left = x + cScaled.X;
-                        right = left + 1;
-                    }
-                    else if ((tile.Flags & TileRenderFlag.FlipX) == TileRenderFlag.FlipX)
-                    {
-                        // flip x coordinates
-                        bottom = y + cScaled.Y;
-                        top = bottom + 1;
-                        right = x + cScaled.X;
-                        left = right + 1;
-                    }
-                    else if ((tile.Flags & TileRenderFlag.Rotate180) == TileRenderFlag.Rotate180)
-                    {
-                        // flip both x and y
-                        top = y + cScaled.Y;
-                        bottom = top + 1;
-                        right = x + cScaled.X;
-                        left = right + 1;
-                    }
-                    else
-                    {
-                        // flip y-coordinates
-                        top = y + cScaled.Y;
-                        bottom = top + 1;
-                        left = x + cScaled.X;
-                        right = left + 1;
-                    }
-
-                    if ((tile.Flags & TileRenderFlag.Rotate90) == TileRenderFlag.Rotate90)
-                    {
-                        vertexBuffer[vIdx + 0] = new Vertex2D(left, top, region.Left, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 1] = new Vertex2D(left, bottom, region.Right, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 2] = new Vertex2D(right, bottom, region.Right, region.Top, Color.White);
-                        vertexBuffer[vIdx + 3] = new Vertex2D(right, top, region.Left, region.Top, Color.White);
-                    }
-                    else
-                    {
-                        vertexBuffer[vIdx + 0] = new Vertex2D(right, top, region.Left, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 1] = new Vertex2D(left, top, region.Right, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 2] = new Vertex2D(left, bottom, region.Right, region.Top, Color.White);
-                        vertexBuffer[vIdx + 3] = new Vertex2D(right, bottom, region.Left, region.Top, Color.White);
-                    }
+                    vertexBuffer[vIdx + 0] = new Vertex2D(corners[0], region.Left, region.Bottom, Color.White);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(corners[1], region.Right, region.Bottom, Color.White);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(corners[2], region.Right, region.Top, Color.White);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(corners[3], region.Left, region.Top, Color.White);
 
                     var nIdx = i * GetQuadBatchIndexCount();
                     var tIdx = (ushort)(i * 4);
@@ -173,23 +153,6 @@ namespace Robust.Client.Graphics.Clyde
             datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
             datum.Dirty = false;
             datum.TileCount = i;
-        }
-
-        private static Box2 TransformBox(float left, float bottom, float right, float top, TileRenderFlag transform)
-        {
-            var output = ((byte) transform & 7) switch
-            {
-                1 => new Box2(top, left, bottom, right),
-                2 => new Box2(right, top, left, bottom),
-                3 => new Box2(bottom, left + 1, bottom + 1, left),
-                4 => new Box2(left + 1, bottom, left, bottom + 1),
-                5 => new Box2(bottom + 1, left + 1, bottom, left),
-                6 => new Box2(left, bottom + 1, left + 1, bottom),
-                7 => new Box2(bottom, left, bottom + 1, left + 1),
-                _ => new Box2(left, bottom, right, top),
-            };
-
-            return output;
         }
 
         private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)

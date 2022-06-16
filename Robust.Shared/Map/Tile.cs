@@ -143,8 +143,6 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// </summary>
     public static TileRenderFlag DirectionToTileFlag(Direction dir)
     {
-        // TODO Support Mirroring somehow
-
         return dir switch
         {
             Direction.East => TileRenderFlag.Rotate90,
@@ -161,17 +159,14 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
 [Flags]
 public enum TileRenderFlag : byte
 {
-    // First two bits determine rotation
-    // Third bit determines whether to mirror along the x coordinate (before rotating).
-
+    // First two bits determine rotation. Third bit determines whether to mirror along the x coordinate (before
+    // rotating).
     Identity = 0,
-    Rotate90 = 1,
+    Rotate270 = 1,
     Rotate180 = 2,
-    Rotate270 = 3,
+    Rotate90 = 3,
     FlipX = 4,
-    FlipXRotate90 = 5,
+    FlipXRotate270 = 5,
     FlipXRotate180 = 6,
-    FlipXRotate270 = 7,
-
-    // Maybe use remaining bits for animation frame offset?
+    FlipXRotate90 = 7,
 }

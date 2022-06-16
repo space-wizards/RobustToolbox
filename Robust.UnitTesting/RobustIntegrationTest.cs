@@ -485,6 +485,7 @@ namespace Robust.UnitTesting
                 // Won't get ack'd directly but the shutdown is convincing enough.
                 _currentTicksId += 1;
                 _toInstanceWriter.TryWrite(new StopMessage());
+                _toInstanceWriter.TryComplete();
             }
 
             /// <summary>
@@ -849,8 +850,12 @@ namespace Robust.UnitTesting
 
                 while (Running)
                 {
-                    _channelReader.WaitToReadAsync().AsTask().Wait();
-
+                    var readerNotDone = _channelReader.WaitToReadAsync().AsTask().GetAwaiter().GetResult();
+                    if (!readerNotDone)
+                    {
+                        Running = false;
+                        return;
+                    }
                     SingleThreadRunUntilEmpty();
                 }
             }

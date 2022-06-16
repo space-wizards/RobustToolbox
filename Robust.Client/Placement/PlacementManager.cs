@@ -733,7 +733,8 @@ namespace Robust.Client.Placement
                     var grid = MapManager.GetGrid(gridId);
 
                     // no point changing the tile to the same thing.
-                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                    var t = grid.GetTileRef(coordinates).Tile;
+                    if (t.TypeId == CurrentPermission.TileType && t.Flags == Tile.DirectionToTileFlag(Direction))
                         return;
                 }
 

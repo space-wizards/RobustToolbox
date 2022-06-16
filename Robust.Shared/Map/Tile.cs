@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -136,9 +137,41 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
             return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode();
         }
     }
+
+    /// <summary>
+    ///     Convert Direction to rotational render flag.
+    /// </summary>
+    public static TileRenderFlag DirectionToTileFlag(Direction dir)
+    {
+        // TODO Support Mirroring somehow
+
+        return dir switch
+        {
+            Direction.East => TileRenderFlag.Rotate90,
+            Direction.North => TileRenderFlag.Rotate180,
+            Direction.West => TileRenderFlag.Rotate270,
+            _ => TileRenderFlag.Identity,
+        };
+    }
 }
 
+/// <summary>
+///     Flags used to modify how a given tile gets rendered. Currently just used for rotation & mirroring.
+/// </summary>
+[Flags]
 public enum TileRenderFlag : byte
 {
+    // First two bits determine rotation
+    // Third bit determines whether to mirror along the x coordinate (before rotating).
 
+    Identity = 0,
+    Rotate90 = 1,
+    Rotate180 = 2,
+    Rotate270 = 3,
+    FlipX = 4,
+    FlipXRotate90 = 5,
+    FlipXRotate180 = 6,
+    FlipXRotate270 = 7,
+
+    // Maybe use remaining bits for animation frame offset?
 }

@@ -125,11 +125,11 @@ namespace Robust.Server.Placement
             }
             else
             {
-                PlaceNewTile(tileType, coordinates);
+                PlaceNewTile(tileType, coordinates, Tile.DirectionToTileFlag(dirRcv));
             }
         }
 
-        private void PlaceNewTile(ushort tileType, EntityCoordinates coordinates)
+        private void PlaceNewTile(ushort tileType, EntityCoordinates coordinates, TileRenderFlag tileRenderFlag)
         {
             var mapCoordinates = coordinates.ToMap(_entityManager);
 
@@ -145,14 +145,14 @@ namespace Robust.Server.Placement
             {
                 if (!_mapManager.TryGetGrid(gridCoordinate.EntityId, out var grid)) return;
 
-                grid.SetTile(gridCoordinate, new Tile(tileType));
+                grid.SetTile(gridCoordinate, new Tile(tileType, tileRenderFlag));
             }
             else if (tileType != 0) // create a new grid
             {
                 var newGrid = _mapManager.CreateGrid(mapCoordinates.MapId);
                 newGrid.WorldPosition = mapCoordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(mapCoordinates.Position);
-                newGrid.SetTile(tilePos, new Tile(tileType));
+                newGrid.SetTile(tilePos, new Tile(tileType, tileRenderFlag));
             }
         }
 

@@ -131,8 +131,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
-            if (body._canCollide)
-                _broadphase.UpdateBroadphase(body, xform: xform);
+            _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
             var mapId = _transform.GetMapId(args.Entity);

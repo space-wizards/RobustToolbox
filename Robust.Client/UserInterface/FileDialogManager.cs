@@ -26,7 +26,6 @@ namespace Robust.Client.UserInterface
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
 
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
@@ -197,10 +196,10 @@ namespace Robust.Client.UserInterface
             {
                 case sw_nfdresult.SW_NFD_ERROR:
                     var errPtr = sw_NFD_GetError();
-                    throw new Exception(MarshalHelper.PtrToStringUTF8(errPtr));
+                    throw new Exception(Marshal.PtrToStringUTF8((IntPtr) errPtr));
 
                 case sw_nfdresult.SW_NFD_OKAY:
-                    var str = MarshalHelper.PtrToStringUTF8(outPath)!;
+                    var str = Marshal.PtrToStringUTF8((IntPtr) outPath)!;
 
                     sw_NFD_Free(outPath);
                     return str;

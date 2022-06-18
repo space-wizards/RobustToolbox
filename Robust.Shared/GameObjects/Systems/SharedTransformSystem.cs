@@ -7,7 +7,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -16,6 +15,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
 
+        // Needed on release no remove.
+        // ReSharper disable once NotAccessedField.Local
         private ISawmill _logger = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
@@ -29,6 +30,8 @@ namespace Robust.Shared.GameObjects
             UpdatesOutsidePrediction = true;
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
+            SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
+            SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
         }
@@ -178,6 +181,17 @@ namespace Robust.Shared.GameObjects
 
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _mapManager.GetGrid(xform.GridID).CoordinatesToTile(xform.Coordinates);
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct TransformStartupEvent
+    {
+        public readonly TransformComponent Component;
+
+        public TransformStartupEvent(TransformComponent component)
+        {
+            Component = component;
         }
     }
 

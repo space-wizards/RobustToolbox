@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -36,5 +37,22 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <returns>Enumeration of all relative file paths.</returns>
         IEnumerable<string> GetRelativeFilePaths();
+
+        IEnumerable<string> GetEntries(ResourcePath path)
+        {
+            var countDirs = path == ResourcePath.Self ? 0 : path.EnumerateSegments().Count();
+
+            var options = FindFiles(path).Select(c =>
+            {
+                var segCount = c.EnumerateSegments().Count();
+                var newPath = c.EnumerateSegments().Skip(countDirs).First();
+                if (segCount > countDirs + 1)
+                    newPath += "/";
+
+                return newPath;
+            }).Distinct();
+
+            return options;
+        }
     }
 }

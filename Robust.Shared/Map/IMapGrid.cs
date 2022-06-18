@@ -32,15 +32,17 @@ namespace Robust.Shared.Map
         /// </summary>
         ushort TileSize { get; }
 
+        Box2Rotated WorldBounds { get; }
+
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
-        Box2 WorldBounds { get; }
+        Box2 WorldAABB { get; }
 
         /// <summary>
         ///     The bounding box of the grid in local coordinates.
         /// </summary>
-        Box2 LocalBounds { get; }
+        Box2 LocalAABB { get; }
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.

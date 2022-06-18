@@ -6,9 +6,11 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Nett;
+using Robust.Shared.Collections;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.Configuration
 {
@@ -18,6 +20,8 @@ namespace Robust.Shared.Configuration
     [Virtual]
     internal class ConfigurationManager : IConfigurationManagerInternal
     {
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
         private string? _configFile;
@@ -119,7 +123,7 @@ namespace Robust.Shared.Configuration
                 {
                     //or add another unregistered CVar
                     //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) {Value = tomlValue};
+                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
                     _configVars.Add(tablePath, cfgVar);
                 }
 
@@ -266,8 +270,7 @@ namespace Robust.Shared.Configuration
 
             _configVars.Add(name, new ConfigVar(name, defaultValue, flags)
             {
-                Registered = true,
-                Value = defaultValue,
+                Registered = true
             });
         }
 
@@ -280,15 +283,13 @@ namespace Robust.Shared.Configuration
         public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
-
             using (Lock.WriteGuard())
             {
                 var reg = _configVars[name];
-                var exDel = (Action<T>?) reg.ValueChanged;
-                exDel += onValueChanged;
-                reg.ValueChanged = exDel;
 
-                reg.ValueChangedInvoker ??= (del, v) => ((Action<T>) del)((T) v);
+                reg.ValueChanged.AddInPlace(
+                    (object value, in CVarChangeInfo _) => onValueChanged((T)value),
+                    onValueChanged);
             }
 
             if (invokeImmediately)
@@ -307,17 +308,52 @@ namespace Robust.Shared.Configuration
             using var _ = Lock.WriteGuard();
 
             var reg = _configVars[name];
-            var exDel = (Action<T>?) reg.ValueChanged;
-            exDel -= onValueChanged;
-            reg.ValueChanged = exDel;
+            reg.ValueChanged.RemoveInPlace(onValueChanged);
+        }
+
+        public void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+        }
+
+        public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            using (Lock.WriteGuard())
+            {
+                var reg = _configVars[name];
+
+                reg.ValueChanged.AddInPlace(
+                    (object value, in CVarChangeInfo info) => onValueChanged((T)value, info),
+                    onValueChanged);
+            }
+
+            if (invokeImmediately)
+            {
+                onValueChanged(GetCVar<T>(name), new CVarChangeInfo(_gameTiming.CurTick));
+            }
+        }
+
+        public void UnsubValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged) where T : notnull
+        {
+            UnsubValueChanged(cVar.Name, onValueChanged);
+        }
+
+        public void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged) where T : notnull
+        {
+            using var _ = Lock.WriteGuard();
+
+            var reg = _configVars[name];
+            reg.ValueChanged.RemoveInPlace(onValueChanged);
         }
 
         public void LoadCVarsFromAssembly(Assembly assembly)
         {
             foreach (var defField in assembly
-                .GetTypes()
-                .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
-                .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
+                         .GetTypes()
+                         .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
+                         .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
             {
                 var fieldType = defField.FieldType;
                 if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))
@@ -333,7 +369,7 @@ namespace Robust.Shared.Configuration
                         $"Found CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' that is not readonly. Please mark it as readonly.");
                 }
 
-                var def = (CVarDef?) defField.GetValue(null);
+                var def = (CVarDef?)defField.GetValue(null);
 
                 if (def == null)
                 {
@@ -358,16 +394,16 @@ namespace Robust.Shared.Configuration
             using var _ = Lock.ReadGuard();
             // Have to .ToArray() so the lock is held for the whole iteration operation.
             // This function is only currently used for the cvar ? command so I'm not too worried.
-            return _configVars.Select(p => p.Key).ToArray();
+            return _configVars.Where(c => c.Value.Registered).Select(p => p.Key).ToArray();
         }
 
         /// <inheritdoc />
         public virtual void SetCVar(string name, object value)
         {
-            SetCVarInternal(name, value);
+            SetCVarInternal(name, value, _gameTiming.CurTick);
         }
 
-        private void SetCVarInternal(string name, object value)
+        protected void SetCVarInternal(string name, object value, GameTick intendedTick)
         {
             ValueChangedInvoke? invoke = null;
 
@@ -383,7 +419,7 @@ namespace Robust.Shared.Configuration
                         cVar.OverrideValueParsed = null;
 
                         cVar.Value = value;
-                        invoke = SetupInvokeValueChanged(cVar, value);
+                        invoke = SetupInvokeValueChanged(cVar, value, intendedTick);
                     }
                 }
                 else
@@ -399,13 +435,38 @@ namespace Robust.Shared.Configuration
             SetCVar(def.Name, value);
         }
 
+        public void OverrideDefault(string name, object value)
+        {
+            ValueChangedInvoke? invoke = null;
+
+            using (Lock.WriteGuard())
+            {
+                //TODO: Make flags work, required non-derpy net system.
+                if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
+                    throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+
+                cVar.DefaultValue = value;
+
+                if (cVar.OverrideValue == null && cVar.Value == null)
+                    invoke = SetupInvokeValueChanged(cVar, value);
+            }
+
+            if (invoke != null)
+                InvokeValueChanged(invoke.Value);
+        }
+
+        public void OverrideDefault<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            OverrideDefault(def.Name, value);
+        }
+
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
             using var _ = Lock.ReadGuard();
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T) (GetConfigVarValue(cVar))!;
+                return (T)(GetConfigVarValue(cVar))!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -424,7 +485,7 @@ namespace Robust.Shared.Configuration
             }
 
             // If it's null it's a string, since the rest is primitives which aren't null.
-            return cVar.Value?.GetType() ?? typeof(string);
+            return cVar.DefaultValue.GetType();
         }
 
         protected static object GetConfigVarValue(ConfigVar cVar)
@@ -454,7 +515,7 @@ namespace Robust.Shared.Configuration
                     {
                         //or add another unregistered CVar
                         //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                        var cVar = new ConfigVar(key, 0, CVar.NONE) {OverrideValue = value};
+                        var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
                         _configVars.Add(key, cVar);
                     }
                 }
@@ -519,17 +580,25 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        private static void InvokeValueChanged(ValueChangedInvoke invoke)
+        private static void InvokeValueChanged(in ValueChangedInvoke invoke)
         {
-            invoke.Invoker.Invoke(invoke.ValueChanged, invoke.Value);
+            foreach (var entry in invoke.Invoke.Entries)
+            {
+                entry.Value!.Invoke(invoke.Value, in invoke.Info);
+            }
         }
 
-        private static ValueChangedInvoke? SetupInvokeValueChanged(ConfigVar var, object value)
+        private ValueChangedInvoke? SetupInvokeValueChanged(ConfigVar var, object value, GameTick? tick = null)
         {
-            if (var.ValueChangedInvoker == null)
+            if (var.ValueChanged.Count == 0)
                 return null;
 
-            return new ValueChangedInvoke(var.ValueChangedInvoker, var.ValueChanged!, value);
+            return new ValueChangedInvoke
+            {
+                Info = new CVarChangeInfo(tick ?? _gameTiming.CurTick),
+                Invoke = var.ValueChanged,
+                Value = value
+            };
         }
 
         /// <summary>
@@ -583,12 +652,7 @@ namespace Robust.Shared.Configuration
             /// </summary>
             public bool ConfigModified;
 
-            /// <summary>
-            ///     Invoked when the value of this CVar is changed.
-            /// </summary>
-            public Delegate? ValueChanged { get; set; }
-
-            public Action<Delegate, object>? ValueChangedInvoker { get; set; }
+            public InvokeList<ValueChangedDelegate> ValueChanged;
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.
@@ -600,10 +664,14 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// All data we need to invoke a deferred ValueChanged handler outside of a write lock.
         /// </summary>
-        private record struct ValueChangedInvoke(
-            Action<Delegate, object> Invoker,
-            Delegate ValueChanged,
-            object Value);
+        private struct ValueChangedInvoke
+        {
+            public InvokeList<ValueChangedDelegate> Invoke;
+            public object Value;
+            public CVarChangeInfo Info;
+        }
+
+        protected delegate void ValueChangedDelegate(object value, in CVarChangeInfo info);
     }
 
     [Serializable]

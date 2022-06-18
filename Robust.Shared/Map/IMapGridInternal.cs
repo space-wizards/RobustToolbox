@@ -54,17 +54,17 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns all the <see cref="MapChunk"/> intersecting the worldAABB.
         /// </summary>
-        void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
+        MapGrid.ChunkEnumerator GetMapChunks(Box2 worldAABB);
 
         /// <summary>
         ///     Returns all the <see cref="MapChunk"/> intersecting the rotated world box.
         /// </summary>
-        void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
+        MapGrid.ChunkEnumerator GetMapChunks(Box2Rotated worldArea);
 
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.
         /// </summary>
-        void RegenerateCollision(MapChunk mapChunk, bool checkSplit = true);
+        void RegenerateCollision(MapChunk mapChunk);
 
         /// <summary>
         /// Calculate the world space AABB for this chunk.

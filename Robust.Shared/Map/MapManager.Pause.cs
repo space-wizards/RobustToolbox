@@ -29,19 +29,22 @@ namespace Robust.Shared.Map
             var mapEnt = GetMapEntityId(mapId);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
-            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery);
+            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery, in metaSystem);
         }
 
         private static void RecursiveSetPaused(EntityUid entity, bool paused,
             in EntityQuery<TransformComponent> xformQuery,
-            in EntityQuery<MetaDataComponent> metaQuery)
+            in EntityQuery<MetaDataComponent> metaQuery,
+            in MetaDataSystem system)
         {
-            metaQuery.GetComponent(entity).EntityPaused = paused;
+            system.SetEntityPaused(entity, paused, metaQuery.GetComponent(entity));
+            var childEnumerator = xformQuery.GetComponent(entity).ChildEnumerator;
 
-            foreach (var child in xformQuery.GetComponent(entity)._children)
+            while (childEnumerator.MoveNext(out var child))
             {
-                RecursiveSetPaused(child, paused, in xformQuery, in metaQuery);
+                RecursiveSetPaused(child.Value, paused, in xformQuery, in metaQuery, in system);
             }
         }
 
@@ -54,30 +57,34 @@ namespace Robust.Shared.Map
             if (IsMapInitialized(mapId))
                 throw new ArgumentException("That map is already initialized.");
 
-            ClearMapPreInit(mapId);
-
             var mapEnt = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEnt);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
-            RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery);
+            mapComp.MapPreInit = false;
+            mapComp.MapPaused = false;
+
+            RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery, in metaSystem);
         }
 
-        private static void RecursiveDoMapInit(EntityUid entity,
+        private void RecursiveDoMapInit(EntityUid entity,
             in EntityQuery<TransformComponent> xformQuery,
-            in EntityQuery<MetaDataComponent> metaQuery)
+            in EntityQuery<MetaDataComponent> metaQuery,
+            in MetaDataSystem system)
         {
             // RunMapInit can modify the TransformTree
             // ToArray caches deleted euids, we check here if they still exist.
             if(!metaQuery.TryGetComponent(entity, out var meta))
                 return;
 
-            entity.RunMapInit();
-            meta.EntityPaused = false;
+            EntityManager.RunMapInit(entity, meta);
+            system.SetEntityPaused(entity, false, meta);
 
             foreach (var child in xformQuery.GetComponent(entity)._children.ToArray())
             {
-                RecursiveDoMapInit(child, in xformQuery, in metaQuery);
+                RecursiveDoMapInit(child, in xformQuery, in metaQuery, in system);
             }
         }
 
@@ -157,16 +164,6 @@ namespace Robust.Shared.Map
             return mapComp.MapPreInit;
         }
 
-        private void ClearMapPreInit(MapId mapId)
-        {
-            if(mapId == MapId.Nullspace)
-                return;
-
-            var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
-            mapComp.MapPreInit = false;
-        }
-
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
@@ -181,6 +178,17 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         public bool IsGridPaused(GridId gridId)
+        {
+            if (TryGetGrid(gridId, out var grid))
+            {
+                return IsGridPaused(grid);
+            }
+
+            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
+            return true;
+        }
+
+        public bool IsGridPaused(EntityUid gridId)
         {
             if (TryGetGrid(gridId, out var grid))
             {

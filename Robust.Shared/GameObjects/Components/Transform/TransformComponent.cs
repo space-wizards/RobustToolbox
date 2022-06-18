@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log; //Needed for release build, do not remove
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -23,6 +21,7 @@ namespace Robust.Shared.GameObjects
     public sealed class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
@@ -60,9 +59,12 @@ namespace Robust.Shared.GameObjects
         ///     Returns the index of the map which this object is on
         /// </summary>
         [ViewVariables]
-        public MapId MapID { get; private set; }
+        public MapId MapID { get; internal set; }
 
-        private bool _mapIdInitialized;
+        internal bool _mapIdInitialized;
+
+        // TODO: Cache this.
+        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
 
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
@@ -76,7 +78,7 @@ namespace Robust.Shared.GameObjects
         public GridId GridID
         {
             get => _gridId;
-            private set
+            internal set
             {
                 if (_gridId.Equals(value)) return;
 
@@ -92,6 +94,10 @@ namespace Robust.Shared.GameObjects
         }
 
         internal GridId _gridId = GridId.Invalid;
+
+        // TODO: Cache this.
+        public EntityUid? GridUid => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : null;
+        public EntityUid GridEntityId => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : EntityUid.Invalid;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -230,7 +236,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._localMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
+                    Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -255,7 +261,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._invLocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -293,10 +299,6 @@ namespace Robust.Shared.GameObjects
 
                 // world coords to parent coords
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
-
-                // float rounding error guard, if the offset is less than 1mm ignore it
-                //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
-                //    return;
 
                 LocalPosition = newPos;
             }
@@ -354,12 +356,12 @@ namespace Robust.Shared.GameObjects
                     var oldMapId = MapID;
                     ChangeMapId(newParent.MapID, xformQuery);
 
+                    // Cache new GridID before raising the event.
+                    GridID = GetGridIndex(xformQuery);
+
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
                         LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
-
-                    // Cache new GridID before raising the event.
-                    GridID = GetGridIndex(xformQuery);
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
@@ -380,7 +382,7 @@ namespace Robust.Shared.GameObjects
                     {
                         if (!oldPosition.Equals(Coordinates))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this, _gameTiming.ApplyingState);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                         }
                     }
@@ -426,7 +428,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this);
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 }
                 else
@@ -449,18 +451,6 @@ namespace Robust.Shared.GameObjects
                 if (LifeStage < ComponentLifeStage.Starting)
                 {
                     _anchored = value;
-                }
-                else if (LifeStage == ComponentLifeStage.Starting)
-                {
-                    if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
-                    {
-                        _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                    }
-                    // If no grid found then unanchor it.
-                    else
-                    {
-                        _anchored = false;
-                    }
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
@@ -526,66 +516,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            // Children MAY be initialized here before their parents are.
-            // We do this whole dance to handle this recursively,
-            // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
-            static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
-            {
-                if (xform._mapIdInitialized)
-                {
-                    return xform.MapID;
-                }
-
-                MapId value;
-
-                if (xform._parent.IsValid())
-                {
-                    value = FindMapIdAndSet(xformQuery.GetComponent(xform._parent), entMan, xformQuery);
-                }
-                else
-                {
-                    // second level node, terminates recursion up the branch of the tree
-                    if (entMan.TryGetComponent(xform.Owner, out IMapComponent? mapComp))
-                    {
-                        value = mapComp.WorldMap;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-                    }
-                }
-
-                xform.MapID = value;
-                xform._mapIdInitialized = true;
-                return value;
-            }
-
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-            if (!_mapIdInitialized)
-            {
-                FindMapIdAndSet(this, _entMan, xformQuery);
-
-                _mapIdInitialized = true;
-            }
-
-            // Has to be done if _parent is set from ExposeData.
-            if (_parent.IsValid())
-            {
-                // Note that _children is a SortedSet<EntityUid>,
-                // so duplicate additions (which will happen) don't matter.
-                xformQuery.GetComponent(_parent)._children.Add(Owner);
-            }
-
-            GridID = GetGridIndex(xformQuery);
-            RebuildMatrices();
-        }
-
-        private GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
+        internal GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
         {
             if (_entMan.HasComponent<IMapComponent>(Owner))
             {
@@ -605,25 +536,6 @@ namespace Robust.Shared.GameObjects
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
 
-        protected override void Startup()
-        {
-            // Re-Anchor the entity if needed.
-            if (_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
-            {
-                if (!grid.IsAnchored(Coordinates, Owner))
-                {
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
-                }
-            }
-            else
-                _anchored = false;
-
-            base.Startup();
-
-            // Keep the cached matrices in sync with the fields.
-            Dirty(_entMan);
-        }
-
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
@@ -640,7 +552,7 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, _gameTiming.ApplyingState);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _oldCoords = null;
             }
@@ -665,11 +577,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // nothing to do
-            var oldParent = Parent;
-            if (oldParent == null)
-            {
+            if (!_parent.IsValid())
                 return;
-            }
 
             var mapPos = MapPosition;
 
@@ -691,8 +600,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            if (newMapEntity == _parent)
             {
                 return;
             }
@@ -717,6 +625,11 @@ namespace Robust.Shared.GameObjects
                 DebugTools.Assert(!Anchored);
                 return;
             }
+
+            // Stop any active lerps
+            _nextPosition = null;
+            _nextRotation = null;
+            LerpParent = EntityUid.Invalid;
 
             // TODO: When ECSing this can just pass it into the anchor setter
             if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
@@ -774,19 +687,23 @@ namespace Robust.Shared.GameObjects
             if (newMapId == MapID)
                 return;
 
-            var oldMapId = MapID;
-
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
             var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
             var metaData = metaEnts.GetComponent(Owner);
-            metaData.EntityPaused = mapPaused;
+            var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
+            metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
 
             MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+        private void UpdateChildMapIdsRecursive(
+            MapId newMapId,
+            bool mapPaused,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            MetaDataSystem system)
         {
             var childEnumerator = ChildEnumerator;
 
@@ -794,16 +711,15 @@ namespace Robust.Shared.GameObjects
             {
                 //Set Paused state
                 var metaData = metaQuery.GetComponent(child.Value);
-                metaData.EntityPaused = mapPaused;
+                system.SetEntityPaused(child.Value, mapPaused, metaData);
 
                 var concrete = xformQuery.GetComponent(child.Value);
-                var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
                 }
             }
         }
@@ -846,7 +762,7 @@ namespace Robust.Shared.GameObjects
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
             }
@@ -909,11 +825,11 @@ namespace Robust.Shared.GameObjects
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
                 var parentInvMatrix = xform._invLocalMatrix;
-                Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
+                Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;
@@ -922,28 +838,6 @@ namespace Robust.Shared.GameObjects
             var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
 
             return (worldPosition, worldRot, worldMatrix, invMatrix);
-        }
-
-        /// <summary>
-        ///     Returns whether the given entity is a child of this transform or one of its descendants.
-        /// </summary>
-        public bool ContainsEntity(TransformComponent entityTransform)
-        {
-            if (entityTransform.Parent == null) //Is the entity the scene root
-            {
-                return false;
-            }
-
-            if (this == entityTransform.Parent) //Is this the direct parent of the entity
-            {
-                return true;
-            }
-            else
-            {
-                return
-                    ContainsEntity(entityTransform
-                        .Parent); //Recursively search up the parents for this object
-            }
         }
 
         internal void RebuildMatrices()
@@ -984,18 +878,24 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, bool stateHandling)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
             Component = component;
+            FromStateHandling = stateHandling;
         }
 
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
+
+        /// <summary>
+        ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
+        /// </summary>
+        public readonly bool FromStateHandling;
     }
 
     /// <summary>

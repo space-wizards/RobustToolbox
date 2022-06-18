@@ -1,0 +1,9 @@
+﻿<Popup xmlns="https://spacestation14.io"
+       xmlns:gfx="clr-namespace:Robust.Client.Graphics">
+    <PanelContainer>
+        <PanelContainer.PanelOverride>
+            <gfx:StyleBoxFlat BackgroundColor="#000D" />
+        </PanelContainer.PanelOverride>
+        <BoxContainer Access="Public" Margin="2" Name="Contents" Orientation="Vertical" />
+    </PanelContainer>
+</Popup>

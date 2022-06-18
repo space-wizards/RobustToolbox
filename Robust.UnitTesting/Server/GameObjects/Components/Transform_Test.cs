@@ -90,8 +90,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var parent = EntityManager.SpawnEntity("dummy", InitialPos);
             var child = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
-            var childTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child);
+            var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
+            var childTrans = EntityManager.GetComponent<TransformComponent>(child);
 
             // that are not on the same map
             parentTrans.Coordinates = new EntityCoordinates(GridA.GridEntityId, (5, 5));
@@ -139,8 +139,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy", InitialPos);
             var child = EntityManager.SpawnEntity("dummy", InitialPos);
-            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
-            var childTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child);
+            var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
+            var childTrans = EntityManager.GetComponent<TransformComponent>(child);
             parentTrans.WorldPosition = new Vector2(5, 5);
             childTrans.WorldPosition = new Vector2(6, 6);
 
@@ -163,9 +163,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var parent = EntityManager.SpawnEntity("dummy", InitialPos);
             var childOne = EntityManager.SpawnEntity("dummy", InitialPos);
             var childTwo = EntityManager.SpawnEntity("dummy", InitialPos);
-            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
-            var childOneTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(childOne);
-            var childTwoTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(childTwo);
+            var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
+            var childOneTrans = EntityManager.GetComponent<TransformComponent>(childOne);
+            var childTwoTrans = EntityManager.GetComponent<TransformComponent>(childTwo);
             parentTrans.WorldPosition = new Vector2(1, 1);
             childOneTrans.WorldPosition = new Vector2(2, 2);
             childTwoTrans.WorldPosition = new Vector2(3, 3);
@@ -196,8 +196,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy", InitialPos);
             var child = EntityManager.SpawnEntity("dummy", InitialPos);
-            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
-            var childTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child);
+            var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
+            var childTrans = EntityManager.GetComponent<TransformComponent>(child);
             parentTrans.WorldPosition = new Vector2(0, 0);
             childTrans.WorldPosition = new Vector2(2, 0);
             childTrans.AttachParent(parentTrans);
@@ -223,8 +223,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy", InitialPos);
             var child = EntityManager.SpawnEntity("dummy", InitialPos);
-            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
-            var childTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child);
+            var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
+            var childTrans = EntityManager.GetComponent<TransformComponent>(child);
             parentTrans.WorldPosition = new Vector2(1, 1);
             childTrans.WorldPosition = new Vector2(2, 1);
             childTrans.AttachParent(parentTrans);
@@ -253,10 +253,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
-            var node4Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node4);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
+            var node4Trans = EntityManager.GetComponent<TransformComponent>(node4);
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -291,9 +291,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -336,9 +336,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -384,10 +384,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
-            var node4Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node4);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
+            var node4Trans = EntityManager.GetComponent<TransformComponent>(node4);
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -405,8 +405,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var worldMat = node4Trans.WorldMatrix;
             var invWorldMat = node4Trans.InvWorldMatrix;
 
-            Matrix3.Multiply(ref worldMat, ref invWorldMat, out var leftVerifyMatrix);
-            Matrix3.Multiply(ref invWorldMat, ref worldMat, out var rightVerifyMatrix);
+            Matrix3.Multiply(in worldMat, in invWorldMat, out var leftVerifyMatrix);
+            Matrix3.Multiply(in invWorldMat, in worldMat, out var rightVerifyMatrix);
 
             //Assert
 
@@ -431,9 +431,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
             node2Trans.AttachParent(node1Trans);
             node3Trans.AttachParent(node2Trans);
@@ -460,9 +460,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
             var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
+            var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
+            var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
+            var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
             node2Trans.AttachParent(node1Trans);
             node3Trans.AttachParent(node2Trans);

@@ -37,7 +37,6 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
-            gridProgram.SetUniform(UniIModulate, Color.White);
 
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
@@ -50,7 +49,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                grid.GetMapChunks(worldBounds, out var enumerator);
+                var enumerator = grid.GetMapChunks(worldBounds);
 
                 while (enumerator.MoveNext(out var chunk))
                 {
@@ -115,10 +114,10 @@ namespace Robust.Client.Graphics.Clyde
                     var gy = y + cScaled.Y;
 
                     var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top);
+                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom, Color.White);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom, Color.White);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top, Color.White);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top, Color.White);
                     var nIdx = i * GetQuadBatchIndexCount();
                     var tIdx = (ushort)(i * 4);
                     QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
@@ -136,13 +135,13 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
             CheckGlError();
 
-            var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
+            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
@@ -151,12 +150,7 @@ namespace Robust.Client.Graphics.Clyde
                 eboSize, $"Grid {grid.Index} chunk {chunk.Indices} EBO");
 
             ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Index} chunk {chunk.Indices} VAO");
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
+            SetupVAOLayout();
             CheckGlError();
 
             // Assign VBO and EBO to VAO.

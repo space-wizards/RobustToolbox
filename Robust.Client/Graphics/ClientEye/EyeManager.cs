@@ -2,6 +2,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -132,6 +133,12 @@ namespace Robust.Client.Graphics
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
+            if (CurrentEye.Position.MapId != point.MapId)
+            {
+                Logger.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map ({CurrentEye.Position.MapId})");
+                return new(default, WindowId.Invalid);
+            }
+
             return new(WorldToScreen(point.Position), MainViewport.Window?.Id ?? default);
         }
 

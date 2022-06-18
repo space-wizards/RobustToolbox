@@ -87,8 +87,13 @@ namespace Robust.Shared.Network
             /// <inheritdoc />
             public void Disconnect(string reason)
             {
+                Disconnect(reason, true);
+            }
+
+            public void Disconnect(string reason, bool sendBye)
+            {
                 if (_connection.Status == NetConnectionStatus.Connected)
-                    _connection.Disconnect(reason);
+                    _connection.Disconnect(reason, sendBye);
             }
 
             public override string ToString()

@@ -100,7 +100,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent playerTransform))
+                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent? playerTransform))
                 {
                     shell.WriteError("You don't have an entity.");
                     return;
@@ -211,6 +211,24 @@ namespace Robust.Server.Console.Commands
 
                 network.DisconnectChannel(target.ConnectedClient, reason);
             }
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                var playerManager = IoCManager.Resolve<IPlayerManager>();
+                var options = playerManager.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
+
+                return CompletionResult.FromHintOptions(options, "<PlayerIndex>");
+            }
+
+            if (args.Length > 1)
+            {
+                return CompletionResult.FromHint("[<Reason>]");
+            }
+
+            return CompletionResult.Empty;
         }
     }
 }

@@ -239,7 +239,6 @@ namespace Robust.Client.Graphics.Clyde
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 
-            program.SetUniformMaybe(UniIModulate, command.Modulate);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
@@ -529,25 +528,25 @@ namespace Robust.Client.Graphics.Clyde
         /// <param name="br">Bottom right vertex of the quad in object space.</param>
         /// <param name="tl">Top left vertex of the quad in object space.</param>
         /// <param name="tr">Top right vertex of the quad in object space.</param>
-        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <param name="modulate">A color to multiply the texture by when shading. Non-linear.</param>
         /// <param name="texCoords">The four corners of the texture coordinates, matching the four vertices.</param>
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
             in Box2 texCoords)
         {
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
-            EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
+            EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
             tr = _currentMatrixModel.Transform(tr);
-            tl = _currentMatrixModel.Transform(tl);
+            tl = tr + bl - br;
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
@@ -555,7 +554,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
-            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices, in Color color)
+            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices)
         {
             FinishBatch();
             _batchMetaData = null;
@@ -585,7 +584,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = true;
             command.DrawBatch.StartIndex = BatchIndexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
-            command.DrawBatch.Modulate = color;
             command.DrawBatch.TextureId = textureId;
             command.DrawBatch.ShaderInstance = _queuedShader;
 
@@ -598,7 +596,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
-            in ReadOnlySpan<Vertex2D> vertices, in Color color)
+            in ReadOnlySpan<Vertex2D> vertices)
         {
             FinishBatch();
             _batchMetaData = null;
@@ -612,7 +610,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = false;
             command.DrawBatch.StartIndex = BatchVertexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
-            command.DrawBatch.Modulate = color;
             command.DrawBatch.TextureId = textureId;
             command.DrawBatch.ShaderInstance = _queuedShader;
 
@@ -641,15 +638,15 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
             EnsureBatchSpaceAvailable(2, 0);
-            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
+            EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentMatrixModel.Transform(a);
             b = _currentMatrixModel.Transform(b);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero);
-            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero);
+            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero, color);
+            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero, color);
             BatchVertexIndex += 2;
 
             _debugStats.LastClydeDrawCalls += 1;
@@ -716,14 +713,13 @@ namespace Robust.Client.Graphics.Clyde
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, in Color color, bool indexed,
+        private void EnsureBatchState(ClydeHandle textureId, bool indexed,
             BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
             {
                 var metaData = _batchMetaData.Value;
                 if (metaData.TextureId == textureId &&
-                    StrictColorEquality(metaData.Color, color) &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
                     metaData.ShaderInstance == shaderInstance)
@@ -737,7 +733,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // ... and start another.
-            _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
+            _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
                 indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
 
             /*
@@ -769,7 +765,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = indexed;
             command.DrawBatch.StartIndex = metaData.StartIndex;
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
-            command.DrawBatch.Modulate = metaData.Color;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
 
@@ -898,7 +893,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             public ClydeHandle TextureId;
             public ClydeHandle ShaderInstance;
-            public Color Modulate;
 
             public int StartIndex;
             public int Count;
@@ -970,17 +964,15 @@ namespace Robust.Client.Graphics.Clyde
         private readonly struct BatchMetaData
         {
             public readonly ClydeHandle TextureId;
-            public readonly Color Color;
             public readonly bool Indexed;
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
 
-            public BatchMetaData(ClydeHandle textureId, in Color color, bool indexed, BatchPrimitiveType primitiveType,
+            public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
                 int startIndex, ClydeHandle shaderInstance)
             {
                 TextureId = textureId;
-                Color = color;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;

@@ -1,31 +1,108 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.Linq;
 using Robust.Shared.Console;
+using Robust.Shared.IoC;
+using Robust.Shared.Localization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal abstract class SharedCVarCommand : IConsoleCommand
+    internal sealed class CVarCommand : IConsoleCommand
     {
         public string Command => "cvar";
-        public string Description => "Gets or sets a CVar.";
+        public string Description => Loc.GetString("cmd-cvar-desc");
 
-        public string Help => @"cvar <name> [value]
-If a value is passed, the value is parsed and stored as the new value of the CVar.
-If not, the current value of the CVar is displayed.
-Use 'cvar ?' to get a list of all registered CVars.";
+        public string Help => Loc.GetString("cmd-cvar-help");
 
-        public abstract void Execute(IConsoleShell shell, string argStr, string[] args);
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length is < 1 or > 2)
+            {
+                shell.WriteError(Loc.GetString("cmd-cvar-invalid-args"));
+                return;
+            }
 
-        protected static object ParseObject(Type type, string input)
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            var name = args[0];
+
+            if (name == "?")
+            {
+                var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
+                shell.WriteLine(string.Join("\n", cvars));
+                return;
+            }
+
+            if (!configManager.IsCVarRegistered(name))
+            {
+                shell.WriteError(Loc.GetString("cmd-cvar-not-registered", ("cvar", name)));
+                return;
+            }
+
+            if (args.Length == 1)
+            {
+                // Read CVar
+                var value = configManager.GetCVar<object>(name);
+                shell.WriteLine(value.ToString()!);
+            }
+            else
+            {
+                // Write CVar
+                var value = args[1];
+                var type = configManager.GetCVarType(name);
+                try
+                {
+                    var parsed = ParseObject(type, value);
+                    configManager.SetCVar(name, parsed);
+                }
+                catch (FormatException)
+                {
+                    shell.WriteError(Loc.GetString("cmd-cvar-parse-error", ("type", type)));
+                }
+            }
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            var cfg = IoCManager.Resolve<IConfigurationManager>();
+            if (args.Length == 1)
+            {
+                var helpQuestion = Loc.GetString("cmd-cvar-compl-list");
+
+                return CompletionResult.FromHintOptions(
+                    cfg.GetRegisteredCVars()
+                        .Select(c => new CompletionOption(c, GetCVarValueHint(cfg, c)))
+                        .Union(new[] { new CompletionOption("?", helpQuestion) })
+                        .OrderBy(c => c.Value),
+                    Loc.GetString("cmd-cvar-arg-name"));
+            }
+
+            var cvar = args[0];
+            if (!cfg.IsCVarRegistered(cvar))
+                return CompletionResult.Empty;
+
+            var type = cfg.GetCVarType(cvar);
+            return CompletionResult.FromHint($"<{type.Name}>");
+        }
+
+        private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
+        {
+            var value = cfg.GetCVar<object>(cVar).ToString() ?? "";
+            if (value.Length > 50)
+                value = $"{value[..51]}…";
+
+            return value;
+        }
+
+        private static object ParseObject(Type type, string input)
         {
             if (type == typeof(bool))
             {
-                if(bool.TryParse(input, out var val))
+                if (bool.TryParse(input, out var val))
                     return val;
 
-                if (int.TryParse(input, out var intVal))
+                if (Parse.TryInt32(input, out var intVal))
                 {
                     if (intVal == 0) return false;
                     if (intVal == 1) return true;
@@ -41,15 +118,15 @@ Use 'cvar ?' to get a list of all registered CVars.";
 
             if (type == typeof(int))
             {
-                return int.Parse(input, CultureInfo.InvariantCulture);
+                return Parse.Int32(input);
             }
 
             if (type == typeof(float))
             {
-                return float.Parse(input, CultureInfo.InvariantCulture);
+                return Parse.Float(input);
             }
 
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

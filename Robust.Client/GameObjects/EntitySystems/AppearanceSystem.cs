@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 
@@ -94,17 +95,21 @@ namespace Robust.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            var spriteQuery = GetEntityQuery<SpriteComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
                 if (appearance.Deleted)
                     continue;
 
-                OnChangeData(appearance.Owner, appearance);
+                // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
+                spriteQuery.TryGetComponent(appearance.Owner, out var sprite);
+
+                OnChangeData(appearance.Owner, sprite, appearance);
                 UnmarkDirty(appearance);
             }
         }
 
-        public void OnChangeData(EntityUid uid, ClientAppearanceComponent? appearanceComponent = null)
+        public void OnChangeData(EntityUid uid, SpriteComponent? sprite, ClientAppearanceComponent? appearanceComponent = null)
         {
             if (!Resolve(uid, ref appearanceComponent, false)) return;
 
@@ -112,10 +117,11 @@ namespace Robust.Client.GameObjects
             {
                 Component = appearanceComponent,
                 AppearanceData = appearanceComponent.AppearanceData,
+                Sprite = sprite,
             };
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev, false);
 
             // Eventually visualizers would be nuked and we'd just make them components instead.
             foreach (var visualizer in appearanceComponent.Visualizers)
@@ -133,5 +139,6 @@ namespace Robust.Client.GameObjects
     {
         public AppearanceComponent Component;
         public IReadOnlyDictionary<object, object> AppearanceData;
+        public SpriteComponent? Sprite;
     }
 }

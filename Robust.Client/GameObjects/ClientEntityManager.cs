@@ -37,9 +37,9 @@ namespace Robust.Client.GameObjects
             return base.CreateEntity(prototypeName, uid);
         }
 
-        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity)
+        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
         {
-            base.InitializeEntity(entity);
+            base.InitializeEntity(entity, meta);
         }
 
         void IClientEntityManagerInternal.StartEntity(EntityUid entity)

@@ -21,10 +21,12 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -67,6 +69,8 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -92,7 +96,8 @@ namespace Robust.Client
 
             _clyde.InitializePostWindowing();
             _clydeAudio.InitializePostWindowing();
-            _clyde.SetWindowTitle(Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(
+                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
@@ -103,7 +108,8 @@ namespace Robust.Client
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!ContentStart);
-            _modLoader.SetEnableSandboxing(Options.Sandboxing);
+            var disableSandbox = Environment.GetEnvironmentVariable("ROBUST_DISABLE_SANDBOX") == "1";
+            _modLoader.SetEnableSandboxing(!disableSandbox && Options.Sandboxing);
 
             var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
             if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))
@@ -159,7 +165,7 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming)
+                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof)
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };
@@ -199,7 +205,7 @@ namespace Robust.Client
 
             _clyde.Ready();
 
-            if (!Options.DisableCommandLineConnect &&
+            if (_resourceManifest!.AutoConnect &&
                 (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
                 && LaunchState.ConnectEndpoint != null)
             {
@@ -215,7 +221,7 @@ namespace Robust.Client
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
             if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
 
             var yamlStream = new YamlStream();
             using (stream)
@@ -225,7 +231,7 @@ namespace Robust.Client
             }
 
             if (yamlStream.Documents.Count == 0)
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
 
             if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
             {
@@ -260,7 +266,11 @@ namespace Robust.Client
             if (mapping.TryGetNode("splashLogo", out var splashNode))
                 splashLogo = splashNode.AsString();
 
-            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo);
+            bool autoConnect = true;
+            if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
+                autoConnect = autoConnectNode.AsBool();
+
+            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
         }
 
         internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
@@ -329,6 +339,10 @@ namespace Robust.Client
             ProfileOptSetup.Setup(_configurationManager);
 
             _parallelMgr.Initialize();
+            _prof.Initialize();
+#if !FULL_RELEASE
+            _configurationManager.OverrideDefault(CVars.ProfEnabled, true);
+#endif
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
@@ -450,52 +464,127 @@ namespace Robust.Client
 
         private void Input(FrameEventArgs frameEventArgs)
         {
-            _clyde.ProcessInput(frameEventArgs);
-            _networkManager.ProcessPackets();
-            _taskManager.ProcessPendingTasks(); // tasks like connect
+            using (_prof.Group("Input Events"))
+            {
+                _clyde.ProcessInput(frameEventArgs);
+            }
+
+            using (_prof.Group("Network"))
+            {
+                _networkManager.ProcessPackets();
+            }
+
+            using (_prof.Group("Async"))
+            {
+                _taskManager.ProcessPendingTasks(); // tasks like connect
+            }
         }
 
         private void Tick(FrameEventArgs frameEventArgs)
         {
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
-            _console.CommandBufferExecute();
-            _timerManager.UpdateTimers(frameEventArgs);
-            _taskManager.ProcessPendingTasks();
+            using (_prof.Group("Content pre engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("Console"))
+            {
+                _console.CommandBufferExecute();
+            }
+
+            using (_prof.Group("Timers"))
+            {
+                _timerManager.UpdateTimers(frameEventArgs);
+            }
+
+            using (_prof.Group("Async"))
+            {
+                _taskManager.ProcessPendingTasks();
+            }
 
             // GameStateManager is in full control of the simulation update in multiplayer.
             if (_client.RunLevel == ClientRunLevel.InGame || _client.RunLevel == ClientRunLevel.Connected)
             {
-                _gameStateManager.ApplyGameState();
+                using (_prof.Group("Game state"))
+                {
+                    _gameStateManager.ApplyGameState();
+                }
             }
 
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
-                // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                _gameTiming.LastRealTick = _gameTiming.CurTick;
-                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                using (_prof.Group("Entity"))
+                {
+                    // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                    _gameTiming.LastRealTick = _gameTiming.CurTick;
+                    _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                }
             }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            using (_prof.Group("Content post engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            }
         }
 
         private void Update(FrameEventArgs frameEventArgs)
         {
-            _webViewHook?.Update();
-            _clydeAudio.FrameProcess(frameEventArgs);
-            _clyde.FrameProcess(frameEventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
-            _stateManager.FrameUpdate(frameEventArgs);
+            if (_webViewHook != null)
+            {
+                using (_prof.Group("WebView"))
+                {
+                    _webViewHook?.Update();
+                }
+            }
+
+            using (_prof.Group("ClydeAudio"))
+            {
+                _clydeAudio.FrameProcess(frameEventArgs);
+            }
+
+            using (_prof.Group("Clyde"))
+            {
+                _clyde.FrameProcess(frameEventArgs);
+            }
+
+            using (_prof.Group("Content Pre Engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("State"))
+            {
+                _stateManager.FrameUpdate(frameEventArgs);
+            }
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
-                _placementManager.FrameUpdate(frameEventArgs);
-                _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+                using (_prof.Group("Placement"))
+                {
+                    _placementManager.FrameUpdate(frameEventArgs);
+                }
+
+                using (_prof.Group("Entity"))
+                {
+                    _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+                }
             }
 
-            _overlayManager.FrameUpdate(frameEventArgs);
-            _userInterfaceManager.FrameUpdate(frameEventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            using (_prof.Group("Overlay"))
+            {
+                _overlayManager.FrameUpdate(frameEventArgs);
+            }
+
+            using (_prof.Group("UI"))
+            {
+                _userInterfaceManager.FrameUpdate(frameEventArgs);
+            }
+
+            using (_prof.Group("Content Post Engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            }
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
@@ -570,15 +659,20 @@ namespace Robust.Client
             Clyde,
         }
 
-        internal void Cleanup()
+        internal void CleanupGameThread()
         {
             _modLoader.Shutdown();
 
+            // CEF specifically makes a massive silent stink of it if we don't shut it down from the correct thread.
             _webViewHook?.Shutdown();
 
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
             _entityManager.Shutdown();
+        }
+
+        internal void CleanupWindowThread()
+        {
             _clyde.Shutdown();
             _clydeAudio.Shutdown();
         }
@@ -588,7 +682,8 @@ namespace Robust.Client
             string? AssemblyPrefix,
             string? DefaultWindowTitle,
             string? WindowIconSet,
-            string? SplashLogo
+            string? SplashLogo,
+            bool AutoConnect
         );
     }
 }

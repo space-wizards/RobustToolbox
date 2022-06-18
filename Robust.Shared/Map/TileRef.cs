@@ -1,6 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -8,14 +10,19 @@ namespace Robust.Shared.Map
     ///     All of the information needed to reference a tile in the game.
     /// </summary>
     [PublicAPI]
-    public readonly struct TileRef : IEquatable<TileRef>
+    public readonly struct TileRef : IEquatable<TileRef>, ISpanFormattable
     {
-        public static TileRef Zero => new(GridId.Invalid, Vector2i.Zero, Tile.Empty);
+        public static TileRef Zero => new(GridId.Invalid, EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
 
         /// <summary>
         ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
         /// </summary>
         public readonly GridId GridIndex;
+
+        /// <summary>
+        ///     Grid Entity this Tile belongs to.
+        /// </summary>
+        public readonly EntityUid GridUid;
 
         /// <summary>
         ///     Positional indices of this tile on the grid.
@@ -31,21 +38,24 @@ namespace Robust.Shared.Map
         ///     Constructs a new instance of TileRef.
         /// </summary>
         /// <param name="gridId">Identifier of the grid this tile belongs to.</param>
+        /// <param name="gridUid">Identifier of the grid entity this tile belongs to.</param>
         /// <param name="xIndex">Positional X index of this tile on the grid.</param>
         /// <param name="yIndex">Positional Y index of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
-        internal TileRef(GridId gridId, int xIndex, int yIndex, Tile tile)
-            : this(gridId, new Vector2i(xIndex, yIndex), tile) { }
+        internal TileRef(GridId gridId, EntityUid gridUid, int xIndex, int yIndex, Tile tile)
+            : this(gridId, gridUid, new Vector2i(xIndex, yIndex), tile) { }
 
         /// <summary>
         ///     Constructs a new instance of TileRef.
         /// </summary>
         /// <param name="gridId">Identifier of the grid this tile belongs to.</param>
+        /// <param name="gridUid">Identifier of the grid entity this tile belongs to.</param>
         /// <param name="gridIndices">Positional indices of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
-        internal TileRef(GridId gridId, Vector2i gridIndices, Tile tile)
+        internal TileRef(GridId gridId, EntityUid gridUid, Vector2i gridIndices, Tile tile)
         {
             GridIndex = gridId;
+            GridUid = gridUid;
             GridIndices = gridIndices;
             Tile = tile;
         }
@@ -64,6 +74,23 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"TileRef: {X},{Y} ({Tile})";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"TileRef: {X},{Y} ({Tile})");
         }
 
         /// <inheritdoc />

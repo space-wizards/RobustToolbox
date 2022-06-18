@@ -153,9 +153,9 @@ namespace Robust.Client.Graphics
         {
             string? precision = Precision switch
             {
-                ShaderPrecisionQualifier.Low => "lowp ",
-                ShaderPrecisionQualifier.Medium => "mediump ",
-                ShaderPrecisionQualifier.High => "highp ",
+                ShaderPrecisionQualifier.Low => "ARRAY_LOWP ",
+                ShaderPrecisionQualifier.Medium => "ARRAY_MEDIUMP ",
+                ShaderPrecisionQualifier.High => "ARRAY_HIGHP ",
                 _ => null,
             };
 
@@ -201,6 +201,7 @@ namespace Robust.Client.Graphics
         {
             return
                 (type == ShaderDataType.Float) ||
+                (type == ShaderDataType.Int) ||
                 (type == ShaderDataType.Vec2) ||
                 (type == ShaderDataType.Vec3) ||
                 (type == ShaderDataType.Vec4) ||

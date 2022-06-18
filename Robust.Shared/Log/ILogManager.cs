@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Log
+﻿using System.Collections.Generic;
+
+namespace Robust.Shared.Log
 {
     /// <summary>
     ///     Manages logging sawmills.
@@ -15,5 +17,10 @@
         ///     Gets the sawmill with the specified name. Creates a new one if necessary.
         /// </summary>
         ISawmill GetSawmill(string name);
+
+        /// <summary>
+        /// Gets a list of all currently created sawmills.
+        /// </summary>
+        IEnumerable<ISawmill> AllSawmills { get; }
     }
 }

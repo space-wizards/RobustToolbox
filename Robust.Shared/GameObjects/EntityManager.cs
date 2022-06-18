@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -23,11 +26,14 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ISerializationManager _serManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         #endregion Dependencies
 
         /// <inheritdoc />
         public GameTick CurrentTick => _gameTiming.CurTick;
+
+        public static readonly MapInitEvent MapInitEventInstance = new();
 
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
@@ -52,11 +58,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
 
-        public event EventHandler<EntityUid>? EntityAdded;
-        public event EventHandler<EntityUid>? EntityInitialized;
-        public event EventHandler<EntityUid>? EntityStarted;
-        public event EventHandler<EntityUid>? EntityDeleted;
-        public event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
+        public event Action<EntityUid>? EntityAdded;
+        public event Action<EntityUid>? EntityInitialized;
+        public event Action<EntityUid>? EntityStarted;
+        public event Action<EntityUid>? EntityDeleted;
+        public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         public bool Started { get; protected set; }
         public bool Initialized { get; protected set; }
@@ -88,6 +94,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
+            _eventBus.CalcOrdering();
         }
 
         public virtual void Shutdown()
@@ -117,16 +124,19 @@ namespace Robust.Shared.GameObjects
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
+            using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (_prof.Group("Events"))
             {
                 _eventBus.ProcessEventQueue();
             }
 
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (_prof.Group("QueueDel"))
             {
                 while (QueuedDeletions.TryDequeue(out var uid))
                 {
@@ -137,6 +147,7 @@ namespace Robust.Shared.GameObjects
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();
             }
@@ -224,7 +235,7 @@ namespace Robust.Shared.GameObjects
             var currentTick = CurrentTick;
 
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
-            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
+            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
                 throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
 
             var metadata = (MetaDataComponent)component;
@@ -235,7 +246,7 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityLifeStage > EntityLifeStage.Initializing)
             {
-                EntityDirtied?.Invoke(this, uid);
+                EntityDirtied?.Invoke(uid);
             }
         }
 
@@ -264,7 +275,7 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(e, out var comp)
+            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(e, out var comp)
                 || comp is not MetaDataComponent meta || meta.EntityDeleted)
                 return;
 
@@ -280,7 +291,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
+            if (!TryGetComponent(uid, out MetaDataComponent? metadata) || metadata.EntityDeleted)
                 return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);
@@ -313,7 +324,8 @@ namespace Robust.Shared.GameObjects
             DisposeComponents(uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
-            EntityDeleted?.Invoke(this, uid);
+            EntityDeleted?.Invoke(uid);
+            _eventBus.OnEntityDeleted(uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
             Entities.Remove(uid);
         }
@@ -328,7 +340,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _entTraitArray[ArrayIndexFor<MetaDataComponent>()].ContainsKey(uid);
+            return _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].ContainsKey(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -338,12 +350,12 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
-        public bool Deleted(EntityUid? uid)
+        public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
-            return !uid.HasValue || !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !uid.HasValue || !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
         /// <summary>
@@ -360,7 +372,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(string? prototypeName, EntityUid uid = default)
+        private protected EntityUid AllocEntity(
+            string? prototypeName,
+            out MetaDataComponent metadata,
+            EntityUid uid = default)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -369,9 +384,10 @@ namespace Robust.Shared.GameObjects
                 prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             }
 
-            var entity = AllocEntity(uid);
+            var entity = AllocEntity(out metadata, uid);
 
-            GetComponent<MetaDataComponent>(entity).EntityPrototype = prototype;
+            metadata._entityPrototype = prototype;
+            Dirty(metadata);
 
             return entity;
         }
@@ -379,7 +395,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(EntityUid uid = default)
+        private protected EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
         {
             if (uid == default)
             {
@@ -392,9 +408,10 @@ namespace Robust.Shared.GameObjects
             }
 
             // we want this called before adding components
-            EntityAdded?.Invoke(this, uid);
+            EntityAdded?.Invoke(uid);
+            _eventBus.OnEntityAdded(uid);
 
-            var metadata = new MetaDataComponent { Owner = uid };
+            metadata = new MetaDataComponent { Owner = uid };
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
@@ -412,12 +429,12 @@ namespace Robust.Shared.GameObjects
         private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             if (prototypeName == null)
-                return AllocEntity(uid);
+                return AllocEntity(out _, uid);
 
-            var entity = AllocEntity(prototypeName, uid);
+            var entity = AllocEntity(prototypeName, out var metadata, uid);
             try
             {
-                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
+                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)
@@ -438,12 +455,13 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                InitializeEntity(entity);
+                var meta = GetComponent<MetaDataComponent>(entity);
+                InitializeEntity(entity, meta);
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
                 if (_mapManager.IsMapInitialized(mapId))
-                    entity.RunMapInit();
+                    RunMapInit(entity, meta);
             }
             catch (Exception e)
             {
@@ -452,23 +470,34 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(EntityUid entity)
+        protected void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
-            InitializeComponents(entity);
-            EntityInitialized?.Invoke(this, entity);
+            InitializeComponents(entity, meta);
+            EntityInitialized?.Invoke(entity);
         }
 
         protected void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
-            EntityStarted?.Invoke(this, entity);
+            EntityStarted?.Invoke(entity);
+        }
+
+        public void RunMapInit(EntityUid entity, MetaDataComponent meta)
+        {
+            if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
+                return; // Already map initialized, do nothing.
+
+            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
+            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+
+            EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
         }
 
         /// <inheritdoc />
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
-            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
+            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
                 return new EntityStringRepresentation(uid, true);
 
             var metadata = (MetaDataComponent) component;

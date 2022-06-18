@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -123,7 +124,7 @@ namespace Robust.Shared.Configuration
 
                 // apply the initial set immediately, so that they are available to
                 // for the rest of connection building
-                ApplyNetVarChange(message.MsgChannel, message.NetworkedVars);
+                ApplyNetVarChange(message.MsgChannel, message.NetworkedVars, message.Tick);
                 ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -136,6 +137,10 @@ namespace Robust.Shared.Configuration
             if(!_timing.InSimulation || _timing.InPrediction)
                 return;
 
+            // _netVarsMessages is not in any particular ordering.
+            // Copy any messages to apply to a separate list so we can sort before going through it.
+
+            ValueList<MsgConVars> toApply = default;
             for (var i = 0; i < _netVarsMessages.Count; i++)
             {
                 var msg = _netVarsMessages[i];
@@ -143,13 +148,23 @@ namespace Robust.Shared.Configuration
                 if (msg.Tick > _timing.LastRealTick)
                     continue;
 
-                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
-
-                if(msg.Tick != default && msg.Tick < _timing.LastRealTick)
-                    Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
+                toApply.Add(msg);
 
                 _netVarsMessages.RemoveSwap(i);
                 i--;
+            }
+
+            if (toApply.Count == 0)
+                return;
+
+            toApply.Sort((a, b) => a.Tick.CompareTo(b.Tick));
+
+            foreach (var msg in toApply)
+            {
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
+
+                if(msg.Tick != default && msg.Tick < _timing.LastRealTick)
+                    Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
             }
         }
 
@@ -160,13 +175,16 @@ namespace Robust.Shared.Configuration
 
             foreach (var msg in _netVarsMessages)
             {
-                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
             }
 
             _netVarsMessages.Clear();
         }
 
-        private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
+        private void ApplyNetVarChange(
+            INetChannel msgChannel,
+            List<(string name, object value)> networkedVars,
+            GameTick tick)
         {
             Logger.DebugS("cfg", $"{msgChannel} Handling replicated cvars...");
 
@@ -176,7 +194,8 @@ namespace Robust.Shared.Configuration
                 foreach (var (name, value) in networkedVars)
                 {
                     // Actually set the CVar
-                    base.SetCVar(name, value);
+                    SetCVarInternal(name, value, tick);
+
                     Logger.DebugS("cfg", $"name={name}, val={value}");
                 }
 

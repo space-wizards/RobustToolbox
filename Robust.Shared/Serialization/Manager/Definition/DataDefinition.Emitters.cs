@@ -6,6 +6,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
@@ -13,8 +15,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private PopulateDelegateSignature EmitPopulateDelegate()
+        private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
         {
+            var isServer = collection.Resolve<INetManager>().IsServer;
+
             object PopulateDelegate(
                 object target,
                 MappingDataNode mappingDataNode,
@@ -27,7 +31,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     var fieldDefinition = BaseFieldDefinitions[i];
 
-                    if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
+                    if (fieldDefinition.Attribute.ServerOnly && !isServer)
                     {
                         continue;
                     }
@@ -44,24 +48,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var type = fieldDefinition.FieldType;
                     var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
                     object? result;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
+                        {
+                            ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
+                            SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
+                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                            _ => throw new InvalidOperationException()
+                        })
                     {
-                        var foundInterface = false;
-                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
-                        {
-                            if(@interface.GetGenericTypeDefinition() != typeof(ITypeReader<,>)) continue;
-                            if (@interface.GenericTypeArguments[0] == type && @interface.GenericTypeArguments[1] == node.GetType())
-                            {
-                                foundInterface = true;
-                            }
-                        }
-
-                        if (!foundInterface)
-                        {
-                            throw new InvalidOperationException(
-                                $"Could not find implementation of ITypeReader for type {type} and node {node.GetType()} on customtypeserializer {fieldDefinition.Attribute.CustomTypeSerializer}");
-                        }
-
                         result = serializationManager.ReadWithTypeSerializer(type,
                             fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
                     }
@@ -86,7 +80,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate()
+        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -107,7 +101,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     if (fieldDefinition.Attribute.ServerOnly &&
-                        !IoCManager.Resolve<INetManager>().IsServer)
+                        !collection.Resolve<INetManager>().IsServer)
                     {
                         continue;
                     }
@@ -129,24 +123,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var type = fieldDefinition.FieldType;
 
                     DataNode node;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                     {
-                        var foundInterface = false;
-                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
-                        {
-                            if(@interface.GetGenericTypeDefinition() != typeof(ITypeWriter<>)) continue;
-                            if (@interface.GenericTypeArguments[0] == type)
-                            {
-                                foundInterface = true;
-                            }
-                        }
-
-                        if (!foundInterface)
-                        {
-                            throw new InvalidOperationException(
-                                $"Could not find implementation of ITypeWriter for type {type} on customtypeserializer {fieldDefinition.Attribute.CustomTypeSerializer}");
-                        }
-
                         node = manager.WriteWithTypeSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
                             value, alwaysWrite, context);
                     }
@@ -189,7 +167,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
                     else
                     {
-                        copy = field.Attribute.CustomTypeSerializer != null
+                        copy = field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier
                             ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
                                 targetValue,
                                 context)

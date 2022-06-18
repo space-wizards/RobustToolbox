@@ -168,6 +168,8 @@ namespace Robust.Client.Graphics.Clyde
                     0, 0,
                     mode->Width, mode->Height,
                     mode->RefreshRate);
+
+                SendEvent(new EventSetFullscreenAck());
             }
 
             // glfwGetWindowMonitor only works for fullscreen windows.

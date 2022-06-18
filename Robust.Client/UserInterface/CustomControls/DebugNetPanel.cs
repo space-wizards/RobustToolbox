@@ -4,6 +4,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -14,6 +15,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private readonly IClientNetManager NetManager;
         private readonly IGameTiming GameTiming;
+
+        private readonly char[] _textBuffer = new char[256];
 
         private TimeSpan LastUpdate;
         private Label contents;
@@ -84,11 +87,10 @@ namespace Robust.Client.UserInterface.CustomControls
             LastSentPackets = stats.SentPackets;
             LastReceivedPackets = stats.ReceivedPackets;
 
-            contents.Text = $@"UP: {sentBytes / ONE_KIBIBYTE:N} KiB/s, {sentPackets} pckt/s, {LastSentBytes / ONE_KIBIBYTE:N} KiB, {LastSentPackets} pckt
+            contents.TextMemory = FormatHelpers.FormatIntoMem(_textBuffer,
+                $@"UP: {sentBytes / ONE_KIBIBYTE:N} KiB/s, {sentPackets} pckt/s, {LastSentBytes / ONE_KIBIBYTE:N} KiB, {LastSentPackets} pckt
 DOWN: {receivedBytes / ONE_KIBIBYTE:N} KiB/s, {receivedPackets} pckt/s, {LastReceivedBytes / ONE_KIBIBYTE:N} KiB, {LastReceivedPackets} pckt
-PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
-
-            // MinimumSizeChanged();
+PING: {NetManager.ServerChannel?.Ping ?? -1} ms");
         }
     }
 }

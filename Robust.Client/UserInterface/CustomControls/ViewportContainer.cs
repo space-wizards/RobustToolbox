@@ -73,6 +73,9 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
+                if (Viewport.Eye == null)
+                    return;
+
                 var viewportBounds = UIBox2i.FromDimensions(GlobalPixelPosition, PixelSize);
                 Viewport.RenderScreenOverlaysBelow(handle, this, viewportBounds);
 

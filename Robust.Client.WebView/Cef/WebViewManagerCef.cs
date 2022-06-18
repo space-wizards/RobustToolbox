@@ -1,15 +1,21 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Text;
+using Robust.Client.Console;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
 {
-    internal partial class WebViewManagerCef : IWebViewManagerImpl
+    internal sealed partial class WebViewManagerCef : IWebViewManagerImpl
     {
         private static readonly string BasePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location!)!;
 
@@ -17,10 +23,18 @@ namespace Robust.Client.WebView.Cef
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         public void Initialize()
         {
             IoCManager.Instance!.InjectDependencies(this, oneOff: true);
+
+            _consoleHost.RegisterCommand("flushcookies", Loc.GetString("cmd-flushcookies-desc"), Loc.GetString("cmd-flushcookies-help"), (_, _, _) =>
+            {
+                CefCookieManager.GetGlobal(null).FlushStore(null);
+            });
 
             string subProcessName;
             if (OperatingSystem.IsWindows())
@@ -38,6 +52,10 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
+            var cachePath = "";
+            if (_resourceManager.UserData is WritableDirProvider userData)
+                cachePath = userData.GetFullPath(new ResourcePath("/cef_cache"));
+
             var settings = new CefSettings()
             {
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
@@ -47,6 +65,8 @@ namespace Robust.Client.WebView.Cef
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
                 RemoteDebuggingPort = 9222,
+                CookieableSchemesList = "usr,res",
+                CachePath = cachePath,
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -59,6 +79,12 @@ namespace Robust.Client.WebView.Cef
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
             // And nothing seemed to work. Odd.
+
+            if (_cfg.GetCVar(WCVars.WebResProtocol))
+            {
+                var handler = new ResourceSchemeFactoryHandler(this, _resourceManager, Logger.GetSawmill("web.res"));
+                CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
+            }
         }
 
         private static string? LocateCefResources()
@@ -101,6 +127,49 @@ namespace Robust.Client.WebView.Cef
         public void Shutdown()
         {
             CefRuntime.Shutdown();
+        }
+
+        private sealed class ResourceSchemeFactoryHandler : CefSchemeHandlerFactory
+        {
+            private readonly WebViewManagerCef _parent;
+            private readonly IResourceManager _resourceManager;
+            private readonly ISawmill _sawmill;
+
+            public ResourceSchemeFactoryHandler(
+                WebViewManagerCef parent,
+                IResourceManager resourceManager,
+                ISawmill sawmill)
+            {
+                _parent = parent;
+                _resourceManager = resourceManager;
+                _sawmill = sawmill;
+            }
+
+            protected override CefResourceHandler Create(
+                CefBrowser browser,
+                CefFrame frame,
+                string schemeName,
+                CefRequest request)
+            {
+                var uri = new Uri(request.Url);
+
+                _sawmill.Debug($"HANDLING: {request.Url}");
+
+                var resourcePath = new ResourcePath(uri.AbsolutePath);
+                if (_resourceManager.TryContentFileRead(resourcePath, out var stream))
+                {
+                    if (!_parent.TryGetResourceMimeType(resourcePath.Extension, out var mime))
+                        mime = "application/octet-stream";
+
+                    return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();
+                }
+
+                var notFoundStream = new MemoryStream();
+                notFoundStream.Write(Encoding.UTF8.GetBytes("Not found"));
+                notFoundStream.Position = 0;
+
+                return new RequestResultStream(notFoundStream, "text/plain", HttpStatusCode.NotFound).MakeHandler();
+            }
         }
     }
 }

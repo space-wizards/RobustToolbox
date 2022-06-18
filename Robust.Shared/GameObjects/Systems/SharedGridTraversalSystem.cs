@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -12,7 +10,6 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-        [Dependency] private readonly SharedContainerSystem _container = default!;
 
         private Stack<MoveEvent> _queuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
@@ -22,7 +19,19 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent((ref MoveEvent ev) => _queuedEvents.Push(ev));
+            SubscribeLocalEvent<MoveEvent>(OnMove);
+        }
+
+        private void OnMove(ref MoveEvent ev)
+        {
+            // If move event arose from state handling, don't bother to run grid traversal logic.
+            if (ev.FromStateHandling)
+                return;
+
+            if (ev.Component.MapID == MapId.Nullspace)
+                return;
+
+            _queuedEvents.Push(ev);
         }
 
         public override void Update(float frameTime)
@@ -38,11 +47,11 @@ namespace Robust.Shared.GameObjects
 
         private void ProcessChanges()
         {
-            var maps = EntityManager.GetEntityQuery<MapComponent>();
-            var grids = EntityManager.GetEntityQuery<MapGridComponent>();
+            var maps = GetEntityQuery<MapComponent>();
+            var grids = GetEntityQuery<MapGridComponent>();
             var bodies = GetEntityQuery<PhysicsComponent>();
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
-            var metas = EntityManager.GetEntityQuery<MetaDataComponent>();
+            var xforms = GetEntityQuery<TransformComponent>();
+            var metas = GetEntityQuery<MetaDataComponent>();
 
             while (_queuedEvents.TryPop(out var moveEvent))
             {
@@ -64,33 +73,36 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if (!metas.TryGetComponent(entity, out MetaDataComponent? meta) ||
+            if (!metas.TryGetComponent(entity, out var meta) ||
                 meta.EntityDeleted ||
+                (meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer ||
                 maps.HasComponent(entity) ||
-                grids.HasComponent(entity))
+                grids.HasComponent(entity) ||
+                !xforms.TryGetComponent(entity, out var xform) ||
+                // If the entity is anchored then we know for sure it's on the grid and not traversing
+                xform.Anchored)
             {
                 return;
             }
 
-            var xform = xforms.GetComponent(entity);
-            DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
+            // DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) return;
-
+            // We only do grid-traversal parent changes if the entity is currently parented to a map or a grid.
+            var parentIsMap = xform.GridID == GridId.Invalid && maps.HasComponent(xform.ParentUid);
+            if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
+                return;
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
             _gridBuffer.Clear();
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid) &&
-                // TODO: Do we even need this?
-                EntityManager.EntityExists(grid.GridEntityId) &&
-                grid.GridEntityId != entity)
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != xform.GridID)
                 {
                     xform.AttachParent(grid.GridEntityId);
-                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, xform.GridID, grid.Index));
+                    var ev = new ChangedGridEvent(entity, xform.GridID, grid.Index);
+                    RaiseLocalEvent(entity, ref ev);
                 }
             }
             else
@@ -101,17 +113,19 @@ namespace Robust.Shared.GameObjects
                 if (oldGridId != GridId.Invalid)
                 {
                     xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
-                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
+                    var ev = new ChangedGridEvent(entity, oldGridId, GridId.Invalid);
+                    RaiseLocalEvent(entity, ref ev);
                 }
             }
         }
     }
 
-    public sealed class ChangedGridEvent : EntityEventArgs
+    [ByRefEvent]
+    public readonly struct ChangedGridEvent
     {
-        public EntityUid Entity;
-        public GridId OldGrid;
-        public GridId NewGrid;
+        public readonly EntityUid Entity;
+        public readonly GridId OldGrid;
+        public readonly GridId NewGrid;
 
         public ChangedGridEvent(EntityUid entity, GridId oldGrid, GridId newGrid)
         {

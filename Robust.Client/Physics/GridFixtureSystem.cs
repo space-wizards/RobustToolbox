@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -19,6 +20,7 @@ namespace Robust.Client.Physics
             {
                 if (_enableDebug == value) return;
 
+                Sawmill.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
                 var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
@@ -55,6 +57,7 @@ namespace Robust.Client.Physics
 
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
+            Sawmill.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;
@@ -89,7 +92,7 @@ namespace Robust.Client.Physics
                     var gridXform = xformQuery.GetComponent(iGrid.GridEntityId);
                     worldHandle.SetTransform(gridXform.WorldMatrix);
                     var grid = (MapGrid)iGrid;
-                    grid.GetMapChunks(args.WorldBounds, out var chunkEnumerator);
+                    var chunkEnumerator = grid.GetMapChunks(args.WorldBounds);
 
                     while (chunkEnumerator.MoveNext(out var chunk))
                     {
@@ -119,11 +122,15 @@ namespace Robust.Client.Physics
 
             private Color GetColor(MapChunk chunk, int index)
             {
-                var red = Math.Abs(chunk.Indices.X * 30 % 255);
-                var green = Math.Abs(chunk.Indices.Y * 30 % 255);
-                var blue = index * 30 % 255;
+                // Just want something that doesn't give similar indices at 0,0 but is also deterministic.
+                // Add an offset to yIndex so we at least have some colour that isn't grey at 0,0
+                var actualIndex = chunk.Indices.X * 20 + (chunk.Indices.Y + 20) * 35 + index * 50;
 
-                return new Color(red, green, blue, 0.3f);
+                var red = (byte) (actualIndex % 255);
+                var green = (byte) (actualIndex * 20 % 255);
+                var blue = (byte) (actualIndex * 30 % 255);
+
+                return new Color(red, green, blue, 85);
             }
         }
     }

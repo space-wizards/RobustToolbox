@@ -69,6 +69,18 @@ public partial class EntitySystem
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        if (!metaQuery.TryGetComponent(uid, out var meta))
+            return true;
+
+        return meta.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted([NotNullWhen(false)] EntityUid? uid)
     {
         return !uid.HasValue || Deleted(uid.Value);
@@ -249,7 +261,7 @@ public partial class EntitySystem
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        metaData.EntityPaused = paused;
+        EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(uid, paused, metaData);
     }
 
     /// <summary>
@@ -514,6 +526,38 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region Component Remove Deferred
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred<T>(EntityUid uid) where T : class, IComponent
+    {
+        return EntityManager.RemoveComponentDeferred<T>(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Type)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred(EntityUid uid, Type type)
+    {
+        return EntityManager.RemoveComponentDeferred(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, IComponent component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+    #endregion
+
 
     #region Component Remove
 

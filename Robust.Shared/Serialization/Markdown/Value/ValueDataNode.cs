@@ -1,10 +1,11 @@
+using System;
 using System.Globalization;
 using JetBrains.Annotations;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Value
 {
-    public sealed class ValueDataNode : DataNode<ValueDataNode>
+    public sealed class ValueDataNode : DataNode<ValueDataNode>, IEquatable<ValueDataNode>
     {
         public ValueDataNode() : this(string.Empty) {}
 
@@ -45,7 +46,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public override bool Equals(object? obj)
         {
-            return obj is ValueDataNode node && node.Value == Value;
+            return obj is ValueDataNode node && Equals(node);
         }
 
         public override int GetHashCode()
@@ -74,6 +75,13 @@ namespace Robust.Shared.Serialization.Markdown.Value
         public bool AsBool()
         {
             return bool.Parse(Value);
+        }
+
+        public bool Equals(ValueDataNode? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Value == other.Value;
         }
     }
 }

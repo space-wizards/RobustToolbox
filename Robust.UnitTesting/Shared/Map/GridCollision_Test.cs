@@ -35,8 +35,8 @@ namespace Robust.UnitTesting.Shared.Map
                 gridId2 = mapManager.CreateGrid(mapId);
                 gridEnt1 = gridId1.GridEntityId;
                 gridEnt2 = gridId2.GridEntityId;
-                physics1 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt1.Value);
-                physics2 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt2.Value);
+                physics1 = entManager.GetComponent<PhysicsComponent>(gridEnt1.Value);
+                physics2 = entManager.GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static
                 // (given most other games would probably prefer them as static) hence we need to make them dynamic.
                 physics1.BodyType = BodyType.Dynamic;

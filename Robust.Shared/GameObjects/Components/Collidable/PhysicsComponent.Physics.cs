@@ -25,16 +25,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -44,7 +41,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent(), ComponentProtoName("Physics")]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
+    public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IEntitySystemManager _sysMan = default!;
@@ -57,6 +54,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool Island { get; set; }
 
+        [ViewVariables]
         internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>
@@ -90,8 +88,6 @@ namespace Robust.Shared.GameObjects
         [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
 
-        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType
@@ -104,7 +100,6 @@ namespace Robust.Shared.GameObjects
 
                 var oldType = _bodyType;
                 _bodyType = value;
-
                 ResetMassData();
 
                 if (_bodyType == BodyType.Static)
@@ -125,7 +120,8 @@ namespace Robust.Shared.GameObjects
 
                 _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
             }
         }
 
@@ -154,6 +150,13 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType == BodyType.Static) return;
+
+                // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+                if (value && !_canCollide)
+                {
+                    CanCollide = true;
+                    if (!_canCollide) return;
+                }
 
                 SetAwake(value);
             }
@@ -229,35 +232,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void WakeBody()
         {
+            CanCollide = true;
+
+            if (!_canCollide) return;
+
             Awake = true;
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _linearVelocity, _angularVelocity, _bodyType);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState is not PhysicsComponentState newState)
-                return;
-
-            SleepingAllowed = newState.SleepingAllowed;
-            FixedRotation = newState.FixedRotation;
-            CanCollide = newState.CanCollide;
-            BodyStatus = newState.Status;
-
-            // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
-            // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-
-            Dirty(_entMan);
-            LinearVelocity = newState.LinearVelocity;
-            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
-            AngularVelocity = newState.AngularVelocity;
-            BodyType = newState.BodyType;
-            Predict = false;
         }
 
         /// <summary>
@@ -330,12 +309,16 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value ||
-                    value && Owner.IsInContainer(_entMan))
+                if (_canCollide == value)
                     return;
 
+                // If we're recursively in a container then never set this.
+                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
+                    .IsEntityOrParentInContainer(Owner)) return;
+
                 _canCollide = value;
-                _entMan.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
+                var ev = new CollisionChangeEvent(this, _canCollide);
+                _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
                 Dirty(_entMan);
             }
         }
@@ -364,11 +347,17 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public int CollisionMask { get; internal set; }
 
+        /// <summary>
+        ///     The current total mass of the entities fixtures in kilograms. Ignores the body type.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float FixturesMass => _mass;
+
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
-        ///     Current mass of the entity in kilograms.
+        ///     Current mass of the entity in kilograms. This may be 0 depending on the body type.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables(VVAccess.ReadOnly)]
         public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
         private float _mass;
@@ -691,7 +680,12 @@ namespace Robust.Shared.GameObjects
 
         public Transform GetTransform()
         {
-            var (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+            return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));
+        }
+
+        public Transform GetTransform(TransformComponent xform)
+        {
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
             var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
@@ -739,26 +733,6 @@ namespace Robust.Shared.GameObjects
             Force += force;
         }
 
-        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
-        public void DestroyContacts()
-        {
-            var node = Contacts.First;
-
-            while (node != null)
-            {
-                var contact = node.Value;
-                node = node.Next;
-                PhysicsMap?.ContactManager.Destroy(contact);
-            }
-
-            DebugTools.Assert(Contacts.Count == 0);
-        }
-
-        IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
-        {
-            return _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
-        }
-
         public void ResetMassData(FixturesComponent? fixtures = null)
         {
             _mass = 0.0f;
@@ -767,7 +741,7 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;
             }
@@ -782,16 +756,11 @@ namespace Robust.Shared.GameObjects
                 if (fixture.Mass <= 0.0f) continue;
 
                 var data = new MassData {Mass = fixture.Mass};
-                shapeManager.GetMassData(fixture.Shape, ref data);
+                FixtureSystem.GetMassData(fixture.Shape, ref data);
 
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
-            }
-
-            if (BodyType == BodyType.Static)
-            {
-                return;
             }
 
             if (_mass > 0.0f)
@@ -891,22 +860,29 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    [ByRefEvent]
+    public readonly struct PhysicsBodyTypeChangedEvent
     {
+        public readonly EntityUid Entity;
+
         /// <summary>
         ///     New BodyType of the entity.
         /// </summary>
-        public BodyType New { get; }
+        public readonly BodyType New;
 
         /// <summary>
         ///     Old BodyType of the entity.
         /// </summary>
-        public BodyType Old { get; }
+        public readonly BodyType Old;
 
-        public PhysicsBodyTypeChangedEvent(BodyType newType, BodyType oldType)
+        public readonly PhysicsComponent Component;
+
+        public PhysicsBodyTypeChangedEvent(EntityUid entity, BodyType newType, BodyType oldType, PhysicsComponent component)
         {
+            Entity = entity;
             New = newType;
             Old = oldType;
+            Component = component;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
-        private Stack<MoveEvent> _queuedEvents = new();
+        public Stack<MoveEvent> QueuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
 
         private List<MapGrid> _gridBuffer = new();
@@ -31,21 +31,10 @@ namespace Robust.Shared.GameObjects
             if (ev.Component.MapID == MapId.Nullspace)
                 return;
 
-            _queuedEvents.Push(ev);
+            QueuedEvents.Push(ev);
         }
 
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            UpdatesOutsidePrediction = true;
-
-            // Need to queue because otherwise calling HandleMove during FrameUpdate will lead to prediction issues.
-            // TODO: Need to check if that's even still relevant since transform lerping fix?
-            ProcessChanges();
-        }
-
-        private void ProcessChanges()
+        public void ProcessMovement()
         {
             var maps = GetEntityQuery<MapComponent>();
             var grids = GetEntityQuery<MapGridComponent>();
@@ -53,7 +42,7 @@ namespace Robust.Shared.GameObjects
             var xforms = GetEntityQuery<TransformComponent>();
             var metas = GetEntityQuery<MetaDataComponent>();
 
-            while (_queuedEvents.TryPop(out var moveEvent))
+            while (QueuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
 

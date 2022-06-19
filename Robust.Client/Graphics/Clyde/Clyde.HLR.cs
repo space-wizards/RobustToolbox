@@ -124,20 +124,25 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void RenderSingleOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
+            DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
+
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle.DrawingHandleWorld, new UIBox2i((0, 0), vp.Size), vp.Eye!.Position.MapId, worldBox, worldBounds);
+
+            if (!overlay.BeforeDraw(args))
+                return;
+
             if (overlay.RequestScreenTexture)
             {
                 FlushRenderQueue();
                 UpdateOverlayScreenTexture(space, vp.RenderTarget);
             }
 
-            if (overlay.OverwriteTargetFrameBuffer())
-            {
+            if (overlay.OverwriteTargetFrameBuffer)
                 ClearFramebuffer(default);
-            }
 
-            overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+            overlay.Draw(args);
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -146,7 +151,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 foreach (var overlay in GetOverlaysForSpace(space))
                 {
-                    RenderSingleOverlay(overlay, vp, space, worldBox, worldBounds);
+                    RenderSingleWorldOverlay(overlay, vp, space, worldBox, worldBounds);
                 }
 
                 FlushRenderQueue();
@@ -164,8 +169,9 @@ namespace Robust.Client.Graphics.Clyde
 
             var list = GetOverlaysForSpace(space);
 
-            var worldAABB = CalcWorldAABB(vp);
             var worldBounds = CalcWorldBounds(vp);
+            var worldAABB = worldBounds.CalcBoundingBox();
+
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, vp.Eye!.Position.MapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
@@ -291,7 +297,7 @@ namespace Robust.Client.Graphics.Clyde
                         flushed = true;
                     }
 
-                    RenderSingleOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
                 Vector2i roundedPos = default;
@@ -382,7 +388,7 @@ namespace Robust.Client.Graphics.Clyde
                     flushed = true;
                 }
 
-                RenderSingleOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                RenderSingleWorldOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
             ArrayPool<int>.Shared.Return(indexList);
@@ -399,14 +405,8 @@ namespace Robust.Client.Graphics.Clyde
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
 
-            // Construct a matrix equivalent for Viewport.WorldToLocal()
-            eye.GetViewMatrix(out var viewMatrix, view.RenderScale);
-            var uiProjmatrix = Matrix3.Identity;
-            uiProjmatrix.R0C0 = EyeManager.PixelsPerMeter;
-            uiProjmatrix.R1C1 = -EyeManager.PixelsPerMeter;
-            uiProjmatrix.R0C2 = view.Size.X / 2f;
-            uiProjmatrix.R1C2 = view.Size.Y / 2f;
-            var worldToLocal = viewMatrix * uiProjmatrix;
+            // matrix equivalent for Viewport.WorldToLocal()
+            var worldToLocal = view.WorldToLocalMatrix;
 
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
@@ -502,8 +502,8 @@ namespace Robust.Client.Graphics.Clyde
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
-                var worldAABB = CalcWorldAABB(viewport);
                 var worldBounds = CalcWorldBounds(viewport);
+                var worldAABB = worldBounds.CalcBoundingBox();
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
@@ -574,16 +574,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 _currentViewport = oldVp;
             }, viewport.ClearColor);
-        }
-
-        private static Box2 CalcWorldAABB(Viewport viewport)
-        {
-            var eye = viewport.Eye;
-            if (eye == null)
-                return default;
-
-            // Will be larger than the actual viewport due to rotation.
-            return CalcWorldBounds(viewport).CalcBoundingBox();
         }
 
         private static Box2 GetAABB(IEye eye, Viewport viewport)

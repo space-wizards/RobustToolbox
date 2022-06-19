@@ -43,6 +43,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -131,8 +132,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
-            if (body._canCollide)
-                _broadphase.UpdateBroadphase(body, xform: xform);
+            _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
             var mapId = _transform.GetMapId(args.Entity);
@@ -291,6 +291,8 @@ namespace Robust.Shared.GameObjects
             {
                 comp.ProcessQueue();
             }
+
+            _traversal.ProcessMovement();
 
             _physicsManager.ClearTransforms();
         }

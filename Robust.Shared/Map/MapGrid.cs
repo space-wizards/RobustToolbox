@@ -284,6 +284,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
+            if (tiles.Count == 0) return;
+
             var chunks = new HashSet<MapChunk>();
 
             foreach (var (gridIndices, tile) in tiles)
@@ -300,6 +302,12 @@ namespace Robust.Shared.Map
             }
 
             RegenerateCollision(chunks);
+        }
+
+        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
+        {
+            var localAABB = localArea.CalcBoundingBox();
+            return GetLocalTilesIntersecting(localAABB, ignoreEmpty, predicate);
         }
 
         /// <inheritdoc />
@@ -327,16 +335,17 @@ namespace Robust.Shared.Map
             }
         }
 
-        private IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
+        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
         {
             // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
             // that way we can avoid the GetComp here.
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
-            var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
+            // If we have 20.1 we want to include that tile but if we have 20 then we don't.
+            var gridTileRt = new Vector2i((int)Math.Ceiling(localArea.Right), (int)Math.Ceiling(localArea.Top));
 
-            for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
+            for (var x = gridTileLb.X; x < gridTileRt.X; x++)
             {
-                for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
+                for (var y = gridTileLb.Y; y < gridTileRt.Y; y++)
                 {
                     var gridChunk = GridTileToChunkIndices(new Vector2i(x, y));
 

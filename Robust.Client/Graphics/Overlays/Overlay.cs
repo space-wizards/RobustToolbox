@@ -3,9 +3,6 @@ using JetBrains.Annotations;
 using Robust.Shared.Timing;
 using Robust.Shared.Enums;
 using System;
-using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics
 {
@@ -15,7 +12,6 @@ namespace Robust.Client.Graphics
     [PublicAPI]
     public abstract class Overlay
     {
-
         /// <summary>
         ///     Determines when this overlay is drawn in the rendering queue.
         /// </summary>
@@ -48,11 +44,9 @@ namespace Robust.Client.Graphics
         }
 
         /// <summary>
-        ///     If this function returns true, the target framebuffer will be wiped before applying this overlay to it.
+        ///     If this is true, the target framebuffer will be wiped before applying this overlay to it.
         /// </summary>
-        public virtual bool OverwriteTargetFrameBuffer(){
-            return false;
-        }
+        public virtual bool OverwriteTargetFrameBuffer => false;
 
         /// <summary>
         /// Draws this overlay to the current space.
@@ -77,30 +71,14 @@ namespace Robust.Client.Graphics
             GC.SuppressFinalize(this);
         }
 
-
-        internal void ClydeRender(
-            IRenderHandle renderHandle,
-            OverlaySpace currentSpace,
-            IViewportControl? vpControl,
-            IClydeViewport vp,
-            in UIBox2i screenBox,
-            in Box2 worldBox,
-            in Box2Rotated worldBounds)
+        /// <summary>
+        /// This function gets called prior to the overlay being drawn. If this function returns false, the overlay will
+        /// not get drawn to this view-port. Useful for avoiding unnecessary screen-texture fetching or frame buffer
+        /// clearing. 
+        /// </summary>
+        protected internal virtual bool BeforeDraw(in OverlayDrawArgs args)
         {
-            DrawingHandleBase handle;
-            if (currentSpace == OverlaySpace.ScreenSpace || currentSpace == OverlaySpace.ScreenSpaceBelowWorld)
-            {
-                DebugTools.AssertNotNull(vpControl);
-                handle = renderHandle.DrawingHandleScreen;
-            }
-            else
-            {
-                handle = renderHandle.DrawingHandleWorld;
-            }
-
-            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox, vp.Eye!.Position.MapId, worldBox, worldBounds);
-
-            Draw(args);
+            return true;
         }
     }
 }

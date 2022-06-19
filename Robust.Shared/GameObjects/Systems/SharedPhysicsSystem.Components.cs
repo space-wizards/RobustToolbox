@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -10,6 +11,8 @@ namespace Robust.Shared.GameObjects;
 
 public partial class SharedPhysicsSystem
 {
+    [Dependency] private readonly CollisionWakeSystem _collisionWakeSystem = default!;
+    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
     private void OnPhysicsInit(EntityUid uid, PhysicsComponent component, ComponentInit args)
     {
         var xform = Transform(uid);
@@ -41,8 +44,7 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        var startup = new PhysicsInitializedEvent(uid);
-        EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+        OnPhysicsInitialized(uid);
 
         // Issue the event for stuff that needs it.
         if (component._canCollide)
@@ -50,6 +52,15 @@ public partial class SharedPhysicsSystem
             component._canCollide = false;
             component.CanCollide = true;
         }
+    }
+
+    private void OnPhysicsInitialized(EntityUid uid)
+    {
+        if (EntityManager.TryGetComponent(uid, out CollisionWakeComponent? wakeComp))
+        {
+            _collisionWakeSystem.OnPhysicsInit(uid, wakeComp);
+        }
+        _fixtureSystem.OnPhysicsInit(uid);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)

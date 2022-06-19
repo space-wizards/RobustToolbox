@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
         [Access(typeof(SharedTransformSystem))]
         internal EntityUid? _gridUid = null;
 
-        [Obsolete("Use GridEntityId")]
+        [Obsolete("Use GridUid")]
         public GridId GridID
         {
             get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)

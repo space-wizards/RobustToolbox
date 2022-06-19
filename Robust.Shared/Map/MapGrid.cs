@@ -280,6 +280,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
+            if (tiles.Count == 0) return;
+
             var chunks = new HashSet<MapChunk>();
 
             foreach (var (gridIndices, tile) in tiles)

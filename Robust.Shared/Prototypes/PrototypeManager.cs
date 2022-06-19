@@ -156,6 +156,12 @@ namespace Robust.Shared.Prototypes
         void ResolveResults();
 
         /// <summary>
+        /// Reload the changes from LoadString
+        /// </summary>
+        /// <param name="prototypes">Changes from load string</param>
+        void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes);
+
+        /// <summary>
         ///     Registers a specific prototype name to be ignored.
         /// </summary>
         void RegisterIgnore(string name);
@@ -315,7 +321,7 @@ namespace Robust.Shared.Prototypes
 #endif
         }
 
-        internal void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
+        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
         {
 #if !FULL_RELEASE
             var prototypeTypeOrder = prototypes.Keys.ToList();

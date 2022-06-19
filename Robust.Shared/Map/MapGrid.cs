@@ -337,11 +337,11 @@ namespace Robust.Shared.Map
             // that way we can avoid the GetComp here.
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             // If we have 20.1 we want to include that tile but if we have 20 then we don't.
-            var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right - float.Epsilon), (int)Math.Floor(localArea.Top - float.Epsilon));
+            var gridTileRt = new Vector2i((int)Math.Ceiling(localArea.Right), (int)Math.Ceiling(localArea.Top));
 
-            for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
+            for (var x = gridTileLb.X; x < gridTileRt.X; x++)
             {
-                for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
+                for (var y = gridTileLb.Y; y < gridTileRt.Y; y++)
                 {
                     var gridChunk = GridTileToChunkIndices(new Vector2i(x, y));
 

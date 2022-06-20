@@ -36,7 +36,7 @@ public abstract partial class SharedTransformSystem
         xform._parent = newGrid.Owner;
         xform._anchored = true;
 
-        SetGridId(xform, newGrid.GridIndex, xformQuery);
+        SetGridId(xform, newGrid.Owner, xformQuery);
         var reParent = new EntParentChangedMessage(xform.Owner, oldGrid.Owner, xform.MapID, xform);
         RaiseLocalEvent(xform.Owner, ref reParent);
         // TODO: Ideally shouldn't need to call the moveevent
@@ -54,7 +54,6 @@ public abstract partial class SharedTransformSystem
         var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
         RaiseLocalEvent(xform.Owner, ref ev);
     }
-
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
     {
@@ -88,7 +87,7 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(TransformComponent xform)
     {
-        if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+        if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
         {
             return false;
         }
@@ -101,10 +100,10 @@ public abstract partial class SharedTransformSystem
     {
         //HACK: Client grid pivot causes this.
         //TODO: make grid components the actual grid
-        if(xform.GridID == GridId.Invalid)
+        if(xform.GridUid == null)
             return;
 
-        UnanchorEntity(xform, Comp<IMapGridComponent>(_mapManager.GetGridEuid(xform.GridID)));
+        UnanchorEntity(xform, Comp<IMapGridComponent>(xform.GridUid.Value));
     }
 
     public void UnanchorEntity(TransformComponent xform, IMapGridComponent grid)
@@ -213,7 +212,8 @@ public abstract partial class SharedTransformSystem
             xformQuery.GetComponent(component.ParentUid)._children.Add(uid);
         }
 
-        component.GridID = component.GetGridIndex(xformQuery);
+
+        SetGridId(component, component.FindGridEntityId(xformQuery));
         component.RebuildMatrices();
     }
 
@@ -244,22 +244,20 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
     /// </summary>
-    public void SetGridId(TransformComponent xform, GridId gridId)
+    public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
-        SetGridId(xform, gridId, GetEntityQuery<TransformComponent>());
+        if (xform._gridUid == gridId) return;
+
+
+        DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
+
+        xformQuery ??= GetEntityQuery<TransformComponent>();
+        SetGridIdRecursive(xform, gridId, xformQuery.Value);
     }
 
-    /// <inheritdoc cref="SetGridId"/> />
-    private void SetGridId(TransformComponent xform, GridId gridId, EntityQuery<TransformComponent> xformQuery)
+    private static void SetGridIdRecursive(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent> xformQuery)
     {
-        if (xform.GridID == gridId) return;
-
-        SetGridIdRecursive(xform, gridId, xformQuery);
-    }
-
-    private static void SetGridIdRecursive(TransformComponent xform, GridId gridId, EntityQuery<TransformComponent> xformQuery)
-    {
-        xform._gridId = gridId;
+        xform._gridUid = gridId;
         var childEnumerator = xform.ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))
@@ -414,7 +412,8 @@ public abstract partial class SharedTransformSystem
             // Anchored currently does a TryFindGridAt internally which may fail in particularly... violent situations.
             if (newState.Anchored && !component.Anchored)
             {
-                var iGrid = Comp<MapGridComponent>(_mapManager.GetGridEuid(component.GridID));
+                DebugTools.Assert(component.GridUid != null);
+                var iGrid = Comp<MapGridComponent>(component.GridUid!.Value);
                 AnchorEntity(component, iGrid);
                 DebugTools.Assert(component.Anchored);
             }

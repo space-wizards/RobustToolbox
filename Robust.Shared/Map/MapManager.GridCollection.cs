@@ -72,14 +72,17 @@ internal partial class MapManager
         return _grids[id];
     }
 
-    public bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)] out EntityUid euid)
+    public bool TryGetGridEuid(GridId id, [NotNullWhen(true)] out EntityUid? euid)
     {
         DebugTools.Assert(id != GridId.Invalid);
 
-        if (_grids.TryGetValue(id, out euid))
+        if (_grids.TryGetValue(id, out var result))
+        {
+            euid = result;
             return true;
+        }
 
-        euid = default;
+        euid = null;
         return false;
     }
 
@@ -157,7 +160,7 @@ internal partial class MapManager
         return EntityManager.HasComponent<IMapGridComponent>(uid);
     }
 
-    public bool TryGetGrid(EntityUid euid, [MaybeNullWhen(false)] out IMapGrid grid)
+    public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out IMapGrid grid)
     {
         if (EntityManager.TryGetComponent(euid, out IMapGridComponent? comp))
         {
@@ -193,9 +196,9 @@ internal partial class MapManager
         return gridId != GridId.Invalid && TryGetGridEuid(gridId, out var euid) && GridExists(euid);
     }
 
-    public bool GridExists(EntityUid euid)
+    public bool GridExists([NotNullWhen(true)] EntityUid? euid)
     {
-        return EntityManager.EntityExists(euid) && EntityManager.HasComponent<IMapGridComponent>(euid);
+        return EntityManager.HasComponent<IMapGridComponent>(euid);
     }
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)

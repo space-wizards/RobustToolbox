@@ -124,20 +124,25 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void RenderSingleOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
+            DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
+
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle.DrawingHandleWorld, new UIBox2i((0, 0), vp.Size), vp.Eye!.Position.MapId, worldBox, worldBounds);
+
+            if (!overlay.BeforeDraw(args))
+                return;
+
             if (overlay.RequestScreenTexture)
             {
                 FlushRenderQueue();
                 UpdateOverlayScreenTexture(space, vp.RenderTarget);
             }
 
-            if (overlay.OverwriteTargetFrameBuffer())
-            {
+            if (overlay.OverwriteTargetFrameBuffer)
                 ClearFramebuffer(default);
-            }
 
-            overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
+            overlay.Draw(args);
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -146,7 +151,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 foreach (var overlay in GetOverlaysForSpace(space))
                 {
-                    RenderSingleOverlay(overlay, vp, space, worldBox, worldBounds);
+                    RenderSingleWorldOverlay(overlay, vp, space, worldBox, worldBounds);
                 }
 
                 FlushRenderQueue();
@@ -292,7 +297,7 @@ namespace Robust.Client.Graphics.Clyde
                         flushed = true;
                     }
 
-                    RenderSingleOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
                 Vector2i roundedPos = default;
@@ -383,7 +388,7 @@ namespace Robust.Client.Graphics.Clyde
                     flushed = true;
                 }
 
-                RenderSingleOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                RenderSingleWorldOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
             ArrayPool<int>.Shared.Return(indexList);

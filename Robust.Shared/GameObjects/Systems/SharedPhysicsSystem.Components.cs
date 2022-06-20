@@ -135,11 +135,43 @@ public partial class SharedPhysicsSystem
         return bounds;
     }
 
-    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null)
+    public void RecursiveDestroyContacts(PhysicsComponent body, MapId? mapId = null)
+    {
+        var bodyQuery = GetEntityQuery<PhysicsComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        DestroyContacts(body, mapId, xformQuery.GetComponent(body.Owner));
+        DoDestroy(xformQuery.GetComponent(body.Owner), bodyQuery, xformQuery, mapId);
+    }
+
+    private void DoDestroy(
+        TransformComponent xform,
+        EntityQuery<PhysicsComponent> bodyQuery,
+        EntityQuery<TransformComponent> xformQuery,
+        MapId? mapId = null)
+    {
+
+        var childEnumerator = xform.ChildEnumerator;
+
+        while (childEnumerator.MoveNext(out var child))
+        {
+            var childXform = xformQuery.GetComponent(child.Value);
+
+            if (bodyQuery.TryGetComponent(child.Value, out var body))
+            {
+                DestroyContacts(body, mapId, childXform);
+            }
+
+            DoDestroy(childXform, bodyQuery, xformQuery, mapId);
+        }
+    }
+
+    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null, TransformComponent? xform = null)
     {
         if (body.Contacts.Count == 0) return;
 
-        mapId ??= Transform(body.Owner).MapID;
+        xform ??= Transform(body.Owner);
+        mapId ??= xform.MapID;
 
         if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
         {

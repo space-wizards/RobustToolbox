@@ -211,9 +211,9 @@ namespace Robust.Client.GameObjects
         /// </summary>
         RSI? LayerGetActualRSI(object layerKey);
 
-        ISpriteLayer this[int layer] { get; }
-        ISpriteLayer this[Index layer] { get; }
-        ISpriteLayer this[object layerKey] { get; }
+        SpriteComponent.Layer this[int layer] { get; }
+        SpriteComponent.Layer this[Index layer] { get; }
+        SpriteComponent.Layer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
 

@@ -36,5 +36,6 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <returns>Bounding box in sprite local-space coordinates.</returns>
         Box2 CalculateBoundingBox();
+        int GetDirectionCount();
     }
 }

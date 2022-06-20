@@ -370,7 +370,7 @@ public abstract partial class SharedTransformSystem
 #endif
                     }
 
-                    component.AttachParent(Transform(newParentId));
+                    component.Coordinates = new EntityCoordinates(newParentId, newState.LocalPosition);
                 }
 
                 rebuildMatrices = true;

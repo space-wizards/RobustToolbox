@@ -64,6 +64,9 @@ namespace Robust.Shared.GameObjects
         internal bool _mapIdInitialized;
 
         // TODO: Cache this.
+        /// <summary>
+        ///     The EntityUid of the map which this object is on, if any.
+        /// </summary>
         public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
 
         /// <summary>
@@ -72,32 +75,21 @@ namespace Robust.Shared.GameObjects
         public bool DeferUpdates { get; set; }
 
         /// <summary>
-        ///     Returns the index of the grid which this object is on
+        ///     The EntityUid of the grid which this object is on, if any.
         /// </summary>
         [ViewVariables]
+        public EntityUid? GridUid => _gridUid;
+
+        [Access(typeof(SharedTransformSystem))]
+        internal EntityUid? _gridUid = null;
+
+        [Obsolete("Use GridUid")]
         public GridId GridID
         {
-            get => _gridId;
-            internal set
-            {
-                if (_gridId.Equals(value)) return;
-
-                _gridId = value;
-                var childEnumerator = ChildEnumerator;
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-                while (childEnumerator.MoveNext(out var child))
-                {
-                    xformQuery.GetComponent(child.Value).GridID = value;
-                }
-            }
+            get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)
+                ? grid.GridIndex
+                : GridId.Invalid;
         }
-
-        internal GridId _gridId = GridId.Invalid;
-
-        // TODO: Cache this.
-        public EntityUid? GridUid => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : null;
-        public EntityUid GridEntityId => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : EntityUid.Invalid;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -357,7 +349,7 @@ namespace Robust.Shared.GameObjects
                     ChangeMapId(newParent.MapID, xformQuery);
 
                     // Cache new GridID before raising the event.
-                    GridID = GetGridIndex(xformQuery);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, FindGridEntityId(xformQuery), xformQuery);
 
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
@@ -516,24 +508,24 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
-        internal GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
+        internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
         {
             if (_entMan.HasComponent<IMapComponent>(Owner))
             {
-                return GridId.Invalid;
+                return null;
             }
 
             if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
             {
-                return gridComponent.GridIndex;
+                return Owner;
             }
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridID;
+                return xformQuery.GetComponent(_parent).GridUid;
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
         }
 
         /// <summary>
@@ -632,13 +624,10 @@ namespace Robust.Shared.GameObjects
             LerpParent = EntityUid.Invalid;
 
             // TODO: When ECSing this can just pass it into the anchor setter
-            if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
+            if (Anchored && _entMan.TryGetComponent(GridUid, out MetaDataComponent? meta))
             {
-                if (_entMan.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage <=
-                    EntityLifeStage.MapInitialized)
-                {
+                if (meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
                     Anchored = false;
-                }
             }
             else
             {
@@ -652,7 +641,8 @@ namespace Robust.Shared.GameObjects
             _parent = EntityUid.Invalid;
             var oldMap = MapID;
             MapID = MapId.Nullspace;
-            GridID = GridId.Invalid;
+            if (GridUid != null)
+                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, null);
 
             var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);

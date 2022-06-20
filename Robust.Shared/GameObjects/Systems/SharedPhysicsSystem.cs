@@ -146,7 +146,10 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)
         {
-            DestroyContacts(body, oldMapId);
+            // TODO: Could potentially migrate these but would need more thinking
+            // For now just recursively destroy them
+            RecursiveDestroyContacts(body, oldMapId);
+
             _joints.ClearJoints(body);
 
             // So if the map is being deleted it detaches all of its bodies to null soooo we have this fun check.

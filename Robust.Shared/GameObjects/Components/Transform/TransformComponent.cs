@@ -634,13 +634,15 @@ namespace Robust.Shared.GameObjects
                 DebugTools.Assert(!Anchored);
             }
 
-            var oldConcrete = _entMan.GetComponent<TransformComponent>(oldParent);
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+            var oldConcrete = xformQuery.GetComponent(oldParent);
             var uid = Owner;
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
             var oldMap = MapID;
-            MapID = MapId.Nullspace;
+            ChangeMapId(MapId.Nullspace, xformQuery);
+
             if (GridUid != null)
                 _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, null);
 

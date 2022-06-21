@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled), true);
                 Dirty();
             }
         }

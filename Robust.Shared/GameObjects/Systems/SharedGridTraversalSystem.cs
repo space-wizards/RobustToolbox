@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
                 {
                     xform.AttachParent(grid.GridEntityId);
                     var ev = new ChangedGridEvent(entity, xform.GridUid, grid.GridEntityId);
-                    RaiseLocalEvent(entity, ref ev);
+                    RaiseLocalEvent(entity, ref ev, true);
                 }
             }
             else
@@ -103,7 +103,7 @@ namespace Robust.Shared.GameObjects
                 {
                     xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
                     var ev = new ChangedGridEvent(entity, oldGridId, null);
-                    RaiseLocalEvent(entity, ref ev);
+                    RaiseLocalEvent(entity, ref ev, true);
                 }
             }
         }

@@ -102,7 +102,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender, ref ev);
+                    RaiseLocalEvent(ev.Sender, ref ev, true);
                 }
             }
         }

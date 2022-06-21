@@ -211,6 +211,7 @@ namespace Robust.Client.GameObjects
         ///     Should this entity show up in containers regardless of whether the container can show contents?
         /// </summary>
         [DataField("overrideContainerOcclusion")]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool OverrideContainerOcclusion;
 
         [ViewVariables(VVAccess.ReadWrite)]

@@ -207,6 +207,12 @@ namespace Robust.Client.GameObjects
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
+        /// <summary>
+        ///     Should this entity show up in containers regardless of whether the container can show contents?
+        /// </summary>
+        [DataField("overrideContainerOcclusion")]
+        public bool OverrideContainerOcclusion;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded
         {
@@ -214,6 +220,7 @@ namespace Robust.Client.GameObjects
             set
             {
                 if (_containerOccluded == value) return;
+                if (OverrideContainerOcclusion) return;
                 _containerOccluded = value;
                 entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }

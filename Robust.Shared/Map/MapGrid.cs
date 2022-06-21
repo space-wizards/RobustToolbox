@@ -422,7 +422,7 @@ namespace Robust.Shared.Map
 
             if (_chunks.Count == 0)
             {
-                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index});
+                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index}, true);
             }
         }
 

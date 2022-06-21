@@ -321,7 +321,7 @@ namespace Robust.Server.Physics
                     }
 
                     var eevee = new PostGridSplitEvent(mapGrid.GridEntityId, splitGrid.GridEntityId);
-                    RaiseLocalEvent(uid, ref eevee);
+                    RaiseLocalEvent(uid, ref eevee, true);
 
                     for (var j = 0; j < tileData.Count; j++)
                     {
@@ -351,7 +351,7 @@ namespace Robust.Server.Physics
 
                 // Allow content to react to the grid being split...
                 var ev = new GridSplitEvent(newGrids, mapGrid.Index);
-                RaiseLocalEvent(uid, ref ev);
+                RaiseLocalEvent(uid, ref ev, true);
 
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }

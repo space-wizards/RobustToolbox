@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Raise
             var evntArgs = new TestEvent(5);
-            bus.RaiseLocalEvent(entUid, evntArgs);
+            bus.RaiseLocalEvent(entUid, evntArgs, true);
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));
@@ -102,7 +102,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Raise
             var evntArgs = new TestEvent(5);
-            bus.RaiseLocalEvent(entUid, evntArgs);
+            bus.RaiseLocalEvent(entUid, evntArgs, true);
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(0));
@@ -233,7 +233,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Raise
             var evntArgs = new TestEvent(5);
-            bus.RaiseLocalEvent(entUid, evntArgs);
+            bus.RaiseLocalEvent(entUid, evntArgs, true);
 
             // Assert
             Assert.That(a, Is.True, "A did not fire");

@@ -38,21 +38,21 @@ public abstract partial class SharedTransformSystem
 
         SetGridId(xform, newGrid.Owner, xformQuery);
         var reParent = new EntParentChangedMessage(xform.Owner, oldGrid.Owner, xform.MapID, xform);
-        RaiseLocalEvent(xform.Owner, ref reParent);
+        RaiseLocalEvent(xform.Owner, ref reParent, true);
         // TODO: Ideally shouldn't need to call the moveevent
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
             new EntityCoordinates(newGrid.Owner, xform._localPosition),
             xform,
             _gameTiming.ApplyingState);
-        RaiseLocalEvent(xform.Owner, ref movEevee);
+        RaiseLocalEvent(xform.Owner, ref movEevee, true);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
         DebugTools.Assert(xform._anchored);
 
         Dirty(xform);
         var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
-        RaiseLocalEvent(xform.Owner, ref ev);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
     }
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
@@ -234,7 +234,7 @@ public abstract partial class SharedTransformSystem
         Dirty(component);
 
         var ev = new TransformStartupEvent(component);
-        RaiseLocalEvent(uid, ref ev);
+        RaiseLocalEvent(uid, ref ev, true);
     }
 
     #endregion
@@ -328,7 +328,7 @@ public abstract partial class SharedTransformSystem
         }
 
         xform.ActivelyLerping = true;
-        RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform));
+        RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform), true);
     }
 
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)

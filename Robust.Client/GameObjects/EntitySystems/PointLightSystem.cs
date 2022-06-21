@@ -20,7 +20,7 @@ namespace Robust.Client.GameObjects
         private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
         {
             UpdateMask(component);
-            RaiseLocalEvent(uid, new PointLightUpdateEvent());
+            RaiseLocalEvent(uid, new PointLightUpdateEvent(), true);
         }
 
         private void HandleRemove(EntityUid uid, PointLightComponent component, ComponentRemove args)

@@ -43,7 +43,7 @@ public sealed class ScaleCommand : IConsoleCommand
         // We'll just set engine stuff here
         var @event = new ScaleEntityEvent();
         var entManager = IoCManager.Resolve<IEntityManager>();
-        entManager.EventBus.RaiseLocalEvent(uid, ref @event);
+        entManager.EventBus.RaiseLocalEvent(uid, ref @event, true);
 
         if (entManager.TryGetComponent(uid, out AppearanceComponent? appearanceComponent))
         {

@@ -216,11 +216,10 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded
         {
-            get => _containerOccluded;
+            get => _containerOccluded || OverrideContainerOcclusion;
             set
             {
                 if (_containerOccluded == value) return;
-                if (OverrideContainerOcclusion) return;
                 _containerOccluded = value;
                 entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }

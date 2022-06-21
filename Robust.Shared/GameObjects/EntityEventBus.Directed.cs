@@ -170,7 +170,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast)
+        public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
             var type = typeof(TEvent);
@@ -180,7 +180,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseLocalEvent(EntityUid uid, object args, bool broadcast)
+        public void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false)
         {
             var type = args.GetType();
             ref var unitRef = ref Unsafe.As<object, Unit>(ref args);
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
             RaiseLocalEventCore(uid, ref unitRef, type, broadcast, false);
         }
 
-        public void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast)
+        public void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
             var type = typeof(TEvent);
@@ -197,7 +197,7 @@ namespace Robust.Shared.GameObjects
             RaiseLocalEventCore(uid, ref unitRef, type, broadcast, true);
         }
 
-        public void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast)
+        public void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false)
         {
             var type = args.GetType();
             ref var unitRef = ref Unsafe.As<object, Unit>(ref args);

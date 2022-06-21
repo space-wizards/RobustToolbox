@@ -590,7 +590,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Update <see cref="LayerDirections"/>
+        ///     This function calculates & sets <see cref="LayerDirections"/>
         /// </summary>
         private void UpdateLayerDirections()
         {
@@ -605,6 +605,8 @@ namespace Robust.Client.GameObjects
 
             if (_layerDirections != old && HasDirectionalSorting)
                 LayerOrderDirty = true;
+
+            _layerDirectionsDirty = false;
         }
 
         public void RemoveLayer(object layerKey)

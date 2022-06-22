@@ -217,7 +217,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded
         {
-            get => _containerOccluded || OverrideContainerOcclusion;
+            get => _containerOccluded && !OverrideContainerOcclusion;
             set
             {
                 if (_containerOccluded == value) return;

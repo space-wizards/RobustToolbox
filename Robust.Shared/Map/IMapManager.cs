@@ -182,8 +182,8 @@ namespace Robust.Shared.Map
         EntityUid GetGridEuid(GridId id);
         IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
-        bool TryGetGrid(EntityUid euid, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists(EntityUid euid);
+        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
+        bool GridExists([NotNullWhen(true)] EntityUid? euid);
 
         //
         // Pausing functions

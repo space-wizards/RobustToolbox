@@ -43,6 +43,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -145,7 +146,10 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)
         {
-            DestroyContacts(body, oldMapId);
+            // TODO: Could potentially migrate these but would need more thinking
+            // For now just recursively destroy them
+            RecursiveDestroyContacts(body, oldMapId);
+
             _joints.ClearJoints(body);
 
             // So if the map is being deleted it detaches all of its bodies to null soooo we have this fun check.
@@ -290,6 +294,8 @@ namespace Robust.Shared.GameObjects
             {
                 comp.ProcessQueue();
             }
+
+            _traversal.ProcessMovement();
 
             _physicsManager.ClearTransforms();
         }

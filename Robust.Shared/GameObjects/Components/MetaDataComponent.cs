@@ -153,7 +153,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value), true);
             }
         }
 

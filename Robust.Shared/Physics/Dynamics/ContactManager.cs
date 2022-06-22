@@ -293,8 +293,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB), true);
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA), true);
             }
 
             if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
@@ -497,8 +497,8 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyB = fixtureB.Body;
                         var worldPoint = Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new StartCollideEvent(fixtureA, fixtureB, worldPoint));
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new StartCollideEvent(fixtureB, fixtureA, worldPoint));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new StartCollideEvent(fixtureA, fixtureB, worldPoint), true);
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new StartCollideEvent(fixtureB, fixtureA, worldPoint), true);
                         break;
                     }
                     case ContactStatus.Touching:
@@ -515,8 +515,8 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyA = fixtureA.Body;
                         var bodyB = fixtureB.Body;
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB));
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB), true);
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA), true);
                         break;
                     }
                     case ContactStatus.NoContact:

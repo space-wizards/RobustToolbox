@@ -254,6 +254,7 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();

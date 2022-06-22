@@ -46,7 +46,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
-        var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
+        var gridDatums = new Dictionary<EntityUid, GameStateMapData.GridDatum>();
         var enumerator = GetAllGridsEnumerator();
 
         while (enumerator.MoveNext(out var iGrid))
@@ -94,14 +94,14 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                     new MapCoordinates(grid.WorldPosition, grid.ParentMapId),
                     grid.WorldRotation);
 
-            gridDatums.Add(grid.Index, gridDatum);
+            gridDatums.Add(grid.GridEntityId, gridDatum);
         }
 
         // no point sending empty collections
         if (gridDatums.Count == 0)
             return default;
 
-        return new GameStateMapData(gridDatums.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>());
+        return new GameStateMapData(gridDatums.ToArray<KeyValuePair<EntityUid, GameStateMapData.GridDatum>>());
     }
 
     public void CullDeletionHistory(GameTick upToTick)
@@ -143,28 +143,27 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                     else if (data != null && data.GridData != null && compChange.State is MapGridComponentState gridCompState)
                     {
                         var gridEuid = entityState.Uid;
-                        var gridId = gridCompState.GridIndex;
                         var chunkSize = gridCompState.ChunkSize;
 
                         // grid already exists from a previous state
-                        if(GridExists(gridId))
+                        if(GridExists(gridEuid))
                             continue;
 
-                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridId}.");
+                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
 
                         MapId gridMapId = default;
                         foreach (var kvData in data.GridData)
                         {
-                            if (kvData.Key != gridId)
+                            if (kvData.Key != gridEuid)
                                 continue;
 
                             gridMapId = kvData.Value.Coordinates.MapId;
                             break;
                         }
 
-                        DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
+                        DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridEuid}.");
 
-                        _newGrids.Add((gridMapId, gridEuid, gridId, chunkSize));
+                        _newGrids.Add((gridMapId, gridEuid, gridCompState.GridIndex, chunkSize));
                     }
                 }
             }

@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-            EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures});
+            EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
 
             CheckSplit(gridEuid, mapChunks, removedChunks);
         }
@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
             if (UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent))
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures}, true);
 
                 CheckSplit(gridEuid, chunk, rectangles);
             }

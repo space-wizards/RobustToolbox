@@ -70,7 +70,7 @@ namespace Robust.Server.GameObjects
 
                 // This detach cannot fail, as a player is attached to this entity.
                 // It's important to note that detaching the player removes the component.
-                RaiseLocalEvent(uid, new DetachPlayerEvent());
+                RaiseLocalEvent(uid, new DetachPlayerEvent(), true);
             }
 
             // We add the actor component.
@@ -79,7 +79,7 @@ namespace Robust.Server.GameObjects
             player.SetAttachedEntity(actor.Owner);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(actor.Owner, player, forceKicked));
+            RaiseLocalEvent(uid, new PlayerAttachedEvent(actor.Owner, player, forceKicked), true);
             return true;
         }
 
@@ -123,7 +123,7 @@ namespace Robust.Server.GameObjects
             component.PlayerSession.SetAttachedEntity(null);
 
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession));
+            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
         }
     }
 

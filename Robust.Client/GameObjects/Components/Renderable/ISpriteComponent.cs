@@ -71,7 +71,6 @@ namespace Robust.Client.GameObjects
         /// </summary>
         RSI? BaseRSI { get; set; }
 
-        ShaderInstance? PostShader { get; set; }
         uint RenderOrder { get; set; }
         bool IsInert { get; }
 

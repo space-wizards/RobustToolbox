@@ -234,7 +234,7 @@ namespace Robust.Client.GameObjects
         ///     Shader instance to use when drawing the final sprite to the world.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [Access(typeof(SpriteSystem))]
+        [Access(typeof(SpriteSystem), Other = AccessPermissions.ReadExecute)]
         public ShaderInstance? PostShader { get; set; }
 
         /// <summary>

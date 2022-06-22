@@ -36,7 +36,7 @@ public sealed partial class EntityEventBusTests
         simulation.Resolve<IEntityManager>().AddComponent<FooComponent>(entity);
 
         var foo = new FooEvent();
-        simulation.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(entity, foo);
+        simulation.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(entity, foo, true);
 
         Assert.That(foo.EventOrder, Is.EquivalentTo(new[]{"Foo", "Transform", "Metadata"}).Or.EquivalentTo(new[]{"Foo", "Metadata", "Transform"}));
     }

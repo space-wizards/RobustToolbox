@@ -137,7 +137,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
                 }
                 else
                 {
@@ -358,7 +358,7 @@ namespace Robust.Shared.GameObjects
                         LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -377,7 +377,7 @@ namespace Robust.Shared.GameObjects
                         if (!oldPosition.Equals(Coordinates))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this, _gameTiming.ApplyingState);
-                            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                         }
                     }
                 }
@@ -420,7 +420,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this, _gameTiming.ApplyingState);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
                 else
                 {
@@ -544,14 +544,14 @@ namespace Robust.Shared.GameObjects
             if (_oldCoords != null)
             {
                 var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
                 var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
                 _oldLocalRotation = null;
             }
         }
@@ -646,7 +646,7 @@ namespace Robust.Shared.GameObjects
                 _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, null);
 
             var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
@@ -857,7 +857,7 @@ namespace Robust.Shared.GameObjects
             if (issueEvent)
             {
                 var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent, true);
             }
         }
     }

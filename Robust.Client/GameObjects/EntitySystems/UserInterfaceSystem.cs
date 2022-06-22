@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects
             message.UiKey = ev.UiKey;
 
             // Raise as object so the correct type is used.
-            RaiseLocalEvent(uid, (object)message);
+            RaiseLocalEvent(uid, (object)message, true);
 
             cmp.MessageReceived(ev);
         }

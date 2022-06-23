@@ -10,9 +10,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 /// <summary>
 ///     Attempts to resolve a string into an enum. If it fails, it simply reads the string. Useful for both both sprite
-///     layer and appearance data key, which both simultaneously support enums and strings. 
+///     layer and appearance data keys, which both simultaneously support enums and strings. 
 /// </summary>
-public sealed class EnumStringSerializer : ITypeSerializer<object, ValueDataNode>
+public sealed class AppearanceKeySerializer : ITypeSerializer<object, ValueDataNode>
 {
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)

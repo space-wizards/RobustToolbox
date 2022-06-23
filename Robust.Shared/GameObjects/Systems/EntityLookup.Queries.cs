@@ -357,11 +357,15 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = Transform(uid).MapPosition;
+        var xform = Transform(uid);
+        var mapId = xform.MapID;
 
-        if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
+        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var intersecting = GetEntitiesIntersecting(mapPos, flags).ToHashSet();
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        var bounds = GetAABBNoContainer(uid, worldPos, worldRot);
+
+        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags).ToHashSet();
         intersecting.Remove(uid);
         return intersecting;
     }

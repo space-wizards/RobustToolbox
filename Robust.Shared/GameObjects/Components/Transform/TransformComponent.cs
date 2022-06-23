@@ -33,6 +33,8 @@ namespace Robust.Shared.GameObjects
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
+        // used for lerping
+
         internal Vector2? _nextPosition;
         internal Angle? _nextRotation;
 
@@ -409,9 +411,6 @@ namespace Robust.Shared.GameObjects
 
                 if (_localPosition.EqualsApprox(value))
                     return;
-
-                // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
-                _nextPosition = null;
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;

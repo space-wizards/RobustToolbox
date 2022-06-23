@@ -268,6 +268,21 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
+    #region Local Position
+
+    public void SetLocalPosition(EntityUid uid, Vector2 value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalPosition(xform, value);
+    }
+
+    public virtual void SetLocalPosition(TransformComponent xform, Vector2 value)
+    {
+        xform.LocalPosition = value;
+    }
+
+    #endregion
+
     #region Parent
 
     public TransformComponent? GetParent(EntityUid uid)
@@ -320,12 +335,10 @@ public abstract partial class SharedTransformSystem
 
     #region States
 
-    private void ActivateLerp(TransformComponent xform)
+    protected void ActivateLerp(TransformComponent xform)
     {
         if (xform.ActivelyLerping)
-        {
             return;
-        }
 
         xform.ActivelyLerping = true;
         RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform), true);
@@ -436,11 +449,16 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            // this should cause the lerp to do nothing
-            component._nextPosition = null;
-            component._nextRotation = null;
-            component.LerpParent = EntityUid.Invalid;
+            DeactivateLerp(component);
         }
+    }
+
+    private void DeactivateLerp(TransformComponent component)
+    {
+        // this should cause the lerp to do nothing
+        component._nextPosition = null;
+        component._nextRotation = null;
+        component.LerpParent = EntityUid.Invalid;
     }
 
     #endregion
@@ -514,10 +532,18 @@ public abstract partial class SharedTransformSystem
         return component.GetWorldPositionRotation(xformQuery);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {
         var xform = Transform(uid);
         SetWorldPosition(xform, worldPos);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPosition(EntityUid uid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    {
+        var component = xformQuery.GetComponent(uid);
+        SetWorldPosition(component, worldPos, xformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -531,14 +557,7 @@ public abstract partial class SharedTransformSystem
 
         // world coords to parent coords
         var newPos = component.Parent!.InvWorldMatrix.Transform(worldPos);
-        component.LocalPosition = newPos;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPosition(EntityUid uid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
-    {
-        var component = xformQuery.GetComponent(uid);
-        SetWorldPosition(component, worldPos, xformQuery);
+        SetLocalPosition(component, newPos);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -552,7 +571,7 @@ public abstract partial class SharedTransformSystem
 
         // world coords to parent coords
         var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
-        component.LocalPosition = newPos;
+        SetLocalPosition(component, newPos);
     }
 
     #endregion

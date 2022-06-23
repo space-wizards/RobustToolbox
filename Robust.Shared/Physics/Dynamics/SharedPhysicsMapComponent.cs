@@ -227,13 +227,17 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
-                if (seed.Island ||
-                    metaQuery.GetComponent(seed.Owner).EntityPaused && !seed.IgnorePaused)
+                if (seed.Island) continue;
+
+                if (!metaQuery.TryGetComponent(seed.Owner, out var metadata))
                 {
+                    Logger.ErrorS("physics", $"Found deleted entity {_entityManager.ToPrettyString(seed.Owner)} on map!");
+                    RemoveSleepBody(seed);
                     continue;
                 }
 
-                if (prediction && !seed.Predict ||
+                if ((metadata.EntityPaused && !seed.IgnorePaused) ||
+                    (prediction && !seed.Predict) ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static)
                 {

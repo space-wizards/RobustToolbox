@@ -67,6 +67,9 @@ internal partial class Clyde
                 case EventWheel ev:
                     ProcessEventWheel(ev);
                     break;
+                case EventMonitorSetup ev:
+                    ProcessSetupMonitor(ev);
+                    break;
                 default:
                     _sawmill.Error($"Unknown SDL2 event type: {evb.GetType().Name}");
                     break;

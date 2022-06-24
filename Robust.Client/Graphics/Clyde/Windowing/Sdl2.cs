@@ -5,9 +5,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using static SDL2.SDL;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -49,6 +46,7 @@ internal partial class Clyde
         {
             StoreCallbacks();
 
+            SDL_LogSetAllPriority(SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE);
             SDL_LogSetOutputFunction(_logOutputFunction!, IntPtr.Zero);
 
             SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
@@ -89,11 +87,6 @@ internal partial class Clyde
             // Not currently used
         }
 
-        public void UpdateMainWindowMode()
-        {
-            throw new NotImplementedException();
-        }
-
         public void GLMakeContextCurrent(WindowReg? reg)
         {
             int res;
@@ -106,8 +99,9 @@ internal partial class Clyde
                 _sawmill.Error("SDL_GL_MakeCurrent failed: {error}", SDL_GetError());
         }
 
-        public void GLSwapInterval(int interval)
+        public void GLSwapInterval(WindowReg reg, int interval)
         {
+            ((Sdl2WindowReg)reg).SwapInterval = interval;
             SDL_GL_SetSwapInterval(interval);
         }
 

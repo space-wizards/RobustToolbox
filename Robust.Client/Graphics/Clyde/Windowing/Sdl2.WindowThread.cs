@@ -36,9 +36,9 @@ internal partial class Clyde
                     continue; // Assume it's a transient failure?
                 }
 
-                while (SDL_PollEvent(out var ev) == 1)
+                while (SDL_PollEvent(out _) == 1)
                 {
-                    // ProcessSdl2Event(in ev);
+                    // We let callbacks process all events because of stuff like resizing.
                 }
 
                 while (_cmdReader.TryRead(out var cmd) && _windowingRunning)
@@ -101,6 +101,9 @@ internal partial class Clyde
                     WinThreadWinCursorSet(cmd);
                     break;
 
+                case CmdWinWinSetMode cmd:
+                    WinThreadWinSetMode(cmd);
+                    break;
             }
         }
 
@@ -140,7 +143,7 @@ internal partial class Clyde
             _eventWriter = eventChannel.Writer;
         }
 
-        private void SendCmd(CmdBase cmd)
+        private unsafe void SendCmd(CmdBase cmd)
         {
             _cmdWriter.TryWrite(cmd);
 
@@ -151,7 +154,8 @@ internal partial class Clyde
 
             // This can fail if the event queue is full.
             // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
-            _ = SDL_PushEvent(ref ev);
+            // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
+            SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
         }
 
         private void SendEvent(EventBase ev)
@@ -173,6 +177,7 @@ internal partial class Clyde
             GLContextSpec? GLSpec,
             WindowCreateParameters Parameters,
             nint ShareWindow,
+            nint ShareContext,
             nint OwnerWindow,
             TaskCompletionSource<Sdl2WindowCreateResult> Tcs
         ) : CmdBase;
@@ -223,11 +228,14 @@ internal partial class Clyde
             ClydeHandle Cursor
         ) : CmdBase;
 
-
         private sealed record CmdWinCursorSet(
             nint Window,
             ClydeHandle Cursor
         ) : CmdBase;
 
+        private sealed record CmdWinWinSetMode(
+            nint Window,
+            WindowMode Mode
+        ) : CmdBase;
     }
 }

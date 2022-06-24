@@ -53,6 +53,22 @@ internal partial class Clyde
                 case SDL_MOUSEWHEEL:
                     ProcessSdl2EventMouseWheel(ev.wheel);
                     break;
+                case SDL_DISPLAYEVENT:
+                    ProcessSdl2EventDisplay(ev.display);
+                    break;
+            }
+        }
+
+        private void ProcessSdl2EventDisplay(SDL_DisplayEvent evDisplay)
+        {
+            switch (evDisplay.displayEvent)
+            {
+                case SDL_DisplayEventID.SDL_DISPLAYEVENT_CONNECTED:
+                    WinThreadSetupMonitor((int) evDisplay.display);
+                    break;
+                case SDL_DisplayEventID.SDL_DISPLAYEVENT_DISCONNECTED:
+                    WinThreadDestroyMonitor((int) evDisplay.display);
+                    break;
             }
         }
 
@@ -166,6 +182,19 @@ internal partial class Clyde
         private record EventWindow(
             uint WindowId,
             SDL_WindowEventID EventId
+        ) : EventBase;
+
+        private record EventMonitorSetup
+        (
+            int Id,
+            string Name,
+            VideoMode CurrentMode,
+            VideoMode[] AllModes
+        ) : EventBase;
+
+        private record EventMonitorDestroy
+        (
+            int Id
         ) : EventBase;
     }
 }

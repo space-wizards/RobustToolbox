@@ -1869,6 +1869,14 @@ namespace SDL2
 			out int h
 		);
 
+        /* window refers to an SDL_Window* */
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SDL_GetWindowContentScale(
+            IntPtr window,
+            out float h,
+            out float v
+        );
+
 		/* IntPtr refers to an SDL_Surface*, window to an SDL_Window* */
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr SDL_GetWindowSurface(IntPtr window);
@@ -5445,6 +5453,15 @@ namespace SDL2
 			SDL_EventType minType,
 			SDL_EventType maxType
 		);
+
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern unsafe int SDL_PeepEvents(
+            SDL_Event* events,
+            int numevents,
+            SDL_eventaction action,
+            SDL_EventType minType,
+            SDL_EventType maxType
+        );
 
 		/* Checks to see if certain events are in the event queue */
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]

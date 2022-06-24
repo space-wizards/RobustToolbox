@@ -654,7 +654,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void GLSwapInterval(int interval)
+            public void GLSwapInterval(WindowReg reg, int interval)
             {
                 GLFW.SwapInterval(interval);
             }

@@ -34,7 +34,7 @@ internal partial class UserInterfaceManager
         };
         RootControl.AddChild(ScreenRoot);
         //This MUST be drawn before windowroot
-        ScreenRoot.SetPositionInParent(WindowRoot.GetPositionInParent()-1);
+        ScreenRoot.SetPositionInParent(2);
     }
 
     public void LoadScreen<T>() where T:UIScreen, new()

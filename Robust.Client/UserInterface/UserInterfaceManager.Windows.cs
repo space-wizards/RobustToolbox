@@ -47,6 +47,7 @@ internal partial class UserInterfaceManager
     {
         var newPopup = _typeFactory.CreateInstance<T>();
         _popupsByType.GetOrNew(typeof(T)).Enqueue(newPopup);
+        ModalRoot.AddChild(newPopup);
         return newPopup;
     }
 

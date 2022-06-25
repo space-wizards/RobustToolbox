@@ -370,6 +370,7 @@ namespace Robust.Shared.GameObjects
             {
                 DeleteEntity(e);
             }
+            DebugTools.Assert(Entities.Count == 0);
         }
 
         /// <summary>

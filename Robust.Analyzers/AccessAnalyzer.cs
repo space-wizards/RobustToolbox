@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
-using Robust.Shared.Analyzers;
+using Robust.Shared.Analyzers.Implementation;
 
 namespace Robust.Analyzers
 {

@@ -75,8 +75,8 @@ namespace Robust.Client.GameObjects
         protected internal override void Draw(in OverlayDrawArgs args)
         {
             var handle = args.WorldHandle;
-            var currentMap = _eyeManager.CurrentMap;
-            var viewport = _eyeManager.GetWorldViewbounds();
+            var currentMap = args.MapId;
+            var viewport = args.WorldBounds;
 
             foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
             {

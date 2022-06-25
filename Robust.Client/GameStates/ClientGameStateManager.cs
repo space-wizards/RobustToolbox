@@ -225,6 +225,9 @@ namespace Robust.Client.GameStates
                     using var _ = _timing.StartStateApplicationArea();
 
                     ResetPredictedEntities(_timing.CurTick);
+
+                    // I hate this..
+                    _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
                 }
 
                 using (_prof.Group("FullRep"))
@@ -296,7 +299,7 @@ namespace Robust.Client.GameStates
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
                 var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-                var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
+                var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
                 var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                                  (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 

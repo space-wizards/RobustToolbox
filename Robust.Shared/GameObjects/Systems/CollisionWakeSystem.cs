@@ -9,7 +9,6 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsInitializedEvent>(OnInit);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
@@ -70,7 +69,7 @@ namespace Robust.Shared.GameObjects
             UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
-        private void OnInit(EntityUid uid, CollisionWakeComponent component, ref PhysicsInitializedEvent args)
+        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
         {
             UpdateCanCollide(uid, component, checkTerminating: false);
         }
@@ -118,7 +117,7 @@ namespace Robust.Shared.GameObjects
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
             body.CanCollide = body.Awake ||
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
-                              xform.GridID == GridId.Invalid;
+                              xform.GridUid == null;
         }
     }
 }

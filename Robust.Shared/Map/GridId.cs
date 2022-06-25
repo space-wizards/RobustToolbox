@@ -78,19 +78,6 @@ namespace Robust.Shared.Map
             return IoCManager.Resolve<IMapManager>().GetGridEuid(self);
         }
 
-        /// <summary>
-        /// <see cref="GridId"/> is an alias of the <see cref="EntityUid"/> that
-        /// holds the <see cref="IMapGridComponent"/>.
-        /// </summary>
-        public static implicit operator GridId(EntityUid euid)
-        {
-            // If this throws, you are using an EntityUid that isn't a grid.
-            // This would raise the question, "Why does your code think this entity is a grid?".
-            // Grid-ness is defined by the entity having an IMapGridComponent,
-            // was the component removed without you knowing?
-            return IoCManager.Resolve<IMapManager>().GetGridComp(euid).GridIndex;
-        }
-
         public override string ToString()
         {
             return Value.ToString();

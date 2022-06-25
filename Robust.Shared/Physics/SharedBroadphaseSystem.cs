@@ -394,15 +394,51 @@ namespace Robust.Shared.Physics
             if (!Resolve(body.Owner, ref manager, ref xform) ||
                 _mapManager.IsGrid(body.Owner)) return;
 
-            var oldBroadphase = body.Broadphase;
-            var newBroadphase = GetBroadphase(xform);
+            var bodyQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var childEnumerator = xform.ChildEnumerator;
 
-            if (oldBroadphase == newBroadphase) return;
+            while (childEnumerator.MoveNext(out var child))
+            {
+                RecursiveBroadphaseUpdate(child.Value, bodyQuery, fixturesQuery, xformQuery);
+            }
 
-            DestroyProxies(body, manager);
+            UpdateBodyBroadphase(body, manager, xform);
+        }
 
-            // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
-            CreateProxies(body, manager);
+        private void RecursiveBroadphaseUpdate(EntityUid uid, EntityQuery<PhysicsComponent> bodyQuery, EntityQuery<FixturesComponent> fixturesQuery, EntityQuery<TransformComponent> xformQuery)
+        {
+            var xform = xformQuery.GetComponent(uid);
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                RecursiveBroadphaseUpdate(child.Value, bodyQuery, fixturesQuery, xformQuery);
+            }
+
+            if (bodyQuery.TryGetComponent(uid, out var body) &&
+                fixturesQuery.TryGetComponent(uid, out var manager))
+            {
+                UpdateBodyBroadphase(body, manager, xform);
+            }
+        }
+
+        private void UpdateBodyBroadphase(PhysicsComponent body, FixturesComponent manager, TransformComponent xform)
+        {
+            if (body._canCollide)
+            {
+                // oldBroadphase may be null if they were previously in nullspace (e.g. via PVS).
+                var oldBroadphase = body.Broadphase;
+                var newBroadphase = GetBroadphase(xform);
+
+                if (oldBroadphase == newBroadphase) return;
+
+                DestroyProxies(body, manager);
+
+                // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
+                CreateProxies(body, manager);
+            }
         }
 
         /// <summary>

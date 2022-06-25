@@ -27,37 +27,37 @@ namespace Robust.Shared.GameObjects
         private void OnMapAdded(EntityUid uid, MapComponent component, ComponentInit args)
         {
             var msg = new MapChangedEvent(component.WorldMap, true);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
             var msg = new MapChangedEvent(component.WorldMap, false);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
             var msg = new GridInitializeEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
             var msg = new GridStartupEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex));
+            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
             MapManager.OnComponentRemoved(component);
         }
     }

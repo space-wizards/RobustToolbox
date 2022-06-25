@@ -48,7 +48,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
             }
         }
 
@@ -169,11 +169,12 @@ namespace Robust.Client.GameObjects
             get => _baseRsi;
             set
             {
+                if (value == _baseRsi)
+                    return;
+
                 _baseRsi = value;
                 if (value == null)
-                {
                     return;
-                }
 
                 for (var i = 0; i < Layers.Count; i++)
                 {
@@ -182,6 +183,8 @@ namespace Robust.Client.GameObjects
                     {
                         continue;
                     }
+
+                    layer.UpdateActualState();
 
                     if (value.TryGetState(layer.State, out var state))
                     {
@@ -204,15 +207,22 @@ namespace Robust.Client.GameObjects
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
+        /// <summary>
+        ///     Should this entity show up in containers regardless of whether the container can show contents?
+        /// </summary>
+        [DataField("overrideContainerOcclusion")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool OverrideContainerOcclusion;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded
         {
-            get => _containerOccluded;
+            get => _containerOccluded && !OverrideContainerOcclusion;
             set
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
             }
         }
 
@@ -1587,7 +1597,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
         }
 
         /// <summary>
@@ -1624,11 +1634,40 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
-            [ViewVariables] public RSI? RSI;
-            [ViewVariables] public RSI.StateId State;
+            private RSI? _rsi;
+            [ViewVariables] public RSI? RSI
+            {
+                get => _rsi;
+                set
+                {
+                    if (_rsi == value)
+                        return;
+
+                    _rsi = value;
+                    UpdateActualState();
+                }
+            }
+
+            private RSI.StateId _state;
+            [ViewVariables] public RSI.StateId State
+            {
+                get => _state;
+                set
+                {
+                    if (_state == value)
+                        return;
+
+                    _state = value;
+                    UpdateActualState();
+                }
+            }
+
             [ViewVariables] public float AnimationTimeLeft;
             [ViewVariables] public float AnimationTime;
             [ViewVariables] public int AnimationFrame;
+
+            private RSI.State? _actualState;
+            [ViewVariables] public RSI.State? ActualState => _actualState;
 
             public Matrix3 LocalMatrix = Matrix3.Identity;
 
@@ -1969,13 +2008,11 @@ namespace Robust.Client.GameObjects
                     return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
                 }
 
-                var rsiState = GetActualState();
-
                 var longestSide = MathF.Max(textureSize.X, textureSize.Y);
                 var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
 
                 // Build the bounding box based on how many directions the sprite has
-                var box = (_rotation != 0, rsiState) switch
+                var box = (_rotation != 0, _actualState) switch
                 {
                     // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
                     // any possible rotation.
@@ -1994,19 +2031,23 @@ namespace Robust.Client.GameObjects
                 return _scale == Vector2.One ? box : box.Scale(_scale);
             }
 
-            internal RSI.State? GetActualState()
+            /// <summary>
+            ///     Update Cached RSI state. State is cached to avoid calling this every time an entity gets drawn.
+            /// </summary>
+            internal void UpdateActualState()
             {
                 if (!State.IsValid)
-                    return null;
+                {
+                    _actualState = null;
+                    return;
+                }
 
                 // Pull texture from RSI state
                 var rsi = RSI ?? _parent.BaseRSI;
-                if (rsi == null || !rsi.TryGetState(State, out var rsiState))
+                if (rsi == null || !rsi.TryGetState(State, out _actualState))
                 {
-                    rsiState = GetFallbackState(_parent.resourceCache);
+                    _actualState = GetFallbackState(_parent.resourceCache);
                 }
-
-                return rsiState;
             }
 
             /// <summary>
@@ -2041,11 +2082,9 @@ namespace Robust.Client.GameObjects
                 if (!Visible || Blank)
                     return;
 
-                var rsiState = GetActualState();
-
-                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
+                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
                     ? RSIDirection.South
-                    : angle.ToRsiDirection(rsiState.Directions);
+                    : angle.ToRsiDirection(_actualState.Directions);
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
@@ -2054,12 +2093,12 @@ namespace Robust.Client.GameObjects
 
                 // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
                 // due to direction overrides or offsets.
-                if (overrideDirection != null && rsiState != null)
-                    dir = overrideDirection.Value.Convert(rsiState.Directions);
+                if (overrideDirection != null && _actualState != null)
+                    dir = overrideDirection.Value.Convert(_actualState.Directions);
                 dir = dir.OffsetRsiDir(DirOffset);
 
                 // Get the correct directional texture from the state, and draw it!
-                var texture = GetRenderTexture(rsiState, dir);
+                var texture = GetRenderTexture(_actualState, dir);
                 RenderTexture(drawingHandle, texture);
             }
 
@@ -2069,10 +2108,8 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(Shader);
 
                 var layerColor = _parent.color * Color;
-
-                var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter);
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(position, textureSize);
+                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 
                 drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 
@@ -2168,12 +2205,17 @@ namespace Robust.Client.GameObjects
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
             EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
 
-            var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {
+                if (!layer.Visible) continue;
+
                 if (layer.Texture != null)
+                {
                     results.Add(layer.Texture);
-                if (!layer.RsiState.IsValid || !layer.Visible) continue;
+                    continue;
+                }
+
+                if (!layer.RsiState.IsValid) continue;
 
                 var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
                 if (rsi == null ||
@@ -2181,15 +2223,15 @@ namespace Robust.Client.GameObjects
                     continue;
 
                 results.Add(state);
-                anyTexture = true;
             }
 
             noRot = spriteComponent.NoRotation;
 
             entityManager.DeleteEntity(dummy);
 
-            if (!anyTexture)
+            if (results.Count == 0)
                 results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+
             return results;
         }
 

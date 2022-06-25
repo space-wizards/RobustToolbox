@@ -115,12 +115,12 @@ namespace Robust.Shared.Containers
 
             //raise events
             var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
-            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent, true);
             if (insertAttemptEvent.Cancelled)
                 return false;
 
             var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
-            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent, true);
             if (gettingInsertedAttemptEvent.Cancelled)
                 return false;
 
@@ -169,12 +169,12 @@ namespace Robust.Shared.Containers
 
             //raise events
             var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
-            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent, true);
             if (removeAttemptEvent.Cancelled)
                 return false;
 
             var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
-            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent, true);
             if (gettingRemovedAttemptEvent.Cancelled)
                 return false;
 
@@ -203,7 +203,7 @@ namespace Robust.Shared.Containers
 
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
             meta.Flags |= MetaDataFlags.InContainer;
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this), true);
             Manager.Dirty(entMan);
         }
 
@@ -222,7 +222,7 @@ namespace Robust.Shared.Containers
 
             meta ??= entMan.GetComponent<MetaDataComponent>(toremove);
             meta.Flags &= ~MetaDataFlags.InContainer;
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this), true);
             Manager.Dirty(entMan);
         }
     }

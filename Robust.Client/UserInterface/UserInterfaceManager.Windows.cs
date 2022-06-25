@@ -6,15 +6,88 @@ using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
 internal partial class UserInterfaceManager
 {
-    private readonly Dictionary<string, BaseWindow> _windowData = new();
+    private readonly Dictionary<string, BaseWindow> _namedWindows = new();
     private readonly Dictionary<Type, Queue<BaseWindow>> _windowsByType = new();
     private readonly Dictionary<string, (IClydeWindow, WindowRoot)> _popoutWindows = new ();
+    private readonly Dictionary<string, Popup> _namedPopups = new();
+    private readonly Dictionary<Type, Queue<Popup>> _popupsByType = new();
+
+    public bool TryGetNamedPopup(string popupName, out Popup? popup)
+    {
+        return _namedPopups.TryGetValue(popupName,out popup);
+    }
+
+    public Popup GetNamedPopup(string popupName)
+    {
+        return _namedPopups[popupName];
+    }
+
+    public bool RemoveNamedPopup(string popupName)
+    {
+        return _namedPopups.Remove(popupName);
+    }
+
+    public bool RegisterNamedPopup(string popupName, Popup popup)
+    {
+        return _namedPopups.TryAdd(popupName, popup);
+    }
+
+    public T CreatePopupOfType<T>() where T : Popup, new()
+    {
+        var newPopup = _typeFactory.CreateInstance<T>();
+        _popupsByType.GetOrNew(typeof(T)).Enqueue(newPopup);
+        return newPopup;
+    }
+
+    public T? CreateNamedPopup<T>(string popupName, Vector2 position) where T : Popup, new()
+    {
+        if (_namedPopups.ContainsKey(popupName)) return null;
+        var popup = CreatePopupOfType<T>();
+        popup.Name = popupName;
+        _uiManager.StateRoot.AddChild(popup);
+        popup.Position = position;
+        _namedPopups.Add(popupName, popup);
+        return popup;
+    }
+
+    public bool RemoveFirstPopupOfType<T>() where T : Popup, new()
+    {
+        if (!_popupsByType.TryGetValue(typeof(T),out var popupQueue)) return false;
+        var oldPopup = popupQueue.Dequeue();
+        if (popupQueue.Count == 0)
+        {
+            _popupsByType.Remove(typeof(T));
+        }
+        _uiManager.StateRoot.RemoveChild(oldPopup);
+        oldPopup.Dispose();
+        return true;
+    }
+    public bool TryGetFirstPopupByType<T>(out T? popup) where T : Popup, new()
+    {
+        popup = null;
+        var success =  _popupsByType.TryGetValue(typeof(T), out var win);
+        if (win is {Count: > 0})
+        {
+            popup = (T)win.Peek();
+        }
+        return success;
+    }
+
+    public bool TryGetFirstPopupByType(Type type, out Popup? popup)
+    {
+        popup = null;
+        if (!typeof(Popup).IsAssignableFrom(type)) return false;
+        if (!_popupsByType.TryGetValue(type, out var popupQueue) || popupQueue.Count == 0) return false;
+        popup = popupQueue.Peek();
+        return true;
+    }
 
     public bool TryGetPopupWindow(string windowName, out WindowRoot? window)
     {
@@ -66,25 +139,47 @@ internal partial class UserInterfaceManager
 
     public bool RegisterNamedWindow(string name, BaseWindow window)
     {
-        if (_windowData.ContainsKey(name)) return false;
+        if (_namedWindows.ContainsKey(name)) return false;
         if (!_windowsByType.ContainsKey(window.GetType()))
         {
             RegisterWindowOfType(window);
         }
-        _windowData[name] = window;
+        _namedWindows[name] = window;
         _uiManager.StateRoot.AddChild(window);
         return true;
     }
 
+    public BaseWindow GetNamedWindow(string name)
+    {
+        return _namedWindows[name];
+    }
+
+    public bool TryGetNamedWindow(string name, out BaseWindow? window)
+    {
+        return _namedWindows.TryGetValue(name, out window);
+    }
+
     public T? CreateNamedWindow<T>(string name) where T : BaseWindow, new()
     {
-        if (_windowData.ContainsKey(name)) return null;
-        var newWindow = !_windowsByType.ContainsKey(typeof(T)) ? CreateWindowOfType<T>() : _typeFactory.CreateInstance<T>();
-        if (newWindow != null) _uiManager.StateRoot.AddChild(newWindow);
+        if (_namedWindows.ContainsKey(name)) return null;
+        var newWindow = CreateWindowOfType<T>();
+        newWindow.Name = name;
+        _uiManager.StateRoot.AddChild(newWindow);
+
+        if (_windowsByType.TryGetValue(typeof(T), out var queue))
+        {
+            queue.Enqueue(newWindow!);
+        }
+        else
+        {
+            queue = new Queue<BaseWindow>();
+            queue.Enqueue(newWindow!);
+            _windowsByType.Add(typeof(T),queue);
+        }
         return newWindow;
     }
 
-    public bool RemoveWindowOfType<T>() where T : BaseWindow, new()
+    public bool RemoveFirstWindowOfType<T>() where T : BaseWindow, new()
     {
         if (!_windowsByType.TryGetValue(typeof(T),out var windowQueue)) return false;
         var oldWindow = windowQueue.Dequeue();
@@ -96,10 +191,9 @@ internal partial class UserInterfaceManager
         oldWindow.Dispose();
         return true;
     }
-
     public bool RemoveNamedWindow(string name)
     {
-        if (!_windowData.TryGetValue(name, out var foundWindow)) return false;
+        if (!_namedWindows.TryGetValue(name, out var foundWindow)) return false;
         var windowType = foundWindow.GetType();
         if (_windowsByType.TryGetValue(windowType, out var foundSingleWindow))
         {
@@ -109,7 +203,7 @@ internal partial class UserInterfaceManager
                 _windowsByType.Remove(windowType);
             }
         }
-        _windowData.Remove(name);
+        _namedWindows.Remove(name);
         _uiManager.StateRoot.RemoveChild(foundWindow);
         foundWindow.Dispose();
         return true;
@@ -122,9 +216,8 @@ internal partial class UserInterfaceManager
         return (T)windowQueue.Peek();
     }
 
-    public T? CreateWindowOfType<T>() where T : BaseWindow, new()
+    public T CreateWindowOfType<T>() where T : BaseWindow, new()
     {
-        if (_windowsByType.ContainsKey(typeof(T))) return null;
         var newWindow = _typeFactory.CreateInstance<T>();
         _windowsByType.GetOrNew(typeof(T)).Enqueue(newWindow);
         return newWindow;
@@ -136,7 +229,7 @@ internal partial class UserInterfaceManager
         _windowsByType.GetOrNew(window.GetType()).Enqueue(window);
     }
 
-    public bool TryGetWindowByType<T>(out T? window) where T : BaseWindow, new()
+    public bool TryGetFirstWindowByType<T>(out T? window) where T : BaseWindow, new()
     {
         window = null;
         var success =  _windowsByType.TryGetValue(typeof(T), out var win);
@@ -147,7 +240,7 @@ internal partial class UserInterfaceManager
         return success;
     }
 
-    public bool TryGetWindowByType(Type type, out BaseWindow? window)
+    public bool TryGetFirstWindowByType(Type type, out BaseWindow? window)
     {
         window = null;
         if (!typeof(BaseWindow).IsAssignableFrom(type)) return false;
@@ -168,7 +261,7 @@ internal partial class UserInterfaceManager
             data.Value.Dequeue().Dispose();
         }
         _windowsByType.Clear();
-        _windowData.Clear();
+        _namedWindows.Clear();
         foreach (var (_, value) in _popoutWindows)
         {
             value.Item2.Dispose();

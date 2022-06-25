@@ -31,7 +31,11 @@ internal partial class UserInterfaceManager
 
     public bool RemoveNamedPopup(string popupName)
     {
-        return _namedPopups.Remove(popupName);
+        if(!_namedPopups.TryGetValue(popupName, out var popup)) return false;
+        popup.Close();
+        _namedPopups.Remove(popupName);
+        popup.Dispose();
+        return true;
     }
 
     public bool RegisterNamedPopup(string popupName, Popup popup)
@@ -51,7 +55,6 @@ internal partial class UserInterfaceManager
         if (_namedPopups.ContainsKey(popupName)) return null;
         var popup = CreatePopupOfType<T>();
         popup.Name = popupName;
-        _uiManager.StateRoot.AddChild(popup);
         popup.Position = position;
         _namedPopups.Add(popupName, popup);
         return popup;
@@ -65,7 +68,7 @@ internal partial class UserInterfaceManager
         {
             _popupsByType.Remove(typeof(T));
         }
-        _uiManager.StateRoot.RemoveChild(oldPopup);
+        oldPopup.Close();
         oldPopup.Dispose();
         return true;
     }

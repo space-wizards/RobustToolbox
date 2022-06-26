@@ -654,6 +654,8 @@ namespace Robust.Client.GameObjects
                     {
                         // Always use south because this layer will be cached in the serializer.
                         layer.AnimationTimeLeft = state.GetDelay(0);
+                        layer.AnimationTime = 0;
+                        layer.AnimationFrame = 0;
                     }
                     else
                     {

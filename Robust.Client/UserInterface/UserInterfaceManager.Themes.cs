@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Themes;
 using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Prototypes;
 
 namespace Robust.Client.UserInterface;
 
@@ -51,7 +47,7 @@ internal partial class UserInterfaceManager
             return;
         }
         DefaultTheme = theme;
-        CurrentTheme = theme;
+        UpdateTheme(theme);
         _defaultOverriden = true;
     }
 

@@ -33,6 +33,7 @@ namespace Robust.Client.UserInterface
         /// happens. When focus is lost on a control, it always fires Control.ControlFocusExited.
         /// </summary>
         Control? ControlFocused { get; set; }
+        public void PostInitialize();
 
         ViewportContainer MainViewport { get; }
 

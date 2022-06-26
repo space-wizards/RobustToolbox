@@ -144,6 +144,7 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _userInterfaceManager.PostInitialize();
 
             if (_commandLineArgs?.Username != null)
             {

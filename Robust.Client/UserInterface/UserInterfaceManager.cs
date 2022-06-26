@@ -109,9 +109,12 @@ namespace Robust.Client.UserInterface
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _stateManager.OnStateChanged += OnStateUpdated;
             _initThemes();
+
+        }
+        public void PostInitialize()
+        {
             _initializeScreens();
         }
-
         private void _initializeCommon()
         {
             RootControl = CreateWindowRoot(_clyde.MainWindow);

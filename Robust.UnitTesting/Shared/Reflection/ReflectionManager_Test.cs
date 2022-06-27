@@ -86,12 +86,17 @@ namespace Robust.UnitTesting.Shared.Reflection
             reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType1.Value", out var out1);
             reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType2.InnerValue", out var out2);
             reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType3.OuterValue", out var out3);
+            reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceTypeClass+TestParseEnumReferenceType2.InnerValue", out var out4);
             Assert.Multiple(() =>
             {
                 Assert.That(out1, Is.EqualTo(TestParseEnumReferenceType1.Value));
                 Assert.That(out2, Is.EqualTo(TestParseEnumReferenceTypeClass.TestParseEnumReferenceType2.InnerValue));
                 Assert.That(out3, Is.EqualTo(TestParseEnumReferenceType3.OuterValue));
+                Assert.That(out4, Is.EqualTo(TestParseEnumReferenceTypeClass.TestParseEnumReferenceType2.InnerValue));
             });
+
+
+
         }
     }
 

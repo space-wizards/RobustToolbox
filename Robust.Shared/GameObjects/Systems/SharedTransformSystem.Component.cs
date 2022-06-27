@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -220,7 +221,7 @@ public abstract partial class SharedTransformSystem
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // Re-Anchor the entity if needed.
-        if (component._anchored && _mapManager.TryFindGridAt(component.MapPosition, out var grid))
+        if (component._anchored && _mapManager.IsGrid(component.ParentUid) && _mapManager.TryGetGrid(component.GridUid, out var grid))
         {
             if (!grid.IsAnchored(component.Coordinates, uid))
             {
@@ -234,7 +235,7 @@ public abstract partial class SharedTransformSystem
         Dirty(component);
 
         var ev = new TransformStartupEvent(component);
-        RaiseLocalEvent(uid, ref ev, true);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     #endregion
@@ -419,7 +420,8 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-                component.Anchored = newState.Anchored;
+                if (component.Anchored != newState.Anchored)
+                    component.Anchored = newState.Anchored;
             }
 
             component._noLocalRotation = newState.NoLocalRotation;

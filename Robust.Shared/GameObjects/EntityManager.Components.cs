@@ -1180,6 +1180,17 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (uid == null)
+            {
+                component = default;
+                return false;
+            }
+            else
+                return TryGetComponent(uid.Value, out component);
+        }
+
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)

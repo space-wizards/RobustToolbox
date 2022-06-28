@@ -150,7 +150,6 @@ public partial class SharedPhysicsSystem
         EntityQuery<TransformComponent> xformQuery,
         MapId? mapId = null)
     {
-
         var childEnumerator = xform.ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))

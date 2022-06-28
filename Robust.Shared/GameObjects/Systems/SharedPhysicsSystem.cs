@@ -150,6 +150,9 @@ namespace Robust.Shared.GameObjects
             // For now just recursively destroy them
             RecursiveDestroyContacts(body, oldMapId);
 
+            // Remove our old movebuffer
+            _broadphase.RemoveFromMoveBuffer(body, oldMapId);
+
             _joints.ClearJoints(body);
 
             // So if the map is being deleted it detaches all of its bodies to null soooo we have this fun check.
@@ -179,8 +182,6 @@ namespace Robust.Shared.GameObjects
             }
 
             if (xform.ChildCount == 0 ||
-                (oldMap == null && map == null) ||
-                MapManager.IsGrid(body.Owner) ||
                 MapManager.IsMap(body.Owner)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
@@ -205,6 +206,7 @@ namespace Robust.Shared.GameObjects
                     !xformQuery.TryGetComponent(child.Value, out var childXform) ||
                     metaQuery.GetComponent(child.Value).EntityLifeStage == EntityLifeStage.Deleted) continue;
 
+                _broadphase.RemoveFromMoveBuffer(childBody, oldMap);
                 DestroyContacts(childBody, oldMap);
                 _joints.ClearJoints(childBody);
                 RecursiveMapUpdate(childXform, oldMap, xformQuery, bodyQuery, metaQuery);

@@ -2,6 +2,7 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Robust.UnitTesting.Shared.Reflection
 {
@@ -77,9 +78,36 @@ namespace Robust.UnitTesting.Shared.Reflection
                 Assert.That(reflectionManager.GetType("Shared.Reflection.ITestGetType3"), Is.EqualTo(typeof(ITestGetType3)));
             });
         }
+
+        [Test]
+        public void ReflectionManager_TestTryParseEnumReference()
+        {
+            IReflectionManager reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType1.Value", out var out1);
+            reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType2.InnerValue", out var out2);
+            reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceType3.OuterValue", out var out3);
+            reflectionManager.TryParseEnumReference("enum.TestParseEnumReferenceTypeClass+TestParseEnumReferenceType2.InnerValue", out var out4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(out1, Is.EqualTo(TestParseEnumReferenceType1.Value));
+                Assert.That(out2, Is.EqualTo(TestParseEnumReferenceTypeClass.TestParseEnumReferenceType2.InnerValue));
+                Assert.That(out3, Is.EqualTo(TestParseEnumReferenceType3.OuterValue));
+                Assert.That(out4, Is.EqualTo(TestParseEnumReferenceTypeClass.TestParseEnumReferenceType2.InnerValue));
+            });
+        }
     }
 
     public sealed class TestGetType1 { }
     public abstract class TestGetType2 { }
     public interface ITestGetType3 { }
+
+    public enum TestParseEnumReferenceType1 { Value }
+
+    [UsedImplicitly]
+    public sealed class TestParseEnumReferenceTypeClass
+    {
+        public enum TestParseEnumReferenceType2 { InnerValue }
+    }
 }
+
+public enum TestParseEnumReferenceType3 { OuterValue }

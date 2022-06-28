@@ -94,9 +94,6 @@ namespace Robust.UnitTesting.Shared.Reflection
                 Assert.That(out3, Is.EqualTo(TestParseEnumReferenceType3.OuterValue));
                 Assert.That(out4, Is.EqualTo(TestParseEnumReferenceTypeClass.TestParseEnumReferenceType2.InnerValue));
             });
-
-
-
         }
     }
 

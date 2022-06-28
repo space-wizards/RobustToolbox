@@ -676,6 +676,19 @@ namespace Robust.Shared.Physics
             _moveBuffer[mapId][proxy] = aabb;
         }
 
+        public void RemoveFromMoveBuffer(PhysicsComponent body, MapId mapId)
+        {
+            if (!TryComp<FixturesComponent>(body.Owner, out var manager) || !_moveBuffer.TryGetValue(mapId, out var buffer)) return;
+
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    buffer.Remove(fixture.Proxies[i]);
+                }
+            }
+        }
+
         /// <summary>
         /// Get broadphase proxies from the body's fixtures and add them to the relevant broadphase.
         /// </summary>

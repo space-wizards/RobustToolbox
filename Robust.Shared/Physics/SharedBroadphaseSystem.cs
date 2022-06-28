@@ -339,7 +339,14 @@ namespace Robust.Shared.Physics
 
             // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
             Box2 aabb;
-            var proxyBroad = proxyBody.Broadphase!;
+            var proxyBroad = proxyBody.Broadphase;
+
+            if (proxyBroad == null)
+            {
+                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
+                DebugTools.Assert(false);
+                return;
+            }
 
             // If it's the same broadphase as our body's one then don't need to translate the AABB.
             if (proxyBroad.Owner == broadphase)

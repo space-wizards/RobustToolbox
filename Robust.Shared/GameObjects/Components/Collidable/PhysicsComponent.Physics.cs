@@ -316,6 +316,11 @@ namespace Robust.Shared.GameObjects
                 if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
                     .IsEntityOrParentInContainer(Owner)) return;
 
+                if (!value)
+                {
+                    Awake = false;
+                }
+
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
                 _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);

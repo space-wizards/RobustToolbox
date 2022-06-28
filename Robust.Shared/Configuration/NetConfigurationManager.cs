@@ -81,6 +81,8 @@ namespace Robust.Shared.Configuration
         private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
         private readonly List<MsgConVars> _netVarsMessages = new();
 
+        private ISawmill _sawmill = default!;
+
         public event EventHandler? ReceivedInitialNwVars;
         private bool _receivedInitialNwVars;
 
@@ -97,6 +99,9 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public void SetupNetworking()
         {
+            _sawmill = Logger.GetSawmill("cfg");
+            _sawmill.Level = LogLevel.Info;
+
             if(_isServer)
             {
                 _netManager.Connected += PeerConnected;
@@ -164,7 +169,7 @@ namespace Robust.Shared.Configuration
                 ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
 
                 if(msg.Tick != default && msg.Tick < _timing.LastRealTick)
-                    Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
+                    _sawmill.Warning($"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
             }
         }
 
@@ -186,7 +191,7 @@ namespace Robust.Shared.Configuration
             List<(string name, object value)> networkedVars,
             GameTick tick)
         {
-            Logger.DebugS("cfg", $"{msgChannel} Handling replicated cvars...");
+            _sawmill.Debug($"{msgChannel} Handling replicated cvars...");
 
             if (_netManager.IsClient)
             {
@@ -196,7 +201,7 @@ namespace Robust.Shared.Configuration
                     // Actually set the CVar
                     SetCVarInternal(name, value, tick);
 
-                    Logger.DebugS("cfg", $"name={name}, val={value}");
+                    _sawmill.Debug($"name={name}, val={value}");
                 }
 
                 return;
@@ -205,7 +210,7 @@ namespace Robust.Shared.Configuration
             // Client sent us a CVar update
             if (!_replicatedCVars.TryGetValue(msgChannel, out var clientCVars))
             {
-                Logger.WarningS("cfg", $"{msgChannel} tried to replicate CVars but is not in _replicatedCVars.");
+                _sawmill.Warning($"{msgChannel} tried to replicate CVars but is not in _replicatedCVars.");
                 return;
             }
 
@@ -215,24 +220,24 @@ namespace Robust.Shared.Configuration
             {
                 if (!_configVars.TryGetValue(name, out var cVar))
                 {
-                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unknown CVar '{name}.'");
+                    _sawmill.Warning($"{msgChannel} tried to replicate an unknown CVar '{name}.'");
                     continue;
                 }
 
                 if (!cVar.Registered)
                 {
-                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
+                    _sawmill.Warning($"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
                     continue;
                 }
 
                 if((cVar.Flags & CVar.REPLICATED) != 0)
                 {
                     clientCVars[name] = value;
-                    Logger.DebugS("cfg", $"name={name}, val={value}");
+                    _sawmill.Debug($"name={name}, val={value}");
                 }
                 else
                 {
-                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
+                    _sawmill.Warning($"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
                 }
             }
         }
@@ -268,14 +273,14 @@ namespace Robust.Shared.Configuration
                         {
                             if ((cVar.Flags & CVar.NOT_CONNECTED) != 0)
                             {
-                                Logger.WarningS("cfg", $"'{name}' can only be changed when not connected to a server.");
+                                _sawmill.Warning($"'{name}' can only be changed when not connected to a server.");
                                 return;
                             }
                         }
 
                         if ((cVar.Flags & CVar.SERVER) != 0)
                         {
-                            Logger.WarningS("cfg", $"Only the server can change '{name}'.");
+                            _sawmill.Warning($"Only the server can change '{name}'.");
                             return;
                         }
                     }
@@ -321,7 +326,7 @@ namespace Robust.Shared.Configuration
             DebugTools.Assert(_netManager.IsConnected);
             DebugTools.Assert(_netManager.IsServer);
 
-            Logger.InfoS("cfg", $"{client}: Sending server info...");
+            _sawmill.Info($"{client}: Sending server info...");
 
             var msg = new MsgConVars();
             msg.Tick = _timing.CurTick;
@@ -335,7 +340,7 @@ namespace Robust.Shared.Configuration
             DebugTools.Assert(_netManager.IsConnected);
             DebugTools.Assert(_netManager.IsClient);
 
-            Logger.InfoS("cfg", "Sending client info...");
+            _sawmill.Info("Sending client info...");
 
             var msg = new MsgConVars();
             msg.Tick = default;
@@ -367,7 +372,7 @@ namespace Robust.Shared.Configuration
 
                 nwVars.Add((cVar.Name, GetConfigVarValue(cVar)));
 
-                Logger.DebugS("cfg", $"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
+                _sawmill.Debug($"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
             }
 
             return nwVars;

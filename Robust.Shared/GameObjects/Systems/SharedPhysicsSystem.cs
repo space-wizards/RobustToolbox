@@ -76,6 +76,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
+            SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
 
@@ -83,6 +84,12 @@ namespace Robust.Shared.GameObjects
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+        }
+
+        private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
+        {
+            component.CanCollide = false;
+            DebugTools.Assert(!component.Awake);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)

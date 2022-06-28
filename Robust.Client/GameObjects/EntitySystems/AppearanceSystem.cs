@@ -96,16 +96,21 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             var spriteQuery = GetEntityQuery<SpriteComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
                 if (appearance.Deleted)
                     continue;
 
+                UnmarkDirty(appearance);
+
+                // If the entity is no longer within the clients PVS, don't bother updating.
+                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detatched) != 0)
+                    continue;
+
                 // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
                 spriteQuery.TryGetComponent(appearance.Owner, out var sprite);
-
                 OnChangeData(appearance.Owner, sprite, appearance);
-                UnmarkDirty(appearance);
             }
         }
 

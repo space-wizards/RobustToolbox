@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing
@@ -153,6 +154,14 @@ namespace Robust.Shared.Timing
             }
         }
 
+        public TimeSpan CalcAdjustedTickPeriod()
+        {
+            // ranges from -1 to 1, with 0 being 'default'
+            var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
+            var ticks = (1.0 / TickRate * TimeSpan.TicksPerSecond) - (TickPeriod.Ticks * ratio);
+            return TimeSpan.FromTicks((long) ticks);
+        }
+
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1, from swapbuffer to swapbuffer. Useful to set a
         ///     conditional breakpoint on specific frames, and synchronize with OGL debugging tools that capture frames.
@@ -258,6 +267,9 @@ namespace Robust.Shared.Timing
 
         /// <inheritdoc />
         public GameTick LastRealTick { get; set; }
+
+        /// <inheritdoc />
+        public GameTick LastProcessedTick { get; set; }
 
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.

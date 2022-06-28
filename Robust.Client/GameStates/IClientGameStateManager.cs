@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -27,17 +27,9 @@ namespace Robust.Client.GameStates
         int TargetBufferSize { get; }
 
         /// <summary>
-        ///     Number of game states currently in the state buffer.
+        ///     Number of applicable game states currently in the state buffer.
         /// </summary>
         int CurrentBufferSize { get; }
-
-        /// <summary>
-        ///     The current tick of the last server game state applied.
-        /// </summary>
-        /// <remarks>
-        ///     Use this to synchronize server-sent simulation events with the client's game loop.
-        /// </remarks>
-        GameTick CurServerTick { get; }
 
         /// <summary>
         ///     If the buffer size is this many states larger than the target buffer size,

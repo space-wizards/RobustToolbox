@@ -138,6 +138,12 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
+        /// The amount of pvs-exiting entities that a client will process in a single tick.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSEntityExitBudget =
+            CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// ZSTD compression level to use when compressing game states.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =

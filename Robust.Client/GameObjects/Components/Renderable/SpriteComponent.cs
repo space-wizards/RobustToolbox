@@ -1443,10 +1443,8 @@ namespace Robust.Client.GameObjects
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not SpriteComponentState thestate)
                 return;
-
-            var thestate = (SpriteComponentState)curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;

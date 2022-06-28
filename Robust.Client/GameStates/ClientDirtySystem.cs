@@ -49,14 +49,14 @@ internal sealed class ClientDirtySystem : EntitySystem
         _dirtyEntities.Clear();
     }
 
-    public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
+    public IEnumerable<EntityUid> GetDirtyEntities()
     {
         _dirty.Clear();
 
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
         {
-            if (tick < currentTick) continue;
+            if (tick < _timing.LastRealTick) continue;
             foreach (var ent in dirty)
             {
                 _dirty.Add(ent);

@@ -676,4 +676,10 @@ public abstract partial class SharedTransformSystem
 
         return xform.MapID;
     }
+
+    // Placeholder, added in a separate PR.
+    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        xform.DetachParentToNull();
+    }
 }

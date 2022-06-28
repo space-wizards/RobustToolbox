@@ -154,6 +154,15 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public GameTick LastModifiedTick { get; internal set; }
 
+        /// <summary>
+        /// This tick is the <see cref="LastModifiedTick"/> of the most recently applied sever state.
+        /// </summary>
+        /// <remarks>
+        /// This is used by clients to avoid repeatedly applying redundant server states.
+        /// </remarks>
+        [ViewVariables]
+        public GameTick LastAppliedModifiedTick { get; internal set; }
+
         private static readonly ComponentAdd CompAddInstance = new();
         private static readonly ComponentInit CompInitInstance = new();
         private static readonly ComponentStartup CompStartupInstance = new();

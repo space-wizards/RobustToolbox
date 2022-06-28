@@ -89,13 +89,11 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!int.TryParse(args[0], out var intGridId))
+            if (!EntityUid.TryParse(args[0], out var gridId))
             {
-                shell.WriteError("Not a valid grid ID.");
+                shell.WriteError("Not a valid entity ID.");
                 return;
             }
-
-            var gridId = new GridId(intGridId);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 

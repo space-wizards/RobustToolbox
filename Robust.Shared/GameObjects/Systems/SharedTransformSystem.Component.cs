@@ -51,8 +51,8 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(xform._anchored);
 
         Dirty(xform);
-        var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
-        RaiseLocalEvent(xform.Owner, ref ev, true);
+        var ev = new ReAnchorEvent(xform.Owner, oldGrid.Owner, newGrid.Owner, tilePos);
+        RaiseLocalEvent(xform.Owner, ref ev);
     }
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)

@@ -735,7 +735,6 @@ namespace Robust.Shared.GameObjects
 
         public void ResetMassData(FixturesComponent? fixtures = null)
         {
-            _mass = 0.0f;
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
@@ -746,10 +745,13 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            // We need the mass to not get reset, unless we plan on recalculating it
+            // So it can be used in temperature calculations
+            _mass = 0.0f;
+
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {

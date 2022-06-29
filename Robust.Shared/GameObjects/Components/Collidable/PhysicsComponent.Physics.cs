@@ -611,7 +611,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _angularVelocity;
+        internal float _angularVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second

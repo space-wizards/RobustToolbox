@@ -746,11 +746,6 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return;
-            }
-
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
@@ -766,6 +761,11 @@ namespace Robust.Shared.GameObjects
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
+            }
+
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
+            {
+                return;
             }
 
             if (_mass > 0.0f)

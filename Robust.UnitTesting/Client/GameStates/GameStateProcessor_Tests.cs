@@ -71,9 +71,10 @@ namespace Robust.UnitTesting.Client.GameStates
 
             // calculate states for first tick
             timing.LastProcessedTick = new GameTick(2);
-            processor.TryGetNextStates(out _, out _);
+            processor.TryGetNextStates(out var state, out _);
 
-            Assert.That(timing.CurTick.Value, Is.EqualTo(1));
+            Assert.NotNull(state);
+            Assert.That(state.ToSequence.Value, Is.EqualTo(1));
         }
 
         [Test]
@@ -161,7 +162,6 @@ namespace Robust.UnitTesting.Client.GameStates
 
             processor.AddNewState(GameStateFactory(4, 5));
             timing.LastRealTick = new GameTick(3);
-
             timing.LastProcessedTick = new GameTick(3);
 
             var result = processor.TryGetNextStates(out _, out _);
@@ -244,6 +244,8 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var timingMock = new Mock<IGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
+            timingMock.SetupProperty(p => p.LastProcessedTick);
+            timingMock.SetupProperty(p => p.LastRealTick);
             timingMock.SetupProperty(p => p.TickTimingAdjustment);
 
             var timing = timingMock.Object;
@@ -253,9 +255,8 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(1, 2));
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
-            // calculate states for first tick
-            timing.LastProcessedTick = new GameTick(0);
-            processor.TryGetNextStates(out _, out _);
+            processor.WaitingForFull = false;
+            timing.LastProcessedTick = timing.LastRealTick = new GameTick(1);
 
             return (timing, processor);
         }

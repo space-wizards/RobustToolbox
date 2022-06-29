@@ -272,6 +272,10 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid e)
         {
+            // Some UIs get dispose after entity-manager has shut down and already deleted all entities.
+            if (!Started)
+                return;
+
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var xformSys = EntitySysManager.GetEntitySystem<SharedTransformSystem>();

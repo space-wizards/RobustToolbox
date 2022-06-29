@@ -120,7 +120,9 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveFromEntityTree(args.Entity);
             }
-            else if (EntityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
+            else if (!args.Detaching &&
+                TryComp(args.Entity, out MetaDataComponent? meta) &&
+                meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xformQuery = GetEntityQuery<TransformComponent>();
                 var xform = xformQuery.GetComponent(args.Entity);
@@ -276,7 +278,7 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsMap(args.Entity)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(args.Entity);
+            var xform = args.Transform;
             EntityLookupComponent? oldLookup = null;
 
             if (args.OldParent != null)

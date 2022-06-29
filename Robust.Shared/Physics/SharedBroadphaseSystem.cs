@@ -65,8 +65,6 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
@@ -802,24 +800,6 @@ namespace Robust.Shared.Physics
             }
 
             fixture.ProxyCount = 0;
-        }
-
-        private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = false;
-            physicsComponent.Awake = false;
-        }
-
-        private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = true;
-            physicsComponent.Awake = true;
         }
 
         public override void Shutdown()

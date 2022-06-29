@@ -367,8 +367,7 @@ public abstract partial class SharedTransformSystem
             {
                 if (!newParentId.IsValid())
                 {
-                    component.DetachParentToNull();
-                    return;
+                    DetachParentToNull(component);
                 }
                 else
                 {
@@ -677,9 +676,73 @@ public abstract partial class SharedTransformSystem
         return xform.MapID;
     }
 
-    // Placeholder, added in a separate PR.
+    #region State Handling
+    private void ChangeMapId(TransformComponent xform, MapId newMapId, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        if (newMapId == xform.MapID)
+            return;
+
+        //Set Paused state
+        var mapPaused = _mapManager.IsMapPaused(newMapId);
+        var meta = metaQuery.GetComponent(xform.Owner);
+        _metaSys.SetEntityPaused(xform.Owner, mapPaused, meta);
+
+        xform.MapID = newMapId;
+        xform.UpdateChildMapIdsRecursive(xform.MapID, mapPaused, xformQuery, metaQuery, _metaSys);
+    }
+
+    public void DetachParentToNull(TransformComponent xform)
+    {
+        if (xform._parent.IsValid())
+            DetachParentToNull(xform, GetEntityQuery<TransformComponent>(), GetEntityQuery<MetaDataComponent>());
+        else
+            DebugTools.Assert(!xform.Anchored);
+    }
+
     public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
     {
-        xform.DetachParentToNull();
+        var oldParent = xform._parent;
+
+        // Even though they may already be in nullspace we may want to deparent them anyway
+        if (!oldParent.IsValid())
+        {
+            DebugTools.Assert(!xform.Anchored);
+            return;
+        }
+
+        // Stop any active lerps
+        xform._nextPosition = null;
+        xform._nextRotation = null;
+        xform.LerpParent = EntityUid.Invalid;
+
+        if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+        {
+            var grid = Comp<IMapGridComponent>(xform.GridUid.Value);
+            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+
+            // intentionally not updating physics body type to non-static, there is no need to add it to the current map.
+
+            xform._anchored = false;
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
+            RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
+        }
+
+        var oldConcrete = xformQuery.GetComponent(oldParent);
+        oldConcrete._children.Remove(xform.Owner);
+
+        xform._parent = EntityUid.Invalid;
+        var oldMap = xform.MapID;
+
+        // aaaaaaaaaaaaaaaa
+        ChangeMapId(xform, MapId.Nullspace, xformQuery, metaQuery);
+
+        if (xform.GridUid != null)
+            SetGridId(xform, null, xformQuery);
+
+        var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent, oldMap, xform);
+        RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+        Dirty(xform);
     }
+    #endregion
 }

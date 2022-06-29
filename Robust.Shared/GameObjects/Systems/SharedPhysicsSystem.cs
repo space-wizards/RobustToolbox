@@ -70,8 +70,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
@@ -135,8 +134,21 @@ namespace Robust.Shared.GameObjects
         {
             var meta = MetaData(uid);
 
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized)
                 return;
+
+            var xform = args.Transform;
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != 0)
+            {
+                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                SetLinearVelocity(body, Vector2.Zero, false);
+                SetAngularVelocity(body, 0, false);
+                _joints.ClearJoints(body);
+                SetCanCollide(body, false, false);
+            }
 
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
             _broadphase.UpdateBroadphase(body, xform: xform);
@@ -261,23 +273,12 @@ namespace Robust.Shared.GameObjects
             EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
-        private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
-        {
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
-
-            physicsComponent.LinearVelocity = Vector2.Zero;
-            physicsComponent.AngularVelocity = 0.0f;
-            _joints.ClearJoints(physicsComponent);
-            physicsComponent.CanCollide = false;
-        }
-
-        private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
+        private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
         {
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent) ||
-                MetaData(message.Entity).EntityLifeStage >= EntityLifeStage.Terminating) return;
+            if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            physicsComponent.WakeBody();
+            SetCanCollide(physics, true, false);
         }
 
         /// <summary>

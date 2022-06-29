@@ -401,6 +401,7 @@ namespace Robust.Client.GameStates
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var query = _entityManager.GetEntityQuery<MetaDataComponent>();
 
+            // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
             foreach (var entity in system.GetDirtyEntities())

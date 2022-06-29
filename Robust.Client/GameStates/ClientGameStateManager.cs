@@ -616,13 +616,10 @@ namespace Robust.Client.GameStates
                 _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
             }
 
-            // Initialize and start the newly created entities.
-            // IMO this should be done before apply-state, so that people can safely make use of things like
-            // on-container-insert events without having to check whether entities have been initialized yet. but this
-            // seems to cause some weird issues for transform components when they get initialized before a state has
-            // been applied?? It would also avoid situations were a system accidentally dirties a component during
-            // init/startup, because these results are going to be saved via merge implicit data, and we really want
-            // that to match the server state
+            // Initialize and start the newly created entities. IMO this should be done before apply-state, so that
+            // people can safely make use of things like on-container-insert events without having to check whether
+            // entities have been initialized yet. But currently there seems to be some issues with initializing
+            // transform components before a state has been applied.
             if (toCreate.Count > 0)
                 InitializeAndStart(toCreate);
 

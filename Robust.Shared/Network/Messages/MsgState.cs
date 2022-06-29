@@ -27,7 +27,7 @@ namespace Robust.Shared.Network.Messages
         public GameState State;
         public ZStdCompressionContext CompressionContext;
 
-        private bool _hasWritten;
+        internal bool _hasWritten;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

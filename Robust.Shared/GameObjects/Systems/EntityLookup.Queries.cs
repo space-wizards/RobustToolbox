@@ -63,7 +63,7 @@ public sealed partial class EntityLookupSystem
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
 
-        foreach (var uid in lookup.Tree.QueryAabb(localAABB))
+        foreach (var uid in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             if (uid == ignored) continue;
             return true;
@@ -613,14 +613,14 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var localAABB = xformQuery.GetComponent(component.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {
-            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {
                 intersecting.Add(uid);
             }
@@ -635,14 +635,14 @@ public sealed partial class EntityLookupSystem
     {
         var intersecting = new HashSet<EntityUid>();
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {
-            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {
                 intersecting.Add(uid);
             }

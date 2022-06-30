@@ -5,6 +5,6 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent]
     public sealed class EntityLookupComponent : Component
     {
-        internal DynamicTree<EntityUid> Tree = default!;
+        public DynamicTree<EntityUid> Tree = default!;
     }
 }

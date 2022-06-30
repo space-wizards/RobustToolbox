@@ -749,7 +749,6 @@ namespace Robust.Shared.GameObjects
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {
@@ -762,7 +761,8 @@ namespace Robust.Shared.GameObjects
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
             }
-			// Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
+
+            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
             if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;

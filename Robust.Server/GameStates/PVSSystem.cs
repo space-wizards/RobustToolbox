@@ -31,7 +31,6 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerNetManager _networkManager = default!;
 
     public const float ChunkSize = 8;
 
@@ -649,7 +648,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return true;
     }
 
-    public (List<EntityState>? updates, List<EntityUid>? deletions, List<EntityUid>? leftPvs) CalculateEntityStates(IPlayerSession session,
+    public (List<EntityState>? updates, List<EntityUid>? deletions, List<EntityUid>? leftPvs, GameTick fromTick) CalculateEntityStates(IPlayerSession session,
         GameTick fromTick, GameTick toTick,
         (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache,
         HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery,
@@ -716,7 +715,6 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             if (sessionData.RequestedFull)
             {
-                Logger.Info("Sending Full");
                 entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid)));
                 continue;
             }
@@ -759,7 +757,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (deletions.Count == 0) deletions = default;
         if (entityStates.Count == 0) entityStates = default;
-        return (entityStates, deletions, leftView);
+        return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
     }
 
     /// <summary>
@@ -906,7 +904,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
     {
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         // no point sending an empty collection
@@ -929,7 +927,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 stateEntities.Add(GetEntityState(player, md.Owner, GameTick.Zero, md));
             }
 
-            return (stateEntities.Count == 0 ? default : stateEntities, deletions, null);
+            return (stateEntities.Count == 0 ? default : stateEntities, deletions, null, fromTick);
         }
 
         // Just get the relevant entities that have been dirtied
@@ -977,7 +975,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             if (stateEntities.Count == 0) stateEntities = default;
 
-            return (stateEntities, deletions, null);
+            return (stateEntities, deletions, null, fromTick);
         }
 
         stateEntities = new List<EntityState>(EntityManager.EntityCount);
@@ -994,7 +992,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // no point sending an empty collection
         if (stateEntities.Count == 0) stateEntities = default;
 
-        return (stateEntities, deletions, null);
+        return (stateEntities, deletions, null, fromTick);
     }
 
     /// <summary>
@@ -1069,6 +1067,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
+            if (!component.NetSyncEnabled)
+                continue;
+
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
 

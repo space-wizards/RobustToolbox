@@ -258,7 +258,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions, leftPvs) = _pvs.CullingEnabled
+                var (entStates, deletions, leftPvs, fromTick) = _pvs.CullingEnabled
                     ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
                         playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
@@ -268,7 +268,7 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
+                var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
                     entStates, playerStates, deletions, mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);

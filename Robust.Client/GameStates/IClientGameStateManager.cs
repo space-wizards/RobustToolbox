@@ -76,6 +76,11 @@ namespace Robust.Client.GameStates
         /// <param name="message">Message being dispatched.</param>
         void InputCommandDispatched(FullInputCmdMessage message);
 
+        /// <summary>
+        ///     Requests a full state from the server. This should override even implicit entity data.
+        /// </summary>
+        public void RequestFullState();
+
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
     }
 }

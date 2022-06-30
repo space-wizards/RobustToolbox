@@ -117,7 +117,7 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null || state.ToSequence < LastFullState.ToSequence)
+            if (LastFullState == null || state.ToSequence <= LastFullState.ToSequence)
                 return false;
 
             _stateBuffer.Add(state);
@@ -360,7 +360,7 @@ namespace Robust.Client.GameStates
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            LastFullStateRequested = GameTick.First;
+            LastFullStateRequested = GameTick.Zero;
         }
 
         public void RequestFullState()

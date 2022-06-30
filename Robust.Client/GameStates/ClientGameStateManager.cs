@@ -180,9 +180,7 @@ namespace Robust.Client.GameStates
             // applied a state containing entity-creation information, which it would then no longer send to us when
             // we re-encounter this entity
             if (_processor.AddNewState(message.State))
-            {
                 AckGameState(message.State.ToSequence);
-            }
         }
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -233,14 +231,14 @@ namespace Robust.Client.GameStates
                 // This is usually functionally just a +=1, except when applying a full state.
                 _timing.LastProcessedTick = curState.ToSequence;
 
+                // TODO: make the game only reset entities when required (i.e., if we are about to apply a real state.
+                if (PredictionNeedsResetting)
+                    ResetPredictedEntities();
+
                 if (curState.Extrapolated)
                     continue; // This is not a real state, we will not actually apply it.
 
                 _timing.LastRealTick = _timing.LastProcessedTick;
-
-                // Only reset if its required, and if we are about to apply a server state
-                if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
 
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
@@ -274,9 +272,9 @@ namespace Robust.Client.GameStates
                     catch (Exception e)
                     {
                         // Something has gone wrong. Probably a missing meta-data component.
-                        _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick});
-                        _processor.RequestFullState();
-                        throw e;
+                        Logger.Error("Something has gone wrong while applying a game state. Perhaps a full server state will fix it.");
+                        RequestFullState();
+                        throw;
                     }
 #endif
                 }
@@ -334,6 +332,13 @@ namespace Robust.Client.GameStates
             {
                 _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
             }
+        }
+
+        public void RequestFullState()
+        {
+            Logger.Info("Requesting full server state");
+            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick });
+            _processor.RequestFullState();
         }
 
         public void PredictTicks()

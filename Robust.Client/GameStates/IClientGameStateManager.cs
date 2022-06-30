@@ -2,6 +2,7 @@ using System;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -48,6 +49,11 @@ namespace Robust.Client.GameStates
         ///     This is called after the game state has been applied for the current tick.
         /// </summary>
         event Action<GameStateAppliedArgs> GameStateApplied;
+
+        /// <summary>
+        ///     This is invoked whenever a pvs-leave message is received.
+        /// </summary>
+        public event Action<MsgStateLeavePvs>? PvsLeave;
 
         /// <summary>
         ///     One time initialization of the service.

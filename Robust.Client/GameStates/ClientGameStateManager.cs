@@ -2,7 +2,6 @@
 // Used in EXCEPTION_TOLERANCE preprocessor
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
@@ -11,7 +10,9 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+#if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
+#endif
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -20,7 +21,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -86,6 +86,8 @@ namespace Robust.Client.GameStates
 
         /// <inheritdoc />
         public event Action<GameStateAppliedArgs>? GameStateApplied;
+
+        public event Action<MsgStateLeavePvs>? PvsLeave;
 
         /// <inheritdoc />
         public void Initialize()
@@ -186,6 +188,7 @@ namespace Robust.Client.GameStates
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
             _processor.AddLeavePvsMessage(message);
+            PvsLeave?.Invoke(message);
         }
 
         /// <inheritdoc />
@@ -272,7 +275,7 @@ namespace Robust.Client.GameStates
                     {
                         // Something has gone wrong. Probably a missing meta-data component.
                         _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick});
-                        _processor.FullStateRequested();
+                        _processor.RequestFullState();
                         throw e;
                     }
 #endif

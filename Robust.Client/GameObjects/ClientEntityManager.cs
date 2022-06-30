@@ -19,7 +19,6 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;

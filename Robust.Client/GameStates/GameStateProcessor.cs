@@ -363,7 +363,7 @@ namespace Robust.Client.GameStates
             LastFullStateRequested = GameTick.First;
         }
 
-        public void FullStateRequestd()
+        public void RequestFullState()
         {
             _stateBuffer.Clear();
             LastFullState = null;

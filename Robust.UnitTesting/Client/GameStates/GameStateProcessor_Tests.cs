@@ -255,7 +255,7 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(1, 2));
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
-            processor.WaitingForFull = false;
+            processor.LastFullStateRequested = null;
             timing.LastProcessedTick = timing.LastRealTick = new GameTick(1);
 
             return (timing, processor);

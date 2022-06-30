@@ -251,32 +251,19 @@ namespace Robust.Client.GameStates
         private sealed class NetShowGraphCommand : IConsoleCommand
         {
             public string Command => "net_graph";
-            public string Help => "net_graph <0|1>";
+            public string Help => "net_graph";
             public string Description => "Toggles the net statistics pannel.";
 
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                if (args.Length != 1)
-                {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
-                    return;
-                }
-
-                if (!byte.TryParse(args[0], out var iValue))
-                {
-                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
-                    return;
-                }
-
-                var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                if(!overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
                     shell.WriteLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                else
                 {
                     overlayMan.RemoveOverlay(typeof(NetGraphOverlay));
                     shell.WriteLine("Disabled network overlay.");

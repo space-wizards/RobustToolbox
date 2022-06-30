@@ -1,39 +1,29 @@
 using System;
-using System.Buffers;
-using System.Buffers.Binary;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Cryptography;
-using Robust.Shared;
+using System.Threading.Tasks;
+using Robust.Packaging;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
-using SharpZstd.Interop;
-using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus;
 
 // Contains source logic for ACZ (Automatic Client Zip)
 // This entails the following:
-// * Automatic generation of client zip on development servers.
+// * Automatic generation of client zip on development servers. ("Magic ACZ")
 // * Loading of pre-built client zip on release servers. ("Hybrid ACZ")
 
 internal sealed partial class StatusHost
 {
     private (string binFolder, string[] assemblies)? _aczInfo;
+    private IMagicAczProvider? _aczProvider;
 
     // -- Dictionary<string, OnDemandFile> methods --
 
-    private Dictionary<string, OnDemandFile>? SourceAczDictionary()
+    private async Task<Dictionary<string, OnDemandFile>?> SourceAczDictionary()
     {
-        return SourceAczDictionaryViaFile() ?? SourceAczDictionaryViaMagic();
+        return SourceAczDictionaryViaFile() ?? await SourceAczDictionaryViaMagic();
     }
 
     private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaFile()
@@ -61,39 +51,24 @@ internal sealed partial class StatusHost
         return archive;
     }
 
-    private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaMagic()
+    private async Task<Dictionary<string, OnDemandFile>?> SourceAczDictionaryViaMagic()
     {
-        var (binFolderPath, assemblyNames) =
-            _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
-
         var archive = new Dictionary<string, OnDemandFile>();
-
-        foreach (var assemblyName in assemblyNames)
+        var writer = new PackageWriterAcz(archive);
+        var provider = _aczProvider;
+        if (provider == null)
         {
-            AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
-            AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
+            // Default provider
+            var (binFolderPath, assemblyNames) =
+                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+
+            var info = new DefaultMagicAczInfo(binFolderPath, assemblyNames);
+            provider = new DefaultMagicAczProvider(info, _deps);
         }
 
-        var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
-        foreach (var path in PathHelpers.GetFiles(prefix))
-        {
-            var relPath = Path.GetRelativePath(prefix, path);
-            if (OperatingSystem.IsWindows())
-                relPath = relPath.Replace('\\', '/');
-            AttemptPullFromDisk(relPath, path);
-        }
+        await provider.Package(writer, default);
 
         return archive;
-
-        void AttemptPullFromDisk(string pathTo, string pathFrom)
-        {
-            // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
-            var res = PathHelpers.ExecutableRelativeFile(pathFrom);
-            if (!File.Exists(res))
-                return;
-
-            archive[pathTo] = new OnDemandDiskFile(res);
-        }
     }
 
     // -- Information Input --
@@ -114,11 +89,16 @@ internal sealed partial class StatusHost
         }
     }
 
+    public void SetMagicAczProvider(IMagicAczProvider provider)
+    {
+        _aczProvider = provider;
+    }
+
     // -- This Thing --
 
     /// <summary>
     /// An attempt to mitigate the amount of RAM usage caused by ACZ-related operations.
-    /// The idea is that Dictionary<string, OnDemandFile> should become the standard interchange.
+    /// The idea is that <c>Dictionary&lt;string, OnDemandFile&gt;</c> should become the standard interchange.
     /// </summary>
     internal abstract class OnDemandFile
     {
@@ -192,5 +172,47 @@ internal sealed partial class StatusHost
         }
     }
 
+    internal sealed class OnDemandFileBlob : OnDemandFile
+    {
+        private readonly byte[] _blob;
+
+        public OnDemandFileBlob(byte[] blob) : base(blob.Length)
+        {
+            _blob = blob;
+        }
+
+        public override void ReadExact(Span<byte> data)
+        {
+            _blob.AsSpan().CopyTo(data);
+        }
+    }
+
+    private sealed class PackageWriterAcz : IPackageWriter
+    {
+        private readonly Dictionary<string, OnDemandFile> _files;
+
+        public PackageWriterAcz(Dictionary<string, OnDemandFile> files)
+        {
+            _files = files;
+        }
+
+        public void WriteResource(string path, Stream stream)
+        {
+            var file = new OnDemandFileBlob(stream.CopyToArray());
+            lock (_files)
+            {
+                _files[path] = file;
+            }
+        }
+
+        public void WriteResourceFromDisk(string path, string diskPath)
+        {
+            var file = new OnDemandDiskFile(diskPath);
+            lock (_files)
+            {
+                _files[path] = file;
+            }
+        }
+    }
 }
 

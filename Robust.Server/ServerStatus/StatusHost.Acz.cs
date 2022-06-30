@@ -324,12 +324,12 @@ namespace Robust.Server.ServerStatus
                 // ACZ hasn't been prepared, prepare it
                 try
                 {
-                    // Run actual ACZ generation via Task.Run because it's synchronous
-                    var maybeData = await Task.Run(() =>
+                    // Run actual ACZ generation via Task.Run because it's potentially synchronous
+                    var maybeData = await Task.Run(async () =>
                     {
                         var sw = Stopwatch.StartNew();
 
-                        var gen = SourceAczDictionary();
+                        var gen = await SourceAczDictionary();
                         if (gen == null) return null;
                         var results = PrepareAczInnards(gen);
 

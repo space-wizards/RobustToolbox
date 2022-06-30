@@ -34,6 +34,7 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
 
         private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;

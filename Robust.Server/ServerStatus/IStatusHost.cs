@@ -38,5 +38,7 @@ namespace Robust.Server.ServerStatus
         /// The list of client assemblies to send from the aforementioned folder.
         /// </param>
         void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames);
+
+        void SetMagicAczProvider(IMagicAczProvider provider);
     }
 }

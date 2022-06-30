@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
@@ -16,11 +17,23 @@ namespace Robust.Client.GameStates
 
         private readonly List<GameState> _stateBuffer = new();
 
-        private readonly Dictionary<GameTick, List<EntityUid>> _pvsDetatchMessages = new();
+        private readonly Dictionary<GameTick, List<EntityUid>> _pvsDetachMessages = new();
 
         public GameState? LastFullState { get; private set; }
-        public bool WaitingForFull { get; internal set; } = true;
-        private int _interpRatio;
+        public bool WaitingForFull => LastFullStateRequested.HasValue;
+        public GameTick? LastFullStateRequested
+        {
+            get => _lastFullStateRequested;
+            set
+            {
+                _lastFullStateRequested = value;
+                LastFullState = null;
+            }
+        }
+
+        public GameTick? _lastFullStateRequested = GameTick.First;
+
+        private int _bufferSize;
         private GameTick _highestFromSequence;
 
         /// <summary>
@@ -30,19 +43,19 @@ namespace Robust.Client.GameStates
             = new();
 
         /// <inheritdoc />
-        public int MinBufferSize => Interpolation ? 3 : 2;
+        public int MinBufferSize => Interpolation ? 2 : 1;
 
         /// <inheritdoc />
-        public int TargetBufferSize => MinBufferSize + InterpRatio;
+        public int TargetBufferSize => MinBufferSize + BufferSize;
 
         /// <inheritdoc />
         public bool Interpolation { get; set; }
 
         /// <inheritdoc />
-        public int InterpRatio
+        public int BufferSize
         {
-            get => _interpRatio;
-            set => _interpRatio = value < 0 ? 0 : value;
+            get => _bufferSize;
+            set => _bufferSize = value < 0 ? 0 : value;
         }
 
         /// <inheritdoc />
@@ -61,53 +74,54 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public void AddNewState(GameState state)
+        public bool AddNewState(GameState state)
         {
-            // any state from tick 0 is a full state, and needs to be handled different
-            if (state.FromSequence == GameTick.Zero)
-            {
-                // this is a newer full state, so discard the older one.
-                if (LastFullState == null || LastFullState.ToSequence < state.ToSequence)
-                {
-                    LastFullState = state;
-
-                    if (Logging)
-                        Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
-
-                    return;
-                }
-            }
-
-            if (state.ToSequence <= _timing.LastRealTick && !WaitingForFull)
+            // Check for old states.
+            if (state.ToSequence <= _timing.LastRealTick)
             {
                 if (Logging)
                     Logger.DebugS("net.state", $"Received Old GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
-                return;
+                return false;
             }
 
-            // lets check for a duplicate state now.
-            for (var i = 0; i < _stateBuffer.Count; i++)
+            // Check for a duplicate states.
+            foreach (var bufferState in _stateBuffer)
             {
-                var iState = _stateBuffer[i];
-
-                if (state.ToSequence != iState.ToSequence)
+                if (state.ToSequence != bufferState.ToSequence)
                     continue;
 
                 if (Logging)
                     Logger.DebugS("net.state", $"Received Dupe GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
-                return;
+                return false;
             }
 
-            if (WaitingForFull && LastFullState != null && LastFullState.ToSequence >= state.ToSequence)
-                return;
+            // Are we expecting a full state?
+            if (!WaitingForFull)
+            {
+                // This is a good state that we will be using.
+                _stateBuffer.Add(state);
+                if (Logging)
+                    Logger.DebugS("net.state", $"Received New GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                return true;
+            }
 
-            // this is a good state that we will be using.
+            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value)
+            {
+                LastFullState = state;
+
+                if (Logging)
+                    Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
+
+                return true;
+            }
+
+            if (LastFullState == null || state.ToSequence < LastFullState.ToSequence)
+                return false;
+
             _stateBuffer.Add(state);
-
-            if (Logging)
-                Logger.DebugS("net.state", $"Received New GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+            return true;
         }
 
         /// <summary>
@@ -224,13 +238,13 @@ namespace Robust.Client.GameStates
         {
             // Late message may still need to be processed,
             DebugTools.Assert(message.Entities.Count > 0);
-            _pvsDetatchMessages.TryAdd(message.Tick, message.Entities);
+            _pvsDetachMessages.TryAdd(message.Tick, message.Entities);
         }
 
-        public List<(GameTick Tick, List<EntityUid> Entities)> GetEntitiesToDetatch(GameTick toTick, int budget)
+        public List<(GameTick Tick, List<EntityUid> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
         {
             var result = new List<(GameTick Tick, List<EntityUid> Entities)>();
-            foreach (var (tick, entities) in _pvsDetatchMessages)
+            foreach (var (tick, entities) in _pvsDetachMessages)
             {
                 if (tick > toTick)
                     continue;
@@ -238,7 +252,7 @@ namespace Robust.Client.GameStates
                 if (budget >= entities.Count)
                 {
                     budget -= entities.Count;
-                    _pvsDetatchMessages.Remove(tick);
+                    _pvsDetachMessages.Remove(tick);
                     result.Add((tick, entities));
                     continue;
                 }
@@ -319,6 +333,18 @@ namespace Robust.Client.GameStates
             return true;
         }
 
+        internal void RemoveState(GameState curState)
+        {
+            for (int i = 0; i < _stateBuffer.Count; i++)
+            {
+                if (curState == _stateBuffer[i])
+                {
+                    _stateBuffer.RemoveSwap(i);
+                    return;
+                }
+            }
+        }
+
         /// <summary>
         ///     Generates a completely fake GameState.
         /// </summary>
@@ -334,7 +360,14 @@ namespace Robust.Client.GameStates
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            WaitingForFull = true;
+            LastFullStateRequested = GameTick.First;
+        }
+
+        public void FullStateRequestd()
+        {
+            _stateBuffer.Clear();
+            LastFullState = null;
+            LastFullStateRequested = _timing.LastRealTick;
         }
 
         public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> data)

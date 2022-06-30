@@ -111,7 +111,7 @@ namespace Robust.Client.GameStates
                 entStateString = sb.ToString();
             }
 
-            foreach (var ent in args.Detatched)
+            foreach (var ent in args.Detached)
             {
                 if (ent != WatchEntId)
                     continue;

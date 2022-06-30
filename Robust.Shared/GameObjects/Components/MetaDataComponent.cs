@@ -183,7 +183,8 @@ namespace Robust.Shared.GameObjects
         None = 0,
 
         /// <summary>
-        /// Whether the entity has states specific to a particular player.
+        /// Whether the entity has states specific to particular players. This will cause many state-attempt events to
+        /// be raised, and is generally somewhat expensive.
         /// </summary>
         EntitySpecific = 1 << 0,
 
@@ -195,6 +196,6 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Used by clients to indicate that an entity has left their visible set.
         /// </summary>
-        Detatched = 1 << 2,
+        Detached = 1 << 2,
     }
 }

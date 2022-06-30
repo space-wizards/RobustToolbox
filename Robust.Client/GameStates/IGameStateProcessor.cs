@@ -17,8 +17,8 @@ namespace Robust.Client.GameStates
         ///     Minimum number of states needed in the buffer for everything to work.
         /// </summary>
         /// <remarks>
-        ///     With interpolation enabled minimum is 3 states in buffer for the system to work (last, cur, next).
-        ///     Without interpolation enabled minimum is 2 states in buffer for the system to work (last, cur).
+        ///     With interpolation enabled minimum is 2 states in buffer for the system to work (cur, next).
+        ///     Without interpolation enabled minimum is 2 states in buffer for the system to work (cur).
         /// </remarks>
         int MinBufferSize { get; }
 
@@ -40,7 +40,7 @@ namespace Robust.Client.GameStates
         ///     For Lan, set this to 0. For Excellent net conditions, set this to 1. For normal network conditions,
         ///     set this to 2. For worse conditions, set it higher.
         /// </remarks>
-        int InterpRatio { get; set; }
+        int BufferSize { get; set; }
 
         /// <summary>
         ///     If the client clock runs ahead of the server and the buffer gets emptied, should fake extrapolated states be generated?
@@ -52,11 +52,15 @@ namespace Robust.Client.GameStates
         /// </summary>
         bool Logging { get; set; }
 
+
         /// <summary>
         ///     Adds a new state into the processor. These are usually from networking or replays.
         /// </summary>
         /// <param name="state">Newly received state.</param>
-        void AddNewState(GameState state);
+        /// <returns>Returns true if the state was accepted and should be acknowledged</returns>
+        bool AddNewState(GameState state);
+        //> usually from replays
+        //replays when
 
         /// <summary>
         ///     Calculates the current and next state to apply for a given game tick.

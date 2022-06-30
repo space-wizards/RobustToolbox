@@ -14,6 +14,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -29,6 +31,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerNetManager _networkManager = default!;
 
     public const float ChunkSize = 8;
 
@@ -62,6 +65,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
+
     private readonly List<IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
@@ -100,7 +104,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         base.Initialize();
 
-        _sawmill = Logger.GetSawmill("pvs");
+        _sawmill = Logger.GetSawmill("PVS");
 
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
 
@@ -124,7 +128,8 @@ internal sealed partial class PVSSystem : EntitySystem
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
 
-        _serverGameStateManager.OnClientAck += OnClientAck;
+        _serverGameStateManager.ClientAck += OnClientAck;
+        _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
 
         InitializeDirty();
     }
@@ -152,9 +157,32 @@ internal sealed partial class PVSSystem : EntitySystem
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
 
-        _serverGameStateManager.OnClientAck -= OnClientAck;
+        _serverGameStateManager.ClientAck -= OnClientAck;
 
         ShutdownDirty();
+    }
+
+    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked)
+    {
+        if (!_playerVisibleSets.TryGetValue(session, out var sessionData))
+            return;
+
+        // TODO rate limit this?
+        _sawmill.Warning($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. They probably encountered a PVS / missing meta-data exception.");
+
+        sessionData.LastSeenAt.Clear();
+
+        if (sessionData.Overflow != null)
+        {
+            _visSetPool.Return(sessionData.Overflow.Value.SentEnts);
+            sessionData.Overflow = null;
+        }
+
+        // return last acked to pool, but only if it is not still in the overflow dictionary.
+        if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAcked.Value > TickBuffer)
+            _visSetPool.Return(sessionData.LastAcked);
+
+        sessionData.RequestedFull = true;
     }
 
     private void OnClientAck(ICommonSession session, GameTick ackedTick, GameTick lastAckedTick)
@@ -165,30 +193,25 @@ internal sealed partial class PVSSystem : EntitySystem
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick < ackedTick)
         {
             var (overflowTick, overflowEnts) = sessionData.Overflow.Value;
+            sessionData.Overflow = null;
             if (overflowTick == ackedTick)
             {
                 ProcessAckedTick(sessionData, overflowEnts, ackedTick, lastAckedTick);
-                sessionData.Overflow = null;
                 return;
             }
-            else if (overflowTick < ackedTick)
-            {
-                // Even though the acked tick is newer, we have no guarantee that the client received stored tick, so we
-                // just discard it.
-                _visSetPool.Return(overflowEnts);
-                sessionData.Overflow = null;
-            }
+
+            // Even though the acked tick is newer, we have no guarantee that the client received the cached set, so
+            // we just discard it.
+            _visSetPool.Return(overflowEnts);
         }
         
         if (sessionData.SentEntities.TryGetValue(ackedTick, out var ackedData))
-        {
-            ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);     
-        }
+            ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);
     }
 
     private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
     {
-        // return to pool if last acked is no longer in the overflow dictionary.
+        // return last acked to pool, but only if it is not still in the overflow dictionary.
         if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAckedTick.Value > TickBuffer)
             _visSetPool.Return(sessionData.LastAcked);
 
@@ -197,6 +220,9 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             sessionData.LastSeenAt[ent] = tick;
         }
+
+        // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false
+        sessionData.RequestedFull = false;
     }
 
     private void OnViewsizeChanged(float obj)
@@ -337,12 +363,12 @@ internal sealed partial class PVSSystem : EntitySystem
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);
 
-        if (data.LastAcked != null && data.LastAcked != data.Overflow?.SentEnts)
+        if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
 
         foreach (var (_, visSet) in data.SentEntities)
         {
-            if (visSet != data.Overflow?.SentEnts && visSet != data.LastAcked)
+            if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
         }
     }
@@ -688,18 +714,22 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var (uid, visiblity) in visibleEnts)
         {
+            if (sessionData.RequestedFull)
+            {
+                Logger.Info("Sending Full");
+                entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid)));
+                continue;
+            }
+
             if (visiblity == PVSEntityVisiblity.StayedUnchanged)
                 continue;
 
             var entered = visiblity == PVSEntityVisiblity.Entered;
             var entFromTick = entered ? lastSeen.GetValueOrDefault(uid) : fromTick;
-
             var state = GetEntityState(session, uid, entFromTick, mQuery.GetComponent(uid));
 
-            //this entity is not new & nothing changed
-            if(!entered && state.Empty) continue;
-
-            entityStates.Add(state);
+            if (entered || !state.Empty) 
+                entityStates.Add(state);
         }
 
         // tell a client to detach entities that have left their view
@@ -845,7 +875,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // rate.
         if (enteredSinceLastSent)
         {
-            // TODO: should we separate this budget into "entered-but-seen" and "completley-new"?
+            // TODO: should we separate this budget into "entered-but-seen" and "completely-new"?
             // completely new entities are significantly more intensive for both server sending and client processing.
             if (totalEnteredEntities++ >= enteredEntityBudget)
                 return (entered, true);
@@ -973,25 +1003,27 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <param name="player">The player to generate this state for.</param>
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
-    /// <param name="flags">Any applicable metadata flags</param>
+    /// <param name="meta">The entity's metadata component</param>
+    /// <param name="includeImplicit">If true, the state will include even the implicit component data</param>
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
-        MetaDataFlags flags = meta.Flags;
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
-        // Whether this entity has any component states that are only for a specific session.
-        // TODO: This GetComp is probably expensive, less expensive than before, but ideally we'd cache it somewhere or something from a previous getcomp
-        // Probably still needs tweaking but checking for add / changed states up front should do most of the work.
-        var specificStates = (flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
+
+        // Whether this entity has any component states that should only be sent to specific sessions.
+        var entitySpecific = (meta.Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
-            // really, these shouldn't even be in NetComponents
-            if (!component.NetSyncEnabled || component.Deleted)
+            if (!component.NetSyncEnabled)
                 continue;
 
-            DebugTools.Assert(component.Initialized);
+            if (component.Deleted || !component.Initialized)
+            {
+                _sawmill.Error("Entity manager returned deleted or uninitialized components while sending entity data");
+                continue;
+            }
 
             // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
             // "not different from entity creation".
@@ -1008,7 +1040,10 @@ internal sealed partial class PVSSystem : EntitySystem
             if (!(addState || changedState))
                 continue;
 
-            if (specificStates && !EntityManager.CanGetComponentState(bus, component, player))
+            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+                continue;
+
+            if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
             var state = changedState ? EntityManager.GetComponentState(bus, component) : null;
@@ -1016,6 +1051,34 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, fromTick))
+        {
+            changed.Add(ComponentChange.Removed(netId));
+        }
+
+        return new EntityState(entityUid, changed.ToArray(), meta.EntityLastModifiedTick);
+    }
+
+    /// <summary>
+    ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
+    /// </summary>
+    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
+    {
+        var bus = EntityManager.EventBus;
+        var changed = new List<ComponentChange>();
+        var entitySpecific = (meta.Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
+
+        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        {
+            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+                continue;
+
+            if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
+                continue;
+
+            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component), component.LastModifiedTick));
+        }
+
+        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, GameTick.Zero))
         {
             changed.Add(ComponentChange.Removed(netId));
         }
@@ -1146,6 +1209,12 @@ internal sealed partial class PVSSystem : EntitySystem
         ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="TickBuffer"/> ticks behind the current tick.
         /// </summary>
         public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
+
+        /// <summary>
+        ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them
+        ///     all data, not just data that cannot be implicitly inferred from entity prototypes.
+        /// </summary>
+        public bool RequestedFull = false;
     }
 }
 

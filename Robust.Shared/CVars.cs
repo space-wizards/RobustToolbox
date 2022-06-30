@@ -73,10 +73,10 @@ namespace Robust.Shared
             CVarDef.Create("net.interp", true, CVar.ARCHIVE);
 
         /// <summary>
-        /// The target number of game states to keep buffered up to smooth out against network inconsistency.
+        /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
-        public static readonly CVarDef<int> NetInterpRatio =
-            CVarDef.Create("net.interp_ratio", 0, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetBufferSize =
+            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE);
 
         /// <summary>
         /// Enable verbose game state/networking logging.

@@ -82,7 +82,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Maximum number of entities that are sent to null-space each tick due to leaving PVS.
         /// </summary>
-        private int _pvsDetatchBudget;
+        private int _pvsDetachBudget;
 
         /// <inheritdoc />
         public event Action<GameStateAppliedArgs>? GameStateApplied;
@@ -96,19 +96,20 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
             _network.RegisterNetMessage<MsgStateLeavePvs>(HandlePvsLeaveMessage);
             _network.RegisterNetMessage<MsgStateAck>();
+            _network.RegisterNetMessage<MsgStateRequestFull>();
             _client.RunLevelChanged += RunLevelChanged;
 
             _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
-            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
+            _config.OnValueChanged(CVars.NetBufferSize, i => _processor.BufferSize = i, true);
             _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
             _config.OnValueChanged(CVars.NetPredict, b => IsPredictionEnabled = b, true);
             _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
             _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
-            _config.OnValueChanged(CVars.NetPVSEntityExitBudget, i => _pvsDetatchBudget = i, true);
+            _config.OnValueChanged(CVars.NetPVSEntityExitBudget, i => _pvsDetachBudget = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
-            _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
+            _processor.BufferSize = _config.GetCVar(CVars.NetBufferSize);
             _processor.Logging = _config.GetCVar(CVars.NetLogging);
             IsPredictionEnabled = _config.GetCVar(CVars.NetPredict);
             PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
@@ -125,7 +126,6 @@ namespace Robust.Client.GameStates
         public void Reset()
         {
             _processor.Reset();
-
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
@@ -174,12 +174,13 @@ namespace Robust.Client.GameStates
 
         private void HandleStateMessage(MsgState message)
         {
-            var state = message.State;
-
-            _processor.AddNewState(state);
-
-            // we always ack everything we receive, even if it is late
-            AckGameState(state.ToSequence);
+            // We ONLY ack states that are definitely going to get applied. Otherwise the sever might assume that we
+            // applied a state containing entity-creation information, which it would then no longer send to us when
+            // we re-encounter this entity
+            if (_processor.AddNewState(message.State))
+            {
+                AckGameState(message.State.ToSequence);
+            }
         }
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -204,7 +205,6 @@ namespace Robust.Client.GameStates
             var i = 0;
             for (; i < applyCount; i++)
             {
-                // Attempts to retrieve the next state to apply
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
                 // Consider, if you have 3 states, (tFrom=1, tTo=2), (tFrom=1, tTo=3), (tFrom=2, tTo=3),
@@ -212,13 +212,19 @@ namespace Robust.Client.GameStates
                 // instead of all 3.
                 // This would be a nice optimization though also minor since the primary cost here
                 // is avoiding entity system and re-prediction runs.
+                //
+                // Addendum: It might be possible that some state (e.g. 1->2) contains information for entity creation
+                // for some entity that has left pvs by tick 3. Given that state 1->2 was acked, the server will not
+                // re-send that state later. So if we skip it and only apply tick 1->3, that will lead to a missing
+                // meta-data error. So while this can still be optimized, its probably not worth the headache.
+                //
+                // Attempts to retrieve the next state to apply
                 if (!_processor.TryGetNextStates(out var curState, out var nextState))
                     break;
 
-                _processor.WaitingForFull = false;
-
-                if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
+                // If we were waiting for a new state, we are now applying it.
+                if (_processor.LastFullStateRequested.HasValue)
+                    _processor.LastFullStateRequested = null;
 
                 // Increase last processed tick.
                 // This is usually functionally just a +=1, except when applying a full state.
@@ -229,6 +235,11 @@ namespace Robust.Client.GameStates
 
                 _timing.LastRealTick = _timing.LastProcessedTick;
 
+                // Only reset if its required, and if we are about to apply a server state
+                if (PredictionNeedsResetting)
+                    ResetPredictedEntities();
+
+                // Update the cached server state.
                 using (_prof.Group("FullRep"))
                 {
                     _processor.UpdateFullRep(curState);
@@ -250,8 +261,24 @@ namespace Robust.Client.GameStates
                         nextState = null;
                     }
 
+#if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
                     createdEntities = ApplyGameState(curState, nextState);
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        // Something has gone wrong. Probably a missing meta-data component.
+                        _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick});
+                        _processor.FullStateRequested();
+                        throw e;
+                    }
+#endif
                 }
+
+                _processor.RemoveState(curState);
 
                 using (_prof.Group("MergeImplicitData"))
                 {
@@ -265,7 +292,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            _timing.CurTick = _timing.LastRealTick;
+            _timing.CurTick = _timing.LastProcessedTick;
 
             // Slightly speed up or slow down the client tickrate based on the contents of the buffer.
             // TryGetTickStates should have cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
@@ -453,7 +480,7 @@ namespace Robust.Client.GameStates
         /// <remarks>
         ///     Whenever a new entity is created, the server doesn't send full state data, given that much of the data
         ///     can simply be obtained from the entity prototype information. This function basically creates a fake
-        ///     initial server state for any newly created entity. It does this byu simply uisng the standard <see
+        ///     initial server state for any newly created entity. It does this by simply using the standard <see
         ///     cref="IEntityManager.GetComponentState(IEventBus, IComponent)"/>.
         /// </remarks>
         private void MergeImplicitData(IEnumerable<EntityUid> createdEntities)
@@ -495,7 +522,7 @@ namespace Robust.Client.GameStates
                 _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
             }
 
-            (IEnumerable<EntityUid> Created, List<EntityUid> Detatched) output;
+            (IEnumerable<EntityUid> Created, List<EntityUid> Detached) output;
             using (_prof.Group("Entity"))
             {
                 output = ApplyEntityStates(curState, nextState);
@@ -508,13 +535,13 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Callback"))
             {
-                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, output.Detatched));
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, output.Detached));
             }
 
             return output.Created;
         }
 
-        private (IEnumerable<EntityUid> Created, List<EntityUid> Detatched) ApplyEntityStates(GameState curState, GameState? nextState)
+        private (IEnumerable<EntityUid> Created, List<EntityUid> Detached) ApplyEntityStates(GameState curState, GameState? nextState)
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
@@ -532,10 +559,10 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detatched) != 0;
+                bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
-                    meta.Flags &= ~MetaDataFlags.Detatched;
+                    meta.Flags &= ~MetaDataFlags.Detached;
                     enteringPvs++;
                 }
                 else if (meta.LastStateApplied >= es.EntityLastModified && meta.LastStateApplied != GameTick.Zero)
@@ -569,7 +596,7 @@ namespace Robust.Client.GameStates
             }
 
             // Detatch entities to null space
-            var detatched = ProcessPvsDeparture(curState.ToSequence, metas, xforms);
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -626,16 +653,16 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
 
-            return (toCreate.Keys, detatched);
+            return (toCreate.Keys, detached);
         }
 
         private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms)
         {
-            var toDetatch = _processor.GetEntitiesToDetatch(toTick, _pvsDetatchBudget);
-            var detatched = new List<EntityUid>();
+            var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
+            var detached = new List<EntityUid>();
 
-            if (toDetatch.Count == 0)
-                return detatched;
+            if (toDetach.Count == 0)
+                return detached;
 
             // TODO optimize
             // If an entity is leaving PVS, so are all of its children. If we can preserve the hierarchy we can avoid
@@ -645,7 +672,7 @@ namespace Robust.Client.GameStates
 
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            foreach (var (tick, ents) in toDetatch)
+            foreach (var (tick, ents) in toDetach)
             {
                 foreach (var ent in ents)
                 {
@@ -659,21 +686,21 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    if ((meta.Flags & MetaDataFlags.Detatched) != 0)
+                    if ((meta.Flags & MetaDataFlags.Detached) != 0)
                         continue;
 
-                    meta.Flags |= MetaDataFlags.Detatched;
+                    meta.Flags |= MetaDataFlags.Detached;
                     meta.LastStateApplied = toTick;
 
                     var xform = xforms.GetComponent(ent);
                     if (xform.ParentUid.IsValid())
                         xformSys.DetachParentToNull(xform, xforms, metas);
-                    detatched.Add(ent);
+                    detached.Add(ent);
                 }
             }
 
-            _prof.WriteValue("Count", ProfData.Int32(detatched.Count));
-            return detatched;
+            _prof.WriteValue("Count", ProfData.Int32(detached.Count));
+            return detached;
         }
 
         private void InitializeAndStart(Dictionary<EntityUid, EntityState> toCreate)
@@ -749,7 +776,6 @@ namespace Robust.Client.GameStates
                 {
                     if (comp.NetSyncEnabled && !serverState.ContainsKey(id))
                         _entityManager.RemoveComponent(uid, comp);
-
                 }
 
                 foreach (var (id, state) in serverState)
@@ -835,12 +861,12 @@ namespace Robust.Client.GameStates
     public sealed class GameStateAppliedArgs : EventArgs
     {
         public GameState AppliedState { get; }
-        public readonly List<EntityUid> Detatched;
+        public readonly List<EntityUid> Detached;
 
-        public GameStateAppliedArgs(GameState appliedState, List<EntityUid> detatched)
+        public GameStateAppliedArgs(GameState appliedState, List<EntityUid> detached)
         {
             AppliedState = appliedState;
-            Detatched = detatched;
+            Detached = detached;
         }
     }
 }

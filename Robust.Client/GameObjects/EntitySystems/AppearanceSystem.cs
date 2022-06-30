@@ -105,7 +105,7 @@ namespace Robust.Client.GameObjects
                 UnmarkDirty(appearance);
 
                 // If the entity is no longer within the clients PVS, don't bother updating.
-                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detatched) != 0)
+                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0)
                     continue;
 
                 // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system

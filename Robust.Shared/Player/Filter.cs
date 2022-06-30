@@ -143,11 +143,11 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Add all players whose entity is on a certain grid.
         /// </summary>
-        public Filter AddInGrid(GridId gridId, IEntityManager? entMan = null)
+        public Filter AddInGrid(EntityUid uid, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
-            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).GridID == gridId);
+            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).GridUid == uid);
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     A new filter with all players whose attached entity is on a certain grid.
         /// </summary>
-        public static Filter BroadcastGrid(GridId grid)
+        public static Filter BroadcastGrid(EntityUid grid)
         {
             return Empty().AddInGrid(grid);
         }

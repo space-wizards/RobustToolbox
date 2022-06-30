@@ -70,8 +70,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             _netComponents.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
@@ -356,12 +354,47 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Component component)
         {
-            if (component == null) throw new ArgumentNullException(nameof(component));
-
-            if (component.Owner != uid)
-                throw new InvalidOperationException("Component is not owned by entity.");
-
             RemoveComponentImmediate(component, uid, false);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool RemoveComponentDeferred<T>(EntityUid uid)
+        {
+            return RemoveComponentDeferred(uid, typeof(T));
+        }
+
+        /// <inheritdoc />
+        public bool RemoveComponentDeferred(EntityUid uid, Type type)
+        {
+            if (!TryGetComponent(uid, type, out var comp))
+                return false;
+
+            RemoveComponentDeferred((Component)comp, uid, false);
+            return true;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool RemoveComponentDeferred(EntityUid uid, ushort netId)
+        {
+            if (!TryGetComponent(uid, netId, out var comp))
+                return false;
+
+            RemoveComponentDeferred((Component)comp, uid, false);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public void RemoveComponentDeferred(EntityUid owner, IComponent component)
+        {
+            RemoveComponentDeferred((Component)component, owner, false);
+        }
+
+        /// <inheritdoc />
+        public void RemoveComponentDeferred(EntityUid owner, Component component)
+        {
+            RemoveComponentDeferred(component, owner, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -406,6 +439,9 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
+            if (component.Owner != uid)
+                throw new InvalidOperationException("Component is not owned by entity.");
+
             if (component.Deleted) return;
 
 #if EXCEPTION_TOLERANCE
@@ -448,6 +484,9 @@ namespace Robust.Shared.GameObjects
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool removeProtected)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
+
+            if (component.Owner != uid)
+                throw new InvalidOperationException("Component is not owned by entity.");
 
 #if EXCEPTION_TOLERANCE
             try
@@ -1137,6 +1176,17 @@ namespace Robust.Shared.GameObjects
                 return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (uid == null)
+            {
+                component = default;
+                return false;
+            }
+            else
+                return TryGetComponent(uid.Value, out component);
         }
 
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)

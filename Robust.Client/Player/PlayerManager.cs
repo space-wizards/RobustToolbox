@@ -143,7 +143,6 @@ namespace Robust.Client.Player
             {
                 return;
             }
-
             if (entity == null)
             {
                 LocalPlayer.DetachEntity();

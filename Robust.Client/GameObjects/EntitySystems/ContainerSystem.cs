@@ -149,7 +149,7 @@ namespace Robust.Client.GameObjects
         {
             base.OnParentChanged(ref message);
 
-            var xform = Transform(message.Entity);
+            var xform = message.Transform;
 
             if (xform.MapID != MapId.Nullspace)
                 _updateQueue.Add(message.Entity);

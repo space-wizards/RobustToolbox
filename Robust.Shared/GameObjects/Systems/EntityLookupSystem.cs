@@ -120,7 +120,9 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveFromEntityTree(args.Entity);
             }
-            else if (EntityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
+            else if (!args.Detaching &&
+                TryComp(args.Entity, out MetaDataComponent? meta) &&
+                meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xformQuery = GetEntityQuery<TransformComponent>();
                 var xform = xformQuery.GetComponent(args.Entity);
@@ -166,7 +168,7 @@ namespace Robust.Shared.GameObjects
             }
 
             component.Tree = new DynamicTree<EntityUid>(
-                GetTreeAABB,
+                (in EntityUid e) => GetTreeAABB(e, component.Owner),
                 capacity: capacity,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x * 2
             );
@@ -182,17 +184,15 @@ namespace Robust.Shared.GameObjects
             EntityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
         }
 
-        private Box2 GetTreeAABB(in EntityUid entity)
+        private Box2 GetTreeAABB(EntityUid entity, EntityUid tree)
         {
-            // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
-            var aabb = GetWorldAABB(entity);
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var tree = GetLookup(entity, xformQuery);
+            var xform = xformQuery.GetComponent(entity);
 
-            if (tree == null)
-                return aabb;
+            if (xform.ParentUid == tree)
+                return GetAABBNoContainer(entity, xform.LocalPosition, xform.LocalRotation);
 
-            return xformQuery.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(aabb);
+            return xformQuery.GetComponent(tree).InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
         }
 
         #endregion
@@ -276,7 +276,7 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsMap(args.Entity)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(args.Entity);
+            var xform = args.Transform;
             EntityLookupComponent? oldLookup = null;
 
             if (args.OldParent != null)
@@ -455,20 +455,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
-            // DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
-            Box2 localAABB;
-            var transform = new Transform(position, angle);
-
             if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
             {
-                localAABB = worldLookup.GetAABB(transform);
+                var transform = new Transform(position, angle);
+                return worldLookup.GetAABB(transform);
             }
             else
             {
-                localAABB = new Box2Rotated(new Box2(transform.Position, transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox();
+                return new Box2(position, position);
             }
-
-            return localAABB;
         }
 
         public Box2 GetWorldAABB(EntityUid uid, TransformComponent? xform = null)

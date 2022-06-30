@@ -184,7 +184,7 @@ namespace Robust.Server.GameObjects
             }
 
             _subscribedSessions.Add(session);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session), true);
             SendMessage(new OpenBoundInterfaceMessage(), session);
             if (_lastState != null)
             {
@@ -241,7 +241,7 @@ namespace Robust.Server.GameObjects
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);
             session.PlayerStatusChanged -= OnSessionOnPlayerStatusChanged;
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session), true);
 
             if (_subscribedSessions.Count == 0)
             {

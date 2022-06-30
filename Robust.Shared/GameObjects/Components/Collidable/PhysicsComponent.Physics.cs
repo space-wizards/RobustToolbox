@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
                 _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
         }
 
@@ -173,12 +173,12 @@ namespace Robust.Shared.GameObjects
             {
                 _sleepTime = 0.0f;
                 var ev = new PhysicsWakeEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
             else
             {
                 var ev = new PhysicsSleepEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -256,10 +256,12 @@ namespace Robust.Shared.GameObjects
         {
             var bounds = new Box2(transform.Position, transform.Position);
 
+            // TODO cache this to speed up entity lookups & tree updating
             foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
+                    // TODO don't transform each fixture, just transform the final AABB
                     var boundy = fixture.Shape.ComputeAABB(transform, i);
                     bounds = bounds.Union(boundy);
                 }
@@ -315,6 +317,11 @@ namespace Robust.Shared.GameObjects
                 // If we're recursively in a container then never set this.
                 if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
                     .IsEntityOrParentInContainer(Owner)) return;
+
+                if (!value)
+                {
+                    Awake = false;
+                }
 
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
@@ -606,7 +613,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _angularVelocity;
+        internal float _angularVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -838,12 +845,12 @@ namespace Robust.Shared.GameObjects
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 

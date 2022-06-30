@@ -8,10 +8,10 @@ public sealed class ScaleVisualsSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<AppearanceChangeEvent>(OnChangeData);
+        SubscribeLocalEvent<ScaleVisualsComponent, AppearanceChangeEvent>(OnChangeData);
     }
 
-    private void OnChangeData(ref AppearanceChangeEvent ev)
+    private void OnChangeData(EntityUid uid, ScaleVisualsComponent component, ref AppearanceChangeEvent ev)
     {
         if (!ev.AppearanceData.TryGetValue(ScaleVisuals.Scale, out var scale) ||
             ev.Sprite == null) return;

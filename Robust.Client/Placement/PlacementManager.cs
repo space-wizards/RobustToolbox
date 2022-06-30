@@ -492,7 +492,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer!.ControlledEntity is {Valid: true} ent)
+            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
             {
                 map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }

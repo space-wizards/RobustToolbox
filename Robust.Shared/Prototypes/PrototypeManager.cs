@@ -156,6 +156,12 @@ namespace Robust.Shared.Prototypes
         void ResolveResults();
 
         /// <summary>
+        /// Reload the changes from LoadString
+        /// </summary>
+        /// <param name="prototypes">Changes from load string</param>
+        void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes);
+
+        /// <summary>
         ///     Registers a specific prototype name to be ignored.
         /// </summary>
         void RegisterIgnore(string name);
@@ -315,7 +321,7 @@ namespace Robust.Shared.Prototypes
 #endif
         }
 
-        internal void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
+        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
         {
 #if !FULL_RELEASE
             var prototypeTypeOrder = prototypes.Keys.ToList();
@@ -609,7 +615,10 @@ namespace Robust.Shared.Prototypes
                 foreach (var node in root.Cast<YamlMappingNode>())
                 {
                     var typeString = node.GetNode("type").AsString();
-                    var type = _prototypeTypes[typeString];
+                    if (!_prototypeTypes.TryGetValue(typeString, out var type))
+                    {
+                        continue;
+                    }
 
                     var id = node.GetNode("id").AsString();
 
@@ -618,7 +627,10 @@ namespace Robust.Shared.Prototypes
                         tree.RemoveId(id);
                     }
 
-                    _prototypes[type].Remove(id);
+                    if (_prototypes.TryGetValue(type, out var prototypeIds))
+                    {
+                        prototypeIds.Remove(id);
+                    }
                 }
             }
         }

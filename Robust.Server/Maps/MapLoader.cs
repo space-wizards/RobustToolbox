@@ -51,7 +51,7 @@ namespace Robust.Server.Maps
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
-        public void SaveBlueprint(GridId gridId, string yamlPath)
+        public void SaveBlueprint(EntityUid gridId, string yamlPath)
         {
             var grid = _mapManager.GetGrid(gridId);
 
@@ -71,7 +71,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path)
         {
             return LoadBlueprint(mapId, path, DefaultLoadOptions);
         }
@@ -81,7 +81,7 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
@@ -111,7 +111,7 @@ namespace Robust.Server.Maps
                 PostDeserialize(mapId, context);
             }
 
-            return (entities, grid?.Index);
+            return (entities, grid?.GridEntityId);
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -171,7 +171,7 @@ namespace Robust.Server.Maps
             Logger.InfoS("map", "Save completed!");
         }
 
-        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<EntityUid> gridIds) LoadMap(MapId mapId, string path)
         {
             return LoadMap(mapId, path, DefaultLoadOptions);
         }
@@ -203,13 +203,13 @@ namespace Robust.Server.Maps
             return true;
         }
 
-        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<EntityUid> gridIds) LoadMap(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
-            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), Array.Empty<GridId>());
+            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), Array.Empty<EntityUid>());
 
-            IReadOnlyList<GridId> grids;
+            IReadOnlyList<EntityUid> grids;
             IReadOnlyList<EntityUid> entities;
             using (reader)
             {
@@ -222,7 +222,7 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grids = context.Grids.Select(x => x.Index).ToArray(); // TODO: make context use grid IDs.
+                grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
@@ -463,8 +463,12 @@ namespace Robust.Server.Maps
             private void ApplyGridFixtures()
             {
                 var entManager = _serverEntityManager;
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+                var sysManager = _serverEntityManager.EntitySysManager;
+                var gridFixtures = sysManager.GetEntitySystem<GridFixtureSystem>();
+                var fixtureSystem = sysManager.GetEntitySystem<FixtureSystem>();
+                // Disable splitting temporarily while maploading occurs.
+                var splitEnabled = gridFixtures.SplitAllowed;
+                gridFixtures.SplitAllowed = false;
 
                 foreach (var grid in Grids)
                 {
@@ -473,7 +477,7 @@ namespace Robust.Server.Maps
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
                     gridFixtures.EnsureGrid(grid.GridEntityId);
-                    gridFixtures.ProcessGrid(gridInternal);
+                    gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
                     fixtures.SerializedFixtures.Clear();
 
@@ -510,6 +514,8 @@ namespace Robust.Server.Maps
 
                     fixtureSystem.FixtureUpdate(fixtures, body);
                 }
+
+                gridFixtures.SplitAllowed = splitEnabled;
             }
 
             private void ReadGridSection()

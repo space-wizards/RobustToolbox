@@ -1,4 +1,5 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 
@@ -6,10 +7,11 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class CollisionWakeSystem : EntitySystem
     {
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsInitializedEvent>(OnInit);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
@@ -70,14 +72,14 @@ namespace Robust.Shared.GameObjects
             UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
-        private void OnInit(EntityUid uid, CollisionWakeComponent component, ref PhysicsInitializedEvent args)
+        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
         {
-            UpdateCanCollide(uid, component, checkTerminating: false);
+            UpdateCanCollide(uid, component, checkTerminating: false, dirty: false);
         }
 
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            UpdateCanCollide(uid, component, args.OurBody);
+            UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);
         }
 
         private void OnJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
@@ -100,9 +102,10 @@ namespace Robust.Shared.GameObjects
         private void UpdateCanCollide(
             EntityUid uid,
             CollisionWakeComponent component,
-            IPhysBody? body = null,
+            PhysicsComponent? body = null,
             TransformComponent? xform = null,
-            bool checkTerminating = true)
+            bool checkTerminating = true,
+            bool dirty = true)
         {
             if (!component.Enabled)
                 return;
@@ -116,9 +119,11 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
-            body.CanCollide = body.Awake ||
+            var canCollide = body.Awake ||
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
-                              xform.GridID == GridId.Invalid;
+                              xform.GridUid == null;
+
+            _physics.SetCanCollide(body, canCollide, dirty);
         }
     }
 }

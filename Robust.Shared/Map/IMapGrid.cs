@@ -117,6 +117,10 @@ namespace Robust.Shared.Map
         /// <param name="tiles"></param>
         void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
 
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
         IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
 
         /// <summary>

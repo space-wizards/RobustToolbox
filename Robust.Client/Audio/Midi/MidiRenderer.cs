@@ -7,7 +7,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi;
 
@@ -19,6 +21,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     // TODO: Make this a replicated CVar in MidiManager
     private const int MidiSizeLimit = 2000000;
     private const double BytesToMegabytes = 0.000001d;
+    private const int ChannelCount = 16;
 
     private readonly ISawmill _midiSawmill;
 
@@ -44,6 +47,9 @@ internal sealed class MidiRenderer : IMidiRenderer
     private readonly SequencerClientId _synthRegister;
     private readonly SequencerClientId _robustRegister;
     private readonly SequencerClientId _debugRegister;
+
+    [ViewVariables]
+    private MidiRendererState _rendererState = new();
     public IClydeBufferedAudioSource Source { get; set; }
     IClydeBufferedAudioSource IMidiRenderer.Source => Source;
 
@@ -56,17 +62,22 @@ internal sealed class MidiRenderer : IMidiRenderer
         get => _midiProgram;
         set
         {
+            var disable = DisableProgramChangeEvent;
+            DisableProgramChangeEvent = false;
+
             lock (_playerStateLock)
             {
-                for (var i = 0; i < _synth.MidiChannelCount; i++)
+                for (byte i = 0; i < ChannelCount; i++)
                 {
                     // Channel 9 is the percussion channel. Let's not change its instrument...
                     if (i == 9)
                         continue;
 
-                    _synth.ProgramChange(i, value);
+                    SendMidiEvent(RobustMidiEvent.ProgramChange(i, value, SequencerTick));
                 }
             }
+
+            DisableProgramChangeEvent = disable;
 
             _midiProgram = value;
         }
@@ -80,13 +91,13 @@ internal sealed class MidiRenderer : IMidiRenderer
         {
             lock (_playerStateLock)
             {
-                for (var i = 0; i < _synth.MidiChannelCount; i++)
+                for (byte i = 0; i < ChannelCount; i++)
                 {
                     // Channel 9 is the percussion channel. Let's not change its bank...
                     if (i == 9)
                         continue;
 
-                    _synth.BankSelect(i, value);
+                    SendMidiEvent(RobustMidiEvent.BankSelect(i, value, SequencerTick));
                 }
             }
 
@@ -233,11 +244,12 @@ internal sealed class MidiRenderer : IMidiRenderer
             return false;
 
         if (Status != MidiRendererStatus.File) CloseMidi();
-        Status = MidiRendererStatus.Input;
-        StopAllNotes();
 
         lock (_playerStateLock)
         {
+            Status = MidiRendererStatus.Input;
+            StopAllNotes();
+
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
         }
 
@@ -250,19 +262,20 @@ internal sealed class MidiRenderer : IMidiRenderer
             return false;
 
         if (Status == MidiRendererStatus.Input) CloseInput();
-        Status = MidiRendererStatus.File;
-        StopAllNotes();
-
-        if (buffer.Length > MidiSizeLimit)
-        {
-            _midiSawmill.Error("MIDI file selected is too big! It was {0} MB but it should be less than {1} MB.",
-                buffer.Length * BytesToMegabytes, MidiSizeLimit * BytesToMegabytes);
-            CloseMidi();
-            return false;
-        }
 
         lock (_playerStateLock)
         {
+            Status = MidiRendererStatus.File;
+            StopAllNotes();
+
+            if (buffer.Length > MidiSizeLimit)
+            {
+                _midiSawmill.Error("MIDI file selected is too big! It was {0} MB but it should be less than {1} MB.",
+                    buffer.Length * BytesToMegabytes, MidiSizeLimit * BytesToMegabytes);
+                CloseMidi();
+                return false;
+            }
+
             _player?.Dispose();
             _player = new NFluidsynth.Player(_synth);
             _player.SetPlaybackCallback(MidiPlayerEventHandler);
@@ -278,10 +291,10 @@ internal sealed class MidiRenderer : IMidiRenderer
     public bool CloseInput()
     {
         if (Status != MidiRendererStatus.Input) return false;
-        Status = MidiRendererStatus.None;
 
         lock (_playerStateLock)
         {
+            Status = MidiRendererStatus.None;
             _driver?.Dispose();
             _driver = null;
         }
@@ -293,9 +306,9 @@ internal sealed class MidiRenderer : IMidiRenderer
     public bool CloseMidi()
     {
         if (Status != MidiRendererStatus.File) return false;
-        Status = MidiRendererStatus.None;
         lock (_playerStateLock)
         {
+            Status = MidiRendererStatus.None;
             if (_player == null) return false;
             _player?.Stop();
             _player?.Join();
@@ -331,9 +344,9 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     public void StopAllNotes()
     {
-        lock(_playerStateLock)
+        for (byte i = 0; i < ChannelCount; i++)
         {
-            _synth.AllNotesOff(-1);
+            SendMidiEvent(RobustMidiEvent.AllNotesOff(i, SequencerTick));
         }
     }
 
@@ -410,6 +423,61 @@ internal sealed class MidiRenderer : IMidiRenderer
         if (!Source.IsPlaying) Source.StartPlaying();
     }
 
+    public void ApplyState(MidiRendererState state)
+    {
+        lock (_playerStateLock)
+        {
+            _synth.SystemReset();
+
+            for (var channel = 0; channel < ChannelCount; channel++)
+            {
+                _synth.AllNotesOff(channel);
+
+                _synth.PitchBend(channel, state.PitchBend.AsSpan[channel]);
+                _synth.ChannelPressure(channel, state.ChannelPressure.AsSpan[channel]);
+                _synth.ProgramChange(channel, state.Program.AsSpan[channel]);
+
+                for (var controller = 0; controller < state.Controllers.AsSpan[channel].AsSpan.Length; controller++)
+                {
+                    var value = state.Controllers.AsSpan[channel].AsSpan[controller];
+
+                    if (value == _synth.GetCC(channel, controller))
+                        continue;
+
+                    try
+                    {
+                        _synth.CC(channel, controller, value);
+                    }
+                    catch (FluidSynthInteropException e)
+                    {
+                        _midiSawmill.Error($"CH:{channel} CC:{controller} VAL:{value} {e.ToStringBetter()}");
+                    }
+
+                }
+
+                for (var key = 0; key < state.NoteVelocities.AsSpan[channel].AsSpan.Length; key++)
+                {
+                    var velocity = state.NoteVelocities.AsSpan[channel].AsSpan[key];
+
+                    if (velocity <= 0)
+                        continue;
+
+                    try
+                    {
+                        _synth.NoteOn(channel, key, velocity);
+                    }
+                    catch (FluidSynthInteropException e)
+                    {
+                        _midiSawmill.Error($"CH:{channel} KEY:{key} VEL:{velocity} {e.ToStringBetter()}");
+                    }
+                }
+            }
+
+            // Sorry PJB, I have to copy it.
+            _rendererState = state;
+        }
+    }
+
     public void SendMidiEvent(RobustMidiEvent midiEvent)
     {
         if (Disposed)
@@ -423,6 +491,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                 switch (midiEvent.MidiCommand)
                 {
                     case RobustMidiCommand.NoteOff:
+                        _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
                         _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
                         break;
 
@@ -431,44 +500,52 @@ internal sealed class MidiRenderer : IMidiRenderer
                         if (DisablePercussionChannel && midiEvent.Channel == 9)
                             return;
 
-                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, VolumeBoost ? 127 : midiEvent.Velocity);
+                        var velocity = (byte)(VolumeBoost ? 127 : midiEvent.Velocity);
+
+                        _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
+                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
                         break;
 
                     case RobustMidiCommand.AfterTouch:
+                        _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = midiEvent.Value;
                         _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);
                         break;
 
                     case RobustMidiCommand.ControlChange:
+                        _rendererState.Controllers.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Control] = midiEvent.Value;
                         _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
                         break;
 
                     case RobustMidiCommand.ProgramChange:
-                        if (!DisableProgramChangeEvent)
-                            _synth.ProgramChange(midiEvent.Channel, midiEvent.Program);
-                        else
+                        if (DisableProgramChangeEvent)
                             return;
+
+                        _rendererState.Program.AsSpan[midiEvent.Channel] = midiEvent.Program;
+                        _synth.ProgramChange(midiEvent.Channel, midiEvent.Program);
                         break;
 
                     case RobustMidiCommand.ChannelPressure:
+                        _rendererState.ChannelPressure.AsSpan[midiEvent.Channel] = midiEvent.Pressure;
                         _synth.ChannelPressure(midiEvent.Channel, midiEvent.Pressure);
                         break;
 
                     case RobustMidiCommand.PitchBend:
+                        _rendererState.PitchBend.AsSpan[midiEvent.Channel] = (ushort)midiEvent.Pitch;
                         _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
                         break;
 
                     // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
-                    case 0x00:
+                    case (RobustMidiCommand) 0x00:
                     case (RobustMidiCommand) 0x01:
                     case (RobustMidiCommand) 0x05:
-                    // MetaEvent -- SetTempo
-                    case (RobustMidiCommand) 0x50: // Already handled by the player.
+                    case (RobustMidiCommand) 0x50: // MetaEvent -- SetTempo, handled by the player.
                         return;
 
                     case RobustMidiCommand.SystemMessage:
                         switch (midiEvent.Control)
                         {
                             case 0x0 when midiEvent.Status == 0xFF:
+                                _rendererState = new ();
                                 _synth.SystemReset();
 
                                 // Reset the instrument to the one we were using.
@@ -481,6 +558,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                                 break;
 
                             case 0x0B:
+                                _rendererState.NoteVelocities = default;
                                 _synth.AllNotesOff(midiEvent.Channel);
                                 break;
                         }

@@ -762,7 +762,7 @@ namespace Robust.Shared.GameObjects
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
             }
-
+			// Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
             if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;

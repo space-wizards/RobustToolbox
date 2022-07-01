@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Prometheus;
-using Robust.Client.GameStates;
 using Robust.Client.Player;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -19,7 +18,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
@@ -44,6 +43,22 @@ namespace Robust.Client.GameObjects
         void IClientEntityManagerInternal.StartEntity(EntityUid entity)
         {
             base.StartEntity(entity);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty(EntityUid uid)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(uid);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty(Component component)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(component);
         }
 
         #region IEntityNetworkManager impl

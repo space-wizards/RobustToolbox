@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -15,7 +16,7 @@ namespace Robust.Client.GameStates;
 /// </summary>
 internal sealed class ClientDirtySystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IClientGameTiming _timing = default!;
 
     private readonly Dictionary<GameTick, HashSet<EntityUid>> _dirtyEntities = new();
 

@@ -260,16 +260,10 @@ namespace Robust.Shared.Timing
         public bool IsFirstTimePredicted { get; protected set; } = true;
 
         /// <inheritdoc />
-        public bool InPrediction => !ApplyingState && CurTick > LastRealTick;
+        public virtual bool InPrediction => false;
 
         /// <inheritdoc />
         public bool ApplyingState {get; protected set; }
-
-        /// <inheritdoc />
-        public GameTick LastRealTick { get; set; }
-
-        /// <inheritdoc />
-        public GameTick LastProcessedTick { get; set; }
 
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.

@@ -1,6 +1,7 @@
 using System;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -10,13 +11,13 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class DebugTimePanel : PanelContainer
     {
-        private readonly IGameTiming _gameTiming;
+        private readonly IClientGameTiming _gameTiming;
         private readonly IClientGameStateManager _gameState;
 
         private readonly char[] _textBuffer = new char[256];
         private readonly Label _contents;
 
-        public DebugTimePanel(IGameTiming gameTiming, IClientGameStateManager gameState)
+        public DebugTimePanel(IClientGameTiming gameTiming, IClientGameStateManager gameState)
         {
             _gameTiming = gameTiming;
             _gameState = gameState;

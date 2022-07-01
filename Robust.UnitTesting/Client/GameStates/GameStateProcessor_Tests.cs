@@ -1,6 +1,7 @@
 using Moq;
 using NUnit.Framework;
 using Robust.Client.GameStates;
+using Robust.Client.Timing;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
 
@@ -12,7 +13,7 @@ namespace Robust.UnitTesting.Client.GameStates
         [Test]
         public void FillBufferBlocksProcessing()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
@@ -32,7 +33,7 @@ namespace Robust.UnitTesting.Client.GameStates
         [Test]
         public void FillBufferAndCalculateFirstState()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
@@ -60,7 +61,7 @@ namespace Robust.UnitTesting.Client.GameStates
         [Test]
         public void FullStateResyncsCurTick()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
@@ -241,9 +242,9 @@ namespace Robust.UnitTesting.Client.GameStates
         ///     Creates a new GameTiming and GameStateProcessor, fills the processor with enough states, and calculate the first tick.
         ///     CurTick = 1, states 1 - 3 are in the buffer.
         /// </summary>
-        private static (IGameTiming timing, GameStateProcessor processor) SetupProcessorFactory()
+        private static (IClientGameTiming timing, GameStateProcessor processor) SetupProcessorFactory()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
             timingMock.SetupProperty(p => p.LastProcessedTick);
             timingMock.SetupProperty(p => p.LastRealTick);

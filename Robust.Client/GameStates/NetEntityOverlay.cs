@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Client.Timing;
 using Robust.Shared.Collections;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
@@ -20,7 +21,7 @@ namespace Robust.Client.GameStates
     /// </summary>
     sealed class NetEntityOverlay : Overlay
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -176,7 +177,7 @@ namespace Robust.Client.GameStates
             public bool Exists = true;
             public bool InPVS = true;
 
-            public Color TextColor(IGameTiming timing)
+            public Color TextColor(IClientGameTiming timing)
             {
                 if (!InPVS)
                     return Color.Orange; // Entity still exists outside PVS, but not updated anymore.

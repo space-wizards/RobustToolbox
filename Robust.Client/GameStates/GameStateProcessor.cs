@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -13,7 +14,7 @@ namespace Robust.Client.GameStates
     /// <inheritdoc />
     internal sealed class GameStateProcessor : IGameStateProcessor
     {
-        private readonly IGameTiming _timing;
+        private readonly IClientGameTiming _timing;
 
         private readonly List<GameState> _stateBuffer = new();
 
@@ -68,7 +69,7 @@ namespace Robust.Client.GameStates
         ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
         /// </summary>
         /// <param name="timing">Timing information of the current state.</param>
-        public GameStateProcessor(IGameTiming timing)
+        public GameStateProcessor(IClientGameTiming timing)
         {
             _timing = timing;
         }

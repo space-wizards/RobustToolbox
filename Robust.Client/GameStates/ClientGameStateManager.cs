@@ -214,11 +214,11 @@ namespace Robust.Client.GameStates
                 // This would be a nice optimization though also minor since the primary cost here
                 // is avoiding entity system and re-prediction runs.
                 //
-                // Addendum: It might be possible that some state (e.g. 1->2) contains information for entity creation
+                // Correction: It might be possible that some state (e.g. 1->2) contains information for entity creation
                 // for some entity that has left pvs by tick 3. Given that state 1->2 was acked, the server will not
                 // re-send that state later. So if we skip it and only apply tick 1->3, that will lead to a missing
                 // meta-data error. So while this can still be optimized, its probably not worth the headache.
-                //
+
                 // Attempts to retrieve the next state to apply
                 if (!_processor.TryGetNextStates(out var curState, out var nextState))
                     break;
@@ -291,8 +291,6 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            _timing.CurTick = _timing.LastProcessedTick;
-
             // Slightly speed up or slow down the client tickrate based on the contents of the buffer.
             // TryGetTickStates should have cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
             // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
@@ -323,8 +321,21 @@ namespace Robust.Client.GameStates
 
             DebugTools.Assert(_timing.InSimulation);
 
+            var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
+            var predictionTarget = _timing.LastProcessedTick + (uint) (_processor.TargetBufferSize + Math.Ceiling(_timing.TickRate * ping) + PredictTickBias);
+
             if (IsPredictionEnabled)
-                PredictTicks();
+            {
+                // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
+                // Really the main-loop ticking just needs to be more specialized for clients.
+                var skipPrediction = _timing.TickRemainder >= _timing.CalcAdjustedTickPeriod();
+                if (skipPrediction)
+                    _timing.CurTick = predictionTarget;
+                else
+                    PredictTicks(predictionTarget);
+            }
+            else
+                _timing.CurTick = _timing.LastProcessedTick;
 
             using (_prof.Group("Tick"))
             {
@@ -339,22 +350,9 @@ namespace Robust.Client.GameStates
             _processor.RequestFullState();
         }
 
-        public void PredictTicks()
+        public void PredictTicks(GameTick predictionTarget)
         {
-            var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
-            var predictionTarget = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int)Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
-
-            // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
-            // Really the main-loop ticking just needs to be more specialized for clients.
-            var skipPrediction = _timing.TickRemainder >= _timing.CalcAdjustedTickPeriod();
-            if (skipPrediction)
-            {
-                _timing.CurTick = new((uint) predictionTarget);
-                return;
-            }
-
-            PredictionNeedsResetting = true;
+            _timing.CurTick = _timing.LastProcessedTick;
             using var _p = _prof.Group("Prediction");
             using var _ = _timing.StartPastPredictionArea();
 
@@ -369,30 +367,27 @@ namespace Robust.Client.GameStates
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-            for (var t = _timing.CurTick.Value + 1; t <= predictionTarget; t++)
+            while (_timing.CurTick < predictionTarget)
             {
+                _timing.CurTick += 1;
                 var groupStart = _prof.WriteGroupStart();
 
-                var tick = new GameTick(t);
-                _timing.CurTick = tick;
-
-                while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
+                while (hasPendingInput && pendingInputEnumerator.Current.Tick <= _timing.CurTick)
                 {
                     var inputCmd = pendingInputEnumerator.Current;
 
                     _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
                     _sawmill.Debug(
-                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={_timing.CurTick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
-
 
                     input.PredictInputCommand(inputCmd);
 
                     hasPendingInput = pendingInputEnumerator.MoveNext();
                 }
 
-                while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= _timing.CurTick)
                 {
                     var msg = pendingMessagesEnumerator.Current.msg;
 
@@ -402,8 +397,9 @@ namespace Robust.Client.GameStates
                     hasPendingMessage = pendingMessagesEnumerator.MoveNext();
                 }
 
-                if (t != predictionTarget)
+                if (_timing.CurTick != predictionTarget)
                 {
+                    PredictionNeedsResetting = true;
                     using (_prof.Group("Systems"))
                     {
                         // Don't run EntitySystemManager.TickUpdate if this is the target tick,
@@ -418,7 +414,7 @@ namespace Robust.Client.GameStates
                     }
                 }
 
-                _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(t));
+                _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(_timing.CurTick.Value));
             }
         }
 

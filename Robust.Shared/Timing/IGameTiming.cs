@@ -150,16 +150,6 @@ namespace Robust.Shared.Timing
         /// </summary>
         bool ApplyingState { get; }
 
-        /// <summary>
-        /// The last real non-extrapolated tick that was processed.
-        /// </summary>
-        GameTick LastRealTick { get; set; }
-
-        /// <summary>
-        /// The last real non-extrapolated tick that was processed.
-        /// </summary>
-        GameTick LastProcessedTick { get; set; }
-
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 
         static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;

@@ -233,11 +233,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Calling Dirty on a component will call this directly.
         /// </remarks>
-        public void Dirty(EntityUid uid)
+        public virtual void Dirty(EntityUid uid)
         {
-            if (_netMan.IsClient && (_gameTiming.CurTick <= _gameTiming.LastRealTick || _gameTiming.ApplyingState))
-                return;
-
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
             if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
                 throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
@@ -254,11 +251,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void Dirty(Component component)
+        public virtual void Dirty(Component component)
         {
-            if (_netMan.IsClient && (_gameTiming.CurTick <= _gameTiming.LastRealTick || _gameTiming.ApplyingState))
-                return;
-
             var owner = component.Owner;
 
             // Deserialization will cause this to be true.

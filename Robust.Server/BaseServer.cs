@@ -648,9 +648,6 @@ namespace Robust.Server
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
-            // These are always the same on the server, there is no prediction.
-            _time.LastRealTick = _time.LastProcessedTick = _time.CurTick;
-
             _systemConsole.UpdateTick();
 
             using (TickUsage.WithLabels("PreEngine").NewTimer())

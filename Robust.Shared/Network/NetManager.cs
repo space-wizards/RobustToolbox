@@ -603,7 +603,9 @@ namespace Robust.Shared.Network
             netConfig.SimulatedRandomLatency = _config.GetCVar(CVars.NetFakeLagRand);
             netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
+#if DEBUG
             netConfig.ConnectionTimeout = 30000f;
+#endif
 
             return netConfig;
         }

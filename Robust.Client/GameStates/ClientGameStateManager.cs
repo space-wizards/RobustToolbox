@@ -602,7 +602,8 @@ namespace Robust.Client.GameStates
             }
 
             // Detatch entities to null space
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms);
+            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -636,18 +637,9 @@ namespace Robust.Client.GameStates
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
 
-            // Delete Entities. This HAS to happen after apply entity state, because some entities may have been
-            // de-parented from an entity that is about to be deleted.
             var delSpan = curState.EntityDeletions.Span;
             if (delSpan.Length > 0)
-            {
-                using var _ = _prof.Group("Deletion");
-                foreach (var id in delSpan)
-                {
-                    _entities.DeleteEntity(id);
-                }
-                _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
-            }
+                ProcessDeletions(delSpan, xforms, metas, xformSys);
 
             // Initialize and start the newly created entities. IMO this should be done before apply-state, so that
             // people can safely make use of things like on-container-insert events without having to check whether
@@ -662,7 +654,46 @@ namespace Robust.Client.GameStates
             return (toCreate.Keys, detached);
         }
 
-        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms)
+        private void ProcessDeletions(
+            ReadOnlySpan<EntityUid> delSpan,
+            EntityQuery<TransformComponent> xforms,
+            EntityQuery<MetaDataComponent> metas,
+            SharedTransformSystem xformSys)
+        {
+            // Processing deletions is non-trivial, because by default deletions will also delete all child entities.
+            // 
+            // Naively: easy, just apply server states to process any transform states before deleting, right? But now
+            // that PVS detach messages are sent separately & processed over time, the entity may have left our view,
+            // but not yet been moved to null-space. In that case, the server would not send us transform states, and
+            // deleting an entity could falsely delete the children as well. Therefore, before deleting we must detach
+            // all children to null. This also gets called WHILE deleting, but we need to do it beforehand. Given that
+            // they are either also about to get deleted, or about to be send to out-of-pvs null-space, this shouldn't
+            // be a significant performance impact.
+
+            using var _ = _prof.Group("Deletion");
+
+            foreach (var id in delSpan)
+            {
+                if (!xforms.TryGetComponent(id, out var xform))
+                    continue; // Already deleted? or never sent to us?
+
+                // First, a single recursive map change
+                xformSys.DetachParentToNull(xform, xforms, metas);
+
+                // Then detach all children.
+                var childEnumerator = xform.ChildEnumerator;
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                }
+
+                // Finally, delete the entity.
+                _entities.DeleteEntity(id);
+            }
+            _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
+        }
+
+        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
             var detached = new List<EntityUid>();
@@ -675,8 +706,6 @@ namespace Robust.Client.GameStates
             // things like container insertion and ejection.
 
             using var _ = _prof.Group("Leave PVS");
-
-            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             foreach (var (tick, ents) in toDetach)
             {
@@ -777,14 +806,7 @@ namespace Robust.Client.GameStates
                 //
                 // as to why we need to reset: because in the process of detaching to null-space, we will have dirtied
                 // the entity. most notably, all entities will have been ejected from their containers.
-                var serverState = _processor.GetLastServerStates(uid);
-                foreach (var (id, comp) in _entities.GetNetComponents(uid))
-                {
-                    if (comp.NetSyncEnabled && !serverState.ContainsKey(id))
-                        _entityManager.RemoveComponent(uid, comp);
-                }
-
-                foreach (var (id, state) in serverState)
+                foreach (var (id, state) in _processor.GetLastServerStates(uid))
                 {
                     if (!_entityManager.TryGetComponent(uid, id, out var comp))
                     {

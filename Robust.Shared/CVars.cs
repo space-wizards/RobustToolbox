@@ -70,13 +70,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE);
+            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.

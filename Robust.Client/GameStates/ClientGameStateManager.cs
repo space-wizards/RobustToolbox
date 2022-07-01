@@ -279,8 +279,6 @@ namespace Robust.Client.GameStates
 #endif
                 }
 
-                _processor.RemoveState(curState);
-
                 using (_prof.Group("MergeImplicitData"))
                 {
                     MergeImplicitData(createdEntities);

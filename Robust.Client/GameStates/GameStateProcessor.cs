@@ -333,18 +333,6 @@ namespace Robust.Client.GameStates
             return true;
         }
 
-        internal void RemoveState(GameState curState)
-        {
-            for (int i = 0; i < _stateBuffer.Count; i++)
-            {
-                if (curState == _stateBuffer[i])
-                {
-                    _stateBuffer.RemoveSwap(i);
-                    return;
-                }
-            }
-        }
-
         /// <summary>
         ///     Generates a completely fake GameState.
         /// </summary>
@@ -408,7 +396,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var state in _stateBuffer)
                 {
-                    if (state.ToSequence >= nextTick && state.FromSequence < nextTick)
+                    if (state.ToSequence > nextTick && state.FromSequence <= nextTick)
                     {
                         foundState = true;
                         nextTick += 1;

@@ -304,6 +304,11 @@ namespace Robust.Shared.GameObjects
             var ev = new EntityTerminatingEvent(metadata.Owner);
             EventBus.RaiseLocalEvent(metadata.Owner, ref ev, false);
 
+            // Detach the base entity to null before iterating over children
+            // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
+            if (transform.ParentUid != EntityUid.Invalid)
+                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
+
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var child in transform._children.ToArray())
             {
@@ -319,13 +324,6 @@ namespace Robust.Shared.GameObjects
             {
                 if(component.Running)
                     component.LifeShutdown(this);
-            }
-
-            // map does not have a parent node, everything else needs to be detached
-            if (transform.ParentUid != EntityUid.Invalid)
-            {
-                // Detach from my parent, if any
-                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
             }
 
             // Dispose all my components, in a safe order so transform is available

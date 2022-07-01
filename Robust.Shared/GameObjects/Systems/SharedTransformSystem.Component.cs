@@ -667,15 +667,6 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
-    public MapId GetMapId(EntityUid? uid, TransformComponent? xform = null)
-    {
-        if (uid == null ||
-            !uid.Value.IsValid() ||
-            !Resolve(uid.Value, ref xform, false)) return MapId.Nullspace;
-
-        return xform.MapID;
-    }
-
     #region State Handling
     private void ChangeMapId(TransformComponent xform, MapId newMapId, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
     {

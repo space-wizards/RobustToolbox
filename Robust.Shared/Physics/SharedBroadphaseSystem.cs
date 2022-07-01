@@ -394,7 +394,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
-        internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(PhysicsComponent body, MapId oldMapId, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform) ||
                 _mapManager.IsGrid(body.Owner)) return;
@@ -406,30 +406,30 @@ namespace Robust.Shared.Physics
 
             while (childEnumerator.MoveNext(out var child))
             {
-                RecursiveBroadphaseUpdate(child.Value, bodyQuery, fixturesQuery, xformQuery);
+                RecursiveBroadphaseUpdate(child.Value, oldMapId, bodyQuery, fixturesQuery, xformQuery);
             }
 
-            UpdateBodyBroadphase(body, manager, xform);
+            UpdateBodyBroadphase(body, oldMapId, manager, xform);
         }
 
-        private void RecursiveBroadphaseUpdate(EntityUid uid, EntityQuery<PhysicsComponent> bodyQuery, EntityQuery<FixturesComponent> fixturesQuery, EntityQuery<TransformComponent> xformQuery)
+        private void RecursiveBroadphaseUpdate(EntityUid uid, MapId oldMapId, EntityQuery<PhysicsComponent> bodyQuery, EntityQuery<FixturesComponent> fixturesQuery, EntityQuery<TransformComponent> xformQuery)
         {
             var xform = xformQuery.GetComponent(uid);
             var childEnumerator = xform.ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {
-                RecursiveBroadphaseUpdate(child.Value, bodyQuery, fixturesQuery, xformQuery);
+                RecursiveBroadphaseUpdate(child.Value, oldMapId, bodyQuery, fixturesQuery, xformQuery);
             }
 
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 fixturesQuery.TryGetComponent(uid, out var manager))
             {
-                UpdateBodyBroadphase(body, manager, xform);
+                UpdateBodyBroadphase(body, oldMapId, manager, xform);
             }
         }
 
-        private void UpdateBodyBroadphase(PhysicsComponent body, FixturesComponent manager, TransformComponent xform)
+        private void UpdateBodyBroadphase(PhysicsComponent body, MapId oldMapId, FixturesComponent manager, TransformComponent xform)
         {
             if (body._canCollide)
             {
@@ -439,7 +439,9 @@ namespace Robust.Shared.Physics
 
                 if (oldBroadphase == newBroadphase) return;
 
-                DestroyProxies(body, manager);
+                DebugTools.Assert(oldMapId != null);
+
+                DestroyProxies(body, manager, oldMapId);
 
                 // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
                 CreateProxies(body, manager);
@@ -449,7 +451,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Remove all of our fixtures from the broadphase.
         /// </summary>
-        private void DestroyProxies(PhysicsComponent body, FixturesComponent? manager = null)
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent? manager = null, MapId? mapId = null)
         {
             if (!Resolve(body.Owner, ref manager)) return;
 
@@ -457,11 +459,11 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null) return;
 
-            var mapId = Transform(broadphase.Owner).MapID;
+            mapId ??= Transform(broadphase.Owner).MapID;
 
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                DestroyProxies(broadphase, fixture, mapId);
+                DestroyProxies(broadphase, fixture, mapId.Value);
             }
 
             body.Broadphase = null;
@@ -789,14 +791,16 @@ namespace Robust.Shared.Physics
             }
 
             var proxyCount = fixture.ProxyCount;
-            var moveBuffer = _moveBuffer[mapId];
+
+            // May have already moved to null-space, in which case the move-buffer was already cleared.
+            _moveBuffer.TryGetValue(mapId, out var moveBuffer);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
                 broadphase.Tree.RemoveProxy(proxy.ProxyId);
                 proxy.ProxyId = DynamicTree.Proxy.Free;
-                moveBuffer.Remove(proxy);
+                moveBuffer?.Remove(proxy);
             }
 
             fixture.ProxyCount = 0;

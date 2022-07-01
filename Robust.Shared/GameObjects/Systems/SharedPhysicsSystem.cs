@@ -139,6 +139,10 @@ namespace Robust.Shared.GameObjects
 
             var xform = args.Transform;
 
+            // Is this entity getting recursively detached after it's parent was already detached to null?
+            if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
+                return;
+
             if ((meta.Flags & MetaDataFlags.InContainer) != 0)
             {
                 // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
@@ -151,10 +155,10 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
-            _broadphase.UpdateBroadphase(body, xform: xform);
+            _broadphase.UpdateBroadphase(body, args.OldMapId, xform: xform);
 
             // Handle map change
-            var mapId = _transform.GetMapId(args.Entity);
+            var mapId = args.Transform.MapID;
 
             if (args.OldMapId != mapId)
                 HandleMapChange(body, xform, args.OldMapId, mapId);

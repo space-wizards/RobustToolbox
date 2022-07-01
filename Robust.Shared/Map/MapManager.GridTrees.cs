@@ -143,24 +143,23 @@ internal partial class MapManager
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy
-        // Want gridinit / gridremoval to handle this hence specialcase those situations.
-        if (lifestage is < EntityLifeStage.Initialized or >= EntityLifeStage.Terminating) return;
-
-        var oldMapId = args.OldParent == null
-            ? MapId.Nullspace
-            : EntityManager.GetComponent<TransformComponent>(args.OldParent.Value).MapID;
+        // Want gridinit to handle this hence specialcase those situations.
+        if (lifestage < EntityLifeStage.Initialized) return;
 
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = args.Transform.MapID;
 
         // y'all need jesus
-        if (oldMapId == mapId) return;
+        if (args.OldMapId == mapId) return;
 
-        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(oldMapId, out var oldMovedGrids))
+        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
-            RemoveGrid(aGrid, oldMapId);
+            RemoveGrid(aGrid, args.OldMapId);
         }
+
+        if (args.Transform.MapID == MapId.Nullspace)
+            return;
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {

@@ -83,6 +83,31 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(xformSystem.GetMoverCoordinates(child3Xform).Position, Is.EqualTo(Vector2.One));
         }
 
+        /// <summary>
+        /// Asserts that when a transformcomponent is detached to null all of its children update their mapids.
+        /// </summary>
+        [Test]
+        public void DetachMapRecursive()
+        {
+            var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
+            var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            var mapId = new MapId(1);
+
+            var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var xform = entManager.GetComponent<TransformComponent>(parent);
+
+            var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+            var childXform = entManager.GetComponent<TransformComponent>(child);
+
+            Assert.That(xform.MapID, Is.EqualTo(mapId));
+            Assert.That(childXform.MapID, Is.EqualTo(mapId));
+
+            xformSystem.DetachParentToNull(xform);
+            Assert.That(xform.MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(childXform.MapID, Is.EqualTo(MapId.Nullspace));
+        }
+
         private sealed class Subscriber : IEntityEventSubscriber { }
     }
 }

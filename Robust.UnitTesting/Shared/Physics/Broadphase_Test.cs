@@ -70,7 +70,8 @@ public sealed class Broadphase_Test
         var mapManager = sim.Resolve<IMapManager>();
 
         var mapId = mapManager.CreateMap();
-        var mapBroapdhase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
+        var mapUid = mapManager.GetMapEntityId(mapId);
+        var mapBroapdhase = entManager.GetComponent<BroadphaseComponent>(mapUid);
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(1));
 
@@ -103,5 +104,11 @@ public sealed class Broadphase_Test
         Assert.That(child2Body.Broadphase, Is.EqualTo(null));
 
         // Can't assert CanCollide because they may still want to be valid when coming out of nullspace.
+
+        // Check it goes back to normal
+        parentXform.AttachParent(mapUid);
+        Assert.That(parentBody.Broadphase, Is.EqualTo(mapBroapdhase));
+        Assert.That(child1Body.Broadphase, Is.EqualTo(mapBroapdhase));
+        Assert.That(child2Body.Broadphase, Is.EqualTo(null));
     }
 }

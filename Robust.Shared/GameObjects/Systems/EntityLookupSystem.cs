@@ -187,12 +187,23 @@ namespace Robust.Shared.GameObjects
         private Box2 GetTreeAABB(EntityUid entity, EntityUid tree)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(entity);
+
+            if (!xformQuery.TryGetComponent(entity, out var xform))
+            {
+                Logger.Error($"Entity tree contains a deleted entity? Tree: {ToPrettyString(tree)}, entity: {entity}");
+                return default;
+            }
 
             if (xform.ParentUid == tree)
                 return GetAABBNoContainer(entity, xform.LocalPosition, xform.LocalRotation);
 
-            return xformQuery.GetComponent(tree).InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
+            if (!xformQuery.TryGetComponent(tree, out var treeXform))
+            {
+                Logger.Error($"Entity tree has no transform? Tree Uid: {tree}");
+                return default;
+            }
+
+            return treeXform.InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
         }
 
         #endregion
@@ -279,7 +290,7 @@ namespace Robust.Shared.GameObjects
             var xform = args.Transform;
             EntityLookupComponent? oldLookup = null;
 
-            if (args.OldParent != null)
+            if (args.OldMapId != MapId.Nullspace && args.OldParent != null)
             {
                 oldLookup = GetLookup(args.OldParent.Value, xformQuery);
             }

@@ -55,7 +55,6 @@ public sealed class Broadphase_Test
         grid.SetTile(Vector2i.Zero, Tile.Empty);
         Assert.That(parentBody.Broadphase, Is.EqualTo(mapBroapdhase));
         Assert.That(child1Body.Broadphase, Is.EqualTo(mapBroapdhase));
-
         Assert.That(child2Body.Broadphase, Is.EqualTo(null));
     }
 }

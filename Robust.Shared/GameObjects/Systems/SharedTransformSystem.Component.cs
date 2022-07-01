@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -209,7 +210,21 @@ public abstract partial class SharedTransformSystem
         {
             // Note that _children is a SortedSet<EntityUid>,
             // so duplicate additions (which will happen) don't matter.
-            xformQuery.GetComponent(component.ParentUid)._children.Add(uid);
+
+            var parentXform = xformQuery.GetComponent(component.ParentUid);
+            if (parentXform.LifeStage > ComponentLifeStage.Running || LifeStage(parentXform.Owner) > EntityLifeStage.MapInitialized)
+            {
+                var msg = $"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(parentXform.Owner)}, new parent: {ToPrettyString(uid)}";
+#if EXCEPTION_TOLERANCE
+                Logger.Error(msg);
+                Del(uid);
+#else
+                throw new InvalidOperationException(msg);
+#endif
+            }
+
+
+            parentXform._children.Add(uid);
         }
 
 

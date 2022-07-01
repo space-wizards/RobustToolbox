@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -273,7 +274,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid e)
         {
-            // Some UIs get dispose after entity-manager has shut down and already deleted all entities.
+            // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
             if (!Started)
                 return;
 
@@ -289,11 +290,15 @@ namespace Robust.Shared.GameObjects
                 return;
 
             if (meta.EntityLifeStage == EntityLifeStage.Terminating)
+            {
+                var msg = $"Called Delete on an entity already being deleted. Entity: {ToPrettyString(meta.Owner)}";
 #if !EXCEPTION_TOLERANCE
-                throw new InvalidOperationException("Called Delete on an entity already being deleted.");
+                throw new InvalidOperationException(msg);
 #else
-                return;
+                Logger.Error(msg);
 #endif
+            }
+
             RecursiveDeleteEntity(meta, metaQuery, xformQuery, xformSys);
         }
 
@@ -309,15 +314,20 @@ namespace Robust.Shared.GameObjects
             if (transform.ParentUid != EntityUid.Invalid)
                 xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
 
-            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var child in transform._children.ToArray())
+            foreach (var child in transform._children)
             {
                 if (!metaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
-                    continue; //TODO: Why was this still a child if it was already deleted?
+                {
+                    Logger.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(metadata.Owner)}.");
+                    transform._children.Remove(child);
+                    continue;
+                }
 
                 // Recursion Alert
                 RecursiveDeleteEntity(childMeta, metaQuery, xformQuery, xformSys);
             }
+
+            DebugTools.Assert(transform._children.Count == 0, $"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
 
             // Shut down all components.
             foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))

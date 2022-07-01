@@ -338,6 +338,18 @@ namespace Robust.Shared.GameObjects
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
 
+                    if (newParent.LifeStage > ComponentLifeStage.Running ||
+                        _entMan.GetComponent<MetaDataComponent>(newParent.Owner).EntityLifeStage > EntityLifeStage.MapInitialized)
+                    {
+                        var msg = $"Attempted to re-parent to a terminating object. Entity: {_entMan.ToPrettyString(Owner)}, new parent: {_entMan.ToPrettyString(value.EntityId)}";
+#if EXCEPTION_TOLERANCE
+                        Logger.Error(msg);
+                        _entMan.DeleteEntity(Owner);
+#else
+                        throw new InvalidOperationException(msg);
+#endif
+                    }
+
                     // That's already our parent, don't bother attaching again.
 
                     var oldParent = _parent.IsValid() ? xformQuery.GetComponent(_parent) : null;

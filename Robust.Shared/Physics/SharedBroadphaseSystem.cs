@@ -397,7 +397,8 @@ namespace Robust.Shared.Physics
         internal void UpdateBroadphase(PhysicsComponent body, MapId oldMapId, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform) ||
-                _mapManager.IsGrid(body.Owner)) return;
+                _mapManager.IsGrid(body.Owner) && xform.MapID != MapId.Nullspace)
+                return;
 
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
@@ -439,7 +440,7 @@ namespace Robust.Shared.Physics
 
                 if (oldBroadphase == newBroadphase) return;
 
-                DebugTools.Assert(oldMapId != null);
+                DebugTools.Assert(oldMapId != MapId.Nullspace);
 
                 DestroyProxies(body, manager, oldMapId);
 

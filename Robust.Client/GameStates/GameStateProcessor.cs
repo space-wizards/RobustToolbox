@@ -31,7 +31,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public GameTick? _lastFullStateRequested = GameTick.First;
+        public GameTick? _lastFullStateRequested = GameTick.Zero;
 
         private int _bufferSize;
         private GameTick _highestFromSequence;

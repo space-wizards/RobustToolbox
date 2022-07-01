@@ -17,6 +17,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
+            processor.Interpolation = true;
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2)); // buffer is at 2/3, so processing should be blocked

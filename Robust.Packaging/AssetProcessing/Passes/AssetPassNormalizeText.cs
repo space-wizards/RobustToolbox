@@ -2,24 +2,36 @@
 
 namespace Robust.Packaging.AssetProcessing.Passes;
 
-public sealed class AssetPassNormalizeEols : AssetPass
+/// <summary>
+/// Normalizes text files to make sure there is no BOM and EOLs are LF.
+/// </summary>
+public sealed class AssetPassNormalizeText : AssetPass
 {
-    private static readonly HashSet<string> TextFileExtensions = new()
+    private readonly HashSet<string> _textFileExtensions = new()
     {
-        // TODO: add more.
         "txt",
         "json",
         "yml",
         "html",
         "css",
-        "js"
+        "js",
+        "ftl",
+        "swsl",
+        "toml",
+        "svg",
+        "xml"
     };
+
+    /// <summary>
+    /// The file extensions that are considered text files. Does not include the period.
+    /// </summary>
+    public ISet<string> TextFileExtensions => _textFileExtensions;
 
     public override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         var extensionPeriod = file.Path.LastIndexOf('.');
         var extension = file.Path[(extensionPeriod + 1)..];
-        if (!TextFileExtensions.Contains(extension))
+        if (!_textFileExtensions.Contains(extension))
             return AssetFileAcceptResult.Pass;
 
         // Console.WriteLine($"Normalizing EOLs: {file.Path}");

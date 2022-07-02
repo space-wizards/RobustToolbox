@@ -12,6 +12,7 @@
 [assembly: InternalsVisibleTo("Content.Benchmarks")]
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]
 [assembly: InternalsVisibleTo("Robust.Client.WebView")]
+[assembly: InternalsVisibleTo("Robust.Packaging")]
 
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]

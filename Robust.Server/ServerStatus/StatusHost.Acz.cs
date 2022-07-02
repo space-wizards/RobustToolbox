@@ -8,13 +8,10 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
 using Robust.Shared;
 using Robust.Shared.Collections;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using SpaceWizards.Sodium;
@@ -361,7 +358,7 @@ namespace Robust.Server.ServerStatus
 
         // -- All methods from this point forward do not access the ACZ global state --
 
-        private AczManifestInfo? PrepareAczInnards(Dictionary<string, OnDemandFile> zipData)
+        private AczManifestInfo? PrepareAczInnards(List<OnDemandFile> zipData)
         {
             _aczSawmill.Debug("Making ACZ manifest...");
 
@@ -416,7 +413,7 @@ namespace Robust.Server.ServerStatus
 
         private static (byte[] manifestContent, AczManifestEntry[] manifestEntries, byte[] blobData)
             CalcManifestData(
-                Dictionary<string, OnDemandFile> zipEntries,
+                List<OnDemandFile> files,
                 bool blobCompress,
                 int blobCompressLevel,
                 int blobCompressSaveThresh)
@@ -444,15 +441,17 @@ namespace Robust.Server.ServerStatus
 
                 var manifestEntries = new ValueList<AczManifestEntry>();
 
-                foreach (var (fullName, entry) in zipEntries.OrderBy((e) => e.Key, StringComparer.Ordinal))
+                files.Sort(OnDemandFilePathComparer.Instance);
+
+                foreach (var file in files)
                 {
-                    var length = (int)entry.Length;
+                    var length = (int)file.Length;
                     var startPos = (int)blobData.Position;
 
                     BufferHelpers.EnsurePooledBuffer(ref decompressBuffer, ArrayPool<byte>.Shared, length);
                     var data = decompressBuffer.AsSpan(0, length);
 
-                    entry.ReadExact(data);
+                    file.ReadExact(data);
 
                     // Calculate hash.
                     CryptoGenericHashBlake2B.Hash(entryHash, data, ReadOnlySpan<byte>.Empty);
@@ -489,7 +488,7 @@ namespace Robust.Server.ServerStatus
                         dataLength = 0;
                     }
 
-                    manifestWriter.Write($"{Convert.ToHexString(entryHash)} {fullName}\n");
+                    manifestWriter.Write($"{Convert.ToHexString(entryHash)} {file.Path}\n");
 
                     manifestEntries.Add(new AczManifestEntry(length, startPos, dataLength));
                 }

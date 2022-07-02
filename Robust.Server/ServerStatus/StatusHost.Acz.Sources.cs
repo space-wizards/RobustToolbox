@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using Robust.Packaging;
+using Robust.Packaging.AssetProcessing;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
@@ -21,12 +21,12 @@ internal sealed partial class StatusHost
 
     // -- Dictionary<string, OnDemandFile> methods --
 
-    private async Task<Dictionary<string, OnDemandFile>?> SourceAczDictionary()
+    private async Task<List<OnDemandFile>?> SourceAczDictionary()
     {
         return SourceAczDictionaryViaFile() ?? await SourceAczDictionaryViaMagic();
     }
 
-    private Dictionary<string, OnDemandFile>? SourceAczDictionaryViaFile()
+    private List<OnDemandFile>? SourceAczDictionaryViaFile()
     {
         var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
         if (!File.Exists(path)) return null;
@@ -37,24 +37,25 @@ internal sealed partial class StatusHost
         return SourceAczDictionaryViaZipStream(fs);
     }
 
-    private Dictionary<string, OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
+    private List<OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
     {
         var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-        var archive = new Dictionary<string, OnDemandFile>();
+        var archive = new List<OnDemandFile>();
         foreach (var entry in zip.Entries)
         {
             // Ignore directory entries.
             if (entry.Name == "")
                 continue;
-            archive[entry.FullName] = new OnDemandZipArchiveEntryFile(entry);
+
+            archive.Add(new OnDemandZipArchiveEntryFile(entry));
         }
         return archive;
     }
 
-    private async Task<Dictionary<string, OnDemandFile>?> SourceAczDictionaryViaMagic()
+    private async Task<List<OnDemandFile>?> SourceAczDictionaryViaMagic()
     {
-        var archive = new Dictionary<string, OnDemandFile>();
-        var writer = new PackageWriterAcz(archive);
+        var archive = new List<OnDemandFile>();
+        var writer = new AssetPassAczWriter(archive);
         var provider = _aczProvider;
         if (provider == null)
         {
@@ -67,6 +68,8 @@ internal sealed partial class StatusHost
         }
 
         await provider.Package(writer, default);
+
+        await writer.FinishedTask;
 
         return archive;
     }
@@ -94,7 +97,7 @@ internal sealed partial class StatusHost
         _aczProvider = provider;
     }
 
-    // -- This Thing --
+        // -- This Thing --
 
     /// <summary>
     /// An attempt to mitigate the amount of RAM usage caused by ACZ-related operations.
@@ -102,10 +105,12 @@ internal sealed partial class StatusHost
     /// </summary>
     internal abstract class OnDemandFile
     {
+        public readonly string Path;
+
         /// <summary>
         /// Length of the target file. Assumed to be cached.
         /// </summary>
-        public long Length { get; }
+        public readonly long Length;
 
         /// <summary>
         /// Content of the target file. Assumed to not be cached.
@@ -121,8 +126,9 @@ internal sealed partial class StatusHost
             }
         }
 
-        public OnDemandFile(long len)
+        public OnDemandFile(string path, long len)
         {
+            Path = path;
             Length = len;
         }
 
@@ -133,7 +139,7 @@ internal sealed partial class StatusHost
     {
         private readonly string _diskPath;
 
-        public OnDemandDiskFile(string fileName) : base(new FileInfo(fileName).Length)
+        public OnDemandDiskFile(string path, string fileName) : base(path, new FileInfo(fileName).Length)
         {
             _diskPath = fileName;
         }
@@ -158,7 +164,7 @@ internal sealed partial class StatusHost
     {
         private readonly ZipArchiveEntry _entry;
 
-        public OnDemandZipArchiveEntryFile(ZipArchiveEntry src) : base(src.Length)
+        public OnDemandZipArchiveEntryFile(ZipArchiveEntry src) : base(src.FullName, src.Length)
         {
             _entry = src;
         }
@@ -176,7 +182,7 @@ internal sealed partial class StatusHost
     {
         private readonly byte[] _blob;
 
-        public OnDemandFileBlob(byte[] blob) : base(blob.Length)
+        public OnDemandFileBlob(string path, byte[] blob) : base(path, blob.Length)
         {
             _blob = blob;
         }
@@ -187,31 +193,45 @@ internal sealed partial class StatusHost
         }
     }
 
-    private sealed class PackageWriterAcz : IPackageWriter
+    private sealed class AssetPassAczWriter : AssetPass
     {
-        private readonly Dictionary<string, OnDemandFile> _files;
+        private readonly List<OnDemandFile> _files;
 
-        public PackageWriterAcz(Dictionary<string, OnDemandFile> files)
+        public AssetPassAczWriter(List<OnDemandFile> files)
         {
             _files = files;
         }
 
-        public void WriteResource(string path, Stream stream)
+        public override AssetFileAcceptResult AcceptFile(AssetFile file)
         {
-            var file = new OnDemandFileBlob(stream.CopyToArray());
             lock (_files)
             {
-                _files[path] = file;
-            }
-        }
+                switch (file)
+                {
+                    case AssetFileDisk assetFileDisk:
+                        _files.Add(new OnDemandDiskFile(assetFileDisk.Path, assetFileDisk.DiskPath));
+                        break;
 
-        public void WriteResourceFromDisk(string path, string diskPath)
-        {
-            var file = new OnDemandDiskFile(diskPath);
-            lock (_files)
-            {
-                _files[path] = file;
+                    case AssetFileMemory assetFileMemory:
+                        _files.Add(new OnDemandFileBlob(assetFileMemory.Path, assetFileMemory.Memory));
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
             }
+
+            return AssetFileAcceptResult.Consumed;
+        }
+    }
+
+    private sealed class OnDemandFilePathComparer : IComparer<OnDemandFile>
+    {
+        public static readonly OnDemandFilePathComparer Instance = new();
+
+        public int Compare(OnDemandFile? x, OnDemandFile? y)
+        {
+            return string.Compare(x!.Path, y!.Path, StringComparison.Ordinal);
         }
     }
 }

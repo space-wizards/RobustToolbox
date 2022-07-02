@@ -1,6 +1,8 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Packaging;
+using Robust.Packaging.AssetProcessing;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 
@@ -18,20 +20,29 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
     }
 
     public async Task Package(
-        IPackageWriter writer,
+        AssetPass pass,
         CancellationToken cancel)
     {
         var (binFolderPath, assemblyNames) = _info;
 
+        var graph = new RobustClientAssetGraph();
+        pass.Dependencies.Add(new AssetPassDependency(graph.Output.Name));
+
+        AssetGraph.CalculateGraph(graph.AllPasses.Append(pass).ToArray());
+
+        var inputPass = graph.Input;
+
         var contentDir = FindContentRootPath(_deps);
         await RobustClientPackaging.WriteContentAssemblies(
-            writer,
+            inputPass,
             contentDir,
             binFolderPath,
             assemblyNames,
             cancel);
 
-        await RobustClientPackaging.WriteClientResources(contentDir, writer, cancel);
+        await RobustClientPackaging.WriteClientResources(contentDir, inputPass, cancel);
+
+        inputPass.InitFinished();
     }
 
     // deps is for future proofing, not currently used.

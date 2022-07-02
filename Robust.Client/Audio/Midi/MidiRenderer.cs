@@ -50,6 +50,7 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     [ViewVariables]
     private MidiRendererState _rendererState = new();
+    public MidiRendererState RendererState => _rendererState;
     public IClydeBufferedAudioSource Source { get; set; }
     IClydeBufferedAudioSource IMidiRenderer.Source => Source;
 

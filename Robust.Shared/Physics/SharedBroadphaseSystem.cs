@@ -440,8 +440,6 @@ namespace Robust.Shared.Physics
 
                 if (oldBroadphase == newBroadphase) return;
 
-                DebugTools.Assert(oldMapId != MapId.Nullspace);
-
                 DestroyProxies(body, manager, oldMapId);
 
                 // Shouldn't need to null-check as this already checks for nullspace so should be okay...?

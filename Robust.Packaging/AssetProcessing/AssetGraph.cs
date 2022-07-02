@@ -12,12 +12,16 @@ public static class AssetGraph
     /// Wire up all dependencies in a set of asset passes.
     /// This must be called on the full set of passes before they can be properly used.
     /// </summary>
-    public static void CalculateGraph(IReadOnlyCollection<AssetPass> passes)
+    /// <param name="passes">All the asset passes to wire up.</param>
+    /// <param name="logger">Logger to assign to all asset passes, if they don't have a logger yet.</param>
+    public static void CalculateGraph(IReadOnlyCollection<AssetPass> passes, IPackageLogger? logger = null)
     {
         var named = passes.ToDictionary(p => p.Name, p => p);
         // Set up dependents lists on the passes.
         foreach (var pass in passes)
         {
+            pass.Logger ??= logger;
+
             if (pass.DependenciesList.Count == 0)
                 continue;
 

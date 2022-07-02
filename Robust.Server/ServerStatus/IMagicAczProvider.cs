@@ -8,5 +8,5 @@ namespace Robust.Server.ServerStatus;
 public interface IMagicAczProvider
 {
     // Cancellation not currently used, future proofing can't hurt though.
-    Task Package(AssetPass pass, CancellationToken cancel);
+    Task Package(AssetPass pass, IPackageLogger logger, CancellationToken cancel);
 }

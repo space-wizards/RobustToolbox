@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using Robust.Packaging;
 using Robust.Packaging.AssetProcessing;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
@@ -55,6 +56,7 @@ internal sealed partial class StatusHost
     private async Task<List<OnDemandFile>?> SourceAczDictionaryViaMagic()
     {
         var archive = new List<OnDemandFile>();
+        var logger = new PackageLoggerSawmill(_aczPackagingSawmill);
         var writer = new AssetPassAczWriter(archive);
         var provider = _aczProvider;
         if (provider == null)
@@ -67,7 +69,7 @@ internal sealed partial class StatusHost
             provider = new DefaultMagicAczProvider(info, _deps);
         }
 
-        await provider.Package(writer, default);
+        await provider.Package(writer, logger, default);
 
         await writer.FinishedTask;
 
@@ -202,7 +204,7 @@ internal sealed partial class StatusHost
             _files = files;
         }
 
-        public override AssetFileAcceptResult AcceptFile(AssetFile file)
+        protected override AssetFileAcceptResult AcceptFile(AssetFile file)
         {
             lock (_files)
             {

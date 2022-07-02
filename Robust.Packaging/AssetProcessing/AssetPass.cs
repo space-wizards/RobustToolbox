@@ -66,7 +66,7 @@ namespace Robust.Packaging.AssetProcessing;
 /// </para>
 /// <para>
 /// <c>AssetPass</c> must be inherited to be able to accept files properly.
-/// However, <see cref="SendFile"/> and <see cref="InitFinished"/> can be used
+/// However, <see cref="InjectFile"/> and <see cref="InjectFinished"/> can be used
 /// to externally inject into the graph (it has to start somewhere).
 /// <see cref="FinishedTask"/> can be used to wait for the graph to finish processing.
 /// This means even a plain unspecialized <c>AssetPass</c> instance can be a useful tool.
@@ -84,6 +84,8 @@ public class AssetPass
     internal int DependenciesUnfinished;
     internal int JobsRunning;
     internal bool ReadyToFinish;
+
+    public IPackageLogger? Logger { get; set; }
 
     /// <summary>
     /// Name of this pass. Defaults to the name of the pass instance type. Names are used for referencing dependencies.
@@ -131,7 +133,7 @@ public class AssetPass
     /// </summary>
     /// <seealso cref="SendFileFromDisk"/>
     /// <seealso cref="SendFileFromMemory"/>
-    public void SendFile(AssetFile file)
+    protected void SendFile(AssetFile file)
     {
         foreach (var dependent in Dependents)
         {
@@ -146,25 +148,25 @@ public class AssetPass
     /// </summary>
     /// <param name="path">The VFS path of the new file.</param>
     /// <param name="diskPath">The disk path of the file.</param>
-    public void SendFileFromDisk(string path, string diskPath) => SendFile(new AssetFileDisk(path, diskPath));
+    protected void SendFileFromDisk(string path, string diskPath) => SendFile(new AssetFileDisk(path, diskPath));
 
     /// <summary>
     /// Convenience method to send a <see cref="AssetFileMemory"/>.
     /// </summary>
     /// <param name="path">The VFS path of the new file.</param>
     /// <param name="memory">The byte blob of file contents.</param>
-    public void SendFileFromMemory(string path, byte[] memory) => SendFile(new AssetFileMemory(path, memory));
+    protected void SendFileFromMemory(string path, byte[] memory) => SendFile(new AssetFileMemory(path, memory));
 
     /// <summary>
     /// Manual way to mark a "root" graph pass as finished, to get the ball rolling.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if this pass has any dependencies.</exception>
-    public void InitFinished()
+    public void InjectFinished()
     {
         if (Dependencies.Count > 0)
         {
             throw new InvalidOperationException(
-                $"{nameof(InitFinished)} may only be called on passes without explicit dependencies, to manually finish graph roots.");
+                $"{nameof(InjectFinished)} may only be called on passes without explicit dependencies, to manually finish graph roots.");
         }
 
         InitFinishedCore();
@@ -175,10 +177,27 @@ public class AssetPass
     /// Consume the file if applicable and use <see cref="RunJob"/> for parallelization if necessary.
     /// </summary>
     /// <param name="file">The file to handle.</param>
-    public virtual AssetFileAcceptResult AcceptFile(AssetFile file)
+    protected virtual AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         return AssetFileAcceptResult.Pass;
     }
+
+    /// <summary>
+    /// Externally inject a file into this asset pass. Intended for "root" passes that take files from external sources.
+    /// </summary>
+    /// <seealso cref="InjectFileFromDisk"/>
+    /// <seealso cref="InjectFileFromMemory"/>
+    public void InjectFile(AssetFile file) => InternalAcceptFile(file);
+
+    /// <summary>
+    /// Convenience method to <see cref="InjectFile"/> a <see cref="AssetFileDisk"/>.
+    /// </summary>
+    public void InjectFileFromDisk(string path, string diskPath) => InjectFile(new AssetFileDisk(path, diskPath));
+
+    /// <summary>
+    /// Convenience method to <see cref="InjectFile"/> a <see cref="AssetFileMemory"/>.
+    /// </summary>
+    public void InjectFileFromMemory(string path, byte[] memory) => InjectFile(new AssetFileMemory(path, memory));
 
     /// <summary>
     /// Called when all depended-on passes have finished processing, meaning no more files will come in.
@@ -235,7 +254,7 @@ public class AssetPass
 
     private void InitFinishedCore()
     {
-        Console.WriteLine($"{Name}: finishing");
+        Logger?.Debug($"{Name}: finishing");
 
         AcceptFinished();
 
@@ -265,7 +284,7 @@ public class AssetPass
 
     private void SendFinished()
     {
-        Console.WriteLine($"{Name}: finished");
+        Logger?.Debug($"{Name}: finished");
         _finishedTcs.TrySetResult();
 
         foreach (var dependent in Dependents)

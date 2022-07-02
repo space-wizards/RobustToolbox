@@ -21,6 +21,7 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
 
     public async Task Package(
         AssetPass pass,
+        IPackageLogger logger,
         CancellationToken cancel)
     {
         var (binFolderPath, assemblyNames) = _info;
@@ -28,7 +29,7 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
         var graph = new RobustClientAssetGraph();
         pass.Dependencies.Add(new AssetPassDependency(graph.Output.Name));
 
-        AssetGraph.CalculateGraph(graph.AllPasses.Append(pass).ToArray());
+        AssetGraph.CalculateGraph(graph.AllPasses.Append(pass).ToArray(), logger);
 
         var inputPass = graph.Input;
 
@@ -42,7 +43,7 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
 
         await RobustClientPackaging.WriteClientResources(contentDir, inputPass, cancel);
 
-        inputPass.InitFinished();
+        inputPass.InjectFinished();
     }
 
     // deps is for future proofing, not currently used.

@@ -16,7 +16,7 @@ public sealed class AssetPassZipWriter : AssetPass
         Archive = archive;
     }
 
-    public override AssetFileAcceptResult AcceptFile(AssetFile file)
+    protected override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         switch (file)
         {

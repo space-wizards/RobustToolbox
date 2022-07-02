@@ -9,11 +9,11 @@
 public sealed class AssetPassPipe : AssetPass
 {
     /// <summary>
-    /// Whether to use <see cref="AssetPass.RunJob"/> to send every file.
+    /// Whether to use <see cref="AssetPass.RunJob"/> to send every file. Parallelizing files at the "start"
     /// </summary>
     public bool Parallelize { get; set; }
 
-    public override AssetFileAcceptResult AcceptFile(AssetFile file)
+    protected override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         if (Parallelize)
         {

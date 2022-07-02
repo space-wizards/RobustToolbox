@@ -58,7 +58,7 @@ public sealed class RobustClientPackaging
         foreach (var f in files)
         {
             cancel.ThrowIfCancellationRequested();
-            pass.SendFileFromDisk($"{target}/{f}", Path.Combine(sourceDir, f));
+            pass.InjectFileFromDisk($"{target}/{f}", Path.Combine(sourceDir, f));
         }
 
         return Task.CompletedTask;

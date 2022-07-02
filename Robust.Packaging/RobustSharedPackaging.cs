@@ -33,7 +33,7 @@ public sealed class RobustSharedPackaging
             if (Directory.Exists(path))
                 CopyDirIntoZip(path, targetPath, pass);
             else
-                pass.SendFileFromDisk(targetPath, path);
+                pass.InjectFileFromDisk(targetPath, path);
         }
 
         return Task.CompletedTask;
@@ -50,7 +50,7 @@ public sealed class RobustSharedPackaging
             var zipPath = $"{basePath}/{relPath}";
 
             // Console.WriteLine($"{directory}/{zipPath} -> /{zipPath}");
-            pass.SendFileFromDisk(zipPath, file);
+            pass.InjectFileFromDisk(zipPath, file);
         }
     }
 }

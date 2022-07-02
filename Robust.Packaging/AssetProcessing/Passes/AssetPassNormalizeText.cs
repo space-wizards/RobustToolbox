@@ -27,7 +27,7 @@ public sealed class AssetPassNormalizeText : AssetPass
     /// </summary>
     public ISet<string> TextFileExtensions => _textFileExtensions;
 
-    public override AssetFileAcceptResult AcceptFile(AssetFile file)
+    protected override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         var extensionPeriod = file.Path.LastIndexOf('.');
         var extension = file.Path[(extensionPeriod + 1)..];

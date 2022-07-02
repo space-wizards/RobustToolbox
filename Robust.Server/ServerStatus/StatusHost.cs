@@ -41,6 +41,7 @@ namespace Robust.Server.ServerStatus
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
         private ISawmill _aczSawmill = default!;
+        private ISawmill _aczPackagingSawmill = default!;
 
         private string? _serverNameCache;
 
@@ -98,6 +99,8 @@ namespace Robust.Server.ServerStatus
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
             _aczSawmill = Logger.GetSawmill($"{Sawmill}.acz");
+            _aczPackagingSawmill = Logger.GetSawmill($"{Sawmill}.acz.packaging");
+
             RegisterCVars();
 
             // Cache this in a field to avoid thread safety shenanigans.

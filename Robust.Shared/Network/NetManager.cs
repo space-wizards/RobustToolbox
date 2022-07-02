@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -1033,6 +1033,11 @@ namespace Robust.Shared.Network
         /// <inheritdoc />
         public void ServerSendMessage(NetMessage message, INetChannel recipient)
         {
+            // TODO: Does the entity manager HAVE to shut down after network manager?
+            // Though tbf theres no real point in sending messages anymore at that point.
+            if (!_initialized)
+                return; 
+
             DebugTools.Assert(IsServer);
             if (!(recipient is NetChannel channel))
                 throw new ArgumentException($"Not of type {typeof(NetChannel).FullName}", nameof(recipient));

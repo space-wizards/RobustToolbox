@@ -13,6 +13,8 @@ namespace Robust.Shared.Physics {
 
         void MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb, Vector2 displacement);
 
+        FixtureProxy? GetProxy(DynamicTree.Proxy proxy);
+
         void RemoveProxy(DynamicTree.Proxy proxy);
 
         void QueryAabb<TState>(

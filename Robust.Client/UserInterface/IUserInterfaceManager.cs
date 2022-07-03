@@ -10,6 +10,8 @@ namespace Robust.Client.UserInterface
 {
     public interface IUserInterfaceManager
     {
+        void InitializeTesting();
+
         UITheme ThemeDefaults { get; }
 
         /// <summary>

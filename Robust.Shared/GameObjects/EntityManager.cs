@@ -299,20 +299,22 @@ namespace Robust.Shared.GameObjects
 #endif
             }
 
+            // Notify all entities they are being terminated prior to detaching & deleting
+            RecursiveFlagEntityTermination(meta, metaQuery, xformQuery, xformSys);
+
+            // Then actually delete them
             RecursiveDeleteEntity(meta, metaQuery, xformQuery, xformSys);
         }
 
-        private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
+        private void RecursiveFlagEntityTermination(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
         {
             var transform = xformQuery.GetComponent(metadata.Owner);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
             var ev = new EntityTerminatingEvent(metadata.Owner);
-            EventBus.RaiseLocalEvent(metadata.Owner, ref ev, false);
 
-            // Detach the base entity to null before iterating over children
-            // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
-                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
+            // TODO: consider making this a meta-data flag?
+            // veeeery few entities make use of this event.
+            EventBus.RaiseLocalEvent(metadata.Owner, ref ev, false);
 
             foreach (var child in transform._children)
             {
@@ -323,8 +325,22 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                // Recursion Alert
-                RecursiveDeleteEntity(childMeta, metaQuery, xformQuery, xformSys);
+                RecursiveFlagEntityTermination(childMeta, metaQuery, xformQuery, xformSys);
+            }
+        }
+
+        private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
+        {
+            var transform = xformQuery.GetComponent(metadata.Owner);
+
+            // Detach the base entity to null before iterating over children
+            // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
+            if (transform.ParentUid != EntityUid.Invalid)
+                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
+
+            foreach (var child in transform._children)
+            {
+                RecursiveDeleteEntity(metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
             }
 
             DebugTools.Assert(transform._children.Count == 0, $"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");

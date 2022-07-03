@@ -1,12 +1,18 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Packaging;
 using Robust.Packaging.AssetProcessing;
+using Robust.Packaging.AssetProcessing.Passes;
+using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus;
 
@@ -22,42 +28,115 @@ internal sealed partial class StatusHost
 
     // -- Dictionary<string, OnDemandFile> methods --
 
-    private async Task<List<OnDemandFile>?> SourceAczDictionary()
+    private async Task<AczManifestInfo?> PrepareAczInner()
     {
-        return SourceAczDictionaryViaFile() ?? await SourceAczDictionaryViaMagic();
+        var streamCompression = _cfg.GetCVar(CVars.AczStreamCompress);
+        var blobCompress = _cfg.GetCVar(CVars.AczBlobCompress);
+        var blobCompressLevel = _cfg.GetCVar(CVars.AczBlobCompressLevel);
+        var blobCompressSaveThresh = _cfg.GetCVar(CVars.AczBlobCompressSaveThreshold);
+        var manifestCompress = _cfg.GetCVar(CVars.AczManifestCompress);
+        var manifestCompressLevel = _cfg.GetCVar(CVars.AczManifestCompressLevel);
+
+        // Stream compression disables individual compression.
+        blobCompress &= !streamCompression;
+
+        var manifestResult = await CalcManifestData(
+            blobCompress,
+            blobCompressLevel,
+            blobCompressSaveThresh);
+
+        if (manifestResult == null)
+            return null;
+
+        var (manifestData, manifestEntries, manifestBlobData) = manifestResult!.Value;
+
+        var manifestHash = CryptoGenericHashBlake2B.Hash(32, manifestData, ReadOnlySpan<byte>.Empty);
+        var manifestHashString = Convert.ToHexString(manifestHash);
+
+        _aczSawmill.Debug("ACZ Manifest hash: {ManifestHash}", manifestHashString);
+
+        if (manifestCompress)
+        {
+            _aczSawmill.Debug("Compressing ACZ manifest at level {ManifestCompressLevel}", manifestCompressLevel);
+
+            var beforeSize = manifestData.Length;
+            var compressBuffer = ZStd.CompressBound(manifestData.Length);
+            var compressed = ArrayPool<byte>.Shared.Rent(compressBuffer);
+
+            var size = ZStd.Compress(compressed, manifestData, manifestCompressLevel);
+
+            manifestData = compressed[..size];
+
+            ArrayPool<byte>.Shared.Return(compressed);
+
+            _aczSawmill.Debug(
+                "ACZ manifest compression: {ManifestSize} -> {ManifestSizeCompressed} ({ManifestSizeRatio} ratio)",
+                beforeSize, manifestData.Length, manifestData.Length / (float) beforeSize);
+        }
+
+        return new AczManifestInfo(
+            manifestData,
+            manifestCompress,
+            manifestHashString,
+            manifestBlobData,
+            manifestEntries,
+            blobCompress);
     }
 
-    private List<OnDemandFile>? SourceAczDictionaryViaFile()
+    private async Task<(byte[] manifestData, AczManifestEntry[] entries, byte[] blobData)?> CalcManifestData(
+        bool blobCompress,
+        int blobCompressLevel,
+        int blobCompressSaveThresh)
+    {
+        var logger = new PackageLoggerSawmill(_aczPackagingSawmill);
+        using var writerPass = new AssetPassAczWriter(blobCompress, blobCompressLevel, blobCompressSaveThresh);
+
+        var result = await SourceAczDictionaryViaFile(writerPass, logger) ||
+                     await SourceAczViaMagic(writerPass, logger);
+
+        if (!result)
+            return null;
+
+        await writerPass.FinishedTask;
+
+        return (writerPass.ManifestContent!, writerPass.ManifestEntries!, writerPass.BlobData!);
+    }
+
+    private Task<bool> SourceAczDictionaryViaFile(AssetPass pass, IPackageLogger logger)
     {
         var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-        if (!File.Exists(path)) return null;
+        if (!File.Exists(path))
+            return Task.FromResult(false);
+
         _aczSawmill.Info($"StatusHost found client zip: {path}");
-        // Note: We don't want to explicitly close this, as the OnDemandFiles will hold references to this.
-        // Let it be cleaned up by GC eventually.
-        FileStream fs = File.OpenRead(path);
-        return SourceAczDictionaryViaZipStream(fs);
+        using var zip = new ZipArchive(File.OpenRead(path), ZipArchiveMode.Read, leaveOpen: false);
+        SourceAczDictionaryViaZipStream(zip, pass, logger);
+        return Task.FromResult(true);
     }
 
-    private List<OnDemandFile> SourceAczDictionaryViaZipStream(Stream stream)
+    private static void SourceAczDictionaryViaZipStream(ZipArchive zip, AssetPass pass, IPackageLogger logger)
     {
-        var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-        var archive = new List<OnDemandFile>();
+        var inputPass = new AssetPassPipe { Parallelize = true };
+        pass.AddDependency(inputPass);
+
+        AssetGraph.CalculateGraph(new []{inputPass, pass}, logger);
+
         foreach (var entry in zip.Entries)
         {
             // Ignore directory entries.
             if (entry.Name == "")
                 continue;
 
-            archive.Add(new OnDemandZipArchiveEntryFile(entry));
+            using var stream = entry.Open();
+            var file = new AssetFileMemory(entry.FullName, stream.CopyToArray());
+            inputPass.InjectFile(file);
         }
-        return archive;
+
+        inputPass.InjectFinished();
     }
 
-    private async Task<List<OnDemandFile>?> SourceAczDictionaryViaMagic()
+    private async Task<bool> SourceAczViaMagic(AssetPass pass, IPackageLogger logger)
     {
-        var archive = new List<OnDemandFile>();
-        var logger = new PackageLoggerSawmill(_aczPackagingSawmill);
-        var writer = new AssetPassAczWriter(archive);
         var provider = _aczProvider;
         if (provider == null)
         {
@@ -69,11 +148,8 @@ internal sealed partial class StatusHost
             provider = new DefaultMagicAczProvider(info, _deps);
         }
 
-        await provider.Package(writer, logger, default);
-
-        await writer.FinishedTask;
-
-        return archive;
+        await provider.Package(pass, logger, default);
+        return true;
     }
 
     // -- Information Input --
@@ -99,142 +175,148 @@ internal sealed partial class StatusHost
         _aczProvider = provider;
     }
 
-        // -- This Thing --
-
-    /// <summary>
-    /// An attempt to mitigate the amount of RAM usage caused by ACZ-related operations.
-    /// The idea is that <c>Dictionary&lt;string, OnDemandFile&gt;</c> should become the standard interchange.
-    /// </summary>
-    internal abstract class OnDemandFile
+    private sealed class AssetPassAczWriter : AssetPass, IDisposable
     {
-        public readonly string Path;
+        private readonly object _lock = new();
 
-        /// <summary>
-        /// Length of the target file. Assumed to be cached.
-        /// </summary>
-        public readonly long Length;
+        private readonly SequenceMemoryStream _stream = new();
+        private readonly bool _blobCompress;
+        private readonly int _blobCompressLevel;
+        private readonly int _blobCompressSaveThresh;
 
-        /// <summary>
-        /// Content of the target file. Assumed to not be cached.
-        /// Length should be equal to above length.
-        /// </summary>
-        public byte[] Content
+        private readonly ObjectPool<ZStdCompressionContext> _compressStreamPool =
+            ObjectPool.Create<ZStdCompressionContext>();
+
+        private ValueList<InProgressAczManifestInfo> _infos;
+
+        public byte[]? ManifestContent;
+        public AczManifestEntry[]? ManifestEntries;
+        public byte[]? BlobData;
+
+        public AssetPassAczWriter(
+            bool blobCompress,
+            int blobCompressLevel,
+            int blobCompressSaveThresh)
         {
-            get
-            {
-                byte[] data = new byte[Length];
-                ReadExact(data);
-                return data;
-            }
-        }
-
-        public OnDemandFile(string path, long len)
-        {
-            Path = path;
-            Length = len;
-        }
-
-        public abstract void ReadExact(Span<byte> data);
-    }
-
-    internal sealed class OnDemandDiskFile : OnDemandFile
-    {
-        private readonly string _diskPath;
-
-        public OnDemandDiskFile(string path, string fileName) : base(path, new FileInfo(fileName).Length)
-        {
-            _diskPath = fileName;
-        }
-
-        public override void ReadExact(Span<byte> data)
-        {
-            try
-            {
-                using (FileStream fs = File.OpenRead(_diskPath))
-                {
-                    fs.ReadExact(data);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"During OnDemandDiskFile.ReadExact: {_diskPath} (expected length {Length}, span length {data.Length})", ex);
-            }
-        }
-    }
-
-    internal sealed class OnDemandZipArchiveEntryFile : OnDemandFile
-    {
-        private readonly ZipArchiveEntry _entry;
-
-        public OnDemandZipArchiveEntryFile(ZipArchiveEntry src) : base(src.FullName, src.Length)
-        {
-            _entry = src;
-        }
-
-        public override void ReadExact(Span<byte> data)
-        {
-            using (var stream = _entry.Open())
-            {
-                stream.ReadExact(data);
-            }
-        }
-    }
-
-    internal sealed class OnDemandFileBlob : OnDemandFile
-    {
-        private readonly byte[] _blob;
-
-        public OnDemandFileBlob(string path, byte[] blob) : base(path, blob.Length)
-        {
-            _blob = blob;
-        }
-
-        public override void ReadExact(Span<byte> data)
-        {
-            _blob.AsSpan().CopyTo(data);
-        }
-    }
-
-    private sealed class AssetPassAczWriter : AssetPass
-    {
-        private readonly List<OnDemandFile> _files;
-
-        public AssetPassAczWriter(List<OnDemandFile> files)
-        {
-            _files = files;
+            _blobCompress = blobCompress;
+            _blobCompressLevel = blobCompressLevel;
+            _blobCompressSaveThresh = blobCompressSaveThresh;
         }
 
         protected override AssetFileAcceptResult AcceptFile(AssetFile file)
         {
-            lock (_files)
+            // Logger?.Verbose(file.Path);
+            var entryHash = new byte[256 / 8];
+
+            byte[]? dataPool = null;
+            Span<byte> data;
+
+            if (file is AssetFileMemory mem)
             {
-                switch (file)
+                data = mem.Memory;
+            }
+            else
+            {
+                using var fs = file.Open();
+
+                dataPool = ArrayPool<byte>.Shared.Rent((int) fs.Length);
+                data = dataPool.AsSpan(0, (int)fs.Length);
+
+                fs.ReadToEnd(data);
+            }
+
+            CryptoGenericHashBlake2B.Hash(entryHash, data, ReadOnlySpan<byte>.Empty);
+
+            ReadOnlySpan<byte> toWrite;
+
+            byte[]? compressBuffer = null;
+            if (_blobCompress)
+            {
+                var compressCtx = _compressStreamPool.Get();
+                compressBuffer = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound(data.Length));
+                var comprLength = compressCtx.Compress(compressBuffer, data, _blobCompressLevel);
+
+                _compressStreamPool.Return(compressCtx);
+
+                // See if compression was worth it.
+                if (comprLength + _blobCompressSaveThresh < data.Length)
                 {
-                    case AssetFileDisk assetFileDisk:
-                        _files.Add(new OnDemandDiskFile(assetFileDisk.Path, assetFileDisk.DiskPath));
-                        break;
-
-                    case AssetFileMemory assetFileMemory:
-                        _files.Add(new OnDemandFileBlob(assetFileMemory.Path, assetFileMemory.Memory));
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
+                    // Worth it
+                    toWrite = compressBuffer.AsSpan(0, comprLength);
+                }
+                else
+                {
+                    // Compression not worth it, just send an uncompressed blob instead.
+                    toWrite = data;
                 }
             }
+            else
+            {
+                toWrite = data;
+            }
+
+            lock (_lock)
+            {
+                var streamPos = (int)_stream.Position;
+                _stream.Write(toWrite);
+                var info = new AczManifestEntry(
+                    data.Length,
+                    streamPos,
+                    toWrite.Length == data.Length ? 0 : toWrite.Length);
+
+                _infos.Add(new InProgressAczManifestInfo(info, file.Path, entryHash));
+            }
+
+            if (compressBuffer != null)
+                ArrayPool<byte>.Shared.Return(compressBuffer);
+
+            if (dataPool != null)
+                ArrayPool<byte>.Shared.Return(dataPool);
 
             return AssetFileAcceptResult.Consumed;
         }
+
+        protected override void AcceptFinished()
+        {
+            _infos.Sort(OnDemandFilePathComparer.Instance);
+
+            var manifestStream = new MemoryStream();
+            using var manifestWriter = new StreamWriter(manifestStream, EncodingHelpers.UTF8);
+            manifestWriter.Write("Robust Content Manifest 1\n");
+
+            var manifestEntries = new AczManifestEntry[_infos.Count];
+
+            for (var i = 0; i < _infos.Count; i++)
+            {
+                var info = _infos[i];
+                manifestWriter.Write($"{Convert.ToHexString(info.Hash)} {info.Path}\n");
+
+                manifestEntries[i] = info.Entry;
+            }
+
+            manifestWriter.Flush();
+
+            ManifestContent = manifestStream.ToArray();
+            ManifestEntries = manifestEntries;
+            BlobData = _stream.AsSequence.ToArray();
+        }
+
+        public void Dispose()
+        {
+            // _compressStreamPool is actually a DisposableObjectPool, which is an internal type.
+            (_compressStreamPool as IDisposable)?.Dispose();
+        }
     }
 
-    private sealed class OnDemandFilePathComparer : IComparer<OnDemandFile>
+    private sealed record InProgressAczManifestInfo(AczManifestEntry Entry, string Path, byte[] Hash);
+
+    private sealed class OnDemandFilePathComparer : IComparer<InProgressAczManifestInfo>
     {
         public static readonly OnDemandFilePathComparer Instance = new();
 
-        public int Compare(OnDemandFile? x, OnDemandFile? y)
+        public int Compare(InProgressAczManifestInfo? x, InProgressAczManifestInfo? y)
         {
             return string.Compare(x!.Path, y!.Path, StringComparison.Ordinal);
         }
     }
 }
-

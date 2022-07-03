@@ -183,7 +183,9 @@ namespace Robust.Shared.GameObjects
 
             _broadphase.TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
 
-            RecursiveMapUpdate(xform, body, newMapId, null, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+            var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
+
+            RecursiveMapUpdate(xform, body, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
         }
 
         /// <summary>

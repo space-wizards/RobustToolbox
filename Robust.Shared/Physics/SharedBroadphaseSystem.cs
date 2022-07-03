@@ -892,7 +892,7 @@ namespace Robust.Shared.Physics
             return GetBroadphase(xform, broadQuery, xformQuery);
         }
 
-        private BroadphaseComponent? GetBroadphase(TransformComponent xform, EntityQuery<BroadphaseComponent> broadQuery, EntityQuery<TransformComponent> xformQuery)
+        public BroadphaseComponent? GetBroadphase(TransformComponent xform, EntityQuery<BroadphaseComponent> broadQuery, EntityQuery<TransformComponent> xformQuery)
         {
             if (xform.MapID == MapId.Nullspace) return null;
 

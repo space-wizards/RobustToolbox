@@ -256,8 +256,13 @@ namespace Robust.Shared.GameObjects
         {
             var bounds = new Box2(transform.Position, transform.Position);
 
+            // Applying transform component state can cause entity-lookup updates, which apparently sometimes trigger this
+            // function before a fixtures has been added? I'm not 100% sure how this happens.
+            if (!_entMan.TryGetComponent(Owner, out FixturesComponent? fixtures))
+                return bounds;
+                
             // TODO cache this to speed up entity lookups & tree updating
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
+            foreach (var fixture in fixtures.Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
@@ -283,20 +288,7 @@ namespace Robust.Shared.GameObjects
                 worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
             }
 
-            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
-
-            var bounds = new Box2(transform.Position, transform.Position);
-
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
+            return GetAABB(new Transform(worldPos.Value, (float)worldRot.Value.Theta));
         }
 
         /// <summary>
@@ -748,15 +740,9 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return;
-            }
-
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {
@@ -768,6 +754,12 @@ namespace Robust.Shared.GameObjects
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
+            }
+
+            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
+            {
+                return;
             }
 
             if (_mass > 0.0f)

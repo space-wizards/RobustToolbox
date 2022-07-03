@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -207,12 +208,14 @@ namespace Robust.Shared.GameObjects
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            RecursiveMapUpdate(xform, oldMapId, xformQuery, bodyQuery, metaQuery);
+            RecursiveMapUpdate(xform, oldMapId, oldMap, map, xformQuery, bodyQuery, metaQuery);
         }
 
         private void RecursiveMapUpdate(
             TransformComponent xform,
-            MapId oldMap,
+            MapId oldMapId,
+            SharedPhysicsMapComponent? oldMap,
+            SharedPhysicsMapComponent? map,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<MetaDataComponent> metaQuery)
@@ -225,10 +228,20 @@ namespace Robust.Shared.GameObjects
                     !xformQuery.TryGetComponent(child.Value, out var childXform) ||
                     metaQuery.GetComponent(child.Value).EntityLifeStage == EntityLifeStage.Deleted) continue;
 
-                _broadphase.RemoveFromMoveBuffer(childBody, oldMap);
-                DestroyContacts(childBody, oldMap);
+                if (childBody.Awake)
+                {
+                    oldMap?.RemoveSleepBody(childBody);
+                    map?.AddAwakeBody(childBody);
+                }
+                else
+                {
+                    DebugTools.Assert(oldMap?.AwakeBodies.Contains(childBody) != true);
+                }
+
+                _broadphase.RemoveFromMoveBuffer(childBody, oldMapId);
+                DestroyContacts(childBody, oldMapId);
                 _joints.ClearJoints(childBody);
-                RecursiveMapUpdate(childXform, oldMap, xformQuery, bodyQuery, metaQuery);
+                RecursiveMapUpdate(childXform, oldMapId, oldMap, map, xformQuery, bodyQuery, metaQuery);
             }
         }
 

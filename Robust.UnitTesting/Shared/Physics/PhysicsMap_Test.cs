@@ -40,7 +40,6 @@ public sealed class PhysicsMap_Test
         Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
 
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
-        var childXform = entManager.GetComponent<TransformComponent>(child);
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
         childBody.BodyType = BodyType.Dynamic;
 
@@ -52,7 +51,7 @@ public sealed class PhysicsMap_Test
         parentXform.AttachParent(mapUid2);
 
         Assert.That(physicsMap.AwakeBodies, Is.Empty);
-        Assert.That(physicsMap.AwakeBodies, Has.Count.EqualTo(2));
+        Assert.That(physicsMap2.AwakeBodies, Has.Count.EqualTo(2));
 
         parentXform.AttachParent(mapUid);
 

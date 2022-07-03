@@ -381,6 +381,11 @@ namespace Robust.Shared.Physics
             _dirtyJoints.Add(joint);
         }
 
+        public void ClearJoints(JointComponent joint)
+        {
+            _dirtyJoints.Add(joint);
+        }
+
         public void RemoveJoint(Joint joint)
         {
             var bodyAUid = joint.BodyAUid;

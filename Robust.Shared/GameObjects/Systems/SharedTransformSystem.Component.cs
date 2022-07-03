@@ -223,7 +223,6 @@ public abstract partial class SharedTransformSystem
 #endif
             }
 
-
             parentXform._children.Add(uid);
         }
 

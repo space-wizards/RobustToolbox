@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -19,6 +20,8 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSys = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private ISawmill _logger = default!;
 
@@ -394,75 +397,109 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
-        internal void UpdateBroadphase(PhysicsComponent body, MapId oldMapId, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(PhysicsComponent body, MapId oldMapId, TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager, ref xform) ||
-                _mapManager.IsGrid(body.Owner) && xform.MapID != MapId.Nullspace)
+            if (!Resolve(body.Owner, ref xform))
                 return;
 
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var childEnumerator = xform.ChildEnumerator;
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
-            while (childEnumerator.MoveNext(out var child))
-            {
-                RecursiveBroadphaseUpdate(child.Value, oldMapId, bodyQuery, fixturesQuery, xformQuery);
-            }
+            var newBroadphase = GetBroadphase(xform, broadQuery, xformQuery);
+            TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
 
-            UpdateBodyBroadphase(body, oldMapId, manager, xform);
+            RecursiveBroadphaseUpdate(xform, bodyQuery, fixturesQuery, xformQuery, broadQuery, newBroadphase, oldMoveBuffer);
         }
 
-        private void RecursiveBroadphaseUpdate(EntityUid uid, MapId oldMapId, EntityQuery<PhysicsComponent> bodyQuery, EntityQuery<FixturesComponent> fixturesQuery, EntityQuery<TransformComponent> xformQuery)
+        private void RecursiveBroadphaseUpdate(
+            TransformComponent xform,
+            EntityQuery<PhysicsComponent> bodyQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<BroadphaseComponent> broadQuery,
+            BroadphaseComponent? newBroadphase,
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer)
         {
-            var xform = xformQuery.GetComponent(uid);
+            var uid = xform.Owner;
             var childEnumerator = xform.ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
-            {
-                RecursiveBroadphaseUpdate(child.Value, oldMapId, bodyQuery, fixturesQuery, xformQuery);
-            }
 
             if (bodyQuery.TryGetComponent(uid, out var body) &&
+                body._canCollide &&
                 fixturesQuery.TryGetComponent(uid, out var manager))
             {
-                UpdateBodyBroadphase(body, oldMapId, manager, xform);
+                // TODO while iterating down through children, evaluate world position & rotation and pass into this function
+                UpdateBodyBroadphase(body, manager, xform, newBroadphase, xformQuery, oldMoveBuffer);
+            }
+
+            if (xform.MapID != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroad))
+                newBroadphase = parentBroad;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                if (xformQuery.TryGetComponent(child, out var childXform))
+                    RecursiveBroadphaseUpdate(childXform, bodyQuery, fixturesQuery, xformQuery, broadQuery, newBroadphase, oldMoveBuffer);
             }
         }
 
-        private void UpdateBodyBroadphase(PhysicsComponent body, MapId oldMapId, FixturesComponent manager, TransformComponent xform)
+        internal void UpdateBodyBroadphase(
+            PhysicsComponent body,
+            FixturesComponent manager,
+            TransformComponent xform,
+            BroadphaseComponent? newBroadphase,
+            EntityQuery<TransformComponent> xformQuery,
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer)
         {
-            if (body._canCollide)
+            if (body.Broadphase == newBroadphase)
+                return;
+
+            DestroyProxies(body, manager, oldMoveBuffer);
+            body.Broadphase = newBroadphase;
+
+            if (newBroadphase == null)
+                return;
+
+            // TODO optimize map moving. Seeing as we iterate downwards through children, world position/rotation can be
+            // tracked, instead of re-calculated each time by iterating upwards though parents. But for deletions,
+            // newBroadphase is null anyways, so this only matters for things like shuttles moving across maps.
+            var (worldPos, worldRot) = _xformSys.GetWorldPositionRotation(xform, xformQuery);
+
+            foreach (var (_, fixture) in manager.Fixtures)
             {
-                // oldBroadphase may be null if they were previously in nullspace (e.g. via PVS).
-                var oldBroadphase = body.Broadphase;
-                var newBroadphase = GetBroadphase(xform);
-
-                if (oldBroadphase == newBroadphase) return;
-
-                DestroyProxies(body, manager, oldMapId);
-
-                // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
-                CreateProxies(body, manager);
+                // TODO pass in broadphaseXform
+                CreateProxies(fixture, worldPos, worldRot);
             }
         }
 
         /// <summary>
         /// Remove all of our fixtures from the broadphase.
         /// </summary>
-        private void DestroyProxies(PhysicsComponent body, FixturesComponent? manager = null, MapId? mapId = null)
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent manager)
         {
-            if (!Resolve(body.Owner, ref manager)) return;
+            if (body.Broadphase == null)
+                return;
 
-            var broadphase = body.Broadphase;
+            DestroyProxies(body, manager, _moveBuffer[Transform(body.Broadphase.Owner).MapID]);
+        }
 
-            if (broadphase == null) return;
-
-            mapId ??= Transform(broadphase.Owner).MapID;
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent manager, Dictionary<FixtureProxy, Box2>? moveBuffer)
+        {
+            if (body.Broadphase == null)
+                return;
 
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                DestroyProxies(broadphase, fixture, mapId.Value);
+                var proxyCount = fixture.ProxyCount;
+                for (var i = 0; i < proxyCount; i++)
+                {
+                    var proxy = fixture.Proxies[i];
+                    body.Broadphase.Tree.RemoveProxy(proxy.ProxyId);
+                    proxy.ProxyId = DynamicTree.Proxy.Free;
+                    moveBuffer?.Remove(proxy);
+                }
+
+                fixture.ProxyCount = 0;
             }
 
             body.Broadphase = null;
@@ -520,7 +557,7 @@ namespace Robust.Shared.Physics
 
         public void RegenerateContacts(PhysicsComponent body)
         {
-            Get<SharedPhysicsSystem>().DestroyContacts(body);
+            _physicsSystem.DestroyContacts(body);
 
             var broadphase = body.Broadphase;
 
@@ -675,10 +712,12 @@ namespace Robust.Shared.Physics
             _moveBuffer[mapId][proxy] = aabb;
         }
 
-        public void RemoveFromMoveBuffer(PhysicsComponent body, MapId mapId)
-        {
-            if (!TryComp<FixturesComponent>(body.Owner, out var manager) || !_moveBuffer.TryGetValue(mapId, out var buffer)) return;
+        // For use when recursively deleting an entity, to avoid may dictionary lookups
+        internal bool TryGetMoveBuffer(MapId mapId, [NotNullWhen(true)]out Dictionary<FixtureProxy, Box2>? buffer)
+            => _moveBuffer.TryGetValue(mapId, out buffer);
 
+        internal void RemoveFromMoveBuffer(FixturesComponent manager, Dictionary<FixtureProxy, Box2> buffer)
+        {
             foreach (var (_, fixture) in manager.Fixtures)
             {
                 for (var i = 0; i < fixture.ProxyCount; i++)
@@ -782,24 +821,24 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Destroy the proxies for this fixture on the broadphase.
         /// </summary>
-        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture, MapId mapId)
+        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture, MapId map)
         {
             if (broadphase == null)
             {
                 throw new InvalidBroadphaseException($"Unable to find broadphase for destroy on {fixture.Body}");
             }
 
-            var proxyCount = fixture.ProxyCount;
+            DebugTools.Assert(Transform(broadphase.Owner).MapID == map);
 
-            // May have already moved to null-space, in which case the move-buffer was already cleared.
-            _moveBuffer.TryGetValue(mapId, out var moveBuffer);
+            var proxyCount = fixture.ProxyCount;
+            var moveBuffer = _moveBuffer[map];
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
                 broadphase.Tree.RemoveProxy(proxy.ProxyId);
                 proxy.ProxyId = DynamicTree.Proxy.Free;
-                moveBuffer?.Remove(proxy);
+                moveBuffer.Remove(proxy);
             }
 
             fixture.ProxyCount = 0;
@@ -850,14 +889,16 @@ namespace Robust.Shared.Physics
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
+            return GetBroadphase(xform, broadQuery, xformQuery);
+        }
+
+        private BroadphaseComponent? GetBroadphase(TransformComponent xform, EntityQuery<BroadphaseComponent> broadQuery, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (xform.MapID == MapId.Nullspace) return null;
+
             var parent = xform.ParentUid;
 
-            // if it's map return null. Grids should return the map's broadphase.
-            if (broadQuery.HasComponent(xform.Owner) &&
-                !parent.IsValid())
-            {
-                return null;
-            }
+            // if it's map (or in null-space) return null. Grids should return the map's broadphase.
 
             while (parent.IsValid())
             {

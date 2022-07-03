@@ -598,6 +598,9 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
+                if (!_mapManager.IsMap(Owner))
+                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
+
                 DetachParentToNull();
                 return;
             }

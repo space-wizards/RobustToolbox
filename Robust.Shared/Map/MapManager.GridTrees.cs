@@ -158,9 +158,6 @@ internal partial class MapManager
             RemoveGrid(aGrid, args.OldMapId);
         }
 
-        if (args.Transform.MapID == MapId.Nullspace)
-            return;
-
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
             newMovedGrids.Add(component.Grid);

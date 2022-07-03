@@ -221,6 +221,8 @@ namespace Robust.Shared.GameObjects
                 newMap?.AddAwakeBody(body);
                 DebugTools.Assert(body.Awake);
             }
+            else
+                DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
 
             if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
             {

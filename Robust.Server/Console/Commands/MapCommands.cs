@@ -527,7 +527,7 @@ namespace Robust.Server.Console.Commands
                 var worldPos = xform.WorldPosition;
 
                 msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
-                    grid.Index, grid.ParentMapId, grid.GridEntityId, worldPos.X, worldPos.Y);
+                    grid.Index, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
             }
 
             shell.WriteLine(msg.ToString());

@@ -171,7 +171,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                loadOptions.Rotation = new Angle(rotation);
+                loadOptions.Rotation = Angle.FromDegrees(rotation);
             }
 
             if (args.Length >= 6)
@@ -219,7 +219,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteLine(Help);
                 return;
             }
-                
+
             if (!int.TryParse(args[0], out var intMapId))
             {
                 shell.WriteLine(Help);

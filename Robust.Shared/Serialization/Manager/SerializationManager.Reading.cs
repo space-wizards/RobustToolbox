@@ -231,6 +231,10 @@ namespace Robust.Shared.Serialization.Manager
                         Expression.Convert(value.IsValueType ? Expression.Call(instanceConst, nameof(GetNullable), new []{value}) : Expression.Constant(null), typeof(object)),
                         Expression.Convert(call, typeof(object)));
                 }
+                else
+                {
+                    call = Expression.Convert(call, typeof(object));
+                }
 
                 return Expression.Lambda<ReadDelegate>(
                     call,

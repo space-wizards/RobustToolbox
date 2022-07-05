@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct UIBox2i : IEquatable<UIBox2i>
+    public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     {
         [FieldOffset(sizeof(int) * 0)] public int Left;
         [FieldOffset(sizeof(int) * 1)] public int Top;
@@ -144,6 +145,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Top}, {Right}, {Bottom})");
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
 
-        private ISawmill _logger = default!;
+        protected ISawmill Sawmill = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
         private bool _convexHulls = true;
@@ -28,9 +28,8 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Logger.GetSawmill("physics");
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
-
+            Sawmill = Logger.GetSawmill("physics");
             var configManager = IoCManager.Resolve<IConfigurationManager>();
 
             configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
@@ -60,23 +59,26 @@ namespace Robust.Shared.GameObjects
             // Just in case there's any deleted we'll ToArray
             foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())
             {
-                gridInternal.RegenerateCollision(chunk, false);
+                gridInternal.RegenerateCollision(chunk);
             }
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, bool checkSplit = true)
+        internal void RegenerateCollision(
+            EntityUid gridEuid,
+            Dictionary<MapChunk, List<Box2i>> mapChunks,
+            List<MapChunk> removedChunks)
         {
             if (!_enabled) return;
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 
@@ -89,39 +91,46 @@ namespace Robust.Shared.GameObjects
             }
 
             _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-            EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures});
+            EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
 
-            foreach (var (chunk, _) in mapChunks)
-            {
-                GenerateSplitNode(gridEuid, chunk, checkSplit);
-            }
+            CheckSplit(gridEuid, mapChunks, removedChunks);
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, bool checkSplit = true)
+        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
         {
             if (!_enabled) return;
 
-            DebugTools.Assert(chunk.FilledTiles > 0);
+            if (chunk.FilledTiles == 0)
+            {
+                CheckSplit(gridEuid, chunk, rectangles);
+                return;
+            }
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
             {
-                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 
             if (UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent))
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
-                GenerateSplitNode(gridEuid, chunk, checkSplit);
+                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures}, true);
+
+                CheckSplit(gridEuid, chunk, rectangles);
             }
         }
+
+        internal virtual void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks,
+            List<MapChunk> removedChunks) {}
+
+        internal virtual void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles) {}
 
         private bool UpdateFixture(MapChunk chunk, List<Box2i> rectangles, PhysicsComponent physicsComponent, FixturesComponent fixturesComponent)
         {
@@ -215,8 +224,6 @@ namespace Robust.Shared.GameObjects
 
             return updated;
         }
-
-        internal virtual void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true) {}
     }
 
     public sealed class GridFixtureChangeEvent : EntityEventArgs

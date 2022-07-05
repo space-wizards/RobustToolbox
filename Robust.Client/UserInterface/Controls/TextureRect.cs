@@ -150,11 +150,21 @@ namespace Robust.Client.UserInterface.Controls
                         GetDrawDimensions(texture));
                     break;
                 case StretchMode.KeepAspectCovered:
-                    handle.DrawTextureRectRegion(texture, PixelSizeBox, GetDrawDimensions(texture));
+                    var dimensions = GetDrawDimensions(texture);
+                    var subRegion = CalcClipSubRegion(texture.Size, dimensions, PixelSizeBox);
+                    handle.DrawTextureRectRegion(texture, PixelSizeBox, subRegion);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private static UIBox2 CalcClipSubRegion(Vector2 texSize, UIBox2 drawDimensions, UIBox2 size)
+        {
+            var normTL = (size.TopLeft - drawDimensions.TopLeft) / drawDimensions.Size;
+            var normBR = (size.BottomRight - drawDimensions.TopLeft) / drawDimensions.Size;
+
+            return new UIBox2(normTL * texSize, normBR * texSize);
         }
 
         protected UIBox2 GetDrawDimensions(Texture texture)
@@ -202,8 +212,9 @@ namespace Robust.Client.UserInterface.Controls
                     // Use whichever scale is greater.
                     var scale = Math.Max(scaleX, scaleY);
                     // Offset inside the actual texture.
-                    var offset = (texSize - PixelSize) / scale / 2f;
-                    return UIBox2.FromDimensions(offset, PixelSize / scale);
+                    var texDrawSize = texSize * scale;
+                    var offset = (PixelSize - texDrawSize) / 2f;
+                    return UIBox2.FromDimensions(offset, texDrawSize);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

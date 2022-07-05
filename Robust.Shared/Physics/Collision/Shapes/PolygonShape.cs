@@ -133,6 +133,45 @@ namespace Robust.Shared.Physics.Collision.Shapes
             }
 
             // TODO: Updates (network etc)
+            Centroid = ComputeCentroid(Vertices, VertexCount);
+        }
+
+        private static Vector2 ComputeCentroid(Vector2[] vs, int count)
+        {
+            DebugTools.Assert(count >= 3);
+
+            var c = new Vector2(0.0f, 0.0f);
+            float area = 0.0f;
+
+            // Get a reference point for forming triangles.
+            // Use the first vertex to reduce round-off errors.
+            var s = vs[0];
+
+            const float inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < count; ++i)
+            {
+                // Triangle vertices.
+                var p1 = vs[0] - s;
+                var p2 = vs[i] - s;
+                var p3 = i + 1 < count ? vs[i+1] - s : vs[0] - s;
+
+                var e1 = p2 - p1;
+                var e2 = p3 - p1;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                c += (p1 + p2 + p3) * triangleArea * inv3;
+            }
+
+            // Centroid
+            DebugTools.Assert(area > float.Epsilon);
+            c = c * (1.0f / area) + s;
+            return c;
         }
 
         public ShapeType ShapeType => ShapeType.Polygon;
@@ -177,30 +216,28 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
-            Span<Vector2> verts = stackalloc Vector2[4];
+            Vertices = new Vector2[4];
+            Normals = new Vector2[4];
             // Damn normies
-            Span<Vector2> norms = stackalloc Vector2[4];
 
-            verts[0] = new Vector2(-halfWidth, -halfHeight);
-            verts[1] = new Vector2(halfWidth, -halfHeight);
-            verts[2] = new Vector2(halfWidth, halfHeight);
-            verts[3] = new Vector2(-halfWidth, halfHeight);
-            norms[0] = new Vector2(0f, -1f);
-            norms[1] = new Vector2(1f, 0f);
-            norms[2] = new Vector2(0f, 1f);
-            norms[3] = new Vector2(-1f, 0f);
+            Vertices[0] = new Vector2(-halfWidth, -halfHeight);
+            Vertices[1] = new Vector2(halfWidth, -halfHeight);
+            Vertices[2] = new Vector2(halfWidth, halfHeight);
+            Vertices[3] = new Vector2(-halfWidth, halfHeight);
+            Normals[0] = new Vector2(0f, -1f);
+            Normals[1] = new Vector2(1f, 0f);
+            Normals[2] = new Vector2(0f, 1f);
+            Normals[3] = new Vector2(-1f, 0f);
 
             Centroid = center;
 
             var xf = new Transform(center, angle);
-            Array.Resize(ref Vertices, 4);
-            Array.Resize(ref Normals, 4);
 
             // Transform vertices and normals.
-            for (var i = 0; i < verts.Length; ++i)
+            for (var i = 0; i < VertexCount; ++i)
             {
-                Vertices[i] = Transform.Mul(xf, verts[i]);
-                Normals[i] = Transform.Mul(xf.Quaternion2D, norms[i]);
+                Vertices[i] = Transform.Mul(xf, Vertices[i]);
+                Normals[i] = Transform.Mul(xf.Quaternion2D, Normals[i]);
             }
         }
 

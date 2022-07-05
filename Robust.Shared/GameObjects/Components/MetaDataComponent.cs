@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
-        private bool _entityPaused;
+        internal bool _entityPaused;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
@@ -146,13 +146,14 @@ namespace Robust.Shared.GameObjects
         public bool EntityPaused
         {
             get => _entityPaused;
+            [Obsolete("Call MetaDataSystem to change this.")]
             set
             {
                 if (_entityPaused == value)
                     return;
 
                 _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value), true);
             }
         }
 

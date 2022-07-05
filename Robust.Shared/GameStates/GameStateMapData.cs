@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -9,9 +10,9 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public sealed class GameStateMapData
     {
-        public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
+        public readonly KeyValuePair<EntityUid, GridDatum>[]? GridData;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData)
+        public GameStateMapData(KeyValuePair<EntityUid, GridDatum>[]? gridData)
         {
             GridData = gridData;
         }

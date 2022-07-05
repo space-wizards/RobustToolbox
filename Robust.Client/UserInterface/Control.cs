@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia.Metadata;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
@@ -865,13 +866,17 @@ namespace Robust.Client.UserInterface
             OnResized?.Invoke();
         }
 
-        internal void DoFrameUpdate(FrameEventArgs args)
+        internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            var total = 1;
             FrameUpdate(args);
+
             foreach (var child in Children)
             {
-                child.DoFrameUpdate(args);
+                total += child.DoFrameUpdateRecursive(args);
             }
+
+            return total;
         }
 
         /// <summary>

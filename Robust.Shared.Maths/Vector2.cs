@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -9,7 +10,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>
+    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, ISpanFormattable
     {
         /// <summary>
         ///     The X component of the vector.
@@ -380,6 +381,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({X}, {Y})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({X}, {Y})");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

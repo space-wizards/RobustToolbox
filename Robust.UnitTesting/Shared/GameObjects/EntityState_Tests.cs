@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -35,6 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
+            container.Register<ProfManager, ProfManager>();
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();

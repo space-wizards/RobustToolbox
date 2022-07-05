@@ -86,20 +86,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 var x = FrameWidth * UIScale * (TrackedFrames - 1 - i);
                 var rect = new UIBox2(x, PixelHeight - (frameHeight * ratio), x + FrameWidth * UIScale, PixelHeight);
 
-                Color color;
-                if (frameTime > 1f / (target / 2 - 1))
-                {
-                    color = Color.Red;
-                }
-                else if (frameTime > 1f / (target - 1))
-                {
-                    color = Color.Yellow;
-                }
-                else
-                {
-                    color = Color.Lime;
-                }
-                handle.DrawRect(rect, color);
+                handle.DrawRect(rect, FrameTimeColor(frameTime, target));
 
                 var gc = _gcMarkers[currentFrameIndex];
                 if (gc)
@@ -111,6 +98,17 @@ namespace Robust.Client.UserInterface.CustomControls
                     handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, triangle, Color.LightBlue);
                 }
             }
+        }
+
+        internal static Color FrameTimeColor(float time, int target)
+        {
+            if (time > 1f / (target / 2 - 1))
+                return Color.Red;
+
+            if (time > 1f / (target - 1))
+                return Color.Yellow;
+
+            return Color.Lime;
         }
     }
 }

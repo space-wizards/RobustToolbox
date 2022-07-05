@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
 
-                gridInternal.GetMapChunks(viewport, out var chunkEnumerator);
+                var chunkEnumerator = gridInternal.GetMapChunks(viewport);
 
                 while (chunkEnumerator.MoveNext(out var chunk))
                 {

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Robust.Shared.Log
 {
     public sealed class ProxyLogManager : ILogManager
@@ -15,5 +17,7 @@ namespace Robust.Shared.Log
         {
             return _impl.GetSawmill(name);
         }
+
+        public IEnumerable<ISawmill> AllSawmills => _impl.AllSawmills;
     }
 }

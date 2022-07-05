@@ -78,7 +78,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIOpenedEvent(wrapped.UiKey, Owner, playerSession));
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIOpenedEvent(wrapped.UiKey, Owner, playerSession), true);
         }
 
         internal void Close(object uiKey, bool remoteCall)
@@ -95,7 +95,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIClosedEvent(uiKey, Owner, playerSession));
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIClosedEvent(uiKey, Owner, playerSession), true);
         }
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)

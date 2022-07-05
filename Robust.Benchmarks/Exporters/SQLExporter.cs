@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Mathematics;
@@ -11,6 +12,9 @@ using BenchmarkDotNet.Reports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Npgsql;
+using Npgsql.Internal;
+using Npgsql.Internal.TypeHandlers;
+using Npgsql.Internal.TypeHandling;
 
 namespace Robust.Benchmarks.Exporters;
 
@@ -68,6 +72,13 @@ public sealed class SQLExporter : IExporter
         using var ctx = new BenchmarkContext(builder.Options);
         try
         {
+            ctx.Database.OpenConnection();
+            var con = (NpgsqlConnection) ctx.Database.GetDbConnection();
+            con.TypeMapper.AddTypeResolverFactory(new JsonOverrideTypeHandlerResolverFactory(new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+            }));
+
             ctx.Database.Migrate();
             ctx.BenchmarkRuns.Add(BenchmarkRun.FromSummary(summary, gitHash));
             ctx.SaveChanges();
@@ -81,6 +92,45 @@ public sealed class SQLExporter : IExporter
     public string Name => "sql";
 }
 
+// https://github.com/npgsql/efcore.pg/issues/1107#issuecomment-945126627
+class JsonOverrideTypeHandlerResolverFactory : TypeHandlerResolverFactory
+{
+    private readonly JsonSerializerOptions _options;
+
+    public JsonOverrideTypeHandlerResolverFactory(JsonSerializerOptions options)
+        => _options = options;
+
+    public override TypeHandlerResolver Create(NpgsqlConnector connector)
+        => new JsonOverrideTypeHandlerResolver(connector, _options);
+
+    public override string? GetDataTypeNameByClrType(Type clrType)
+        => null;
+
+    public override TypeMappingInfo? GetMappingByDataTypeName(string dataTypeName)
+        => null;
+
+    class JsonOverrideTypeHandlerResolver : TypeHandlerResolver
+    {
+        readonly JsonHandler _jsonbHandler;
+
+        internal JsonOverrideTypeHandlerResolver(NpgsqlConnector connector, JsonSerializerOptions options)
+            => _jsonbHandler ??= new JsonHandler(
+                connector.DatabaseInfo.GetPostgresTypeByName("jsonb"),
+                connector.TextEncoding,
+                isJsonb: true,
+                options);
+
+        public override NpgsqlTypeHandler? ResolveByDataTypeName(string typeName)
+            => typeName == "jsonb" ? _jsonbHandler : null;
+
+        public override NpgsqlTypeHandler? ResolveByClrType(Type type)
+            // You can add any user-defined CLR types which you want mapped to jsonb
+            => type == typeof(JsonDocument) ? _jsonbHandler : null;
+
+        public override TypeMappingInfo? GetMappingByDataTypeName(string dataTypeName)
+            => null; // Let the built-in resolver do this
+    }
+}
 public sealed class DesignTimeContextFactoryPostgres : IDesignTimeDbContextFactory<BenchmarkContext>
 {
     public BenchmarkContext CreateDbContext(string[] args)
@@ -101,12 +151,14 @@ public class BenchmarkContext : DbContext
 
 public class BenchmarkRun
 {
-    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public ulong Id { get; set; }
+    public int Id { get; set; }
     public string GitHash { get; set; } = string.Empty;
+
     [Column(TypeName = "timestamptz")]
     public DateTime RunDate { get; set; }
+
     public string Name { get; set; } = string.Empty;
+
     [Column(TypeName = "jsonb")]
     public BenchmarkRunReport[] Reports { get; set; } = Array.Empty<BenchmarkRunReport>();
 

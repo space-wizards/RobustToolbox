@@ -16,6 +16,16 @@ namespace Robust.Shared.Map
             return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
         }
 
+        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
+        {
+            IoCManager.Resolve(ref mapManager);
+            
+            var grid = mapManager.GetGrid(gridId);
+            var tile = grid.TileSize;
+
+            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
+        }
+
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coordinates, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
             var coords = coordinates;
@@ -42,7 +52,7 @@ namespace Robust.Shared.Map
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
+                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)

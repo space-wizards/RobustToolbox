@@ -28,6 +28,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -89,6 +90,7 @@ namespace Robust.Server
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -478,7 +480,7 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time)
+                _mainLoop = new GameLoop(_time, _runtimeLog, _prof)
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,
@@ -543,6 +545,8 @@ namespace Robust.Server
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
 
+            var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
+            _time.TimeBase = (startOffset, GameTick.First);
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
@@ -602,7 +606,8 @@ namespace Robust.Server
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
-            _network.Shutdown($"Server shutting down: {_shutdownReason}");
+            var shutdownReasonWithRedial = NetStructuredDisconnectMessages.Encode($"Server shutting down: {_shutdownReason}", true);
+            _network.Shutdown(shutdownReasonWithRedial);
 
             // shutdown entities
             _entityManager.Cleanup();
@@ -686,8 +691,13 @@ namespace Robust.Server
         private void FrameUpdate(FrameEventArgs frameEventArgs)
         {
             ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
     }
 }

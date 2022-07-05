@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -125,12 +132,6 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// The amount of new entities that can be sent to a client in a single game state, under PVS.
-        /// </summary>
-        public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
-
-        /// <summary>
         /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
@@ -154,6 +155,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Offset CurTime at server start by this amount (in seconds).
+        /// </summary>
+        public static readonly CVarDef<int> NetTimeStartOffset =
+            CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
 
         /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
@@ -194,7 +201,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
-#if DEBUG
         /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
         /// 0 = no packet loss, 1 = all packets dropped
@@ -219,7 +225,6 @@ namespace Robust.Shared
         /// 0 = no packets duplicated, 1 = all packets duplicated.
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /**
          * SUS
@@ -737,6 +742,12 @@ namespace Robust.Shared
             CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Force ANGLE to create a context from a D3D11 FL 10_0 device.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForce10_0 =
+            CVarDef.Create("display.angle_force_10_0", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleDxgi1 =
@@ -769,6 +780,12 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
             CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Enable allowES3OnFL10_0 on ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleEs3On10_0 =
+            CVarDef.Create("display.angle_es3_on_10_0", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Base DPI to render fonts at. This can be further scaled based on <c>display.uiScale</c>.
@@ -1205,6 +1222,31 @@ namespace Robust.Shared
             CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
 
         /*
+         * CON
+         */
+
+        /// <summary>
+        /// Add artificial delay (in seconds) to console completion fetching, even for local commands.
+        /// </summary>
+        /// <remarks>
+        /// Intended for debugging the console completion system.
+        /// </remarks>
+        public static readonly CVarDef<float> ConCompletionDelay =
+            CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The amount of completions to show in console completion drop downs.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionCount =
+            CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum margin of options to keep on either side of the completion cursor, when scrolling through.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionMargin =
+            CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
+
+        /*
          * THREAD
          */
 
@@ -1214,5 +1256,24 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ThreadParallelCount =
             CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

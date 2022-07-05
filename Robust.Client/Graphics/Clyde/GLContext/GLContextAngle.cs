@@ -374,6 +374,14 @@ namespace Robust.Client.Graphics.Clyde
                         };
                     }
 
+                    if (Clyde._cfg.GetCVar(CVars.DisplayAngleForce10_0))
+                    {
+                        featureLevels = stackalloc D3D_FEATURE_LEVEL[]
+                        {
+                            D3D_FEATURE_LEVEL_10_0,
+                        };
+                    }
+
                     fixed (ID3D11Device** device = &_device)
                     fixed (D3D_FEATURE_LEVEL* fl = &featureLevels[0])
                     {

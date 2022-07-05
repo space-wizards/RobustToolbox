@@ -88,6 +88,11 @@ namespace Robust.Shared.Timing
         byte TickRate { get; set; }
 
         /// <summary>
+        /// The baseline time value that CurTime is calculated relatively to.
+        /// </summary>
+        (TimeSpan, GameTick) TimeBase { get; set; }
+
+        /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
         TimeSpan TickPeriod { get; }
@@ -134,9 +139,14 @@ namespace Robust.Shared.Timing
         bool IsFirstTimePredicted { get; }
 
         /// <summary>
-        /// Is CurTick ahead of LastRealTick, meaning we are inside predicted ticks?
+        /// True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
         /// </summary>
         bool InPrediction { get; }
+
+        /// <summary>
+        /// If true, the game is currently in the process of applying a game server-state.
+        /// </summary>
+        bool ApplyingState { get; }
 
         /// <summary>
         /// The last real non-predicted tick that was processed.
@@ -151,6 +161,9 @@ namespace Robust.Shared.Timing
         /// Resets the simulation time. This should be called on round restarts.
         /// </summary>
         void ResetSimTime();
+        void ResetSimTime((TimeSpan, GameTick) timeBase);
+
+        void SetTickRateAt( byte tickRate, GameTick atTick);
 
         TimeSpan RealLocalToServer(TimeSpan local);
         TimeSpan RealServerToLocal(TimeSpan server);

@@ -27,8 +27,18 @@ public sealed class MetaDataSystem : EntitySystem
         component._entityName = state.Name;
         component._entityDescription = state.Description;
 
-        if(state.PrototypeId != null)
+        if(state.PrototypeId != null && state.PrototypeId != component._entityPrototype?.ID)
             component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
+    }
+
+    public void SetEntityPaused(EntityUid uid, bool value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata)) return;
+
+        if (metadata._entityPaused == value) return;
+
+        metadata._entityPaused = value;
+        RaiseLocalEvent(uid, new EntityPausedEvent(uid, value), true);
     }
 
     public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
@@ -52,7 +62,7 @@ public sealed class MetaDataSystem : EntitySystem
             return;
 
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
-        EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev);
+        EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev, true);
 
         component.Flags &= ~ev.ToRemove;
     }

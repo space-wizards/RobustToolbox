@@ -32,15 +32,17 @@ namespace Robust.Shared.Map
         /// </summary>
         ushort TileSize { get; }
 
+        Box2Rotated WorldBounds { get; }
+
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
-        Box2 WorldBounds { get; }
+        Box2 WorldAABB { get; }
 
         /// <summary>
         ///     The bounding box of the grid in local coordinates.
         /// </summary>
-        Box2 LocalBounds { get; }
+        Box2 LocalAABB { get; }
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -114,6 +116,10 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="tiles"></param>
         void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
+
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
 
         IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
 

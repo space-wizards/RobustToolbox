@@ -84,9 +84,11 @@ internal sealed partial class MidiManager : IMidiManager
     private static readonly string[] LinuxSoundfonts =
     {
         "/usr/share/soundfonts/default.sf2",
+        "/usr/share/soundfonts/default.dls",
         "/usr/share/soundfonts/FluidR3_GM.sf2",
         "/usr/share/soundfonts/freepats-general-midi.sf2",
         "/usr/share/sounds/sf2/default.sf2",
+        "/usr/share/sounds/sf2/default.dls",
         "/usr/share/sounds/sf2/FluidR3_GM.sf2",
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };
@@ -97,6 +99,8 @@ internal sealed partial class MidiManager : IMidiManager
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
+
+    private const float MaxDistanceForOcclusion = 1000;
 
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
@@ -212,12 +216,6 @@ internal sealed partial class MidiManager : IMidiManager
 
             var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
 
-            foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
-            {
-                if (file.Extension != "sf2" && file.Extension != "dls") continue;
-                renderer.LoadSoundfont(file.ToString());
-            }
-
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
             renderer.LoadSoundfont(FallbackSoundfont);
 
@@ -250,7 +248,14 @@ internal sealed partial class MidiManager : IMidiManager
                     renderer.LoadSoundfont(WindowsSoundfont, true);
             }
 
-            // load every soundfont from the user data directory
+            // Load content-specific custom soundfonts, which could override the system/fallback soundfont.
+            foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
+            {
+                if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                renderer.LoadSoundfont(file.ToString());
+            }
+
+            // Load every soundfont from the user data directory last, since those may override any other soundfont.
             _midiSawmill.Debug($"loading soundfonts from {CustomSoundfontDirectory.ToRelativePath().ToString()}/*");
             var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath().ToString()}/*").Item1;
             foreach (var soundfont in enumerator)
@@ -322,7 +327,7 @@ internal sealed partial class MidiManager : IMidiManager
                             pos.Position,
                             sourceRelative.Normalized,
                             OcclusionCollisionMask),
-                        sourceRelative.Length,
+                        MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
                         renderer.TrackingEntity);
                 }
 

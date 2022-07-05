@@ -143,12 +143,9 @@ namespace Robust.Server.ServerStatus
 
         private async Task<JsonObject?> PrepareACZBuildInfo()
         {
-            var acz = await PrepareACZ();
-            if (acz == null) return null;
+            var acm = await PrepareAcz();
+            if (acm == null) return null;
 
-            // Automatic - pass to ACZ
-            // Unfortunately, we still can't divine engine version.
-            var engineVersion = _cfg.GetCVar(CVars.BuildEngineVersion);
             // Fork ID is an interesting case, we don't want to cause too many redownloads but we also don't want to pollute disk.
             // Call the fork "custom" if there's no explicit ID given.
             var fork = _cfg.GetCVar(CVars.BuildForkId);
@@ -158,17 +155,18 @@ namespace Robust.Server.ServerStatus
             }
             return new JsonObject
             {
-                ["engine_version"] = engineVersion,
+                ["engine_version"] = _cfg.GetCVar(CVars.BuildEngineVersion),
                 ["fork_id"] = fork,
-                ["version"] = acz.ManifestHash,
+                ["version"] = acm.ManifestHash,
                 // Don't supply a download URL - like supplying an empty self-address
                 ["download_url"] = "",
                 ["manifest_download_url"] = "",
                 ["manifest_url"] = "",
                 // Pass acz so the launcher knows where to find the downloads.
                 ["acz"] = true,
-                ["hash"] = acz.ZipHash,
-                ["manifest_hash"] = acz.ManifestHash
+                // Needs to be an empty 'hash' here or the launcher complains, this is from back when ACZ used zips
+                ["hash"] = "",
+                ["manifest_hash"] = acm.ManifestHash
             };
         }
     }

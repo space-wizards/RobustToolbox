@@ -19,7 +19,7 @@ namespace Robust.Shared.Physics
     /// </remarks>
     [RegisterComponent]
     [NetworkedComponent]
-    [Friend(typeof(FixtureSystem))]
+    [Access(typeof(FixtureSystem))]
     [ComponentProtoName("Fixtures")]
     public sealed class FixturesComponent : Component, ISerializationHooks
     {
@@ -31,10 +31,12 @@ namespace Robust.Shared.Physics
         public int FixtureCount => Fixtures.Count;
 
         [ViewVariables]
+        [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
         public readonly Dictionary<string, Fixture> Fixtures = new();
 
         [DataField("fixtures")]
         [NeverPushInheritance]
+        [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
         internal List<Fixture> SerializedFixtures = new();
 
         void ISerializationHooks.BeforeSerialization()

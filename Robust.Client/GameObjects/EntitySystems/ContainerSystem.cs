@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -25,16 +26,10 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<UpdateContainerOcclusionMessage>(UpdateContainerOcclusion);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
-        }
-
-        private void UpdateContainerOcclusion(UpdateContainerOcclusionMessage ev)
-        {
-            _updateQueue.Add(ev.Entity);
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
@@ -56,24 +51,26 @@ namespace Robust.Client.GameObjects
                 return;
 
             // Delete now-gone containers.
-            List<string>? toDelete = null;
+            var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                if (!cast.ContainerSet.Any(data => data.Id == id))
+                // TODO: This is usually O(n^2) to the amount of containers.
+                foreach (var stateContainer in cast.ContainerSet)
                 {
-                    container.EmptyContainer(true, entMan: EntityManager);
-                    container.Shutdown();
-                    toDelete ??= new List<string>();
-                    toDelete.Add(id);
+                    if (stateContainer.Id == id)
+                        goto skip;
                 }
+
+                container.EmptyContainer(true, entMan: EntityManager);
+                container.Shutdown();
+                toDelete.Add(id);
+
+                skip: ;
             }
 
-            if (toDelete != null)
+            foreach (var dead in toDelete)
             {
-                foreach (var dead in toDelete)
-                {
-                    component.Containers.Remove(dead);
-                }
+                component.Containers.Remove(dead);
             }
 
             // Add new containers and update existing contents.
@@ -91,37 +88,33 @@ namespace Robust.Client.GameObjects
                 container.OccludesLight = occludesLight;
 
                 // Remove gone entities.
-                List<EntityUid>? toRemove = null;
+                var toRemove = new ValueList<EntityUid>();
                 foreach (var entity in container.ContainedEntities)
                 {
                     if (!entityUids.Contains(entity))
                     {
-                        toRemove ??= new List<EntityUid>();
                         toRemove.Add(entity);
                     }
                 }
 
-                if (toRemove != null)
+                foreach (var goner in toRemove)
                 {
-                    foreach (var goner in toRemove)
-                        container.Remove(goner);
+                    container.Remove(goner);
                 }
 
                 // Remove entities that were expected, but have been removed from the container.
-                List<EntityUid>? removedExpected = null;
+                var removedExpected = new ValueList<EntityUid>();
                 foreach (var entityUid in container.ExpectedEntities)
                 {
                     if (!entityUids.Contains(entityUid))
                     {
-                        removedExpected ??= new List<EntityUid>();
                         removedExpected.Add(entityUid);
                     }
                 }
 
-                if (removedExpected != null)
+                foreach (var entityUid in removedExpected)
                 {
-                    foreach (var entityUid in removedExpected)
-                        RemoveExpectedEntity(entityUid);
+                    RemoveExpectedEntity(entityUid);
                 }
 
                 // Add new entities.
@@ -152,9 +145,14 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        protected override void HandleParentChanged(ref EntParentChangedMessage message)
+        protected override void OnParentChanged(ref EntParentChangedMessage message)
         {
-            base.HandleParentChanged(ref message);
+            base.OnParentChanged(ref message);
+
+            var xform = message.Transform;
+
+            if (xform.MapID != MapId.Nullspace)
+                _updateQueue.Add(message.Entity);
 
             // If an entity warped in from null-space (i.e., re-entered PVS) and got attached to a container, do the same checks as for newly initialized entities.
             if (message.OldParent != null && message.OldParent.Value.IsValid())
@@ -163,7 +161,7 @@ namespace Robust.Client.GameObjects
             if (!ExpectedEntities.TryGetValue(message.Entity, out var container))
                 return;
 
-            if (Transform(message.Entity).ParentUid != container.Owner)
+            if (xform.ParentUid != container.Owner)
             {
                 // This container is expecting an entity... but it got parented to some other entity???
                 // Ah well, the sever should send a new container state that updates expected entities so just ignore it for now.
@@ -240,7 +238,7 @@ namespace Robust.Client.GameObjects
             var spriteOccluded = false;
             var lightOccluded = false;
 
-            while (parent.IsValid() && !spriteOccluded && !lightOccluded)
+            while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
                 var parentXform = xformQuery.GetComponent(parent);
                 if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))

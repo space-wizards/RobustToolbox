@@ -47,13 +47,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var mapMan = IoCManager.Resolve<IMapManager>();
                  var entMan = IoCManager.Resolve<IEntityManager>();
                  var playerMan = IoCManager.Resolve<IPlayerManager>();
+                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
 
                  entityUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
-                 entityUid.EnsureContainer<Container>("dummy");
+                 containerSys.EnsureContainer<Container>(entityUid, "dummy");
 
                  // Setup PVS
                  entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
@@ -71,10 +72,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
+                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
 
                  itemUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
-                 var container = entityUid.EnsureContainer<Container>("dummy");
+                 var container = containerSys.EnsureContainer<Container>(entityUid, "dummy");
                  Assert.That(container.Insert(itemUid));
 
                  // Move item out of PVS so that it doesn't get sent to the client
@@ -167,13 +169,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var mapMan = IoCManager.Resolve<IMapManager>();
                  var entMan = IoCManager.Resolve<IEntityManager>();
                  var playerMan = IoCManager.Resolve<IPlayerManager>();
+                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
 
                  entityUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
-                 entityUid.EnsureContainer<Container>("dummy");
+                 containerSys.EnsureContainer<Container>(entityUid, "dummy");
 
                  // Setup PVS
                  entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
@@ -191,10 +194,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
+                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
 
                  itemUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
-                 var container = entityUid.EnsureContainer<Container>("dummy");
+                 var container = containerSys.EnsureContainer<Container>(entityUid, "dummy");
                  container.Insert(itemUid);
 
                  // Move item out of PVS so that it doesn't get sent to the client

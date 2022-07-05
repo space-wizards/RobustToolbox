@@ -10,7 +10,7 @@ namespace Robust.Client.GameObjects;
 /// This is the client instance of <see cref="AppearanceComponent"/>.
 /// </summary>
 [RegisterComponent]
-[ComponentReference(typeof(AppearanceComponent)), Friend(typeof(AppearanceSystem))]
+[ComponentReference(typeof(AppearanceComponent)), Access(typeof(AppearanceSystem))]
 public sealed class ClientAppearanceComponent : AppearanceComponent
 {
     [ViewVariables]

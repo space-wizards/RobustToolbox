@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
@@ -101,7 +101,7 @@ namespace Robust.Client.Animations
                 case double d:
                     return MathHelper.Lerp(d, (double) b, t);
                 case Angle angle:
-                    return (Angle) MathHelper.Lerp(angle, (Angle) b, t);
+                    return Angle.Lerp(angle, (Angle) b, t);
                 case Color color:
                     return Color.InterpolateBetween(color, (Color) b, t);
                 case int i:

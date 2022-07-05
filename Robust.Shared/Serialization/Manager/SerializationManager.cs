@@ -325,7 +325,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (value == null) return new MappingDataNode();
+            if (value == null) return new ValueDataNode("null");
 
             if (underlyingType.IsEnum)
             {

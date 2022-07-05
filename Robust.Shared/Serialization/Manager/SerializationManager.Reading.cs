@@ -253,12 +253,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool IsNull(DataNode node)
         {
-            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() switch
-            {
-                "null" => true,
-                "" => true,
-                _ => false
-            };
+            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
         }
 
         private T[]? ReadArrayValue<T>(

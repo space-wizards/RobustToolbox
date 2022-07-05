@@ -253,12 +253,10 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool IsNull(DataNode node)
         {
-            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim() switch
+            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() switch
             {
-                "~" => true,
                 "null" => true,
-                "Null" => true,
-                "NULL" => true,
+                "" => true,
                 _ => false
             };
         }

@@ -171,7 +171,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                loadOptions.Rotation = new Angle(rotation);
+                loadOptions.Rotation = Angle.FromDegrees(rotation);
             }
 
             if (args.Length >= 6)

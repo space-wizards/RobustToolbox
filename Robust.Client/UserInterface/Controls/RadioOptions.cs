@@ -24,6 +24,23 @@ namespace Robust.Client.UserInterface.Controls
 
         public int ItemCount => _buttonDataList.Count;
 
+        public bool Disabled
+        {
+            get => _disabled;
+            set
+            {
+                if (_disabled == value) return;
+                _disabled = value;
+
+                foreach (var button in _buttonGroup.Buttons)
+                {
+                    button.Disabled = value;
+                }
+            }
+        }
+
+        private bool _disabled = false;
+
         /// <summary>
         /// Called whenever you select a button.
         ///

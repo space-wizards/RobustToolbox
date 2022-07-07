@@ -225,7 +225,10 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !type.FullName!.EndsWith(typeName))
+                    if (!type.IsEnum || !(
+                            type.FullName!.Equals(typeName) ||
+                            type.FullName!.EndsWith("." + typeName) ||
+                            type.FullName!.EndsWith("+" + typeName)))
                     {
                         continue;
                     }

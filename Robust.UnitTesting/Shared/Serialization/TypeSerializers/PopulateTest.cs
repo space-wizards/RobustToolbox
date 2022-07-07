@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
@@ -30,7 +31,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void PopulateNullableStruct()
         {
-            var value = Serialization.Read<TestStruct?>(new ValueDataNode(string.Empty));
+            var value = Serialization.Read<TestStruct?>(new MappingDataNode());
 
             Assert.NotNull(value);
             Assert.True(value.HasValue);

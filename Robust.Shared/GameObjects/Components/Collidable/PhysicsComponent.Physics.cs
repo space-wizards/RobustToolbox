@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
                 _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
         }
 
@@ -173,12 +173,12 @@ namespace Robust.Shared.GameObjects
             {
                 _sleepTime = 0.0f;
                 var ev = new PhysicsWakeEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
             else
             {
                 var ev = new PhysicsSleepEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -256,10 +256,17 @@ namespace Robust.Shared.GameObjects
         {
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
+            // Applying transform component state can cause entity-lookup updates, which apparently sometimes trigger this
+            // function before a fixtures has been added? I'm not 100% sure how this happens.
+            if (!_entMan.TryGetComponent(Owner, out FixturesComponent? fixtures))
+                return bounds;
+                
+            // TODO cache this to speed up entity lookups & tree updating
+            foreach (var fixture in fixtures.Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
+                    // TODO don't transform each fixture, just transform the final AABB
                     var boundy = fixture.Shape.ComputeAABB(transform, i);
                     bounds = bounds.Union(boundy);
                 }
@@ -281,20 +288,7 @@ namespace Robust.Shared.GameObjects
                 worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
             }
 
-            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
-
-            var bounds = new Box2(transform.Position, transform.Position);
-
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
+            return GetAABB(new Transform(worldPos.Value, (float)worldRot.Value.Theta));
         }
 
         /// <summary>
@@ -315,6 +309,11 @@ namespace Robust.Shared.GameObjects
                 // If we're recursively in a container then never set this.
                 if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
                     .IsEntityOrParentInContainer(Owner)) return;
+
+                if (!value)
+                {
+                    Awake = false;
+                }
 
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
@@ -606,7 +605,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _angularVelocity;
+        internal float _angularVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -741,15 +740,9 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return;
-            }
-
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {
@@ -761,6 +754,12 @@ namespace Robust.Shared.GameObjects
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
+            }
+
+            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
+            {
+                return;
             }
 
             if (_mass > 0.0f)
@@ -838,12 +837,12 @@ namespace Robust.Shared.GameObjects
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 

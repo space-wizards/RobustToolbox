@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -219,7 +219,9 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
-            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
+            // Don't invoke PlayerLeaveServer if PlayerJoinedServer & GameStartedSetup hasn't been called yet.
+            if (RunLevel > ClientRunLevel.Connecting)
+                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
             LastDisconnectReason = args.Reason;
             GameStoppedReset();

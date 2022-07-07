@@ -65,8 +65,6 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
@@ -339,7 +337,14 @@ namespace Robust.Shared.Physics
 
             // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
             Box2 aabb;
-            var proxyBroad = proxyBody.Broadphase!;
+            var proxyBroad = proxyBody.Broadphase;
+
+            if (proxyBroad == null)
+            {
+                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
+                DebugTools.Assert(false);
+                return;
+            }
 
             // If it's the same broadphase as our body's one then don't need to translate the AABB.
             if (proxyBroad.Owner == broadphase)
@@ -669,6 +674,19 @@ namespace Robust.Shared.Physics
             _moveBuffer[mapId][proxy] = aabb;
         }
 
+        public void RemoveFromMoveBuffer(PhysicsComponent body, MapId mapId)
+        {
+            if (!TryComp<FixturesComponent>(body.Owner, out var manager) || !_moveBuffer.TryGetValue(mapId, out var buffer)) return;
+
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    buffer.Remove(fixture.Proxies[i]);
+                }
+            }
+        }
+
         /// <summary>
         /// Get broadphase proxies from the body's fixtures and add them to the relevant broadphase.
         /// </summary>
@@ -782,24 +800,6 @@ namespace Robust.Shared.Physics
             }
 
             fixture.ProxyCount = 0;
-        }
-
-        private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = false;
-            physicsComponent.Awake = false;
-        }
-
-        private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = true;
-            physicsComponent.Awake = true;
         }
 
         public override void Shutdown()

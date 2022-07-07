@@ -18,6 +18,8 @@ public abstract class UIController
 {
     [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
     public virtual void FrameUpdate(FrameEventArgs args) {}
+
+    // TODO HUD REFACTOR BEFORE MERGE make these two methods less ass to use
     public virtual void OnSystemLoaded(IEntitySystem system) {}
     public virtual void OnSystemUnloaded(IEntitySystem system) {}
 }

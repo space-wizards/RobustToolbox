@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 internal sealed partial class UserInterfaceManager
@@ -111,6 +112,9 @@ internal sealed partial class UserInterfaceManager
             {
                 if (root.Window != _clyde.MainWindow)
                 {
+                    using var _ = _prof.Group("Window");
+                    _prof.WriteValue("ID", ProfData.Int32((int) root.Window.Id));
+
                     renderHandle.RenderInRenderTarget(
                         root.Window.RenderTarget,
                         () => DoRender(root),
@@ -118,14 +122,20 @@ internal sealed partial class UserInterfaceManager
                 }
             }
 
-            DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            using (_prof.Group("Main"))
+            {
+                DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            }
 
             void DoRender(WindowRoot root)
             {
-                _render(renderHandle, root, Vector2i.Zero, Color.White, null);
+                var total = 0;
+                _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
                 var drawingHandle = renderHandle.DrawingHandleScreen;
                 drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
+
+                _prof.WriteValue("Controls rendered", ProfData.Int32(total));
             }
         }
 

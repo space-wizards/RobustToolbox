@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             // calculate states for first tick
             timing.LastProcessedTick = new GameTick(0);
-            var result = processor.TryGetNextStates(out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
         }
@@ -45,11 +45,10 @@ namespace Robust.UnitTesting.Client.GameStates
 
             // calculate states for first tick
             timing.LastProcessedTick = new GameTick(0);
-            var result = processor.TryGetNextStates(out var curState, out var nextState);
+            var result = processor.TryGetServerState(out var curState, out var nextState);
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.False);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(1));
             Assert.That(nextState, Is.Null);
         }
@@ -73,7 +72,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             // calculate states for first tick
             timing.LastProcessedTick = new GameTick(2);
-            processor.TryGetNextStates(out var state, out _);
+            processor.TryGetServerState(out var state, out _);
 
             Assert.NotNull(state);
             Assert.That(state.ToSequence.Value, Is.EqualTo(1));
@@ -84,12 +83,10 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var (timing, processor) = SetupProcessorFactory();
 
-            processor.Extrapolation = false;
-
             // a few moments later...
             timing.LastProcessedTick = new GameTick(4); // current clock is ahead of server
             processor.AddNewState(GameStateFactory(3, 4)); // received a late state
-            var result = processor.TryGetNextStates(out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
         }
@@ -103,54 +100,11 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var (timing, processor) = SetupProcessorFactory();
 
-            processor.Extrapolation = false;
-
             // a few moments later...
             timing.LastProcessedTick = new GameTick(4); // current clock is ahead of server
-            var result = processor.TryGetNextStates(out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
-        }
-
-        /// <summary>
-        ///     When processing is blocked because the client is ahead of the server, reset CurTick to the last
-        ///     received state.
-        /// </summary>
-        [Test]
-        public void ServerLagsWithoutExtrapolationSetsCurTick()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = false;
-
-            // a few moments later...
-            timing.LastProcessedTick = new GameTick(3); // current clock is ahead of server (server=1, client=3)
-            var result = processor.TryGetNextStates(out _, out _);
-
-            Assert.That(result, Is.False);
-        }
-
-        /// <summary>
-        ///     The server fell behind the client, so the client clock is now ahead of the incoming states.
-        ///     With extrapolation, processing returns a fake extrapolated state for the current tick.
-        /// </summary>
-        [Test]
-        public void ServerLagsWithExtrapolation()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = true;
-
-            // a few moments later...
-            timing.LastProcessedTick = new GameTick(4); // current clock is ahead of server
-
-            var result = processor.TryGetNextStates(out var curState, out var nextState);
-
-            Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.True);
-            Assert.That(curState.ToSequence.Value, Is.EqualTo(5));
-            Assert.That(nextState, Is.Null);
         }
 
         /// <summary>
@@ -166,7 +120,7 @@ namespace Robust.UnitTesting.Client.GameStates
             timing.LastRealTick = new GameTick(3);
             timing.LastProcessedTick = new GameTick(3);
 
-            var result = processor.TryGetNextStates(out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
         }
@@ -188,46 +142,18 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(3, 5));
 
             // We're missing the state for this tick so go into extrap.
-            var result = processor.TryGetNextStates(out var curState, out _);
+            var result = processor.TryGetServerState(out var curState, out _);
 
             Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.True);
+            Assert.That(curState, Is.Null);
 
             timing.LastProcessedTick = new GameTick(4);
 
             // But we DO have the state for the tick after so apply away!
-            result = processor.TryGetNextStates(out curState, out _);
+            result = processor.TryGetServerState(out curState, out _);
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.False);
-        }
-
-        /// <summary>
-        ///     The client started extrapolating and now received the state it needs to "continue as normal".
-        ///     In this scenario the CurTick passed to the game state processor
-        ///     is higher than the real next tick to apply, IF it went into extrapolation.
-        ///     The processor needs to go back to the next REAL tick.
-        /// </summary>
-        [Test, Ignore("Extrapolation is currently non functional anyways")]
-        public void UndoExtrapolation()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = true;
-
-            processor.AddNewState(GameStateFactory(4, 5));
-            processor.AddNewState(GameStateFactory(3, 4));
-            timing.LastRealTick = new GameTick(3);
-
-            timing.LastProcessedTick = new GameTick(4);
-
-            var result = processor.TryGetNextStates(out var curState, out _);
-
-            Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.ToSequence, Is.EqualTo(new GameTick(4)));
         }
 
         /// <summary>

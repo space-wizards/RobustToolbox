@@ -196,15 +196,19 @@ namespace Robust.Client.GameStates
             // Always at least one, but can be more based on StateBufferMergeThreshold.
             var curBufSize = CurrentBufferSize;
             var targetBufSize = TargetBufferSize;
-            var applyCount = Math.Max(1 + _timing.LastProcessedTick.Value - _timing.LastRealTick.Value, curBufSize - targetBufSize - StateBufferMergeThreshold);
 
+            var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
+            var targetProccessedTick = (bufferOverflow > 1)
+                ? _timing.LastProcessedTick + (uint)bufferOverflow
+                : _timing.LastProcessedTick + 1;
+            
             _prof.WriteValue($"State buffer size", curBufSize);
-            _prof.WriteValue($"State apply count", applyCount);
+            _prof.WriteValue($"State apply count", targetProccessedTick.Value - _timing.LastProcessedTick.Value);
+
+            bool processedAny = false;
 
             _timing.LastProcessedTick = _timing.LastRealTick;
-
-            var i = 0;
-            for (; i < applyCount; i++)
+            while (_timing.LastProcessedTick < targetProccessedTick)
             {
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -214,31 +218,36 @@ namespace Robust.Client.GameStates
                 // This would be a nice optimization though also minor since the primary cost here
                 // is avoiding entity system and re-prediction runs.
                 //
-                // Correction: It might be possible that some state (e.g. 1->2) contains information for entity creation
+                // Note however that it is possible that some state (e.g. 1->2) contains information for entity creation
                 // for some entity that has left pvs by tick 3. Given that state 1->2 was acked, the server will not
-                // re-send that state later. So if we skip it and only apply tick 1->3, that will lead to a missing
+                // re-send that creation data later. So if we skip it and only apply tick 1->3, that will lead to a missing
                 // meta-data error. So while this can still be optimized, its probably not worth the headache.
 
-                // Attempts to retrieve the next state to apply
-                if (!_processor.TryGetNextStates(out var curState, out var nextState))
+                if (!_processor.TryGetServerState(out var curState, out var nextState))
+                {
+                    // Might just me missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
                     break;
+                }
+
+                processedAny = true;
+                _timing.LastProcessedTick += 1;
+
+                if (curState == null)
+                {
+                    continue;
+                }
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
+                {
                     _processor.LastFullStateRequested = null;
+                    _timing.LastRealTick = _timing.LastProcessedTick = curState.ToSequence;
+                }
+                else
+                    _timing.LastRealTick = _timing.LastProcessedTick;
 
-                // Increase last processed tick.
-                // This is usually functionally just a +=1, except when applying a full state.
-                _timing.LastProcessedTick = curState.ToSequence;
-
-                // TODO: make the game only reset entities when required (i.e., if we are about to apply a real state.
                 if (PredictionNeedsResetting)
                     ResetPredictedEntities();
-
-                if (curState.Extrapolated)
-                    continue; // This is not a real state, we will not actually apply it.
-
-                _timing.LastRealTick = _timing.LastProcessedTick;
 
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
@@ -249,12 +258,11 @@ namespace Robust.Client.GameStates
                 IEnumerable<EntityUid> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
-                    if (i + 1 < applyCount && nextState != null && !nextState.Extrapolated)
+                    if (_timing.LastProcessedTick < targetProccessedTick && nextState != null)
                     {
                         // We are about to apply another state after this one anyways. So there is no need to pass in
-                        // the next state for frame interpolation. Really the !nextState.Extrapolated should be replaced
-                        // by a (!nextState.Extrapolated || (i+2 < applycount && !next_next_state.Extrapolated)), and so
-                        // on, but this is good enough.
+                        // the next state for frame interpolation. Really, if we are applying 3 or more states, we
+                        // should be checking the next-next state and so on.
                         //
                         // Basically: we only need to apply next-state for the last cur-state we are applying. but 99%
                         // of the time, we are only applying a single tick. But if we are applying more than one the
@@ -299,9 +307,15 @@ namespace Robust.Client.GameStates
             else
                 _timing.TickTimingAdjustment = (CurrentBufferSize - (float)TargetBufferSize) * 0.10f;
 
-            if (i == 0)
+            // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
+            // Really the main-loop ticking just needs to be more specialized for clients.
+            if (_timing.TickRemainder >= _timing.CalcAdjustedTickPeriod())
+                return;
+
+            if (!processedAny)
             {
-                // Didn't apply a single state successfully.
+                // Failed to process even a single tick. Chances are the tick buffer is empty, either because of
+                // networking issues or because the server is dead. This will functionally freeze the client-side simulation.
                 return;
             }
 
@@ -326,16 +340,9 @@ namespace Robust.Client.GameStates
 
             if (IsPredictionEnabled)
             {
-                // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
-                // Really the main-loop ticking just needs to be more specialized for clients.
-                var skipPrediction = _timing.TickRemainder >= _timing.CalcAdjustedTickPeriod();
-                if (skipPrediction)
-                    _timing.CurTick = predictionTarget;
-                else
-                    PredictTicks(predictionTarget);
+                PredictionNeedsResetting = true;
+                PredictTicks(predictionTarget);
             }
-            else
-                _timing.CurTick = _timing.LastProcessedTick;
 
             using (_prof.Group("Tick"))
             {
@@ -352,7 +359,6 @@ namespace Robust.Client.GameStates
 
         public void PredictTicks(GameTick predictionTarget)
         {
-            _timing.CurTick = _timing.LastProcessedTick;
             using var _p = _prof.Group("Prediction");
             using var _ = _timing.StartPastPredictionArea();
 
@@ -399,7 +405,6 @@ namespace Robust.Client.GameStates
 
                 if (_timing.CurTick != predictionTarget)
                 {
-                    PredictionNeedsResetting = true;
                     using (_prof.Group("Systems"))
                     {
                         // Don't run EntitySystemManager.TickUpdate if this is the target tick,
@@ -421,6 +426,7 @@ namespace Robust.Client.GameStates
         private void ResetPredictedEntities()
         {
             PredictionNeedsResetting = false;
+            _timing.CurTick = _timing.LastRealTick;
 
             using var _ = _prof.Group("ResetPredictedEntities");
             using var __ = _timing.StartPastPredictionArea();

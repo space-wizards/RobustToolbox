@@ -35,7 +35,6 @@ namespace Robust.Client.GameStates
         public GameTick? _lastFullStateRequested = GameTick.Zero;
 
         private int _bufferSize;
-        private GameTick _highestFromSequence;
 
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
@@ -58,9 +57,6 @@ namespace Robust.Client.GameStates
             get => _bufferSize;
             set => _bufferSize = value < 0 ? 0 : value;
         }
-
-        /// <inheritdoc />
-        public bool Extrapolation { get; set; }
 
         /// <inheritdoc />
         public bool Logging { get; set; }
@@ -97,7 +93,7 @@ namespace Robust.Client.GameStates
 
                 return false;
             }
-
+            
             // Are we expecting a full state?
             if (!WaitingForFull)
             {
@@ -133,19 +129,19 @@ namespace Robust.Client.GameStates
         ///     cref="IGameTiming.LastProcessedTick"/>.
         /// </remarks>
         /// <returns>Returns true if the states should be applied.</returns>
-        public bool TryGetNextStates([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
+        public bool TryGetServerState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             var applyNextState = WaitingForFull
                 ? TryGetFullState(out curState, out nextState)
                 : TryGetDeltaState(out curState, out nextState);
 
-            if (applyNextState)
+            if (curState != null)
             {
-                DebugTools.Assert(curState!.Extrapolated || curState.FromSequence <= curState.ToSequence,
+                DebugTools.Assert(curState.FromSequence <= curState.ToSequence,
                     "Tried to apply a non-extrapolated state that has too high of a FromSequence!");
 
                 if (Logging)
-                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.LastProcessedTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Applying State:  cTick={_timing.LastProcessedTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
             }
 
             return applyNextState;
@@ -266,15 +262,14 @@ namespace Robust.Client.GameStates
             return result;
         }
 
-        private bool TryGetDeltaState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
+        private bool TryGetDeltaState(out GameState? curState, out GameState? nextState)
         {
             curState = null;
             nextState = null;
 
-            uint lastStateInput = 0;
-
             var targetCurTick = _timing.LastProcessedTick + 1;
             var targetNextTick = _timing.LastProcessedTick + 2;
+
             GameTick? futureStateLowestFromSeq = null;
 
             for (var i = 0; i < _stateBuffer.Count; i++)
@@ -282,66 +277,31 @@ namespace Robust.Client.GameStates
                 var state = _stateBuffer[i];
 
                 // remember there are no duplicate ToSequence states in the list.
-                if (state.ToSequence == targetCurTick)
+                if (state.ToSequence == targetCurTick && state.FromSequence <= _timing.LastRealTick)
                 {
                     curState = state;
-                    _highestFromSequence = state.FromSequence;
+                    continue;
                 }
-                else if (Interpolation && state.ToSequence == targetNextTick)
-                {
+
+                if (Interpolation && state.ToSequence == targetNextTick)
                     nextState = state;
 
-                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq > state.FromSequence)
-                    {
-                        futureStateLowestFromSeq = state.FromSequence;
-                    }
-                }
-                else if (state.ToSequence > targetCurTick)
+                if (state.ToSequence > targetCurTick && (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence))
                 {
-                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence)
-                    {
-                        futureStateLowestFromSeq = state.FromSequence;
-                    }
+                    futureStateLowestFromSeq = state.FromSequence;
+                    continue;
                 }
-                else if (state.ToSequence == _timing.LastRealTick)
-                {
-                    lastStateInput = state.LastProcessedInput;
-                }
-                else if (state.ToSequence < _timing.LastRealTick) // remove any old states we find to keep the buffer clean
+
+                // remove any old states we find to keep the buffer clean
+                if (state.ToSequence <= _timing.LastRealTick) 
                 {
                     _stateBuffer.RemoveSwap(i);
                     i--;
                 }
             }
 
-            // can't find current state, but we do have a future state.
-            if (curState == null && futureStateLowestFromSeq != null && futureStateLowestFromSeq <= _timing.LastRealTick)
-            {
-                //this is not actually extrapolation
-                curState = ExtrapolateState(_highestFromSequence, targetCurTick, lastStateInput);
-                return true; // keep moving, we have a future state
-            }
-
-            // we won't extrapolate, and curState was not found, buffer is empty
-            if (!Extrapolation && curState == null)
-                return false;
-
-            curState ??= ExtrapolateState(_highestFromSequence, targetCurTick, lastStateInput);
-
-            if (Interpolation)
-                nextState ??= ExtrapolateState(_highestFromSequence, targetNextTick, lastStateInput);
-
-            return true;
-        }
-
-        /// <summary>
-        ///     Generates a completely fake GameState.
-        /// </summary>
-        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence, uint lastInput)
-        {
-            var state = new GameState(fromSequence, toSequence, lastInput, default, default, default, null);
-            state.Extrapolated = true;
-            return state;
+            // Even if we can't find current state, maybe we have a future state?
+            return curState != null || (futureStateLowestFromSeq != null && futureStateLowestFromSeq <= _timing.LastRealTick);
         }
 
         /// <inheritdoc />

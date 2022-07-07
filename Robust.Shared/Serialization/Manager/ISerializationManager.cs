@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -18,6 +19,8 @@ namespace Robust.Shared.Serialization.Manager
         ///     Shuts down the serialization manager.
         /// </summary>
         void Shutdown();
+
+        IReflectionManager ReflectionManager { get; }
 
         /// <summary>
         ///     Checks if a type has a data definition defined for it.

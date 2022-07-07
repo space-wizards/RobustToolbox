@@ -1,6 +1,5 @@
 using System;
 using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -18,15 +17,10 @@ public sealed class AppearanceKeySerializer : ITypeSerializer<object, ValueDataN
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        // TODO PERFORMACNE find a way to have serialization manager pass IReflectionManager into type serializers
-        // See also instances where IPrototypeManager gets resolved (e.g., sprite specifier serializers).
-
-        var refMan = dependencies.Resolve<IReflectionManager>();
-
         // Even though literally any value data node value could be resolved into a string, we assume that if it starts
         // with "enum.", it is intended to be resolved into an enum.
 
-        if (!node.Value.StartsWith("enum.") || refMan.TryParseEnumReference(node.Value, out var _, false))
+        if (!node.Value.StartsWith("enum.") || serializationManager.ReflectionManager.TryParseEnumReference(node.Value, out var _, false))
             return new ValidatedValueNode(node);
 
         return new ErrorNode(node, $"Failed to parse enum {node.Value}");

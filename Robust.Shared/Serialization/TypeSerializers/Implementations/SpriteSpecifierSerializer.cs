@@ -89,9 +89,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            // TODO PERFORMACNE find a way to have serialization manager pass IPrototypeManager into type serializers
-            // See also instances where IReflectionManager gets resolved (e.g., AppearanceKeySerializer).
-
             return !dependencies.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);

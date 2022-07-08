@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
                 Component = xform,
             };
 
-            _entityManager.EventBus.RaiseLocalEvent(Owner, ref ev);
+            _entityManager.EventBus.RaiseLocalEvent(Owner, ref ev, true);
 
             if (ev.Handled)
             {

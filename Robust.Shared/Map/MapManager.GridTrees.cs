@@ -151,7 +151,7 @@ internal partial class MapManager
             : EntityManager.GetComponent<TransformComponent>(args.OldParent.Value).MapID;
 
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
+        var mapId = args.Transform.MapID;
 
         // y'all need jesus
         if (oldMapId == mapId) return;

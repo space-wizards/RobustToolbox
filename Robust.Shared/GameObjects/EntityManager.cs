@@ -88,6 +88,8 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Startup()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Startup() called without Initialized");
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
@@ -103,16 +105,15 @@ namespace Robust.Shared.GameObjects
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
             ClearComponents();
-            Initialized = false;
             Started = false;
         }
 
         public void Cleanup()
         {
-            QueuedDeletions.Clear();
-            QueuedDeletionsSet.Clear();
+            _componentFactory.ComponentAdded -= OnComponentAdded;
+            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
+            FlushEntities();
             _entitySystemManager.Clear();
-            Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
             ClearComponents();
@@ -272,10 +273,18 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid e)
         {
+            // Some UIs get dispose after entity-manager has shut down and already deleted all entities.
+            if (!Started)
+                return;
+
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var xformSys = EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(e, out var comp)
+            if (!metaQuery.TryGetComponent(e, out var comp)
                 || comp is not MetaDataComponent meta || meta.EntityDeleted)
                 return;
 
@@ -285,29 +294,28 @@ namespace Robust.Shared.GameObjects
 #else
                 return;
 #endif
-
-            RecursiveDeleteEntity(e);
+            RecursiveDeleteEntity(meta, metaQuery, xformQuery, xformSys);
         }
 
-        private void RecursiveDeleteEntity(EntityUid uid)
+        private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent? metadata) || metadata.EntityDeleted)
-                return; //TODO: Why was this still a child if it was already deleted?
-
-            var transform = GetComponent<TransformComponent>(uid);
+            var transform = xformQuery.GetComponent(metadata.Owner);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            var ev = new EntityTerminatingEvent(uid);
-            EventBus.RaiseLocalEvent(uid, ref ev, false);
+            var ev = new EntityTerminatingEvent(metadata.Owner);
+            EventBus.RaiseLocalEvent(metadata.Owner, ref ev, false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var child in transform._children.ToArray())
             {
+                if (!metaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
+                    continue; //TODO: Why was this still a child if it was already deleted?
+
                 // Recursion Alert
-                RecursiveDeleteEntity(child);
+                RecursiveDeleteEntity(childMeta, metaQuery, xformQuery, xformSys);
             }
 
             // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))
             {
                 if(component.Running)
                     component.LifeShutdown(this);
@@ -317,17 +325,17 @@ namespace Robust.Shared.GameObjects
             if (transform.ParentUid != EntityUid.Invalid)
             {
                 // Detach from my parent, if any
-                transform.DetachParentToNull();
+                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(uid);
+            DisposeComponents(metadata.Owner);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
-            EntityDeleted?.Invoke(uid);
-            _eventBus.OnEntityDeleted(uid);
-            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
-            Entities.Remove(uid);
+            EntityDeleted?.Invoke(metadata.Owner);
+            _eventBus.OnEntityDeleted(metadata.Owner);
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(metadata.Owner));
+            Entities.Remove(metadata.Owner);
         }
 
         public void QueueDeleteEntity(EntityUid uid)
@@ -363,10 +371,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void FlushEntities()
         {
+            QueuedDeletions.Clear();
+            QueuedDeletionsSet.Clear();
             foreach (var e in GetEntities())
             {
                 DeleteEntity(e);
             }
+            DebugTools.Assert(Entities.Count == 0);
         }
 
         /// <summary>

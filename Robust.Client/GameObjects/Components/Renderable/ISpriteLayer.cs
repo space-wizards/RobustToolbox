@@ -1,8 +1,10 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using System;
 
 namespace Robust.Client.GameObjects
 {
+    [Obsolete("Use SpriteComponent.Layer directly instead of this")]
     public interface ISpriteLayer
     {
         SpriteComponent.DirectionOffset DirOffset { get; set; }

@@ -1365,7 +1365,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         private bool HasDirectionalSorting => _comparer.HasDirectionalSorting;
 
-        private Dictionary<RSIDirection, Layer[]> _sortedLayers = new(1);
+        private Layer[]?[] _sortedLayers = new Layer[]?[8];
 
         /// <summary>
         ///     The number of directions that this sprite has. Depends entirely on the sprite's layers & their RSI states.
@@ -1405,14 +1405,16 @@ namespace Robust.Client.GameObjects
         {
             if (LayerOrderDirty)
                 SortLayers();
+            else
+                DebugTools.AssertNotNull(_sortedLayers[0]);
 
             if (!HasDirectionalSorting)
-                return _sortedLayers[RSIDirection.South];
+                return _sortedLayers[(int)RSIDirection.South]!;
 
             if (LayerDirections == RSI.State.DirectionType.Dir4)
                 dir = dir.RoundToCardinal();
 
-            return _sortedLayers[dir];
+            return _sortedLayers[(int)dir]!;
         }
 
         /// <summary>
@@ -1421,15 +1423,14 @@ namespace Robust.Client.GameObjects
         public void SortLayers()
         {
             int i = (int) RSIDirection.South;
-            RSIDirection dir;
-            _sortedLayers.Clear();
+            _sortedLayers = new Layer[]?[8];
             _comparer.HasDirectionalSorting = false;
             do
             {
                 _comparer.Direction = (RSIDirection)i;
                 var arr = Layers.ToArray();
                 Array.Sort(arr, _comparer);
-                _sortedLayers[_comparer.Direction] = arr;
+                _sortedLayers[i] = arr;
                 i++;
             }
             while (HasDirectionalSorting && (i < 4 || LayerDirections == RSI.State.DirectionType.Dir8) && i < 8);

@@ -50,6 +50,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 return;
             }
+            _value = value;
             _lineEdit.Text = value.ToString();
         }
 

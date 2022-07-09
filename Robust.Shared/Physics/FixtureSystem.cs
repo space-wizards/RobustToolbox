@@ -251,7 +251,7 @@ namespace Robust.Shared.Physics
                 }
 
                 // Make sure all the right stuff is set on the body
-                FixtureUpdate(component);
+                FixtureUpdate(component, body, false);
 
                 if (body.CanCollide)
                 {
@@ -416,7 +416,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.
         /// </summary>
-        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
+        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null, bool dirty = true)
         {
             if (!Resolve(component.Owner, ref body))
                 return;
@@ -438,7 +438,8 @@ namespace Robust.Shared.Physics
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
-            Dirty(component);
+            if (dirty)
+                Dirty(component);
         }
 
         [Serializable, NetSerializable]

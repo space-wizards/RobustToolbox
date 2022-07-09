@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -32,6 +32,7 @@ namespace Robust.Shared.Reflection
         private readonly Dictionary<string, Type> _looseTypeCache = new();
 
         private readonly Dictionary<string, Enum> _enumCache = new();
+        private readonly Dictionary<Enum, string> _reverseEnumCache = new();
 
         private readonly List<Type> _getAllTypesCache = new();
 
@@ -172,7 +173,37 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum)
+        public string GetEnumReference(Enum @enum)
+        {
+            if (_reverseEnumCache.TryGetValue(@enum, out var reference))
+                return reference;
+
+            // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
+            // but if possible we want to avoid that and use a shorter string.
+
+            var fullName = @enum.GetType().FullName!;
+            var dotIndex = fullName.LastIndexOf('.');
+            if (dotIndex > 0 && dotIndex != fullName.Length)
+            {
+                var name = fullName.Substring(dotIndex + 1);
+                reference = $"enum.{name}.{@enum}";
+
+                if (TryParseEnumReference(reference, out var resolvedEnum, false) && resolvedEnum == @enum)
+                {
+                    // TryParse will have filled in the cache already.
+                    return reference;
+                }
+            }
+
+            // If that failed, just use the full name.
+            reference = $"enum.{fullName}.{@enum}";
+            _reverseEnumCache[@enum] = reference;
+            _enumCache[reference] = @enum;
+            return reference;
+        }
+
+        /// <inheritdoc />
+        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum, bool shouldThrow = true)
         {
             if (!reference.StartsWith("enum."))
             {
@@ -194,18 +225,24 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !type.FullName!.EndsWith(typeName))
+                    if (!type.IsEnum || !(
+                            type.FullName!.Equals(typeName) ||
+                            type.FullName!.EndsWith("." + typeName) ||
+                            type.FullName!.EndsWith("+" + typeName)))
                     {
                         continue;
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
                     _enumCache[reference] = @enum;
+                    _reverseEnumCache[@enum] = reference;
                     return true;
                 }
             }
 
-            throw new ArgumentException($"Could not resolve enum reference: {reference}.");
+            if (shouldThrow)
+                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
+            return false;
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)

@@ -207,10 +207,17 @@ namespace Robust.Client.GameObjects
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
+        /// <summary>
+        ///     Should this entity show up in containers regardless of whether the container can show contents?
+        /// </summary>
+        [DataField("overrideContainerOcclusion")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool OverrideContainerOcclusion;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded
         {
-            get => _containerOccluded;
+            get => _containerOccluded && !OverrideContainerOcclusion;
             set
             {
                 if (_containerOccluded == value) return;
@@ -674,6 +681,8 @@ namespace Robust.Client.GameObjects
                     {
                         // Always use south because this layer will be cached in the serializer.
                         layer.AnimationTimeLeft = state.GetDelay(0);
+                        layer.AnimationTime = 0;
+                        layer.AnimationFrame = 0;
                     }
                     else
                     {

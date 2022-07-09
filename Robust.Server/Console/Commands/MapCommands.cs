@@ -89,13 +89,11 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!int.TryParse(args[0], out var intGridId))
+            if (!EntityUid.TryParse(args[0], out var gridId))
             {
-                shell.WriteError("Not a valid grid ID.");
+                shell.WriteError("Not a valid entity ID.");
                 return;
             }
-
-            var gridId = new GridId(intGridId);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 
@@ -173,7 +171,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                loadOptions.Rotation = new Angle(rotation);
+                loadOptions.Rotation = Angle.FromDegrees(rotation);
             }
 
             if (args.Length >= 6)
@@ -221,7 +219,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteLine(Help);
                 return;
             }
-                
+
             if (!int.TryParse(args[0], out var intMapId))
             {
                 shell.WriteLine(Help);
@@ -517,14 +515,19 @@ namespace Robust.Server.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            var entManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var msg = new StringBuilder();
+            var xformQuery = entManager.GetEntityQuery<TransformComponent>();
 
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
-                msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMapId, grid.GridEntityId, grid.WorldPosition);
+                var xform = xformQuery.GetComponent(grid.GridEntityId);
+                var worldPos = xform.WorldPosition;
+
+                msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
+                    grid.Index, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
             }
 
             shell.WriteLine(msg.ToString());

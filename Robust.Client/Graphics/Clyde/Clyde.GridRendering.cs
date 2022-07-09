@@ -203,14 +203,12 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateOnGridCreated(GridStartupEvent ev)
         {
             var gridId = ev.GridId;
-            Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
             var gridId = ev.GridId;
-            Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
 
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)

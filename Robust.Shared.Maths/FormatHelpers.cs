@@ -79,7 +79,7 @@ public static class FormatHelpers
     {
         var truncLength = Math.Min(builder.Length, memory.Length);
         builder.CopyTo(0, memory.Span, truncLength);
-        return memory[..builder.Length];
+        return memory[..truncLength];
     }
 }
 

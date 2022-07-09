@@ -1,6 +1,10 @@
 using System;
 
+#if NETSTANDARD2_0
+namespace Robust.Shared.Analyzers.Implementation;
+#else
 namespace Robust.Shared.Analyzers;
+#endif
 
 [Flags]
 public enum AccessPermissions : byte

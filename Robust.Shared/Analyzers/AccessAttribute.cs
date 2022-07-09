@@ -1,6 +1,10 @@
 using System;
 
+#if NETSTANDARD2_0
+namespace Robust.Shared.Analyzers.Implementation;
+#else
 namespace Robust.Shared.Analyzers;
+#endif
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct
                 | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Constructor)]

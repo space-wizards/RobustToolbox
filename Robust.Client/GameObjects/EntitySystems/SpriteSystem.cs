@@ -90,43 +90,6 @@ namespace Robust.Client.GameObjects
         {
             _manualUpdate.Add(sprite);
         }
-
-        /// <summary>
-        ///     Function to set a sprite's shader. Raises a cancellable event, as currently sprites only support a
-        ///     single shader at a time. Prevents a situation where one system's shader gets overwritten by another
-        ///     (e.g., interaction outlines).
-        /// </summary>
-        public void SetPostShader(EntityUid uid, ShaderInstance? shader, SpriteComponent? sprite = null, bool force = false)
-        {
-            if (!Resolve(uid, ref sprite))
-                return;
-
-            if (force)
-            {
-                sprite.PostShader = shader;
-                return;
-            }
-
-            var ev = new SetShaderAttemptEvent(shader);
-
-            RaiseLocalEvent(uid, ev, false);
-            if (!ev.Cancelled)
-                sprite.PostShader = shader;
-        }
-    }
-
-    /// <summary>
-    ///     This event gets raised when something attempts to modify a sprite's post-shader. If canceled, the shader
-    ///     will not get updated.
-    /// </summary>
-    public sealed class SetShaderAttemptEvent : CancellableEntityEventArgs
-    {
-        public readonly ShaderInstance? Shader;
-
-        public SetShaderAttemptEvent(ShaderInstance? shader)
-        {
-            Shader = shader;
-        }
     }
 
     /// <summary>

@@ -14,7 +14,6 @@ namespace Robust.Shared.GameObjects
     [Virtual]
     internal class ComponentFactory : IComponentFactory
     {
-        private bool _ignoreMissingComponents;
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
 
@@ -40,6 +39,12 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<Type, ComponentRegistration> types = new();
 
         private ComponentRegistration[] _array = Array.Empty<ComponentRegistration>();
+
+        /// <summary>
+        /// Any component name requested that ends with this postfix, and is missing
+        /// will be treated as ignored, instead of throwing an error
+        /// </summary>
+        private string? _ignoreMissingComponentPostfix = null;
 
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
@@ -198,9 +203,13 @@ namespace Robust.Shared.GameObjects
             ComponentReferenceAdded?.Invoke(registration, idx);
         }
 
-        public void IgnoreMissingComponents()
+        public void IgnoreMissingComponents(string? postfix = "")
         {
-            _ignoreMissingComponents = true;
+            if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)
+            {
+                throw new InvalidOperationException("Ignoring multiple prefixes is not supported");
+            }
+            _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
@@ -248,7 +257,9 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (_ignoreMissingComponents || IgnoredComponentNames.Contains(componentName))
+            if (IgnoredComponentNames.Contains(componentName) ||
+                (_ignoreMissingComponentPostfix != null &&
+                componentName.EndsWith(_ignoreMissingComponentPostfix)))
             {
                 return ComponentAvailability.Ignore;
             }

@@ -87,13 +87,14 @@ namespace Robust.Shared.GameObjects
         /// Registers a component name as being ignored.
         /// </summary>
         /// <param name="name">The name to be ignored.</param>
-        /// <param name="overwrite">Whether to overrde existing settings instead of throwing an exception in the case of duplicates.</param>
+        /// <param name="overwrite">Whether to override existing settings instead of throwing an exception in the case of duplicates.</param>
         void RegisterIgnore(string name, bool overwrite = false);
 
         /// <summary>
-        /// Disabled throwing on missing components that have not been ignored
+        /// Disables throwing on missing components. Missing components will instead be treated as ignored.
         /// </summary>
-        void IgnoreMissingComponents();
+        /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
+        void IgnoreMissingComponents(string? postfix = "");
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.

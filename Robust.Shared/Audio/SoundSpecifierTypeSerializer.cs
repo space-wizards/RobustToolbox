@@ -1,4 +1,3 @@
-using Robust.Shared.Audio;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -9,7 +8,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 using System;
 
-namespace Robust.Shared.Sound;
+namespace Robust.Shared.Audio;
 
 [TypeSerializer]
 public sealed class SoundSpecifierTypeSerializer :
@@ -34,7 +33,7 @@ public sealed class SoundSpecifierTypeSerializer :
         IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, SoundSpecifier? _ = null)
     {
         var type = GetType(node);
-        return (SoundSpecifier) serializationManager.Read(type, node, context, skipHook)!;
+        return (SoundSpecifier)serializationManager.Read(type, node, context, skipHook)!;
     }
 
     public SoundSpecifier Read(ISerializationManager serializationManager, ValueDataNode node,

@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Serialization;
+using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.Serialization.Manager;
@@ -79,6 +79,12 @@ namespace Robust.Shared.Audio
 
         [DataField("playoffset")]
         public float PlayOffsetSeconds { get; set; }
+
+        /// <summary>
+        ///     If not null, this will randomly modify the pitch scale by adding a number drawn from a normal distribution with this deviation.
+        /// </summary>
+        [DataField("variation")]
+        public float? Variation { get; set; }
 
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
         // so that's divided by 32 (EyeManager.PIXELSPERMETER).

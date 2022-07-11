@@ -100,12 +100,13 @@ namespace Robust.Shared.Audio
             float maxDistance,
             float refDistance,
             bool loop,
-            float playOffsetSeconds)
-            : this(volume, pitchScale, busName, maxDistance, 1, refDistance, loop, playOffsetSeconds)
+            float playOffsetSeconds,
+            float? variation = null)
+            : this(volume, pitchScale, busName, maxDistance, 1, refDistance, loop, playOffsetSeconds, variation)
         {
         }
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds) : this()
+        public AudioParams(float volume, float pitchScale, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds, float? variation = null) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;
@@ -115,6 +116,7 @@ namespace Robust.Shared.Audio
             ReferenceDistance = refDistance;
             Loop = loop;
             PlayOffsetSeconds = playOffsetSeconds;
+            Variation = variation;
         }
 
         /// <summary>
@@ -122,10 +124,21 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="volume">The new volume.</param>
         [Pure]
-        public AudioParams WithVolume(float volume)
+        public readonly AudioParams WithVolume(float volume)
         {
             var me = this;
             me.Volume = volume;
+            return me;
+        }
+
+        /// <summary>
+        ///     Returns a copy of this instance with a new variation set, for easy chaining.
+        /// </summary>
+        [Pure]
+        public readonly AudioParams WithVariation(float? variation)
+        {
+            var me = this;
+            me.Variation = variation;
             return me;
         }
 
@@ -134,7 +147,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="pitch">The new pitch scale.</param>
         [Pure]
-        public AudioParams WithPitchScale(float pitch)
+        public readonly AudioParams WithPitchScale(float pitch)
         {
             var me = this;
             me.PitchScale = pitch;
@@ -146,7 +159,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="bus">The new bus name.</param>
         [Pure]
-        public AudioParams WithBusName(string bus)
+        public readonly AudioParams WithBusName(string bus)
         {
             var me = this;
             me.BusName = bus;
@@ -158,7 +171,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="dist">The new max distance.</param>
         [Pure]
-        public AudioParams WithMaxDistance(float dist)
+        public readonly AudioParams WithMaxDistance(float dist)
         {
             var me = this;
             me.MaxDistance = dist;
@@ -170,7 +183,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="rolloffFactor">The new rolloff factor.</param>
         [Pure]
-        public AudioParams WithRolloffFactor(float rolloffFactor)
+        public readonly AudioParams WithRolloffFactor(float rolloffFactor)
         {
             var me = this;
             me.RolloffFactor = rolloffFactor;
@@ -182,7 +195,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="refDistance">The new reference distance.</param>
         [Pure]
-        public AudioParams WithReferenceDistance(float refDistance)
+        public readonly AudioParams WithReferenceDistance(float refDistance)
         {
             var me = this;
             me.ReferenceDistance = refDistance;
@@ -194,7 +207,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="loop">The new loop.</param>
         [Pure]
-        public AudioParams WithLoop(bool loop)
+        public readonly AudioParams WithLoop(bool loop)
         {
             var me = this;
             me.Loop = loop;
@@ -206,7 +219,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="attenuation">The new attenuation.</param>
         [Pure]
-        public AudioParams WithAttenuation(Attenuation attenuation)
+        public readonly AudioParams WithAttenuation(Attenuation attenuation)
         {
             var me = this;
             me.Attenuation = attenuation;
@@ -214,7 +227,7 @@ namespace Robust.Shared.Audio
         }
 
         [Pure]
-        public AudioParams WithPlayOffset(float offset)
+        public readonly AudioParams WithPlayOffset(float offset)
         {
             var me = this;
             me.PlayOffsetSeconds = offset;
@@ -232,6 +245,7 @@ namespace Robust.Shared.Audio
             ReferenceDistance = Default.ReferenceDistance;
             Loop = Default.Loop;
             PlayOffsetSeconds = Default.PlayOffsetSeconds;
+            Variation = null;
         }
     }
 }

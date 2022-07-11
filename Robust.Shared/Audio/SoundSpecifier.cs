@@ -15,8 +15,8 @@ namespace Robust.Shared.Audio;
 [ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
 public abstract class SoundSpecifier
 {
-    [ViewVariables(VVAccess.ReadWrite), DataField("params")]
-    public AudioParams Params = AudioParams.Default;
+    [ViewVariables, DataField("params")]
+    public AudioParams Params { get; init; }
 
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public abstract string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null);

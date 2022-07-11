@@ -132,6 +132,18 @@ namespace Robust.Shared.Audio
         }
 
         /// <summary>
+        ///     Returns a copy of this instance with a modified volume set, for easy chaining.
+        /// </summary>
+        /// <param name="volume">The volume to add.</param>
+        [Pure]
+        public readonly AudioParams AddVolume(float volume)
+        {
+            var me = this;
+            me.Volume += volume;
+            return me;
+        }
+
+        /// <summary>
         ///     Returns a copy of this instance with a new variation set, for easy chaining.
         /// </summary>
         [Pure]

@@ -82,6 +82,17 @@ namespace Robust.Shared.GameObjects
             => Play(sound, Filter.Pvs(uid, entityManager: EntityManager), uid, audioParams);
 
         /// <summary>
+        /// Plays a predicted sound following an entity. The server will send the sound to every player in PVS range,
+        /// unless that player is attached to the "user" entity that initiated the sound. The client-side system plays
+        /// this sound as normal
+        /// </summary>
+        /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+        /// <param name="source">The UID of the entity "emitting" the audio.</param>
+        /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
+        /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+        public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid user, AudioParams? audioParams = null);
+
+        /// <summary>
         /// Play an audio file at a static position.
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>

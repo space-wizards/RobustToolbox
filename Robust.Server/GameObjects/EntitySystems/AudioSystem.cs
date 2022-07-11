@@ -117,5 +117,12 @@ namespace Robust.Server.GameObjects
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
+
+        /// <inheritdoc />
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid user, AudioParams? audioParams = null)
+        {
+            var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
+            return Play(sound, filter, source, audioParams);
+        }
     }
 }

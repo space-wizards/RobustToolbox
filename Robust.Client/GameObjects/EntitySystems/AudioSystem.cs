@@ -428,6 +428,10 @@ namespace Robust.Client.GameObjects
             return playing;
         }
 
+        /// <inheritdoc />
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid user, AudioParams? audioParams = null)
+            => Play(sound, Filter.Local(), source, audioParams);
+
         private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
         {
             if (!audioParams.HasValue)

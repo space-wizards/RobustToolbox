@@ -20,7 +20,11 @@ namespace Robust.Shared.Audio
         [Obsolete("Use SharedAudioSystem.PlayGlobal()")]
         public static IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedAudioSystem>().PlayGlobal(filename, playerFilter, audioParams);
+            var entSystMan = IoCManager.Resolve<IEntitySystemManager>();
+
+            // Some timers try to play audio after the system has shut down?
+            entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
+            return audio?.PlayGlobal(filename, playerFilter, audioParams);
         }
 
         /// <summary>
@@ -34,7 +38,11 @@ namespace Robust.Shared.Audio
         public static IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
             AudioParams? audioParams = null)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedAudioSystem>().Play(filename, playerFilter, uid, audioParams);
+            var entSystMan = IoCManager.Resolve<IEntitySystemManager>();
+
+            // Some timers try to play audio after the system has shut down?
+            entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
+            return audio?.Play(filename, playerFilter, uid, audioParams);
         }
 
         /// <summary>
@@ -48,7 +56,11 @@ namespace Robust.Shared.Audio
         public static IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
             AudioParams? audioParams = null)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedAudioSystem>().Play(filename, playerFilter, coordinates, audioParams);
+            var entSystMan = IoCManager.Resolve<IEntitySystemManager>();
+
+            // Some timers try to play audio after the system has shut down?
+            entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
+            return audio?.Play(filename, playerFilter, coordinates, audioParams);
         }
     }
 }

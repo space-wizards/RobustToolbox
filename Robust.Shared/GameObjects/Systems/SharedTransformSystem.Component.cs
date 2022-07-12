@@ -281,6 +281,32 @@ public abstract partial class SharedTransformSystem
         xform.LocalPosition = value;
     }
 
+    public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalPositionNoLerp(xform, value);
+    }
+
+    public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
+    {
+        xform.LocalPosition = value;
+    }
+
+    #endregion
+
+    #region Local Rotation
+
+    public void SetLocalRotation(EntityUid uid, Angle value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalRotation(xform, value);
+    }
+
+    public virtual void SetLocalRotation(TransformComponent xform, Angle value)
+    {
+        xform.LocalRotation = value;
+    }
+
     #endregion
 
     #region Parent
@@ -616,7 +642,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, angle + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -630,7 +656,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component, xformQuery);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     #endregion

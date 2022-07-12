@@ -33,12 +33,15 @@ namespace Robust.Shared.Serialization.Manager
             if (type.IsGenericType)
             {
                 var typeDef = type.GetGenericTypeDefinition();
+                var typeGenericArgs = type.GetGenericArguments();
 
                 Type? serializerTypeDef = null;
 
                 foreach (var (key, val) in _genericReaderTypes)
                 {
-                    if (typeDef.HasSameMetadataDefinitionAs(key.Type) && key.DataNodeType.IsAssignableFrom(node))
+                    if (typeDef.HasSameMetadataDefinitionAs(key.Type) &&
+                        key.DataNodeType.IsAssignableFrom(node) &&
+                        typeGenericArgs.Length == val.GetGenericArguments().Length)
                     {
                         serializerTypeDef = val;
                         break;
@@ -51,7 +54,7 @@ namespace Robust.Shared.Serialization.Manager
                     return false;
                 }
 
-                var serializerType = serializerTypeDef.MakeGenericType(type.GetGenericArguments());
+                var serializerType = serializerTypeDef.MakeGenericType(typeGenericArgs);
 
                 reader = RegisterSerializer(serializerType) ?? throw new NullReferenceException();
                 return true;

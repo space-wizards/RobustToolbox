@@ -12,6 +12,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -23,6 +24,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IClydeAudio _clyde = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
         [Dependency] private readonly SharedTransformSystem _xformSys = default!;
 
@@ -429,8 +431,13 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid user, AudioParams? audioParams = null)
-            => Play(sound, Filter.Local(), source, audioParams);
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        {
+            if (_timing.IsFirstTimePredicted)
+                return Play(sound, Filter.Local(), source, audioParams);
+            else
+                return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
+        }
 
         private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
         {

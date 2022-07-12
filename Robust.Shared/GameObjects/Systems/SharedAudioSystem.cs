@@ -90,7 +90,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="source">The UID of the entity "emitting" the audio.</param>
         /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
-        public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid user, AudioParams? audioParams = null);
+        public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null);
 
         /// <summary>
         /// Play an audio file at a static position.

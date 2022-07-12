@@ -551,6 +551,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldPosition;
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
@@ -604,6 +605,7 @@ public abstract partial class SharedTransformSystem
     #region World Rotation
 
     [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(EntityUid uid)
     {
         return Transform(uid).WorldRotation;
@@ -631,6 +633,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldRotation;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldRotation(EntityUid uid, Angle angle)
     {
         var component = Transform(uid);

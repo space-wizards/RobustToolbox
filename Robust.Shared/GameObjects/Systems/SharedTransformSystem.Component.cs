@@ -642,7 +642,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component);
         var diff = angle - current;
-        SetLocalRotation(component, angle + diff);
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

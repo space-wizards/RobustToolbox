@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Serialization.Constraints.Interfaces;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
@@ -11,13 +12,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
             object? defaultValue,
             AbstractFieldInfo fieldInfo,
             AbstractFieldInfo backingField,
-            InheritanceBehavior inheritanceBehavior)
+            InheritanceBehavior inheritanceBehavior,
+            ConstraintAttribute[] constraints)
         {
             BackingField = backingField;
             Attribute = attr;
             DefaultValue = defaultValue;
             FieldInfo = fieldInfo;
             InheritanceBehavior = inheritanceBehavior;
+            Constraints = constraints;
         }
 
         public DataFieldAttribute Attribute { get; }
@@ -31,6 +34,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public AbstractFieldInfo FieldInfo { get; }
 
         public Type FieldType => FieldInfo.FieldType;
+
+        public ConstraintAttribute[] Constraints { get; }
 
         public object? GetValue(object? obj)
         {

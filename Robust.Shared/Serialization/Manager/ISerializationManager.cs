@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Constraints.Interfaces;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -28,7 +29,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type to check for.</param>
         /// <returns>True if it does, false otherwise.</returns>
         bool HasDataDefinition(Type type);
-        
+
         #region Validation
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace Robust.Shared.Serialization.Manager
         ValidationNode ValidateNodeWith<TType, TSerializer, TNode>(TNode node, ISerializationContext? context = null)
             where TSerializer : ITypeValidator<TType, TNode>
             where TNode : DataNode;
-
+        
         #endregion
 
         #region Read

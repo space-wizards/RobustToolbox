@@ -45,6 +45,13 @@ namespace Robust.Shared.Reflection
         IEnumerable<Type> GetAllChildren(Type baseType, bool inclusive = false);
 
         /// <summary>
+        /// Gets all known types that implement <paramref name="interface"/>. (Works with generic interfaces)
+        /// </summary>
+        /// <param name="interface">The interface to search for.</param>
+        /// <returns>An enumerable over all the types. Order is in no way guaranteed.</returns>
+        IEnumerable<(Type type, Type @interface)> GetAllImplementing(Type @interface);
+
+        /// <summary>
         /// All loaded assemblies.
         /// </summary>
         IReadOnlyList<Assembly> Assemblies { get; }

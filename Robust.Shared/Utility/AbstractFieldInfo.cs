@@ -17,6 +17,7 @@ namespace Robust.Shared.Utility
 
         public abstract T? GetAttribute<T>(bool includeBacking = false) where T : Attribute;
         public abstract IEnumerable<T> GetAttributes<T>(bool includeBacking = false) where T : Attribute;
+        public abstract IEnumerable<Attribute> GetAttributes();
         public abstract bool HasAttribute<T>(bool includeBacking = false) where T : Attribute;
         public abstract bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : Attribute;
         public abstract bool IsBackingField();

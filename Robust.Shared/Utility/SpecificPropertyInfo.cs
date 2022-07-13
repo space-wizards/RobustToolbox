@@ -51,6 +51,11 @@ namespace Robust.Shared.Utility
             }
         }
 
+        public override IEnumerable<Attribute> GetAttributes()
+        {
+            return PropertyInfo.GetCustomAttributes();
+        }
+
         public override bool HasAttribute<T>(bool includeBacking = false)
         {
             if (includeBacking && TryGetBackingField(out var backing))

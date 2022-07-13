@@ -34,6 +34,11 @@ namespace Robust.Shared.Utility
             return FieldInfo.GetCustomAttributes<T>();
         }
 
+        public override IEnumerable<Attribute> GetAttributes()
+        {
+            return FieldInfo.GetCustomAttributes();
+        }
+
         public override bool HasAttribute<T>(bool includeBacking = false)
         {
             return FieldInfo.HasCustomAttribute<T>();

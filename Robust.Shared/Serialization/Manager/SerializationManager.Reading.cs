@@ -251,11 +251,6 @@ namespace Robust.Shared.Serialization.Manager
             return null;
         }
 
-        private bool IsNull(DataNode node)
-        {
-            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
-        }
-
         private T[]? ReadArrayValue<T>(
             ValueDataNode value,
             ISerializationContext? context = null,

@@ -59,6 +59,37 @@ namespace Robust.Shared.Reflection
             }
         }
 
+        public IEnumerable<(Type, Type)> GetAllImplementing(Type @interface)
+        {
+            EnsureGetAllTypesCache();
+            var isGenericTypeDef = @interface.IsGenericTypeDefinition;
+
+            foreach (var type in _getAllTypesCache)
+            {
+                if(type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition) continue;
+
+                foreach (var typeIFace in type.GetInterfaces())
+                {
+                    if (isGenericTypeDef && typeIFace.IsGenericType)
+                    {
+                        if (typeIFace.GetGenericTypeDefinition() == @interface)
+                        {
+                            yield return (type, typeIFace);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (typeIFace == @interface)
+                        {
+                            yield return (type, typeIFace);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         private void EnsureGetAllTypesCache()
         {
             if (_getAllTypesCache.Count != 0)

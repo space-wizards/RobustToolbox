@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization.Constraints.Interfaces;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -36,11 +37,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
 
-        public DataDefinition(Type type, IDependencyCollection collection)
+        public DataDefinition(Type type, IDependencyCollection collection, ISerializationManager serializationManager)
         {
             Type = type;
 
-            var fieldDefs = GetFieldDefinitions();
+            var fieldDefs = GetFieldDefinitions(serializationManager);
 
             Duplicates = fieldDefs
                 .Where(f =>
@@ -169,7 +170,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public ValidationNode Validate(
             ISerializationManager serialization,
             MappingDataNode mapping,
-            ISerializationContext? context)
+            ISerializationContext? context,
+            IDependencyCollection dependencyCollection)
         {
             var validatedMapping = new Dictionary<ValidationNode, ValidationNode>();
 
@@ -181,7 +183,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                FieldDefinition? field = null;
+                int i;
+                for (i = 0; i < BaseFieldDefinitions.Length; i++)
+                {
+                    if (BaseFieldDefinitions[i].Attribute.Tag == valueDataNode.Value)
+                    {
+                        field = BaseFieldDefinitions[i];
+                        break;
+                    }
+                }
+
                 if (field == null)
                 {
                     var error = new ErrorNode(
@@ -199,6 +211,24 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         field.Attribute.CustomTypeSerializer, val, context)
                     : serialization.ValidateNode(field.FieldType, val, context);
 
+                if (valValidated is not ErrorNode && field.Constraints.Length > 0)
+                {
+                    var value = ReadField(i, val, serialization, context, false);
+                    if (value != null)
+                    {
+                        foreach (var constraintAttribute in field.Constraints)
+                        {
+                            if (!constraintAttribute.Validate(serialization, value, dependencyCollection, context))
+                            {
+                                valValidated =
+                                    new ErrorNode(val, $"Value did not fit Constraint {constraintAttribute.GetType()}");
+                                break;
+                            }
+                        }
+                    }
+
+                }
+
                 validatedMapping.Add(keyValidated, valValidated);
             }
 
@@ -213,7 +243,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return duplicates.Length > 0;
         }
 
-        private List<FieldDefinition> GetFieldDefinitions()
+        private List<FieldDefinition> GetFieldDefinitions(ISerializationManager serializationManager)
         {
             var dummyObject = Activator.CreateInstance(Type) ?? throw new NullReferenceException();
             var fieldDefinitions = new List<FieldDefinition>();
@@ -267,12 +297,27 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     inheritanceBehaviour = InheritanceBehavior.Never;
                 }
 
+                var constraints = new List<ConstraintAttribute>();
+                foreach (var attribute in abstractFieldInfo.GetAttributes())
+                {
+                    if (attribute is ConstraintAttribute constraintAttribute)
+                    {
+                        if (!constraintAttribute.SupportedTypes.Contains(abstractFieldInfo.FieldType))
+                        {
+                            throw new InvalidOperationException(
+                                $"Constraint {constraintAttribute.GetType()} does not support type {abstractFieldInfo.FieldType}!");
+                        }
+                        constraints.Add(constraintAttribute);
+                    }
+                }
+
                 var fieldDefinition = new FieldDefinition(
                     dataField,
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,
-                    inheritanceBehaviour);
+                    inheritanceBehaviour,
+                    constraints.ToArray());
 
                 fieldDefinitions.Add(fieldDefinition);
             }

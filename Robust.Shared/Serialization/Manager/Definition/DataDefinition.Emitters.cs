@@ -15,6 +15,28 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
+        private object? ReadField(int i, DataNode node, ISerializationManager serializationManager, ISerializationContext? serializationContext,
+            bool skipHook)
+        {
+            var fieldDefinition = BaseFieldDefinitions[i];
+            var type = fieldDefinition.FieldType;
+            if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
+                {
+                    ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
+                    SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
+                    MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                    _ => throw new InvalidOperationException()
+                })
+            {
+                return serializationManager.ReadWithTypeSerializer(type,
+                    fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
+            }
+            else
+            {
+                return serializationManager.Read(type, node, serializationContext, skipHook);
+            }
+        }
+
         private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
         {
             var isServer = collection.Resolve<INetManager>().IsServer;
@@ -45,24 +67,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
-                    var type = fieldDefinition.FieldType;
                     var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
-                    object? result;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
-                        {
-                            ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
-                            SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
-                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
-                            _ => throw new InvalidOperationException()
-                        })
-                    {
-                        result = serializationManager.ReadWithTypeSerializer(type,
-                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
-                    }
-                    else
-                    {
-                        result = serializationManager.Read(type, node, serializationContext, skipHook);
-                    }
+                    var result = ReadField(i, node, serializationManager, serializationContext, skipHook);
 
                     var defValue = defaultValues[i];
 

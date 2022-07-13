@@ -15,6 +15,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Constraints.Attributes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
@@ -52,7 +53,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
+        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>)), Min(100)]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -409,7 +410,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>.
+        ///     Add a new layer based on some <see cref="SharedSpriteComponent.PrototypeLayerData"/>.
         /// </summary>
         public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
         {
@@ -610,7 +611,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
+        ///     Fills in a layer's values using some <see cref="SharedSpriteComponent.PrototypeLayerData"/>.
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {

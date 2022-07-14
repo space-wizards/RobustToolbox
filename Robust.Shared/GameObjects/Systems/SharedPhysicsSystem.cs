@@ -147,10 +147,10 @@ namespace Robust.Shared.GameObjects
                 // player for any entity inside of a container during init.
                 SetLinearVelocity(body, Vector2.Zero, false);
                 SetAngularVelocity(body, 0, false);
-                _joints.ClearJoints(body);
                 SetCanCollide(body, false, false);
             }
 
+            _joints.ClearJoints(body);
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
             _broadphase.UpdateBroadphase(body, xform: xform);
 

@@ -378,7 +378,10 @@ namespace Robust.Shared.Physics
         {
             if (!TryComp<JointComponent>(body.Owner, out var joint)) return;
 
-            _dirtyJoints.Add(joint);
+            foreach (var a in joint.Joints.Values.ToArray())
+            {
+                RemoveJoint(a);
+            }
         }
 
         public void RemoveJoint(Joint joint)

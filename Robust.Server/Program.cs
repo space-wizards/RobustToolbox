@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Server
 {
@@ -30,6 +31,8 @@ namespace Robust.Server
             {
                 throw new InvalidOperationException("Cannot start twice!");
             }
+
+            GlibcBug.Check();
 
             _hasStarted = true;
 

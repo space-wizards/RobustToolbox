@@ -70,8 +70,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             _netComponents.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
@@ -1178,6 +1176,17 @@ namespace Robust.Shared.GameObjects
                 return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (uid == null)
+            {
+                component = default;
+                return false;
+            }
+            else
+                return TryGetComponent(uid.Value, out component);
         }
 
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)

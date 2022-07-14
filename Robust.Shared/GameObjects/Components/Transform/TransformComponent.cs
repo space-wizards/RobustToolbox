@@ -606,52 +606,10 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
+        [Obsolete("Use transform system")]
         public void DetachParentToNull()
         {
-            var oldParent = _parent;
-
-            // Even though they may already be in nullspace we may want to deparent them anyway
-            if (!oldParent.IsValid())
-            {
-                DebugTools.Assert(!Anchored);
-                return;
-            }
-
-            // Stop any active lerps
-            _nextPosition = null;
-            _nextRotation = null;
-            LerpParent = EntityUid.Invalid;
-
-            // TODO: When ECSing this can just pass it into the anchor setter
-            if (Anchored && _entMan.TryGetComponent(GridUid, out MetaDataComponent? meta))
-            {
-                if (meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
-                    Anchored = false;
-            }
-            else
-            {
-                DebugTools.Assert(!Anchored);
-            }
-
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-            var oldConcrete = xformQuery.GetComponent(oldParent);
-            var uid = Owner;
-            oldConcrete._children.Remove(uid);
-
-            _parent = EntityUid.Invalid;
-            var oldMap = MapID;
-            ChangeMapId(MapId.Nullspace, xformQuery);
-
-            if (GridUid != null)
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, null);
-
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
-
-            // Does it even make sense to call these since this is called purely from OnRemove right now?
-            // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
-            RebuildMatrices();
-            Dirty(_entMan);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
         }
 
         /// <summary>
@@ -689,7 +647,7 @@ namespace Robust.Shared.GameObjects
             UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
-        private void UpdateChildMapIdsRecursive(
+        internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
             bool mapPaused,
             EntityQuery<TransformComponent> xformQuery,
@@ -838,7 +796,7 @@ namespace Robust.Shared.GameObjects
             if (!_parent.IsValid()) // Root Node
                 pos = Vector2.Zero;
 
-            var rot = (float) _localRotation.Theta;
+            var rot = (float)_localRotation.Theta;
 
             _localMatrix = Matrix3.CreateTransform(pos.X, pos.Y, rot);
             _invLocalMatrix = Matrix3.CreateInverseTransform(pos.X, pos.Y, rot);
@@ -856,7 +814,7 @@ namespace Robust.Shared.GameObjects
 
             if (issueEvent)
             {
-                var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(this, false);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent, true);
             }
         }
@@ -942,13 +900,19 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct AnchorStateChangedEvent
     {
-        public readonly EntityUid Entity;
-        public readonly bool Anchored;
+        public readonly TransformComponent Transform;
+        public EntityUid Entity => Transform.Owner;
+        public bool Anchored => Transform.Anchored;
 
-        public AnchorStateChangedEvent(EntityUid entity, bool anchored)
+        /// <summary>
+        ///     If true, the entity is being detached to null-space
+        /// </summary>
+        public readonly bool Detaching;
+
+        public AnchorStateChangedEvent(TransformComponent transform, bool detaching)
         {
-            Entity = entity;
-            Anchored = anchored;
+            Detaching = detaching;
+            Transform = transform;
         }
     }
 
@@ -959,19 +923,19 @@ namespace Robust.Shared.GameObjects
     public readonly struct ReAnchorEvent
     {
         public readonly EntityUid Entity;
-        public readonly GridId OldGrid;
-        public readonly GridId GridId;
+        public readonly EntityUid OldGrid;
+        public readonly EntityUid Grid;
 
         /// <summary>
         /// Tile on both the old and new grid being re-anchored.
         /// </summary>
         public readonly Vector2i TilePos;
 
-        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId, Vector2i tilePos)
+        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos)
         {
             Entity = uid;
             OldGrid = oldGrid;
-            GridId = gridId;
+            Grid = grid;
             TilePos = tilePos;
         }
     }

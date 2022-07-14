@@ -208,7 +208,7 @@ namespace Robust.Server.Console
             {
                 // Typing out command name, handle this ourselves.
                 return ValueTask.FromResult(CompletionResult.FromOptions(
-                    RegisteredCommands.Values.Select(c => new CompletionOption(c.Command, c.Description))));
+                    RegisteredCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
             }
 
             var cmdName = args[0];

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -70,12 +71,12 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
+            SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
 
@@ -83,6 +84,12 @@ namespace Robust.Shared.GameObjects
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+        }
+
+        private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
+        {
+            component.CanCollide = false;
+            DebugTools.Assert(!component.Awake);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
@@ -128,9 +135,22 @@ namespace Robust.Shared.GameObjects
         {
             var meta = MetaData(uid);
 
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized)
                 return;
 
+            var xform = args.Transform;
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != 0)
+            {
+                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                SetLinearVelocity(body, Vector2.Zero, false);
+                SetAngularVelocity(body, 0, false);
+                SetCanCollide(body, false, false);
+            }
+
+            _joints.ClearJoints(body);
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
             _broadphase.UpdateBroadphase(body, xform: xform);
 
@@ -149,6 +169,9 @@ namespace Robust.Shared.GameObjects
             // TODO: Could potentially migrate these but would need more thinking
             // For now just recursively destroy them
             RecursiveDestroyContacts(body, oldMapId);
+
+            // Remove our old movebuffer
+            _broadphase.RemoveFromMoveBuffer(body, oldMapId);
 
             _joints.ClearJoints(body);
 
@@ -179,20 +202,20 @@ namespace Robust.Shared.GameObjects
             }
 
             if (xform.ChildCount == 0 ||
-                (oldMap == null && map == null) ||
-                MapManager.IsGrid(body.Owner) ||
                 MapManager.IsMap(body.Owner)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            RecursiveMapUpdate(xform, oldMapId, xformQuery, bodyQuery, metaQuery);
+            RecursiveMapUpdate(xform, oldMapId, oldMap, map, xformQuery, bodyQuery, metaQuery);
         }
 
         private void RecursiveMapUpdate(
             TransformComponent xform,
-            MapId oldMap,
+            MapId oldMapId,
+            SharedPhysicsMapComponent? oldMap,
+            SharedPhysicsMapComponent? map,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<MetaDataComponent> metaQuery)
@@ -205,9 +228,20 @@ namespace Robust.Shared.GameObjects
                     !xformQuery.TryGetComponent(child.Value, out var childXform) ||
                     metaQuery.GetComponent(child.Value).EntityLifeStage == EntityLifeStage.Deleted) continue;
 
-                DestroyContacts(childBody, oldMap);
+                if (childBody.Awake)
+                {
+                    oldMap?.RemoveSleepBody(childBody);
+                    map?.AddAwakeBody(childBody);
+                }
+                else
+                {
+                    DebugTools.Assert(oldMap?.AwakeBodies.Contains(childBody) != true);
+                }
+
+                _broadphase.RemoveFromMoveBuffer(childBody, oldMapId);
+                DestroyContacts(childBody, oldMapId);
                 _joints.ClearJoints(childBody);
-                RecursiveMapUpdate(childXform, oldMap, xformQuery, bodyQuery, metaQuery);
+                RecursiveMapUpdate(childXform, oldMapId, oldMap, map, xformQuery, bodyQuery, metaQuery);
             }
         }
 
@@ -252,23 +286,12 @@ namespace Robust.Shared.GameObjects
             EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
-        private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
-        {
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
-
-            physicsComponent.LinearVelocity = Vector2.Zero;
-            physicsComponent.AngularVelocity = 0.0f;
-            _joints.ClearJoints(physicsComponent);
-            physicsComponent.CanCollide = false;
-        }
-
-        private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
+        private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
         {
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent) ||
-                MetaData(message.Entity).EntityLifeStage >= EntityLifeStage.Terminating) return;
+            if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            physicsComponent.WakeBody();
+            SetCanCollide(physics, true, false);
         }
 
         /// <summary>

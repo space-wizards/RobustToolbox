@@ -151,7 +151,7 @@ internal partial class MapManager
     public IMapGrid GetGrid(EntityUid gridId)
     {
         DebugTools.Assert(gridId.IsValid());
-        
+
         return GetGridComp(gridId).Grid;
     }
 
@@ -286,7 +286,6 @@ internal partial class MapManager
         if (!GridExists(gridIndex))
             return;
 
-        Logger.DebugS("map", $"Entity {comp.Owner} removed grid component, removing bound grid {gridIndex}");
         DeleteGrid(gridIndex);
     }
 

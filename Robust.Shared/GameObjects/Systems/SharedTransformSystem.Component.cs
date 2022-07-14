@@ -394,14 +394,12 @@ public abstract partial class SharedTransformSystem
                 rebuildMatrices = true;
             }
 
+            EntityCoordinates oldPos = default;
+
             if (!component.LocalPosition.EqualsApprox(newState.LocalPosition))
             {
-                var oldPos = component.Coordinates;
+                oldPos = component.Coordinates;
                 component._localPosition = newState.LocalPosition;
-
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
-                DeferMoveEvent(ref ev);
-
                 rebuildMatrices = true;
             }
 
@@ -434,6 +432,12 @@ public abstract partial class SharedTransformSystem
             if (rebuildMatrices)
             {
                 component.RebuildMatrices();
+            }
+
+            if (oldPos != default)
+            {
+                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
+                RaiseLocalEvent(uid, ref ev);
             }
 
             Dirty(component);

@@ -20,9 +20,6 @@ namespace Robust.Shared.GameObjects
         // ReSharper disable once NotAccessedField.Local
         private ISawmill _logger = default!;
 
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
-
         public override void Initialize()
         {
             base.Initialize();
@@ -69,42 +66,6 @@ namespace Robust.Shared.GameObjects
                 var transform = Transform(entity);
                 if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
                     transform.AttachParent(mapTransform);
-            }
-        }
-
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev, true);
-                }
             }
         }
 

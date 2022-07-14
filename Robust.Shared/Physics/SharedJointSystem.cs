@@ -376,8 +376,12 @@ namespace Robust.Shared.Physics
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!TryComp<JointComponent>(body.Owner, out var joint)) return;
+            if (TryComp<JointComponent>(body.Owner, out var joint))
+                ClearJoints(joint);
+        }
 
+        public void ClearJoints(JointComponent joint)
+        {
             foreach (var a in joint.Joints.Values.ToArray())
             {
                 RemoveJoint(a);

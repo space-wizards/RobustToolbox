@@ -265,7 +265,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
-            entitySystemMan.LoadExtraSystemType<MetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

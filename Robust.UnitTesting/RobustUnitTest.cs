@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -80,6 +81,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<TransformSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
             systems.LoadExtraSystemType<ServerMetaDataSystem>();
+            systems.LoadExtraSystemType<PVSSystem>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();

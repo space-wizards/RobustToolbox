@@ -6,6 +6,7 @@ using Moq;
 using Robust.Server;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Server.Reflection;
 using Robust.Shared;
@@ -266,6 +267,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<PVSSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

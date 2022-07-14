@@ -1,9 +1,12 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
+        [Dependency] private readonly MetaDataSystem _metaSys = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -63,12 +66,14 @@ namespace Robust.Server.GameObjects
             }
 
             var visMask = 1;
-            metaDataComponent.VisibilityMask = GetVisibilityMask(uid, ref visMask, visibilityComponent);
+            GetVisibilityMask(uid, ref visMask, visibilityComponent);
+
+            _metaSys.SetVisibilityMask(uid, visMask, metaDataComponent);
         }
 
         public void RefreshVisibility(VisibilityComponent visibilityComponent)
         {
-            RefreshVisibility(visibilityComponent.Owner);
+            RefreshVisibility(visibilityComponent.Owner, null, visibilityComponent);
         }
 
         private int GetVisibilityMask(EntityUid uid, ref int visMask, VisibilityComponent? visibilityComponent = null, TransformComponent? xform = null)

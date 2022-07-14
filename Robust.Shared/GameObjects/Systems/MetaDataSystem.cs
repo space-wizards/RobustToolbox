@@ -4,7 +4,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed class MetaDataSystem : EntitySystem
+public abstract class MetaDataSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _proto = default!;
 
@@ -65,6 +65,12 @@ public sealed class MetaDataSystem : EntitySystem
         EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev, true);
 
         component.Flags &= ~ev.ToRemove;
+    }
+
+    public virtual void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
+    {
+        if (Resolve(uid, ref meta))
+            meta.VisibilityMask = value;
     }
 }
 

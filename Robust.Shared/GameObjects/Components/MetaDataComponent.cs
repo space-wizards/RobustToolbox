@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
@@ -139,8 +140,15 @@ namespace Robust.Shared.GameObjects
         ///     The sum of our visibility layer and our parent's visibility layers.
         ///     Server-only.
         /// </summary>
-        [ViewVariables]
-        public int VisibilityMask { get; internal set; }
+        [Access(typeof(MetaDataSystem))]
+        public int VisibilityMask;
+
+        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
+        private int VVVisibilityMask
+        {
+            get => VisibilityMask;
+            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
+        }
 
         [ViewVariables]
         public bool EntityPaused

@@ -138,10 +138,13 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.
-        ///     Server-only.
         /// </summary>
+        /// <remarks>
+        ///     Every entity has a mask of 1, unless this is overridden via a VisibilityComponent. So unless every
+        ///     parent, including the map, has such a component, the 1-flag is almost certainly set.
+        /// </remarks>
         [Access(typeof(MetaDataSystem))]
-        public int VisibilityMask;
+        public int VisibilityMask = 1;
 
         [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
         private int VVVisibilityMask

@@ -148,9 +148,9 @@ namespace Robust.Shared.GameObjects
                 SetLinearVelocity(body, Vector2.Zero, false);
                 SetAngularVelocity(body, 0, false);
                 SetCanCollide(body, false, false);
+                _joints.ClearJoints(body);
             }
 
-            _joints.ClearJoints(body);
             // TODO: need to suss out this particular bit + containers + body.Broadphase.
             _broadphase.UpdateBroadphase(body, xform: xform);
 
@@ -158,7 +158,10 @@ namespace Robust.Shared.GameObjects
             var mapId = _transform.GetMapId(args.Entity);
 
             if (args.OldMapId != mapId)
+            {
                 HandleMapChange(body, xform, args.OldMapId, mapId);
+                _joints.ClearJoints(body);
+            }
 
             if (body.BodyType != BodyType.Static && mapId != MapId.Nullspace && body._canCollide)
                 HandleParentChangeVelocity(uid, body, ref args, xform);

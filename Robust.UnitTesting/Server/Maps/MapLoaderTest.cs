@@ -103,7 +103,7 @@ entities:
 
             Assert.That(geid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetComponent<TransformComponent>(geid.Value).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid!.Value).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

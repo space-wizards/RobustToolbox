@@ -43,7 +43,6 @@ namespace Robust.Shared.GameObjects
 
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
@@ -151,15 +150,18 @@ namespace Robust.Shared.GameObjects
                 // player for any entity inside of a container during init.
                 SetLinearVelocity(body, Vector2.Zero, false);
                 SetAngularVelocity(body, 0, false);
-                _joints.ClearJoints(body);
                 SetCanCollide(body, false, false);
+                _joints.ClearJoints(body);
             }
 
             // Handle map change
             var mapId = args.Transform.MapID;
 
             if (args.OldMapId != mapId)
+            {
                 HandleMapChange(body, xform, args.OldMapId, mapId);
+                _joints.ClearJoints(body);
+            }
             else
                 _broadphase.UpdateBroadphase(body, args.OldMapId, xform: xform);
 

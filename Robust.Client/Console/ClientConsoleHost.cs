@@ -50,6 +50,7 @@ namespace Robust.Client.Console
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IPlayerManager _player = default!;
 
         private bool _requestedCommands;
 
@@ -123,14 +124,12 @@ namespace Robust.Client.Console
 
             if (AvailableCommands.ContainsKey(commandName))
             {
-#if FULL_RELEASE
-                var playerManager = IoCManager.Resolve<IPlayerManager>();
-                if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
+                if (!CanExecute(commandName))
                 {
                     WriteError(null, $"Insufficient perms for command: {commandName}");
                     return;
                 }
-#endif
+
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
                 var shell = new ConsoleShell(this, null);
@@ -141,6 +140,16 @@ namespace Robust.Client.Console
             }
             else
                 WriteError(null, "Unknown command: " + commandName);
+        }
+
+        private bool CanExecute(string cmdName)
+        {
+            // When not connected to a server, you can run all local commands.
+            // When connected to a server, you can only run commands according to the con group controller.
+
+            return _player.LocalPlayer == null
+                   || _player.LocalPlayer.Session.Status <= SessionStatus.Connecting
+                   || _conGroup.CanCommand(cmdName);
         }
 
         /// <inheritdoc />

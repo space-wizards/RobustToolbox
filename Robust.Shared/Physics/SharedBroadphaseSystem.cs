@@ -397,9 +397,9 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
-        internal void UpdateBroadphase(PhysicsComponent body, MapId oldMapId, TransformComponent? xform = null)
+        internal void UpdateBroadphase(EntityUid uid, MapId oldMapId, TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref xform))
+            if (!Resolve(uid, ref xform))
                 return;
 
             var bodyQuery = GetEntityQuery<PhysicsComponent>();

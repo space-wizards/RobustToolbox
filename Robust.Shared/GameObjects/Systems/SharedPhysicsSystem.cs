@@ -71,7 +71,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
-            SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
@@ -130,8 +130,11 @@ namespace Robust.Shared.GameObjects
             component.ContactManager.Shutdown();
         }
 
-        private void OnParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
+        private void OnParentChange(ref EntParentChangedMessage args)
         {
+            // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
+            var uid = args.Entity;
+
             var meta = MetaData(uid);
 
             if (meta.EntityLifeStage < EntityLifeStage.Initialized)
@@ -143,7 +146,7 @@ namespace Robust.Shared.GameObjects
             if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
                 return;
 
-            if ((meta.Flags & MetaDataFlags.InContainer) != 0)
+            if (TryComp(uid, out PhysicsComponent? body) && (meta.Flags & MetaDataFlags.InContainer) != 0)
             {
                 // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
                 // changes. This also ensures that the server doesn't have to send the physics comp state to every
@@ -154,25 +157,24 @@ namespace Robust.Shared.GameObjects
                 _joints.ClearJoints(body);
             }
 
-            // Handle map change
-            var mapId = args.Transform.MapID;
-
-            if (args.OldMapId != mapId)
+            // Handle map changes
+            if (args.OldMapId != xform.MapID)
             {
-                HandleMapChange(body, xform, args.OldMapId, mapId);
-                _joints.ClearJoints(body);
+                // This will also handle broadphase updating & joint clearing.
+                HandleMapChange(xform, body, args.OldMapId, xform.MapID);
+                return;
             }
-            else
-                _broadphase.UpdateBroadphase(body, args.OldMapId, xform: xform);
 
-            if (body.BodyType != BodyType.Static && mapId != MapId.Nullspace && body._canCollide)
+            _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
+
+            if (body != null)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
         /// <summary>
         ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
         /// </summary>
-        private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId newMapId)
+        private void HandleMapChange(TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
         {
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
@@ -195,7 +197,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private void RecursiveMapUpdate(
             TransformComponent xform,
-            PhysicsComponent body,
+            PhysicsComponent? body,
             MapId newMapId,
             BroadphaseComponent? newBroadphase,
             SharedPhysicsMapComponent? newMap,
@@ -211,25 +213,29 @@ namespace Robust.Shared.GameObjects
 
             DebugTools.Assert(!Deleted(uid));
 
-            // TODO: Could potentially migrate these but would need more thinking
-            if (oldMap != null)
-                DestroyContacts(body, oldMap);
-
-            DebugTools.Assert(body.Contacts.Count == 0);
-
-            if (body.Awake)
+            // This entity may not have a body, but some of its children might:
+            if (body != null)
             {
-                oldMap?.RemoveSleepBody(body);
-                newMap?.AddAwakeBody(body);
-                DebugTools.Assert(body.Awake);
-            }
-            else
-                DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
+                // TODO: Could potentially migrate these but would need more thinking
+                if (oldMap != null)
+                    DestroyContacts(body, oldMap);
 
-            if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
-            {
-                // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
-                _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);
+                DebugTools.Assert(body.Contacts.Count == 0);
+
+                if (body.Awake)
+                {
+                    oldMap?.RemoveSleepBody(body);
+                    newMap?.AddAwakeBody(body);
+                    DebugTools.Assert(body.Awake);
+                }
+                else
+                    DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
+
+                if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
+                {
+                    // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
+                    _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);
+                }
             }
 
             if (jointQuery.TryGetComponent(uid, out var joint))
@@ -241,8 +247,12 @@ namespace Robust.Shared.GameObjects
             var childEnumerator = xform.ChildEnumerator;
             while (childEnumerator.MoveNext(out var child))
             {
-                if (xformQuery.TryGetComponent(child, out var childXform) && bodyQuery.TryGetComponent(child, out var childBody))
+                if (xformQuery.TryGetComponent(child, out var childXform))
+                {
+                    bodyQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+                }
+                    
             }
         }
 

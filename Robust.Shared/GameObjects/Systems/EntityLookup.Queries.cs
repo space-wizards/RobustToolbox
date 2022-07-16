@@ -444,7 +444,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
-        DebugTools.Assert(range > 0, "Range must me a positive float");
+        DebugTools.Assert(range > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 

@@ -70,17 +70,13 @@ namespace Robust.Server.GameObjects
 
         private int GetVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null, TransformComponent? xform = null)
         {
-            int visMask;
+            int visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
             if (Resolve(uid, ref visibilityComponent, false))
-                visMask = visibilityComponent.Layer;
-            else
-                visMask = 1;
-
+                visMask |= visibilityComponent.Layer;
+            
             // Include parent vis masks
             if (Resolve(uid, ref xform) && xform.ParentUid.IsValid())
-            {
                 visMask |= GetVisibilityMask(xform.ParentUid);
-            }
 
             return visMask;
         }

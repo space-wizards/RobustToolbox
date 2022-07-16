@@ -140,8 +140,7 @@ namespace Robust.Shared.GameObjects
         ///     The sum of our visibility layer and our parent's visibility layers.
         /// </summary>
         /// <remarks>
-        ///     Every entity has a mask of 1, unless this is overridden via a VisibilityComponent. So unless every
-        ///     parent, including the map, has such a component, the 1-flag is almost certainly set.
+        ///     Every entity will always have the first bit set to true.
         /// </remarks>
         [Access(typeof(MetaDataSystem))]
         public int VisibilityMask = 1;

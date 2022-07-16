@@ -230,25 +230,26 @@ namespace Robust.Client.GameStates
                 }
 
                 processedAny = true;
-                _timing.LastProcessedTick += 1;
 
                 if (curState == null)
                 {
+                    _timing.LastProcessedTick += 1;
                     continue;
                 }
-
-                if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
                 {
                     _processor.LastFullStateRequested = null;
-                    _timing.LastRealTick = _timing.LastProcessedTick = curState.ToSequence;
+                    _timing.LastProcessedTick = curState.ToSequence;
                 }
                 else
-                    _timing.LastRealTick = _timing.LastProcessedTick;
+                    _timing.LastProcessedTick += 1;
 
+                _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
+
+                if (PredictionNeedsResetting)
+                    ResetPredictedEntities();
 
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
@@ -295,13 +296,13 @@ namespace Robust.Client.GameStates
 
                 if (_lastProcessedInput < curState.LastProcessedInput)
                 {
-                    _sawmill.Debug($"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedInput}");
+                    _sawmill.Debug($"SV> RCV  tick={_timing.CurTick}, last processed ={_lastProcessedInput}");
                     _lastProcessedInput = curState.LastProcessedInput;
                 }
             }
 
             // Slightly speed up or slow down the client tickrate based on the contents of the buffer.
-            // TryGetTickStates should have cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
+            // TryGetTickStates should have cleaned out any old states, so the buffer contains [t+0(cur), t+1(next), t+2, t+3, ..., t+n]
             // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
             if (_processor.WaitingForFull)
                 _timing.TickTimingAdjustment = 0f;
@@ -390,7 +391,6 @@ namespace Robust.Client.GameStates
                         $"state={inputCmd.State}");
 
                     input.PredictInputCommand(inputCmd);
-
                     hasPendingInput = pendingInputEnumerator.MoveNext();
                 }
 
@@ -400,7 +400,6 @@ namespace Robust.Client.GameStates
 
                     _entities.EventBus.RaiseEvent(EventSource.Local, msg);
                     _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
-
                     hasPendingMessage = pendingMessagesEnumerator.MoveNext();
                 }
 
@@ -427,7 +426,6 @@ namespace Robust.Client.GameStates
         private void ResetPredictedEntities()
         {
             PredictionNeedsResetting = false;
-            _timing.CurTick = _timing.LastRealTick;
 
             using var _ = _prof.Group("ResetPredictedEntities");
             using var __ = _timing.StartPastPredictionArea();

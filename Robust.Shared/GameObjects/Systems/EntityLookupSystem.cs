@@ -73,8 +73,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
 
-            SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
-
             EntityManager.EntityInitialized += OnEntityInit;
             SubscribeLocalEvent<MapChangedEvent>(OnMapCreated);
         }
@@ -209,12 +207,6 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         #region Entity events
-
-        private void OnTerminate(ref EntityTerminatingEvent args)
-        {
-            RemoveFromEntityTree(args.Owner, false);
-        }
-
         private void OnEntityInit(EntityUid uid)
         {
             if (_container.IsEntityInContainer(uid)) return;

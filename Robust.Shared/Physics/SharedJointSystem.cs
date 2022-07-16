@@ -382,6 +382,10 @@ namespace Robust.Shared.Physics
 
         public void ClearJoints(JointComponent joint)
         {
+            // TODO PERFORMANCE
+            // This will re-fetch the joint & body component for this entity ( & ever connected
+            // entity), for each and every joint. at the very least, we could pass in the joint & physics comp. As long
+            // as most entities only have a single joint, fetching connected components probably isn't worth it.
             foreach (var a in joint.Joints.Values.ToArray())
             {
                 RemoveJoint(a);

@@ -29,6 +29,8 @@ namespace Robust.Shared.Serialization.Manager
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        public IReflectionManager ReflectionManager => _reflectionManager;
+
         public const string LogCategory = "serialization";
 
         private bool _initializing;

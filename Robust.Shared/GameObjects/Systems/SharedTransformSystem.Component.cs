@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -209,7 +210,20 @@ public abstract partial class SharedTransformSystem
         {
             // Note that _children is a SortedSet<EntityUid>,
             // so duplicate additions (which will happen) don't matter.
-            xformQuery.GetComponent(component.ParentUid)._children.Add(uid);
+
+            var parentXform = xformQuery.GetComponent(component.ParentUid);
+            if (parentXform.LifeStage > ComponentLifeStage.Running || LifeStage(parentXform.Owner) > EntityLifeStage.MapInitialized)
+            {
+                var msg = $"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(parentXform.Owner)}, new parent: {ToPrettyString(uid)}";
+#if EXCEPTION_TOLERANCE
+                Logger.Error(msg);
+                Del(uid);
+#else
+                throw new InvalidOperationException(msg);
+#endif
+            }
+
+            parentXform._children.Add(uid);
         }
 
 
@@ -279,6 +293,32 @@ public abstract partial class SharedTransformSystem
     public virtual void SetLocalPosition(TransformComponent xform, Vector2 value)
     {
         xform.LocalPosition = value;
+    }
+
+    public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalPositionNoLerp(xform, value);
+    }
+
+    public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
+    {
+        xform.LocalPosition = value;
+    }
+
+    #endregion
+
+    #region Local Rotation
+
+    public void SetLocalRotation(EntityUid uid, Angle value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalRotation(xform, value);
+    }
+
+    public virtual void SetLocalRotation(TransformComponent xform, Angle value)
+    {
+        xform.LocalRotation = value;
     }
 
     #endregion
@@ -525,6 +565,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldPosition;
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
@@ -578,6 +619,7 @@ public abstract partial class SharedTransformSystem
     #region World Rotation
 
     [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(EntityUid uid)
     {
         return Transform(uid).WorldRotation;
@@ -605,6 +647,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldRotation;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldRotation(EntityUid uid, Angle angle)
     {
         var component = Transform(uid);
@@ -616,7 +659,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -630,7 +673,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component, xformQuery);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     #endregion
@@ -666,15 +709,6 @@ public abstract partial class SharedTransformSystem
     }
 
     #endregion
-
-    public MapId GetMapId(EntityUid? uid, TransformComponent? xform = null)
-    {
-        if (uid == null ||
-            !uid.Value.IsValid() ||
-            !Resolve(uid.Value, ref xform, false)) return MapId.Nullspace;
-
-        return xform.MapID;
-    }
 
     #region State Handling
     private void ChangeMapId(TransformComponent xform, MapId newMapId, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)

@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
@@ -143,10 +144,19 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.
-        ///     Server-only.
         /// </summary>
-        [ViewVariables]
-        public int VisibilityMask { get; internal set; }
+        /// <remarks>
+        ///     Every entity will always have the first bit set to true.
+        /// </remarks>
+        [Access(typeof(MetaDataSystem))]
+        public int VisibilityMask = 1;
+
+        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
+        private int VVVisibilityMask
+        {
+            get => VisibilityMask;
+            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
+        }
 
         [ViewVariables]
         public bool EntityPaused
@@ -159,7 +169,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value), true);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 

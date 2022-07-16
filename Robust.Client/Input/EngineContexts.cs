@@ -23,6 +23,11 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.HideUI);
             common.AddFunction(EngineKeyFunctions.ShowDebugConsole);
             common.AddFunction(EngineKeyFunctions.ShowDebugMonitors);
+            common.AddFunction(EngineKeyFunctions.MoveUp);
+            common.AddFunction(EngineKeyFunctions.MoveDown);
+            common.AddFunction(EngineKeyFunctions.MoveLeft);
+            common.AddFunction(EngineKeyFunctions.MoveRight);
+            common.AddFunction(EngineKeyFunctions.Walk);
             common.AddFunction(EngineKeyFunctions.CameraRotateRight);
             common.AddFunction(EngineKeyFunctions.CameraRotateLeft);
 
@@ -67,11 +72,6 @@ namespace Robust.Client.Input
             editor.AddFunction(EngineKeyFunctions.EditorRotateObject);
 
             var human = contexts.New("human", common);
-            human.AddFunction(EngineKeyFunctions.MoveUp);
-            human.AddFunction(EngineKeyFunctions.MoveDown);
-            human.AddFunction(EngineKeyFunctions.MoveLeft);
-            human.AddFunction(EngineKeyFunctions.MoveRight);
-            human.AddFunction(EngineKeyFunctions.Walk);
         }
     }
 }

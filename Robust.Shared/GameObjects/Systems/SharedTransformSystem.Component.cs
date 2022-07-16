@@ -281,6 +281,32 @@ public abstract partial class SharedTransformSystem
         xform.LocalPosition = value;
     }
 
+    public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalPositionNoLerp(xform, value);
+    }
+
+    public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
+    {
+        xform.LocalPosition = value;
+    }
+
+    #endregion
+
+    #region Local Rotation
+
+    public void SetLocalRotation(EntityUid uid, Angle value, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform)) return;
+        SetLocalRotation(xform, value);
+    }
+
+    public virtual void SetLocalRotation(TransformComponent xform, Angle value)
+    {
+        xform.LocalRotation = value;
+    }
+
     #endregion
 
     #region Parent
@@ -525,6 +551,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldPosition;
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
@@ -578,6 +605,7 @@ public abstract partial class SharedTransformSystem
     #region World Rotation
 
     [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(EntityUid uid)
     {
         return Transform(uid).WorldRotation;
@@ -605,6 +633,7 @@ public abstract partial class SharedTransformSystem
         return component.WorldRotation;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldRotation(EntityUid uid, Angle angle)
     {
         var component = Transform(uid);
@@ -616,7 +645,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -630,7 +659,7 @@ public abstract partial class SharedTransformSystem
     {
         var current = GetWorldRotation(component, xformQuery);
         var diff = angle - current;
-        component.LocalRotation += diff;
+        SetLocalRotation(component, component.LocalRotation + diff);
     }
 
     #endregion

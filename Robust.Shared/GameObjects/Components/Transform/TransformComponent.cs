@@ -127,9 +127,6 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var oldRotation = _localRotation;
-
-                // Set _nextRotation to null to break any active lerps if this is a client side prediction.
-                _nextRotation = null;
                 _localRotation = value;
                 Dirty(_entMan);
 

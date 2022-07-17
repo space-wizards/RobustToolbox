@@ -430,7 +430,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var angle = _angles[i];
 
                 var translation = linearVelocity * frameTime;
-                if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
+                if (translation.Length > _maxLinearVelocity)
                 {
                     var ratio = _maxLinearVelocity / translation.Length;
                     linearVelocity *= ratio;

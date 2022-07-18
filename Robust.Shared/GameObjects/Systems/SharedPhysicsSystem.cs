@@ -60,12 +60,7 @@ namespace Robust.Shared.GameObjects
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
 
-            SubscribeLocalEvent<MapChangedEvent>(ev =>
-            {
-                if (ev.Created)
-                    HandleMapCreated(ev);
-            });
-
+            SubscribeLocalEvent<MapAddedEvent>(OnMapAdded);
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
@@ -252,7 +247,7 @@ namespace Robust.Shared.GameObjects
                     bodyQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
-                    
+
             }
         }
 
@@ -273,7 +268,7 @@ namespace Robust.Shared.GameObjects
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
-        protected abstract void HandleMapCreated(MapChangedEvent eventArgs);
+        protected abstract void OnMapAdded(ref MapAddedEvent eventArgs);
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {

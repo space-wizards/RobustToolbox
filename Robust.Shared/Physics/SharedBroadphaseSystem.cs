@@ -38,9 +38,15 @@ namespace Robust.Shared.Physics
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
-        // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
+        /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new()
+        {
+            {
+                MapId.Nullspace, new Dictionary<FixtureProxy, Box2>()
+            }
+        };
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);

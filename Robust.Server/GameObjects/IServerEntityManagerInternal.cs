@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Server.GameObjects
 {
@@ -10,6 +11,8 @@ namespace Robust.Server.GameObjects
         EntityUid AllocEntity(string? prototypeName, EntityUid uid = default);
 
         void FinishEntityLoad(EntityUid entity, IEntityLoadContext? context = null);
+
+        void FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context = null);
 
         void FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta = null);
 

@@ -56,7 +56,9 @@ internal partial class MapManager
     public void TrueDeleteMap(MapId mapId)
     {
         // grids are cached because Delete modifies collection
-        foreach (var grid in GetAllMapGrids(mapId).ToList())
+        var grids = GetAllMapGrids(mapId).ToList();
+
+        foreach (var grid in grids)
         {
             DeleteGrid(grid.Index);
         }
@@ -133,11 +135,15 @@ internal partial class MapManager
         else
             _mapEntities.Add(mapId, EntityUid.Invalid);
 
+        var raiseEvent = false;
+
         // re-use or add map component
         if (!EntityManager.TryGetComponent(newMapEntity, out MapComponent? mapComp))
             mapComp = EntityManager.AddComponent<MapComponent>(newMapEntity);
         else
         {
+            raiseEvent = true;
+
             if (mapComp.WorldMap != mapId)
             {
                 Logger.WarningS("map",
@@ -150,6 +156,14 @@ internal partial class MapManager
         // set as new map entity
         mapComp.WorldMap = mapId;
         _mapEntities[mapId] = newMapEntity;
+
+        // Yeah this sucks but I just want to save maps for now, deal.
+        if (raiseEvent)
+        {
+            OnMapCreatedGridTree(new MapEventArgs(mapId));
+            var ev = new MapChangedEvent(mapId, true);
+            EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
+        }
     }
 
     /// <inheritdoc />

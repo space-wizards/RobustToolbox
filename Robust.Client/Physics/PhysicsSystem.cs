@@ -16,11 +16,10 @@ namespace Robust.Client.Physics
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
-        protected override void HandleMapCreated(MapChangedEvent eventArgs)
+        protected override void OnMapAdded(ref MapAddedEvent eventArgs)
         {
-            if (eventArgs.Map == MapId.Nullspace) return;
-            var mapUid = MapManager.GetMapEntityId(eventArgs.Map);
-            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
+            if (!eventArgs.Entity.IsValid()) return;
+            EnsureComp<PhysicsMapComponent>(eventArgs.Entity);
         }
     }
 }

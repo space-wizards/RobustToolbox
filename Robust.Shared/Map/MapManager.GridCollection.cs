@@ -203,8 +203,10 @@ internal partial class MapManager
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
         return EntityManager.EntityQuery<IMapGridComponent>(true)
-            .Where(c => c.Grid.ParentMapId == mapId)
+            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
             .Select(c => c.Grid);
     }
 

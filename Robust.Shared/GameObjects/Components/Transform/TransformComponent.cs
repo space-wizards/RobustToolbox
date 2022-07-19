@@ -127,9 +127,6 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var oldRotation = _localRotation;
-
-                // Set _nextRotation to null to break any active lerps if this is a client side prediction.
-                _nextRotation = null;
                 _localRotation = value;
                 Dirty(_entMan);
 
@@ -337,6 +334,18 @@ namespace Robust.Shared.GameObjects
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
+
+                    if (newParent.LifeStage > ComponentLifeStage.Running ||
+                        _entMan.GetComponent<MetaDataComponent>(newParent.Owner).EntityLifeStage > EntityLifeStage.MapInitialized)
+                    {
+                        var msg = $"Attempted to re-parent to a terminating object. Entity: {_entMan.ToPrettyString(Owner)}, new parent: {_entMan.ToPrettyString(value.EntityId)}";
+#if EXCEPTION_TOLERANCE
+                        Logger.Error(msg);
+                        _entMan.DeleteEntity(Owner);
+#else
+                        throw new InvalidOperationException(msg);
+#endif
+                    }
 
                     // That's already our parent, don't bother attaching again.
 
@@ -586,6 +595,9 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
+                if (!_mapManager.IsMap(Owner))
+                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
+
                 DetachParentToNull();
                 return;
             }

@@ -260,7 +260,7 @@ namespace Robust.Shared.GameObjects
             // function before a fixtures has been added? I'm not 100% sure how this happens.
             if (!_entMan.TryGetComponent(Owner, out FixturesComponent? fixtures))
                 return bounds;
-                
+
             // TODO cache this to speed up entity lookups & tree updating
             foreach (var fixture in fixtures.Fixtures.Values)
             {

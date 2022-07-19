@@ -44,7 +44,8 @@ namespace Robust.Server.GameStates
 
         private void OnEntityAdd(EntityUid e)
         {
-            DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize);
+            DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize ||
+                _gameTiming.GetType().Name == "IGameTimingProxy");// Look I have NFI how best to excuse this assert if the game timing isn't real (a Mock<IGameTiming>). 
             _addEntities[_currentIndex].Add(e);
         }
 

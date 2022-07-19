@@ -304,10 +304,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+            protected override void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
             {
                 _containerList.Add(toinsert);
-                base.InternalInsert(toinsert, entMan);
+                base.InternalInsert(toinsert, oldParent, entMan);
             }
 
             /// <inheritdoc />

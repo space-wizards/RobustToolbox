@@ -858,6 +858,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<string> DisplayWindowingApi =
+            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

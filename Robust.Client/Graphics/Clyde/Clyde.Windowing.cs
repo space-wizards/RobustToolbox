@@ -106,8 +106,24 @@ namespace Robust.Client.Graphics.Clyde
 
             _windowingThread = Thread.CurrentThread;
 
-            _windowing = new GlfwWindowingImpl(this);
+            var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
+            IWindowingImpl winImpl;
 
+            switch (windowingApi)
+            {
+                case "glfw":
+                    winImpl = new GlfwWindowingImpl(this);
+                    break;
+                case "sdl2":
+                    winImpl = new Sdl2WindowingImpl(this);
+                    break;
+                default:
+                    _logManager.GetSawmill("clyde.win").Log(
+                        LogLevel.Error, "Unknown windowing API: {name}. Falling back to GLFW.", windowingApi);
+                    goto case "glfw";
+            }
+
+            _windowing = winImpl;
             return _windowing.Init();
         }
 

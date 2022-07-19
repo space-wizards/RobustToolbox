@@ -43,8 +43,7 @@ public abstract partial class SharedTransformSystem
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
             new EntityCoordinates(newGrid.Owner, xform._localPosition),
-            xform,
-            _gameTiming.ApplyingState);
+            xform);
         RaiseLocalEvent(xform.Owner, ref movEevee, true);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
@@ -436,7 +435,7 @@ public abstract partial class SharedTransformSystem
 
             if (oldPos != default)
             {
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
+                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component);
                 RaiseLocalEvent(uid, ref ev);
             }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,6 +10,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
         public Stack<MoveEvent> QueuedEvents = new();
@@ -25,7 +27,7 @@ namespace Robust.Shared.GameObjects
         private void OnMove(ref MoveEvent ev)
         {
             // If move event arose from state handling, don't bother to run grid traversal logic.
-            if (ev.FromStateHandling)
+            if (_timing.ApplyingState)
                 return;
 
             if (ev.Component.MapID == MapId.Nullspace)

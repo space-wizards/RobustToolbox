@@ -197,7 +197,9 @@ namespace Robust.Client.Graphics.Clyde
                         ref var color = ref command.Clear.Color;
                         GL.ClearColor(color.R, color.G, color.B, color.A);
                         CheckGlError();
-                        GL.Clear(ClearBufferMask.ColorBufferBit);
+                        GL.ClearStencil(command.Clear.Stencil);
+                        CheckGlError();
+                        GL.Clear(command.Clear.Mask);
                         CheckGlError();
                         break;
 
@@ -380,13 +382,13 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void ClearFramebuffer(Color color)
+        private void ClearFramebuffer(Color color, int stencil = 0, ClearBufferMask mask = ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit)
         {
             GL.ClearColor(color.ConvertOpenTK());
             CheckGlError();
-            GL.ClearStencil(0);
+            GL.ClearStencil(stencil);
             CheckGlError();
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            GL.Clear(mask);
             CheckGlError();
         }
 
@@ -398,8 +400,36 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
+            // Handle stencil parameters.
+            if (instance.Stencil.Enabled)
+            {
+                if (!_isStencilling)
+                {
+                    GL.Enable(EnableCap.StencilTest);
+                    CheckGlError();
+                    _isStencilling = true;
+                }
+
+                GL.StencilMask(instance.Stencil.WriteMask);
+                CheckGlError();
+                GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
+                CheckGlError();
+                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                CheckGlError();
+            }
+            else if (_isStencilling)
+            {
+                GL.Disable(EnableCap.StencilTest);
+                CheckGlError();
+                _isStencilling = false;
+            }
+
+            if (!instance.ParametersDirty)
+                return (program, shader);
+
+            instance.ParametersDirty = false;
+
             int textureUnitVal = 0;
-            // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
                 if (!program.HasUniform(name))
@@ -459,31 +489,6 @@ namespace Robust.Client.Graphics.Clyde
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
                 }
-            }
-
-            // Handle stencil parameters.
-
-            if (instance.Stencil.Enabled)
-            {
-                if (!_isStencilling)
-                {
-                    GL.Enable(EnableCap.StencilTest);
-                    CheckGlError();
-                    _isStencilling = true;
-                }
-
-                GL.StencilMask(instance.Stencil.WriteMask);
-                CheckGlError();
-                GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
-                CheckGlError();
-                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
-                CheckGlError();
-            }
-            else if (_isStencilling)
-            {
-                GL.Disable(EnableCap.StencilTest);
-                CheckGlError();
-                _isStencilling = false;
             }
 
             return (program, shader);
@@ -680,13 +685,15 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShader = handle;
         }
 
-        private void DrawClear(Color color)
+        private void DrawClear(Color color, int stencil, ClearBufferMask mask)
         {
             BreakBatch();
 
             ref var command = ref AllocRenderCommand(RenderCommandType.Clear);
 
             command.Clear.Color = color;
+            command.Clear.Stencil = stencil;
+            command.Clear.Mask = mask;
         }
 
         private void DrawViewport(Box2i viewport)
@@ -928,6 +935,8 @@ namespace Robust.Client.Graphics.Clyde
         private struct RenderCommandClear
         {
             public Color Color;
+            public int Stencil;
+            public ClearBufferMask Mask;
         }
 
         private enum RenderCommandType : byte

@@ -61,7 +61,6 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
 
-            _moveBuffer.Add(MapId.Nullspace, new Dictionary<FixtureProxy, Box2>());
             _logger = Logger.GetSawmill("physics");
             UpdatesOutsidePrediction = true;
 
@@ -849,7 +848,6 @@ namespace Robust.Shared.Physics
         public override void Shutdown()
         {
             base.Shutdown();
-            _moveBuffer.Remove(MapId.Nullspace);
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
         }

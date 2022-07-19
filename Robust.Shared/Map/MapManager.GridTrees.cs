@@ -30,9 +30,6 @@ internal partial class MapManager
 
     private void StartupGridTrees()
     {
-        _gridTrees.Add(MapId.Nullspace, new B2DynamicTree<MapGrid>());
-        _movedGrids.Add(MapId.Nullspace, new HashSet<IMapGrid>());
-
         // Needs to be done on mapmanager startup because the eventbus will clear on shutdown
         // (and mapmanager initialize doesn't run upon connecting to a server every time).
         EntityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
@@ -44,9 +41,6 @@ internal partial class MapManager
 
     private void ShutdownGridTrees()
     {
-        _gridTrees.Remove(MapId.Nullspace);
-        _movedGrids.Remove(MapId.Nullspace);
-
         EntityManager.EventBus.UnsubscribeEvent<GridInitializeEvent>(EventSource.Local, this);
         EntityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();

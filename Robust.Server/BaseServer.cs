@@ -335,7 +335,6 @@ namespace Robust.Server
             _entityManager.Initialize();
             _mapManager.Initialize();
 
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded

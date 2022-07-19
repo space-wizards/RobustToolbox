@@ -1,5 +1,7 @@
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
@@ -147,6 +149,9 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         if (physics.LifeStage != ComponentLifeStage.Running)
+            return;
+
+        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics._canCollide)
             return;
 
         // When transferring bodies, we will preserve map angular and linear velocities. For this purpose, we simply

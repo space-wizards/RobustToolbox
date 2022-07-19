@@ -44,7 +44,8 @@ public abstract partial class SharedTransformSystem
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
             new EntityCoordinates(newGrid.Owner, xform._localPosition),
-            xform);
+            xform,
+            _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref movEevee, true);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
@@ -433,12 +434,14 @@ public abstract partial class SharedTransformSystem
                 rebuildMatrices = true;
             }
 
-            EntityCoordinates oldPos = default;
-
             if (!component.LocalPosition.EqualsApprox(newState.LocalPosition))
             {
-                oldPos = component.Coordinates;
+                var oldPos = component.Coordinates;
                 component._localPosition = newState.LocalPosition;
+
+                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
+                DeferMoveEvent(ref ev);
+
                 rebuildMatrices = true;
             }
 
@@ -471,12 +474,6 @@ public abstract partial class SharedTransformSystem
             if (rebuildMatrices)
             {
                 component.RebuildMatrices();
-            }
-
-            if (oldPos != default)
-            {
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component);
-                RaiseLocalEvent(uid, ref ev);
             }
 
             Dirty(component);

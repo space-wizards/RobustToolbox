@@ -211,18 +211,14 @@ namespace Robust.Client.GameObjects
                 var stream = _playingClydeStreams[validIndices[i]];
                 var pos = stream.MapCoordinatesTemporary;
 
+                if (stream.OcclusionValidTemporary)
+                {
+                    stream.Source.SetOcclusion(stream.OcclusionTemporary);
+                }
+
                 if (pos.MapId != _eyeManager.CurrentMap)
                 {
                     stream.Source.SetVolume(-10000000);
-                }
-                else if (stream.Attenuation == Attenuation.NoAttenuation)
-                {
-                    //TODO: OpenAL supports positional audio together with no attenuation, we should do too.
-                    if (!stream.Source.SetPosition(ourPos))
-                    {
-                        Logger.Warning("Interrupting positional audio, can't set position.");
-                        stream.Source.StopPlaying();
-                    }
                 }
                 else
                 {
@@ -237,19 +233,6 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        var occlusion = 0f;
-                        if (sourceRelative.Length > 0)
-                        {
-                            occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                                pos.MapId,
-                                new CollisionRay(
-                                    pos.Position,
-                                    sourceRelative.Normalized,
-                                    OcclusionCollisionMask),
-                                sourceRelative.Length,
-                                stream.TrackingEntity);
-                        }
-
                         // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
                         // sources that are further away than stream.MaxDistance, we don't do that.
                         var distance = MathF.Max(stream.ReferenceDistance, sourceRelative.Length);
@@ -290,11 +273,11 @@ namespace Robust.Client.GameObjects
                         var actualGain = MathF.Max(0f, volume * gain);
 
                         stream.Source.SetVolumeDirect(actualGain);
-                        stream.Source.SetOcclusion(occlusion);
+                        var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? pos.Position : ourPos;
 
-                        if (!stream.Source.SetPosition(pos.Position))
+                        if (!stream.Source.SetPosition(audioPos))
                         {
-                            Logger.Warning("Interrupting positional audio, can't set position.");
+                            Logger.Warning($"Interrupting positional audio, can't set position.");
                             stream.Source.StopPlaying();
                         }
 

@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -30,6 +31,8 @@ namespace Robust.Shared.GameObjects
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
+
+        // used for lerping
 
         internal Vector2? _nextPosition;
         internal Angle? _nextRotation;
@@ -62,6 +65,9 @@ namespace Robust.Shared.GameObjects
         internal bool _mapIdInitialized;
 
         // TODO: Cache this.
+        /// <summary>
+        ///     The EntityUid of the map which this object is on, if any.
+        /// </summary>
         public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
 
         /// <summary>
@@ -70,31 +76,21 @@ namespace Robust.Shared.GameObjects
         public bool DeferUpdates { get; set; }
 
         /// <summary>
-        ///     Returns the index of the grid which this object is on
+        ///     The EntityUid of the grid which this object is on, if any.
         /// </summary>
         [ViewVariables]
+        public EntityUid? GridUid => _gridUid;
+
+        [Access(typeof(SharedTransformSystem))]
+        internal EntityUid? _gridUid = null;
+
+        [Obsolete("Use GridUid")]
         public GridId GridID
         {
-            get => _gridId;
-            internal set
-            {
-                if (_gridId.Equals(value)) return;
-
-                _gridId = value;
-                var childEnumerator = ChildEnumerator;
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-                while (childEnumerator.MoveNext(out var child))
-                {
-                    xformQuery.GetComponent(child.Value).GridID = value;
-                }
-            }
+            get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)
+                ? grid.GridIndex
+                : GridId.Invalid;
         }
-
-        internal GridId _gridId = GridId.Invalid;
-
-        // TODO: Cache this.
-        public EntityUid? GridUid => _mapManager.TryGetGrid(_gridId, out var mapGrid) ? mapGrid.GridEntityId : null;
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -130,9 +126,6 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var oldRotation = _localRotation;
-
-                // Set _nextRotation to null to break any active lerps if this is a client side prediction.
-                _nextRotation = null;
                 _localRotation = value;
                 Dirty(_entMan);
 
@@ -140,7 +133,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
                 }
                 else
                 {
@@ -233,7 +226,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._localMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
+                    Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -258,7 +251,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform._invLocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
                     myMatrix = result;
                 }
 
@@ -296,10 +289,6 @@ namespace Robust.Shared.GameObjects
 
                 // world coords to parent coords
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
-
-                // float rounding error guard, if the offset is less than 1mm ignore it
-                //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
-                //    return;
 
                 LocalPosition = newPos;
             }
@@ -345,6 +334,18 @@ namespace Robust.Shared.GameObjects
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
 
+                    if (newParent.LifeStage > ComponentLifeStage.Running ||
+                        _entMan.GetComponent<MetaDataComponent>(newParent.Owner).EntityLifeStage > EntityLifeStage.MapInitialized)
+                    {
+                        var msg = $"Attempted to re-parent to a terminating object. Entity: {_entMan.ToPrettyString(Owner)}, new parent: {_entMan.ToPrettyString(value.EntityId)}";
+#if EXCEPTION_TOLERANCE
+                        Logger.Error(msg);
+                        _entMan.DeleteEntity(Owner);
+#else
+                        throw new InvalidOperationException(msg);
+#endif
+                    }
+
                     // That's already our parent, don't bother attaching again.
 
                     var oldParent = _parent.IsValid() ? xformQuery.GetComponent(_parent) : null;
@@ -358,14 +359,14 @@ namespace Robust.Shared.GameObjects
                     ChangeMapId(newParent.MapID, xformQuery);
 
                     // Cache new GridID before raising the event.
-                    GridID = GetGridIndex(xformQuery);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, FindGridEntityId(xformQuery), xformQuery);
 
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
                         LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -384,7 +385,7 @@ namespace Robust.Shared.GameObjects
                         if (!oldPosition.Equals(Coordinates))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
-                            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                         }
                     }
                 }
@@ -419,9 +420,6 @@ namespace Robust.Shared.GameObjects
                 if (_localPosition.EqualsApprox(value))
                     return;
 
-                // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
-                _nextPosition = null;
-
                 var oldGridPos = Coordinates;
                 _localPosition = value;
                 Dirty(_entMan);
@@ -430,7 +428,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
                 else
                 {
@@ -517,24 +515,24 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
-        internal GridId GetGridIndex(EntityQuery<TransformComponent> xformQuery)
+        internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
         {
             if (_entMan.HasComponent<IMapComponent>(Owner))
             {
-                return GridId.Invalid;
+                return null;
             }
 
             if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
             {
-                return gridComponent.GridIndex;
+                return Owner;
             }
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridID;
+                return xformQuery.GetComponent(_parent).GridUid;
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
         }
 
         /// <summary>
@@ -554,14 +552,14 @@ namespace Robust.Shared.GameObjects
             if (_oldCoords != null)
             {
                 var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
                 var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
                 _oldLocalRotation = null;
             }
         }
@@ -596,6 +594,9 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
+                if (!_mapManager.IsMap(Owner))
+                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
+
                 DetachParentToNull();
                 return;
             }
@@ -616,52 +617,10 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
+        [Obsolete("Use transform system")]
         public void DetachParentToNull()
         {
-            var oldParent = _parent;
-
-            // Even though they may already be in nullspace we may want to deparent them anyway
-            if (!oldParent.IsValid())
-            {
-                DebugTools.Assert(!Anchored);
-                return;
-            }
-
-            // Stop any active lerps
-            _nextPosition = null;
-            _nextRotation = null;
-            LerpParent = EntityUid.Invalid;
-
-            // TODO: When ECSing this can just pass it into the anchor setter
-            if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
-            {
-                if (_entMan.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage <=
-                    EntityLifeStage.MapInitialized)
-                {
-                    Anchored = false;
-                }
-            }
-            else
-            {
-                DebugTools.Assert(!Anchored);
-            }
-
-            var oldConcrete = _entMan.GetComponent<TransformComponent>(oldParent);
-            var uid = Owner;
-            oldConcrete._children.Remove(uid);
-
-            _parent = EntityUid.Invalid;
-            var oldMap = MapID;
-            MapID = MapId.Nullspace;
-            GridID = GridId.Invalid;
-
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
-
-            // Does it even make sense to call these since this is called purely from OnRemove right now?
-            // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
-            RebuildMatrices();
-            Dirty(_entMan);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
         }
 
         /// <summary>
@@ -699,7 +658,7 @@ namespace Robust.Shared.GameObjects
             UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
-        private void UpdateChildMapIdsRecursive(
+        internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
             bool mapPaused,
             EntityQuery<TransformComponent> xformQuery,
@@ -763,7 +722,7 @@ namespace Robust.Shared.GameObjects
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
             }
@@ -826,11 +785,11 @@ namespace Robust.Shared.GameObjects
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform._localMatrix;
-                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
                 var parentInvMatrix = xform._invLocalMatrix;
-                Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
+                Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;
@@ -848,7 +807,7 @@ namespace Robust.Shared.GameObjects
             if (!_parent.IsValid()) // Root Node
                 pos = Vector2.Zero;
 
-            var rot = (float) _localRotation.Theta;
+            var rot = (float)_localRotation.Theta;
 
             _localMatrix = Matrix3.CreateTransform(pos.X, pos.Y, rot);
             _invLocalMatrix = Matrix3.CreateInverseTransform(pos.X, pos.Y, rot);
@@ -866,8 +825,8 @@ namespace Robust.Shared.GameObjects
 
             if (issueEvent)
             {
-                var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(this, false);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent, true);
             }
         }
     }
@@ -946,13 +905,19 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct AnchorStateChangedEvent
     {
-        public readonly EntityUid Entity;
-        public readonly bool Anchored;
+        public readonly TransformComponent Transform;
+        public EntityUid Entity => Transform.Owner;
+        public bool Anchored => Transform.Anchored;
 
-        public AnchorStateChangedEvent(EntityUid entity, bool anchored)
+        /// <summary>
+        ///     If true, the entity is being detached to null-space
+        /// </summary>
+        public readonly bool Detaching;
+
+        public AnchorStateChangedEvent(TransformComponent transform, bool detaching)
         {
-            Entity = entity;
-            Anchored = anchored;
+            Detaching = detaching;
+            Transform = transform;
         }
     }
 
@@ -963,19 +928,19 @@ namespace Robust.Shared.GameObjects
     public readonly struct ReAnchorEvent
     {
         public readonly EntityUid Entity;
-        public readonly GridId OldGrid;
-        public readonly GridId GridId;
+        public readonly EntityUid OldGrid;
+        public readonly EntityUid Grid;
 
         /// <summary>
         /// Tile on both the old and new grid being re-anchored.
         /// </summary>
         public readonly Vector2i TilePos;
 
-        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId, Vector2i tilePos)
+        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos)
         {
             Entity = uid;
             OldGrid = oldGrid;
-            GridId = gridId;
+            Grid = grid;
             TilePos = tilePos;
         }
     }

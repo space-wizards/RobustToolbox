@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -10,7 +11,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
-    public interface IMapManager : IPauseManager
+    public interface IMapManager
     {
         /// <summary>
         /// A faster version of <see cref="GetAllGrids"/>
@@ -92,6 +93,7 @@ namespace Robust.Shared.Map
 
         IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
         IMapGrid GetGrid(GridId gridId);
+        IMapGrid GetGrid(EntityUid gridId);
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(GridId gridId);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
@@ -180,7 +182,32 @@ namespace Robust.Shared.Map
         EntityUid GetGridEuid(GridId id);
         IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
-        bool TryGetGrid(EntityUid euid, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists(EntityUid euid);
+        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
+        bool GridExists([NotNullWhen(true)] EntityUid? euid);
+
+        //
+        // Pausing functions
+        //
+
+        void SetMapPaused(MapId mapId, bool paused);
+
+        void DoMapInitialize(MapId mapId);
+
+        void AddUninitializedMap(MapId mapId);
+
+        [Pure]
+        bool IsMapPaused(MapId mapId);
+
+        [Pure]
+        bool IsGridPaused(IMapGrid grid);
+
+        [Pure]
+        bool IsGridPaused(GridId gridId);
+
+        [Pure]
+        bool IsGridPaused(EntityUid gridId);
+
+        [Pure]
+        bool IsMapInitialized(MapId mapId);
     }
 }

@@ -203,9 +203,9 @@ namespace Robust.Shared.IoC
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T>([NotNull] ref T? instance)
         {
-            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-
-            _container.Value!.Resolve(ref instance);
+            // Do not call into IDependencyCollection immediately for this,
+            // avoids thread local lookup if instance is already given.
+            instance ??= Resolve<T>()!;
         }
 
         /// <inheritdoc cref="Resolve{T}(ref T?)"/>

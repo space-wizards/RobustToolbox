@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -9,7 +10,7 @@ namespace Robust.Shared.Maths
     ///     This type contains a <see cref="Box2"/> and a rotation <see cref="Angle"/> in world space.
     /// </summary>
     [Serializable]
-    public struct Box2Rotated : IEquatable<Box2Rotated>
+    public struct Box2Rotated : IEquatable<Box2Rotated>, ISpanFormattable
     {
         public Box2 Box;
         public Angle Rotation;
@@ -28,6 +29,9 @@ namespace Robust.Shared.Maths
         public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
         public readonly Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
+        public readonly Vector2 Centre => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
+
+        public Matrix3 Transform => Matrix3.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight))
@@ -211,7 +215,24 @@ namespace Robust.Shared.Maths
         /// </summary>
         public override readonly string ToString()
         {
-            return $"{Box.ToString()}, {Rotation.ToString()}";
+            return $"{Box}, {Rotation}";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{Box}, {Rotation}");
         }
     }
 }

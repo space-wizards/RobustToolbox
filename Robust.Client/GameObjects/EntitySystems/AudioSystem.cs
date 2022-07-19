@@ -211,74 +211,98 @@ namespace Robust.Client.GameObjects
                 var stream = _playingClydeStreams[validIndices[i]];
                 var pos = stream.MapCoordinatesTemporary;
 
-                // Occlusion apply
-                if (stream.OcclusionValidTemporary)
-                {
-                    stream.Source.SetOcclusion(stream.OcclusionTemporary);
-                }
-
-                // Everything else
-
                 if (pos.MapId != _eyeManager.CurrentMap)
                 {
                     stream.Source.SetVolume(-10000000);
                 }
-                else
+                else if (stream.Attenuation == Attenuation.NoAttenuation)
                 {
-                    var sourceRelative = ourPos - pos.Position;
-
-                    var distance = MathF.Max(stream.ReferenceDistance, MathF.Min(sourceRelative.Length, stream.MaxDistance));
-                    float gain;
-
-                    // Technically these are formulas for gain not decibels but EHHHHHHHH.
-                    switch (stream.Attenuation)
-                    {
-                        case Attenuation.Default:
-                            gain = 1f;
-                            break;
-                        // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
-                        // I didn't even wanna implement this much for linear but figured it'd be cleaner.
-                        case Attenuation.InverseDistanceClamped:
-                        case Attenuation.InverseDistance:
-                            gain = stream.ReferenceDistance /
-                                   (stream.ReferenceDistance + stream.RolloffFactor * (distance - stream.ReferenceDistance));
-
-                            break;
-                        case Attenuation.LinearDistanceClamped:
-                        case Attenuation.LinearDistance:
-                            gain = 1f - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
-                                (stream.MaxDistance - stream.ReferenceDistance);
-
-                            break;
-                        case Attenuation.ExponentDistanceClamped:
-                        case Attenuation.ExponentDistance:
-                            gain = MathF.Pow((distance / stream.ReferenceDistance),
-                                (-stream.RolloffFactor));
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException($"No implemented attenuation for {stream.Attenuation.ToString()}");
-                    }
-
-                    var volume = MathF.Pow(10, stream.Volume / 10);
-                    var actualGain = MathF.Max(0f, volume * gain);
-
-                    stream.Source.SetVolumeDirect(actualGain);
-                }
-
-                SetAudioPos(stream, stream.Attenuation != Attenuation.NoAttenuation ? pos.Position : ourPos);
-
-                void SetAudioPos(PlayingStream stream, Vector2 pos)
-                {
-                    if (!stream.Source.SetPosition(pos))
+                    //TODO: OpenAL supports positional audio together with no attenuation, we should do too.
+                    if (!stream.Source.SetPosition(ourPos))
                     {
                         Logger.Warning("Interrupting positional audio, can't set position.");
                         stream.Source.StopPlaying();
                     }
                 }
-
-                if (stream.TrackingEntity != default)
+                else
                 {
-                    stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
+                    var sourceRelative = ourPos - pos.Position;
+                    // OpenAL uses MaxDistance to limit how much attenuation can *reduce* the gain,
+                    // and doesn't do any culling. We however cull based on MaxDistance, because
+                    // this is what all current code that uses MaxDistance expects and because
+                    // we don't need the OpenAL behaviour.
+                    if (sourceRelative.Length > stream.MaxDistance)
+                    {
+                        stream.Source.SetVolume(-10000000);
+                    }
+                    else
+                    {
+                        var occlusion = 0f;
+                        if (sourceRelative.Length > 0)
+                        {
+                            occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                                pos.MapId,
+                                new CollisionRay(
+                                    pos.Position,
+                                    sourceRelative.Normalized,
+                                    OcclusionCollisionMask),
+                                sourceRelative.Length,
+                                stream.TrackingEntity);
+                        }
+
+                        // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
+                        // sources that are further away than stream.MaxDistance, we don't do that.
+                        var distance = MathF.Max(stream.ReferenceDistance, sourceRelative.Length);
+                        float gain;
+
+                        // Technically these are formulas for gain not decibels but EHHHHHHHH.
+                        switch (stream.Attenuation)
+                        {
+                            case Attenuation.Default:
+                                gain = 1f;
+                                break;
+                            // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
+                            // I didn't even wanna implement this much for linear but figured it'd be cleaner.
+                            case Attenuation.InverseDistanceClamped:
+                            case Attenuation.InverseDistance:
+                                gain = stream.ReferenceDistance /
+                                       (stream.ReferenceDistance + stream.RolloffFactor *
+                                           (distance - stream.ReferenceDistance));
+
+                                break;
+                            case Attenuation.LinearDistanceClamped:
+                            case Attenuation.LinearDistance:
+                                gain = 1f - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
+                                    (stream.MaxDistance - stream.ReferenceDistance);
+
+                                break;
+                            case Attenuation.ExponentDistanceClamped:
+                            case Attenuation.ExponentDistance:
+                                gain = MathF.Pow((distance / stream.ReferenceDistance),
+                                    (-stream.RolloffFactor));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(
+                                    $"No implemented attenuation for {stream.Attenuation.ToString()}");
+                        }
+
+                        var volume = MathF.Pow(10, stream.Volume / 10);
+                        var actualGain = MathF.Max(0f, volume * gain);
+
+                        stream.Source.SetVolumeDirect(actualGain);
+                        stream.Source.SetOcclusion(occlusion);
+
+                        if (!stream.Source.SetPosition(pos.Position))
+                        {
+                            Logger.Warning("Interrupting positional audio, can't set position.");
+                            stream.Source.StopPlaying();
+                        }
+
+                        if (stream.TrackingEntity != default)
+                        {
+                            stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
+                        }
+                    }
                 }
             }
         }
@@ -323,6 +347,7 @@ namespace Robust.Client.GameObjects
 
             source.SetGlobal();
             source.StartPlaying();
+            // These defaults differ from AudioParams.Default
             var playing = new PlayingStream
             {
                 Source = source,
@@ -537,19 +562,21 @@ namespace Robust.Client.GameObjects
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             return Play(filename, audioParams);
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity,
+            AudioParams? audioParams = null)
         {
             return Play(filename, entity, GetFallbackCoordinates(EntityManager.GetComponent<TransformComponent>(entity).MapPosition), audioParams);
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
             return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(_entityManager)), audioParams);
         }

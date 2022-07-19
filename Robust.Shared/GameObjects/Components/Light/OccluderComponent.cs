@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
-                _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this), true);
             }
         }
 
@@ -46,11 +46,11 @@ namespace Robust.Shared.GameObjects
                 _enabled = value;
                 if (_enabled)
                 {
-                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this), true);
                 }
                 else
                 {
-                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this), true);
                 }
 
                 Dirty();

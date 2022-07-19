@@ -1,12 +1,15 @@
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class FpsCounter : Label
     {
         private readonly IGameTiming _gameTiming;
+
+        private readonly char[] _textBuffer = new char[16];
 
         public FpsCounter(IGameTiming gameTiming)
         {
@@ -25,7 +28,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             var fps = _gameTiming.FramesPerSecondAvg;
-            Text = $"FPS: {fps:N0}";
+            TextMemory = FormatHelpers.FormatIntoMem(_textBuffer, $"FPS: {fps:N0}");
         }
     }
 }

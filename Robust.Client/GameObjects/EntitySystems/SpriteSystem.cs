@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
 {
@@ -66,15 +67,15 @@ namespace Robust.Client.GameObjects
             {
                 var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
 
-                comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
+                comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
-                    if (value.IsInert)
+                    if (value.Component.IsInert)
                     {
                         return true;
                     }
 
-                    if (!_manualUpdate.Contains(value))
-                        value.FrameUpdate(state);
+                    if (!_manualUpdate.Contains(value.Component))
+                        value.Component.FrameUpdate(state);
                     return true;
                 }, bounds, true);
             }
@@ -88,6 +89,21 @@ namespace Robust.Client.GameObjects
         public void ForceUpdate(ISpriteComponent sprite)
         {
             _manualUpdate.Add(sprite);
+        }
+    }
+
+    /// <summary>
+    ///     This event gets raised before a sprite gets drawn using it's post-shader.
+    /// </summary>
+    public sealed class BeforePostShaderRenderEvent : EntityEventArgs
+    {
+        public readonly SpriteComponent Sprite;
+        public readonly IClydeViewport Viewport;
+
+        public BeforePostShaderRenderEvent(SpriteComponent sprite, IClydeViewport viewport)
+        {
+            Sprite = sprite;
+            Viewport = viewport;
         }
     }
 }

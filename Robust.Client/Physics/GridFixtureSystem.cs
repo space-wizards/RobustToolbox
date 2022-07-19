@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -19,6 +20,7 @@ namespace Robust.Client.Physics
             {
                 if (_enableDebug == value) return;
 
+                Sawmill.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
                 var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
@@ -55,6 +57,7 @@ namespace Robust.Client.Physics
 
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
+            Sawmill.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;

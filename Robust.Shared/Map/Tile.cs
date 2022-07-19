@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
 
@@ -7,7 +8,7 @@ namespace Robust.Shared.Map;
 ///     This structure contains the data for an individual Tile in a <c>MapGrid</c>.
 /// </summary>
 [PublicAPI, Serializable]
-public readonly struct Tile : IEquatable<Tile>
+public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
 {
     /// <summary>
     ///     Internal type ID of this tile.
@@ -94,6 +95,23 @@ public readonly struct Tile : IEquatable<Tile>
     public override string ToString()
     {
         return $"Tile {TypeId}, {Flags}, {Variant}";
+    }
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+    {
+        return ToString();
+    }
+
+    public bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        return FormatHelpers.TryFormatInto(
+            destination,
+            out charsWritten,
+            $"Tile {TypeId}, {Flags}, {Variant}");
     }
 
     /// <inheritdoc />

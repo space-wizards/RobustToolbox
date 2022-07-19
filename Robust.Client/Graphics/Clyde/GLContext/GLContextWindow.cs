@@ -70,7 +70,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 Clyde._windowing!.GLMakeContextCurrent(Clyde._mainWindow);
-                Clyde._windowing.GLSwapInterval(Clyde._vSync ? 1 : 0);
+                Clyde._windowing.GLSwapInterval(Clyde._mainWindow, Clyde._vSync ? 1 : 0);
             }
 
             public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
@@ -216,10 +216,10 @@ namespace Robust.Client.Graphics.Clyde
                 Clyde._windowing!.WindowSwapBuffers(window.Reg);
             }
 
-            private void BlitThreadInit(WindowData reg)
+            private unsafe void BlitThreadInit(WindowData reg)
             {
                 Clyde._windowing!.GLMakeContextCurrent(reg.Reg);
-                Clyde._windowing.GLSwapInterval(0);
+                Clyde._windowing.GLSwapInterval(reg.Reg, 0);
 
                 Clyde.SetupDebugCallback();
 
@@ -230,10 +230,10 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindVertexArray(vao);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, Clyde.WindowVBO.ObjectHandle);
                 // Vertex Coords
-                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 0);
                 GL.EnableVertexAttribArray(0);
                 // Texture Coords.
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
 
                 var program = Clyde._compileProgram(

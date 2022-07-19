@@ -44,7 +44,7 @@ namespace Robust.Server.GameObjects
 
         EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
-            return AllocEntity(prototypeName, uid);
+            return AllocEntity(prototypeName, out _, uid);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -52,7 +52,7 @@ namespace Robust.Server.GameObjects
             LoadEntity(entity, context);
         }
 
-        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta = null)
+        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
         {
             InitializeEntity(entity, meta);
         }
@@ -79,7 +79,9 @@ namespace Robust.Server.GameObjects
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
                     // And those aren't guaranteed to exist on the client, so don't clear them.
-                    if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+                    var compName = ComponentFactory.GetComponentName(component.GetType());
+                    if (prototype.Components.ContainsKey(compName))
+                        component.ClearTicks();
                 }
             }
 
@@ -144,21 +146,21 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        private void OnEntityRemoved(object? sender, EntityUid e)
+        private void OnEntityRemoved(EntityUid e)
         {
             if (_componentDeletionHistory.ContainsKey(e))
                 _componentDeletionHistory.Remove(e);
         }
 
-        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        private void OnComponentRemoved(RemovedComponentEventArgs e)
         {
-            var reg = ComponentFactory.GetRegistration(e.Component.GetType());
+            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
 
             // We only keep track of networked components being removed.
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.Owner;
+            var uid = e.BaseArgs.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {

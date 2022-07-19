@@ -33,6 +33,11 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// The vertical resize shape. Used when mousing over something that can be vertically resized.
         /// </summary>
-        VResize
+        VResize,
+
+        /// <summary>
+        /// Not a real value
+        /// </summary>
+        CountCursors,
     }
 }

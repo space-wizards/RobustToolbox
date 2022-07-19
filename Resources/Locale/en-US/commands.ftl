@@ -1,5 +1,12 @@
 ﻿### Localization for engine console commands
 
+## generic
+
+cmd-parse-failure-integer = {$arg} is not a valid integer.
+cmd-parse-failure-float = {$arg} is not a valid float.
+cmd-parse-failure-bool = {$arg} is not a valid bool.
+
+
 ## 'help' command
 cmd-help-desc = Display general help or help text for a specific command
 cmd-help-help = Usage: help [command name]
@@ -87,3 +94,61 @@ cmd-exec-help = Usage: exec <fileName>
     Each line in the file is executed as a single command, unless it starts with a #
 
 cmd-exec-arg-filename = <fileName>
+
+## 'dump_net_comps' command
+cmd-dump_net_comps-desc = Prints the table of networked components.
+cmd-dump_net_comps-help = Usage: dump_net-comps
+
+cmd-dump_net_comps-error-writeable = Registration still writeable, network ids have not been generated.
+cmd-dump_net_comps-header = Networked Component Registrations:
+
+## 'dump_event_tables' command
+cmd-dump_event_tables-desc = Prints directed event tables for an entity.
+cmd-dump_event_tables-help = Usage: dump_event_tables <entityUid>
+
+cmd-dump_event_tables-missing-arg-entity = Missing entity argument
+cmd-dump_event_tables-error-entity = Invalid entity
+cmd-dump_event_tables-arg-entity = <entityUid>
+
+## 'monitor' command
+cmd-monitor-desc = Toggles a debug monitor in the F3 menu.
+cmd-monitor-help = Usage: monitor <name>
+    Possible monitors are: { $monitors }
+    You can also use the special values "-all" and "+all" to hide or show all monitors, respectively.
+
+cmd-monitor-arg-monitor = <monitor>
+cmd-monitor-invalid-name = Invalid monitor name
+cmd-monitor-arg-count = Missing monitor argument
+cmd-monitor-minus-all-hint = Hides all monitors
+cmd-monitor-plus-all-hint = Shows all monitors
+
+
+## Mapping commands
+
+cmd-savemap-desc = Serializes a map to disk. Will not save a post-init map unless forced.
+cmd-savemap-help = savemap <MapID> <Path> [force]
+cmd-savemap-not-exist = Target map does not exist.
+cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
+cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
+cmd-savemap-success = Map successfully saved.
+cmd-hint-savemap-id = <MapID>
+cmd-hint-savemap-path = <Path>
+cmd-hint-savemap-force = [bool]
+
+cmd-loadmap-desc = Loads a map from disk into the game.
+cmd-loadmap-help = loadmap <MapID> <Path> [x] [y] [rotation] [consistentUids]
+cmd-loadmap-nullspace = You cannot load into map 0.
+cmd-loadmap-exists = Map {$mapId} already exists.
+cmd-loadmap-success = Map {$mapId} has been loaded from {$path}.
+cmd-loadmap-error = An error occurred while loading map from {$path}.
+cmd-hint-loadmap-x-position = [x-position]
+cmd-hint-loadmap-y-position = [y-position]
+cmd-hint-loadmap-rotation = [rotation]
+cmd-hint-loadmap-uids = [float]
+
+## 'flushcookies' command
+# Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.
+
+cmd-flushcookies-desc = Flush CEF cookie storage to disk
+cmd-flushcookies-help = This ensure cookies are properly saved to disk in the event of unclean shutdowns.
+    Note that the actual operation is asynchronous.

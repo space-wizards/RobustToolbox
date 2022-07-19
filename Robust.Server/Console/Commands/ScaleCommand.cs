@@ -1,4 +1,5 @@
 using System;
+using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -41,17 +42,17 @@ public sealed class ScaleCommand : IConsoleCommand
 
         // Event for content to use
         // We'll just set engine stuff here
-        var @event = new ScaleEntityEvent();
         var entManager = IoCManager.Resolve<IEntityManager>();
+
+        entManager.EnsureComponent<ScaleVisualsComponent>(uid);
+        var @event = new ScaleEntityEvent();
         entManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        if (entManager.TryGetComponent(uid, out AppearanceComponent? appearanceComponent))
-        {
-            if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
-                oldScale = Vector2.One;
+        var appearanceComponent = entManager.EnsureComponent<ServerAppearanceComponent>(uid);
+        if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
+            oldScale = Vector2.One;
 
-            appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
-        }
+        appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
 
         if (entManager.TryGetComponent(uid, out FixturesComponent? manager))
         {

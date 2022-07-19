@@ -53,7 +53,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
 #if EXCEPTION_TOLERANCE
@@ -222,8 +222,12 @@ namespace Robust.Client.GameStates
                     // Disable IsFirstTimePredicted while re-running HandleComponentState here.
                     // Helps with debugging.
                     using var resetArea = _timing.StartPastPredictionArea();
+                    using var _ = _timing.StartStateApplicationArea();
 
                     ResetPredictedEntities(_timing.CurTick);
+
+                    // I hate this..
+                    _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
                 }
 
                 using (_prof.Group("FullRep"))
@@ -295,7 +299,7 @@ namespace Robust.Client.GameStates
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
                 var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-                var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
+                var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
                 var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                                  (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 
@@ -366,6 +370,7 @@ namespace Robust.Client.GameStates
 
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var query = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             foreach (var entity in system.GetDirtyEntities(curTick))
             {
@@ -398,7 +403,9 @@ namespace Robust.Client.GameStates
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
+                    comp.LastModifiedTick = curTick;
                 }
+                query.GetComponent(entity).EntityLastModifiedTick = curTick;
             }
 
             system.Reset();
@@ -446,6 +453,8 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
+            using var _ = _timing.StartStateApplicationArea();
+
             using (_prof.Group("Config"))
             {
                 _config.TickProcessMessages();

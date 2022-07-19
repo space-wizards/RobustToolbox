@@ -2,6 +2,7 @@
 using Robust.Shared.Serialization;
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
-    public readonly struct ScreenCoordinates : IEquatable<ScreenCoordinates>
+    public readonly struct ScreenCoordinates : IEquatable<ScreenCoordinates>, ISpanFormattable
     {
         /// <summary>
         ///     Position on the rendering screen.
@@ -61,6 +62,23 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"({Position.X}, {Position.Y}, W{Window.Value})";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Position.X}, {Position.Y}, W{Window.Value})");
         }
 
         /// <inheritdoc />

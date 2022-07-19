@@ -1,9 +1,9 @@
 ﻿using System;
+using Robust.Shared.Collections;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Client.Profiling;
 

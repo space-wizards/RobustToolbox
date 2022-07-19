@@ -52,7 +52,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         {
                             ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
                             SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
-                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping
+                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                            _ => throw new InvalidOperationException()
                         })
                     {
                         result = serializationManager.ReadWithTypeSerializer(type,
@@ -79,7 +80,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate()
+        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -100,7 +101,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     if (fieldDefinition.Attribute.ServerOnly &&
-                        !IoCManager.Resolve<INetManager>().IsServer)
+                        !collection.Resolve<INetManager>().IsServer)
                     {
                         continue;
                     }

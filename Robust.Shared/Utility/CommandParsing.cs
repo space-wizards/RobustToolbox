@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Robust.Shared.Utility.Collections;
+using Robust.Shared.Collections;
 
 namespace Robust.Shared.Utility
 {

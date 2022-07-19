@@ -135,13 +135,13 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
             CheckGlError();
 
-            var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
+            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
@@ -203,14 +203,12 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateOnGridCreated(GridStartupEvent ev)
         {
             var gridId = ev.GridId;
-            Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
             var gridId = ev.GridId;
-            Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
 
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)

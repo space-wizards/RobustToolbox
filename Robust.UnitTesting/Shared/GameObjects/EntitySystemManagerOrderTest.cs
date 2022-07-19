@@ -11,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -70,6 +71,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var deps = new DependencyCollection();
             deps.Register<IRuntimeLog, RuntimeLog>();
             deps.Register<ILogManager, LogManager>();
+            deps.Register<IGameTiming, GameTiming>();
             deps.Register<IConfigurationManager, ConfigurationManager>();
             deps.Register<ProfManager, ProfManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();

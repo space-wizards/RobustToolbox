@@ -14,13 +14,11 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
+        [Dependency] private readonly MetaDataSystem _metaSys = default!;
 
         // Needed on release no remove.
         // ReSharper disable once NotAccessedField.Local
         private ISawmill _logger = default!;
-
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
 
         public override void Initialize()
         {
@@ -71,46 +69,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev);
-                }
-            }
-        }
-
         public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
         {
             // If they're parented directly to the map or grid then just return the coordinates.
-            if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+            if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
             {
                 var mapUid = _mapManager.GetMapEntityId(xform.MapID);
                 var coordinates = xform.Coordinates;
@@ -176,11 +138,11 @@ namespace Robust.Shared.GameObjects
                 return Vector2i.Zero;
 
             // Fast path, we're not on a grid.
-            if (xform.GridID == GridId.Invalid)
+            if (xform.GridUid == null)
                 return (Vector2i) xform.WorldPosition;
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.GetGrid(xform.GridID).CoordinatesToTile(xform.Coordinates);
+            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
         }
     }
 

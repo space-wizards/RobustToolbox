@@ -1,7 +1,9 @@
-﻿using Robust.Client.WebView;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Client.WebView;
 using Robust.Client.WebView.Cef;
 using Robust.Client.WebView.Headless;
 using Robust.Client.WebViewHook;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -16,6 +18,9 @@ namespace Robust.Client.WebView
         public void Initialize(GameController.DisplayMode mode)
         {
             DebugTools.Assert(_impl == null, "WebViewManager has already been initialized!");
+
+            var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+            cfg.LoadCVarsFromAssembly(typeof(WebViewManager).Assembly);
 
             IoCManager.RegisterInstance<IWebViewManager>(this);
             IoCManager.RegisterInstance<IWebViewManagerInternal>(this);
@@ -47,6 +52,20 @@ namespace Robust.Client.WebView
             DebugTools.Assert(_impl != null, "WebViewManager has not yet been initialized!");
 
             return _impl!.CreateBrowserWindow(createParams);
+        }
+
+        public void SetResourceMimeType(string extension, string mimeType)
+        {
+            DebugTools.Assert(_impl != null, "WebViewManager has not yet been initialized!");
+
+            _impl!.SetResourceMimeType(extension, mimeType);
+        }
+
+        public bool TryGetResourceMimeType(string extension, [NotNullWhen(true)] out string? mimeType)
+        {
+            DebugTools.Assert(_impl != null, "WebViewManager has not yet been initialized!");
+
+            return _impl!.TryGetResourceMimeType(extension, out mimeType);
         }
 
         public IWebViewControlImpl MakeControlImpl(WebViewControl owner)

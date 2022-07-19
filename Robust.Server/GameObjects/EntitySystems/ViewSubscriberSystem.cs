@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects
             viewSubscriber.SubscribedSessions.Add(session);
             session.AddViewSubscription(uid);
 
-            RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(uid, session));
+            RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(uid, session), true);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Robust.Server.GameObjects
                 return; // Session wasn't subscribed, do nothing.
 
             session.RemoveViewSubscription(uid);
-            RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session));
+            RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session), true);
         }
 
         private void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ComponentShutdown _)

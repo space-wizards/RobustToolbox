@@ -90,7 +90,7 @@ namespace Robust.Server.GameObjects
             message.UiKey = msg.UiKey;
 
             // Raise as object so the correct type is used.
-            RaiseLocalEvent(uid, (object)message);
+            RaiseLocalEvent(uid, (object)message, true);
 
             // Once we have populated our message's wrapped message, we will wrap it up into a message that can be sent
             // to old component-code.

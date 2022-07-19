@@ -66,7 +66,7 @@ internal sealed class ClientDirtySystem : EntitySystem
         return _dirty;
     }
 
-    private void OnEntityDirty(object? sender, EntityUid e)
+    private void OnEntityDirty(EntityUid e)
     {
         if (e.IsClientSide()) return;
 

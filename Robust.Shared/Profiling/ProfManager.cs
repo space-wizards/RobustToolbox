@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Collections;
 
 namespace Robust.Shared.Profiling;
 

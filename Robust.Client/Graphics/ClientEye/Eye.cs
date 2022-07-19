@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Map;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -56,27 +56,33 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public void GetViewMatrix(out Matrix3 viewMatrix, Vector2 renderScale)
         {
-            var scaleMat = Matrix3.CreateScale(_scale.X * renderScale.X, _scale.Y * renderScale.Y);
-            var rotMat = Matrix3.CreateRotation(_rotation);
-            var transMat = Matrix3.CreateTranslation(-_coords.Position - Offset);
-
-            viewMatrix = transMat * rotMat * scaleMat;
+            viewMatrix = Matrix3.CreateInverseTransform(
+                _coords.Position.X + Offset.X,
+                _coords.Position.Y + Offset.Y,
+                (float)-Rotation.Theta,
+                1 / (_scale.X * renderScale.X),
+                1 / (_scale.Y * renderScale.Y));
         }
 
         public void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale)
         {
-            var scaleMat = Matrix3.CreateScale(_scale.X * renderScale.X, _scale.Y * renderScale.Y);
-            var rotMat = Matrix3.CreateRotation(_rotation);
-            var transMat = Matrix3.CreateTranslation(-_coords.Position);
-
-            viewMatrix = transMat * rotMat * scaleMat;
+            viewMatrix = Matrix3.CreateInverseTransform(
+                _coords.Position.X,
+                _coords.Position.Y,
+                (float)-Rotation.Theta,
+                1 / (_scale.X * renderScale.X),
+                1 / (_scale.Y * renderScale.Y));
         }
 
         /// <inheritdoc />
         public void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale)
         {
-            GetViewMatrix(out var viewMatrix, renderScale);
-            viewMatrixInv = Matrix3.Invert(viewMatrix);
+            viewMatrixInv = Matrix3.CreateTransform(
+                _coords.Position.X + Offset.X,
+                _coords.Position.Y + Offset.Y,
+                (float)-Rotation.Theta,
+                1 / (_scale.X * renderScale.X),
+                1 / (_scale.Y * renderScale.Y));
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -48,6 +49,8 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
+        [Dependency] private readonly SharedContainerSystem Container = default!;
+
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();
@@ -373,9 +376,20 @@ namespace Robust.Shared.Physics
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!TryComp<JointComponent>(body.Owner, out var joint)) return;
+            if (TryComp<JointComponent>(body.Owner, out var joint))
+                ClearJoints(joint);
+        }
 
-            _dirtyJoints.Add(joint);
+        public void ClearJoints(JointComponent joint)
+        {
+            // TODO PERFORMANCE
+            // This will re-fetch the joint & body component for this entity ( & ever connected
+            // entity), for each and every joint. at the very least, we could pass in the joint & physics comp. As long
+            // as most entities only have a single joint, fetching connected components probably isn't worth it.
+            foreach (var a in joint.Joints.Values.ToArray())
+            {
+                RemoveJoint(a);
+            }
         }
 
         public void RemoveJoint(Joint joint)
@@ -409,14 +423,16 @@ namespace Robust.Shared.Physics
 
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !Container.IsEntityInContainer(bodyAUid))
             {
                 bodyA.CanCollide = true;
                 bodyA.Awake = true;
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !Container.IsEntityInContainer(bodyBUid))
             {
                 bodyB.CanCollide = true;
                 bodyB.Awake = true;
@@ -441,11 +457,22 @@ namespace Robust.Shared.Physics
                 FilterContactsForJoint(joint);
             }
 
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            if (bodyA == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyAUid)} without a physics component?");
+            }
+            else if (bodyB == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyBUid)} without a physics component?");
+            }
+            else
+            {
+                var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            }
 
             // We can't just check up front due to how prediction works.
             _dirtyJoints.Add(jointComponentA);

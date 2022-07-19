@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Configuration
 {
@@ -11,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Configuration
         [Test]
         public void TestSubscribeUnsubscribe()
         {
-            var mgr = new ConfigurationManager();
+            var mgr = MakeCfg();
 
             mgr.RegisterCVar("foo.bar", 5);
 
@@ -39,7 +41,7 @@ namespace Robust.UnitTesting.Shared.Configuration
         [Test]
         public void TestOverrideDefaultValue()
         {
-            var mgr = new ConfigurationManager();
+            var mgr = MakeCfg();
             mgr.RegisterCVar("foo.bar", 5);
 
             var value = 0;
@@ -62,6 +64,16 @@ namespace Robust.UnitTesting.Shared.Configuration
 
             Assert.That(value, Is.EqualTo(7));
             Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
+        }
+
+        private ConfigurationManager MakeCfg()
+        {
+            var collection = new DependencyCollection();
+            collection.Register<ConfigurationManager, ConfigurationManager>();
+            collection.Register<IGameTiming, GameTiming>();
+            collection.BuildGraph();
+
+            return collection.Resolve<ConfigurationManager>();
         }
     }
 }

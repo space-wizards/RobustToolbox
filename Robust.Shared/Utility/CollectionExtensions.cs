@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
@@ -183,6 +184,17 @@ namespace Robust.Shared.Utility
             }
 
             return value;
+        }
+
+        public static TValue GetOrNew<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key)
+            where TValue : new()
+            where TKey : notnull
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var exists);
+            if (!exists)
+                entry = new TValue();
+
+            return entry!;
         }
 
         // More efficient than LINQ.

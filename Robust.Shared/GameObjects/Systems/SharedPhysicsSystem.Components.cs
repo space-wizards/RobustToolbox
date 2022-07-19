@@ -1,37 +1,50 @@
 using System;
+using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class SharedPhysicsSystem
 {
+    [Dependency] private readonly CollisionWakeSystem _collisionWakeSystem = default!;
+    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
+    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+
     private void OnPhysicsInit(EntityUid uid, PhysicsComponent component, ComponentInit args)
     {
         var xform = Transform(uid);
 
+        if (component.CanCollide && _containerSystem.IsEntityInContainer(uid))
+        {
+            SetCanCollide(component, false, false);
+        }
+
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
+            bool awake;
+            component._awake = false;
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
-            physicsMap.AddBody(component);
 
             if (component.BodyType != BodyType.Static &&
                 (physicsMap.Gravity != Vector2.Zero ||
                  !component.LinearVelocity.Equals(Vector2.Zero) ||
                  !component.AngularVelocity.Equals(0f)))
             {
-                component._awake = true;
+                awake = true;
             }
             else
             {
-                component._awake = false;
+                awake = false;
             }
 
-            if (component._awake)
-                physicsMap.AddAwakeBody(component);
+            if (awake)
+                component.Awake = true;
         }
         else
         {
@@ -39,15 +52,23 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        var startup = new PhysicsInitializedEvent(uid);
-        EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
+        OnPhysicsInitialized(uid);
 
         // Issue the event for stuff that needs it.
         if (component._canCollide)
         {
-            component._canCollide = false;
-            component.CanCollide = true;
+            var ev = new CollisionChangeEvent(component, true);
+            RaiseLocalEvent(ref ev);
         }
+    }
+
+    private void OnPhysicsInitialized(EntityUid uid)
+    {
+        if (EntityManager.TryGetComponent(uid, out CollisionWakeComponent? wakeComp))
+        {
+            _collisionWakeSystem.OnPhysicsInit(uid, wakeComp);
+        }
+        _fixtureSystem.OnPhysicsInit(uid);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -82,19 +103,66 @@ public partial class SharedPhysicsSystem
         component.Predict = false;
     }
 
-    public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity)
+    /// <summary>
+    /// Attempts to set the body to collidable, wake it, then move it.
+    /// </summary>
+    /// <param name="body"></param>
+    /// <param name="velocity"></param>
+    public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity, bool dirty = true)
     {
-        if (body.BodyType == BodyType.Static ||
-            !body.CanCollide) return;
+        if (body.BodyType == BodyType.Static) return;
 
         if (Vector2.Dot(velocity, velocity) > 0.0f)
-            body.Awake = true;
+            body.WakeBody();
 
-        if (body._linearVelocity.EqualsApprox(velocity, 0.0001f))
+        if (!body.CanCollide ||
+            body._linearVelocity.EqualsApprox(velocity, 0.0001f))
             return;
 
         body._linearVelocity = velocity;
-        Dirty(body);
+
+        if (dirty)
+            Dirty(body);
+    }
+
+    public void SetAngularVelocity(PhysicsComponent body, float value, bool dirty = true)
+    {
+        if (body.BodyType == BodyType.Static)
+            return;
+
+        if (value * value > 0.0f)
+            body.Awake = true;
+
+        // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
+        // sleep-tolerance can damp down to sleeping.
+
+        if (MathHelper.CloseToPercent(body._angularVelocity, value, 0.00001f))
+            return;
+
+        body._angularVelocity = value;
+
+        if (dirty)
+            Dirty(body);
+    }
+
+    public void SetCanCollide(PhysicsComponent body, bool value, bool dirty = true)
+    {
+        if (body._canCollide == value)
+            return;
+
+        // If we're recursively in a container then never set this.
+        if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
+            return;
+
+        if (!value)
+            body.Awake = false;
+
+        body._canCollide = value;
+        var ev = new CollisionChangeEvent(body, value);
+        RaiseLocalEvent(ref ev);
+
+        if (dirty)
+            Dirty(body);
     }
 
     public Box2 GetWorldAABB(PhysicsComponent body, TransformComponent xform, EntityQuery<TransformComponent> xforms, EntityQuery<FixturesComponent> fixtures)
@@ -115,6 +183,39 @@ public partial class SharedPhysicsSystem
         }
 
         return bounds;
+    }
+
+    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null, TransformComponent? xform = null)
+    {
+        if (body.Contacts.Count == 0) return;
+
+        xform ??= Transform(body.Owner);
+        mapId ??= xform.MapID;
+
+        if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
+        {
+            DebugTools.Assert("Attempted to destroy contacts, but entity has no physics map!");
+            return;
+        }
+
+        DestroyContacts(body, map);
+    }
+
+    public void DestroyContacts(PhysicsComponent body, SharedPhysicsMapComponent physMap)
+    {
+        if (body.Contacts.Count == 0) return;
+
+        var node = body.Contacts.First;
+
+        while (node != null)
+        {
+            var contact = node.Value;
+            node = node.Next;
+            // Destroy last so the linked-list doesn't get touched.
+            physMap.ContactManager.Destroy(contact);
+        }
+
+        DebugTools.Assert(body.Contacts.Count == 0);
     }
 
     public Box2 GetHardAABB(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)

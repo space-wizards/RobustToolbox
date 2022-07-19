@@ -361,7 +361,17 @@ namespace Robust.UnitTesting
             {
                 while (_isAlive && _currentTicksId != _ackTicksId)
                 {
-                    var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
+                    object msg = default!;
+                    try
+                    {
+                        msg = await _fromInstanceReader.ReadAsync(cancellationToken);
+                    }
+                    catch(OperationCanceledException ex)
+                    {
+                        _unhandledException = ex;
+                        _isAlive = false;
+                        break;
+                    }
                     switch (msg)
                     {
                         case ShutDownMessage shutDownMessage:
@@ -475,6 +485,7 @@ namespace Robust.UnitTesting
                 // Won't get ack'd directly but the shutdown is convincing enough.
                 _currentTicksId += 1;
                 _toInstanceWriter.TryWrite(new StopMessage());
+                _toInstanceWriter.TryComplete();
             }
 
             /// <summary>
@@ -526,7 +537,7 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            internal ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
+            public ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
                 ServerOptions = options;
                 DependencyCollection = new DependencyCollection();
@@ -654,7 +665,7 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            internal ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
+            public ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
             {
                 ClientOptions = options;
                 DependencyCollection = new DependencyCollection();
@@ -706,7 +717,8 @@ namespace Robust.UnitTesting
                 {
                     var client = Init();
                     GameLoop.Run();
-                    client.Cleanup();
+                    client.CleanupGameThread();
+                    client.CleanupWindowThread();
                 }
                 catch (Exception e)
                 {
@@ -838,8 +850,12 @@ namespace Robust.UnitTesting
 
                 while (Running)
                 {
-                    _channelReader.WaitToReadAsync().AsTask().Wait();
-
+                    var readerNotDone = _channelReader.WaitToReadAsync().AsTask().GetAwaiter().GetResult();
+                    if (!readerNotDone)
+                    {
+                        Running = false;
+                        return;
+                    }
                     SingleThreadRunUntilEmpty();
                 }
             }

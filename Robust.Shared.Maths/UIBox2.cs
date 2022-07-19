@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct UIBox2 : IEquatable<UIBox2>
+    public struct UIBox2 : IEquatable<UIBox2>, ISpanFormattable
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
@@ -180,6 +181,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Top}, {Right}, {Bottom})");
         }
     }
 }

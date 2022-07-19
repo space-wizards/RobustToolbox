@@ -116,6 +116,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
+            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
@@ -245,6 +246,19 @@ namespace Robust.Client.UserInterface
 
         public void FrameUpdate(FrameEventArgs args)
         {
+            using (_prof.Group("Update"))
+            {
+                foreach (var root in _roots)
+                {
+                    using (_prof.Group("Root"))
+                    {
+                        var totalUpdated = root.DoFrameUpdateRecursive(args);
+
+                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
+                    }
+                }
+            }
+
             // Process queued style & layout updates.
             using (_prof.Group("Style"))
             {
@@ -295,19 +309,6 @@ namespace Robust.Client.UserInterface
                 }
 
                 _prof.WriteValue("Total", ProfData.Int32(total));
-            }
-
-            using (_prof.Group("Update"))
-            {
-                foreach (var root in _roots)
-                {
-                    using (_prof.Group("Root"))
-                    {
-                        var totalUpdated = root.DoFrameUpdateRecursive(args);
-
-                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
-                    }
-                }
             }
 
             // count down tooltip delay if we're not showing one yet and

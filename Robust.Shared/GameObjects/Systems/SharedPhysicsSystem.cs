@@ -60,7 +60,12 @@ namespace Robust.Shared.GameObjects
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
 
-            SubscribeLocalEvent<MapAddedEvent>(OnMapAdded);
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    OnMapAdded(ref ev);
+            });
+
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
@@ -268,7 +273,7 @@ namespace Robust.Shared.GameObjects
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
-        protected abstract void OnMapAdded(ref MapAddedEvent eventArgs);
+        protected abstract void OnMapAdded(ref MapChangedEvent eventArgs);
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {

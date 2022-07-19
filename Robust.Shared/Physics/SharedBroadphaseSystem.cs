@@ -41,12 +41,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
         /// </summary>
-        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new()
-        {
-            {
-                MapId.Nullspace, new Dictionary<FixtureProxy, Box2>()
-            }
-        };
+        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
@@ -66,13 +61,14 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
 
+            _moveBuffer.Add(MapId.Nullspace, new Dictionary<FixtureProxy, Box2>());
             _logger = Logger.GetSawmill("physics");
             UpdatesOutsidePrediction = true;
 
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
-            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
 
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
@@ -853,6 +849,7 @@ namespace Robust.Shared.Physics
         public override void Shutdown()
         {
             base.Shutdown();
+            _moveBuffer.Remove(MapId.Nullspace);
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
         }
@@ -872,9 +869,9 @@ namespace Robust.Shared.Physics
             _moveBuffer.Remove(e.Map);
         }
 
-        private void OnGridAdd(GridAddEvent ev)
+        private void OnGridAdd(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
+            EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)

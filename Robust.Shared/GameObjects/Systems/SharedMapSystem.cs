@@ -15,7 +15,6 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
             SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
 
@@ -23,12 +22,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
-        }
-
-        private void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
-        {
-            var ev = new MapAddedEvent(uid);
-            RaiseLocalEvent(uid, ref ev, true);
         }
 
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
@@ -97,20 +90,6 @@ namespace Robust.Shared.GameObjects
         ///     The map is being destroyed (not <see cref="Created"/>).
         /// </summary>
         public bool Destroyed => !Created;
-    }
-
-    /// <summary>
-    /// Raised on a map whenever it is added.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct MapAddedEvent
-    {
-        public readonly EntityUid Entity;
-
-        public MapAddedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
     }
 
     public sealed class GridStartupEvent : EntityEventArgs

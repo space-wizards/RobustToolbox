@@ -558,6 +558,23 @@ public partial class EntitySystem
     }
     #endregion
 
+    #region Component count
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count<T>() where T : Component
+    {
+        return EntityManager.Count<T>();
+    }
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count(Type type)
+    {
+        return EntityManager.Count(type);
+    }
+
+    #endregion
 
     #region Component Remove
 

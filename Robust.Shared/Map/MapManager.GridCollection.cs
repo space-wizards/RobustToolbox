@@ -7,6 +7,9 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
+// All the obsolete warnings about GridId are probably useless here.
+#pragma warning disable CS0618
+
 namespace Robust.Shared.Map;
 
 /// <summary>
@@ -135,9 +138,20 @@ internal partial class MapManager
         }
     }
 
+    // ReSharper disable once MethodOverloadWithOptionalParameter
     public IMapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId = null, ushort chunkSize = 16)
     {
         return CreateGrid(currentMapId, forcedGridId, chunkSize, default);
+    }
+
+    public IMapGrid CreateGrid(MapId currentMapId, in GridCreateOptions options)
+    {
+        return CreateGrid(currentMapId, null, options.ChunkSize, default);
+    }
+
+    public IMapGrid CreateGrid(MapId currentMapId)
+    {
+        return CreateGrid(currentMapId, GridCreateOptions.Default);
     }
 
     public IMapGrid GetGrid(GridId gridId)
@@ -172,6 +186,7 @@ internal partial class MapManager
         return false;
     }
 
+    [Obsolete("Use EntityUids")]
     public bool TryGetGrid(GridId gridId, [MaybeNullWhen(false)] out IMapGrid grid)
     {
         // grid 0 compatibility
@@ -190,6 +205,7 @@ internal partial class MapManager
         return TryGetGrid(euid, out grid);
     }
 
+    [Obsolete("Use EntityUids")]
     public bool GridExists(GridId gridId)
     {
         // grid 0 compatibility
@@ -213,6 +229,7 @@ internal partial class MapManager
         enumerator = new FindGridsEnumerator(EntityManager, GetAllGrids().Cast<MapGrid>().GetEnumerator(), mapId, worldAabb, approx);
     }
 
+    [Obsolete("Delete the grid's entity instead")]
     public virtual void DeleteGrid(GridId gridId)
     {
 #if DEBUG

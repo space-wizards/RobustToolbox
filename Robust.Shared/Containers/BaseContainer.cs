@@ -68,18 +68,27 @@ namespace Robust.Shared.Containers
                 return false;
 
             transform ??= entMan.GetComponent<TransformComponent>(toinsert);
+            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
 
-            // CanInsert already checks nullability of Parent (or container forgot to call base that does)
-            if (toinsert.TryGetContainerMan(out var containerManager, entMan) && !containerManager.Remove(toinsert))
-                return false; // Can't remove from existing container, can't insert.
+            // remove from any old containers.
+            if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                entMan.TryGetComponent(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
+                oldManager.TryGetContainer(toinsert, out var oldContainer) &&
+                !oldContainer.Remove(toinsert, entMan, transform, meta, false))
+            {
+                // failed to remove from container --> cannot insert.
+                return false;
+            }
 
             // Update metadata first, so that parent change events can check IsInContainer.
-            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
             meta.Flags |= MetaDataFlags.InContainer;
 
             ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
             transform.AttachParent(ownerTransform);
             InternalInsert(toinsert, entMan);
+
+            // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -132,7 +141,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null)
+        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -144,8 +153,12 @@ namespace Robust.Shared.Containers
             if (!CanRemove(toremove, entMan)) return false;
             InternalRemove(toremove, entMan, meta);
 
-            xform ??= entMan.GetComponent<TransformComponent>(toremove);
-            xform.AttachParentToContainerOrGrid(entMan);
+            if (reparent)
+            {
+                xform ??= entMan.GetComponent<TransformComponent>(toremove);
+                xform.AttachParentToContainerOrGrid(entMan);
+            }
+
             return true;
         }
 

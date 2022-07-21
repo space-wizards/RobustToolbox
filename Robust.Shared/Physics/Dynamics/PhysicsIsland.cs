@@ -166,7 +166,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
-        private Joint[] _joints = Array.Empty<Joint>();
+        private (Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)[] _joints = Array.Empty<(Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)>();
 
         private List<(Joint Joint, float ErrorSquared)> _brokenJoints = new();
 
@@ -251,9 +251,12 @@ stored in a single array since multiple arrays lead to multiple misses.
                 Add(contact);
             }
 
+            var query = _entityManager.GetEntityQuery<PhysicsComponent>();
             foreach (var joint in joints)
             {
-                Add(joint);
+                var bodyA = query.GetComponent(joint.BodyAUid);
+                var bodyB = query.GetComponent(joint.BodyBUid);
+                Add((joint, bodyA, bodyB));
             }
         }
 
@@ -268,7 +271,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _contacts[ContactCount++] = contact;
         }
 
-        public void Add(Joint joint)
+        public void Add((Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB) joint)
         {
             _joints[JointCount++] = joint;
         }
@@ -391,9 +394,9 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             for (var i = 0; i < JointCount; i++)
             {
-                var joint = _joints[i];
+                var (joint, bodyA, bodyB) = _joints[i];
                 if (!joint.Enabled) continue;
-                joint.InitVelocityConstraints(SolverData);
+                joint.InitVelocityConstraints(SolverData, bodyA, bodyB);
             }
 
             // Velocity solver
@@ -401,7 +404,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 for (var j = 0; j < JointCount; ++j)
                 {
-                    Joint joint = _joints[j];
+                    Joint joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;
@@ -462,7 +465,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 for (int j = 0; j < JointCount; ++j)
                 {
-                    var joint = _joints[j];
+                    var joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;

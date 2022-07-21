@@ -54,7 +54,7 @@ namespace Robust.Shared.Physics
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();
-        private HashSet<Joint> _addedJoints = new();
+        protected HashSet<Joint> AddedJoints = new();
 
         private ISawmill _sawmill = default!;
 
@@ -74,8 +74,10 @@ namespace Robust.Shared.Physics
         {
             foreach (var (_, joint) in component.Joints)
             {
-                var bodyA = EntityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
-                var bodyB = EntityManager.GetComponent<PhysicsComponent>(joint.BodyBUid);
+                // Client may not yet know about the other entity.
+                // But whenever that other entity enters PVS, its own joint initialization should hopefully run this again anyways.
+                if (!TryComp(joint.BodyAUid, out PhysicsComponent? bodyA) || !TryComp(joint.BodyBUid, out PhysicsComponent? bodyB))
+                    continue;
 
                 bodyA.WakeBody();
                 bodyB.WakeBody();
@@ -112,12 +114,12 @@ namespace Robust.Shared.Physics
         {
             base.Update(frameTime);
 
-            foreach (var joint in _addedJoints)
+            foreach (var joint in AddedJoints)
             {
                 InitJoint(joint);
             }
 
-            _addedJoints.Clear();
+            AddedJoints.Clear();
 
             foreach (var joint in _dirtyJoints)
             {
@@ -132,6 +134,8 @@ namespace Robust.Shared.Physics
         {
             var aUid = joint.BodyAUid;
             var bUid = joint.BodyBUid;
+
+            DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
 
             if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
                 !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
@@ -167,7 +171,7 @@ namespace Robust.Shared.Physics
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)
             {
-                FilterContactsForJoint(joint);
+                FilterContactsForJoint(joint, bodyA, bodyB);
             }
 
             bodyA.CanCollide = true;
@@ -208,7 +212,7 @@ namespace Robust.Shared.Physics
             anchorA ??= Vector2.Zero;
             anchorB ??= Vector2.Zero;
 
-            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
+            var joint = new DistanceJoint(Comp<PhysicsComponent>(bodyA), Comp<PhysicsComponent>(bodyB), anchorA.Value, anchorB.Value);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -348,10 +352,13 @@ namespace Robust.Shared.Physics
 
         #region Joints
 
-        protected void AddJoint(Joint joint)
+        protected void AddJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+                return;
+
+            if (!joint.CollideConnected)
+                FilterContactsForJoint(joint, bodyA, bodyB);
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
             var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
@@ -371,7 +378,7 @@ namespace Robust.Shared.Physics
             }
 
             // Need to defer this for prediction reasons, yay!
-            _addedJoints.Add(joint);
+            AddedJoints.Add(joint);
         }
 
         public void ClearJoints(PhysicsComponent body)
@@ -481,10 +488,10 @@ namespace Robust.Shared.Physics
 
         #endregion
 
-        internal void FilterContactsForJoint(Joint joint)
+        internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+                return;
 
             var node = bodyB.Contacts.First;
 

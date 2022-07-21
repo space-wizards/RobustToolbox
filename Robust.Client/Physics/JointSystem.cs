@@ -16,6 +16,7 @@ namespace Robust.Client.Physics
 
         private void HandleComponentState(EntityUid uid, JointComponent component, ref ComponentHandleState args)
         {
+            if (!component.Initialized) return;
             if (args.Current is not JointComponent.JointComponentState jointState) return;
 
             var changed = new List<string>();

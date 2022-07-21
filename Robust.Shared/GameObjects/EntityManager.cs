@@ -190,6 +190,10 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
+
+            if (coordinates.MapId == MapId.Nullspace)
+                return newEntity;
+
             var transform = GetComponent<TransformComponent>(newEntity);
             transform.AttachParent(_mapManager.GetMapEntityId(coordinates.MapId));
 

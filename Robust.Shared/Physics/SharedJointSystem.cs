@@ -135,10 +135,10 @@ namespace Robust.Shared.Physics
             var aUid = joint.BodyAUid;
             var bUid = joint.BodyBUid;
 
-            DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
-
             if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
                 !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+
+            DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
 
             var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
             var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);

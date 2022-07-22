@@ -8,7 +8,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface;
 
-
 // ReSharper disable MemberCanBePrivate.Global
 [PublicAPI]
 public abstract class UIScreen : LayoutContainer

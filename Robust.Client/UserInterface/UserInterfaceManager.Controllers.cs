@@ -11,13 +11,19 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
+/// <summary>
+///     Attribute applied to EntitySystem-typed fields inside UIControllers that should be
+///     injected when the system becomes available.
+/// </summary>
 public sealed class UISystemDependency : Attribute {}
 
-[Virtual] //Notices your UIController, *UwU Whats this?*
+//Notices your UIController, *UwU Whats this?*
 public abstract class UIController
 {
     [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
     public virtual void FrameUpdate(FrameEventArgs args) {}
+
+    public virtual void Initialize() {}
 
     // TODO HUD REFACTOR BEFORE MERGE make these two methods less ass to use
     public virtual void OnSystemLoaded(IEntitySystem system) {}
@@ -223,6 +229,11 @@ internal partial class UserInterfaceManager
         _systemManager.SystemUnloaded += OnSystemUnloaded;
 
         _stateManager.OnStateChanged += OnStateChanged;
+
+        foreach (var controller in _uiControllerRegistry)
+        {
+            controller.Initialize();
+        }
     }
 
     private void _updateControllers(FrameEventArgs args)

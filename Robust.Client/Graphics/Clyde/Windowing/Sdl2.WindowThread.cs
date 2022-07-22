@@ -113,7 +113,9 @@ internal partial class Clyde
             _cmdWriter.Complete();
 
             // Drain command queue ignoring it until the window thread confirms completion.
+#pragma warning disable RA0004
             while (_eventReader.WaitToReadAsync().AsTask().Result)
+#pragma warning restore RA0004
             {
                 _eventReader.TryRead(out _);
             }

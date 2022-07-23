@@ -35,6 +35,9 @@ public struct MidiRendererState
         // Controller defaults
         Controllers.AsSpan.Fill(new FixedArray128<byte>
         {
+            // Bank selection default
+            _00 = 0,
+
             // Volume controller default
             _07 = 100,
 

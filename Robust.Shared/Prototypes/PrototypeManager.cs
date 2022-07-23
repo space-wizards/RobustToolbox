@@ -490,11 +490,7 @@ namespace Robust.Shared.Prototypes
                 if(_inheritanceTrees.TryGetValue(type, out var tree))
                 {
                     var processed = new HashSet<string>();
-                    var workList = new Queue<string>();
-                    foreach (var baseNode in tree.RootNodes)
-                    {
-                        workList.Enqueue(baseNode);
-                    }
+                    var workList = new Queue<string>(tree.RootNodes);
 
                     while (workList.TryDequeue(out var id))
                     {
@@ -728,6 +724,7 @@ namespace Robust.Shared.Prototypes
                     if (_prototypes.TryGetValue(type, out var prototypeIds))
                     {
                         prototypeIds.Remove(id);
+                        _prototypeResults[type].Remove(id);
                     }
                 }
             }

@@ -70,7 +70,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 Clyde._windowing!.GLMakeContextCurrent(Clyde._mainWindow);
-                Clyde._windowing.GLSwapInterval(Clyde._vSync ? 1 : 0);
+                Clyde._windowing.GLSwapInterval(Clyde._mainWindow, Clyde._vSync ? 1 : 0);
             }
 
             public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
@@ -219,7 +219,7 @@ namespace Robust.Client.Graphics.Clyde
             private unsafe void BlitThreadInit(WindowData reg)
             {
                 Clyde._windowing!.GLMakeContextCurrent(reg.Reg);
-                Clyde._windowing.GLSwapInterval(0);
+                Clyde._windowing.GLSwapInterval(reg.Reg, 0);
 
                 Clyde.SetupDebugCallback();
 

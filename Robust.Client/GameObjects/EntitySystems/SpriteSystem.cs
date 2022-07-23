@@ -91,4 +91,19 @@ namespace Robust.Client.GameObjects
             _manualUpdate.Add(sprite);
         }
     }
+
+    /// <summary>
+    ///     This event gets raised before a sprite gets drawn using it's post-shader.
+    /// </summary>
+    public sealed class BeforePostShaderRenderEvent : EntityEventArgs
+    {
+        public readonly SpriteComponent Sprite;
+        public readonly IClydeViewport Viewport;
+
+        public BeforePostShaderRenderEvent(SpriteComponent sprite, IClydeViewport viewport)
+        {
+            Sprite = sprite;
+            Viewport = viewport;
+        }
+    }
 }

@@ -153,26 +153,25 @@ namespace Robust.Server
 
             if (Options.LoadConfigAndUserData)
             {
+                string? path = _commandLineArgs?.ConfigFile;
+
                 // Sets up the configMgr
                 // If a config file path was passed, use it literally.
                 // This ensures it's working-directory relative
                 // (for people passing config file through the terminal or something).
                 // Otherwise use the one next to the executable.
-                if (_commandLineArgs?.ConfigFile != null)
+                if (string.IsNullOrEmpty(path))
                 {
-                    _config.LoadFromFile(_commandLineArgs.ConfigFile);
+                    path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                }
+
+                if (File.Exists(path))
+                {
+                    _config.LoadFromFile(path);
                 }
                 else
                 {
-                    var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
-                    if (File.Exists(path))
-                    {
-                        _config.LoadFromFile(path);
-                    }
-                    else
-                    {
-                        _config.SetSaveFile(path);
-                    }
+                    _config.SetSaveFile(path);
                 }
             }
 
@@ -336,7 +335,6 @@ namespace Robust.Server
             _entityManager.Initialize();
             _mapManager.Initialize();
 
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded

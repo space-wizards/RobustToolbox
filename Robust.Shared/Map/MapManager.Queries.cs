@@ -60,8 +60,9 @@ internal partial class MapManager
                 var grid = grids[i];
 
                 var xformComp = xformQuery.GetComponent(grid.GridEntityId);
-                var (worldPos, worldRot, invMatrix) = xformComp.GetWorldPositionRotationInvMatrix(xformQuery);
-                var localAABB = invMatrix.TransformBox(aabb);
+                var (worldPos, worldRot, matrix, invMatrix) = xformComp.GetWorldPositionRotationMatrixWithInv(xformQuery);
+                var overlap = matrix.TransformBox(grid.LocalAABB).Intersect(aabb);
+                var localAABB = invMatrix.TransformBox(overlap);
 
                 var intersects = false;
 

@@ -48,7 +48,10 @@ internal partial class Clyde
             // Block the main thread (to avoid stuff like texture uploads being problematic).
             WaitWindowCreate(task);
 
+#pragma warning disable RA0004
+            // Block above ensured task is done, this is safe.
             var (reg, error) = task.Result;
+#pragma warning restore RA0004
             if (reg != null)
             {
                 reg.Owner = reg.Handle;

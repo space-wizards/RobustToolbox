@@ -1,0 +1,9 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.ProfTreeEntry"
+         MouseFilter="Stop">
+    <BoxContainer Orientation="Horizontal" Access="Public" Name="LineContainer">
+        <ExpanderArrow Access="Public" Name="Arrow" MinSize="12 12" VerticalAlignment="Center" Margin="2 0 0 0" />
+        <ProfTreeLine Name="TextLine" Access="Public" HorizontalExpand="True" />
+    </BoxContainer>
+</Control>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -27,37 +28,43 @@ namespace Robust.Shared.GameObjects
         private void OnMapAdded(EntityUid uid, MapComponent component, ComponentInit args)
         {
             var msg = new MapChangedEvent(component.WorldMap, true);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
             var msg = new MapChangedEvent(component.WorldMap, false);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
+#pragma warning disable CS0618
             var msg = new GridInitializeEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+#pragma warning restore CS0618
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
+#pragma warning disable CS0618
             var msg = new GridStartupEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+#pragma warning restore CS0618
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex));
+#pragma warning disable CS0618
+            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
+#pragma warning restore CS0618
             MapManager.OnComponentRemoved(component);
         }
     }
@@ -92,9 +99,11 @@ namespace Robust.Shared.GameObjects
         public bool Destroyed => !Created;
     }
 
+#pragma warning disable CS0618
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridStartupEvent(EntityUid uid, GridId gridId)
@@ -107,6 +116,7 @@ namespace Robust.Shared.GameObjects
     public sealed class GridRemovalEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridRemovalEvent(EntityUid uid, GridId gridId)
@@ -122,6 +132,7 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridInitializeEvent(EntityUid uid, GridId gridId)
@@ -130,6 +141,7 @@ namespace Robust.Shared.GameObjects
             GridId = gridId;
         }
     }
+#pragma warning restore CS0618
 
     /// <summary>
     /// Raised whenever a grid is Added
@@ -152,11 +164,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(TileRef newTile, Tile oldTile)
+        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile)
         {
+            Entity = uid;
             NewTile = newTile;
             OldTile = oldTile;
         }
+
+        /// <summary>
+        ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
+        /// </summary>
+        public EntityUid Entity { get; }
 
         /// <summary>
         ///     New tile that replaced the old one.

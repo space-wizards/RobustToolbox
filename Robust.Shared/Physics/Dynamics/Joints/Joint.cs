@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         Prismatic,
         Distance,
         Pulley,
-        //Mouse, <- We have fixed mouse
+        Mouse,
         Gear,
         Wheel,
         Weld,

@@ -15,8 +15,6 @@ namespace Robust.Server.GameObjects
     [ComponentReference(typeof(SharedSpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
-        const string LayerSerializationCache = "spritelayersrv";
-
         [ViewVariables]
         [DataField("layers", priority: 2, readOnly: true)]
         private List<PrototypeLayerData> Layers = new();
@@ -145,7 +143,7 @@ namespace Robust.Server.GameObjects
             {
                 if (state != null || texture != null)
                 {
-                    var layerZeroData = SharedSpriteComponent.PrototypeLayerData.New();
+                    var layerZeroData = new PrototypeLayerData();
                     if (!string.IsNullOrWhiteSpace(state))
                     {
                         layerZeroData.State = state;
@@ -166,7 +164,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
@@ -187,7 +185,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithTexture(string texture)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.TexturePath = texture;
             Layers.Add(layer);
             Dirty();
@@ -201,7 +199,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithState(string stateId)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.State = stateId;
             Layers.Add(layer);
             Dirty();
@@ -210,7 +208,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithState(string stateId, string rsiPath)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.State = stateId;
             layer.RsiPath = rsiPath;
             Layers.Add(layer);

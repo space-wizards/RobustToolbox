@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 
@@ -9,6 +10,17 @@ namespace Robust.Client.WebView.Headless
         public IWebViewWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams)
         {
             return new WebViewWindowDummy();
+        }
+
+        public void SetResourceMimeType(string extension, string mimeType)
+        {
+            // Nop
+        }
+
+        public bool TryGetResourceMimeType(string extension, [NotNullWhen(true)] out string? mimeType)
+        {
+            mimeType = null;
+            return false;
         }
 
         public IWebViewControlImpl MakeControlImpl(WebViewControl owner)

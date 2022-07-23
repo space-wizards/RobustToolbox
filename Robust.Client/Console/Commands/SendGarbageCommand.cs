@@ -15,7 +15,7 @@ namespace Robust.Client.Console.Commands
             // MsgStringTableEntries is registered as NetMessageAccept.Client so the server will immediately deny it.
             // And kick us.
             var net = IoCManager.Resolve<IClientNetManager>();
-            var msg = net.CreateNetMessage<MsgStringTableEntries>();
+            var msg = new MsgStringTableEntries();
             msg.Entries = new MsgStringTableEntries.Entry[0];
             net.ClientSendMessage(msg);
         }

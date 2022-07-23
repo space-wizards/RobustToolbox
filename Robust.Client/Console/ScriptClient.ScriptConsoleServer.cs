@@ -35,7 +35,7 @@ namespace Robust.Client.Console
 
                 RunButton.Disabled = true;
 
-                var msg = _client._netManager.CreateNetMessage<MsgScriptEval>();
+                var msg = new MsgScriptEval();
                 msg.ScriptSession = _session;
                 msg.Code = _lastEnteredText = InputBar.Text;
 
@@ -48,7 +48,7 @@ namespace Robust.Client.Console
 
             protected override void Complete()
             {
-                var msg = _client._netManager.CreateNetMessage<MsgScriptCompletion>();
+                var msg = new MsgScriptCompletion();
                 msg.ScriptSession = _session;
                 msg.Code = InputBar.Text;
                 msg.Cursor = InputBar.CursorPosition;

@@ -50,7 +50,7 @@ public sealed class SpinCommand : IConsoleCommand
         }
 
         // Try get physics
-        if (!entMan.TryGetComponent(target, out PhysicsComponent physics))
+        if (!entMan.TryGetComponent(target, out PhysicsComponent? physics))
         {
             shell.WriteError($"Target entity is incorporeal");
             return;

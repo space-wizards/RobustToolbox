@@ -264,6 +264,36 @@ namespace Robust.Shared.ContentPack
             return ContentFindFiles(new ResourcePath(path));
         }
 
+        public IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path)
+        {
+            ArgumentNullException.ThrowIfNull(path, nameof(path));
+
+            if (!path.IsRooted)
+                throw new ArgumentException("Path is not rooted", nameof(path));
+
+            var entries = new HashSet<string>();
+
+            _contentRootsLock.EnterReadLock();
+            try
+            {
+                foreach (var (prefix, root) in _contentRoots)
+                {
+                    if (!path.TryRelativeTo(prefix, out var relative))
+                    {
+                        continue;
+                    }
+
+                    entries.UnionWith(root.GetEntries(relative));
+                }
+            }
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
+            }
+
+            return entries;
+        }
+
         /// <inheritdoc />
         public IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path)
         {

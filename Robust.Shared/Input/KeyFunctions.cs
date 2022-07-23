@@ -70,6 +70,8 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
         public static readonly BoundKeyFunction TextDelete = "TextDelete";
         public static readonly BoundKeyFunction TextTabComplete = "TextTabComplete";
+        public static readonly BoundKeyFunction TextCompleteNext = "TextCompleteNext";
+        public static readonly BoundKeyFunction TextCompletePrev = "TextCompletePrev";
     }
 
     [Serializable, NetSerializable]

@@ -23,6 +23,7 @@ namespace Robust.Client.UserInterface
 
             TabContainer.SetTabTitle(DebugConsole, "Debug Console");
             TabContainer.SetTabTitle(UI, "User Interface");
+            TabContainer.SetTabTitle(Perf, "Profiling");
         }
     }
 
@@ -45,9 +46,9 @@ namespace Robust.Client.UserInterface
 
             var window = clyde.CreateWindow(new WindowCreateParameters
             {
-                Maximized = true,
+                //Maximized = true,
                 Title = "Robust Debug Window",
-                Monitor = monitor,
+                //Monitor = monitor,
             });
             var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
             window.DisposeOnClose = true;

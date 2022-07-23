@@ -37,9 +37,9 @@ namespace Robust.Client.GameObjects
             return base.CreateEntity(prototypeName, uid);
         }
 
-        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity)
+        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
         {
-            base.InitializeEntity(entity);
+            base.InitializeEntity(entity, meta);
         }
 
         void IClientEntityManagerInternal.StartEntity(EntityUid entity)
@@ -86,7 +86,7 @@ namespace Robust.Client.GameObjects
 
         public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
+            var msg = new MsgEntity();
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;

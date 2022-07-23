@@ -28,6 +28,7 @@ SOFTWARE.
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -36,7 +37,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Matrix4 : IEquatable<Matrix4>
+    public struct Matrix4 : IEquatable<Matrix4>, ISpanFormattable
     {
         #region Fields
 
@@ -1160,9 +1161,26 @@ namespace Robust.Shared.Maths
         /// Returns a System.String that represents the current Matrix44.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"{Row0}\n{Row1}\n{Row2}\n{Row3}";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{Row0}\n{Row1}\n{Row2}\n{Row3}");
         }
 
         #endregion public override string ToString()

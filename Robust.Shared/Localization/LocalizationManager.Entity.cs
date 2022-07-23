@@ -57,7 +57,7 @@ namespace Robust.Shared.Localization
             string? suffix = null;
             Dictionary<string, string>? attributes = null;
 
-            while (true)
+            //TODO ENUMERATE PARENTS
             {
                 _prototype.TryIndex<EntityPrototype>(prototypeId, out var prototype);
                 var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
@@ -125,11 +125,6 @@ namespace Robust.Shared.Localization
                         }
                     }
                 }
-
-                if (prototype?.Parents == null)
-                    break;
-
-                prototypeId = prototype.Parents.First();
             }
 
             return new EntityLocData(

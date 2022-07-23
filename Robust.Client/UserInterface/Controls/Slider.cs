@@ -13,10 +13,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyFill = "fill";
         public const string StylePropertyGrabber = "grabber";
 
-        private readonly PanelContainer _foregroundPanel;
-        private readonly PanelContainer _backgroundPanel;
-        private readonly PanelContainer _fillPanel;
-        private readonly PanelContainer _grabber;
+        protected readonly PanelContainer _foregroundPanel;
+        protected readonly PanelContainer _backgroundPanel;
+        protected readonly PanelContainer _fillPanel;
+        protected readonly PanelContainer _grabber;
 
         private bool _grabbed;
 
@@ -169,7 +169,7 @@ namespace Robust.Client.UserInterface.Controls
             UpdateStyleBoxes();
         }
 
-        private void UpdateStyleBoxes()
+        protected virtual void UpdateStyleBoxes()
         {
             StyleBox? GetStyleBox(string name)
             {
@@ -182,7 +182,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _backgroundPanel.PanelOverride = BackgroundStyleBoxOverride ?? GetStyleBox(StylePropertyBackground);
-            _foregroundPanel.PanelOverride = BackgroundStyleBoxOverride ?? GetStyleBox(StylePropertyForeground);
+            _foregroundPanel.PanelOverride = ForegroundStyleBoxOverride ?? GetStyleBox(StylePropertyForeground);
             _fillPanel.PanelOverride = FillStyleBoxOverride ?? GetStyleBox(StylePropertyFill);
             _grabber.PanelOverride = GrabberStyleBoxOverride ?? GetStyleBox(StylePropertyGrabber);
         }

@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -12,7 +13,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
-    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>
+    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
@@ -149,11 +150,11 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridId = GetGridId(entityManager);
+            var gridId = GetGridUid(entityManager);
 
-            if (gridId != GridId.Invalid)
+            if (gridId != null)
             {
-                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
+                return mapManager.GetGrid(gridId.Value).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);
@@ -209,9 +210,29 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
+        [Obsolete("Use GetGridUid")]
         public GridId GetGridId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? GridId.Invalid : entityManager.GetComponent<TransformComponent>(EntityId).GridID;
+            if (!IsValid(entityManager))
+                return GridId.Invalid;
+
+            var uid = entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
+
+            if (uid == null)
+                return GridId.Invalid;
+
+            return entityManager.GetComponent<IMapGridComponent>(uid.Value).GridIndex;
+        }
+
+        /// <summary>
+        ///     Returns the Grid EntityUid these coordinates are on.
+        ///     If none of the ancestors are a grid, returns null instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Grid EntityUid this entity is on or null</returns>
+        public EntityUid? GetGridUid(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
         }
 
         /// <summary>
@@ -223,6 +244,17 @@ namespace Robust.Shared.Map
         public MapId GetMapId(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
+        }
+
+        /// <summary>
+        ///     Returns the Map Id these coordinates are on.
+        ///     If the relative entity is not valid, returns null instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Map Id these coordinates are on or null</returns>
+        public EntityUid? GetMapUid(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).MapUid;
         }
 
         /// <summary>
@@ -397,6 +429,20 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+            destination,
+            out charsWritten,
+            $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}");
         }
     }
 }

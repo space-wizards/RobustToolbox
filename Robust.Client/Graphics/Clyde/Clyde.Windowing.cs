@@ -95,14 +95,35 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
+            if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngleEs3On10_0))
+            {
+                Environment.SetEnvironmentVariable("ANGLE_FEATURE_OVERRIDES_ENABLED", "allowES3OnFL10_0");
+            }
+
             var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
             if (!string.IsNullOrWhiteSpace(iconPath))
                 _windowIconPath = new ResourcePath(iconPath);
 
             _windowingThread = Thread.CurrentThread;
 
-            _windowing = new GlfwWindowingImpl(this);
+            var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
+            IWindowingImpl winImpl;
 
+            switch (windowingApi)
+            {
+                case "glfw":
+                    winImpl = new GlfwWindowingImpl(this);
+                    break;
+                case "sdl2":
+                    winImpl = new Sdl2WindowingImpl(this);
+                    break;
+                default:
+                    _logManager.GetSawmill("clyde.win").Log(
+                        LogLevel.Error, "Unknown windowing API: {name}. Falling back to GLFW.", windowingApi);
+                    goto case "glfw";
+            }
+
+            _windowing = winImpl;
             return _windowing.Init();
         }
 

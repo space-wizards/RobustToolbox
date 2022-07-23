@@ -23,6 +23,7 @@ namespace Robust.Shared.Scripting
             BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         [field: Dependency] public IEntityManager ent { get; } = default!;
+        [field: Dependency] public IEntitySystemManager esm { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
 
@@ -35,10 +36,10 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, int gridId)
         {
-            return gpos(x, y, new GridId(gridId));
+            return gpos(x, y, new EntityUid(gridId));
         }
 
-        public EntityCoordinates gpos(double x, double y, GridId gridId)
+        public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
             if (!map.TryGetGrid(gridId, out var grid))
             {
@@ -60,10 +61,10 @@ namespace Robust.Shared.Scripting
 
         public IMapGrid getgrid(int i)
         {
-            return map.GetGrid(new GridId(i));
+            return map.GetGrid(new EntityUid(i));
         }
 
-        public IMapGrid getgrid(GridId mapId)
+        public IMapGrid getgrid(EntityUid mapId)
         {
             return map.GetGrid(mapId);
         }
@@ -76,6 +77,11 @@ namespace Robust.Shared.Scripting
         public T res<T>()
         {
             return IoCManager.Resolve<T>();
+        }
+
+        public T ressys<T>() where T : EntitySystem
+        {
+            return esm.GetEntitySystem<T>();
         }
 
         public object? prop(object target, string name)

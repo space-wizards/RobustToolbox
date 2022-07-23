@@ -75,16 +75,16 @@ namespace Robust.Client.GameObjects
         protected internal override void Draw(in OverlayDrawArgs args)
         {
             var handle = args.WorldHandle;
-            var currentMap = _eyeManager.CurrentMap;
-            var viewport = _eyeManager.GetWorldViewbounds();
+            var currentMap = args.MapId;
+            var viewport = args.WorldBounds;
 
             foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
             {
                 var localAABB = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(viewport);
 
-                foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
+                foreach (var (sprite, xform) in comp.SpriteTree.QueryAabb(localAABB))
                 {
-                    var (worldPos, worldRot) = _entityManager.GetComponent<TransformComponent>(sprite.Owner).GetWorldPositionRotation();
+                    var (worldPos, worldRot) = xform.GetWorldPositionRotation();
                     var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
 
                     // Get scaled down bounds used to indicate the "south" of a sprite.

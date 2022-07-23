@@ -1,11 +1,42 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Configuration
 {
     /// <summary>
+    /// Additional information about a CVar change.
+    /// </summary>
+    public readonly struct CVarChangeInfo
+    {
+        /// <summary>
+        /// The tick this CVar changed at.
+        /// </summary>
+        /// <remarks>
+        /// Nominally this should always be the current tick,
+        /// however due to poor network conditions it is possible for CVars to get applied late.
+        /// In this case, this is effectively "this is the tick it was SUPPOSED to have been applied at".
+        /// </remarks>
+        public readonly GameTick TickChanged;
+
+        internal CVarChangeInfo(GameTick tickChanged)
+        {
+            TickChanged = tickChanged;
+        }
+    }
+
+    public delegate void CVarChanged<in T>(T newValue, in CVarChangeInfo info);
+
+    /// <summary>
     /// Stores and manages global configuration variables.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Accessing (getting/setting) main CVars is thread safe.
+    /// Note that value-changed callbacks are ran synchronously from the thread using <see cref="SetCVar"/>,
+    /// so it is not recommended to modify CVars from other threads.
+    /// </para>
+    /// </remarks>
     public interface IConfigurationManager
     {
         /// <summary>
@@ -48,6 +79,22 @@ namespace Robust.Shared.Configuration
         void SetCVar<T>(CVarDef<T> def, T value) where T : notnull;
 
         /// <summary>
+        /// Change the default value for a CVar.
+        /// This means the CVar value is changed *only* if it has not been changed by config file or <c>OverrideConVars</c>.
+        /// </summary>
+        /// <param name="name">The name of the CVar to change the default for.</param>
+        /// <param name="value">The new default value of the CVar.</param>
+        void OverrideDefault(string name, object value);
+
+        /// <summary>
+        /// Change the default value for a CVar.
+        /// This means the CVar value is changed *only* if it has not been changed by config file or <c>OverrideConVars</c>.
+        /// </summary>
+        /// <param name="def">The definition of the CVar to change the default for.</param>
+        /// <param name="value">The new default value of the CVar.</param>
+        void OverrideDefault<T>(CVarDef<T> def, T value) where T : notnull;
+
+        /// <summary>
         /// Get the value of a CVar.
         /// </summary>
         /// <typeparam name="T">The Type of the CVar value.</typeparam>
@@ -66,6 +113,9 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Listen for an event for if the config value changes.
         /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
         /// <param name="cVar">The CVar to listen for.</param>
         /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
         /// <param name="invokeImmediately">
@@ -79,6 +129,9 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Listen for an event for if the config value changes.
         /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
         /// <param name="name">The name of the CVar to listen for.</param>
         /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
         /// <param name="invokeImmediately">
@@ -92,6 +145,9 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T},bool)"/>.
         /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
         /// <param name="cVar">The CVar to unsubscribe from.</param>
         /// <param name="onValueChanged">The delegate to unsubscribe.</param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
@@ -101,10 +157,69 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(string,System.Action{T},bool)"/>.
         /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
         /// <param name="name">The name of the CVar to unsubscribe from.</param>
         /// <param name="onValueChanged">The delegate to unsubscribe.</param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         void UnsubValueChanged<T>(string name, Action<T> onValueChanged)
+            where T : notnull;
+
+        /// <summary>
+        /// Listen for an event for if the config value changes.
+        /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
+        /// <param name="cVar">The CVar to listen for.</param>
+        /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
+        /// <param name="invokeImmediately">
+        /// Whether to run the callback immediately in this method. Can help reduce boilerplate
+        /// </param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        /// <seealso cref="UnsubValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T})"/>
+        void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <summary>
+        /// Listen for an event for if the config value changes.
+        /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
+        /// <param name="name">The name of the CVar to listen for.</param>
+        /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
+        /// <param name="invokeImmediately">
+        /// Whether to run the callback immediately in this method. Can help reduce boilerplate
+        /// </param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        /// <seealso cref="UnsubValueChanged{T}(string,System.Action{T})"/>
+        void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <summary>
+        /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T},bool)"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
+        /// <param name="cVar">The CVar to unsubscribe from.</param>
+        /// <param name="onValueChanged">The delegate to unsubscribe.</param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        void UnsubValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged)
+            where T : notnull;
+
+        /// <summary>
+        /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(string,System.Action{T},bool)"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is an O(n) operation.
+        /// </remarks>
+        /// <param name="name">The name of the CVar to unsubscribe from.</param>
+        /// <param name="onValueChanged">The delegate to unsubscribe.</param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
     }
 }

@@ -28,9 +28,11 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
@@ -87,6 +89,8 @@ namespace Robust.Server
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
+        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -149,26 +153,25 @@ namespace Robust.Server
 
             if (Options.LoadConfigAndUserData)
             {
+                string? path = _commandLineArgs?.ConfigFile;
+
                 // Sets up the configMgr
                 // If a config file path was passed, use it literally.
                 // This ensures it's working-directory relative
                 // (for people passing config file through the terminal or something).
                 // Otherwise use the one next to the executable.
-                if (_commandLineArgs?.ConfigFile != null)
+                if (string.IsNullOrEmpty(path))
                 {
-                    _config.LoadFromFile(_commandLineArgs.ConfigFile);
+                    path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                }
+
+                if (File.Exists(path))
+                {
+                    _config.LoadFromFile(path);
                 }
                 else
                 {
-                    var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
-                    if (File.Exists(path))
-                    {
-                        _config.LoadFromFile(path);
-                    }
-                    else
-                    {
-                        _config.SetSaveFile(path);
-                    }
+                    _config.SetSaveFile(path);
                 }
             }
 
@@ -183,6 +186,8 @@ namespace Robust.Server
             }
 
             ProfileOptSetup.Setup(_config);
+
+            _parallelMgr.Initialize();
 
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
@@ -330,7 +335,6 @@ namespace Robust.Server
             _entityManager.Initialize();
             _mapManager.Initialize();
 
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
@@ -474,7 +478,7 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time)
+                _mainLoop = new GameLoop(_time, _runtimeLog, _prof)
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,
@@ -539,6 +543,8 @@ namespace Robust.Server
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
 
+            var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
+            _time.TimeBase = (startOffset, GameTick.First);
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
@@ -598,7 +604,8 @@ namespace Robust.Server
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
-            _network.Shutdown($"Server shutting down: {_shutdownReason}");
+            var shutdownReasonWithRedial = NetStructuredDisconnectMessages.Encode($"Server shutting down: {_shutdownReason}", true);
+            _network.Shutdown(shutdownReasonWithRedial);
 
             // shutdown entities
             _entityManager.Cleanup();
@@ -682,8 +689,13 @@ namespace Robust.Server
         private void FrameUpdate(FrameEventArgs frameEventArgs)
         {
             ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
     }
 }

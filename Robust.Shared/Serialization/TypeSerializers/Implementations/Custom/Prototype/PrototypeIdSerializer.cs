@@ -8,12 +8,25 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
-    public sealed class PrototypeIdSerializer<TPrototype> : ITypeSerializer<string, ValueDataNode> where TPrototype : class, IPrototype
+    public sealed class AbstractPrototypeIdSerializer<TPrototype> : PrototypeIdSerializer<TPrototype>
+        where TPrototype : class, IPrototype
     {
-        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public override ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
             return dependencies.Resolve<IPrototypeManager>().HasMapping<TPrototype>(node.Value)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
+        }
+    }
+
+    [Virtual]
+    public class PrototypeIdSerializer<TPrototype> : ITypeSerializer<string, ValueDataNode> where TPrototype : class, IPrototype
+    {
+        public virtual ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            return dependencies.Resolve<IPrototypeManager>().HasIndex<TPrototype>(node.Value)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }

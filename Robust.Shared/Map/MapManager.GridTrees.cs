@@ -33,7 +33,6 @@ internal partial class MapManager
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>(OnGridParentChange);
-        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
     private void ShutdownGridTrees()
@@ -43,7 +42,6 @@ internal partial class MapManager
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>();
-        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>();
 
         DebugTools.Assert(_gridTrees.Count == 0);
         DebugTools.Assert(_movedGrids.Count == 0);
@@ -71,12 +69,12 @@ internal partial class MapManager
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-        return new Box2Rotated(grid.LocalBounds.Translated(worldPos), worldRot, worldPos).CalcBoundingBox();
+        return new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
     }
 
     private void OnGridInit(GridInitializeEvent args)
     {
-        var grid = (MapGrid) GetGrid(args.GridId);
+        var grid = (MapGrid) GetGrid(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
         var mapId = xform.MapID;
 
@@ -97,7 +95,7 @@ internal partial class MapManager
 
     private void OnGridRemove(GridRemovalEvent args)
     {
-        var grid = (MapGrid) GetGrid(args.GridId);
+        var grid = (MapGrid) GetGrid(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
         // Can't check for free proxy because DetachParentToNull gets called first woo!
@@ -145,23 +143,19 @@ internal partial class MapManager
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy
-        // Want gridinit / gridremoval to handle this hence specialcase those situations.
+        // Want gridinit to handle this hence specialcase those situations.
         if (lifestage < EntityLifeStage.Initialized) return;
 
-        var oldMapId = args.OldParent == null
-            ? MapId.Nullspace
-            : EntityManager.GetComponent<TransformComponent>(args.OldParent.Value).MapID;
-
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
+        var mapId = args.Transform.MapID;
 
         // y'all need jesus
-        if (oldMapId == mapId) return;
+        if (args.OldMapId == mapId) return;
 
-        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(oldMapId, out var oldMovedGrids))
+        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
-            RemoveGrid(aGrid, oldMapId);
+            RemoveGrid(aGrid, args.OldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
@@ -171,15 +165,14 @@ internal partial class MapManager
         }
     }
 
-    private void OnGridBoundsChange(EntityUid uid, MapGridComponent component, GridFixtureChangeEvent args)
+    public void OnGridBoundsChange(EntityUid uid, MapGrid grid)
     {
-        var grid = (MapGrid) component.Grid;
-
         // Just MapLoader things.
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
+        _movedGrids[xform.MapID].Add(grid);
     }
 }

@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -32,6 +33,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
@@ -114,6 +116,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
+            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
@@ -243,46 +246,69 @@ namespace Robust.Client.UserInterface
 
         public void FrameUpdate(FrameEventArgs args)
         {
+            using (_prof.Group("Update"))
+            {
+                foreach (var root in _roots)
+                {
+                    using (_prof.Group("Root"))
+                    {
+                        var totalUpdated = root.DoFrameUpdateRecursive(args);
+
+                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
+                    }
+                }
+            }
+
             // Process queued style & layout updates.
-            while (_styleUpdateQueue.Count != 0)
+            using (_prof.Group("Style"))
             {
-                var control = _styleUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_styleUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _styleUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    control.DoStyleUpdate();
+                    total += 1;
                 }
 
-                control.DoStyleUpdate();
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
-            while (_measureUpdateQueue.Count != 0)
+            using (_prof.Group("Measure"))
             {
-                var control = _measureUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_measureUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _measureUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    RunMeasure(control);
+                    total += 1;
                 }
 
-                RunMeasure(control);
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
-            while (_arrangeUpdateQueue.Count != 0)
+            using (_prof.Group("Arrange"))
             {
-                var control = _arrangeUpdateQueue.Dequeue();
-
-                if (control.Disposed)
+                var total = 0;
+                while (_arrangeUpdateQueue.Count != 0)
                 {
-                    continue;
+                    var control = _arrangeUpdateQueue.Dequeue();
+
+                    if (control.Disposed)
+                        continue;
+
+                    RunArrange(control);
+                    total += 1;
                 }
 
-                RunArrange(control);
-            }
-
-            foreach (var root in _roots)
-            {
-                root.DoFrameUpdate(args);
+                _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
             // count down tooltip delay if we're not showing one yet and
@@ -688,6 +714,9 @@ namespace Robust.Client.UserInterface
             {
                 if (root.Window != _clyde.MainWindow)
                 {
+                    using var _ = _prof.Group("Window");
+                    _prof.WriteValue("ID", ProfData.Int32((int) root.Window.Id));
+
                     renderHandle.RenderInRenderTarget(
                         root.Window.RenderTarget,
                         () => DoRender(root),
@@ -695,14 +724,20 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            using (_prof.Group("Main"))
+            {
+                DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+            }
 
             void DoRender(WindowRoot root)
             {
-                _render(renderHandle, root, Vector2i.Zero, Color.White, null);
+                var total = 0;
+                _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
                 var drawingHandle = renderHandle.DrawingHandleScreen;
                 drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
+
+                _prof.WriteValue("Controls rendered", ProfData.Int32(total));
             }
         }
 
@@ -730,7 +765,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
+        private void _render(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -753,10 +788,6 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            var handle = renderHandle.DrawingHandleScreen;
-            handle.SetTransform(position, Angle.Zero, Vector2.One);
-            modulate *= control.Modulate;
-            handle.Modulate = modulate * control.ActualModulateSelf;
             var clip = control.RectClipContent;
             var scissorRegion = scissorBox;
             if (clip)
@@ -779,15 +810,25 @@ namespace Robust.Client.UserInterface
                 renderHandle.SetScissor(scissorRegion);
             }
 
+            total += 1;
+
+            var handle = renderHandle.DrawingHandleScreen;
+            handle.SetTransform(position, Angle.Zero, Vector2.One);
+            modulate *= control.Modulate;
+
             if (_rendering || control.AlwaysRender)
             {
+                // Handle modulation with care.
+                var oldMod = handle.Modulate;
+                handle.Modulate = modulate * control.ActualModulateSelf;
                 control.DrawInternal(renderHandle);
+                handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
 
             foreach (var child in control.Children)
             {
-                _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);
+                _render(renderHandle, ref total, child, position + child.PixelPosition, modulate, scissorRegion);
             }
 
             if (clip)

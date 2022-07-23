@@ -141,6 +141,7 @@ stored in a single array since multiple arrays lead to multiple misses.
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        private SharedTransformSystem _transform = default!;
 #if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
@@ -217,6 +218,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
         }
 
         internal void LoadConfig(in IslandCfg cfg)
@@ -522,8 +524,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;
-                    transform.WorldPosition = bodyPos;
-                    transform.WorldRotation = angle;
+                    _transform.SetWorldPosition(transform, bodyPos, xforms);
+                    _transform.SetWorldRotation(transform, angle, xforms);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Client.Log;
 using Robust.Client.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -41,11 +46,15 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed class ClientConsoleHost : ConsoleHost, IClientConsoleHost
+    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IPlayerManager _player = default!;
 
         private bool _requestedCommands;
+
+        public ClientConsoleHost() : base(isServer: false) {}
 
         /// <inheritdoc />
         public void Initialize()
@@ -53,6 +62,8 @@ namespace Robust.Client.Console
             NetManager.RegisterNetMessage<MsgConCmdReg>(HandleConCmdReg);
             NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
             NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCompletion>();
+            NetManager.RegisterNetMessage<MsgConCompletionResp>(ProcessCompletionResp);
 
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;
@@ -88,6 +99,11 @@ namespace Robust.Client.Console
             OutputText(text, true, true);
         }
 
+        public bool IsCmdServer(IConsoleCommand cmd)
+        {
+            return cmd is ServerDummyCommand;
+        }
+
         public override event ConAnyCommandCallback? AnyCommandExecuted;
 
         /// <inheritdoc />
@@ -108,14 +124,12 @@ namespace Robust.Client.Console
 
             if (AvailableCommands.ContainsKey(commandName))
             {
-                var playerManager = IoCManager.Resolve<IPlayerManager>();
-#if !DEBUG
-                if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
+                if (!CanExecute(commandName))
                 {
                     WriteError(null, $"Insufficient perms for command: {commandName}");
                     return;
                 }
-#endif
+
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
                 var shell = new ConsoleShell(this, null);
@@ -128,13 +142,23 @@ namespace Robust.Client.Console
                 WriteError(null, "Unknown command: " + commandName);
         }
 
+        private bool CanExecute(string cmdName)
+        {
+            // When not connected to a server, you can run all local commands.
+            // When connected to a server, you can only run commands according to the con group controller.
+
+            return _player.LocalPlayer == null
+                   || _player.LocalPlayer.Session.Status <= SessionStatus.Connecting
+                   || _conGroup.CanCommand(cmdName);
+        }
+
         /// <inheritdoc />
         public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
             if (!NetManager.IsConnected) // we don't care about session on client
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            var msg = new MsgConCmd();
             msg.Text = command;
             NetManager.ClientSendMessage(msg);
         }
@@ -198,36 +222,69 @@ namespace Robust.Client.Console
             if (!NetManager.IsConnected)
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmdReg>();
+            var msg = new MsgConCmdReg();
             NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
-    }
 
-    /// <summary>
-    /// These dummies are made purely so list and help can list server-side commands.
-    /// </summary>
-    [Reflect(false)]
-    internal sealed class ServerDummyCommand : IConsoleCommand
-    {
-        internal ServerDummyCommand(string command, string help, string description)
+        /// <summary>
+        /// These dummies are made purely so list and help can list server-side commands.
+        /// </summary>
+        [Reflect(false)]
+        private sealed class ServerDummyCommand : IConsoleCommand
         {
-            Command = command;
-            Help = help;
-            Description = description;
+            internal ServerDummyCommand(string command, string help, string description)
+            {
+                Command = command;
+                Help = help;
+                Description = description;
+            }
+
+            public string Command { get; }
+
+            public string Description { get; }
+
+            public string Help { get; }
+
+            // Always forward to server.
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            {
+                shell.RemoteExecuteCommand(argStr);
+            }
+
+            public async ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
+            {
+                var host = (ClientConsoleHost)shell.ConsoleHost;
+                var argsList = args.ToList();
+                argsList.Insert(0, Command);
+
+                return await host.DoServerCompletions(argsList, cancel);
+            }
         }
 
-        public string Command { get; }
-
-        public string Description { get; }
-
-        public string Help { get; }
-
-        // Always forward to server.
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        private sealed class RemoteExecCommand : IConsoleCommand
         {
-            shell.RemoteExecuteCommand(argStr);
+            public string Command => ">";
+            public string Description => Loc.GetString("cmd-remoteexec-desc");
+            public string Help => Loc.GetString("cmd-remoteexec-help");
+
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            {
+                shell.RemoteExecuteCommand(argStr["> ".Length..]);
+            }
+
+            public async ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
+            {
+                var host = (ClientConsoleHost)shell.ConsoleHost;
+                return await host.DoServerCompletions(args.ToList(), cancel);
+            }
         }
     }
 }

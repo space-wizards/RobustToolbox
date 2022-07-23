@@ -19,6 +19,16 @@ out highp vec4 colourOutput;
 #endif
 #endif
 
+#ifndef NO_ARRAY_PRECISION
+#define ARRAY_LOWP lowp
+#define ARRAY_MEDIUMP mediump
+#define ARRAY_HIGHP highp
+#else
+#define ARRAY_LOWP lowp
+#define ARRAY_MEDIUMP mediump
+#define ARRAY_HIGHP highp
+#endif
+
 // -- shadow depth --
 
 // If float textures are supported, puts the values in the R/G fields.

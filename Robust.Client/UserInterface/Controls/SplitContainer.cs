@@ -232,10 +232,21 @@ namespace Robust.Client.UserInterface.Controls
             var second = GetChild(1);
 
             // TODO: Probably bad implementation with the new WPF layout.
-            first.Measure(availableSize);
-            second.Measure(availableSize);
 
+            if (Vertical)
+                availableSize.Y = MathF.Max(0, availableSize.Y - SplitWidth);
+            else
+                availableSize.X = MathF.Max(0, availableSize.X - SplitWidth);
+
+            first.Measure(availableSize);
             var (firstSizeX, firstSizeY) = first.DesiredSize;
+
+            if (Vertical)
+                availableSize.Y = MathF.Max(0, availableSize.Y - firstSizeY);
+            else
+                availableSize.X = MathF.Max(0, availableSize.X - firstSizeX);
+
+            second.Measure(availableSize);
             var (secondSizeX, secondSizeY) = second.DesiredSize;
 
             if (Vertical)

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -28,13 +29,15 @@ namespace Robust.Shared.Serialization.Manager
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        public IReflectionManager ReflectionManager => _reflectionManager;
+
         public const string LogCategory = "serialization";
 
         private bool _initializing;
         private bool _initialized;
 
         // Using CWT<,> here in case we ever want assembly unloading.
-        private static readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
+        private readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -113,7 +116,7 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                DataDefinitions.GetValue(type, CreateDefinitionCallback);
+                DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
             var error = new StringBuilder();
@@ -167,12 +170,9 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private static readonly ConditionalWeakTable<Type, DataDefinition>.CreateValueCallback
-            CreateDefinitionCallback = CreateDataDefinition;
-
-        private static DataDefinition CreateDataDefinition(Type t)
+        private static DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
         {
-            return new(t);
+            return new(t, collection);
         }
 
         public void Shutdown()
@@ -327,7 +327,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (value == null) return new MappingDataNode();
+            if (value == null) return new ValueDataNode("null");
 
             if (underlyingType.IsEnum)
             {

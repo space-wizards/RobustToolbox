@@ -38,36 +38,49 @@ namespace Robust.UnitTesting.Shared.Physics
 
             IMapGrid grid = default!;
             MapId mapId = default!;
-            PhysicsComponent physics = default!;
+            PhysicsComponent entityOnePhysics = default!;
+            TransformComponent xform = default!;
+            PhysicsComponent entityTwoPhysics = default!;
 
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
                 grid = mapManager.CreateGrid(mapId);
+                grid.SetTile(Vector2i.Zero, new Tile(1));
 
-                var entity = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One, mapId));
-                physics = entManager.GetComponent<PhysicsComponent>(entity);
+                var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
+                entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);
+                xform = entManager.GetComponent<TransformComponent>(entityOne);
+                var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+                entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo);
+
             });
 
-            // Should still be collidable
+            // Item 1 Should still be collidable
             await server.WaitRunTicks(1);
 
             await server.WaitAssertion(() =>
             {
-                Assert.That(physics.Awake, Is.EqualTo(false));
-                Assert.That(physics.CanCollide, Is.EqualTo(true));
+                Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
+                Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(grid.GridEntityId);
+                xform.LocalPosition = new Vector2(0.5f, 0.5f);
+                xform.AttachParent(grid.GridEntityId);
+
+                // Entity 2 should immediately not be collidable on spawn
+                Assert.That(entityTwoPhysics.Awake, Is.EqualTo(false));
+                Assert.That(entityTwoPhysics.CanCollide, Is.EqualTo(false));
             });
 
             await server.WaitRunTicks(1);
 
             await server.WaitAssertion(() =>
             {
-                Assert.That(physics.Awake, Is.EqualTo(false));
-                Assert.That(physics.CanCollide, Is.EqualTo(false));
+                Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
+                Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(false));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(mapManager.GetMapEntityId(mapId));
+                xform.LocalPosition = Vector2.One * 2f;
+                xform.AttachParent(mapManager.GetMapEntityId(mapId));
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.
@@ -75,8 +88,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitAssertion(() =>
             {
-                Assert.That(physics.Awake, Is.EqualTo(false));
-                Assert.That(physics.CanCollide, Is.EqualTo(true));
+                Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
+                Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
             });
         }
     }

@@ -12,7 +12,7 @@ namespace Robust.Shared.Containers
         {
             base.Initialize();
 
-            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -294,7 +294,7 @@ namespace Robust.Shared.Containers
 
             while (parent.IsValid())
             {
-                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) && 
+                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
                     conQuery.TryGetComponent(parent, out var conManager) &&
                     conManager.TryGetContainer(child, out var parentContainer))
                 {
@@ -312,7 +312,7 @@ namespace Robust.Shared.Containers
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        protected virtual void HandleParentChanged(ref EntParentChangedMessage message)
+        protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 

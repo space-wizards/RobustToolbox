@@ -112,6 +112,7 @@ namespace Robust.Server.Player
 
             _network.RegisterNetMessage<MsgPlayerListReq>(HandlePlayerListReq);
             _network.RegisterNetMessage<MsgPlayerList>();
+            _network.RegisterNetMessage<MsgSyncTimeBase>();
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;
@@ -404,6 +405,11 @@ namespace Robust.Server.Player
 
             PlayerCountMetric.Set(PlayerCount);
 
+            // Synchronize base time.
+            var msgTimeBase = new MsgSyncTimeBase();
+            (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
+            _network.ServerSendMessage(msgTimeBase, args.Channel);
+
             IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
         }
 
@@ -445,7 +451,7 @@ namespace Robust.Server.Player
         {
             var channel = message.MsgChannel;
             var players = Sessions;
-            var netMsg = channel.CreateNetMessage<MsgPlayerList>();
+            var netMsg = new MsgPlayerList();
 
             // client session is complete, set their status accordingly.
             // This is done before the packet is built, so that the client

@@ -14,6 +14,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -35,6 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -273,10 +276,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Span<Vertex2D> quadVertices = stackalloc[]
                 {
-                    new Vertex2D(1, 0, 1, 1),
-                    new Vertex2D(0, 0, 0, 1),
-                    new Vertex2D(1, 1, 1, 0),
-                    new Vertex2D(0, 1, 0, 0)
+                    new Vertex2D(1, 0, 1, 1, Color.White),
+                    new Vertex2D(0, 0, 0, 1, Color.White),
+                    new Vertex2D(1, 1, 1, 0, Color.White),
+                    new Vertex2D(0, 1, 0, 0, Color.White)
                 };
 
                 QuadVBO = new GLBuffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw,
@@ -292,10 +295,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Span<Vertex2D> winVertices = stackalloc[]
                 {
-                    new Vertex2D(-1, 1, 0, 1),
-                    new Vertex2D(-1, -1, 0, 0),
-                    new Vertex2D(1, 1, 1, 1),
-                    new Vertex2D(1, -1, 1, 0),
+                    new Vertex2D(-1, 1, 0, 1, Color.White),
+                    new Vertex2D(-1, -1, 0, 0, Color.White),
+                    new Vertex2D(1, 1, 1, 1, Color.White),
+                    new Vertex2D(1, -1, 1, 0, Color.White),
                 };
 
                 WindowVBO = new GLBuffer<Vertex2D>(
@@ -311,17 +314,12 @@ namespace Robust.Client.Graphics.Clyde
             // Batch rendering
             {
                 BatchVBO = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                    Vertex2D.SizeOf * BatchVertexData.Length, nameof(BatchVBO));
+                    sizeof(Vertex2D) * BatchVertexData.Length, nameof(BatchVBO));
 
                 BatchVAO = new GLHandle(GenVertexArray());
                 BindVertexArray(BatchVAO.Handle);
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, nameof(BatchVAO));
-                // Vertex Coords
-                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-                GL.EnableVertexAttribArray(0);
-                // Texture Coords.
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
+                SetupVAOLayout();
 
                 CheckGlError();
 
@@ -334,7 +332,7 @@ namespace Robust.Client.Graphics.Clyde
 
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-            ApplySampleParameters(TextureSampleParameters.Default);
+            ApplySampleParameters(new TextureSampleParameters() { Filter = false, WrapMode = TextureWrapMode.MirroredRepeat});
             // TODO: This is atrocious and broken and awful why did I merge this
             ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32);
         }
@@ -345,18 +343,13 @@ namespace Robust.Client.Graphics.Clyde
             BindVertexArray(vao.Handle);
             ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, nameof(QuadVAO));
             GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.ObjectHandle);
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
+            SetupVAOLayout();
 
             return vao;
         }
 
         [Conditional("DEBUG")]
-        private void SetupDebugCallback()
+        private unsafe void SetupDebugCallback()
         {
             if (!_hasGLKhrDebug)
             {
@@ -367,18 +360,15 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
-            GCHandle.Alloc(_debugMessageCallbackInstance);
+            _debugMessageCallbackInstance ??= DebugMessageCallback;
 
             // OpenTK seemed to have trouble marshalling the delegate so do it manually.
 
             var procName = _isGLKhrDebugESExtension ? "glDebugMessageCallbackKHR" : "glDebugMessageCallback";
-            LoadGLProc(procName, out DebugMessageCallbackDelegate proc);
-            _debugMessageCallbackInstance = DebugMessageCallback;
+            var glDebugMessageCallback = (delegate* unmanaged[Stdcall] <nint, nint, void>) LoadGLProc(procName);
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);
-            proc(funcPtr, new IntPtr(0x3005));
+            glDebugMessageCallback(funcPtr, new IntPtr(0x3005));
         }
-
-        private delegate void DebugMessageCallbackDelegate(IntPtr funcPtr, IntPtr userParam);
 
         private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)

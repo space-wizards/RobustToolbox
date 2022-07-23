@@ -44,6 +44,11 @@ namespace Robust.Client.Graphics
         MapCoordinates LocalToWorld(Vector2 point);
 
         /// <summary>
+        ///     Matrix equivalent of <see cref="LocalToWorld(Vector2)"/>.
+        /// </summary>
+        Matrix3 WorldToLocalMatrix { get; }
+
+        /// <summary>
         ///     Converts a point in world-space to the viewport's screen coordinates.
         /// </summary>
         Vector2 WorldToLocal(Vector2 point);

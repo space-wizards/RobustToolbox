@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -6,7 +7,18 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
+        [Obsolete("Use EntityUid overload instead.")]
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, GridId gridId, IMapManager? mapManager = null)
+        {
+            IoCManager.Resolve(ref mapManager);
+
+            var grid = mapManager.GetGrid(gridId);
+            var tile = grid.TileSize;
+
+            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
+        }
+
+        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref mapManager);
 
@@ -21,9 +33,9 @@ namespace Robust.Shared.Map
             var coords = coordinates;
             IoCManager.Resolve(ref entityManager, ref mapManager);
 
-            var gridId = coords.GetGridId(entityManager);
+            var gridId = coords.GetGridUid(entityManager);
 
-            if (!gridId.IsValid() || !mapManager.GridExists(gridId))
+            if (gridId != null || !mapManager.GridExists(gridId))
             {
                 var mapCoords = coords.ToMap(entityManager);
 
@@ -42,7 +54,7 @@ namespace Robust.Shared.Map
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
+                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)

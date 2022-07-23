@@ -29,6 +29,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -37,7 +38,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Quaternion : IEquatable<Quaternion>
+    public struct Quaternion : IEquatable<Quaternion>, ISpanFormattable
     {
         #region Fields
 
@@ -903,9 +904,26 @@ namespace Robust.Shared.Maths
         /// Returns a System.String that represents the current Quaternion.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public readonly override string ToString()
         {
-            return $"V: {Xyz}, W: {W}";
+            return $"V: {xyz}, W: {w}";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"V: {xyz}, W: {w}");
         }
 
         #endregion public override string ToString()

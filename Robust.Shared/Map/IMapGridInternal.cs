@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -25,6 +26,13 @@ namespace Robust.Shared.Map
         void RemoveChunk(Vector2i origin);
 
         /// <summary>
+        ///     Tries to return a chunk at the given indices.
+        /// </summary>
+        /// <param name="chunk"></param>
+        /// <returns></returns>
+        bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk);
+
+        /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
         /// </summary>
@@ -33,7 +41,7 @@ namespace Robust.Shared.Map
         MapChunk GetChunk(Vector2i chunkIndices);
 
         /// <summary>
-        /// Returns whether a chunk exists with the specified indices.
+        ///     Returns whether a chunk exists with the specified indices.
         /// </summary>
         bool HasChunk(Vector2i chunkIndices);
 
@@ -46,12 +54,12 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns all the <see cref="MapChunk"/> intersecting the worldAABB.
         /// </summary>
-        void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
+        MapGrid.ChunkEnumerator GetMapChunks(Box2 worldAABB);
 
         /// <summary>
         ///     Returns all the <see cref="MapChunk"/> intersecting the rotated world box.
         /// </summary>
-        void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
+        MapGrid.ChunkEnumerator GetMapChunks(Box2Rotated worldArea);
 
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.
@@ -66,11 +74,10 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns the tile at the given chunk indices.
         /// </summary>
-        /// <param name="mapId"></param>
         /// <param name="mapChunk"></param>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
         /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>
-        TileRef GetTileRef(MapId mapId, MapChunk mapChunk, ushort xIndex, ushort yIndex);
+        TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex);
     }
 }

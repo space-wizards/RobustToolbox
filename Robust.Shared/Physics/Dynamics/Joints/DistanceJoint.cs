@@ -63,7 +63,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             return joint;
         }
-
     }
 
     // 1-D rained system

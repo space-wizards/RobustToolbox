@@ -234,7 +234,8 @@ namespace Robust.Client.UserInterface
                         currentColorTag = tagColor;
                         break;
                     case FormattedMessage.TagPop _:
-                        var popped = formatStack.Pop();
+                        if (!formatStack.TryPop(out var popped))
+                            throw new Exception($"Rich text entry has unmatched closing tag: {Message.ToMarkup()}");
                         switch (popped)
                         {
                             case FormattedMessage.TagColor tagColor:

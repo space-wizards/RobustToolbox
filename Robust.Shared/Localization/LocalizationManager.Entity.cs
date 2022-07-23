@@ -57,9 +57,8 @@ namespace Robust.Shared.Localization
             string? suffix = null;
             Dictionary<string, string>? attributes = null;
 
-            //TODO ENUMERATE PARENTS
+            foreach (var prototype in _prototype.EnumerateParents<EntityPrototype>(prototypeId, true))
             {
-                _prototype.TryIndex<EntityPrototype>(prototypeId, out var prototype);
                 var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
 
                 if (TryGetMessage(locId, out var bundle, out var msg))

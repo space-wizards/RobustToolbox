@@ -58,6 +58,16 @@ namespace Robust.Shared.Prototypes
         IEnumerable<IPrototype> EnumeratePrototypes(string variant);
 
         /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false) where T : class, IPrototype, IInheritingPrototype;
+
+        /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false);
+
+        /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -267,6 +277,61 @@ namespace Robust.Shared.Prototypes
         public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
         {
             return EnumeratePrototypes(GetVariantType(variant));
+        }
+
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)  where T : class, IPrototype, IInheritingPrototype
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            var prototype = Index<T>(id);
+            if (includeSelf) yield return prototype;
+            if (prototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(prototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                var parent = Index<T>(prototypeId);
+                yield return parent;
+                if (parent.Parents == null) continue;
+
+                foreach (var parentId in parent.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
+        }
+
+        public IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false)
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
+            {
+                throw new InvalidOperationException("The provided prototype type is not an inheriting prototype");
+            }
+
+            var prototype = (IInheritingPrototype)Index(type, id);
+            if (includeSelf) yield return (IPrototype)prototype;
+            if (prototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(prototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                var parent = (IInheritingPrototype)Index(type, prototypeId);
+                yield return (IPrototype)parent;
+                if (parent.Parents == null) continue;
+
+                foreach (var parentId in parent.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
         }
 
         public T Index<T>(string id) where T : class, IPrototype

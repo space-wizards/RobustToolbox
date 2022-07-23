@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
     public sealed class AbstractPrototypeIdSerializer<TPrototype> : PrototypeIdSerializer<TPrototype>
-        where TPrototype : class, IPrototype
+        where TPrototype : class, IPrototype, IInheritingPrototype
     {
         public override ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

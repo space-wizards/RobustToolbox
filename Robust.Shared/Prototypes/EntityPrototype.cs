@@ -138,7 +138,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
-        public string[]? Parents { get; private set; }
+        public string[]? Parents { get; }
 
         [ViewVariables]
         [NeverPushInheritance]

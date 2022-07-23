@@ -10,17 +10,24 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 
-public sealed class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], SequenceDataNode>,
+public sealed class AbstractPrototypeIdArraySerializer<TPrototype> : PrototypeIdArraySerializer<TPrototype> where TPrototype : class, IPrototype, IInheritingPrototype
+{
+    protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
+        new AbstractPrototypeIdSerializer<TPrototype>();
+}
+
+[Virtual]
+public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], SequenceDataNode>,
     ITypeSerializer<string[], ValueDataNode> where TPrototype : class, IPrototype
 {
-    private readonly PrototypeIdSerializer<TPrototype> _prototypeSerializer = new();
+    protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
     public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
         return new ValidatedSequenceNode(node.Select(x =>
             x is ValueDataNode valueDataNode
-                ? _prototypeSerializer.Validate(serializationManager, valueDataNode, dependencies, context)
+                ? PrototypeSerializer.Validate(serializationManager, valueDataNode, dependencies, context)
                 : new ErrorNode(x, $"Cannot cast node {x} to ValueDataNode.")).ToList());
     }
 
@@ -28,7 +35,7 @@ public sealed class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<str
         bool skipHook, ISerializationContext? context = null, string[]? value = default)
     {
         return node.Select(x =>
-                _prototypeSerializer.Read(serializationManager, (ValueDataNode)x, dependencies, skipHook, context))
+                PrototypeSerializer.Read(serializationManager, (ValueDataNode)x, dependencies, skipHook, context))
             .ToArray();
     }
 
@@ -46,11 +53,11 @@ public sealed class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<str
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null) =>
-        _prototypeSerializer.Validate(serializationManager, node, dependencies, context);
+        PrototypeSerializer.Validate(serializationManager, node, dependencies, context);
 
     public string[] Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         bool skipHook, ISerializationContext? context = null, string[]? value = default) =>
-        new[] { _prototypeSerializer.Read(serializationManager, node, dependencies, skipHook, context) };
+        new[] { PrototypeSerializer.Read(serializationManager, node, dependencies, skipHook, context) };
 }
 

@@ -286,14 +286,16 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            var prototype = Index<T>(id);
+            if(!TryIndex<T>(id, out var prototype))
+                yield break;
             if (includeSelf) yield return prototype;
             if (prototype.Parents == null) yield break;
 
             var queue = new Queue<string>(prototype.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                var parent = Index<T>(prototypeId);
+                if(!TryIndex<T>(prototypeId, out var parent))
+                    yield break;
                 yield return parent;
                 if (parent.Parents == null) continue;
 
@@ -316,18 +318,22 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("The provided prototype type is not an inheriting prototype");
             }
 
-            var prototype = (IInheritingPrototype)Index(type, id);
-            if (includeSelf) yield return (IPrototype)prototype;
-            if (prototype.Parents == null) yield break;
+            if(!TryIndex(type, id, out var prototype))
+                yield break;
+            if (includeSelf) yield return prototype;
+            var iPrototype = (IInheritingPrototype)prototype;
+            if (iPrototype.Parents == null) yield break;
 
-            var queue = new Queue<string>(prototype.Parents);
+            var queue = new Queue<string>(iPrototype.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                var parent = (IInheritingPrototype)Index(type, prototypeId);
-                yield return (IPrototype)parent;
-                if (parent.Parents == null) continue;
+                if (!TryIndex(type, id, out var parent))
+                    continue;
+                yield return parent;
+                iPrototype = (IInheritingPrototype)parent;
+                if (iPrototype.Parents == null) continue;
 
-                foreach (var parentId in parent.Parents)
+                foreach (var parentId in iPrototype.Parents)
                 {
                     queue.Enqueue(parentId);
                 }

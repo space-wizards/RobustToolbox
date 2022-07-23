@@ -718,7 +718,7 @@ namespace Robust.Shared.Prototypes
 
                     if (_inheritanceTrees.TryGetValue(type, out var tree))
                     {
-                        tree.Remove(id);
+                        tree.Remove(id, true);
                     }
 
                     if (_prototypes.TryGetValue(type, out var prototypeIds))

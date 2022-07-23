@@ -103,7 +103,15 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
                         newParents[i++] = childParent;
                     }
 
-                    _parents[child] = newParents;
+                    if (newParents.Length == 0)
+                    {
+                        _rootNodes.Add(child);
+                        _parents.Remove(child);
+                    }
+                    else
+                    {
+                        _parents[child] = newParents;
+                    }
                 }
             }
         }

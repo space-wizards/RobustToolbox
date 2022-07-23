@@ -436,7 +436,6 @@ internal sealed class MidiRenderer : IMidiRenderer
 
                 _synth.PitchBend(channel, state.PitchBend.AsSpan[channel]);
                 _synth.ChannelPressure(channel, state.ChannelPressure.AsSpan[channel]);
-                _synth.ProgramChange(channel, state.Program.AsSpan[channel]);
 
                 for (var controller = 0; controller < state.Controllers.AsSpan[channel].AsSpan.Length; controller++)
                 {
@@ -453,8 +452,9 @@ internal sealed class MidiRenderer : IMidiRenderer
                     {
                         _midiSawmill.Error($"CH:{channel} CC:{controller} VAL:{value} {e.ToStringBetter()}");
                     }
-
                 }
+
+                _synth.ProgramChange(channel, state.Program.AsSpan[channel]);
 
                 for (var key = 0; key < state.NoteVelocities.AsSpan[channel].AsSpan.Length; key++)
                 {

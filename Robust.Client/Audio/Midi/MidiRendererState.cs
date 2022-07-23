@@ -14,6 +14,13 @@ public struct MidiRendererState
 
     internal Span<byte> AsSpan => MemoryMarshal.CreateSpan(ref NoteVelocities._00._00, 4160);
 
+    static unsafe MidiRendererState()
+    {
+        var s = new MidiRendererState();
+        DebugTools.Assert(s.AsSpan.Length == sizeof(MidiRendererState),
+            $"{nameof(MidiRendererState)}'s {nameof(AsSpan)} length does not match struct size! Was: {s.AsSpan.Length} Expected: {sizeof(MidiRendererState)}");
+    }
+
     public MidiRendererState()
     {
         NoteVelocities = default;

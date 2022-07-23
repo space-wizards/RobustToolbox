@@ -79,7 +79,6 @@ internal sealed class MidiRenderer : IMidiRenderer
             }
 
             DisableProgramChangeEvent = disable;
-
             _midiProgram = value;
         }
     }
@@ -90,6 +89,9 @@ internal sealed class MidiRenderer : IMidiRenderer
         get => _midiBank;
         set
         {
+            var disable = DisableProgramChangeEvent;
+            DisableProgramChangeEvent = false;
+
             lock (_playerStateLock)
             {
                 for (byte i = 0; i < ChannelCount; i++)
@@ -102,6 +104,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                 }
             }
 
+            DisableProgramChangeEvent = disable;
             _midiBank = value;
         }
     }
@@ -513,6 +516,10 @@ internal sealed class MidiRenderer : IMidiRenderer
                         break;
 
                     case RobustMidiCommand.ControlChange:
+                        // CC0 is bank selection
+                        if (midiEvent.Control == 0x0 && DisableProgramChangeEvent)
+                            return;
+
                         _rendererState.Controllers.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Control] = midiEvent.Value;
                         _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
                         break;

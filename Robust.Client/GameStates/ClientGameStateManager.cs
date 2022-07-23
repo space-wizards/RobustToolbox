@@ -237,6 +237,9 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
+                if (PredictionNeedsResetting)
+                    ResetPredictedEntities();
+
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
                 {
@@ -247,9 +250,6 @@ namespace Robust.Client.GameStates
                     _timing.LastProcessedTick += 1;
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
-
-                if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
 
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))

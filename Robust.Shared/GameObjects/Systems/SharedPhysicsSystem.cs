@@ -252,7 +252,7 @@ namespace Robust.Shared.GameObjects
                     bodyQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
-                    
+
             }
         }
 
@@ -302,7 +302,12 @@ namespace Robust.Shared.GameObjects
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            SetCanCollide(physics, true, false);
+            bool canCollide = true;
+
+            if (TryComp(uid, out PhysicsComponent? physicsComponent))
+                canCollide = physicsComponent._canCollide;
+
+            SetCanCollide(physics, canCollide, false);
         }
 
         /// <summary>

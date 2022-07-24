@@ -227,39 +227,50 @@ namespace Robust.Client.UserInterface.CustomControls
             Opened();
         }
 
-        public void OpenCentered()
+        public void OpenCentered() => OpenCentered((0.5f, 0.5f));
+        public void OpenToLeft() => OpenCentered((0, 0.5f));
+        public void OpenCenteredLeft() => OpenCentered((0.25f, 0.5f));
+        public void OpenToRight() => OpenCentered((1, 0.5f));
+        public void OpenCenteredRight() => OpenCentered((0.75f, 0.5f));
+
+        /// <summary>
+        ///     Opens a window, attempting to place the center of the window at some relative point on the screen.
+        /// </summary>
+        /// <param name="relativePosition">Fractional screen position. So (0,0) is the upper left, and (1,1) is the
+        /// lower right.</param>
+        public void OpenCentered(Vector2 relativePosition)
         {
-            if (_firstTimeOpened)
-            {
-                Measure(Vector2.Infinity);
-                SetSize = DesiredSize;
-                Open();
-                // An explaination: The BadOpenGLVersionWindow was showing up off the top-left corner of the screen.
-                // Basically, if OpenCentered happens super-early, RootControl doesn't get time to layout children.
-                // But we know that this is always going to be one of the roots anyway for now.
-                LayoutContainer.SetPosition(this, (UserInterfaceManager.RootControl.Size - SetSize) / 2);
-                _firstTimeOpened = false;
-            }
-            else
+            if (!_firstTimeOpened)
             {
                 Open();
+                return;
             }
+
+            Measure(Vector2.Infinity);
+            SetSize = DesiredSize;
+            Open();
+            RecenterWindow(relativePosition);
+            _firstTimeOpened = false;
         }
 
-        public void OpenToLeft()
+        /// <summary>
+        ///     Repositions a window, attempting to place the center of the window at some relative point on the screen.
+        /// </summary>
+        /// <param name="relativePosition">Fractional screen position. So (0,0) is the upper left, and (1,1) is the
+        /// lower right.</param>
+        public void RecenterWindow(Vector2 relativePosition)
         {
-            if (_firstTimeOpened)
-            {
-                Measure(Vector2.Infinity);
-                SetSize = DesiredSize;
-                Open();
-                LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - DesiredSize.Y) / 2));
-                _firstTimeOpened = false;
-            }
-            else
-            {
-                Open();
-            }
+            if (Parent == null)
+                return;
+
+            // Where we want the upper left corner of the window to be
+            var corner = Parent!.Size * Vector2.Clamp(relativePosition, Vector2.Zero, Vector2.One) - DesiredSize / 2;
+
+            // Attempt to keep the whole window is visible, regardless of the target position. e.g., if the target for
+            // the center is (0,0), this will actually open the window so that the upper left is at (0,0). If the window
+            // is bigger than the parent, this will currently prioritize showing the upper left corner.
+            var pos = Vector2.Clamp(corner, Vector2.Zero, Parent.Size - DesiredSize);
+            LayoutContainer.SetPosition(this, pos);
         }
 
         protected virtual void Opened()

@@ -252,7 +252,6 @@ namespace Robust.Shared.GameObjects
                     bodyQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
-
             }
         }
 

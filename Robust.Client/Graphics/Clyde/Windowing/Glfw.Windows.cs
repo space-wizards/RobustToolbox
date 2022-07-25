@@ -519,6 +519,9 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
+                if (OperatingSystem.IsWindows())
+                    WsiShared.WindowsSharedWindowCreate((HWND) GLFW.GetWin32Window(window), _cfg);
+
                 if (parameters.Visible)
                 {
                     GLFW.ShowWindow(window);

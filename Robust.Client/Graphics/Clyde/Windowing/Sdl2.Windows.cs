@@ -231,6 +231,14 @@ internal partial class Clyde
             // Make sure window thread doesn't keep hold of the GL context.
             SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
 
+
+            if (OperatingSystem.IsWindows())
+            {
+                SDL_SysWMinfo info = default;
+                if (SDL_GetWindowWMInfo(window, ref info) == SDL_TRUE && info.subsystem == SDL_SYSWM_WINDOWS)
+                    WsiShared.WindowsSharedWindowCreate((HWND) info.info.win.window, _cfg);
+            }
+
             if (parameters.Visible)
                 SDL_ShowWindow(window);
 

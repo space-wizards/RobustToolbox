@@ -38,9 +38,10 @@ namespace Robust.Shared.Physics
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
-        // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
+        /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
@@ -66,7 +67,7 @@ namespace Robust.Shared.Physics
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
-            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
 
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
@@ -866,9 +867,9 @@ namespace Robust.Shared.Physics
             _moveBuffer.Remove(e.Map);
         }
 
-        private void OnGridAdd(GridAddEvent ev)
+        private void OnGridAdd(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
+            EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)

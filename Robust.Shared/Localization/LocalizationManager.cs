@@ -77,19 +77,20 @@ namespace Robust.Shared.Localization
         public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
             params (string, object)[]? keyArgs)
         {
+            if (!HasMessage(messageId, out var bundle))
+            {
+                value = null;
+                return false;
+            }
+
+            var context = new LocContext(bundle);
             var args = new Dictionary<string, IFluentType>();
             if (keyArgs != null)
             {
                 foreach (var (k, v) in keyArgs)
                 {
-                    args.Add(k, v.FluentFromObject());
+                    args.Add(k, v.FluentFromObject(context));
                 }
-            }
-
-            if (!HasMessage(messageId, out var bundle))
-            {
-                value = null;
-                return false;
             }
 
             try

@@ -260,8 +260,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Block the main thread (to avoid stuff like texture uploads being problematic).
                 WaitWindowCreate(task);
-
+#pragma warning disable RA0004
                 var (reg, errorResult) = task.Result;
+#pragma warning restore RA0004
 
                 if (reg != null)
                 {

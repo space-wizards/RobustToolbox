@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -45,12 +46,14 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
+#pragma warning disable CS0618
             var msg = new GridInitializeEvent(uid, component.GridIndex);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
+#pragma warning disable CS0618
             var msg = new GridStartupEvent(uid, component.GridIndex);
             RaiseLocalEvent(uid, msg, true);
         }
@@ -92,9 +95,11 @@ namespace Robust.Shared.GameObjects
         public bool Destroyed => !Created;
     }
 
+#pragma warning disable CS0618
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridStartupEvent(EntityUid uid, GridId gridId)
@@ -107,6 +112,7 @@ namespace Robust.Shared.GameObjects
     public sealed class GridRemovalEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridRemovalEvent(EntityUid uid, GridId gridId)
@@ -122,6 +128,7 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
         public GridInitializeEvent(EntityUid uid, GridId gridId)
@@ -130,6 +137,7 @@ namespace Robust.Shared.GameObjects
             GridId = gridId;
         }
     }
+#pragma warning restore CS0618
 
     /// <summary>
     /// Raised whenever a grid is Added

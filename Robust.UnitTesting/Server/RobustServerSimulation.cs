@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Debugging;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -269,6 +270,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugRayDrawingSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<CollisionWakeSystem>();
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();

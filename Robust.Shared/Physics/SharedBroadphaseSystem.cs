@@ -67,7 +67,7 @@ namespace Robust.Shared.Physics
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
@@ -867,8 +867,9 @@ namespace Robust.Shared.Physics
             _moveBuffer.Remove(e.Map);
         }
 
-        private void OnGridAdd(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
+            // Must be done before initialization as that's when broadphase data starts getting set.
             EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 

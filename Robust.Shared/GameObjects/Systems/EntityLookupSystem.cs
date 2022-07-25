@@ -71,7 +71,7 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
             EntityManager.EntityInitialized += OnEntityInit;
             SubscribeLocalEvent<MapChangedEvent>(OnMapCreated);
@@ -147,7 +147,7 @@ namespace Robust.Shared.GameObjects
             component.Tree.Clear();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             EntityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }

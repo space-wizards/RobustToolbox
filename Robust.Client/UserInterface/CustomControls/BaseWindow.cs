@@ -227,18 +227,18 @@ namespace Robust.Client.UserInterface.CustomControls
             Opened();
         }
 
-        public void OpenCentered() => OpenCentered((0.5f, 0.5f));
-        public void OpenToLeft() => OpenCentered((0, 0.5f));
-        public void OpenCenteredLeft() => OpenCentered((0.25f, 0.5f));
-        public void OpenToRight() => OpenCentered((1, 0.5f));
-        public void OpenCenteredRight() => OpenCentered((0.75f, 0.5f));
+        public void OpenCentered() => OpenCenteredAt((0.5f, 0.5f));
+        public void OpenToLeft() => OpenCenteredAt((0, 0.5f));
+        public void OpenCenteredLeft() => OpenCenteredAt((0.25f, 0.5f));
+        public void OpenToRight() => OpenCenteredAt((1, 0.5f));
+        public void OpenCenteredRight() => OpenCenteredAt((0.75f, 0.5f));
 
         /// <summary>
         ///     Opens a window, attempting to place the center of the window at some relative point on the screen.
         /// </summary>
         /// <param name="relativePosition">Fractional screen position. So (0,0) is the upper left, and (1,1) is the
         /// lower right.</param>
-        public void OpenCentered(Vector2 relativePosition)
+        public void OpenCenteredAt(Vector2 relativePosition)
         {
             if (!_firstTimeOpened)
             {

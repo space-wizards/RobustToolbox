@@ -1149,6 +1149,7 @@ namespace Robust.Shared.GameObjects
         private static ComponentState AutoGenerateState(IComponent comp, Type compType, Type stateType)
         {
             var compFields = compType.GetFields();
+
             var state = Activator.CreateInstance(stateType)!;
             foreach (var field in stateType.GetFields())
             {
@@ -1161,6 +1162,9 @@ namespace Robust.Shared.GameObjects
                     $"Field {field.Name} on {comp.Name} had matching field for auto-generating on {stateType.Name}, but their types differ! {field.FieldType.Name} vs {applicable.FieldType.Name}");
                 field.SetValue(state, applicable.GetValue(comp));
             }
+
+            DebugTools.Assert(typeof(ComponentState).IsAssignableFrom(stateType),
+                $"State type {stateType} is not an inheritor of {nameof(ComponentState)}!");
 
             return (ComponentState) state;
         }

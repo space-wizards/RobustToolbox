@@ -204,9 +204,7 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve(ref entManager);
             entManager.Dirty(this);
         }
-
-        private static readonly ComponentState DefaultComponentState = new();
-
+        
         /// <inheritdoc />
         public virtual ComponentState? GetComponentState()
         {

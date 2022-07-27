@@ -751,6 +751,8 @@ namespace Robust.Server.Maps
             {
                 var mapQuery = _serverEntityManager.GetEntityQuery<MapComponent>();
                 var metaQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
+                var mapCompMappings = new Dictionary<string, MappingDataNode>();
+                var compTypes = new Dictionary<string, Type>();
 
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
@@ -758,29 +760,28 @@ namespace Robust.Server.Maps
                     var prototype = metaQuery.GetComponent(entity).EntityPrototype;
                     if (prototype != null && data.TryGet("components", out SequenceDataNode? componentList))
                     {
-                        var componentMappings =
-                            prototype.Components.ToDictionary(x => x.Key, x => x.Value.Mapping);
-
                         CurrentComponentData.EnsureCapacity(componentList.Count);
-                        var mapCompMappings = new Dictionary<string, MappingDataNode>();
+                        mapCompMappings.Clear();
+                        mapCompMappings.EnsureCapacity(componentList.Count);
+                        compTypes.Clear();
+                        compTypes.EnsureCapacity(mapCompMappings.Count);
                         foreach (var compData in componentList.Cast<MappingDataNode>())
                         {
                             var datanode = compData.Copy();
                             datanode.Remove("type");
                             var value = ((ValueDataNode)compData["type"]).Value;
                             mapCompMappings[value] = datanode;
+                            compTypes[value] = _componentFactory.GetRegistration(value).Type;
                         }
 
-                        var compTypes = mapCompMappings.ToDictionary(x => x.Key,
-                            x => _componentFactory.GetRegistration(x.Key).Type);
                         foreach (var comp in mapCompMappings.Keys)
                         {
-                            if (componentMappings.TryGetValue(comp, out var protData))
+                            if (prototype.Components.TryGetValue(comp, out var protData))
                             {
                                 mapCompMappings[comp] =
                                     _serializationManager.PushCompositionWithGenericNode(
                                         compTypes[comp],
-                                        new[] { protData }, mapCompMappings[comp], this);
+                                        new[] { protData.Mapping }, mapCompMappings[comp], this);
                             }
                         }
 

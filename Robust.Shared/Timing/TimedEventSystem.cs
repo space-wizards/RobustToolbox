@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -15,24 +16,20 @@ public sealed class TimedEventSystem : EntitySystem
     {
         if (_gameTiming.Paused) return;
         var time = _gameTiming.CurTime;
-        while (_timeQueue.TryDequeue(out var pair, out var triggerTime))
+        while (_timeQueue.TryPeek(out var pair, out var triggerTime))
         {
-            if (triggerTime <= time)
-            {
-                _componentTimedEventInstance.Key = pair.Key;
-                EntityManager.EventBus.RaiseComponentEvent(pair.Component, _componentTimedEventInstance);
-            }
-            else
-            {
-                _timeQueue.Enqueue(pair, triggerTime);
-                break;
-            }
+            if (triggerTime > time) return;
+            _ = _timeQueue.Dequeue();
+            if (!pair.Component.Running) continue;
+            _componentTimedEventInstance.Key = pair.Key;
+            EntityManager.EventBus.RaiseComponentEvent(pair.Component, _componentTimedEventInstance);
         }
     }
 
     [PublicAPI]
     public void AddTimedEvent<TComponent>(TComponent component, TimeSpan waitTime, string key) where TComponent: Component
     {
+        Debug.Assert(component.Running);
         _timeQueue.Enqueue((component, key), _gameTiming.RealTime+waitTime);
     }
 

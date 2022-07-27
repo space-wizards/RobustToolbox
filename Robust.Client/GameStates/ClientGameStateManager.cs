@@ -434,7 +434,7 @@ namespace Robust.Client.GameStates
                 {
                     var state = _entityManager.GetComponentState(bus, component);
 
-                    if(state.GetType() == typeof(ComponentState))
+                    if(state == null)
                         continue;
 
                     compData.Add(netId, state);

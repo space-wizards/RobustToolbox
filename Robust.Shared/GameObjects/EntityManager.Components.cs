@@ -1110,12 +1110,25 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
+        public ComponentState? GetComponentState(IEventBus eventBus, IComponent component)
         {
             var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 
-            return getState.State ?? component.GetComponentState();
+            var state = getState.State;
+            if (state == null)
+            {
+                var compType = component.GetType();
+                var networkedComp =
+                    (NetworkedComponentAttribute) Attribute.GetCustomAttribute(compType, typeof(NetworkedComponentAttribute))!;
+
+                if (networkedComp.ComponentStateType != null)
+                {
+                    state = TryAutoGenerateComponentState(component, compType, networkedComp.ComponentStateType);
+                }
+            }
+
+            return state ?? component.GetComponentState();
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
@@ -1123,6 +1136,14 @@ namespace Robust.Shared.GameObjects
             var attempt = new ComponentGetStateAttemptEvent(player);
             eventBus.RaiseComponentEvent(component, ref attempt);
             return !attempt.Cancelled;
+        }
+
+        /// <summary>
+        ///     Attempts to fill in a given component state with data from the component automatically.
+        /// </summary>
+        public ComponentState? TryAutoGenerateComponentState(IComponent component, Type componentType, Type componentStateType)
+        {
+            return null;
         }
 
         #endregion

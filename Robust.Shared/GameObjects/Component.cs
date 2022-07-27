@@ -208,13 +208,13 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentState DefaultComponentState = new();
 
         /// <inheritdoc />
-        public virtual ComponentState GetComponentState()
+        public virtual ComponentState? GetComponentState()
         {
             DebugTools.Assert(
                 Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) != null,
                 $"Calling base {nameof(GetComponentState)} without being networked.");
 
-            return DefaultComponentState;
+            return null;
         }
 
         /// <inheritdoc />

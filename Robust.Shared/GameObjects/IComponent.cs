@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
         ///     Get the component's state for replicating on the client.
         /// </summary>
         /// <returns>ComponentState object</returns>
-        ComponentState GetComponentState();
+        ComponentState? GetComponentState();
 
         /// <summary>
         ///     Handles an incoming component state from the server.

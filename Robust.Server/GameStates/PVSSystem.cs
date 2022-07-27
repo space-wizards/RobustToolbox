@@ -921,7 +921,7 @@ internal sealed partial class PVSSystem : EntitySystem
             else
             {
                 DebugTools.Assert(changeState);
-                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
+                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component) ?? new ComponentState()));
             }
         }
 

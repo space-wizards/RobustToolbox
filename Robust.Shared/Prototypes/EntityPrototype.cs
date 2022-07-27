@@ -18,6 +18,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
 {
+
     /// <summary>
     /// Prototype that represents game entities.
     /// </summary>
@@ -251,20 +252,11 @@ namespace Robust.Shared.Prototypes
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
-            /*YamlObjectSerializer.Context? defaultContext = null;
-            if (context == null)
-            {
-                defaultContext = new PrototypeSerializationContext(prototype);
-            }*/
-
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
                 {
-                    var fullData = entry.Mapping;
-
-                    if (context != null)
-                        fullData = context.GetComponentData(name, fullData);
+                    var fullData = context?.TryGetComponent(name, out var data) == true ? data : entry.Component;
 
                     EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
@@ -272,7 +264,7 @@ namespace Robust.Shared.Prototypes
 
             if (context != null)
             {
-                foreach (var name in context.GetExtraComponentTypes())
+                foreach (var name in context.GetAvailableComponents())
                 {
                     if (prototype != null && prototype.Components.ContainsKey(name))
                     {
@@ -282,9 +274,13 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var ser = context.GetComponentData(name, null);
+                    if (!context.TryGetComponent(name, out var data))
+                    {
+                        throw new InvalidOperationException(
+                            $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
+                    }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, ser, context as ISerializationContext);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
                 }
             }
         }
@@ -294,7 +290,7 @@ namespace Robust.Shared.Prototypes
             IEntityManager entityManager,
             ISerializationManager serManager,
             string compName,
-            MappingDataNode data,
+            IComponent data,
             ISerializationContext? context)
         {
             var compReg = factory.GetRegistration(compName);
@@ -308,7 +304,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            serManager.Read(compReg.Type, data, context, value: component);
+            serManager.Copy(data, component, context);
         }
 
         public override string ToString()

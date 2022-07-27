@@ -272,7 +272,7 @@ namespace Robust.Server.Maps
             public readonly MapId TargetMap;
             private EntityUid? TargetMapUid;
 
-            private Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
+            private Dictionary<string, IComponent> CurrentComponentData = new();
 
             private string? CurrentWritingComponent;
             private EntityUid? CurrentWritingEntity;
@@ -754,24 +754,48 @@ namespace Robust.Server.Maps
 
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
-                    CurrentReadingEntityComponents = new Dictionary<string, MappingDataNode>();
-                    if (data.TryGet("components", out SequenceDataNode? componentList))
+                    CurrentComponentData.Clear();
+                    var prototype = metaQuery.GetComponent(entity).EntityPrototype;
+                    if (prototype != null && data.TryGet("components", out SequenceDataNode? componentList))
                     {
+                        var componentMappings =
+                            prototype.Components.ToDictionary(x => x.Key, x => x.Value.Mapping);
+
+                        CurrentComponentData.EnsureCapacity(componentList.Count);
+                        var mapCompMappings = new Dictionary<string, MappingDataNode>();
                         foreach (var compData in componentList.Cast<MappingDataNode>())
                         {
                             var datanode = compData.Copy();
                             datanode.Remove("type");
                             var value = ((ValueDataNode)compData["type"]).Value;
-                            CurrentReadingEntityComponents[value] = datanode;
+                            mapCompMappings[value] = datanode;
                         }
-                    }
 
-                    _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
+                        var compTypes = mapCompMappings.ToDictionary(x => x.Key,
+                            x => _componentFactory.GetRegistration(x.Key).Type);
+                        foreach (var comp in mapCompMappings.Keys)
+                        {
+                            if (componentMappings.TryGetValue(comp, out var protData))
+                            {
+                                mapCompMappings[comp] =
+                                    _serializationManager.PushCompositionWithGenericNode(
+                                        compTypes[comp],
+                                        new[] { protData }, mapCompMappings[comp], this);
+                            }
+                        }
 
-                    if (mapQuery.HasComponent(entity))
-                    {
-                        DebugTools.Assert(TargetMapUid == null);
-                        TargetMapUid = entity;
+                        foreach (var (comp, mapping) in mapCompMappings)
+                        {
+                            CurrentComponentData[comp] = (IComponent) _serializationManager.Read(compTypes[comp], mapping, this)!;
+                        }
+
+                        _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
+
+                        if (mapQuery.HasComponent(entity))
+                        {
+                            DebugTools.Assert(TargetMapUid == null);
+                            TargetMapUid = entity;
+                        }
                     }
                 }
             }
@@ -1016,30 +1040,14 @@ namespace Robust.Server.Maps
                 }
             }
 
-            // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
-                MappingDataNode? protoData)
+            public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
             {
-                if (CurrentReadingEntityComponents == null)
-                {
-                    throw new InvalidOperationException();
-                }
-
-
-                if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
-                {
-                    if (protoData == null) return mapping.Copy();
-
-                    return _serializationManager.PushCompositionWithGenericNode(
-                        _componentFactory.GetRegistration(componentName).Type, new[] { protoData }, mapping, this);
-                }
-
-                return protoData ?? new MappingDataNode();
+                return CurrentComponentData.TryGetValue(componentName, out component);
             }
 
-            public IEnumerable<string> GetExtraComponentTypes()
+            public IEnumerable<string> GetAvailableComponents()
             {
-                return CurrentReadingEntityComponents!.Keys;
+                return CurrentComponentData.Keys;
             }
 
             [Virtual]

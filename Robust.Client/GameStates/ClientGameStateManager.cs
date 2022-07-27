@@ -401,6 +401,7 @@ namespace Robust.Client.GameStates
 
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
+                    TryAutoHandleState(comp, compState);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = curTick;
@@ -666,6 +667,7 @@ namespace Robust.Client.GameStates
                     try
                     {
                         var handleState = new ComponentHandleState(cur, next);
+                        TryAutoHandleState(component, cur);
                         bus.RaiseComponentEvent(component, ref handleState);
                         component.HandleComponentState(cur, next);
                     }
@@ -694,6 +696,35 @@ namespace Robust.Client.GameStates
                     var eRegisteredNetUidName = _compFactory.GetRegistration(netId).Name;
                     DebugTools.Assert(
                         $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
+                }
+            }
+        }
+
+        private static void TryAutoHandleState(IComponent comp, ComponentState? state)
+        {
+            if (state == null)
+                return;
+
+            var compType = comp.GetType();
+            var attr = (NetworkedComponentAttribute)Attribute.GetCustomAttribute(compType,
+                typeof(NetworkedComponentAttribute))!;
+
+            if (attr.ComponentStateType == null)
+                return;
+
+            DebugTools.Assert(state.GetType() == attr.ComponentStateType,
+                $"Tried to auto-handle state {attr.ComponentStateType.Name} for component {comp.Name}, instead got state {state.GetType().Name}");
+
+            // Try to automatically fill fields based on the given state.
+            var stateType = state.GetType();
+            var compFields = compType.GetFields();
+            foreach (var field in stateType.GetFields())
+            {
+                // If there's a field in the component with the same name as the state,
+                // set the state to the components field.
+                if (compFields.FirstOrDefault(f => f.Name == field.Name) is { } applicable)
+                {
+                    applicable.SetValue(comp, field.GetValue(state));
                 }
             }
         }

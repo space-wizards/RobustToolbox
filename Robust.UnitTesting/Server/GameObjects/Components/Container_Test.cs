@@ -278,7 +278,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.Insert(childEnt);
 
             var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
-            var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
+            var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState()!;
 
             Assert.That(state.ContainerSet.Count, Is.EqualTo(1));
             Assert.That(state.ContainerSet[0].Id, Is.EqualTo("dummy"));

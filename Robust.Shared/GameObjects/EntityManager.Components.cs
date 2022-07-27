@@ -1112,23 +1112,28 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public ComponentState? GetComponentState(IEventBus eventBus, IComponent component)
         {
+            // Try eventbus handlestate, then component handlestate, then fall back to auto-generated state if applicable.
             var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 
             var state = getState.State;
-            if (state == null)
-            {
-                var compType = component.GetType();
-                var networkedComp =
-                    (NetworkedComponentAttribute) Attribute.GetCustomAttribute(compType, typeof(NetworkedComponentAttribute))!;
+            if (state != null)
+                return state;
 
-                if (networkedComp.ComponentStateType != null)
-                {
-                    state = TryAutoGenerateComponentState(component, compType, networkedComp.ComponentStateType);
-                }
+            state = component.GetComponentState();
+            if (state != null)
+                return state;
+
+            var compType = component.GetType();
+            var networkedComp =
+                (NetworkedComponentAttribute) Attribute.GetCustomAttribute(compType, typeof(NetworkedComponentAttribute))!;
+
+            if (networkedComp.ComponentStateType != null)
+            {
+                state = AutoGenerateState(component, compType, networkedComp.ComponentStateType);
             }
 
-            return state ?? component.GetComponentState();
+            return state;
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
@@ -1141,9 +1146,21 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Attempts to fill in a given component state with data from the component automatically.
         /// </summary>
-        public ComponentState? TryAutoGenerateComponentState(IComponent component, Type componentType, Type componentStateType)
+        private static ComponentState AutoGenerateState(IComponent comp, Type compType, Type stateType)
         {
-            return null;
+            var compFields = compType.GetFields();
+            var state = Activator.CreateInstance(stateType)!;
+            foreach (var field in stateType.GetFields())
+            {
+                // If there's a field in the component with the same name as the state,
+                // set the state to the components field.
+                if (compFields.FirstOrDefault(f => f.Name == field.Name) is { } applicable)
+                {
+                    field.SetValue(state, applicable.GetValue(comp));
+                }
+            }
+
+            return (ComponentState) state;
         }
 
         #endregion

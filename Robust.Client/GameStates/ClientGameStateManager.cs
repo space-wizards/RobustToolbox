@@ -401,6 +401,7 @@ namespace Robust.Client.GameStates
 
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
+                    // Auto handle is done first, in case the explicit handlers want to rely on the values being set normally.
                     TryAutoHandleState(comp, compState);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
@@ -667,6 +668,7 @@ namespace Robust.Client.GameStates
                     try
                     {
                         var handleState = new ComponentHandleState(cur, next);
+                        // Auto handle is done first, in case the explicit handlers want to rely on the values being set normally.
                         TryAutoHandleState(component, cur);
                         bus.RaiseComponentEvent(component, ref handleState);
                         component.HandleComponentState(cur, next);
@@ -700,6 +702,11 @@ namespace Robust.Client.GameStates
             }
         }
 
+        /// <summary>
+        ///     Attempts to fill in fields on the component with fields from the state with the same name.
+        /// </summary>
+        /// <param name="comp"></param>
+        /// <param name="state"></param>
         private static void TryAutoHandleState(IComponent comp, ComponentState? state)
         {
             if (state == null)
@@ -722,10 +729,12 @@ namespace Robust.Client.GameStates
             {
                 // If there's a field in the component with the same name as the state,
                 // set the state to the components field.
-                if (compFields.FirstOrDefault(f => f.Name == field.Name) is { } applicable)
-                {
-                    applicable.SetValue(comp, field.GetValue(state));
-                }
+                if (compFields.FirstOrDefault(f => f.Name == field.Name) is not { } applicable)
+                    continue;
+
+                DebugTools.Assert(applicable.FieldType == field.FieldType,
+                    $"Field {field.Name} on {comp.Name} had matching field on {stateType.Name} for auto-handling, but their types differ! {field.FieldType.Name} vs {applicable.FieldType.Name}");
+                applicable.SetValue(comp, field.GetValue(state));
             }
         }
     }

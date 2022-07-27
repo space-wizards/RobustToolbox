@@ -1154,10 +1154,12 @@ namespace Robust.Shared.GameObjects
             {
                 // If there's a field in the component with the same name as the state,
                 // set the state to the components field.
-                if (compFields.FirstOrDefault(f => f.Name == field.Name) is { } applicable)
-                {
-                    field.SetValue(state, applicable.GetValue(comp));
-                }
+                if (compFields.FirstOrDefault(f => f.Name == field.Name) is not { } applicable)
+                    continue;
+
+                DebugTools.Assert(applicable.FieldType == field.FieldType,
+                    $"Field {field.Name} on {comp.Name} had matching field for auto-generating on {stateType.Name}, but their types differ! {field.FieldType.Name} vs {applicable.FieldType.Name}");
+                field.SetValue(state, applicable.GetValue(comp));
             }
 
             return (ComponentState) state;

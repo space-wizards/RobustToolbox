@@ -799,6 +799,7 @@ namespace Robust.Server.Maps
                         }
                     }
                 }
+                CurrentComponentData.Clear();
             }
 
             private void AdjustEntityTransforms()

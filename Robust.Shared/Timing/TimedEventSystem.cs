@@ -13,7 +13,8 @@ public sealed class TimedEventSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        var time = _gameTiming.RealTime;
+        if (_gameTiming.Paused) return;
+        var time = _gameTiming.CurTime;
         while (_timeQueue.TryDequeue(out var pair, out var triggerTime))
         {
             if (triggerTime <= time)

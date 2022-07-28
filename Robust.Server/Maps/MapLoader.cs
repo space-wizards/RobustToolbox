@@ -751,52 +751,38 @@ namespace Robust.Server.Maps
             {
                 var mapQuery = _serverEntityManager.GetEntityQuery<MapComponent>();
                 var metaQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
-                var mapCompMappings = new Dictionary<string, MappingDataNode>();
-                var compTypes = new Dictionary<string, Type>();
 
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
                     CurrentComponentData.Clear();
                     var prototype = metaQuery.GetComponent(entity).EntityPrototype;
-                    if (prototype != null && data.TryGet("components", out SequenceDataNode? componentList))
+                    if (data.TryGet("components", out SequenceDataNode? componentList))
                     {
                         CurrentComponentData.EnsureCapacity(componentList.Count);
-                        mapCompMappings.Clear();
-                        mapCompMappings.EnsureCapacity(componentList.Count);
-                        compTypes.Clear();
-                        compTypes.EnsureCapacity(mapCompMappings.Count);
+
                         foreach (var compData in componentList.Cast<MappingDataNode>())
                         {
                             var datanode = compData.Copy();
                             datanode.Remove("type");
                             var value = ((ValueDataNode)compData["type"]).Value;
-                            mapCompMappings[value] = datanode;
-                            compTypes[value] = _componentFactory.GetRegistration(value).Type;
-                        }
-
-                        foreach (var comp in mapCompMappings.Keys)
-                        {
-                            if (prototype.Components.TryGetValue(comp, out var protData))
+                            var compType = _componentFactory.GetRegistration(value).Type;
+                            if (prototype?.Components?.TryGetValue(value, out var protData) == true)
                             {
-                                mapCompMappings[comp] =
+                                datanode =
                                     _serializationManager.PushCompositionWithGenericNode(
-                                        compTypes[comp],
-                                        new[] { protData.Mapping }, mapCompMappings[comp], this);
+                                        compType,
+                                        new[] { protData.Mapping }, datanode, this);
                             }
+                            CurrentComponentData[value] = (IComponent) _serializationManager.Read(compType, datanode, this)!;
                         }
+                    }
 
-                        foreach (var (comp, mapping) in mapCompMappings)
-                        {
-                            CurrentComponentData[comp] = (IComponent) _serializationManager.Read(compTypes[comp], mapping, this)!;
-                        }
+                    _serverEntityManager.FinishEntityLoad(entity, prototype, this);
 
-                        _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
-
-                        if (mapQuery.HasComponent(entity))
-                        {
-                            DebugTools.Assert(TargetMapUid == null);
-                            TargetMapUid = entity;
-                        }
+                    if (mapQuery.HasComponent(entity))
+                    {
+                        DebugTools.Assert(TargetMapUid == null);
+                        TargetMapUid = entity;
                     }
                 }
                 CurrentComponentData.Clear();

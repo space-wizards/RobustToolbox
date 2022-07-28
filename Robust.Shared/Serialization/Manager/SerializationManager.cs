@@ -402,7 +402,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (source == null || target == null)
             {
-                return source;
+                return null;
             }
 
             var sourceType = source.GetType();
@@ -502,7 +502,8 @@ namespace Robust.Shared.Serialization.Manager
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null) return source;
+            if (source == null || target == null)
+                return null;
 
             return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }

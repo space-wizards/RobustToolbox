@@ -186,7 +186,6 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value);
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    var populateConst = Expression.Constant(value.IsAssignableTo(typeof(IPopulateDefaultValues)));
                     var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));
 
                     call = node switch
@@ -198,7 +197,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -210,7 +208,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(MappingDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -354,7 +351,6 @@ namespace Robust.Shared.Serialization.Manager
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -376,11 +372,6 @@ namespace Robust.Shared.Serialization.Manager
 
             instance ??= instantiator();
 
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
-            }
-
             if (node.Value != string.Empty)
             {
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
@@ -398,7 +389,6 @@ namespace Robust.Shared.Serialization.Manager
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -417,11 +407,6 @@ namespace Robust.Shared.Serialization.Manager
             if (definition == null)
             {
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
-            }
-
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
             }
 
             var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;

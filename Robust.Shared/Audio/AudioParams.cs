@@ -29,56 +29,54 @@ namespace Robust.Shared.Audio
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public struct AudioParams : IPopulateDefaultValues
+    public struct AudioParams
     {
         /// <summary>
         ///     The DistanceModel to use for this specific source.
         /// </summary>
         [DataField("attenuation")]
-        public Attenuation Attenuation { get; set; }
+        public Attenuation Attenuation { get; set; } = Default.Attenuation;
 
         /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
         [DataField("volume")]
-        public float Volume { get; set; }
+        public float Volume { get; set; } = Default.Volume;
 
         /// <summary>
         ///     Scale for the audio pitch.
         /// </summary>
         [DataField("pitchscale")]
-        public float PitchScale { get; set; }
+        public float PitchScale { get; set; } = Default.PitchScale;
 
         /// <summary>
         ///     Audio bus to play on.
         /// </summary>
         [DataField("busname")]
-        public string BusName { get; set; }
+        public string BusName { get; set; } = Default.BusName;
 
         /// <summary>
         ///     Only applies to positional audio.
         ///     The maximum distance from which the audio is hearable.
         /// </summary>
         [DataField("maxdistance")]
-        public float MaxDistance { get; set; }
+        public float MaxDistance { get; set; } = Default.MaxDistance;
 
         /// <summary>
         ///     Used for distance attenuation calculations. Set to 0f to make a sound exempt from distance attenuation.
         /// </summary>
         [DataField("rolloffFactor")]
-        public float RolloffFactor { get; set; }
+        public float RolloffFactor { get; set; } = Default.RolloffFactor;
 
         /// <summary>
         ///     Equivalent of the minimum distance to use for an audio source.
         /// </summary>
         [DataField("referenceDistance")]
-        public float ReferenceDistance { get; set; }
+        public float ReferenceDistance { get; set; } = Default.ReferenceDistance;
 
-        [DataField("loop")]
-        public bool Loop { get; set; }
+        [DataField("loop")] public bool Loop { get; set; } = Default.Loop;
 
-        [DataField("playoffset")]
-        public float PlayOffsetSeconds { get; set; }
+        [DataField("playoffset")] public float PlayOffsetSeconds { get; set; } = Default.PlayOffsetSeconds;
 
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
         // so that's divided by 32 (EyeManager.PIXELSPERMETER).
@@ -213,19 +211,6 @@ namespace Robust.Shared.Audio
             var me = this;
             me.PlayOffsetSeconds = offset;
             return me;
-        }
-
-        public void PopulateDefaultValues()
-        {
-            Attenuation = Default.Attenuation;
-            Volume = Default.Volume;
-            PitchScale = Default.PitchScale;
-            BusName = Default.BusName;
-            MaxDistance = Default.MaxDistance;
-            RolloffFactor = Default.RolloffFactor;
-            ReferenceDistance = Default.ReferenceDistance;
-            Loop = Default.Loop;
-            PlayOffsetSeconds = Default.PlayOffsetSeconds;
         }
     }
 }

@@ -83,7 +83,7 @@ namespace Robust.Shared.Physics
 
                 if (!otherComp.Joints.ContainsKey(id))
                 {
-                    // This can happen if the other joint handled its state before this entity was initialized In this
+                    // This can happen if the other joint handled its state before this entity was initialized. In this
                     // case we need to re-add the joint to the other entity.
                     if (uid == joint.BodyAUid)
                         InitJoint(joint, bodyA, bodyB, component, otherComp, ignoreExisting: true);

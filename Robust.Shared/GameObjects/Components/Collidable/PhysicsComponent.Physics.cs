@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
         private bool _awake = false;
 
-        private void SetAwake(bool value, bool updateSleepTime = true)
+        public void SetAwake(bool value, bool updateSleepTime = true)
         {
             if (_awake == value)
                 return;

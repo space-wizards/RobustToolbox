@@ -18,9 +18,7 @@ chunk:
 entity:
   - uid: int()
     type: str(required=False)
-    components: list(include('comp'))
-comp:
-  - type: str()
+    components: list(comp())
 
 # Example
 # meta:

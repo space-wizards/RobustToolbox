@@ -2,9 +2,9 @@ list(include('attribution'), min=1)
 ---
 attribution:
   files: list(str())
-  license: str() #todo regex
-  copyright: str() #todo regex
-  source: str() #todo regex
+  license: license()
+  copyright: str()
+  source: url()
 
 # Example
 # - files: ["deprecated.png"]

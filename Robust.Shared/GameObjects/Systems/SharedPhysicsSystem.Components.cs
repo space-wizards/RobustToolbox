@@ -27,7 +27,6 @@ public partial class SharedPhysicsSystem
 
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
-            bool awake;
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
 
             if (component.BodyType != BodyType.Static &&

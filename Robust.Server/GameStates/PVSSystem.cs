@@ -166,6 +166,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
+        _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
 
         ShutdownDirty();
     }

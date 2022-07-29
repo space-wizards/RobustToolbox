@@ -129,49 +129,37 @@ namespace Robust.Shared.GameObjects
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
 
-        /// <summary>
-        /// Set awake without the sleeptimer being reset.
-        /// </summary>
-        internal void ForceAwake()
-        {
-            if (_awake || _bodyType == BodyType.Static) return;
-
-            _awake = true;
-            var ev = new PhysicsWakeEvent(this);
-            _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
-        }
-
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Awake
         {
             get => _awake;
-            set
-            {
-                if (_bodyType == BodyType.Static) return;
-
-                // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
-                if (value && !_canCollide)
-                {
-                    CanCollide = true;
-                    if (!_canCollide) return;
-                }
-
-                SetAwake(value);
-            }
+            set => SetAwake(value);
         }
 
-        internal bool _awake = true;
+        private bool _awake = false;
 
-        private void SetAwake(bool value)
+        private void SetAwake(bool value, bool updateSleepTime = true)
         {
-            if (_awake == value) return;
+            if (_awake == value)
+                return;
+
+            if (value && _bodyType == BodyType.Static)
+                return;
+
+            // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+            if (value && !_canCollide)
+            {
+                CanCollide = true;
+                if (!_canCollide)
+                    return;
+            }
+
             _awake = value;
 
             if (value)
             {
-                _sleepTime = 0.0f;
                 var ev = new PhysicsWakeEvent(this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
@@ -180,8 +168,10 @@ namespace Robust.Shared.GameObjects
                 var ev = new PhysicsSleepEvent(this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
                 ResetDynamics();
-                _sleepTime = 0.0f;
             }
+
+            if (updateSleepTime)
+                _sleepTime = 0.0f;
 
             Dirty(_entMan);
         }

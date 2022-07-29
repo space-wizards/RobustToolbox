@@ -72,21 +72,34 @@ namespace Robust.Shared.Physics
 
         private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
         {
-            foreach (var (_, joint) in component.Joints)
+            foreach (var (id, joint) in component.Joints)
             {
+                var other = uid == joint.BodyAUid ? joint.BodyBUid : joint.BodyAUid;
+
                 // Client may not yet know about the other entity.
                 // But whenever that other entity enters PVS, its own joint initialization should hopefully run this again anyways.
-                if (!TryComp(joint.BodyAUid, out PhysicsComponent? bodyA) || !TryComp(joint.BodyBUid, out PhysicsComponent? bodyB))
+                if (!TryComp(joint.BodyAUid, out PhysicsComponent? bodyA) || !TryComp(joint.BodyBUid, out PhysicsComponent? bodyB) || !TryComp(other, out JointComponent? otherComp))
                     continue;
+
+                if (!otherComp.Joints.ContainsKey(id))
+                {
+                    // This can happen if the other joint handled its state before this entity was initialized In this
+                    // case we need to re-add the joint to the other entity.
+                    if (uid == joint.BodyAUid)
+                        InitJoint(joint, bodyA, bodyB, component, otherComp, ignoreExisting: true);
+                    else
+                        InitJoint(joint, bodyA, bodyB, otherComp, component, ignoreExisting: true);
+                    continue;
+                }
 
                 bodyA.WakeBody();
                 bodyB.WakeBody();
 
                 // Raise broadcast last so we can do both sides of directed first.
                 var vera = new JointAddedEvent(joint, bodyA, bodyB);
-                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                RaiseLocalEvent(bodyA.Owner, vera);
                 var smug = new JointAddedEvent(joint, bodyB, bodyA);
-                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                RaiseLocalEvent(bodyB.Owner, smug);
                 EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
             }
         }
@@ -130,43 +143,65 @@ namespace Robust.Shared.Physics
             _dirtyJoints.Clear();
         }
 
-        private void InitJoint(Joint joint)
+        private void InitJoint(Joint joint,
+            PhysicsComponent? bodyA = null,
+            PhysicsComponent? bodyB = null,
+            JointComponent? jointComponentA = null,
+            JointComponent? jointComponentB = null,
+            bool ignoreExisting = false)
         {
             var aUid = joint.BodyAUid;
             var bUid = joint.BodyBUid;
 
-            if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
-                !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+            if (!Resolve(aUid, ref bodyA, false) || !Resolve(bUid, ref bodyB, false))
+                return;
 
             DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
 
-            var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
-            var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);
+            jointComponentA ??= EnsureComp<JointComponent>(bodyA.Owner);
+            jointComponentB ??= EnsureComp<JointComponent>(bodyB.Owner);
+            DebugTools.Assert(jointComponentA.Owner == aUid && jointComponentB.Owner == bUid);
+
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 
-            if (jointsA.ContainsKey(joint.ID))
+
+            _sawmill.Debug($"Initializing joint {joint.ID}");
+
+            // Check for existing joints
+            if (!ignoreExisting && jointsA.TryGetValue(joint.ID, out var existing))
             {
+                if (existing.BodyBUid != bUid)
+                {
+                    _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
+                    return;
+                }
+
                 // If they both already have it we should be gucci
                 // This can occur because of client states coming in blah blah
                 // The reason for this is we defer everything until Update
                 // (and the reason we defer is to avoid modifying components during iteration when we do the EnsureComponent)
-                if (jointsB.ContainsKey(joint.ID)) return;
+                if (jointsB.ContainsKey(joint.ID))
+                {
+                    DebugTools.Assert(jointsB[joint.ID].BodyAUid == aUid);
+                    return;
+                }
 
-                _sawmill.Error($"Existing joint {joint.ID} on {bodyA.Owner}");
-                return;
+                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
             }
-
-            if (jointsB.ContainsKey(joint.ID))
+            else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
             {
-                _sawmill.Error($"Existing joint {joint.ID} on {bodyB.Owner}");
-                return;
+                if (existing.BodyAUid != aUid)
+                {
+                    _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
+                    return;
+                }
+
+                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
             }
 
-            _sawmill.Debug($"Added joint {joint.ID}");
-
-            jointsA.Add(joint.ID, joint);
-            jointsB.Add(joint.ID, joint);
+            jointsA.TryAdd(joint.ID, joint);
+            jointsB.TryAdd(joint.ID, joint);
 
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)

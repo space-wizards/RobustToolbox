@@ -491,7 +491,7 @@ namespace Robust.Client.GameObjects
             }
 
             if (audioParams.Value.Variation.HasValue)
-                source.SetPitch(audioParams.Value.PitchScale + (float)RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
+                source.SetPitch(audioParams.Value.PitchScale * (float)RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
             else
                 source.SetPitch(audioParams.Value.PitchScale);
 

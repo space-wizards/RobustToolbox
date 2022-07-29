@@ -642,10 +642,7 @@ namespace Robust.Client.GameStates
             if (delSpan.Length > 0)
                 ProcessDeletions(delSpan, xforms, metas, xformSys);
 
-            // Initialize and start the newly created entities. IMO this should be done before apply-state, so that
-            // people can safely make use of things like on-container-insert events without having to check whether
-            // entities have been initialized yet. But currently there seems to be some issues with initializing
-            // transform components before a state has been applied.
+            // Initialize and start the newly created entities.
             if (toCreate.Count > 0)
                 InitializeAndStart(toCreate);
 

@@ -15,8 +15,8 @@ namespace Robust.Shared.Audio;
 [ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
 public abstract class SoundSpecifier
 {
-    [ViewVariables, DataField("params")]
-    public AudioParams Params { get; init; }
+    [DataField("params")]
+    public AudioParams Params { get; init; } = AudioParams.Default;
 
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public abstract string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null);
@@ -35,14 +35,15 @@ public sealed class SoundPathSpecifier : SoundSpecifier
     {
     }
 
-    public SoundPathSpecifier(string path)
+    public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResourcePath(path), @params)
     {
-        Path = new ResourcePath(path);
     }
 
-    public SoundPathSpecifier(ResourcePath path)
+    public SoundPathSpecifier(ResourcePath path, AudioParams? @params = null)
     {
         Path = path;
+        if (@params.HasValue)
+            Params = @params.Value;
     }
 
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
@@ -62,9 +63,11 @@ public sealed class SoundCollectionSpecifier : SoundSpecifier
     [UsedImplicitly]
     public SoundCollectionSpecifier() { }
 
-    public SoundCollectionSpecifier(string collection)
+    public SoundCollectionSpecifier(string collection, AudioParams? @params = null)
     {
         Collection = collection;
+        if (@params.HasValue)
+            Params = @params.Value;
     }
 
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)

@@ -247,7 +247,6 @@ namespace Robust.Shared.Prototypes
             EntityPrototype? prototype,
             EntityUid entity,
             IComponentFactory factory,
-            IPrototypeManager prototypeManager,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
@@ -260,8 +259,6 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                prototypeManager.TryGetMapping(typeof(EntityPrototype), prototype.ID, out var prototypeData);
-
                 foreach (var (name, entry) in prototype.Components)
                 {
                     var fullData = entry.Mapping;

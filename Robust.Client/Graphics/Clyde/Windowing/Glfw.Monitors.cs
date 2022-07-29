@@ -113,7 +113,6 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessEventDestroyMonitor(EventMonitorDestroy ev)
             {
-                var reg = _monitors[ev.Id];
                 _monitors.Remove(ev.Id);
                 _clyde._monitorHandles.Remove(ev.Id);
             }

@@ -14,7 +14,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 /// <summary>
 ///     This is a variation of the <see cref="HashSetSerializer{T}"/> that uses a custom type serializer to read the values.
 /// </summary>
-[TypeSerializer]
 public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     : ITypeSerializer<HashSet<T>, SequenceDataNode>
     where TCustomSerializer : ITypeSerializer<T, ValueDataNode>

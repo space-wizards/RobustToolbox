@@ -153,6 +153,8 @@ public interface IMidiRenderer : IDisposable
     /// </summary>
     EntityCoordinates? TrackingCoordinates { get; set; }
 
+    MidiRendererState RendererState { get; }
+
     /// <summary>
     ///     Send a midi event for the renderer to play.
     /// </summary>
@@ -166,6 +168,11 @@ public interface IMidiRenderer : IDisposable
     /// <param name="time"></param>
     /// <param name="absolute"></param>
     void ScheduleMidiEvent(RobustMidiEvent midiEvent, uint time, bool absolute);
+
+    /// <summary>
+    ///     Apply a certain state to the renderer.
+    /// </summary>
+    void ApplyState(MidiRendererState state);
 
     /// <summary>
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.

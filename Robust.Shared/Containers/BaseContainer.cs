@@ -78,8 +78,9 @@ namespace Robust.Shared.Containers
             meta.Flags |= MetaDataFlags.InContainer;
 
             ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
+            var oldParent = transform.ParentUid;
             transform.AttachParent(ownerTransform);
-            InternalInsert(toinsert, entMan);
+            InternalInsert(toinsert, oldParent, entMan);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -200,10 +201,10 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+        protected virtual void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
         {
             DebugTools.Assert(!Deleted);
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this), true);
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
             Manager.Dirty(entMan);
         }
 

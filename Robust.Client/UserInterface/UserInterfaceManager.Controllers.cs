@@ -5,26 +5,60 @@ using System.Reflection.Emit;
 using Robust.Client.State;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Shared.Serialization.Manager.Definition.DataDefinition;
 
 namespace Robust.Client.UserInterface;
 
 internal partial class UserInterfaceManager
 {
-    private readonly Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
-    private readonly Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
+    /// <summary>
+    ///     All registered <see cref="UIController"/>s
+    /// </summary>
     private UIController[] _uiControllerRegistry = default!;
+
+    /// <summary>
+    ///     Indexes of <see cref="UIController"/>s in <see cref="_uiControllerRegistry"/>
+    /// </summary>
     private readonly Dictionary<Type, int> _uiControllerIndices = new();
+
+    /// <summary>
+    ///     <see cref="UIController"/>s that implement <see cref="UIController.OnSystemLoaded"/> indexed by
+    ///     the type of <see cref="EntitySystem"/>
+    /// </summary>
+    private readonly Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
+
+    /// <summary>
+    ///     <see cref="UIController"/>s that implement <see cref="UIController.OnSystemUnloaded"/> indexed by
+    ///     the type of <see cref="EntitySystem"/>
+    /// </summary>
+    private readonly Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
+
+    /// <summary>
+    ///     Implementations of <see cref="IOnStateEntered{T}"/>
+    /// </summary>
     private readonly Dictionary<Type, List<object>> _onStateEnteredControllers = new();
+
+    /// <summary>
+    ///     Implementations of <see cref="IOnStateExited{T}"/>
+    /// </summary>
     private readonly Dictionary<Type, List<object>> _onStateExitedControllers = new();
+
+    /// <summary>
+    ///     Delegates to call for <see cref="_onStateEnteredControllers"/>
+    /// </summary>
     private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateEnteredCallers = new();
+
+    /// <summary>
+    ///     Delegates to call for <see cref="_onStateExitedControllers"/>
+    /// </summary>
     private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateExitedCallers = new();
 
-    //field type, systemsDict
-    private readonly Dictionary<Type, List<(Type, DataDefinition.AssignField<UIController, object?>)>>
-        _assignerRegistry = new();
+    /// <summary>
+    ///
+    /// </summary>
+    private readonly Dictionary<Type, List<(Type, AssignField<UIController, object?>)>> _assignerRegistry = new();
 
     private delegate void StateChangedCaller(object controller, State.State state);
 
@@ -142,7 +176,7 @@ internal partial class UserInterfaceManager
 
             foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
             {
-                if (!fieldInfo.HasAttribute<UISystemDependency>())
+                if (!fieldInfo.HasAttribute<UISystemDependencyAttribute>())
                 {
                     continue;
                 }
@@ -160,7 +194,7 @@ internal partial class UserInterfaceManager
                         if (setter == null)
                         {
                             throw new InvalidOperationException(
-                                $"Property with {nameof(UISystemDependency)} attribute did not have a backing field nor setter");
+                                $"Property with {nameof(UISystemDependencyAttribute)} attribute did not have a backing field nor setter");
                         }
                     }
                 }
@@ -171,7 +205,7 @@ internal partial class UserInterfaceManager
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,
-                    DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType,
+                    EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType,
                         backingField)));
 
                 if (uiControllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType !=

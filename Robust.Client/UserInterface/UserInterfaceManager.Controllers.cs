@@ -11,32 +11,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
-/// <summary>
-///     Attribute applied to EntitySystem-typed fields inside UIControllers that should be
-///     injected when the system becomes available.
-/// </summary>
-public sealed class UISystemDependency : Attribute {}
-
-//Notices your UIController, *UwU Whats this?*
-/// <summary>
-///     Each <see cref="UIController"/> is instantiated as a singleton by <see cref="UserInterfaceManager"/>
-///     <see cref="UIController"/> can use <see cref="DependencyAttribute"/> for regular IoC dependencies
-///     and <see cref="UISystemDependency"/> to depend on <see cref="EntitySystem"/>s, which will be automatically
-///     injected once they are created.
-/// </summary>
-public abstract class UIController
-{
-    [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
-    public virtual void FrameUpdate(FrameEventArgs args) {}
-
-    public virtual void Initialize() {}
-
-    // TODO HUD REFACTOR BEFORE MERGE make these two methods less ass to use
-    public virtual void OnSystemLoaded(IEntitySystem system) {}
-    public virtual void OnSystemUnloaded(IEntitySystem system) {}
-}
-
-
 internal partial class UserInterfaceManager
 {
     private readonly Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
@@ -49,7 +23,8 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateExitedCallers = new();
 
     //field type, systemsDict
-    private readonly Dictionary<Type, List<(Type, DataDefinition.AssignField<UIController,object?>)>> _assignerRegistry = new ();
+    private readonly Dictionary<Type, List<(Type, DataDefinition.AssignField<UIController, object?>)>>
+        _assignerRegistry = new();
 
     private delegate void StateChangedCaller(object controller, State.State state);
 
@@ -79,14 +54,16 @@ internal partial class UserInterfaceManager
         if (entered)
         {
             onStateChangedType = typeof(IOnStateEntered<>).MakeGenericType(state);
-            onStateChangedMethod = controller.GetMethod(nameof(IOnStateEntered<State.State>.OnStateEntered), new[] {state})
-                                   ?? throw new NullReferenceException();
+            onStateChangedMethod =
+                controller.GetMethod(nameof(IOnStateEntered<State.State>.OnStateEntered), new[] {state})
+                ?? throw new NullReferenceException();
         }
         else
         {
             onStateChangedType = typeof(IOnStateExited<>).MakeGenericType(state);
-            onStateChangedMethod = controller.GetMethod(nameof(IOnStateExited<State.State>.OnStateExited), new[] {state})
-                                   ?? throw new NullReferenceException();
+            onStateChangedMethod =
+                controller.GetMethod(nameof(IOnStateExited<State.State>.OnStateExited), new[] {state})
+                ?? throw new NullReferenceException();
         }
 
         generator.Emit(OpCodes.Ldarg_0); // controller
@@ -118,7 +95,7 @@ internal partial class UserInterfaceManager
         }
     }
 
-    private void AddUiControllerToRegistry(List<UIController> list,Type type, UIController instance)
+    private void AddUiControllerToRegistry(List<UIController> list, Type type, UIController instance)
     {
         list.Add(instance);
         _uiControllerIndices.Add(type, list.Count - 1);
@@ -136,7 +113,7 @@ internal partial class UserInterfaceManager
 
     private T GetUiControllerByType<T>() where T : UIController, new()
     {
-        return (T)_uiControllerRegistry[_uiControllerIndices[typeof(T)]];
+        return (T) _uiControllerRegistry[_uiControllerIndices[typeof(T)]];
     }
 
     public T GetUIController<T>() where T : UIController, new()
@@ -182,7 +159,8 @@ internal partial class UserInterfaceManager
                         var setter = property.PropertyInfo.GetSetMethod(true);
                         if (setter == null)
                         {
-                            throw new InvalidOperationException($"Property with {nameof(UISystemDependency)} attribute did not have a backing field nor setter");
+                            throw new InvalidOperationException(
+                                $"Property with {nameof(UISystemDependency)} attribute did not have a backing field nor setter");
                         }
                     }
                 }
@@ -192,14 +170,18 @@ internal partial class UserInterfaceManager
                     continue;
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
+                typeDict.Add((uiControllerType,
+                    DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType,
+                        backingField)));
 
-                if (uiControllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType != typeof(UIController))
+                if (uiControllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType !=
+                    typeof(UIController))
                 {
                     _systemLoadedListeners.GetOrNew(fieldInfo.FieldType).Add(newController);
                 }
 
-                if (uiControllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType != typeof(UIController))
+                if (uiControllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType !=
+                    typeof(UIController))
                 {
                     _systemUnloadedListeners.GetOrNew(fieldInfo.FieldType).Add(newController);
                 }
@@ -250,12 +232,12 @@ internal partial class UserInterfaceManager
         }
     }
 
-    private void OnSystemLoaded(object? sender,SystemChangedArgs args)
+    private void OnSystemLoaded(object? sender, SystemChangedArgs args)
     {
         if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
-            accessor( ref GetUiControllerByTypeRef(controllerType),args.System);
+            accessor(ref GetUiControllerByTypeRef(controllerType), args.System);
         }
 
         if (!_systemLoadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
@@ -265,7 +247,7 @@ internal partial class UserInterfaceManager
         }
     }
 
-    private void OnSystemUnloaded(object? system,SystemChangedArgs args)
+    private void OnSystemUnloaded(object? system, SystemChangedArgs args)
     {
         var systemType = args.System.GetType();
 

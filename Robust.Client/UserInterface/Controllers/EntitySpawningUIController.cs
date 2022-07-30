@@ -67,6 +67,7 @@ public sealed class EntitySpawningUIController : UIController
         _window.SearchBar.OnTextChanged += OnEntitySearchChanged;
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
+        _window.OnResized += UpdateVisiblePrototypes;
 
         _placement.DirectionChanged += OnDirectionChanged;
         _placement.PlacementChanged += ClearSelection;

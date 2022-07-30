@@ -18,6 +18,12 @@ namespace Robust.Client.UserInterface;
 public sealed class UISystemDependency : Attribute {}
 
 //Notices your UIController, *UwU Whats this?*
+/// <summary>
+///     Each <see cref="UIController"/> is instantiated as a singleton by <see cref="UserInterfaceManager"/>
+///     <see cref="UIController"/> can use <see cref="DependencyAttribute"/> for regular IoC dependencies
+///     and <see cref="UISystemDependency"/> to depend on <see cref="EntitySystem"/>s, which will be automatically
+///     injected once they are created.
+/// </summary>
 public abstract class UIController
 {
     [Dependency] protected readonly IUserInterfaceManager UIManager = default!;

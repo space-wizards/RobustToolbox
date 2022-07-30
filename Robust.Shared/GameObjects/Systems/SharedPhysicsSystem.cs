@@ -303,10 +303,10 @@ namespace Robust.Shared.GameObjects
 
             bool canCollide = true;
 
-            if (TryComp(uid, out PhysicsComponent? physicsComponent))
-                canCollide = physicsComponent._canCollide;
+            if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
+                return;
 
-            SetCanCollide(physics, canCollide, false);
+            SetCanCollide(physics, true, false);
         }
 
         /// <summary>

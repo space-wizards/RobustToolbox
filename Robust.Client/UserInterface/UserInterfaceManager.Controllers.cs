@@ -56,7 +56,7 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<(Type controller, Type state), StateChangedCaller> _onStateExitedCallers = new();
 
     /// <summary>
-    ///
+    ///     Field -> Controller -> Field assigner delegate
     /// </summary>
     private readonly Dictionary<Type, List<(Type, AssignField<UIController, object?>)>> _assignerRegistry = new();
 

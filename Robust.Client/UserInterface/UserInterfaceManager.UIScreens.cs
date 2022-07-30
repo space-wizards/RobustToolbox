@@ -8,7 +8,9 @@ namespace Robust.Client.UserInterface;
 internal partial class UserInterfaceManager
 {
     private UIScreen? _activeScreen;
-    public UIScreen? ActiveScreen {
+
+    public UIScreen? ActiveScreen
+    {
         get => _activeScreen;
         private set
         {
@@ -18,16 +20,19 @@ internal partial class UserInterfaceManager
             _activeScreen?.OnAdded();
         }
     }
+
     [ViewVariables] public Control ScreenRoot { get; private set; } = default!;
 
     private readonly Dictionary<Type, UIScreen> _screens = new();
+
     private void _initializeScreens()
     {
         foreach (var screenType in _reflectionManager.GetAllChildren<UIScreen>())
         {
             if (screenType.IsAbstract) continue;
-            _screens.Add(screenType, (UIScreen)_typeFactory.CreateInstance(screenType));
+            _screens.Add(screenType, (UIScreen) _typeFactory.CreateInstance(screenType));
         }
+
         ScreenRoot = new Control
         {
             Name = "ScreenRoot"
@@ -37,9 +42,9 @@ internal partial class UserInterfaceManager
         ScreenRoot.SetPositionInParent(2);
     }
 
-    public void LoadScreen<T>() where T:UIScreen, new()
+    public void LoadScreen<T>() where T : UIScreen, new()
     {
-        ((IUserInterfaceManager)this).LoadScreenInternal(typeof(T));
+        ((IUserInterfaceManager) this).LoadScreenInternal(typeof(T));
     }
 
     public T? GetActiveUIWidgetOrNull<T>() where T : UIWidget, new()
@@ -52,7 +57,7 @@ internal partial class UserInterfaceManager
         if (_activeScreen == null) throw new Exception("No screen is currently active");
         var widget = _activeScreen.GetWidget<T>();
         if (widget == null) throw new Exception("No widget of type found in active screen");
-        return (T)widget;
+        return (T) widget;
     }
 
     void IUserInterfaceManager.LoadScreenInternal(Type type)

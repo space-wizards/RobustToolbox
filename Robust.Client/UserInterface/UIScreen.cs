@@ -13,10 +13,11 @@ namespace Robust.Client.UserInterface;
 public abstract class UIScreen : LayoutContainer
 {
     private IConfigurationManager _configManager = IoCManager.Resolve<IConfigurationManager>();
+
     public Vector2i AutoscaleMaxResolution
     {
         get =>
-            new (_configManager.GetCVar<int>("interface.resolutionAutoScaleUpperCutoffX"),
+            new(_configManager.GetCVar<int>("interface.resolutionAutoScaleUpperCutoffX"),
                 _configManager.GetCVar<int>("interface.resolutionAutoScaleUpperCutoffY"));
         protected set
         {
@@ -24,6 +25,7 @@ public abstract class UIScreen : LayoutContainer
             _configManager.SetCVar("interface.resolutionAutoScaleUpperCutoffY", value.Y);
         }
     }
+
     public Vector2i AutoscaleMinResolution
     {
         get
@@ -38,6 +40,7 @@ public abstract class UIScreen : LayoutContainer
             _configManager.SetCVar("interface.resolutionAutoScaleLowerCutoffY", value.Y);
         }
     }
+
     public float AutoscaleFloor
     {
         get
@@ -45,20 +48,18 @@ public abstract class UIScreen : LayoutContainer
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             return configManager.GetCVar<float>("interface.resolutionAutoScaleMinimum");
         }
-        protected set
-        {
-            _configManager.SetCVar("interface.interface.resolutionAutoScaleMinimum", value);
-        }
+        protected set { _configManager.SetCVar("interface.interface.resolutionAutoScaleMinimum", value); }
     }
 
     private readonly Dictionary<Type, UIWidget> _widgets = new();
+
     protected UIScreen()
     {
         HorizontalAlignment = HAlignment.Stretch;
         VerticalAlignment = VAlignment.Stretch;
     }
 
-    public T RegisterWidget<T>() where T: UIWidget, new()
+    public T RegisterWidget<T>() where T : UIWidget, new()
     {
         if (_widgets.ContainsKey(typeof(T))) throw new Exception("Hud Widget not found");
         var newWidget = new T();
@@ -71,6 +72,7 @@ public abstract class UIScreen : LayoutContainer
         {
             RemoveChild(widget);
         }
+
         _widgets.Remove(typeof(T));
     }
 
@@ -94,17 +96,25 @@ public abstract class UIScreen : LayoutContainer
             return widget;
         }
     }
-    public UIWidget? GetWidget<T>() where T : UIWidget, new()
+
+    public void AddWidget(UIWidget widget)
     {
-        return _widgets.GetValueOrDefault(typeof(T));
+
     }
-    public UIWidget GetOrNewWidget<T>() where T : UIWidget, new()
+
+    public T? GetWidget<T>() where T : UIWidget, new()
+    {
+        return (T?) _widgets.GetValueOrDefault(typeof(T));
+    }
+
+    public T GetOrNewWidget<T>() where T : UIWidget, new()
     {
         if (!_widgets.TryGetValue(typeof(T), out var widget))
         {
             widget = new T();
         }
-        return widget;
+
+        return (T) widget;
     }
 
     public bool IsWidgetShown<T>() where T : UIWidget
@@ -131,8 +141,12 @@ public abstract class UIScreen : LayoutContainer
         if (child is not UIWidget widget) return;
         _widgets.Remove(child.GetType());
     }
-    protected void OnLoaded() {}
 
-    protected void OnUnloaded() {}
+    protected void OnLoaded()
+    {
+    }
 
+    protected void OnUnloaded()
+    {
+    }
 }

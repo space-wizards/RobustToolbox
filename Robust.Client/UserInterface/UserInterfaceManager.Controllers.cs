@@ -99,16 +99,16 @@ internal partial class UserInterfaceManager
     // TODO hud refactor BEFORE MERGE cleanup subscriptions for all implementations when switching out of gameplay state
     private void OnStateChanged(StateChangedEventArgs args)
     {
-        var stateType = args.NewState.GetType();
-
-        foreach (var controller in _onStateExitedControllers[stateType])
+        var oldStateType = args.OldState.GetType();
+        foreach (var controller in _onStateExitedControllers[oldStateType])
         {
-            _onStateEnteredCallers[(controller.GetType(), stateType)](controller, args.OldState);
+            _onStateExitedCallers[(controller.GetType(), oldStateType)](controller, args.OldState);
         }
 
-        foreach (var controller in _onStateEnteredControllers[stateType])
+        var newStateType = args.NewState.GetType();
+        foreach (var controller in _onStateEnteredControllers[newStateType])
         {
-            _onStateEnteredCallers[(controller.GetType(), stateType)](controller, args.NewState);
+            _onStateEnteredCallers[(controller.GetType(), newStateType)](controller, args.NewState);
         }
     }
 

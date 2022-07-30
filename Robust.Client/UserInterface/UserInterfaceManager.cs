@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
-            _initializeControllers();
+            InitializeControllers();
             _initializeCommon();
 
             DebugConsole = new DropDownDebugConsole();
@@ -244,7 +244,7 @@ namespace Robust.Client.UserInterface
                 _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
-            _updateControllers(args); // TODO HUD REFACTOR BEFORE MERGE  remove this when DragDrop helper update is removed
+            UpdateControllers(args); // TODO HUD REFACTOR BEFORE MERGE  remove this when DragDrop helper update is removed
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it

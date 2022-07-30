@@ -155,7 +155,7 @@ internal partial class UserInterfaceManager
         return GetUiControllerByType<T>();
     }
 
-    private void _initializeControllers()
+    private void InitializeControllers()
     {
         foreach (var state in _reflectionManager.GetAllChildren<State.State>())
         {
@@ -258,7 +258,7 @@ internal partial class UserInterfaceManager
         }
     }
 
-    private void _updateControllers(FrameEventArgs args)
+    private void UpdateControllers(FrameEventArgs args)
     {
         foreach (var controller in _uiControllerRegistry)
         {

@@ -17,6 +17,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapGridComponent : IComponent
     {
+        [Obsolete("Use EntityUids instead")]
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
     }
@@ -33,11 +34,14 @@ namespace Robust.Shared.GameObjects
         // If you want to remove this, you would have to restructure the map save file.
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
+#pragma warning disable CS0618
         private GridId _gridIndex = GridId.Invalid;
+#pragma warning restore CS0618
 
         private IMapGrid? _mapGrid;
 
         /// <inheritdoc />
+        [Obsolete("Use EntityUid instead")]
         public GridId GridIndex
         {
             get => _gridIndex;
@@ -96,7 +100,9 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
+#pragma warning disable CS0618
             var grid = new MapGrid(_mapManager, _entMan, GridIndex, chunkSize);
+#pragma warning restore CS0618
             grid.TileSize = tileSize;
 
             Grid = grid;
@@ -160,6 +166,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
+#pragma warning disable CS0618
     [Serializable, NetSerializable]
     internal sealed class MapGridComponentState : ComponentState
     {
@@ -184,4 +191,5 @@ namespace Robust.Shared.GameObjects
             ChunkSize = chunkSize;
         }
     }
+#pragma warning restore CS0618
 }

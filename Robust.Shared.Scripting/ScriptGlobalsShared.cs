@@ -36,10 +36,10 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, int gridId)
         {
-            return gpos(x, y, new GridId(gridId));
+            return gpos(x, y, new EntityUid(gridId));
         }
 
-        public EntityCoordinates gpos(double x, double y, GridId gridId)
+        public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
             if (!map.TryGetGrid(gridId, out var grid))
             {
@@ -61,10 +61,10 @@ namespace Robust.Shared.Scripting
 
         public IMapGrid getgrid(int i)
         {
-            return map.GetGrid(new GridId(i));
+            return map.GetGrid(new EntityUid(i));
         }
 
-        public IMapGrid getgrid(GridId mapId)
+        public IMapGrid getgrid(EntityUid mapId)
         {
             return map.GetGrid(mapId);
         }

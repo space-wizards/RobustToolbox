@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Robust.Shared;
+using Robust.Shared.Configuration;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -26,6 +29,16 @@ internal partial class Clyde
 
             _eglLoaded = true;
 #endif
+        }
+
+        public static unsafe void WindowsSharedWindowCreate(HWND hWnd, IConfigurationManager cfg)
+        {
+            // >= Windows 11 22000 check
+            if (cfg.GetCVar(CVars.DisplayWin11ImmersiveDarkMode) && Environment.OSVersion.Version.Build >= 22000)
+            {
+                var b = BOOL.TRUE;
+                Windows.DwmSetWindowAttribute(hWnd, 20, &b, (uint) sizeof(BOOL));
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -150,11 +150,11 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridId = GetGridId(entityManager);
+            var gridId = GetGridUid(entityManager);
 
-            if (gridId != GridId.Invalid)
+            if (gridId != null)
             {
-                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
+                return mapManager.GetGrid(gridId.Value).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);

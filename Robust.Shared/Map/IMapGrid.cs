@@ -25,6 +25,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     The identifier of this grid.
         /// </summary>
+        [Obsolete("Use EntityUids instead")]
         GridId Index { get; }
 
         /// <summary>

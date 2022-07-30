@@ -170,7 +170,9 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+#pragma warning disable RA0004
             var loadedConfig = _config.Result;
+#pragma warning restore RA0004
 
             // We still do explicit type reference scanning, even though the actual whitelists work with raw members.
             // This is so that we can simplify handling of generic type specifications during member checking:
@@ -233,7 +235,9 @@ namespace Robust.Shared.ContentPack
                 }
             });
 
+#pragma warning disable RA0004
             var loadedCfg = _config.Result;
+#pragma warning restore RA0004
 
             var verifyErrors = false;
             foreach (var res in bag)

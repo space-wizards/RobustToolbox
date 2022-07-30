@@ -258,10 +258,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
 
-                for (var j = overlayIndex; j < worldOverlays.Count; j++)
+                for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
-                    overlayIndex = j;
-                    var overlay = worldOverlays[j];
+                    var overlay = worldOverlays[overlayIndex];
 
                     if (overlay.ZIndex > entry.sprite.DrawDepth)
                     {
@@ -373,7 +372,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // draw remainder of overlays
-            for (var j = overlayIndex; j < worldOverlays.Count; j++)
+            for (; overlayIndex < worldOverlays.Count; overlayIndex++)
             {
                 if (!flushed)
                 {
@@ -381,7 +380,7 @@ namespace Robust.Client.Graphics.Clyde
                     flushed = true;
                 }
 
-                RenderSingleWorldOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
             ArrayPool<int>.Shared.Return(indexList);

@@ -203,7 +203,7 @@ namespace Robust.Shared.GameObjects
             ComponentReferenceAdded?.Invoke(registration, idx);
         }
 
-        public void IgnoreMissingComponents(string? postfix = "")
+        public void IgnoreMissingComponents(string postfix = "")
         {
             if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)
             {

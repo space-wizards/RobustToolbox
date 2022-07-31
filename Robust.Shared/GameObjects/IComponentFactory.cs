@@ -94,7 +94,7 @@ namespace Robust.Shared.GameObjects
         /// Disables throwing on missing components. Missing components will instead be treated as ignored.
         /// </summary>
         /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
-        void IgnoreMissingComponents(string? postfix = "");
+        void IgnoreMissingComponents(string postfix = "");
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.

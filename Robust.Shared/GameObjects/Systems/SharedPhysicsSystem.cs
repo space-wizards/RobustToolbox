@@ -63,7 +63,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapChangedEvent>(ev =>
             {
                 if (ev.Created)
-                    HandleMapCreated(ev);
+                    OnMapAdded(ref ev);
             });
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
@@ -252,6 +252,7 @@ namespace Robust.Shared.GameObjects
                     bodyQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
+
             }
         }
 
@@ -272,7 +273,7 @@ namespace Robust.Shared.GameObjects
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
-        protected abstract void HandleMapCreated(MapChangedEvent eventArgs);
+        protected abstract void OnMapAdded(ref MapChangedEvent eventArgs);
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {

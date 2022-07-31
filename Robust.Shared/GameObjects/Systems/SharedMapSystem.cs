@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapAdded);
+            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
 
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
@@ -25,46 +25,42 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
         }
 
-        private void OnMapAdded(EntityUid uid, MapComponent component, ComponentInit args)
+        private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
         {
             var msg = new MapChangedEvent(component.WorldMap, true);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
             var msg = new MapChangedEvent(component.WorldMap, false);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
 #pragma warning disable CS0618
             var msg = new GridInitializeEvent(uid, component.GridIndex);
-#pragma warning restore CS0618
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
 #pragma warning disable CS0618
             var msg = new GridStartupEvent(uid, component.GridIndex);
-#pragma warning restore CS0618
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-#pragma warning disable CS0618
-            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
-#pragma warning restore CS0618
+            RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
             MapManager.OnComponentRemoved(component);
         }
     }

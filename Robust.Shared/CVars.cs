@@ -861,6 +861,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplayWindowingApi =
             CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true and on Windows 11 Build 22000,
+        /// specify <c>DWMWA_USE_IMMERSIVE_DARK_MODE</c> to have dark mode window titles if the system is set to dark mode.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
+            CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

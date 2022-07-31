@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -11,9 +10,14 @@ internal partial class MapManager
 {
     // TODO: Move IMapManager stuff to the system
     private Dictionary<MapId, B2DynamicTree<MapGrid>> _gridTrees = new();
+
     private Dictionary<MapId, HashSet<IMapGrid>> _movedGrids = new();
 
-    // Gets the grids that have moved this tick until broadphase has run.
+    /// <summary>
+    /// Gets the grids that have moved this tick until broadphase has run.
+    /// </summary>
+    /// <param name="mapId"></param>
+    /// <returns></returns>
     public HashSet<IMapGrid> GetMovedGrids(MapId mapId)
     {
         return _movedGrids[mapId];

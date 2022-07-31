@@ -300,7 +300,9 @@ namespace Robust.Shared.Physics.Dynamics
                     {
                         if (joint.IslandFlag) continue;
 
-                        var other = joint.BodyA == body ? joint.BodyB : joint.BodyA;
+                        var other = joint.BodyAUid == body.Owner
+                            ? _entityManager.GetComponent<PhysicsComponent>(joint.BodyBUid)
+                            : _entityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;

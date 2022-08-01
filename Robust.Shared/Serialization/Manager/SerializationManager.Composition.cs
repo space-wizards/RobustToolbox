@@ -83,6 +83,7 @@ public partial class SerializationManager
                     Expression.Convert(childParam, nodeType),
                     Expression.Convert(parentParam, nodeType),
                     definitionConst,
+                    instanceConst,
                     contextParam);
             }
             else

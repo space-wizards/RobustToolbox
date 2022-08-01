@@ -123,32 +123,27 @@ namespace Robust.Shared.Serialization.Manager
             var invalidIncludes = new StringBuilder();
 
             //check for duplicates
-            var dataDefs = DataDefinitions.ToDictionary(
-                x => x.Key, x => x.Value);
+            var dataDefs = DataDefinitions.Select(x => x.Key).ToHashSet();
             //todo use multiroottree to check for circles in datadef includes
             foreach (var (type, definition) in DataDefinitions)
             {
-                var includedDataDefs = new List<DataDefinition>();
                 var invalidTypes = new List<string>();
                 foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
                          {
                              CustomTypeSerializer: null
                          }))
                 {
-                    if (dataDefs.TryGetValue(includedField.FieldType, out var dataDef))
-                    {
-                        includedDataDefs.Add(dataDef);
-                    }
-                    else
+                    if (!dataDefs.Contains(includedField.FieldType))
                     {
                         invalidTypes.Add(includedField.ToString());
+                        continue;
                     }
+
+                    //tree.add(child: includedField.FieldType, parent: type)
                 }
 
                 if (invalidTypes.Count > 0)
                     invalidIncludes.Append($"{type}: [{string.Join(", ", invalidTypes)}]");
-
-
 
                 if (definition.TryGetDuplicates(out var definitionDuplicates))
                 {
@@ -159,6 +154,11 @@ namespace Robust.Shared.Serialization.Manager
             if (duplicateErrors.Length > 0)
             {
                 throw new ArgumentException($"Duplicate data field tags found in:\n{duplicateErrors}");
+            }
+
+            if (invalidIncludes.Length > 0)
+            {
+                throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
             _copyByRefRegistrations.Add(typeof(Type));

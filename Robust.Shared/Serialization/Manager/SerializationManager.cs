@@ -119,19 +119,46 @@ namespace Robust.Shared.Serialization.Manager
                 DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
-            var error = new StringBuilder();
+            var duplicateErrors = new StringBuilder();
+            var invalidIncludes = new StringBuilder();
 
+            //check for duplicates
+            var dataDefs = DataDefinitions.ToDictionary(
+                x => x.Key, x => x.Value);
+            //todo use multiroottree to check for circles in datadef includes
             foreach (var (type, definition) in DataDefinitions)
             {
+                var includedDataDefs = new List<DataDefinition>();
+                var invalidTypes = new List<string>();
+                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
+                         {
+                             CustomTypeSerializer: null
+                         }))
+                {
+                    if (dataDefs.TryGetValue(includedField.FieldType, out var dataDef))
+                    {
+                        includedDataDefs.Add(dataDef);
+                    }
+                    else
+                    {
+                        invalidTypes.Add(includedField.ToString());
+                    }
+                }
+
+                if (invalidTypes.Count > 0)
+                    invalidIncludes.Append($"{type}: [{string.Join(", ", invalidTypes)}]");
+
+
+
                 if (definition.TryGetDuplicates(out var definitionDuplicates))
                 {
-                    error.Append($"{type}: [{string.Join(", ", definitionDuplicates)}]\n");
+                    duplicateErrors.Append($"{type}: [{string.Join(", ", definitionDuplicates)}]\n");
                 }
             }
 
-            if (error.Length > 0)
+            if (duplicateErrors.Length > 0)
             {
-                throw new ArgumentException($"Duplicate data field tags found in:\n{error}");
+                throw new ArgumentException($"Duplicate data field tags found in:\n{duplicateErrors}");
             }
 
             _copyByRefRegistrations.Add(typeof(Type));
@@ -384,7 +411,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var newMapping = dataDef.Serialize(value, this, context, alwaysWrite);
-            mapping = mapping.Merge(newMapping);
+            mapping.Insert(newMapping);
 
             return mapping;
         }

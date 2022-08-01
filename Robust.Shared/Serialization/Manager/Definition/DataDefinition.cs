@@ -42,10 +42,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var fieldDefs = GetFieldDefinitions();
 
-            Duplicates = fieldDefs
+            var dataFields = fieldDefs
+                .Select(f => f.Attribute)
+                .OfType<DataFieldAttribute>().ToArray();
+
+            Duplicates = dataFields
                 .Where(f =>
-                    fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
-                .Select(f => f.Attribute.Tag)
+                    dataFields.Count(df => df.Tag == f.Tag) > 1)
+                .Select(f => f.Tag)
                 .Distinct()
                 .ToArray();
 
@@ -115,7 +119,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
                     {
                         throw new InvalidOperationException(
-                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition.Attribute.Tag}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
                     interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
@@ -181,7 +185,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute is DataFieldAttribute dataFieldAttribute && dataFieldAttribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
                     var error = new ErrorNode(
@@ -225,9 +229,18 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                if (!abstractFieldInfo.TryGetAttribute(out DataFieldAttribute? dataField, true))
+                DataFieldBaseAttribute? dataFieldBaseAttribute;
+                if (!abstractFieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
                 {
-                    continue;
+                    if (!abstractFieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
+                    {
+                        continue;
+                    }
+                    dataFieldBaseAttribute = includeDataFieldAttribute;
+                }
+                else
+                {
+                    dataFieldBaseAttribute = dataFieldAttribute;
                 }
 
                 var backingField = abstractFieldInfo;
@@ -268,7 +281,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 var fieldDefinition = new FieldDefinition(
-                    dataField,
+                    dataFieldBaseAttribute,
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,

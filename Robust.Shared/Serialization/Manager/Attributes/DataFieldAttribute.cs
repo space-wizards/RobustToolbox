@@ -7,11 +7,9 @@ namespace Robust.Shared.Serialization.Manager.Attributes
     [MeansImplicitAssignment]
     [MeansImplicitUse(ImplicitUseKindFlags.Assign)]
     [Virtual]
-    public class DataFieldAttribute : Attribute
+    public class DataFieldAttribute : DataFieldBaseAttribute
     {
         public readonly string Tag;
-        public readonly int Priority;
-        public readonly bool ReadOnly;
 
         /// <summary>
         ///     Whether or not this field being mapped is required for the component to function.
@@ -20,18 +18,33 @@ namespace Robust.Shared.Serialization.Manager.Attributes
         /// </summary>
         public readonly bool Required;
 
-        public readonly bool ServerOnly;
 
-        public readonly Type? CustomTypeSerializer;
-
-        public DataFieldAttribute([NotNull] string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
+        public DataFieldAttribute(string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null) : base(readOnly, priority, serverOnly, customTypeSerializer)
         {
             Tag = tag;
-            Priority = priority;
-            ReadOnly = readOnly;
             Required = required;
+        }
+
+        public override string ToString()
+        {
+            return Tag;
+        }
+    }
+
+    public abstract class DataFieldBaseAttribute : Attribute
+    {
+        public readonly int Priority;
+        public readonly Type? CustomTypeSerializer;
+        public readonly bool ReadOnly;
+        public readonly bool ServerOnly;
+
+        protected DataFieldBaseAttribute(bool readOnly = false, int priority = 1, bool serverOnly = false, Type? customTypeSerializer = null)
+        {
+            ReadOnly = readOnly;
+            Priority = priority;
             ServerOnly = serverOnly;
             CustomTypeSerializer = customTypeSerializer;
         }
     }
+
 }

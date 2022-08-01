@@ -14,6 +14,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -136,8 +137,8 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdSerializer<EntityPrototype>))]
-        public string? Parent { get; private set; }
+        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
+        public string[]? Parents { get; }
 
         [ViewVariables]
         [NeverPushInheritance]

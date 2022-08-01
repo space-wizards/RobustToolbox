@@ -140,7 +140,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 $"Writing field {fieldDefinition} for type {Type} did not return a {nameof(MappingDataNode)} but was annotated to be included.");
                         }
 
-                        mapping.Insert(nodeMapping);
+                        mapping.Insert(nodeMapping, skipDuplicates: true);
                     }
                     else
                     {

@@ -191,12 +191,15 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return newMapping;
         }
 
-        public void Insert(MappingDataNode otherMapping)
+        public void Insert(MappingDataNode otherMapping, bool skipDuplicates = false)
         {
             foreach (var (key, val) in otherMapping.Children)
             {
-                // Intentionally raises an ArgumentException
-                Add(key.Copy(), val.Copy());
+                if (!skipDuplicates || !Has(key))
+                {
+                    // Intentionally raises an ArgumentException
+                    Add(key.Copy(), val.Copy());
+                }
             }
         }
 

@@ -48,7 +48,7 @@ public sealed class IncludeTest : RobustUnitTest
         Assert.That(newMapping.TryGet<ValueDataNode>("f1", out var f1Node));
         Assert.That(f1Node!.Value, Is.EqualTo("1"));
         Assert.That(newMapping.TryGet<ValueDataNode>("f2", out var f2Node));
-        Assert.That(f2Node!.Value, Is.EqualTo("true"));
+        Assert.That(f2Node!.Value.ToLower(), Is.EqualTo("true"));
     }
 
     [Test]

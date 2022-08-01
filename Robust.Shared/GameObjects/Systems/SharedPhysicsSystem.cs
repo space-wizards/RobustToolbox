@@ -302,12 +302,12 @@ namespace Robust.Shared.GameObjects
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            bool canCollide = true;
-
+            // If this entity is only meant to collide when anchored, return early.
             if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
                 return;
 
             SetCanCollide(physics, true, false);
+            physics.Awake = true;
         }
 
         /// <summary>

@@ -32,7 +32,7 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
         return parents != null;
     }
 
-    public void Add(T id, T[] parents)
+    public void Add(T id, params T[] parents)
     {
         //check for circular inheritance
         foreach (var parent in parents)

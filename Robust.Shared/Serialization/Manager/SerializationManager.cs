@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -124,7 +125,7 @@ namespace Robust.Shared.Serialization.Manager
 
             //check for duplicates
             var dataDefs = DataDefinitions.Select(x => x.Key).ToHashSet();
-            //todo use multiroottree to check for circles in datadef includes
+            var includeTree = new MultiRootInheritanceGraph<Type>();
             foreach (var (type, definition) in DataDefinitions)
             {
                 var invalidTypes = new List<string>();
@@ -139,7 +140,7 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    //tree.add(child: includedField.FieldType, parent: type)
+                    includeTree.Add(includedField.FieldType, type);
                 }
 
                 if (invalidTypes.Count > 0)

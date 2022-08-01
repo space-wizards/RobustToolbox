@@ -112,12 +112,18 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
+                    if (fieldDefinition.Attribute is DataFieldAttribute dfa1 && mapping.Has(dfa1.Tag))
+                    {
+                        continue; //this node was already written by a type higher up the includetree
+                    }
+
                     if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true } &&
                         !alwaysWrite &&
                         Equals(value, defaultValues[i]))
                     {
                         continue;
                     }
+
 
                     var type = fieldDefinition.FieldType;
 

@@ -106,7 +106,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures {
             set {
-                PreparePlacementTexList(value, value != null);
+                PreparePlacementTexList(value, value != null, null);
             }
         }
 
@@ -680,10 +680,10 @@ namespace Robust.Client.Placement
             IsActive = true;
 
             var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
-            PreparePlacementTexList(lst, noRot);
+            PreparePlacementTexList(lst, noRot, prototype);
         }
 
-        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot)
+        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
         {
             var sc = SetupPlacementOverlayEntity();
             if (texs != null)
@@ -708,6 +708,12 @@ namespace Robust.Client.Placement
                 sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
+
+            if (prototype?.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp) == true)
+            {
+                sc.Scale = spriteComp.Scale;
+            }
+
         }
 
         private void PreparePlacementTile()

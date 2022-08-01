@@ -56,7 +56,9 @@ internal partial class MapManager
     public void TrueDeleteMap(MapId mapId)
     {
         // grids are cached because Delete modifies collection
-        foreach (var grid in GetAllMapGrids(mapId).ToList())
+        var grids = GetAllMapGrids(mapId).ToList();
+
+        foreach (var grid in grids)
         {
             DeleteGrid(grid.Index);
         }
@@ -123,9 +125,20 @@ internal partial class MapManager
             }
         }
 
+        MapComponent? mapComp;
+        // If this is being done as part of maploader then we want to copy the preinit state across mainly.
+        bool preInit = false;
+        bool paused = false;
+
         // remove existing graph
         if (_mapEntities.TryGetValue(mapId, out var oldEntId))
         {
+            if (EntityManager.TryGetComponent(oldEntId, out mapComp))
+            {
+                preInit = mapComp.MapPreInit;
+                paused = mapComp.MapPaused;
+            }
+
             //Note: EntityUid.Invalid gets passed in here
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
             EntityManager.DeleteEntity(oldEntId);
@@ -133,11 +146,15 @@ internal partial class MapManager
         else
             _mapEntities.Add(mapId, EntityUid.Invalid);
 
+        var raiseEvent = false;
+
         // re-use or add map component
-        if (!EntityManager.TryGetComponent(newMapEntity, out MapComponent? mapComp))
+        if (!EntityManager.TryGetComponent(newMapEntity, out mapComp))
             mapComp = EntityManager.AddComponent<MapComponent>(newMapEntity);
         else
         {
+            raiseEvent = true;
+
             if (mapComp.WorldMap != mapId)
             {
                 Logger.WarningS("map",
@@ -148,8 +165,20 @@ internal partial class MapManager
         Logger.DebugS("map", $"Setting map {mapId} entity to {newMapEntity}");
 
         // set as new map entity
+        mapComp.MapPreInit = preInit;
+        mapComp.MapPaused = paused;
+
         mapComp.WorldMap = mapId;
         _mapEntities[mapId] = newMapEntity;
+
+        // Yeah this sucks but I just want to save maps for now, deal.
+        if (raiseEvent)
+        {
+            var args = new MapEventArgs(mapId);
+            OnMapCreatedGridTree(args);
+            var ev = new MapChangedEvent(mapId, true);
+            EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
+        }
     }
 
     /// <inheritdoc />

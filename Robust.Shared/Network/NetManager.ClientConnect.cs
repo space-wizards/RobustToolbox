@@ -373,7 +373,7 @@ namespace Robust.Shared.Network
                             Logger.DebugS("net", "First peer failed.");
                             firstPeer.Peer.Shutdown("You failed.");
                             _toCleanNetPeers.Add(firstPeer.Peer);
-                            firstReason = firstPeerChanged.Result;
+                            firstReason = await firstPeerChanged;
                             await secondPeerChanged;
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;

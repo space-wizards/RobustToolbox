@@ -260,8 +260,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Block the main thread (to avoid stuff like texture uploads being problematic).
                 WaitWindowCreate(task);
-
+#pragma warning disable RA0004
                 var (reg, errorResult) = task.Result;
+#pragma warning restore RA0004
 
                 if (reg != null)
                 {
@@ -517,6 +518,9 @@ namespace Robust.Client.Graphics.Clyde
                         GLFW.SetWindowPos(window, ownerX + (ownerW - thisW) / 2, ownerY + (ownerH - thisH) / 2);
                     }
                 }
+
+                if (OperatingSystem.IsWindows())
+                    WsiShared.WindowsSharedWindowCreate((HWND) GLFW.GetWin32Window(window), _cfg);
 
                 if (parameters.Visible)
                 {

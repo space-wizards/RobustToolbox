@@ -10,23 +10,25 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Player;
+using Robust.Shared.Random;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Threading;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public sealed class AudioSystem : SharedAudioSystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IClydeAudio _clyde = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSys = default!;
 
         private readonly List<PlayingStream> _playingClydeStreams = new();
 
@@ -38,8 +40,6 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
             SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
-
-            SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
@@ -56,7 +56,7 @@ namespace Robust.Client.GameObjects
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
         {
-            var mapId = ev.Coordinates.GetMapId(_entityManager);
+            var mapId = ev.Coordinates.GetMapId(EntityManager);
 
             if (!_mapManager.MapExists(mapId))
             {
@@ -65,7 +65,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+            var stream = (PlayingStream?)Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
             if (stream != null)
             {
                 stream.NetIdentifier = ev.Identifier;
@@ -74,7 +74,7 @@ namespace Robust.Client.GameObjects
 
         private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
         {
-            var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams);
+            var stream = (PlayingStream?)Play(ev.FileName, ev.AudioParams);
             if (stream != null)
             {
                 stream.NetIdentifier = ev.Identifier;
@@ -84,8 +84,8 @@ namespace Robust.Client.GameObjects
         private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
             var stream = EntityManager.EntityExists(ev.EntityUid) ?
-                (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
-                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+                (PlayingStream?)Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
+                : (PlayingStream?)Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
 
             if (stream != null)
             {
@@ -125,9 +125,9 @@ namespace Robust.Client.GameObjects
                     if (stream.TrackingCoordinates != null)
                     {
                         var coords = stream.TrackingCoordinates.Value;
-                        if (_mapManager.MapExists(coords.GetMapId(_entityManager)))
+                        if (_mapManager.MapExists(coords.GetMapId(EntityManager)))
                         {
-                            mapPos = stream.TrackingCoordinates.Value.ToMap(_entityManager);
+                            mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
                         }
                         else
                         {
@@ -149,7 +149,7 @@ namespace Robust.Client.GameObjects
 
                     // TODO Remove when coordinates can't be NaN
                     if (mapPos == null || !float.IsFinite(mapPos.Value.X) || !float.IsFinite(mapPos.Value.Y))
-                        mapPos = stream.TrackingFallbackCoordinates?.ToMap(_entityManager);
+                        mapPos = stream.TrackingFallbackCoordinates?.ToMap(EntityManager);
 
                     if (mapPos != null)
                     {
@@ -370,7 +370,7 @@ namespace Robust.Client.GameObjects
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates fallbackCoordinates,
+        private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallback = null,
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
@@ -380,9 +380,14 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            if (!source.SetPosition(EntityManager.GetComponent<TransformComponent>(entity).WorldPosition))
+            var query = GetEntityQuery<TransformComponent>();
+            var xform = query.GetComponent(entity);
+            var worldPos = _xformSys.GetWorldPosition(xform, query);
+            fallback ??= GetFallbackCoordinates(new(worldPos, xform.MapID));
+
+            if (!source.SetPosition(worldPos))
             {
-                return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
+                return Play(stream, fallback.Value, fallback.Value, audioParams);
             }
 
             ApplyAudioParams(audioParams, source);
@@ -392,7 +397,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingEntity = entity,
-                TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
+                TrackingFallbackCoordinates = fallback != EntityCoordinates.Invalid ? fallback : null,
                 Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
                 MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
                 ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
@@ -446,7 +451,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            if (!coordinates.IsValid(_entityManager))
+            if (!coordinates.IsValid(EntityManager))
             {
                 coordinates = fallbackCoordinates;
             }
@@ -469,14 +474,27 @@ namespace Robust.Client.GameObjects
             return playing;
         }
 
-        private static void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
+        /// <inheritdoc />
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        {
+            if (_timing.IsFirstTimePredicted)
+                return Play(sound, Filter.Local(), source, audioParams);
+            else
+                return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
+        }
+
+        private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
         {
             if (!audioParams.HasValue)
             {
                 return;
             }
 
-            source.SetPitch(audioParams.Value.PitchScale);
+            if (audioParams.Value.Variation.HasValue)
+                source.SetPitch(audioParams.Value.PitchScale * (float)RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
+            else
+                source.SetPitch(audioParams.Value.PitchScale);
+
             source.SetVolume(audioParams.Value.Volume);
             source.SetRolloffFactor(audioParams.Value.RolloffFactor);
             source.SetMaxDistance(audioParams.Value.MaxDistance);
@@ -542,26 +560,29 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public int OcclusionCollisionMask { get; set; }
-
-        /// <inheritdoc />
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             return Play(filename, audioParams);
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity,
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity,
             AudioParams? audioParams = null)
         {
-            return Play(filename, entity, GetFallbackCoordinates(EntityManager.GetComponent<TransformComponent>(entity).MapPosition), audioParams);
+            if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+            {
+                return Play(audio, entity, null, audioParams);
+            }
+
+            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            return default;
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
             AudioParams? audioParams = null)
         {
-            return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(_entityManager)), audioParams);
+            return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
         }
     }
 }

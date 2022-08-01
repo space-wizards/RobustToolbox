@@ -42,24 +42,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var joint = new RevoluteJoint(UidA, UidB)
-            {
-                ID = ID,
-                Breakpoint = Breakpoint,
-                CollideConnected = CollideConnected,
-                Enabled = Enabled,
-                EnableLimit = EnableLimit,
-                EnableMotor = EnableMotor,
-                ReferenceAngle = ReferenceAngle,
-                LowerAngle = LowerAngle,
-                UpperAngle = UpperAngle,
-                MotorSpeed = MotorSpeed,
-                MaxMotorTorque = MaxMotorTorque,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB
-            };
-
-            return joint;
+            return new RevoluteJoint(this);
         }
     }
 
@@ -136,6 +119,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
+        internal RevoluteJoint(RevoluteJointState state) : base(state)
+        {
+            EnableLimit = state.EnableLimit;
+            EnableMotor = state.EnableMotor;
+            ReferenceAngle = state.ReferenceAngle;
+            LowerAngle = state.LowerAngle;
+            UpperAngle = state.UpperAngle;
+            MotorSpeed = state.MotorSpeed;
+            MaxMotorTorque = state.MaxMotorTorque;
+        }
+
         public override JointType JointType => JointType.Revolute;
 
         public override JointState GetState()
@@ -171,18 +165,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * (_motorImpulse + _lowerImpulse - _upperImpulse);
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = BodyA.LocalCenter;
-            _localCenterB = BodyB.LocalCenter;
-	        _invMassA = BodyA.InvMass;
-	        _invMassB = BodyB.InvMass;
-	        _invIA = BodyA.InvI;
-	        _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
-	        float aA = data.Angles[_indexA];
+            float aA = data.Angles[_indexA];
 	        var vA = data.LinearVelocities[_indexA];
 	        float wA = data.AngularVelocities[_indexA];
 

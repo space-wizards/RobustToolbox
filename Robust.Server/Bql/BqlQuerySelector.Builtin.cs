@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Bql
 {
@@ -268,7 +269,9 @@ namespace Robust.Server.Bql
                 if ((metaData.EntityPrototype?.ID == name) ^ isInverted)
                     return true;
 
-                return (metaData.EntityPrototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
+                var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+
+                return metaData.EntityPrototype != null && prototypeManager.EnumerateParents<EntityPrototype>(metaData.EntityPrototype.ID).Any(x => x.Name == name) ^ isInverted;
             });
         }
     }

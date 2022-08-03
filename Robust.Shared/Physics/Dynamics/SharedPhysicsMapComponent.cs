@@ -137,6 +137,7 @@ namespace Robust.Shared.Physics.Dynamics
                 return;
             }
 
+            DebugTools.Assert(body.Awake);
             AwakeBodies.Add(body);
         }
 
@@ -262,7 +263,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType == BodyType.Static) continue;
 
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                    body.ForceAwake();
+                    body.SetAwake(true, updateSleepTime: false);
 
                     var node = body.Contacts.First;
 

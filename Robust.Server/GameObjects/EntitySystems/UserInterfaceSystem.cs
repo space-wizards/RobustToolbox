@@ -181,7 +181,7 @@ namespace Robust.Server.GameObjects
 
         private void DeactivateInterface(BoundUserInterface ui, ActiveUserInterfaceComponent? activeUis = null)
         {
-            if (!Resolve(ui.Component.Owner, ref activeUis))
+            if (!Resolve(ui.Component.Owner, ref activeUis, false))
                 return;
 
             activeUis.Interfaces.Remove(ui);

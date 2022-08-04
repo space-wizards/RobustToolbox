@@ -96,15 +96,16 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public abstract class BoundUserInterface : IDisposable
     {
-        public readonly ClientUserInterfaceComponent Owner;
+        protected ClientUserInterfaceComponent Owner { get; }
+
         public readonly Enum UiKey;
 
         /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
-        public BoundUserInterfaceState? State { get; private set; }
+        protected BoundUserInterfaceState? State { get; private set; }
 
-        public BoundUserInterface(ClientUserInterfaceComponent owner, Enum uiKey)
+        protected BoundUserInterface(ClientUserInterfaceComponent owner, Enum uiKey)
         {
             Owner = owner;
             UiKey = uiKey;

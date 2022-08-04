@@ -83,7 +83,8 @@ namespace Robust.Client.Serialization
         public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
             AppearanceVisualizer target, bool skipHook, ISerializationContext? context = null)
         {
-            return serializationManager.Copy(source, target, context)!;
+            serializationManager.Copy(source, ref target, context);
+            return target;
         }
     }
 }

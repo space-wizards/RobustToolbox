@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager.Attributes;
 using static Robust.Shared.GameObjects.SharedUserInterfaceComponent;
 
 namespace Robust.Server.GameObjects
@@ -18,37 +15,12 @@ namespace Robust.Server.GameObjects
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
-        internal readonly Dictionary<object, BoundUserInterface> _interfaces =
+        internal readonly Dictionary<Enum, BoundUserInterface> _interfaces =
             new();
 
-        [DataField("interfaces", readOnly: true)]
-        private List<PrototypeData> _interfaceData = new();
-
-        //public IReadOnlyDictionary<object, BoundUserInterface> Interfaces => _interfaces;
-        public IReadOnlyCollection<BoundUserInterface> Interfaces => _interfaces.Values; // TODO replace with dict
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            // TODO allow BUIs to be added after deserialization, and just move this to an on-add or on-init function
-            _interfaces.Clear();
-
-            foreach (var prototypeData in _interfaceData)
-            {
-                _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData, this);
-            }
-        }
-
-        public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
-        {
-            return _interfaces.GetValueOrDefault(uiKey);
-        }
-
-        public bool TryGetBoundUserInterface(object key, [NotNullWhen(true)] out BoundUserInterface? bui)
-        {
-            return _interfaces.TryGetValue(key, out bui);
-        }
+        public IReadOnlyDictionary<Enum, BoundUserInterface> Interfaces => _interfaces;
     }
 
     [RegisterComponent]
@@ -65,8 +37,10 @@ namespace Robust.Server.GameObjects
     {
         public float InteractionRangeSqrd;
 
-        public object UiKey { get; }
+        public Enum UiKey { get; }
         public ServerUserInterfaceComponent Component { get; }
+        public EntityUid Owner => Component.Owner;
+
         internal readonly HashSet<IPlayerSession> _subscribedSessions = new();
         internal BoundUIWrapMessage? LastStateMsg;
         public bool RequireInputValidation;
@@ -83,9 +57,6 @@ namespace Robust.Server.GameObjects
 
         [Obsolete("Use system events")]
         public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
-
-        [Obsolete("Use BoundUIClosedEvent")]
-        public event Action<IPlayerSession>? OnClosed;
 
         public BoundUserInterface(PrototypeData data, ServerUserInterfaceComponent owner)
         {
@@ -149,11 +120,6 @@ namespace Robust.Server.GameObjects
         internal void InvokeOnReceiveMessage(ServerBoundUserInterfaceMessage message)
         {
             OnReceiveMessage?.Invoke(message);
-        }
-
-        internal void InvokeOnClosed(IPlayerSession session)
-        {
-            OnClosed?.Invoke(session);
         }
     }
 

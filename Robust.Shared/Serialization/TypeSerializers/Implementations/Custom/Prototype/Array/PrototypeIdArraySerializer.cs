@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -48,7 +48,8 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
     public string[] Copy(ISerializationManager serializationManager, string[] source, string[] target, bool skipHook,
         ISerializationContext? context = null)
     {
-        return serializationManager.Copy(source, target, context, skipHook)!;
+        serializationManager.Copy(source, ref target, context, skipHook);
+        return target;
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

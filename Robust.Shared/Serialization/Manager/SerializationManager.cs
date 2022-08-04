@@ -522,7 +522,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 else
                 {
-                    target = Activator.CreateInstance(type);
+                    target = Activator.CreateInstance(type)!;
                 }
             }
 

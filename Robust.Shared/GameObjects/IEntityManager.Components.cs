@@ -317,6 +317,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
 
+        EntityQuery<Component> GetEntityQuery(Type type);
+
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.

@@ -402,7 +402,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (source == null || target == null)
             {
-                return null;
+                return CreateCopy(source);
             }
 
             var sourceType = source.GetType();
@@ -502,8 +502,29 @@ namespace Robust.Shared.Serialization.Manager
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null)
+            if (source == null)
                 return null;
+
+            // TODO should custom type serializers respect _copyByRefRegistrations?
+
+            if (target == null)
+            {
+                // TODO allow type serializers to copy into null (or make them provide a parameterless constructor & copy into a
+                // new instance). For now, this needs to assume that this is a value type or that this has a parameterless ctor
+
+                var type = source.GetType();
+
+                if (type.IsPrimitive ||
+                    type.IsEnum ||
+                    source is string)
+                {
+                    target = source;
+                }
+                else
+                {
+                    target = Activator.CreateInstance(type);
+                }
+            }
 
             return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }

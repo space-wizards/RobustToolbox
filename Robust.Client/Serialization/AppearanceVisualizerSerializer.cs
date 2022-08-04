@@ -34,7 +34,7 @@ namespace Robust.Client.Serialization
                 if (typeNode is not ValueDataNode typeValueDataNode)
                     throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
 
-                type = IoCManager.Resolve<IReflectionManager>()
+                type = dependencies.Resolve<IReflectionManager>()
                     .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
                 if (type == null)
                     throw new InvalidMappingException(
@@ -61,7 +61,7 @@ namespace Robust.Client.Serialization
                 return new ErrorNode(node, "Missing/Invalid type", true);
             }
 
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var reflectionManager = dependencies.Resolve<IReflectionManager>();
             var type = reflectionManager.YamlTypeTagLookup(typeof(AppearanceVisualizer), valueNode.Value);
 
             if (type == null)

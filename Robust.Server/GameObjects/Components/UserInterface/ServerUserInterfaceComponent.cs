@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -28,13 +25,11 @@ namespace Robust.Server.GameObjects
         [DataField("interfaces", readOnly: true)]
         private List<PrototypeData> _interfaceData = new();
 
-        /// <summary>
-        ///     Enumeration of all the interfaces this component provides.
-        /// </summary>
-        public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
+        public IReadOnlyDictionary<object, BoundUserInterface> Interfaces => _interfaces;
 
         void ISerializationHooks.AfterDeserialization()
         {
+            // TODO allow BUIs to be added after deserialization, and just move this to an on-add or on-init function
             _interfaces.Clear();
 
             foreach (var prototypeData in _interfaceData)
@@ -42,19 +37,12 @@ namespace Robust.Server.GameObjects
                 _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData, this);
             }
         }
+    }
 
-        public bool TryGetBoundUserInterface(object uiKey,
-            [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
-        {
-            return _interfaces.TryGetValue(uiKey, out boundUserInterface);
-        }
-
-        public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
-        {
-            return TryGetBoundUserInterface(uiKey, out var boundUserInterface)
-                ? boundUserInterface
-                : null;
-        }
+    [RegisterComponent]
+    public sealed class ActiveUserInterfaceComponent : Component
+    {
+        public HashSet<BoundUserInterface> Interfaces = new();
     }
 
     /// <summary>
@@ -63,6 +51,8 @@ namespace Robust.Server.GameObjects
     [PublicAPI]
     public sealed class BoundUserInterface
     {
+        public float InteractionRangeSqrd;
+
         public object UiKey { get; }
         public ServerUserInterfaceComponent Component { get; }
         internal readonly HashSet<IPlayerSession> _subscribedSessions = new();
@@ -90,6 +80,9 @@ namespace Robust.Server.GameObjects
             RequireInputValidation = data.RequireInputValidation;
             UiKey = data.UiKey;
             Component = owner;
+
+            // One Abs(), because negative values imply no limit
+            InteractionRangeSqrd = data.InteractionRange * MathF.Abs(data.InteractionRange);
         }
 
         [Obsolete("Use UserInterfaceSystem")]

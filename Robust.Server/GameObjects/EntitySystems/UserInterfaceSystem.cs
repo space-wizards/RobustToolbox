@@ -56,9 +56,12 @@ namespace Robust.Server.GameObjects
 
         private void OnUserInterfaceShutdown(EntityUid uid, ServerUserInterfaceComponent component, ComponentShutdown args)
         {
-            foreach (var bui in component._interfaces.Values)
+            if (!TryComp(uid, out ActiveUserInterfaceComponent? activeUis))
+                return;
+
+            foreach (var bui in activeUis.Interfaces)
             {
-                DeactivateInterface(bui);
+                DeactivateInterface(bui, activeUis);
             }
         }
 

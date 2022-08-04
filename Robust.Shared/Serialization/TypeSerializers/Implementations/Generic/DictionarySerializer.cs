@@ -147,8 +147,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 target.Add(keyCopy, valueCopy);
             }
@@ -179,8 +179,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 dictionary.Add(keyCopy, valueCopy);
             }

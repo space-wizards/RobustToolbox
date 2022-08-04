@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
@@ -17,6 +17,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityNetworkManager _netMan = default!;
 
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new();
@@ -100,8 +101,7 @@ namespace Robust.Client.GameObjects
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)
         {
-            EntitySystem.Get<UserInterfaceSystem>()
-                .Send(new BoundUIWrapMessage(Owner, message, uiKey));
+            _netMan.SendSystemNetworkMessage(new BoundUIWrapMessage(Owner, message, uiKey));
         }
     }
 

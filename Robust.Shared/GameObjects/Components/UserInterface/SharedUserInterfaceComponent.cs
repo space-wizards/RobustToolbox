@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedUserInterfaceComponent : Component
     {
         [DataField("interfaces")]
-        protected List<PrototypeData> _interfaceData = new();
+        internal List<PrototypeData> _interfaceData = new();
 
         [DataDefinition]
         public sealed class PrototypeData

@@ -30,7 +30,16 @@ namespace Robust.Server.GameObjects
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
             SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
+            SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentInit>(OnAdd);
             _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
+        }
+
+        private void OnAdd(EntityUid uid, ServerUserInterfaceComponent component, ComponentInit args)
+        {
+            foreach (var data in component._interfaceData)
+            {
+                component._interfaces.Add(data.UiKey, new(data, component));
+            }
         }
 
         public override void Shutdown()

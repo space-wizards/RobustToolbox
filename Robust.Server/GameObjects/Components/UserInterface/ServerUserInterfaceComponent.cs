@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
@@ -25,7 +26,8 @@ namespace Robust.Server.GameObjects
         [DataField("interfaces", readOnly: true)]
         private List<PrototypeData> _interfaceData = new();
 
-        public IReadOnlyDictionary<object, BoundUserInterface> Interfaces => _interfaces;
+        //public IReadOnlyDictionary<object, BoundUserInterface> Interfaces => _interfaces;
+        public IReadOnlyCollection<BoundUserInterface> Interfaces => _interfaces.Values; // TODO replace with dict
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -36,6 +38,16 @@ namespace Robust.Server.GameObjects
             {
                 _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData, this);
             }
+        }
+
+        public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
+        {
+            return _interfaces.GetValueOrDefault(uiKey);
+        }
+
+        public bool TryGetBoundUserInterface(object key, [NotNullWhen(true)] out BoundUserInterface? bui)
+        {
+            return _interfaces.TryGetValue(key, out bui);
         }
     }
 

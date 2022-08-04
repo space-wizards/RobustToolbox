@@ -346,10 +346,12 @@ namespace Robust.Server.GameObjects
             _openInterfaces.GetOrNew(session).Add(bui);
             RaiseLocalEvent(bui.Component.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Component.Owner, session));
 
+            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Component.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+
+            // Fun fact, clients needs to have BUIs open before they can receive the state.....
             if (bui.LastStateMsg != null)
                 RaiseNetworkEvent(bui.LastStateMsg, session.ConnectedClient);
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Component.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
             ActivateInterface(bui);
             return true;
         }

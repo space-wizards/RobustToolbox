@@ -146,25 +146,32 @@ namespace Robust.Shared.GameObjects
             if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
                 return;
 
-            if (TryComp(uid, out PhysicsComponent? body) && (meta.Flags & MetaDataFlags.InContainer) != 0)
-            {
-                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
-                // changes. This also ensures that the server doesn't have to send the physics comp state to every
-                // player for any entity inside of a container during init.
-                SetLinearVelocity(body, Vector2.Zero, false);
-                SetAngularVelocity(body, 0, false);
-                SetCanCollide(body, false, false);
-                _joints.ClearJoints(body);
-            }
+            var body = CompOrNull<PhysicsComponent>(uid);
 
             // Handle map changes
             if (args.OldMapId != xform.MapID)
             {
                 // This will also handle broadphase updating & joint clearing.
                 HandleMapChange(xform, body, args.OldMapId, xform.MapID);
-                return;
             }
 
+            if (body != null && (meta.Flags & MetaDataFlags.InContainer) != 0)
+            {
+                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                SetLinearVelocity(body, Vector2.Zero, false);
+                SetAngularVelocity(body, 0, false);
+
+                // This needs to get called AFTER handle map change Otherwise this will set awake to false, but will
+                // fail to remove the body from the "current map" (which should really be the old map).
+                SetCanCollide(body, false, false);
+                _joints.ClearJoints(body);
+            }
+
+            if (args.OldMapId != xform.MapID)
+                return;
+            
             _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
 
             if (body != null)
@@ -216,12 +223,6 @@ namespace Robust.Shared.GameObjects
             // This entity may not have a body, but some of its children might:
             if (body != null)
             {
-                // TODO: Could potentially migrate these but would need more thinking
-                if (oldMap != null)
-                    DestroyContacts(body, oldMap);
-
-                DebugTools.Assert(body.Contacts.Count == 0);
-
                 if (body.Awake)
                 {
                     oldMap?.RemoveSleepBody(body);
@@ -230,6 +231,11 @@ namespace Robust.Shared.GameObjects
                 }
                 else
                     DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
+
+                // TODO: Could potentially migrate these but would need more thinking
+                if (oldMap != null)
+                    DestroyContacts(body, oldMap); // This can modify body.Awake
+                DebugTools.Assert(body.Contacts.Count == 0);
 
                 if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
                 {
@@ -302,7 +308,12 @@ namespace Robust.Shared.GameObjects
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
+            // If this entity is only meant to collide when anchored, return early.
+            if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
+                return;
+
             SetCanCollide(physics, true, false);
+            physics.Awake = true;
         }
 
         /// <summary>

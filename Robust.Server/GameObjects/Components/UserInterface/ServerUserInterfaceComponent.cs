@@ -81,6 +81,8 @@ namespace Robust.Server.GameObjects
     {
         private bool _isActive;
 
+        public float InteractionRangeSqrd;
+
         public object UiKey { get; }
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new();
@@ -105,6 +107,7 @@ namespace Robust.Server.GameObjects
             RequireInputValidation = data.RequireInputValidation;
             UiKey = data.UiKey;
             Owner = owner;
+            InteractionRangeSqrd = data.InteractionRange * MathF.Abs(data.InteractionRange);
         }
 
         /// <summary>

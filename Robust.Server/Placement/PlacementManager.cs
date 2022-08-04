@@ -79,7 +79,7 @@ namespace Robust.Server.Placement
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
-            var plyEntity = session.AttachedEntityTransform;
+            var plyEntity = _entityManager.GetComponentOrNull<TransformComponent>(session.AttachedEntity);
 
             // Don't have an entity, don't get to place.
             if (plyEntity == null)

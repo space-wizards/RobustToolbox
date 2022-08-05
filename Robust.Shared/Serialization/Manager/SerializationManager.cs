@@ -211,7 +211,17 @@ namespace Robust.Shared.Serialization.Manager
 
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
-            var underlyingType = type.EnsureNotNullableType();
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType != null) // implies that type was nullable
+            {
+                if (node is ValueDataNode dataNode && dataNode.Value == "null")
+                    return new ValidatedValueNode(node);
+            }
+            else
+            {
+                underlyingType = type;
+            }
 
             if (underlyingType.IsArray)
             {

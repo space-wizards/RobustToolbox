@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Players;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -10,14 +11,13 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedUserInterfaceComponent : Component
     {
-        [DataField("interfaces")]
-        internal List<PrototypeData> _interfaceData = new();
-
         [DataDefinition]
-        public sealed class PrototypeData
+        public sealed class PrototypeData : ISerializationHooks
         {
+            public object UiKey { get; set; } = default!;
+
             [DataField("key", readOnly: true, required: true)]
-            public Enum UiKey { get; set; } = default!;
+            private string _uiKeyRaw = default!;
 
             [DataField("type", readOnly: true, required: true)]
             public string ClientType { get; set; } = default!;
@@ -38,6 +38,19 @@ namespace Robust.Shared.GameObjects
             /// </remarks>
             [DataField("requireInputValidation")]
             public bool RequireInputValidation = true;
+
+            void ISerializationHooks.AfterDeserialization()
+            {
+                var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+                if (reflectionManager.TryParseEnumReference(_uiKeyRaw, out var @enum))
+                {
+                    UiKey = @enum;
+                    return;
+                }
+
+                UiKey = _uiKeyRaw;
+            }
         }
     }
 
@@ -49,9 +62,9 @@ namespace Robust.Shared.GameObjects
     {
         public readonly ICommonSession Sender;
         public readonly EntityUid Target;
-        public readonly Enum UiKey;
+        public readonly object UiKey;
 
-        public BoundUserInterfaceMessageAttempt(ICommonSession sender, EntityUid target, Enum uiKey)
+        public BoundUserInterfaceMessageAttempt(ICommonSession sender, EntityUid target, object uiKey)
         {
             Sender = sender;
             Target = target;
@@ -72,7 +85,7 @@ namespace Robust.Shared.GameObjects
         ///     The UI of this message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public Enum UiKey { get; set; } = default!;
+        public object UiKey { get; set; } = default!;
 
         /// <summary>
         ///     The Entity receiving the message.
@@ -113,9 +126,9 @@ namespace Robust.Shared.GameObjects
     {
         public readonly EntityUid Entity;
         public readonly BoundUserInterfaceMessage Message;
-        public readonly Enum UiKey;
+        public readonly object UiKey;
 
-        public BoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, Enum uiKey)
+        public BoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, object uiKey)
         {
             Message = message;
             UiKey = uiKey;
@@ -130,7 +143,7 @@ namespace Robust.Shared.GameObjects
 
     public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
     {
-        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIOpenedEvent(object uiKey, EntityUid uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;
@@ -140,7 +153,7 @@ namespace Robust.Shared.GameObjects
 
     public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
     {
-        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIClosedEvent(object uiKey, EntityUid uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -20,18 +22,19 @@ namespace Robust.Server.GameObjects
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
-        internal readonly Dictionary<object, BoundUserInterface> _interfaces =
+        private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
 
         [DataField("interfaces", readOnly: true)]
         private List<PrototypeData> _interfaceData = new();
 
-        //public IReadOnlyDictionary<object, BoundUserInterface> Interfaces => _interfaces;
-        public IReadOnlyCollection<BoundUserInterface> Interfaces => _interfaces.Values; // TODO replace with dict
+        /// <summary>
+        ///     Enumeration of all the interfaces this component provides.
+        /// </summary>
+        public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
 
         void ISerializationHooks.AfterDeserialization()
         {
-            // TODO allow BUIs to be added after deserialization, and just move this to an on-add or on-init function
             _interfaces.Clear();
 
             foreach (var prototypeData in _interfaceData)
@@ -40,21 +43,34 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        public BoundUserInterface GetBoundUserInterface(object uiKey)
+        {
+            return _interfaces[uiKey];
+        }
+
+        public bool TryGetBoundUserInterface(object uiKey,
+            [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
+        {
+            return _interfaces.TryGetValue(uiKey, out boundUserInterface);
+        }
+
         public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
         {
-            return _interfaces.GetValueOrDefault(uiKey);
+            return TryGetBoundUserInterface(uiKey, out var boundUserInterface)
+                ? boundUserInterface
+                : null;
         }
 
-        public bool TryGetBoundUserInterface(object key, [NotNullWhen(true)] out BoundUserInterface? bui)
+        public bool HasBoundUserInterface(object uiKey)
         {
-            return _interfaces.TryGetValue(key, out bui);
+            return _interfaces.ContainsKey(uiKey);
         }
-    }
 
-    [RegisterComponent]
-    public sealed class ActiveUserInterfaceComponent : Component
-    {
-        public HashSet<BoundUserInterface> Interfaces = new();
+        internal void SendToSession(IPlayerSession session, BoundUserInterfaceMessage message, object uiKey)
+        {
+            EntitySystem.Get<UserInterfaceSystem>()
+                .SendTo(session, new BoundUIWrapMessage(Owner, message, uiKey));
+        }
     }
 
     /// <summary>
@@ -63,97 +79,274 @@ namespace Robust.Server.GameObjects
     [PublicAPI]
     public sealed class BoundUserInterface
     {
+        private bool _isActive;
+
         public float InteractionRangeSqrd;
 
         public object UiKey { get; }
-        public ServerUserInterfaceComponent Component { get; }
-        internal readonly HashSet<IPlayerSession> _subscribedSessions = new();
-        internal BoundUIWrapMessage? LastStateMsg;
+        public ServerUserInterfaceComponent Owner { get; }
+        private readonly HashSet<IPlayerSession> _subscribedSessions = new();
+        private BoundUserInterfaceState? _lastState;
         public bool RequireInputValidation;
 
-        internal bool StateDirty;
+        private bool _stateDirty;
 
-        internal readonly Dictionary<IPlayerSession, BoundUIWrapMessage> PlayerStateOverrides =
+        private readonly Dictionary<IPlayerSession, BoundUserInterfaceState> _playerStateOverrides =
             new();
 
         /// <summary>
         ///     All of the sessions currently subscribed to this UserInterface.
         /// </summary>
-        public IReadOnlySet<IPlayerSession> SubscribedSessions => _subscribedSessions;
+        public IReadOnlyCollection<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
-        [Obsolete("Use system events")]
         public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
-
-        [Obsolete("Use BoundUIClosedEvent")]
         public event Action<IPlayerSession>? OnClosed;
 
         public BoundUserInterface(PrototypeData data, ServerUserInterfaceComponent owner)
         {
             RequireInputValidation = data.RequireInputValidation;
             UiKey = data.UiKey;
-            Component = owner;
-
-            // One Abs(), because negative values imply no limit
+            Owner = owner;
             InteractionRangeSqrd = data.InteractionRange * MathF.Abs(data.InteractionRange);
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
-        public void SetState(BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
+        /// <summary>
+        ///     Sets a state. This can be used for stateful UI updating, which can be easier to implement,
+        ///     but is more costly on bandwidth.
+        ///     This state is sent to all clients, and automatically sent to all new clients when they open the UI.
+        ///     Pretty much how NanoUI did it back in ye olde BYOND.
+        /// </summary>
+        /// <param name="state">
+        ///     The state object that will be sent to all current and future client.
+        ///     This can be null.
+        /// </param>
+        /// <param name="session">
+        ///     The player session to send this new state to.
+        ///     Set to null for sending it to every subscribed player session.
+        /// </param>
+        public void SetState(BoundUserInterfaceState state, IPlayerSession? session = null)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().SetUiState(this, state, session, clearOverrides);
+            if (session == null)
+            {
+                _lastState = state;
+                _playerStateOverrides.Clear();
+            }
+            else
+            {
+                _playerStateOverrides[session] = state;
+            }
+
+            _stateDirty = true;
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+
+        /// <summary>
+        ///     Switches between closed and open for a specific client.
+        /// </summary>
+        /// <param name="session">The player session to toggle the UI on.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the session's status is <c>Connecting</c> or <c>Disconnected</c>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
         public void Toggle(IPlayerSession session)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().ToggleUi(this, session);
+            if (_subscribedSessions.Contains(session))
+            {
+                Close(session);
+            }
+            else
+            {
+                Open(session);
+            }
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+
+        /// <summary>
+        ///     Opens this interface for a specific client.
+        /// </summary>
+        /// <param name="session">The player session to open the UI on.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the session's status is <c>Connecting</c> or <c>Disconnected</c>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
         public bool Open(IPlayerSession session)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().OpenUi(this, session);
+            if (session == null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
+            {
+                throw new ArgumentException("Invalid session status.", nameof(session));
+            }
+
+            if (_subscribedSessions.Contains(session))
+            {
+                return false;
+            }
+
+            _subscribedSessions.Add(session);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session), true);
+            SendMessage(new OpenBoundInterfaceMessage(), session);
+            if (_lastState != null)
+            {
+                SendMessage(new UpdateBoundStateMessage(_lastState));
+            }
+
+            if (!_isActive)
+            {
+                _isActive = true;
+
+                EntitySystem.Get<UserInterfaceSystem>()
+                    .ActivateInterface(this);
+            }
+
+            session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
+            return true;
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+        private void OnSessionOnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+            {
+                CloseShared(args.Session);
+            }
+        }
+
+        /// <summary>
+        ///     Close this interface for a specific client.
+        /// </summary>
+        /// <param name="session">The session to close the UI on.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="session"/> is null.</exception>
         public bool Close(IPlayerSession session)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().CloseUi(this, session);
+            if (session == null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            if (!_subscribedSessions.Contains(session))
+            {
+                return false;
+            }
+
+            var msg = new CloseBoundInterfaceMessage();
+            SendMessage(msg, session);
+            CloseShared(session);
+            return true;
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+        public void CloseShared(IPlayerSession session)
+        {
+            var owner = Owner.Owner;
+            OnClosed?.Invoke(session);
+            _subscribedSessions.Remove(session);
+            _playerStateOverrides.Remove(session);
+            session.PlayerStatusChanged -= OnSessionOnPlayerStatusChanged;
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session), true);
+
+            if (_subscribedSessions.Count == 0)
+            {
+                EntitySystem.Get<UserInterfaceSystem>()
+                    .DeactivateInterface(this);
+
+                _isActive = false;
+            }
+        }
+
+        /// <summary>
+        ///     Closes this interface for any clients that have it open.
+        /// </summary>
         public void CloseAll()
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().CloseAll(this);
+            foreach (var session in _subscribedSessions.ToArray())
+                Close(session);
         }
 
-        [Obsolete("Just check SubscribedSessions.Contains")]
+        /// <summary>
+        ///     Returns whether or not a session has this UI open.
+        /// </summary>
+        /// <param name="session">The session to check.</param>
+        /// <returns>True if the player has this UI open, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="session"/> is null.</exception>
         public bool SessionHasOpen(IPlayerSession session)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             return _subscribedSessions.Contains(session);
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+        /// <summary>
+        ///     Sends a message to ALL sessions that currently have the UI open.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="message"/> is null.</exception>
         public void SendMessage(BoundUserInterfaceMessage message)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().SendUiMessage(this, message);
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            foreach (var session in _subscribedSessions)
+            {
+                Owner.SendToSession(session, message, UiKey);
+            }
         }
 
-        [Obsolete("Use UserInterfaceSystem")]
+        /// <summary>
+        ///     Sends a message to a specific session.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="session">The session to send the message to.</param>
+        /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the session does not have this UI open.</exception>
         public void SendMessage(BoundUserInterfaceMessage message, IPlayerSession session)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().TrySendUiMessage(this, message, session);
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            AssertContains(session);
+
+            Owner.SendToSession(session, message, UiKey);
         }
 
-        internal void InvokeOnReceiveMessage(ServerBoundUserInterfaceMessage message)
+        internal void ReceiveMessage(ServerBoundUserInterfaceMessage message)
         {
             OnReceiveMessage?.Invoke(message);
         }
 
-        internal void InvokeOnClosed(IPlayerSession session)
+        private void AssertContains(IPlayerSession session)
         {
-            OnClosed?.Invoke(session);
+            if (!SessionHasOpen(session))
+            {
+                throw new ArgumentException("Player session does not have this UI open.");
+            }
+        }
+
+        public void DispatchPendingState()
+        {
+            if (!_stateDirty)
+            {
+                return;
+            }
+
+            foreach (var playerSession in _subscribedSessions)
+            {
+                if (!_playerStateOverrides.ContainsKey(playerSession) && _lastState != null)
+                {
+                    SendMessage(new UpdateBoundStateMessage(_lastState), playerSession);
+                }
+            }
+
+            foreach (var (player, state) in _playerStateOverrides)
+            {
+                SendMessage(new UpdateBoundStateMessage(state), player);
+            }
+
+            _stateDirty = false;
         }
     }
 

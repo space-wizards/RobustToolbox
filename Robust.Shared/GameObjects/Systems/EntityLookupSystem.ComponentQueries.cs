@@ -121,7 +121,7 @@ public sealed partial class EntityLookupSystem
         {
             foreach (var (comp, xform) in EntityQuery<T, TransformComponent>(true))
             {
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
+                if (xform.MapID != mapId || (xform.Anchored && (flags & LookupFlags.Anchored) == 0x0) || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
                 intersecting.Add(comp);
             }
         }

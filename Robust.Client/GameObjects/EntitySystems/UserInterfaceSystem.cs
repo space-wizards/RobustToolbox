@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -16,8 +16,16 @@ namespace Robust.Client.GameObjects
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(MessageReceived);
             SubscribeLocalEvent<ClientUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
+            SubscribeLocalEvent<ClientUserInterfaceComponent, ComponentInit>(OnAdd);
         }
 
+        private void OnAdd(EntityUid uid, ClientUserInterfaceComponent component, ComponentInit args)
+        {
+            foreach (var data in component._interfaceData)
+            {
+                component._interfaces.Add(data.UiKey, data);
+            }
+        }
         private void OnUserInterfaceShutdown(EntityUid uid, ClientUserInterfaceComponent component, ComponentShutdown args)
         {
             foreach (var bui in component.Interfaces)

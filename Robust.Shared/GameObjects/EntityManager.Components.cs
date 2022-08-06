@@ -835,6 +835,13 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(comps!);
         }
 
+        public EntityQuery<Component> GetEntityQuery(Type type)
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
+            return new EntityQuery<Component>(comps!);
+        }
+
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {

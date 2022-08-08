@@ -318,7 +318,8 @@ namespace Robust.Client.UserInterface.CustomControls
             button.ActualButton.OnToggled += OnItemButtonToggled;
             var entityLabelText = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
 
-            if (!string.IsNullOrWhiteSpace(prototype.EditorSuffix))
+            // "{???}" value happens when Fluent can't find a value in .ftl files for EditorSuffix variable.
+            if (!string.IsNullOrWhiteSpace(prototype.EditorSuffix) && !"{???}".Equals(prototype.EditorSuffix))
             {
                 entityLabelText += $" [{prototype.EditorSuffix}]";
             }

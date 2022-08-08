@@ -1,4 +1,5 @@
 using System;
+using Linguini.Syntax.Ast;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -30,6 +31,8 @@ namespace Robust.Shared.Utility
             throw new InvalidOperationException();
         }
 
+        public abstract ResourcePath GetPath();
+
         [Serializable, NetSerializable]
         public sealed class Rsi : SpriteSpecifier
         {
@@ -51,6 +54,11 @@ namespace Robust.Shared.Utility
             {
                 return RsiPath.GetHashCode() ^ RsiState.GetHashCode();
             }
+
+            public override ResourcePath GetPath()
+            {
+                return new ResourcePath(RsiPath + RsiState);
+            }
         }
 
         [Serializable, NetSerializable]
@@ -71,6 +79,11 @@ namespace Robust.Shared.Utility
             public override int GetHashCode()
             {
                 return TexturePath.GetHashCode();
+            }
+
+            public override ResourcePath GetPath()
+            {
+                return new ResourcePath(TexturePath.ToString());
             }
         }
 
@@ -94,6 +107,11 @@ namespace Robust.Shared.Utility
             public override int GetHashCode()
             {
                 return EntityPrototypeId.GetHashCode();
+            }
+
+            public override ResourcePath GetPath()
+            {
+                throw new NotImplementedException();
             }
         }
     }

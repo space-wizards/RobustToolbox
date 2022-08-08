@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Map
+﻿using Robust.Shared.Utility;
+
+namespace Robust.Shared.Map
 {
     /// <summary>
     ///     The definition (template) for a grid tile.
@@ -21,16 +23,9 @@
         string ID { get; }
 
         /// <summary>
-        ///     The name of the sprite to draw.
+        ///     The sprite to draw.
         /// </summary>
-        string SpriteName { get; }
-
-        /// <summary>
-        ///     Path to the folder where the tile sprite is contained.
-        ///     The texture dimensions should be PixelsPerMeter x (PixelsPerMeter * Variants).
-        ///     This is likely 32 x (32 * variants) if you're working on Space Station 14.
-        /// </summary>
-        string Path { get; }
+        SpriteSpecifier? Sprite { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

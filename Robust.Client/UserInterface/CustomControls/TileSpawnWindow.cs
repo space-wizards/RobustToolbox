@@ -118,9 +118,11 @@ namespace Robust.Client.UserInterface.CustomControls
             foreach (var entry in _shownItems)
             {
                 Texture? texture = null;
-                if (!string.IsNullOrEmpty(entry.SpriteName))
+                var path = entry.Sprite?.ToString();
+
+                if (path != null)
                 {
-                    texture = _resourceCache.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
+                    texture = _resourceCache.GetResource<TextureResource>(path);
                 }
                 TileList.AddItem(entry.Name, texture);
             }

@@ -1,5 +1,6 @@
-﻿using Robust.Shared.Timing;
+﻿using Robust.Client.UserInterface.Controllers;
 
+// ReSharper disable once CheckNamespace
 namespace Robust.Client.UserInterface;
 
 public partial interface IUserInterfaceManager

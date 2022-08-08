@@ -2,7 +2,7 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.UserInterface;
+namespace Robust.Client.UserInterface.Controllers;
 
 // Notices your UIController, *UwU Whats this?*
 /// <summary>

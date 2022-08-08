@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Client.State;
+using Robust.Client.UserInterface.Controllers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using static Robust.Shared.Serialization.Manager.Definition.DataDefinition;
 
+// ReSharper disable once CheckNamespace
 namespace Robust.Client.UserInterface;
 
 internal partial class UserInterfaceManager
@@ -58,7 +60,7 @@ internal partial class UserInterfaceManager
     /// <summary>
     ///     Field -> Controller -> Field assigner delegate
     /// </summary>
-    private readonly Dictionary<Type, List<(Type, AssignField<UIController, object?>)>> _assignerRegistry = new();
+    private readonly Dictionary<Type, Dictionary<Type, AssignField<UIController, object?>>> _assignerRegistry = new();
 
     private delegate void StateChangedCaller(object controller, State.State state);
 
@@ -129,30 +131,25 @@ internal partial class UserInterfaceManager
         }
     }
 
-    private void AddUiControllerToRegistry(List<UIController> list, Type type, UIController instance)
+    private void RegisterUIController(List<UIController> list, Type type, UIController instance)
     {
         list.Add(instance);
         _uiControllerIndices.Add(type, list.Count - 1);
     }
 
-    private ref UIController GetUiControllerByTypeRef(Type type)
+    private ref UIController GetUIControllerRef(Type type)
     {
         return ref _uiControllerRegistry[_uiControllerIndices[type]];
     }
 
-    private UIController GetUiControllerByType(Type type)
+    private UIController GetUIController(Type type)
     {
         return _uiControllerRegistry[_uiControllerIndices[type]];
     }
 
-    private T GetUiControllerByType<T>() where T : UIController, new()
-    {
-        return (T) _uiControllerRegistry[_uiControllerIndices[typeof(T)]];
-    }
-
     public T GetUIController<T>() where T : UIController, new()
     {
-        return GetUiControllerByType<T>();
+        return (T) GetUIController(typeof(T));
     }
 
     private void InitializeControllers()
@@ -171,8 +168,7 @@ internal partial class UserInterfaceManager
 
             var newController = _typeFactory.CreateInstanceUnchecked<UIController>(uiControllerType);
 
-            // TODO hud refactor BEFORE MERGE add them all at the end to prevent people from being too smart
-            AddUiControllerToRegistry(tempList, uiControllerType, newController);
+            RegisterUIController(tempList, uiControllerType, newController);
 
             foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
             {
@@ -204,9 +200,8 @@ internal partial class UserInterfaceManager
                     continue;
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                typeDict.Add((uiControllerType,
-                    EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType,
-                        backingField)));
+                var assigner = EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField);
+                typeDict.Add(uiControllerType, assigner);
 
                 if (uiControllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType !=
                     typeof(UIController))
@@ -268,13 +263,17 @@ internal partial class UserInterfaceManager
 
     private void OnSystemLoaded(object? sender, SystemChangedArgs args)
     {
-        if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
-        foreach (var (controllerType, accessor) in fieldData)
+        if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var assigners))
+            return;
+
+        foreach (var (controllerType, assigner) in assigners)
         {
-            accessor(ref GetUiControllerByTypeRef(controllerType), args.System);
+            assigner(ref GetUIControllerRef(controllerType), args.System);
         }
 
-        if (!_systemLoadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
+        if (!_systemLoadedListeners.TryGetValue(args.System.GetType(), out var controllers))
+            return;
+
         foreach (var uiCon in controllers)
         {
             uiCon.OnSystemLoaded(args.System);
@@ -293,10 +292,12 @@ internal partial class UserInterfaceManager
             }
         }
 
-        if (!_assignerRegistry.TryGetValue(systemType, out var fieldData)) return;
-        foreach (var (controllerType, accessor) in fieldData)
+        if (!_assignerRegistry.TryGetValue(systemType, out var assigners))
+            return;
+
+        foreach (var (controllerType, assigner) in assigners)
         {
-            accessor(ref GetUiControllerByTypeRef(controllerType), null);
+            assigner(ref GetUIControllerRef(controllerType), null);
         }
     }
 }

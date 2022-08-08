@@ -1,4 +1,4 @@
-﻿namespace Robust.Client.UserInterface;
+﻿namespace Robust.Client.UserInterface.Controllers;
 
 public interface IOnStateEntered<T> where T : State.State
 {

@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 using static Robust.Client.UserInterface.Controls.LineEdit;
 
-namespace Robust.Client.UserInterface.Controllers;
+namespace Robust.Client.UserInterface.Controllers.Implementations;
 
 // TODO hud refactor BEFORE MERGE fix only showing one entity on first open
 public sealed class EntitySpawningUIController : UIController

@@ -12,7 +12,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 
-namespace Robust.Client.UserInterface.Controllers;
+namespace Robust.Client.UserInterface.Controllers.Implementations;
 
 // TODO hud refactor BEFORE MERGE fix incorrect ui
 public sealed class TileSpawningUIController : UIController

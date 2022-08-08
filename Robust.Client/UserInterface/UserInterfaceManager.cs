@@ -244,7 +244,7 @@ namespace Robust.Client.UserInterface
                 _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
-            UpdateControllers(args); // TODO HUD REFACTOR BEFORE MERGE  remove this when DragDrop helper update is removed
+            UpdateControllers(args);
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it

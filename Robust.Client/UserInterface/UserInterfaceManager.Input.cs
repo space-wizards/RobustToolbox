@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
@@ -69,10 +70,14 @@ internal partial class UserInterfaceManager
     {
         if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
         {
-            while (_modalStack.Count > 0)
+            for (var i = _modalStack.Count - 1; i >= 0; i--)
             {
-                var top = _modalStack[^1];
-                RemoveModal(top);
+                var top = _modalStack[i];
+
+                if (top is not Popup {CloseOnEscape: false})
+                {
+                    RemoveModal(top);
+                }
             }
 
             args.Handle();
@@ -304,14 +309,19 @@ internal partial class UserInterfaceManager
         var pos = pointerPosition.Position;
 
         // If we have a modal open and the mouse down was outside it, close said modal.
-        while (_modalStack.Count != 0)
+        for (var i = _modalStack.Count - 1; i >= 0; i--)
         {
-            var top = _modalStack[^1];
+            var top = _modalStack[i];
             var offset = pos - top.GlobalPixelPosition;
             if (!top.HasPoint(offset / top.UIScale))
             {
                 if (top.MouseFilter != Control.MouseFilterMode.Stop)
-                    RemoveModal(top);
+                {
+                    if (top is not Popup {CloseOnClick: false})
+                    {
+                        RemoveModal(top);
+                    }
+                }
                 else
                 {
                     ControlFocused = top;

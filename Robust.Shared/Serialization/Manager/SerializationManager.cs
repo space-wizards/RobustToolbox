@@ -398,19 +398,15 @@ namespace Robust.Shared.Serialization.Manager
             return WriteWithSerializerRaw(type, serializer, value!, context, alwaysWrite);
         }
 
-        private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
+        private void CopyToTarget(object source, ref object target, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null)
-            {
-                return source;
-            }
-
             var sourceType = source.GetType();
             var targetType = target.GetType();
 
             if (sourceType.IsValueType && targetType.IsValueType)
             {
-                return source;
+                target = source;
+                return;
             }
 
             if (sourceType.IsValueType != targetType.IsValueType)
@@ -436,10 +432,11 @@ namespace Robust.Shared.Serialization.Manager
 
                 for (var i = 0; i < sourceArray.Length; i++)
                 {
-                    newArray.SetValue(CreateCopy(sourceArray.GetValue(i), context, skipHook), i);
+                    newArray.SetValue(Copy(sourceArray.GetValue(i), context, skipHook), i);
                 }
 
-                return newArray;
+                target = newArray;
+                return;
             }
 
             if (sourceType.IsArray != targetType.IsArray)
@@ -456,12 +453,13 @@ namespace Robust.Shared.Serialization.Manager
 
             if (_copyByRefRegistrations.Contains(commonType) || commonType.IsEnum)
             {
-                return source;
+                target = source;
+                return;
             }
 
             if (TryCopyRaw(commonType, source, ref target, skipHook, context))
             {
-                return target;
+                return;
             }
 
             if (target is IPopulateDefaultValues populateDefaultValues)
@@ -480,37 +478,61 @@ namespace Robust.Shared.Serialization.Manager
             {
                 afterHooks.AfterDeserialization();
             }
-
-            return target;
         }
 
-        [MustUseReturnValue]
-        public object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
+        public void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false)
         {
-            return CopyToTarget(source, target, context, skipHook);
+            if (target == null || source == null)
+            {
+                target = Copy(source, context, skipHook);
+            }
+            else
+            {
+                CopyToTarget(source, ref target, context, skipHook);
+            }
         }
 
-        [MustUseReturnValue]
-        public T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false)
+        public void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false)
         {
-            var copy = CopyToTarget(source, target, context, skipHook);
-
-            return copy == null ? default : (T?) copy;
+            var temp = (object?)target;
+            Copy(source, ref temp, context, skipHook);
+            target = (T)temp!;
         }
 
         [MustUseReturnValue]
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null) return source;
+            if (source == null)
+                return null;
+
+            // TODO should this respect _copyByRefRegistrations? Or should the type serializer be allowed to override this?
+
+            if (target == null)
+            {
+                // TODO allow type serializers to copy into null (or make them provide a parameterless constructor & copy into a
+                // new instance). For now, this needs to assume that this is a value type or that this has a parameterless ctor
+
+                var type = source.GetType();
+
+                if (type.IsPrimitive ||
+                    type.IsEnum ||
+                    source is string)
+                {
+                    target = source;
+                }
+                else
+                {
+                    target = Activator.CreateInstance(type)!;
+                }
+            }
 
             return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }
 
-        private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)
+        private object CreateCopyInternal(Type type, object source, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null ||
-                type.IsPrimitive ||
+            if (type.IsPrimitive ||
                 type.IsEnum ||
                 source is string ||
                 _copyByRefRegistrations.Contains(type))
@@ -519,25 +541,19 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var target = Activator.CreateInstance(source.GetType())!;
-            return Copy(source, target, context, skipHook);
+            CopyToTarget(source, ref target, context, skipHook);
+            return target;
         }
 
-        public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
+        public object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false)
         {
             if (source == null) return null;
             return CreateCopyInternal(source.GetType(), source, context, skipHook);
         }
 
-        public T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false)
+        public T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false)
         {
-            var copy = CreateCopyInternal(typeof(T), source, context, skipHook);
-
-            if (copy == null)
-            {
-                return default;
-            }
-
-            return (T?) copy;
+            return (T)Copy((object?)source, context, skipHook)!;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

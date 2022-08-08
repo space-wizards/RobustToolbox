@@ -579,6 +579,10 @@ internal sealed class MidiRenderer : IMidiRenderer
                 }
             }
         }
+        catch (IndexOutOfRangeException)
+        {
+            // FIXME: Handle malicious MIDI events properly, do sanity so they can't cause this exception on the state.
+        }
         catch (FluidSynthInteropException)
         {
             // This spams NoteOff errors most of the time for no good reason.

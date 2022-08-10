@@ -23,9 +23,9 @@ namespace Robust.Shared.Map
         string ID { get; }
 
         /// <summary>
-        ///     The sprite to draw.
+        ///     The path of the sprite to draw.
         /// </summary>
-        SpriteSpecifier? Sprite { get; }
+        ResourcePath? Sprite { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

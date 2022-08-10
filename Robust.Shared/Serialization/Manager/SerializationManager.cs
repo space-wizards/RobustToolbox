@@ -211,7 +211,17 @@ namespace Robust.Shared.Serialization.Manager
 
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
-            var underlyingType = type.EnsureNotNullableType();
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType != null) // implies that type was nullable
+            {
+                if (node is ValueDataNode dataNode && dataNode.Value == "null")
+                    return new ValidatedValueNode(node);
+            }
+            else
+            {
+                underlyingType = type;
+            }
 
             if (underlyingType.IsArray)
             {
@@ -503,7 +513,29 @@ namespace Robust.Shared.Serialization.Manager
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null) return source;
+            if (source == null)
+                return null;
+
+            // TODO should this respect _copyByRefRegistrations? Or should the type serializer be allowed to override this?
+
+            if (target == null)
+            {
+                // TODO allow type serializers to copy into null (or make them provide a parameterless constructor & copy into a
+                // new instance). For now, this needs to assume that this is a value type or that this has a parameterless ctor
+
+                var type = source.GetType();
+
+                if (type.IsPrimitive ||
+                    type.IsEnum ||
+                    source is string)
+                {
+                    target = source;
+                }
+                else
+                {
+                    target = Activator.CreateInstance(type)!;
+                }
+            }
 
             return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }

@@ -626,6 +626,7 @@ namespace Robust.Client.Placement
                 {
                     handle.UseShader(_drawingShader);
                     handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                    handle.UseShader(null);
                 }
                 return;
             }

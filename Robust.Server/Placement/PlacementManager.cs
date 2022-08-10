@@ -122,6 +122,7 @@ namespace Robust.Server.Placement
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
                 _entityManager.GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
+                _entityManager.EventBus.RaiseLocalEvent(created, new EntityPlacedEvent(created, session));
             }
             else
             {
@@ -346,6 +347,22 @@ namespace Robust.Server.Placement
             }
 
             return null;
+        }
+    }
+
+    /// <summary>
+    ///     Event raised when an entity has been successfully placed down.
+    /// </summary>
+    public sealed class EntityPlacedEvent : EntityEventArgs
+    {
+        public EntityUid Placed;
+
+        public IPlayerSession PlacedBy;
+
+        public EntityPlacedEvent(EntityUid placed, IPlayerSession placedBy)
+        {
+            Placed = placed;
+            PlacedBy = placedBy;
         }
     }
 }

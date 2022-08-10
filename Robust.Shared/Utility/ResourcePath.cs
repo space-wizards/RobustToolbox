@@ -50,6 +50,15 @@ namespace Robust.Shared.Utility
         public string Separator { get; }
 
         /// <summary>
+        /// This exists for serv3.
+        /// </summary>
+        private ResourcePath()
+        {
+            Segments = Array.Empty<string>();
+            Separator = "/";
+        }
+
+        /// <summary>
         ///     Create a new path from a string, splitting it by the separator provided.
         /// </summary>
         /// <param name="path">The string path to turn into a resource path.</param>

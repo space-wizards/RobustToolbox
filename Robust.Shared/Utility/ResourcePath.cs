@@ -52,11 +52,7 @@ namespace Robust.Shared.Utility
         /// <summary>
         /// This exists for serv3.
         /// </summary>
-        private ResourcePath()
-        {
-            Segments = Array.Empty<string>();
-            Separator = "/";
-        }
+        private ResourcePath() : this("") {}
 
         /// <summary>
         ///     Create a new path from a string, splitting it by the separator provided.

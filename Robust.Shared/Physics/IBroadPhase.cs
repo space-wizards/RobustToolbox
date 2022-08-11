@@ -7,6 +7,8 @@ namespace Robust.Shared.Physics {
 
     public interface IBroadPhase
     {
+        int Count { get; }
+
         Box2 GetFatAabb(DynamicTree.Proxy proxy);
 
         DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);

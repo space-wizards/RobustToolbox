@@ -9,7 +9,8 @@ namespace Robust.Client.UserInterface.Controllers;
 public interface IOnSystemLoaded<T> where T : IEntitySystem
 {
     /// <summary>
-    ///     Called on <see cref="UIController"/>s that implement this method when a system
+    ///     Called by <see cref="UserInterfaceManager.OnSystemLoaded"/>
+    ///     on <see cref="UIController"/>s that implement this method when a system
     ///     of the specified type is loaded
     /// </summary>
     /// <param name="system">The system that was loaded</param>

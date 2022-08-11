@@ -9,7 +9,8 @@ namespace Robust.Client.UserInterface.Controllers;
 public interface IOnSystemUnloaded<T> where T : IEntitySystem
 {
     /// <summary>
-    ///     Called on <see cref="UIController"/>s that implement this method when a system
+    ///     Called by <see cref="UserInterfaceManager.OnSystemUnloaded"/>
+    ///     on <see cref="UIController"/>s that implement this method when a system
     ///     of the specified type is unloaded
     /// </summary>
     /// <param name="system">The system that was unloaded</param>

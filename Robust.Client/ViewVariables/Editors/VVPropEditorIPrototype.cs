@@ -35,7 +35,7 @@ namespace Robust.Client.ViewVariables.Editors
                 Text = value switch
                 {
                     IPrototype prototype => prototype.ID,
-                    ViewVariablesBlobMembers.PrototypeReferenceToken token => token.ID,
+                    ViewVariablesBlobMembers.PrototypeReferenceToken token => token.ID ?? string.Empty,
                     _ => string.Empty
                 },
                 Editable = !ReadOnly

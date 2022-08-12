@@ -66,8 +66,9 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <typeparam name="T">The derived NetMessage type to send.</typeparam>
         /// <returns>A new instance of the net message.</returns>
+        [Obsolete("Just new NetMessage directly")]
         T CreateNetMessage<T>()
-            where T : NetMessage;
+            where T : NetMessage, new();
 
         /// <summary>
         ///     Sends a NetMessage over this NetChannel.
@@ -80,5 +81,13 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="reason">Reason why it was disconnected.</param>
         void Disconnect(string reason);
+
+        /// <summary>
+        ///     Disconnects this channel from the remote peer.
+        /// </summary>
+        /// <param name="reason">Reason why it was disconnected.</param>
+        /// <param name="sendBye">If false, we ghost the remote client and don't tell them they got disconnected properly.</param>
+        void Disconnect(string reason, bool sendBye);
+
     }
 }

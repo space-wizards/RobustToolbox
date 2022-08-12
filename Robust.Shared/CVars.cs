@@ -12,6 +12,13 @@ namespace Robust.Shared
     [CVarDefs]
     public abstract class CVars
     {
+#if FULL_RELEASE
+        private const bool ConstFullRelease = true;
+#else
+        private const bool ConstFullRelease = false;
+#endif
+
+
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -125,16 +132,16 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// The amount of new entities that can be sent to a client in a single game state, under PVS.
-        /// </summary>
-        public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
-
-        /// <summary>
         /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+
+        /// <summary>
+        /// ZSTD compression level to use when compressing game states.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSCompressLevel =
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
 
         /// <summary>
         /// Log late input messages from clients.
@@ -148,6 +155,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Offset CurTime at server start by this amount (in seconds).
+        /// </summary>
+        public static readonly CVarDef<int> NetTimeStartOffset =
+            CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
 
         /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
@@ -188,6 +201,31 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
+        /// <summary>
+        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
+        /// 0 = no packet loss, 1 = all packets dropped
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
+        /// </summary>
+        /// <seealso cref="NetFakeLagRand"/>
+        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
+        /// The actual delay added for each packet is random between 0 and the specified value.
+        /// </summary>
+        /// <seealso cref="NetFakeLagMin"/>
+        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
+        /// 0 = no packets duplicated, 1 = all packets duplicated.
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
+
         /**
          * SUS
          */
@@ -217,33 +255,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
-
-#if DEBUG
-        /// <summary>
-        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
-        /// 0 = no packet loss, 1 = all packets dropped
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
-        /// </summary>
-        /// <seealso cref="NetFakeLagRand"/>
-        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
-        /// The actual delay added for each packet is random between 0 and the specified value.
-        /// </summary>
-        /// <seealso cref="NetFakeLagMin"/>
-        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
-        /// 0 = no packets duplicated, 1 = all packets duplicated.
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /*
          * METRICS
@@ -427,10 +438,28 @@ namespace Robust.Shared
             CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
 
         /// <summary>
+        /// URL of the content manifest the launcher should download to connect to this server.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestUrl =
+            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL at which the launcher can download the manifest game files.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestDownloadUrl =
+            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
             CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+
+        /// <summary>
+        /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestHash =
+            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
 
         /*
          * WATCHDOG
@@ -440,7 +469,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.
@@ -713,6 +742,12 @@ namespace Robust.Shared
             CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Force ANGLE to create a context from a D3D11 FL 10_0 device.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForce10_0 =
+            CVarDef.Create("display.angle_force_10_0", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleDxgi1 =
@@ -745,6 +780,12 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
             CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Enable allowES3OnFL10_0 on ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleEs3On10_0 =
+            CVarDef.Create("display.angle_es3_on_10_0", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Base DPI to render fonts at. This can be further scaled based on <c>display.uiScale</c>.
@@ -817,6 +858,16 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<string> DisplayWindowingApi =
+            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true and on Windows 11 Build 22000,
+        /// specify <c>DWMWA_USE_IMMERSIVE_DARK_MODE</c> to have dark mode window titles if the system is set to dark mode.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
+            CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -869,6 +920,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> GenerateGridFixtures =
             CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
+
+        /// <summary>
+        /// Can grids split if not connected by cardinals
+        /// </summary>
+        public static readonly CVarDef<bool> GridSplitting =
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
@@ -1052,6 +1109,12 @@ namespace Robust.Shared
             CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
 
         /// <summary>
+        /// Comma-separated list of tags to advertise via the status server (and therefore, to the hub).
+        /// </summary>
+        public static readonly CVarDef<string> HubTags =
+            CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// URL of the master hub server to advertise to.
         /// </summary>
         public static readonly CVarDef<string> HubMasterUrl =
@@ -1078,5 +1141,111 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> HubAdvertiseInterval =
             CVarDef.Create("hub.advertise_interval", 120, CVar.SERVERONLY);
+
+        /*
+         * ACZ
+         */
+
+        /// <summary>
+        /// Whether to use stream compression instead of per-file compression when transmitting ACZ data.
+        /// Enabling stream compression significantly reduces bandwidth usage of downloads,
+        /// but increases server and launcher CPU load. It also makes final files stored on the client compressed less.
+        /// </summary>
+        public static readonly CVarDef<bool> AczStreamCompress =
+            CVarDef.Create("acz.stream_compress", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use when doing ACZ stream compressed.
+        /// </summary>
+        public static readonly CVarDef<int> AczStreamCompressLevel =
+            CVarDef.Create("acz.stream_compress_level", 3, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to do compression on individual files for ACZ downloads.
+        /// Automatically forced off if stream compression is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> AczBlobCompress =
+            CVarDef.Create("acz.blob_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use for individual file compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressLevel =
+            CVarDef.Create("acz.blob_compress_level", 14, CVar.SERVERONLY);
+
+        // Could consider using a ratio for this?
+        /// <summary>
+        /// Amount of bytes that need to be saved by compression for the compression to be "worth it".
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressSaveThreshold =
+            CVarDef.Create("acz.blob_compress_save_threshold", 14, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to ZSTD compress the ACZ manifest.
+        /// If this is enabled (the default) then non-compressed manifest requests will be decompressed live.
+        /// </summary>
+        public static readonly CVarDef<bool> AczManifestCompress =
+            CVarDef.Create("acz.manifest_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Compression level for ACZ manifest compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczManifestCompressLevel =
+            CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
+
+        /*
+         * CON
+         */
+
+        /// <summary>
+        /// Add artificial delay (in seconds) to console completion fetching, even for local commands.
+        /// </summary>
+        /// <remarks>
+        /// Intended for debugging the console completion system.
+        /// </remarks>
+        public static readonly CVarDef<float> ConCompletionDelay =
+            CVarDef.Create("con.completion_delay", 0f, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The amount of completions to show in console completion drop downs.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionCount =
+            CVarDef.Create("con.completion_count", 15, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum margin of options to keep on either side of the completion cursor, when scrolling through.
+        /// </summary>
+        public static readonly CVarDef<int> ConCompletionMargin =
+            CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
+
+        /*
+         * THREAD
+         */
+
+        /// <summary>
+        /// The nominal parallel processing count to use for parallelized operations.
+        /// The default of 0 automatically selects the system's processor count.
+        /// </summary>
+        public static readonly CVarDef<int> ThreadParallelCount =
+            CVarDef.Create("thread.parallel_count", 0);
+
+        /*
+         * PROF
+         */
+
+        /// <summary>
+        /// Enabled the profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Event log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+
+        /// <summary>
+        /// Index log buffer size for the profiling system.
+        /// </summary>
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
     }
 }

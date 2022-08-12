@@ -79,7 +79,7 @@ namespace Robust.Server.Placement
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
-            var plyEntity = session.AttachedEntityTransform;
+            var plyEntity = _entityManager.GetComponentOrNull<TransformComponent>(session.AttachedEntity);
 
             // Don't have an entity, don't get to place.
             if (plyEntity == null)
@@ -125,75 +125,33 @@ namespace Robust.Server.Placement
             }
             else
             {
-                var mapCoords = coordinates.ToMap(_entityManager);
-                PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
+                PlaceNewTile(tileType, coordinates);
             }
         }
 
-        private void PlaceNewTile(ushort tileType, MapId mapId, Vector2 position)
+        private void PlaceNewTile(ushort tileType, EntityCoordinates coordinates)
         {
-            // tile can snap up to 0.75m away from grid
-            var gridSearchBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f)
-                .Scale(1.5f)
-                .Translated(position);
+            var mapCoordinates = coordinates.ToMap(_entityManager);
 
-            var gridsInArea = _mapManager.FindGridsIntersecting(mapId, gridSearchBox);
+            if (mapCoordinates.MapId == MapId.Nullspace) return;
 
-            IMapGrid? closest = null;
-            float distance = float.PositiveInfinity;
-            Box2 intersect = new Box2();
-            foreach (var grid in gridsInArea)
+            var gridCoordinate = coordinates.AlignWithClosestGridTile(entityManager: _entityManager, mapManager: _mapManager);
+
+            if (!gridCoordinate.IsValid(_entityManager)) return;
+
+            var closest = _mapManager.IsGrid(gridCoordinate.EntityId);
+
+            if (closest) // stick to existing grid
             {
-                // figure out closest intersect
-                var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
-                var gridDist = (gridIntersect.Center - position).LengthSquared;
+                if (!_mapManager.TryGetGrid(gridCoordinate.EntityId, out var grid)) return;
 
-                if (gridDist >= distance)
-                    continue;
-
-                distance = gridDist;
-                closest = grid;
-                intersect = gridIntersect;
-            }
-
-            if (closest != null) // stick to existing grid
-            {
-                // round to nearest cardinal dir
-                var deltaVec = position - intersect.Center;
-                var normal = new Vector2(0,0);
-                if (deltaVec != Vector2.Zero)
-                {
-                    normal = new Angle(deltaVec).GetCardinalDir().ToVec();
-                }
-
-
-                // round coords to center of tile
-                var tileIndices = closest.WorldToTile(intersect.Center);
-                var tileCenterWorld = closest.GridTileToWorldPos(tileIndices);
-
-                // move mouse one tile out along normal
-                var newTilePos = tileCenterWorld + normal * closest.TileSize;
-
-                // you can always remove a tile
-                if(Tile.Empty.TypeId != tileType)
-                {
-                    var tileBounds = Box2.UnitCentered.Scale(closest.TileSize).Translated(newTilePos);
-
-                    var collideCount = _mapManager.FindGridsIntersecting(mapId, tileBounds).Count();
-
-                    // prevent placing a tile if it overlaps more than one grid
-                    if(collideCount > 1)
-                        return;
-                }
-
-                var pos = closest.WorldToTile(position);
-                closest.SetTile(pos, new Tile(tileType));
+                grid.SetTile(gridCoordinate, new Tile(tileType));
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(mapId);
-                newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
-                var tilePos = newGrid.WorldToTile(position);
+                var newGrid = _mapManager.CreateGrid(mapCoordinates.MapId);
+                newGrid.WorldPosition = mapCoordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
+                var tilePos = newGrid.WorldToTile(mapCoordinates.Position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }
         }
@@ -230,7 +188,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = false;
@@ -251,7 +209,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = true;
@@ -272,7 +230,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
             _networkManager.ServerSendMessage(message, playerConnection);
         }

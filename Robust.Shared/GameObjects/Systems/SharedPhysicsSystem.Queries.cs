@@ -6,6 +6,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Debugging;
 
 namespace Robust.Shared.GameObjects
 {
@@ -14,7 +15,7 @@ namespace Robust.Shared.GameObjects
      */
     public partial class SharedPhysicsSystem
     {
-        [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+        [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
 
         /// <summary>
         ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
         {
             var state = (collider, mapId, found: false);
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, collider))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, collider))
             {
                 var gridCollider = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(collider);
 
@@ -95,6 +96,45 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        ///     Get all the entities whose fixtures intersect the fixtures of the given entity. Basically a variant of
+        ///     <see cref="GetCollidingEntities(PhysicsComponent, Vector2, bool)"/> that allows the user to specify
+        ///     their own collision mask.
+        /// </summary>
+        public HashSet<EntityUid> GetEntitiesIntersectingBody(
+            EntityUid uid,
+            int collisionMask,
+            bool approximate = true,
+            PhysicsComponent? body = null,
+            FixturesComponent? fixtureComp = null)
+        {
+            var entities = new HashSet<EntityUid>();
+
+            if (!Resolve(uid, ref body, ref fixtureComp, false) || body.Broadphase == null)
+                return entities;
+
+            var state = (body, entities);
+
+            foreach (var (_, fixture) in fixtureComp.Fixtures)
+            {
+                foreach (var proxy in fixture.Proxies)
+                {
+                    body.Broadphase.Tree.QueryAabb(ref state,
+                        (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
+                            in FixtureProxy other) =>
+                        {
+                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
+                            if ((collisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
+
+                            state.entities.Add(other.Fixture.Body.Owner);
+                            return true;
+                        }, proxy.AABB, approximate);
+                }
+            }
+
+            return entities;
+        }
+
+        /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
@@ -103,7 +143,7 @@ namespace Robust.Shared.GameObjects
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldAABB))
             {
                 var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
@@ -125,7 +165,7 @@ namespace Robust.Shared.GameObjects
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
                 var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
@@ -168,6 +208,7 @@ namespace Robust.Shared.GameObjects
         }
 
         #region RayCast
+
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
         /// </summary>
@@ -177,16 +218,39 @@ namespace Robust.Shared.GameObjects
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
         /// <returns>A result object describing the hit, if any.</returns>
+        // TODO: Make the parameter order here consistent with the other overload.
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
-            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
+            float maxLength = 50F, Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
+        {
+            // No, rider. This is better than a local function!
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper =
+                (EntityUid uid, Func<EntityUid, bool>? wrapped)
+                    => wrapped != null && wrapped(uid);
+
+            return IntersectRayWithPredicate(mapId, ray, predicate, wrapper, maxLength, returnOnFirstHit);
+        }
+
+        /// <summary>
+        ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="ray">Ray to cast in the world.</param>
+        /// <param name="maxLength">Maximum length of the ray in meters.</param>
+        /// <param name="state">A custom state to pass to the predicate.</param>
+        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
+        /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
+        /// <remarks>You can avoid variable capture in many cases by using this method and passing a custom state to the predicate.</remarks>
+        /// <returns>A result object describing the hit, if any.</returns>
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, CollisionRay ray, TState state,
+            Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
             var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
                 Vector2.ComponentMax(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
                 var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
 
@@ -207,7 +271,10 @@ namespace Robust.Shared.GameObjects
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (predicate?.Invoke(proxy.Fixture.Body.Owner) == true)
+                    if (!proxy.Fixture.Body.Hard)
+                        return true;
+
+                    if (predicate.Invoke(proxy.Fixture.Body.Owner, state) == true)
                         return true;
 
                     // TODO: Shape raycast here
@@ -215,23 +282,15 @@ namespace Robust.Shared.GameObjects
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
                     results.Add(result);
-#if DEBUG
-                    EntityManager.EventBus.QueueEvent(EventSource.Local,
-                        new DebugDrawRayMessage(
-                            new DebugRayData(ray, maxLength, result)));
-#endif
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
                     return true;
                 }, gridRay);
             }
 
-#if DEBUG
             if (results.Count == 0)
             {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
+                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
             }
-#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -247,7 +306,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
+        {
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper = (EntityUid uid, EntityUid? ignored)
+                => uid == ignored;
+
+            return IntersectRayWithPredicate(mapId, ray, ignoredEnt, wrapper, maxLength, returnOnFirstHit);
+        }
 
         /// <summary>
         ///     Casts a ray in the world and returns the distance the ray traveled while colliding with entities
@@ -264,7 +329,7 @@ namespace Robust.Shared.GameObjects
             var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
                 Vector2.ComponentMax(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
+            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
                 var (_, rot, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationInvMatrix();
 
@@ -278,13 +343,14 @@ namespace Robust.Shared.GameObjects
                 {
                     if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt) return true;
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
+                    if (!proxy.Fixture.Hard)
                         return true;
-                    }
+
+                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                        return true;
 
                     if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
-                        proxy.AABB, out _, out var exitPoint))
+                            proxy.AABB, out _, out var exitPoint))
                     {
                         penetration += (point - exitPoint).Length;
                     }
@@ -292,14 +358,8 @@ namespace Robust.Shared.GameObjects
                 }, gridRay);
             }
 
-#if DEBUG
-            if (penetration > 0f)
-            {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
-            }
-#endif
+            // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
 
             return penetration;
         }

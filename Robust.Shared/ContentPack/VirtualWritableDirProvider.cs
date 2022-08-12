@@ -78,6 +78,14 @@ namespace Robust.Shared.ContentPack
             throw new NotImplementedException();
         }
 
+        public IEnumerable<string> DirectoryEntries(ResourcePath path)
+        {
+            if (!TryGetNodeAt(path, out var dir) || dir is not DirectoryNode dirNode)
+                throw new ArgumentException("Path is not a valid directory node.");
+
+            return dirNode.Children.Keys;
+        }
+
         public bool IsDir(ResourcePath path)
         {
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;

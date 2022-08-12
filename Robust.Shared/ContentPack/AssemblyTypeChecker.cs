@@ -170,7 +170,9 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+#pragma warning disable RA0004
             var loadedConfig = _config.Result;
+#pragma warning restore RA0004
 
             // We still do explicit type reference scanning, even though the actual whitelists work with raw members.
             // This is so that we can simplify handling of generic type specifications during member checking:
@@ -192,6 +194,10 @@ namespace Robust.Shared.ContentPack
             CheckNoUnmanagedMethodDefs(reader, errors);
 
             _sawmill.Debug($"Unmanaged methods... {fullStopwatch.ElapsedMilliseconds}ms");
+
+            CheckNoTypeAbuse(reader, errors);
+
+            _sawmill.Debug($"Type abuse... {fullStopwatch.ElapsedMilliseconds}ms");
 
             CheckMemberReferences(loadedConfig, members, errors);
 
@@ -229,7 +235,9 @@ namespace Robust.Shared.ContentPack
                 }
             });
 
+#pragma warning disable RA0004
             var loadedCfg = _config.Result;
+#pragma warning restore RA0004
 
             var verifyErrors = false;
             foreach (var res in bag)
@@ -307,6 +315,27 @@ namespace Robust.Shared.ContentPack
                 {
                     var err = $"Method has illegal MethodAttributes: {FormatMethodName(reader, methodDef)}";
                     errors.Add(new SandboxError(err));
+                }
+            }
+        }
+
+        private static void CheckNoTypeAbuse(MetadataReader reader, ConcurrentBag<SandboxError> errors)
+        {
+            foreach (var typeDefHandle in reader.TypeDefinitions)
+            {
+                var typeDef = reader.GetTypeDefinition(typeDefHandle);
+                if ((typeDef.Attributes & TypeAttributes.ExplicitLayout) != 0)
+                {
+                    // The C# compiler emits explicit layout types for some array init logic. These have no fields.
+                    // Only ban explicit layout if it has fields.
+
+                    var type = GetTypeFromDefinition(reader, typeDefHandle);
+
+                    if (typeDef.GetFields().Count > 0)
+                    {
+                        var err = $"Explicit layout type {type} may not have fields.";
+                        errors.Add(new SandboxError(err));
+                    }
                 }
             }
         }
@@ -746,7 +775,7 @@ namespace Robust.Shared.ContentPack
         /// <exception href="UnsupportedMetadataException">
         ///     Thrown if the metadata does something funny we don't "support" like type forwarding.
         /// </exception>
-        private static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
+        internal static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
         {
             var typeRef = reader.GetTypeReference(handle);
             var name = reader.GetString(typeRef.Name);
@@ -883,7 +912,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private sealed class TypeProvider : ISignatureTypeProvider<MType, int>
+        internal sealed class TypeProvider : ISignatureTypeProvider<MType, int>
         {
             public MType GetSZArrayType(MType elementType)
             {

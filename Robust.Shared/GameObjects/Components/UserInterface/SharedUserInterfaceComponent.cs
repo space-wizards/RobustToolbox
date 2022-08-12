@@ -22,6 +22,12 @@ namespace Robust.Shared.GameObjects
             [DataField("type", readOnly: true, required: true)]
             public string ClientType { get; set; } = default!;
 
+            /// <summary>
+            ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.
+            /// </summary>
+            [DataField("range")]
+            public float InteractionRange = 2f;
+
             // TODO BUI move to content?
             // I've tried to keep the name general, but really this is a bool for: can ghosts/stunned/dead people press buttons on this UI?
             /// <summary>
@@ -132,6 +138,16 @@ namespace Robust.Shared.GameObjects
         public override string ToString()
         {
             return $"{nameof(BoundUIWrapMessage)}: {Message}";
+        }
+    }
+
+    public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
+    {
+        public BoundUIOpenedEvent(object uiKey, EntityUid uid, ICommonSession session)
+        {
+            UiKey = uiKey;
+            Entity = uid;
+            Session = session;
         }
     }
 

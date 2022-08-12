@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Bql
 {
@@ -268,7 +269,9 @@ namespace Robust.Server.Bql
                 if ((metaData.EntityPrototype?.ID == name) ^ isInverted)
                     return true;
 
-                return (metaData.EntityPrototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
+                var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+
+                return metaData.EntityPrototype != null && prototypeManager.EnumerateParents<EntityPrototype>(metaData.EntityPrototype.ID).Any(x => x.Name == name) ^ isInverted;
             });
         }
     }
@@ -312,15 +315,20 @@ namespace Robust.Server.Bql
         {
             var radius = (float)(double)arguments[0];
             var entityLookup = EntitySystem.Get<EntityLookupSystem>();
+            var xformQuery = IoCManager.Resolve<IEntityManager>().GetEntityQuery<TransformComponent>();
+            var distinct = new HashSet<EntityUid>();
 
-            // TODO: Make this a foreach and reduce LINQ chain because it'll allocate a LOT
+            foreach (var uid in input)
+            {
+                foreach (var near in entityLookup.GetEntitiesInRange(xformQuery.GetComponent(uid).Coordinates,
+                             radius))
+                {
+                    if (!distinct.Add(near)) continue;
+                    yield return near;
+                }
+            }
+
             //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.
-            return input.Where(entityManager.HasComponent<TransformComponent>)
-                .SelectMany(e =>
-                    entityLookup.GetEntitiesInRange(entityManager.GetComponent<TransformComponent>(e).Coordinates,
-                        radius))
-                .Select(x => x) // Sloth's fault.
-                .Distinct();
         }
     }
 

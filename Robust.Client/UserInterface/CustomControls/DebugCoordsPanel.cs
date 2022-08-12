@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -20,8 +21,10 @@ namespace Robust.Client.UserInterface.CustomControls
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        private readonly StringBuilder _textBuilder = new();
+        private readonly char[] _textBuffer = new char[1024];
+
         private readonly Label _contents;
-        private UIBox2i _uiBox;
 
         public DebugCoordsPanel()
         {
@@ -53,7 +56,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            var stringBuilder = new StringBuilder();
+            _textBuilder.Clear();
 
             var mouseScreenPos = _inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
@@ -73,27 +76,26 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
                     mouseWorldMap.Position);
-                tile = new TileRef(mouseWorldMap.MapId, GridId.Invalid,
+                tile = new TileRef(GridId.Invalid, EntityUid.Invalid,
                     mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
 
-            stringBuilder.AppendFormat(@"Positioning Debug:
-Screen Size: {0}
+            _textBuilder.Append($@"Positioning Debug:
+Screen Size: {screenSize}
 Mouse Pos:
-    Screen: {1}
-    {2}
-    {3}
-    {4}
-    GUI: {5}", screenSize, mouseScreenPos, mouseWorldMap, mouseGridPos,
-                tile, controlHovered);
+    Screen: {mouseScreenPos}
+    {mouseWorldMap}
+    {mouseGridPos}
+    {tile}
+    GUI: {controlHovered}");
 
-            stringBuilder.AppendLine("\nAttached Entity:");
+            _textBuilder.AppendLine("\nAttached Entity:");
             var controlledEntity = _playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
             if (controlledEntity == EntityUid.Invalid)
             {
-                stringBuilder.AppendLine("No attached entity.");
+                _textBuilder.AppendLine("No attached entity.");
             }
             else
             {
@@ -102,41 +104,20 @@ Mouse Pos:
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
                 var playerCoordinates = entityTransform.Coordinates;
+                var playerRotation = entityTransform.WorldRotation;
 
-                stringBuilder.AppendFormat(@"    Screen: {0}
-    {1}
-    {2}
-    EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner,
-                    entityTransform.GridID);
+                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridID, out var grid) ? grid.WorldRotation : Angle.Zero;
+
+                _textBuilder.Append($@"    Screen: {playerScreen}
+    {playerWorldOffset}
+    {playerCoordinates}
+    Rotation: {playerRotation.Degrees:F2}°
+    EntId: {entityTransform.Owner}
+    GridID: {entityTransform.GridID}
+    Grid Rotation: {gridRotation.Degrees:F2}°");
             }
 
-            if (controlHovered != null)
-            {
-                _uiBox = UIBox2i.FromDimensions(controlHovered.GlobalPixelPosition, controlHovered.PixelSize);
-            }
-
-            _contents.Text = stringBuilder.ToString();
-            // MinimumSizeChanged();
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            base.Draw(handle);
-
-            if (!VisibleInTree)
-            {
-                return;
-            }
-
-            var (x, y) = GlobalPixelPosition;
-            var renderBox = new UIBox2(
-                _uiBox.Left - x,
-                _uiBox.Top - y,
-                _uiBox.Right - x,
-                _uiBox.Bottom - y);
-
-            handle.DrawRect(renderBox, Color.Red, false);
+            _contents.TextMemory = FormatHelpers.BuilderToMemory(_textBuilder, _textBuffer);
         }
     }
 }

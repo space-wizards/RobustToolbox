@@ -14,6 +14,7 @@ using Lidgren.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
@@ -114,6 +115,7 @@ namespace Robust.Shared.Network
                 return;
             }
 
+            DebugTools.Assert(ChannelCount > 0 && winningPeer.Channels.Count > 0);
             ClientConnectState = ClientConnectionState.Connected;
             Logger.DebugS("net", "Handshake completed, connection established.");
         }
@@ -154,11 +156,11 @@ namespace Robust.Shared.Network
                 var encRequest = new MsgEncryptionRequest();
                 encRequest.ReadFromBuffer(response);
 
-                var sharedSecret = new byte[AesKeyLength];
+                var sharedSecret = new byte[SharedKeyLength];
                 RandomNumberGenerator.Fill(sharedSecret);
 
                 if (encrypt)
-                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+                    encryption = new NetEncryption(sharedSecret, isServer: false);
 
                 byte[] keyBytes;
                 if (hasPubKey)
@@ -172,11 +174,19 @@ namespace Robust.Shared.Network
                     keyBytes = encRequest.PublicKey;
                 }
 
-                var rsaKey = RSA.Create();
-                rsaKey.ImportRSAPublicKey(keyBytes, out _);
+                if (keyBytes.Length != CryptoBox.PublicKeyBytes)
+                {
+                    var msg = $"Invalid public key length. Expected {CryptoBox.PublicKeyBytes}, but was {keyBytes.Length}.";
+                    connection.Disconnect(msg);
+                    throw new Exception(msg);
+                }
 
-                var encryptedSecret = rsaKey.Encrypt(sharedSecret, RSAEncryptionPadding.OaepSHA256);
-                var encryptedVerifyToken = rsaKey.Encrypt(encRequest.VerifyToken, RSAEncryptionPadding.OaepSHA256);
+                // Data is [shared]+[verify]
+                var data = new byte[sharedSecret.Length + encRequest.VerifyToken.Length];
+                sharedSecret.CopyTo(data.AsSpan());
+                encRequest.VerifyToken.CopyTo(data.AsSpan(sharedSecret.Length));
+
+                var sealedData = CryptoBox.Seal(data, keyBytes);
 
                 var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
                 var authHash = Convert.ToBase64String(authHashBytes);
@@ -190,8 +200,7 @@ namespace Robust.Shared.Network
 
                 var encryptionResponse = new MsgEncryptionResponse
                 {
-                    SharedSecret = encryptedSecret,
-                    VerifyToken = encryptedVerifyToken,
+                    SealedData = sealedData,
                     UserId = userId!.Value.UserId
                 };
 
@@ -364,7 +373,7 @@ namespace Robust.Shared.Network
                             Logger.DebugS("net", "First peer failed.");
                             firstPeer.Peer.Shutdown("You failed.");
                             _toCleanNetPeers.Add(firstPeer.Peer);
-                            firstReason = firstPeerChanged.Result;
+                            firstReason = await firstPeerChanged;
                             await secondPeerChanged;
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;

@@ -34,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var mapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            var component = serializationManager.ReadValueOrThrow<PriorityTestComponent>(mapping);
+            var component = serializationManager.Read<PriorityTestComponent>(mapping);
 
             Assert.That(component.Strings.Count, Is.EqualTo(3));
             Assert.That(component.First, Is.EqualTo("A"));

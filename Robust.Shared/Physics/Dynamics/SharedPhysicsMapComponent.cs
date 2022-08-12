@@ -20,7 +20,6 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -39,7 +38,6 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
-        internal SharedPhysicsSystem _physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
@@ -56,12 +54,11 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 if (_gravity.EqualsApprox(value)) return;
 
+                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                var bodyQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
+
                 // Force every body awake just in case.
-                foreach (var body in Bodies)
-                {
-                    if (body.BodyType != BodyType.Dynamic) continue;
-                    body.Awake = true;
-                }
+                WakeBodiesRecursive(Owner, xformQuery, bodyQuery);
 
                 _gravity = value;
             }
@@ -69,14 +66,26 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Vector2 _gravity;
 
+        private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
+        {
+            if (bodyQuery.TryGetComponent(uid, out var body) &&
+                body.BodyType == BodyType.Dynamic)
+            {
+                body.WakeBody();
+            }
+
+            var xform = xformQuery.GetComponent(uid);
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                WakeBodiesRecursive(child.Value, xformQuery, bodyQuery);
+            }
+        }
+
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
         private HashSet<TransformComponent> _deferredUpdates = new();
-
-        /// <summary>
-        ///     All bodies present on this map.
-        /// </summary>
-        public HashSet<PhysicsComponent> Bodies = new();
 
         /// <summary>
         ///     All awake bodies on this map.
@@ -93,25 +102,15 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private List<Joint> _joints = new();
 
+        private Stack<PhysicsComponent> _bodyStack = new(64);
+
         /// <summary>
         ///     Temporarily store island-bodies for easier iteration.
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
-
-        private HashSet<PhysicsComponent> _queuedWake = new();
-        private HashSet<PhysicsComponent> _queuedSleep = new();
-
-        private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
-
         private List<PhysicsComponent> _islandBodies = new(64);
         private List<Contact> _islandContacts = new(32);
         private List<Joint> _islandJoints = new(8);
-
-        /// <summary>
-        ///     To build islands we do a depth-first search of all colliding bodies and group them together.
-        ///     This stack is used to store bodies that are colliding.
-        /// </summary>
-        private PhysicsComponent[] _stack = new PhysicsComponent[64];
 
         /// <summary>
         ///     Store last tick's invDT
@@ -121,91 +120,32 @@ namespace Robust.Shared.Physics.Dynamics
         public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
+
         public void AddAwakeBody(PhysicsComponent body)
         {
-            _queuedWake.Add(body);
-        }
+            if (!body.CanCollide)
+            {
+                Logger.ErrorS("physics", $"Tried to add non-colliding {_entityManager.ToPrettyString(body.Owner)} as an awake body to map!");
+                DebugTools.Assert(false);
+                return;
+            }
 
-        public void RemoveBody(PhysicsComponent body)
-        {
-            Bodies.Remove(body);
-            AwakeBodies.Remove(body);
-            body.DestroyContacts();
-            body.PhysicsMap = null;
+            if (body.BodyType == BodyType.Static)
+            {
+                Logger.ErrorS("physics", $"Tried to add static body {_entityManager.ToPrettyString(body.Owner)} as an awake body to map!");
+                DebugTools.Assert(false);
+                return;
+            }
+
+            DebugTools.Assert(body.Awake);
+            AwakeBodies.Add(body);
         }
 
         public void RemoveSleepBody(PhysicsComponent body)
         {
-            _queuedSleep.Add(body);
-        }
-        #endregion
-
-        #region Queue
-        private void ProcessChanges()
-        {
-            ProcessBodyChanges();
-            ProcessWakeQueue();
-            ProcessSleepQueue();
+            AwakeBodies.Remove(body);
         }
 
-        private void ProcessBodyChanges()
-        {
-            while (_queuedCollisionMessages.Count > 0)
-            {
-                var message = _queuedCollisionMessages.Dequeue();
-
-                if (!message.Body.Deleted && message.Body.CanCollide)
-                {
-                    AddBody(message.Body);
-                }
-                else
-                {
-                    RemoveBody(message.Body);
-                }
-            }
-        }
-
-        public void AddBody(PhysicsComponent body)
-        {
-            if (Bodies.Contains(body)) return;
-
-            // TODO: Kinda dodgy with this and wake shit.
-            // Look at my note under ProcessWakeQueue
-            if (body.Awake && body.BodyType != BodyType.Static)
-            {
-                _queuedWake.Remove(body);
-                AwakeBodies.Add(body);
-            }
-
-            Bodies.Add(body);
-            body.PhysicsMap = this;
-        }
-
-        private void ProcessWakeQueue()
-        {
-            foreach (var body in _queuedWake)
-            {
-                // Sloth note: So FPE doesn't seem to handle static bodies being woken gracefully as they never sleep
-                // (No static body's an island so can't increase their min sleep time).
-                // AFAIK not adding it to woken bodies shouldn't matter for anything tm...
-                if (!body.Awake || body.BodyType == BodyType.Static || !Bodies.Contains(body)) continue;
-                AwakeBodies.Add(body);
-            }
-
-            _queuedWake.Clear();
-        }
-
-        private void ProcessSleepQueue()
-        {
-            foreach (var body in _queuedSleep)
-            {
-                if (body.Awake) continue;
-
-                AwakeBodies.Remove(body);
-            }
-
-            _queuedSleep.Clear();
-        }
         #endregion
 
         /// <summary>
@@ -215,10 +155,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="prediction"></param>
         public void Step(float frameTime, bool prediction)
         {
-            // The original doesn't call ProcessChanges quite so much but stuff like collision behaviors
-            // can edit things during the solver so we'll just handle it as it comes up.
-            ProcessChanges();
-
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
@@ -234,9 +170,6 @@ namespace Robust.Shared.Physics.Dynamics
             // Don't run collision behaviors during FrameUpdate?
             if (!prediction)
                 ContactManager.PreSolve(frameTime);
-
-            // Remove all deleted entities etc.
-            ProcessChanges();
 
             // Integrate velocities, solve velocity constraints, and do integration.
             Solve(frameTime, dtRatio, invDt, prediction);
@@ -279,17 +212,12 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var contact = contactNode.Value;
                 contactNode = contactNode.Next;
-                contact.IslandFlag = false;
+                contact.Flags &= ~ContactFlags.Island;
             }
 
             // Build and simulated islands from awake bodies.
-            // Ideally you don't need a stack size for all bodies but we'll TODO: optimise it later.
-            var stackSize = Bodies.Count;
-            if (stackSize > _stack.Length)
-            {
-                Array.Resize(ref _stack, Math.Max(_stack.Length * 2, stackSize));
-            }
-
+            _bodyStack.EnsureCapacity(AwakeBodies.Count);
+            _islandSet.EnsureCapacity(AwakeBodies.Count);
             _awakeBodyList.AddRange(AwakeBodies);
 
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
@@ -298,17 +226,19 @@ namespace Robust.Shared.Physics.Dynamics
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
             {
-                // TODO: When this gets ECSd add a helper and remove
-
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
-                if (seed.Island ||
-                    metaQuery.GetComponent(seed.Owner).EntityPaused && !seed.IgnorePaused)
+                if (seed.Island) continue;
+
+                if (!metaQuery.TryGetComponent(seed.Owner, out var metadata))
                 {
+                    Logger.ErrorS("physics", $"Found deleted entity {_entityManager.ToPrettyString(seed.Owner)} on map!");
+                    RemoveSleepBody(seed);
                     continue;
                 }
 
-                if (prediction && !seed.Predict ||
+                if ((metadata.EntityPaused && !seed.IgnorePaused) ||
+                    (prediction && !seed.Predict) ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static)
                 {
@@ -319,15 +249,13 @@ namespace Robust.Shared.Physics.Dynamics
                 _islandBodies.Clear();
                 _islandContacts.Clear();
                 _islandJoints.Clear();
-                var stackCount = 0;
-                _stack[stackCount++] = seed;
+                _bodyStack.Push(seed);
 
                 // TODO: Probably don't need _islandSet anymore.
                 seed.Island = true;
 
-                while (stackCount > 0)
+                while (_bodyStack.TryPop(out var body))
                 {
-                    var body = _stack[--stackCount];
                     _islandBodies.Add(body);
                     _islandSet.Add(body);
 
@@ -335,7 +263,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType == BodyType.Static) continue;
 
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                    body.ForceAwake();
+                    body.SetAwake(true, updateSleepTime: false);
 
                     var node = body.Contacts.First;
 
@@ -345,7 +273,7 @@ namespace Robust.Shared.Physics.Dynamics
                         node = node.Next;
 
                         // Has this contact already been added to an island?
-                        if (contact.IslandFlag) continue;
+                        if ((contact.Flags & ContactFlags.Island) != 0x0) continue;
 
                         // Is this contact solid and touching?
                         if (!contact.Enabled || !contact.IsTouching) continue;
@@ -354,7 +282,7 @@ namespace Robust.Shared.Physics.Dynamics
                         if (contact.FixtureA?.Hard != true || contact.FixtureB?.Hard != true) continue;
 
                         _islandContacts.Add(contact);
-                        contact.IslandFlag = true;
+                        contact.Flags |= ContactFlags.Island;
                         var bodyA = contact.FixtureA!.Body;
                         var bodyB = contact.FixtureB!.Body;
 
@@ -363,9 +291,7 @@ namespace Robust.Shared.Physics.Dynamics
                         // Was the other body already added to this island?
                         if (other.Island) continue;
 
-                        DebugTools.Assert(stackCount < stackSize);
-                        _stack[stackCount++] = other;
-
+                        _bodyStack.Push(other);
                         other.Island = true;
                     }
 
@@ -375,7 +301,9 @@ namespace Robust.Shared.Physics.Dynamics
                     {
                         if (joint.IslandFlag) continue;
 
-                        var other = joint.BodyA == body ? joint.BodyB : joint.BodyA;
+                        var other = joint.BodyAUid == body.Owner
+                            ? _entityManager.GetComponent<PhysicsComponent>(joint.BodyBUid)
+                            : _entityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;
@@ -385,9 +313,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                         if (other.Island) continue;
 
-                        DebugTools.Assert(stackCount < stackSize);
-                        _stack[stackCount++] = other;
-
+                        _bodyStack.Push(other);
                         other.Island = true;
                     }
                 }

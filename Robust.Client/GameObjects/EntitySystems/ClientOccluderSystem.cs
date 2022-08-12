@@ -1,12 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -33,9 +31,10 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(TransformSystem));
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
-            SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
+            SubscribeLocalEvent<OccluderDirtyEvent>(OnOccluderDirty);
 
-            SubscribeLocalEvent<ClientOccluderComponent, AnchorStateChangedEvent>(HandleAnchorChanged);
+            SubscribeLocalEvent<ClientOccluderComponent, AnchorStateChangedEvent>(OnAnchorChanged);
+            SubscribeLocalEvent<ClientOccluderComponent, ReAnchorEvent>(OnReAnchor);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -62,51 +61,58 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void HandleAnchorChanged(EntityUid uid, ClientOccluderComponent component, ref AnchorStateChangedEvent args)
+        private static void OnAnchorChanged(EntityUid uid, ClientOccluderComponent component, ref AnchorStateChangedEvent args)
         {
             component.AnchorStateChanged();
         }
 
-        private void HandleDirtyEvent(OccluderDirtyEvent ev)
+        private void OnReAnchor(EntityUid uid, ClientOccluderComponent component, ref ReAnchorEvent args)
+        {
+            component.AnchorStateChanged();
+        }
+
+        private void OnOccluderDirty(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
+            IMapGrid? grid;
+            var occluderQuery = GetEntityQuery<ClientOccluderComponent>();
+
             if (EntityManager.EntityExists(sender) &&
-                EntityManager.TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
-                && iconSmooth.Initialized)
+                occluderQuery.HasComponent(sender))
             {
                 var xform = EntityManager.GetComponent<TransformComponent>(sender);
-                if (!_mapManager.TryGetGrid(xform.GridID, out var grid1))
+                if (!_mapManager.TryGetGrid(xform.GridID, out grid))
                     return;
 
                 var coords = xform.Coordinates;
+                var localGrid = grid.TileIndicesFor(coords);
 
                 _dirtyEntities.Enqueue(sender);
-                AddValidEntities(grid1.GetInDir(coords, Direction.North));
-                AddValidEntities(grid1.GetInDir(coords, Direction.South));
-                AddValidEntities(grid1.GetInDir(coords, Direction.East));
-                AddValidEntities(grid1.GetInDir(coords, Direction.West));
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(localGrid + new Vector2i(0, 1)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(localGrid + new Vector2i(0, -1)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(localGrid + new Vector2i(1, 0)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(localGrid + new Vector2i(-1, 0)), occluderQuery);
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out var grid))
+            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out grid))
             {
                 var pos = ev.LastPosition.Value.pos;
 
-                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(1, 0)));
-                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(-1, 0)));
-                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, 1)));
-                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, -1)));
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, 1)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, -1)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(1, 0)), occluderQuery);
+                AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(-1, 0)), occluderQuery);
             }
         }
 
-        private void AddValidEntities(IEnumerable<EntityUid> candidates)
+        private void AddValidEntities(AnchoredEntitiesEnumerator enumerator, EntityQuery<ClientOccluderComponent> occluderQuery)
         {
-            foreach (var entity in candidates)
+            while (enumerator.MoveNext(out var entity))
             {
-                if (EntityManager.HasComponent<ClientOccluderComponent>(entity))
-                {
-                    _dirtyEntities.Enqueue(entity);
-                }
+                if (!occluderQuery.HasComponent(entity.Value)) continue;
+
+                _dirtyEntities.Enqueue(entity.Value);
             }
         }
     }

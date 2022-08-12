@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC.Exceptions;
 
@@ -39,6 +38,13 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">The type of entity system to find.</typeparam>
         /// <returns>The <see cref="IEntitySystem"/> instance matching the specified type.</returns>
         T GetEntitySystem<T>() where T : IEntitySystem;
+
+        /// <summary>
+        /// Get an entity system of the specified type, or null if it is not registered.
+        /// </summary>
+        /// <typeparam name="T">The type of entity system to find.</typeparam>
+        /// <returns>The <see cref="IEntitySystem"/> instance matching the specified type, or null.</returns>
+        T? GetEntitySystemOrNull<T>() where T : IEntitySystem;
 
         /// <summary>
         /// Resolves an entity system.

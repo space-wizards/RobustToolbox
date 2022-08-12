@@ -59,6 +59,7 @@ namespace Robust.Server
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<IResourceManagerInternal, ResourceManager>();
+            IoCManager.Register<EntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
             IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
@@ -67,7 +68,6 @@ namespace Robust.Server
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
-            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();

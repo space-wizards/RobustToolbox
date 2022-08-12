@@ -1,8 +1,10 @@
+using System;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -11,7 +13,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IGameTiming _gameTiming;
         private readonly IClientGameStateManager _gameState;
 
-        private Label _contents;
+        private readonly char[] _textBuffer = new char[256];
+        private readonly Label _contents;
 
         public DebugTimePanel(IGameTiming gameTiming, IClientGameStateManager gameState)
         {
@@ -49,9 +52,10 @@ namespace Robust.Client.UserInterface.CustomControls
             // This means that CurTick reports the NEXT tick to be ran, NOT the last tick that was ran.
             // This is why there's a -1 on Pred:.
 
-            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}/{_gameTiming.CurTick-1}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value-1}
+            _contents.TextMemory = FormatHelpers.FormatIntoMem(_textBuffer,
+                $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}/{_gameTiming.CurTick - 1}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value - 1}
 CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
-ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
+ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}");
         }
     }
 }

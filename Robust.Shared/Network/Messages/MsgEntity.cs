@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using Lidgren.Network;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 #nullable disable
 
@@ -19,10 +18,6 @@ namespace Robust.Shared.Network.Messages
         public EntityMessageType Type { get; set; }
 
         public EntityEventArgs SystemMessage { get; set; }
-#pragma warning disable 618
-        public ComponentMessage ComponentMessage { get; set; }
-#pragma warning restore 618
-
         public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
         public uint Sequence { get; set; }
@@ -44,20 +39,6 @@ namespace Robust.Shared.Network.Messages
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                 }
                     break;
-
-                case EntityMessageType.ComponentMessage:
-                {
-                    EntityUid = new EntityUid(buffer.ReadInt32());
-                    NetId = buffer.ReadUInt32();
-
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int length = buffer.ReadVariableInt32();
-                    using var stream = buffer.ReadAlignedMemory(length);
-#pragma warning disable 618
-                    ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
-#pragma warning restore 618
-                }
-                    break;
             }
         }
 
@@ -72,29 +53,12 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    using (var stream = new MemoryStream())
-                    {
-                        serializer.Serialize(stream, SystemMessage);
-                        buffer.WriteVariableInt32((int)stream.Length);
-                        stream.TryGetBuffer(out var segment);
-                        buffer.Write(segment);
-                    }
-                }
-                    break;
+                    var stream = new MemoryStream();
 
-                case EntityMessageType.ComponentMessage:
-                {
-                    buffer.Write((int)EntityUid);
-                    buffer.Write(NetId);
+                    serializer.Serialize(stream, SystemMessage);
 
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    using (var stream = new MemoryStream())
-                    {
-                        serializer.Serialize(stream, ComponentMessage);
-                        buffer.WriteVariableInt32((int)stream.Length);
-                        stream.TryGetBuffer(out var segment);
-                        buffer.Write(segment);
-                    }
+                    buffer.WriteVariableInt32((int)stream.Length);
+                    buffer.Write(stream.AsSpan());
                 }
                     break;
             }
@@ -107,8 +71,6 @@ namespace Robust.Shared.Network.Messages
             {
                 case EntityMessageType.Error:
                     return "MsgEntity Error";
-                case EntityMessageType.ComponentMessage:
-                    return $"MsgEntity Comp, {timingData}, {EntityUid}/{NetId}: {ComponentMessage}";
                 case EntityMessageType.SystemMessage:
                     return $"MsgEntity Comp, {timingData}, {SystemMessage}";
                 default:

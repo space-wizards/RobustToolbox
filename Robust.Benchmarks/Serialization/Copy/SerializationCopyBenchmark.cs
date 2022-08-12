@@ -28,7 +28,7 @@ namespace Robust.Benchmarks.Serialization.Copy
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.ReadValueOrThrow<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
         }
 
         private const string String = "ABC";
@@ -46,25 +46,25 @@ namespace Robust.Benchmarks.Serialization.Copy
         [Benchmark]
         public string? CreateCopyString()
         {
-            return SerializationManager.CreateCopy(String);
+            return SerializationManager.Copy(String);
         }
 
         [Benchmark]
         public int? CreateCopyInteger()
         {
-            return SerializationManager.CreateCopy(Integer);
+            return SerializationManager.Copy(Integer);
         }
 
         [Benchmark]
         public DataDefinitionWithString? CreateCopyDataDefinitionWithString()
         {
-            return SerializationManager.CreateCopy(DataDefinitionWithString);
+            return SerializationManager.Copy(DataDefinitionWithString);
         }
 
         [Benchmark]
         public SeedDataDefinition? CreateCopySeedDataDefinition()
         {
-            return SerializationManager.CreateCopy(Seed);
+            return SerializationManager.Copy(Seed);
         }
 
         [Benchmark]

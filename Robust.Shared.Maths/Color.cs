@@ -28,8 +28,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
 
@@ -44,7 +46,8 @@ namespace Robust.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
-    public struct Color : IEquatable<Color>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Color : IEquatable<Color>, ISpanFormattable
     {
         /// <summary>
         ///     The red component of this Color4 structure.
@@ -235,6 +238,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}");
         }
 
         public readonly Color WithRed(float newR)
@@ -458,12 +478,15 @@ namespace Robust.Shared.Maths
             var c = max - min;
 
             var h = 0.0f;
-            if (max == rgb.R)
-                h = (rgb.G - rgb.B) / c;
-            else if (max == rgb.G)
-                h = (rgb.B - rgb.R) / c + 2.0f;
-            else if (max == rgb.B)
-                h = (rgb.R - rgb.G) / c + 4.0f;
+            if (c != 0)
+            {
+                if (max == rgb.R)
+                    h = (rgb.G - rgb.B) / c;
+                else if (max == rgb.G)
+                    h = (rgb.B - rgb.R) / c + 2.0f;
+                else if (max == rgb.B)
+                    h = (rgb.R - rgb.G) / c + 4.0f;
+            }
 
             var hue = h / 6.0f;
             if (hue < 0.0f)
@@ -566,12 +589,15 @@ namespace Robust.Shared.Maths
             var c = max - min;
 
             var h = 0.0f;
-            if (max == rgb.R)
-                h = (rgb.G - rgb.B) / c % 6.0f;
-            else if (max == rgb.G)
-                h = (rgb.B - rgb.R) / c + 2.0f;
-            else if (max == rgb.B)
-                h = (rgb.R - rgb.G) / c + 4.0f;
+            if (c != 0)
+            {
+                if (max == rgb.R)
+                    h = (rgb.G - rgb.B) / c % 6.0f;
+                else if (max == rgb.G)
+                    h = (rgb.B - rgb.R) / c + 2.0f;
+                else if (max == rgb.B)
+                    h = (rgb.R - rgb.G) / c + 4.0f;
+            }
 
             var hue = h * 60.0f / 360.0f;
 
@@ -880,7 +906,7 @@ namespace Robust.Shared.Maths
                 return color.Value;
             if (fallback.HasValue)
                 return fallback.Value;
-            throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
+            throw new ArgumentException($"Invalid color code \"{new string(hexColor)}\" and no fallback provided.", nameof(hexColor));
         }
 
         public static Color FromXaml(string name)

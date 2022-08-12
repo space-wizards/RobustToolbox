@@ -24,12 +24,13 @@ namespace Robust.Shared.Physics.Collision
 {
     /// <summary>
     /// Input for Distance.ComputeDistance().
+    /// DANGEROUS TO USE DUE TO C# LIMITATIONS, DO NOT USE DIRECTLY EVER I WILL SHED YOU.
     /// You have to option to use the shape radii in the computation.
     /// </summary>
-    internal sealed class DistanceInput
+    internal ref struct DistanceInput
     {
-        public DistanceProxy ProxyA = new();
-        public DistanceProxy ProxyB = new();
+        public DistanceProxy ProxyA;
+        public DistanceProxy ProxyB;
         public Transform TransformA;
         public Transform TransformB;
         public bool UseRadii;

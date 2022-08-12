@@ -25,6 +25,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -41,24 +42,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var joint = new RevoluteJoint(UidA, UidB)
-            {
-                ID = ID,
-                Breakpoint = Breakpoint,
-                CollideConnected = CollideConnected,
-                Enabled = Enabled,
-                EnableLimit = EnableLimit,
-                EnableMotor = EnableMotor,
-                ReferenceAngle = ReferenceAngle,
-                LowerAngle = LowerAngle,
-                UpperAngle = UpperAngle,
-                MotorSpeed = MotorSpeed,
-                MaxMotorTorque = MaxMotorTorque,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB
-            };
-
-            return joint;
+            return new RevoluteJoint(this);
         }
     }
 
@@ -84,38 +68,47 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _upperImpulse;
 
         // Settable
+        [DataField("enableLimit")]
         public bool EnableLimit;
 
         /// <summary>
         /// A flag to enable the joint motor.
         /// </summary>
+        [DataField("enableMotor")]
         public bool EnableMotor;
 
         /// <summary>
         /// The bodyB angle minus bodyA angle in the reference state (radians).
         /// </summary>
+        [DataField("referenceAngle")]
         public float ReferenceAngle;
 
         /// <summary>
         /// The lower angle for the joint limit (radians).
         /// </summary>
+        [DataField("lowerAngle")]
         public float LowerAngle;
 
         /// <summary>
         /// The upper angle for the joint limit (radians).
         /// </summary>
+        [DataField("upperAngle")]
         public float UpperAngle;
 
         /// <summary>
         /// The desired motor speed. Usually in radians per second.
         /// </summary>
+        [DataField("motorSpeed")]
         public float MotorSpeed;
 
         /// <summary>
         /// The maximum motor torque used to achieve the desired motor speed.
         /// Usually in N-m.
         /// </summary>
+        [DataField("maxMotorTorque")]
         public float MaxMotorTorque;
+
+        public RevoluteJoint() {}
 
         public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
         {
@@ -125,6 +118,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
+
+        internal RevoluteJoint(RevoluteJointState state) : base(state)
+        {
+            EnableLimit = state.EnableLimit;
+            EnableMotor = state.EnableMotor;
+            ReferenceAngle = state.ReferenceAngle;
+            LowerAngle = state.LowerAngle;
+            UpperAngle = state.UpperAngle;
+            MotorSpeed = state.MotorSpeed;
+            MaxMotorTorque = state.MaxMotorTorque;
+        }
 
         public override JointType JointType => JointType.Revolute;
 
@@ -161,18 +165,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * (_motorImpulse + _lowerImpulse - _upperImpulse);
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = BodyA.LocalCenter;
-            _localCenterB = BodyB.LocalCenter;
-	        _invMassA = BodyA.InvMass;
-	        _invMassB = BodyB.InvMass;
-	        _invIA = BodyA.InvI;
-	        _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
-	        float aA = data.Angles[_indexA];
+            float aA = data.Angles[_indexA];
 	        var vA = data.LinearVelocities[_indexA];
 	        float wA = data.AngularVelocities[_indexA];
 

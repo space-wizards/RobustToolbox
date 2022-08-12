@@ -37,7 +37,6 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             SetupNetworking();
-            ReceivedComponentMessage += (_, compMsg) => DispatchComponentMessage(compMsg);
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
@@ -45,7 +44,7 @@ namespace Robust.Server.GameObjects
 
         EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
-            return AllocEntity(prototypeName, uid);
+            return AllocEntity(prototypeName, out _, uid);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -53,9 +52,14 @@ namespace Robust.Server.GameObjects
             LoadEntity(entity, context);
         }
 
-        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity)
+        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context)
         {
-            InitializeEntity(entity);
+            LoadEntity(entity, context, prototype);
+        }
+
+        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
+        {
+            InitializeEntity(entity, meta);
         }
 
         void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
@@ -80,7 +84,9 @@ namespace Robust.Server.GameObjects
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
                     // And those aren't guaranteed to exist on the client, so don't clear them.
-                    if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+                    var compName = ComponentFactory.GetComponentName(component.GetType());
+                    if (prototype.Components.ContainsKey(compName))
+                        component.ClearTicks();
                 }
             }
 
@@ -97,9 +103,6 @@ namespace Robust.Server.GameObjects
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
-
-        /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
@@ -148,21 +151,21 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        private void OnEntityRemoved(object? sender, EntityUid e)
+        private void OnEntityRemoved(EntityUid e)
         {
             if (_componentDeletionHistory.ContainsKey(e))
                 _componentDeletionHistory.Remove(e);
         }
 
-        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        private void OnComponentRemoved(RemovedComponentEventArgs e)
         {
-            var reg = ComponentFactory.GetRegistration(e.Component.GetType());
+            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
 
             // We only keep track of networked components being removed.
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.Owner;
+            var uid = e.BaseArgs.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {
@@ -208,38 +211,9 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendComponentNetworkMessage(INetChannel? channel, EntityUid entity, IComponent component,
-            ComponentMessage message)
-        {
-            if (_networkManager.IsClient)
-                return;
-
-            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
-
-            if (!netId.HasValue)
-                throw new ArgumentException($"Component {component.GetType()} does not have a NetID.", nameof(component));
-
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
-            msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity;
-            msg.NetId = netId.Value;
-            msg.ComponentMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
-
-            // Logger.DebugS("net.ent", "Sending: {0}", msg);
-
-            //Send the message
-            if (channel == null)
-                _networkManager.ServerSendToAll(msg);
-            else
-                _networkManager.ServerSendMessage(msg, channel);
-        }
-
-        /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message)
         {
-            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
+            var newMsg = new MsgEntity();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
@@ -250,7 +224,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
         {
-            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
+            var newMsg = new MsgEntity();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
@@ -302,10 +276,6 @@ namespace Robust.Server.GameObjects
             {
                 switch (message.Type)
                 {
-                    case EntityMessageType.ComponentMessage:
-                        ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
-                        return;
-
                     case EntityMessageType.SystemMessage:
                         var msg = message.SystemMessage;
                         var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());

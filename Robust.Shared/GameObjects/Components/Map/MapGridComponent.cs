@@ -17,11 +17,9 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapGridComponent : IComponent
     {
+        [Obsolete("Use EntityUids instead")]
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
-
-        bool AnchorEntity(TransformComponent transform);
-        void UnanchorEntity(TransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -36,11 +34,14 @@ namespace Robust.Shared.GameObjects
         // If you want to remove this, you would have to restructure the map save file.
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
+#pragma warning disable CS0618
         private GridId _gridIndex = GridId.Invalid;
+#pragma warning restore CS0618
 
         private IMapGrid? _mapGrid;
 
         /// <inheritdoc />
+        [Obsolete("Use EntityUid instead")]
         public GridId GridIndex
         {
             get => _gridIndex;
@@ -61,11 +62,12 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = _entMan.GetComponent<TransformComponent>(Owner).MapID;
+            var xform = _entMan.GetComponent<TransformComponent>(Owner);
+            var mapId = xform.MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                _entMan.GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
+                xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
         }
 
@@ -74,49 +76,6 @@ namespace Robust.Shared.GameObjects
             _mapManager.TrueGridDelete((MapGrid)_mapGrid!);
 
             base.OnRemove();
-        }
-
-        /// <inheritdoc />
-        public bool AnchorEntity(TransformComponent transform)
-        {
-            var xform = transform;
-            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner);
-
-            if (result)
-            {
-                xform.ParentUid = Owner;
-
-                // anchor snapping
-                xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
-
-                xform.SetAnchored(result);
-
-                if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
-                {
-                    physicsComponent.BodyType = BodyType.Static;
-                }
-            }
-
-            return result;
-        }
-
-        /// <inheritdoc />
-        public void UnanchorEntity(TransformComponent transform)
-        {
-            //HACK: Client grid pivot causes this.
-            //TODO: make grid components the actual grid
-            if(GridIndex == GridId.Invalid)
-                return;
-
-            var xform = transform;
-            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner);
-            xform.SetAnchored(false);
-            if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
-            {
-                physicsComponent.BodyType = BodyType.Dynamic;
-            }
         }
 
         /// <inheritdoc />
@@ -141,7 +100,9 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
+#pragma warning disable CS0618
             var grid = new MapGrid(_mapManager, _entMan, GridIndex, chunkSize);
+#pragma warning restore CS0618
             grid.TileSize = tileSize;
 
             Grid = grid;
@@ -205,6 +166,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
+#pragma warning disable CS0618
     [Serializable, NetSerializable]
     internal sealed class MapGridComponentState : ComponentState
     {
@@ -229,4 +191,5 @@ namespace Robust.Shared.GameObjects
             ChunkSize = chunkSize;
         }
     }
+#pragma warning restore CS0618
 }

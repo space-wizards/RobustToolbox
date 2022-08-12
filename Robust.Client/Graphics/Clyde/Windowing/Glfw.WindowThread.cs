@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics.Clyde
                     else
                         GLFW.WaitEvents();
 
-                    while (_cmdReader.TryRead(out var cmd))
+                    while (_cmdReader.TryRead(out var cmd) && _windowingRunning)
                     {
                         ProcessGlfwCmd(cmd);
                     }
@@ -69,6 +69,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     case CmdTerminate:
                         _windowingRunning = false;
+                        _eventWriter.Complete();
                         break;
 
                     case CmdWinSetTitle cmd:
@@ -128,6 +129,15 @@ namespace Robust.Client.Graphics.Clyde
             public void TerminateWindowLoop()
             {
                 SendCmd(new CmdTerminate());
+                _cmdWriter.Complete();
+
+                // Drain command queue ignoring it until the window thread confirms completion.
+#pragma warning disable RA0004
+                while (_eventReader.WaitToReadAsync().AsTask().Result)
+#pragma warning restore RA0004
+                {
+                    _eventReader.TryRead(out _);
+                }
             }
 
             private void InitChannels()

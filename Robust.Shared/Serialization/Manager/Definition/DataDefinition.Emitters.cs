@@ -4,9 +4,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
@@ -14,20 +15,24 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private DeserializeDelegate EmitDeserializationDelegate()
+        private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
         {
-            DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
-                ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
-            {
-                var mappedInfo = new DeserializedFieldEntry[BaseFieldDefinitions.Length];
+            var isServer = collection.Resolve<INetManager>().IsServer;
 
+            object PopulateDelegate(
+                object target,
+                MappingDataNode mappingDataNode,
+                ISerializationManager serializationManager,
+                ISerializationContext? serializationContext,
+                bool skipHook,
+                object?[] defaultValues)
+            {
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
                     var fieldDefinition = BaseFieldDefinitions[i];
 
-                    if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
+                    if (fieldDefinition.Attribute.ServerOnly && !isServer)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehavior);
                         continue;
                     }
 
@@ -35,31 +40,22 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     if (!mapped)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior);
+                        if (fieldDefinition.Attribute.Required)
+                            throw new InvalidOperationException($"Required field {fieldDefinition.Attribute.Tag} of type {target.GetType()} wasn't mapped.");
                         continue;
                     }
 
                     var type = fieldDefinition.FieldType;
                     var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
-                    DeserializationResult result;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    object? result;
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
+                        {
+                            ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
+                            SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
+                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                            _ => throw new InvalidOperationException()
+                        })
                     {
-                        var foundInterface = false;
-                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
-                        {
-                            if(@interface.GetGenericTypeDefinition() != typeof(ITypeReader<,>)) continue;
-                            if (@interface.GenericTypeArguments[0] == type && @interface.GenericTypeArguments[1] == node.GetType())
-                            {
-                                foundInterface = true;
-                            }
-                        }
-
-                        if (!foundInterface)
-                        {
-                            throw new InvalidOperationException(
-                                $"Could not find implementation of ITypeReader for type {type} and node {node.GetType()} on customtypeserializer {fieldDefinition.Attribute.CustomTypeSerializer}");
-                        }
-
                         result = serializationManager.ReadWithTypeSerializer(type,
                             fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
                     }
@@ -68,58 +64,23 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         result = serializationManager.Read(type, node, serializationContext, skipHook);
                     }
 
-                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior, result);
-                    mappedInfo[i] = entry;
-                }
-
-                return mappedInfo;
-            }
-
-            return DeserializationDelegate;
-        }
-
-        private PopulateDelegateSignature EmitPopulateDelegate()
-        {
-            // TODO Serialization: validate mappings array count
-            var constructor =
-                typeof(DeserializedDefinition<>).MakeGenericType(Type).GetConstructor(new[] {Type, typeof(DeserializedFieldEntry[])}) ??
-                throw new NullReferenceException();
-
-            var valueParam = Expression.Parameter(typeof(object), "value");
-            var valueParamCast = Expression.Convert(valueParam, Type);
-
-            var mappingParam = Expression.Parameter(typeof(DeserializedFieldEntry[]), "mapping");
-
-            var newExp = Expression.New(constructor, valueParamCast, mappingParam);
-            var createDefinitionDelegate = Expression.Lambda<CreateDefinitionDelegate>(newExp, valueParam, mappingParam).Compile();
-
-            DeserializationResult PopulateDelegate(
-                object target,
-                DeserializedFieldEntry[] deserializedFields,
-                object?[] defaultValues)
-            {
-                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
-                {
-                    var res = deserializedFields[i];
-                    if (!res.Mapped) continue;
-
                     var defValue = defaultValues[i];
 
-                    if (Equals(res.Result?.RawValue, defValue))
+                    if (Equals(result, defValue))
                     {
                         continue;
                     }
 
-                    FieldAssigners[i](ref target, res.Result?.RawValue);
+                    FieldAssigners[i](ref target, result);
                 }
 
-                return createDefinitionDelegate(target, deserializedFields);
+                return target;
             }
 
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate()
+        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -140,7 +101,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     if (fieldDefinition.Attribute.ServerOnly &&
-                        !IoCManager.Resolve<INetManager>().IsServer)
+                        !collection.Resolve<INetManager>().IsServer)
                     {
                         continue;
                     }
@@ -162,24 +123,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var type = fieldDefinition.FieldType;
 
                     DataNode node;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                     {
-                        var foundInterface = false;
-                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
-                        {
-                            if(@interface.GetGenericTypeDefinition() != typeof(ITypeWriter<>)) continue;
-                            if (@interface.GenericTypeArguments[0] == type)
-                            {
-                                foundInterface = true;
-                            }
-                        }
-
-                        if (!foundInterface)
-                        {
-                            throw new InvalidOperationException(
-                                $"Could not find implementation of ITypeWriter for type {type} on customtypeserializer {fieldDefinition.Attribute.CustomTypeSerializer}");
-                        }
-
                         node = manager.WriteWithTypeSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
                             value, alwaysWrite, context);
                     }
@@ -218,15 +163,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         targetValue != null &&
                         TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
                     {
-                        copy = manager.CreateCopy(sourceValue, context);
+                        copy = manager.Copy(sourceValue, context);
                     }
                     else
                     {
-                        copy = field.Attribute.CustomTypeSerializer != null
-                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                        if (field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                        {
+                            copy = manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
                                 targetValue,
-                                context)
-                            : manager.Copy(sourceValue, targetValue, context);
+                                context);
+                        }
+                        else
+                        {
+                            copy = targetValue;
+                            manager.Copy(sourceValue, ref copy, context);
+                        }
                     }
 
                     FieldAssigners[i](ref target, copy);

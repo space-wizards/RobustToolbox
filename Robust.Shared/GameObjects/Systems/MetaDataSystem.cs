@@ -4,7 +4,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed class MetaDataSystem : EntitySystem
+public abstract class MetaDataSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _proto = default!;
 
@@ -27,8 +27,18 @@ public sealed class MetaDataSystem : EntitySystem
         component._entityName = state.Name;
         component._entityDescription = state.Description;
 
-        if(state.PrototypeId != null)
+        if(state.PrototypeId != null && state.PrototypeId != component._entityPrototype?.ID)
             component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
+    }
+
+    public void SetEntityPaused(EntityUid uid, bool value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata)) return;
+
+        if (metadata._entityPaused == value) return;
+
+        metadata._entityPaused = value;
+        RaiseLocalEvent(uid, new EntityPausedEvent(uid, value));
     }
 
     public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
@@ -44,15 +54,23 @@ public sealed class MetaDataSystem : EntitySystem
     /// </summary>
     public void RemoveFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
-        if (!Resolve(uid, ref component) ||
-            (component.Flags & flags) == 0x0) return;
+        if (!Resolve(uid, ref component))
+            return;
 
-        var ev = new MetaFlagRemoveAttemptEvent();
-        EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev);
+        var toRemove = component.Flags & flags;
+        if (toRemove == 0x0)
+            return;
 
-        if (ev.Cancelled) return;
+        var ev = new MetaFlagRemoveAttemptEvent(toRemove);
+        EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev, true);
 
-        component.Flags &= ~flags;
+        component.Flags &= ~ev.ToRemove;
+    }
+
+    public virtual void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
+    {
+        if (Resolve(uid, ref meta))
+            meta.VisibilityMask = value;
     }
 }
 
@@ -62,9 +80,10 @@ public sealed class MetaDataSystem : EntitySystem
 [ByRefEvent]
 public struct MetaFlagRemoveAttemptEvent
 {
-    public bool Cancelled = false;
+    public MetaDataFlags ToRemove;
 
-    public MetaFlagRemoveAttemptEvent()
+    public MetaFlagRemoveAttemptEvent(MetaDataFlags toRemove)
     {
+        ToRemove = toRemove;
     }
 }

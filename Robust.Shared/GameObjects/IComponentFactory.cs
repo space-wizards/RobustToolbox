@@ -50,8 +50,8 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="IComponent" />
     public interface IComponentFactory
     {
-        event Action<IComponentRegistration> ComponentAdded;
-        event Action<(IComponentRegistration, Type)> ComponentReferenceAdded;
+        event Action<ComponentRegistration> ComponentAdded;
+        event Action<ComponentRegistration, CompIdx> ComponentReferenceAdded;
         event Action<string> ComponentIgnoreAdded;
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
         /// This will be null if the network Ids have not been generated yet.
         /// </remarks>
         /// <seealso cref="GenerateNetIds"/>
-        IReadOnlyList<IComponentRegistration>? NetworkedComponents { get; }
+        IReadOnlyList<ComponentRegistration>? NetworkedComponents { get; }
 
         /// <summary>
         /// Get whether a component is available right now.
@@ -87,8 +87,14 @@ namespace Robust.Shared.GameObjects
         /// Registers a component name as being ignored.
         /// </summary>
         /// <param name="name">The name to be ignored.</param>
-        /// <param name="overwrite">Whether to overrde existing settings instead of throwing an exception in the case of duplicates.</param>
+        /// <param name="overwrite">Whether to override existing settings instead of throwing an exception in the case of duplicates.</param>
         void RegisterIgnore(string name, bool overwrite = false);
+
+        /// <summary>
+        /// Disables throwing on missing components. Missing components will instead be treated as ignored.
+        /// </summary>
+        /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
+        void IgnoreMissingComponents(string postfix = "");
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.
@@ -100,6 +106,8 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         IComponent GetComponent(Type componentType);
 
+        IComponent GetComponent(CompIdx componentType);
+
         /// <summary>
         /// Gets a new component instantiated of the specified type.
         /// </summary>
@@ -109,6 +117,12 @@ namespace Robust.Shared.GameObjects
         ///     Thrown if no component of type <see cref="T"/> is registered.
         /// </exception>
         T GetComponent<T>() where T : IComponent, new();
+
+        /// <summary>
+        /// Gets a new component instantiated from the specified component registration.
+        /// </summary>
+        /// <returns>A Component</returns>
+        IComponent GetComponent(ComponentRegistration reg);
 
         /// <summary>
         /// Gets a new component instantiated of the specified <see cref="IComponent.Name"/>.
@@ -149,7 +163,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given name <see cref="componentName"/>.
         /// </exception>
-        IComponentRegistration GetRegistration(string componentName, bool ignoreCase = false);
+        ComponentRegistration GetRegistration(string componentName, bool ignoreCase = false);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
@@ -158,7 +172,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists of type <see cref="reference"/>.
         /// </exception>
-        IComponentRegistration GetRegistration(Type reference);
+        ComponentRegistration GetRegistration(Type reference);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
@@ -167,7 +181,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component of type <see cref="T"/> exists.
         /// </exception>
-        IComponentRegistration GetRegistration<T>() where T : IComponent, new();
+        ComponentRegistration GetRegistration<T>() where T : IComponent, new();
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an
@@ -178,7 +192,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component with id <see cref="netID"/> exists.
         /// </exception>
-        IComponentRegistration GetRegistration(ushort netID);
+        ComponentRegistration GetRegistration(ushort netID);
 
         /// <summary>
         ///     Gets the registration of a component, throwing an exception if
@@ -189,7 +203,9 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no registration exists for component <see cref="component"/>.
         /// </exception>
-        IComponentRegistration GetRegistration(IComponent component);
+        ComponentRegistration GetRegistration(IComponent component);
+
+        ComponentRegistration GetRegistration(CompIdx idx);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.
@@ -198,7 +214,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = false);
+        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out ComponentRegistration? registration, bool ignoreCase = false);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.
@@ -206,7 +222,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="reference">A reference corresponding to the component to look up.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(Type reference, [NotNullWhen(true)] out ComponentRegistration? registration);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.
@@ -214,7 +230,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">A type referencing the component.</typeparam>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new();
+        bool TryGetRegistration<T>([NotNullWhen(true)] out ComponentRegistration? registration) where T : IComponent, new();
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.
@@ -222,7 +238,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="netID">The network ID corresponding to the component.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out ComponentRegistration? registration);
 
         /// <summary>
         ///     Tries to get the registration of a component.
@@ -230,48 +246,16 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">An instance of the component.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out ComponentRegistration? registration);
 
         /// <summary>
         ///     Automatically create registrations for all components with a <see cref="RegisterComponentAttribute" />
         /// </summary>
         void DoAutoRegistrations();
 
-        IEnumerable<Type> GetAllRefTypes();
+        IEnumerable<CompIdx> GetAllRefTypes();
         void GenerateNetIds();
-    }
 
-    /// <summary>
-    /// Represents a component registered into a <see cref="IComponentFactory" />.
-    /// </summary>
-    /// <seealso cref="IComponentFactory" />
-    /// <seealso cref="IComponent" />
-    public interface IComponentRegistration
-    {
-        /// <summary>
-        /// The name of the component.
-        /// This is used as the <c>type</c> field in the component declarations if entity prototypes.
-        /// </summary>
-        /// <seealso cref="IComponent.Name" />
-        string Name { get; }
-
-        /// <summary>
-        /// ID used to reference the component type across the network.
-        /// If null, no network synchronization will be available for this component.
-        /// </summary>
-        /// <seealso cref="NetworkedComponentAttribute" />
-        ushort? NetID { get; }
-
-        /// <summary>
-        /// The type that will be instantiated if this component is created.
-        /// </summary>
-        Type Type { get; }
-
-        /// <summary>
-        /// A list of type references that can be used to get a reference to an instance of this component,
-        /// for methods like GetComponent.
-        /// These are not unique and can overlap with other components.
-        /// </summary>
-        IReadOnlyList<Type> References { get; }
+        Type IdxToType(CompIdx idx);
     }
 }

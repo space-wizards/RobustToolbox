@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         Prismatic,
         Distance,
         Pulley,
-        //Mouse, <- We have fixed mouse
+        Mouse,
         Gear,
         Wheel,
         Weld,
@@ -115,20 +115,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <value>The type of the joint.</value>
         public abstract JointType JointType { get; }
 
-        /// <summary>
-        ///     Get the first body attached to this joint.
-        /// </summary>
-        public PhysicsComponent BodyA =>
-            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyAUid);
-
         [DataField("bodyA")]
         public EntityUid BodyAUid { get; init; }
-
-        /// <summary>
-        ///     Get the second body attached to this joint.
-        /// </summary>
-        public PhysicsComponent BodyB =>
-            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyBUid);
 
         [DataField("bodyB")]
         public EntityUid BodyBUid { get; init; }
@@ -183,7 +171,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         [DataField("collideConnected")]
-        private bool _collideConnected = true;
+        protected bool _collideConnected = true;
 
         /// <summary>
         ///     The Breakpoint simply indicates the maximum Value the JointError can be before it breaks.
@@ -210,10 +198,16 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
         // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
 
-        protected void Dirty()
+        protected void Dirty(IEntityManager? entMan = null)
         {
-            BodyA.Dirty();
-            BodyB.Dirty();
+            // TODO: move dirty & setter functions to a system.
+            IoCManager.Resolve(ref entMan);
+
+            if (entMan.TryGetComponent(BodyAUid, out PhysicsComponent? physics))
+                entMan.Dirty(physics);
+
+            if (entMan.TryGetComponent(BodyBUid, out physics))
+                entMan.Dirty(physics);
         }
 
         protected Joint() {}
@@ -225,6 +219,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             //Can't connect a joint to the same body twice.
             Debug.Assert(BodyAUid != BodyBUid);
+        }
+
+        protected Joint(JointState state)
+        {
+            ID = state.ID;
+            BodyAUid = state.UidA;
+            BodyBUid = state.UidB;
+            _enabled = state.Enabled;
+            _collideConnected = state.CollideConnected;
+            _localAnchorA = state.LocalAnchorA;
+            _localAnchorB = state.LocalAnchorB;
+            _breakpoint = state.Breakpoint;
         }
 
         /// <summary>
@@ -266,7 +272,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="invDt">The inverse delta time.</param>
         public abstract float GetReactionTorque(float invDt);
 
-        internal abstract void InitVelocityConstraints(SolverData data);
+        internal abstract void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB);
 
         internal float Validate(float invDt)
         {

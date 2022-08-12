@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -14,13 +14,36 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate DeserializationResult ReadDelegate(
+        private delegate object? ReadDelegate(
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false);
+            bool skipHook = false,
+            object? value = null);
 
         private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
+
+        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
+        {
+            return (T)Read(typeof(T), node, context, skipHook, value)!;
+        }
+
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
+        {
+            var val = GetOrCreateReader(type, node)(type, node, context, skipHook, value);
+            ReadNullCheck(type, val);
+            return val;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ReadNullCheck(Type type, object? val)
+        {
+            if (!type.IsNullable() && val == null)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(Read)}-Call returned a null value for non-nullable type {type}");
+            }
+        }
 
         private ReadDelegate GetOrCreateReader(Type value, DataNode node)
         {
@@ -42,10 +65,12 @@ namespace Robust.Shared.Serialization.Manager
 
                 var typeParam = Expression.Parameter(typeof(Type), "type");
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
+                //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var valueParam = Expression.Parameter(typeof(object), "value");
 
-                MethodCallExpression call;
+                Expression call;
 
                 if (value.IsArray)
                 {
@@ -53,12 +78,14 @@ namespace Robust.Shared.Serialization.Manager
 
                     switch (node)
                     {
-                        case ValueDataNode when nullable:
+                        case ValueDataNode:
                             call = Expression.Call(
                                 instanceConst,
                                 nameof(ReadArrayValue),
                                 new[] { elementType },
-                                Expression.Convert(nodeParam, typeof(ValueDataNode)));
+                                Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                                contextParam,
+                                skipHookParam);
                             break;
                         case SequenceDataNode seqNode:
                             var isSealed = elementType.IsPrimitive || elementType.IsEnum ||
@@ -97,11 +124,6 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     call = node switch
                     {
-                        ValueDataNode when nullable => Expression.Call(
-                            instanceConst,
-                            nameof(ReadEnumNullable),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode))),
                         ValueDataNode => Expression.Call(
                             instanceConst,
                             nameof(ReadEnumValue),
@@ -129,18 +151,12 @@ namespace Robust.Shared.Serialization.Manager
 
                     call = value.IsValueType switch
                     {
-                        true when nullable => call = Expression.Call(
-                            instanceConst,
-                            nameof(ReadSelfSerializeNullableStruct),
-                            new[] {value},
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst),
                         _ => call = Expression.Call(
                             instanceConst,
                             nameof(ReadSelfSerialize),
                             new[] { value },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst)
+                            instantiatorConst, valueParam)
                     };
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
@@ -148,33 +164,15 @@ namespace Robust.Shared.Serialization.Manager
                     var readerType = typeof(ITypeReader<,>).MakeGenericType(value, nodeType);
                     var readerConst = Expression.Constant(reader, readerType);
 
-                    call = node switch
-                    {
-                        ValueDataNode when nullable && value.IsValueType => Expression.Call(
-                            instanceConst,
-                            nameof(ReadWithTypeReaderNullableStruct),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            readerConst,
-                            contextParam,
-                            skipHookParam),
-                        ValueDataNode when nullable && !value.IsValueType => Expression.Call(
-                            instanceConst,
-                            nameof(ReadWithTypeReaderNullable),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            readerConst,
-                            contextParam,
-                            skipHookParam),
-                        _ => Expression.Call(
-                            instanceConst,
-                            nameof(ReadWithTypeReader),
-                            new[] { value, nodeType },
-                            Expression.Convert(nodeParam, nodeType),
-                            readerConst,
-                            contextParam,
-                            skipHookParam)
-                    };
+                    call = Expression.Call(
+                        instanceConst,
+                        nameof(ReadWithTypeReader),
+                        new[] { value, nodeType },
+                        Expression.Convert(nodeParam, nodeType),
+                        readerConst,
+                        contextParam,
+                        skipHookParam,
+                        valueParam);
                 }
                 else if (value.IsInterface || value.IsAbstract)
                 {
@@ -193,17 +191,6 @@ namespace Robust.Shared.Serialization.Manager
 
                     call = node switch
                     {
-                        ValueDataNode when nullable => Expression.Call(
-                            instanceConst,
-                            nameof(ReadGenericNullable),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst,
-                            definitionConst,
-                            populateConst,
-                            hooksConst,
-                            contextParam,
-                            skipHookParam),
                         ValueDataNode => Expression.Call(
                             instanceConst,
                             nameof(ReadGenericValue),
@@ -214,7 +201,8 @@ namespace Robust.Shared.Serialization.Manager
                             populateConst,
                             hooksConst,
                             contextParam,
-                            skipHookParam),
+                            skipHookParam,
+                            valueParam),
                         MappingDataNode => Expression.Call(
                             instanceConst,
                             nameof(ReadGenericMapping),
@@ -225,10 +213,27 @@ namespace Robust.Shared.Serialization.Manager
                             populateConst,
                             hooksConst,
                             contextParam,
-                            skipHookParam),
+                            skipHookParam,
+                            valueParam),
                         SequenceDataNode => throw new ArgumentException($"No mapping node provided for type {value} at line: {node.Start.Line}"),
                         _ => throw new ArgumentException($"Unknown node type {nodeType} provided. Expected mapping node at line: {node.Start.Line}")
                     };
+                }
+
+                if (nullable)
+                {
+                    call = Expression.Condition(
+                        Expression.Call(
+                            instanceConst,
+                            nameof(IsNull),
+                            Type.EmptyTypes,
+                            nodeParam),
+                        Expression.Convert(value.IsValueType ? Expression.Call(instanceConst, nameof(GetNullable), new []{value}) : Expression.Constant(null), typeof(object)),
+                        Expression.Convert(call, typeof(object)));
+                }
+                else
+                {
+                    call = Expression.Convert(call, typeof(object));
                 }
 
                 return Expression.Lambda<ReadDelegate>(
@@ -236,42 +241,52 @@ namespace Robust.Shared.Serialization.Manager
                     typeParam,
                     nodeParam,
                     contextParam,
-                    skipHookParam).Compile();
+                    skipHookParam,
+                    valueParam).Compile();
             }, (node, this));
         }
 
-        private DeserializationResult ReadArrayValue<T>(ValueDataNode value)
+        private T? GetNullable<T>() where T : struct
+        {
+            return null;
+        }
+
+        private bool IsNull(DataNode node)
+        {
+            return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
+        }
+
+        private T[]? ReadArrayValue<T>(
+            ValueDataNode value,
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
             if (value.Value == "null")
             {
-                return new DeserializedValue<T[]?>(null);
+                return null;
             }
 
-            throw new InvalidNodeTypeException("Cannot read an array from a value data node that is not null.");
+            var array = new T[1];
+            array[0] = Read<T>(value, context, skipHook);
+            return array;
         }
 
-        private DeserializationResult ReadArraySequence<T>(
+        private T[] ReadArraySequence<T>(
             SequenceDataNode node,
             ISerializationContext? context = null,
             bool skipHook = false)
         {
-            var type = typeof(T);
             var array = new T[node.Sequence.Count];
-            var results = new DeserializationResult[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
-                var subNode = node.Sequence[i];
-                var result = Read(type, subNode, context, skipHook);
-
-                results[i] = result;
-                array[i] = (T) result.RawValue!;
+                array[i] = Read<T>(node.Sequence[i], context, skipHook);
             }
 
-            return new DeserializedArray(array, results);
+            return array;
         }
 
-        private DeserializationResult ReadArraySequenceSealed<T>(
+        private T[] ReadArraySequenceSealed<T>(
             SequenceDataNode node,
             ReadDelegate elementReader,
             ISerializationContext? context = null,
@@ -279,109 +294,51 @@ namespace Robust.Shared.Serialization.Manager
         {
             var type = typeof(T);
             var array = new T[node.Sequence.Count];
-            var results = new DeserializationResult[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
                 var subNode = node.Sequence[i];
                 var result = elementReader(type, subNode, context, skipHook);
-
-                results[i] = result;
-                array[i] = (T) result.RawValue!;
+                ReadNullCheck(type, result);
+                array[i] = (T) result!;
             }
 
-            return new DeserializedArray(array, results);
+            return array;
         }
 
-        private DeserializationResult ReadEnumNullable<TEnum>(ValueDataNode node) where TEnum : struct
+        private TEnum ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
         {
-            if (node.Value == "null")
-            {
-                return new DeserializedValue<TEnum?>(null);
-            }
-
-            var value = Enum.Parse<TEnum>(node.Value, true);
-            return new DeserializedValue<TEnum?>(value);
+            return Enum.Parse<TEnum>(node.Value, true);
         }
 
-        private DeserializationResult ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
+        private TEnum ReadEnumSequence<TEnum>(SequenceDataNode node) where TEnum : struct
         {
-            var value = Enum.Parse<TEnum>(node.Value, true);
-            return new DeserializedValue<TEnum>(value);
+            return Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
         }
 
-        private DeserializationResult ReadEnumSequence<TEnum>(SequenceDataNode node) where TEnum : struct
-        {
-            var value = Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
-            return new DeserializedValue<TEnum>(value);
-        }
-
-        private DeserializationResult ReadSelfSerialize<TValue>(
+        private TValue? ReadSelfSerialize<TValue>(
             ValueDataNode node,
-            InstantiationDelegate<object> instantiator)
+            InstantiationDelegate<object> instantiator,
+            object? rawValue = null)
             where TValue : ISelfSerialize
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(default);
+                return default; //todo paul this default should be null
             }
 
-            var value = (TValue) instantiator();
+            var value = (TValue) (rawValue ?? instantiator());
             value.Deserialize(node.Value);
 
-            return new DeserializedValue<TValue?>(value);
+            return value;
         }
 
-        private DeserializationResult ReadSelfSerializeNullableStruct<TValue>(
-            ValueDataNode node,
-            InstantiationDelegate<object> instantiator)
-            where TValue : struct, ISelfSerialize
-        {
-            if (node.Value == "null")
-            {
-                return new DeserializedValue<TValue?>(null);
-            }
-
-            var value = (TValue) instantiator();
-            value.Deserialize(node.Value);
-
-            return new DeserializedValue<TValue?>(value);
-        }
-
-        private DeserializationResult ReadWithTypeReaderNullable<TValue>(
-            ValueDataNode node,
-            ITypeReader<TValue, ValueDataNode> reader,
-            ISerializationContext? context = null,
-            bool skipHook = false)
-        {
-            if (node.Value == "null")
-            {
-                return new DeserializedValue<TValue?>(default);
-            }
-
-            return ReadWithTypeReader(node, reader, context, skipHook);
-        }
-
-        private DeserializationResult ReadWithTypeReaderNullableStruct<TValue>(
-            ValueDataNode node,
-            ITypeReader<TValue, ValueDataNode> reader,
-            ISerializationContext? context = null,
-            bool skipHook = false)
-            where TValue : struct
-        {
-            if (node.Value == "null")
-            {
-                return new DeserializedValue<TValue?>(null);
-            }
-
-            return ReadWithTypeReader(node, reader, context, skipHook);
-        }
-
-        private DeserializationResult ReadWithTypeReader<TValue, TNode>(
+        private TValue ReadWithTypeReader<TValue, TNode>(
             TNode node,
             ITypeReader<TValue, TNode> reader,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = null)
             where TNode : DataNode
         {
             if (context != null &&
@@ -390,34 +347,18 @@ namespace Robust.Shared.Serialization.Manager
                 reader = (ITypeReader<TValue, TNode>) readerUnCast;
             }
 
-            return reader.Read(this, node, DependencyCollection, skipHook, context);
+            return reader.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (TValue) value);
         }
 
-        private DeserializationResult ReadGenericNullable<TValue>(
+        private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
             bool populate,
             bool hooks,
             ISerializationContext? context = null,
-            bool skipHook = false)
-        {
-            if (node.Value == "null")
-            {
-                return new DeserializedValue<TValue?>(default);
-            }
-
-            return ReadGenericValue<TValue?>(node, instantiator, definition, populate, hooks, context, skipHook);
-        }
-
-        private DeserializationResult ReadGenericValue<TValue>(
-            ValueDataNode node,
-            InstantiationDelegate<object> instantiator,
-            DataDefinition? definition,
-            bool populate,
-            bool hooks,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? instance = null)
         {
             var type = typeof(TValue);
 
@@ -425,7 +366,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((typeof(TValue), typeof(ValueDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, ValueDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context);
+                return reader.Read(this, node, DependencyCollection, skipHook, context, instance == null ? default : (TValue)instance);
             }
 
             if (definition == null)
@@ -433,7 +374,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
             }
 
-            var instance = instantiator();
+            instance ??= instantiator();
 
             if (populate)
             {
@@ -445,36 +386,32 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
             }
 
-            // If we get an empty ValueDataNode we just use an empty mapping
-            var mapping = new MappingDataNode();
-
-            var result = definition.Populate(instance, mapping, this, context, skipHook);
-
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result.RawValue!).AfterDeserialization();
+                ((ISerializationHooks) instance).AfterDeserialization();
             }
 
-            return result;
+            return (TValue) instance;
         }
 
-        private DeserializationResult ReadGenericMapping<TValue>(
+        private TValue ReadGenericMapping<TValue>(
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
             bool populate,
             bool hooks,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? instance = null)
         {
             var type = typeof(TValue);
-            var instance = instantiator();
+            instance ??= instantiator();
 
             if (context != null &&
                 context.TypeReaders.TryGetValue((type, typeof(MappingDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, MappingDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context);
+                return reader.Read(this, node, DependencyCollection, skipHook, context, (TValue?) instance);
             }
 
             if (definition == null)
@@ -487,47 +424,20 @@ namespace Robust.Shared.Serialization.Manager
                 ((IPopulateDefaultValues) instance).PopulateDefaultValues();
             }
 
-            var result = definition.Populate(instance, node, this, context, skipHook);
+            var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;
 
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result.RawValue!).AfterDeserialization();
+                ((ISerializationHooks) result).AfterDeserialization();
             }
 
             return result;
         }
 
-        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public object? ReadWithTypeSerializer(Type type, Type serializer, DataNode node, ISerializationContext? context = null,
+            bool skipHook = false, object? value = null)
         {
-            return GetOrCreateReader(type, node)(type, node, context, skipHook);
-        }
-
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return Read(type, node, context, skipHook).RawValue;
-        }
-
-        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            var value = Read(type, node, context, skipHook);
-
-            if (value.RawValue == null)
-            {
-                return default;
-            }
-
-            return (T?) value.RawValue;
-        }
-
-        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return ReadValueCast<T>(typeof(T), node, context, skipHook);
-        }
-
-        public DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
-            bool skipHook = false)
-        {
-            return ReadWithSerializerRaw(value, node, serializer, context, skipHook);
+            return ReadWithSerializerRaw(type, node, serializer, context, skipHook, value);
         }
     }
 }

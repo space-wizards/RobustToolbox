@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 using static Robust.Shared.Serialization.Manager.SerializationManager;
 
@@ -16,12 +18,25 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public sealed partial class DataDefinition
     {
-        private readonly DeserializeDelegate _deserialize;
+        private readonly struct FieldInterfaceInfo
+        {
+            public readonly (bool Value, bool Sequence, bool Mapping) Reader;
+            public readonly bool Writer;
+            public readonly bool Copier;
+
+            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier)
+            {
+                Reader = reader;
+                Writer = writer;
+                Copier = copier;
+            }
+        }
+
         private readonly PopulateDelegateSignature _populate;
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
 
-        public DataDefinition(Type type)
+        public DataDefinition(Type type, IDependencyCollection collection)
         {
             Type = type;
 
@@ -41,13 +56,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
             BaseFieldDefinitions = fields.ToImmutableArray();
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
-            _deserialize = EmitDeserializationDelegate();
-            _populate = EmitPopulateDelegate();
-            _serialize = EmitSerializeDelegate();
+            _populate = EmitPopulateDelegate(collection);
+            _serialize = EmitSerializeDelegate(collection);
             _copy = EmitCopyDelegate();
 
             var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
             var fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
+            var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
 
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
@@ -55,10 +70,61 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
                 fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
+
+                if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                {
+                    //reader (value, sequence, mapping), writer, copier
+                    var reader = (false, false, false);
+                    var writer = false;
+                    var copier = false;
+                    foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
+                    {
+                        var genericTypedef = @interface.GetGenericTypeDefinition();
+                        if (genericTypedef == typeof(ITypeWriter<>))
+                        {
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                            {
+                                writer = true;
+                            }
+                        }
+                        else if (genericTypedef == typeof(ITypeCopier<>))
+                        {
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                            {
+                                copier = true;
+                            }
+                        }
+                        else if (genericTypedef == typeof(ITypeReader<,>))
+                        {
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                            {
+                                if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
+                                {
+                                    reader.Item1 = true;
+                                }else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                {
+                                    reader.Item2 = true;
+                                }else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                {
+                                    reader.Item3 = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition.Attribute.Tag}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                    }
+
+                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
+                }
             }
 
             FieldAccessors = fieldAccessors.ToImmutableArray();
             FieldAssigners = fieldAssigners.ToImmutableArray();
+            FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
         }
 
         public Type Type { get; }
@@ -70,21 +136,16 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private ImmutableArray<AssignField<object, object?>> FieldAssigners { get; }
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
+        private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 
-        public DeserializationResult Populate(object target, DeserializedFieldEntry[] fields)
-        {
-            return _populate(target, fields, DefaultValues);
-        }
-
-        public DeserializationResult Populate(
+        public object Populate(
             object target,
             MappingDataNode mapping,
             ISerializationManager serialization,
             ISerializationContext? context,
             bool skipHook)
         {
-            var fields = _deserialize(mapping, serialization, context, skipHook);
-            return _populate(target, fields, DefaultValues);
+            return _populate(target, mapping, serialization, context, skipHook, DefaultValues);
         }
 
         public MappingDataNode Serialize(

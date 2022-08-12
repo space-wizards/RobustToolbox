@@ -10,6 +10,7 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager
     {
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericReaderTypes = new();
+        private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericInheritanceHandlerTypes = new();
         private readonly Dictionary<Type, Type> _genericWriterTypes = new();
         private readonly Dictionary<Type, Type> _genericCopierTypes = new();
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericValidatorTypes = new();
@@ -44,11 +45,14 @@ namespace Robust.Shared.Serialization.Manager
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeCopier<>)).ToArray();
             var validatorInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeValidator<,>)).ToArray();
+            var inheritanceHandlerInterfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeInheritanceHandler<,>)).ToArray();
 
             if (readerInterfaces.Length == 0 &&
                 writerInterfaces.Length == 0 &&
                 copierInterfaces.Length == 0 &&
-                validatorInterfaces.Length == 0)
+                validatorInterfaces.Length == 0 &&
+                inheritanceHandlerInterfaces.Length == 0)
             {
                 throw new InvalidOperationException(
                     "Tried to register TypeReader/Writer/Copier that had none of the interfaces inherited.");
@@ -56,14 +60,34 @@ namespace Robust.Shared.Serialization.Manager
 
             if (type.IsGenericTypeDefinition)
             {
+                var genArgs = type.GetGenericArguments();
+
+                void GenericArgumentsCheck(Type genericInterface)
+                {
+                    var targetType = genericInterface.GetGenericArguments()[0];
+                    var readTypeArgs = targetType.GetGenericArguments();
+                    if(genArgs.Length != readTypeArgs.Length)
+                        throw new InvalidOperationException(
+                            $"Generic Argcount mismatch! (Target={targetType}, Interface={genericInterface}, Type={type})");
+
+                    for (int i = 0; i < genArgs.Length; i++)
+                    {
+                        if (genArgs[i] != readTypeArgs[i])
+                            throw new InvalidOperationException(
+                                $"Generic Parameter {i} mismatch! (Target={targetType}, Interface={genericInterface}, Type={type})");
+                    }
+                }
+
                 foreach (var writerInterface in writerInterfaces)
                 {
+                    GenericArgumentsCheck(writerInterface);
                     if (!_genericWriterTypes.TryAdd(writerInterface.GetGenericArguments()[0], type))
                         Logger.ErrorS(LogCategory, $"Tried registering generic writer for type {writerInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var readerInterface in readerInterfaces)
                 {
+                    GenericArgumentsCheck(readerInterface);
                     var genericArguments = readerInterface.GetGenericArguments();
                     var readType = genericArguments[0];
                     var nodeType = genericArguments[1];
@@ -74,14 +98,23 @@ namespace Robust.Shared.Serialization.Manager
 
                 foreach (var copierInterface in copierInterfaces)
                 {
+                    GenericArgumentsCheck(copierInterface);
                     if (!_genericCopierTypes.TryAdd(copierInterface.GetGenericArguments()[0], type))
                         Logger.ErrorS(LogCategory, $"Tried registering generic copier for type {copierInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var validatorInterface in validatorInterfaces)
                 {
+                    GenericArgumentsCheck(validatorInterface);
                     if (!_genericValidatorTypes.TryAdd((validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]), type))
                         Logger.ErrorS(LogCategory, $"Tried registering generic reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
+                }
+
+                foreach (var inheritanceHandlerInterface in inheritanceHandlerInterfaces)
+                {
+                    GenericArgumentsCheck(inheritanceHandlerInterface);
+                    if (!_genericInheritanceHandlerTypes.TryAdd((inheritanceHandlerInterface.GetGenericArguments()[0], inheritanceHandlerInterface.GetGenericArguments()[1]), type))
+                        Logger.ErrorS(LogCategory, $"Tried registering generic reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
                 }
 
                 return null;
@@ -112,6 +145,12 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     if (!_typeValidators.TryAdd((validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]), serializer))
                         Logger.ErrorS(LogCategory, $"Tried registering reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
+                }
+
+                foreach (var inheritanceHandlerInterface in inheritanceHandlerInterfaces)
+                {
+                    if (!_typeInheritanceHandlers.TryAdd((inheritanceHandlerInterface.GetGenericArguments()[0], inheritanceHandlerInterface.GetGenericArguments()[1]), serializer))
+                        Logger.ErrorS(LogCategory, $"Tried registering reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
                 }
 
                 return serializer;

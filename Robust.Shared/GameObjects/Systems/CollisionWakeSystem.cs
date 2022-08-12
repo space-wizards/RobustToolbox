@@ -1,3 +1,5 @@
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 
@@ -5,89 +7,123 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class CollisionWakeSystem : EntitySystem
     {
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, EntityInitializedMessage>(HandleInitialize);
-            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(HandleRemove);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
 
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
-            SubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>(HandleCollisionWakeState);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(HandleJointAdd);
-            SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(HandleJointRemove);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeEvent>(OnWake);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepEvent>(OnSleep);
 
-            SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(HandleParentChange);
+            SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(OnJointAdd);
+            SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(OnJointRemove);
+
+            SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(OnParentChange);
         }
 
-        private void HandleRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        public void SetEnabled(EntityUid uid, bool enabled, CollisionWakeComponent? component = null)
         {
-            if (!Terminating(uid) && TryComp(uid, out PhysicsComponent? physics))
+            if (!Resolve(uid, ref component) || component.Enabled == enabled)
+                return;
+
+            component.Enabled = enabled;
+
+            if (component.Enabled)
+                UpdateCanCollide(uid, component);
+            else if (TryComp(uid, out PhysicsComponent? physics))
+                physics.CanCollide = true;
+
+            Dirty(component);
+        }
+
+        private void OnHandleState(EntityUid uid, CollisionWakeComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is CollisionWakeComponent.CollisionWakeState state)
+                component.Enabled = state.Enabled;
+
+            // Note, this explicitly does not update PhysicsComponent.CanCollide. The physics component should perform
+            // its own state-handling logic. Additionally, if we wanted to set it you would have to ensure that things
+            // like the join-component and physics component have already handled their states, otherwise CanCollide may
+            // be set incorrectly and leave the client with a bad state.
+        }
+
+        private void OnGetState(EntityUid uid, CollisionWakeComponent component, ref ComponentGetState args)
+        {
+            args.State = new CollisionWakeComponent.CollisionWakeState(component.Enabled);
+        }
+
+        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        {
+            if (component.Enabled
+                && !Terminating(uid)
+                && TryComp(uid, out PhysicsComponent? physics))
             {
                 physics.CanCollide = true;
             }
         }
 
-        private bool CanRaiseEvent(EntityUid uid)
+        private void OnParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
-            var meta = MetaData(uid);
-
-            if (meta.EntityLifeStage >= EntityLifeStage.Terminating) return false;
-            return true;
+            UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
-        private void HandleParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
+        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
         {
-            if (!CanRaiseEvent(uid)) return;
-
-            component.RaiseStateChange();
+            UpdateCanCollide(uid, component, checkTerminating: false, dirty: false);
         }
 
-        private void HandleInitialize(EntityUid uid, CollisionWakeComponent component, EntityInitializedMessage args)
+        private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            component.RaiseStateChange();
+            UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);
         }
 
-        private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
+        private void OnJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
         {
-            if (!CanRaiseEvent(uid)) return;
-
-            component.RaiseStateChange();
+            // Bypass UpdateCanCollide() as joint count will always be bigger than 0:
+            if (component.Enabled)
+                args.OurBody.CanCollide = true;
         }
 
-        private void HandleJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
+        private void OnWake(EntityUid uid, CollisionWakeComponent component, ref PhysicsWakeEvent args)
         {
-            component.RaiseStateChange();
+            UpdateCanCollide(uid, component, args.Body, checkTerminating: false);
         }
 
-        private void HandleWake(EntityUid uid, CollisionWakeComponent component, PhysicsWakeMessage args)
+        private void OnSleep(EntityUid uid, CollisionWakeComponent component, ref PhysicsSleepEvent args)
         {
-            component.RaiseStateChange();
+            UpdateCanCollide(uid, component, args.Body);
         }
 
-        private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
+        private void UpdateCanCollide(
+            EntityUid uid,
+            CollisionWakeComponent component,
+            PhysicsComponent? body = null,
+            TransformComponent? xform = null,
+            bool checkTerminating = true,
+            bool dirty = true)
         {
-            if (!CanRaiseEvent(uid)) return;
+            if (!component.Enabled)
+                return;
 
-            component.RaiseStateChange();
-        }
+            if (checkTerminating && Terminating(uid))
+                return;
 
-        private void HandleCollisionWakeState(EntityUid uid, CollisionWakeComponent component, CollisionWakeStateMessage args)
-        {
-            // If you really wanted you could optimise for each use case above and save some calls but
-            // these are called pretty infrequently so I'm fine with this for now.
-
-            // If we just got put into a container don't want to mess with our collision state.
-            if (!EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body)) return;
+            if (!Resolve(uid, ref body, false) ||
+                !Resolve(uid, ref xform) ||
+                xform.MapID == MapId.Nullspace)
+                return;
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
-            body.CanCollide = !component.Enabled ||
-                              body.Awake ||
-                              (EntityManager.TryGetComponent(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
-                              EntityManager.GetComponent<TransformComponent>(uid).GridID == GridId.Invalid;
+            var canCollide = body.Awake ||
+                              (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
+                              xform.GridUid == null;
+
+            _physics.SetCanCollide(body, canCollide, dirty);
         }
     }
-
-    public sealed class CollisionWakeStateMessage : EntityEventArgs { }
 }

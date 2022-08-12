@@ -21,6 +21,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -52,8 +53,9 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
@@ -220,22 +222,36 @@ namespace Robust.Client.GameStates
                     // Disable IsFirstTimePredicted while re-running HandleComponentState here.
                     // Helps with debugging.
                     using var resetArea = _timing.StartPastPredictionArea();
+                    using var _ = _timing.StartStateApplicationArea();
 
                     ResetPredictedEntities(_timing.CurTick);
+
+                    // I hate this..
+                    _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
                 }
 
-                if (!curState.Extrapolated)
+                using (_prof.Group("FullRep"))
                 {
-                    _processor.UpdateFullRep(curState);
+                    if (!curState.Extrapolated)
+                    {
+                        _processor.UpdateFullRep(curState);
+                    }
                 }
 
                 // Store last tick we got from the GameStateProcessor.
                 _lastProcessedTick = _timing.CurTick;
 
                 // apply current state
-                var createdEntities = ApplyGameState(curState, nextState);
+                List<EntityUid> createdEntities;
+                using (_prof.Group("ApplyGameState"))
+                {
+                    createdEntities = ApplyGameState(curState, nextState);
+                }
 
-                MergeImplicitData(createdEntities);
+                using (_prof.Group("MergeImplicitData"))
+                {
+                    MergeImplicitData(createdEntities);
+                }
 
                 if (_lastProcessedSeq < curState.LastProcessedInput)
                 {
@@ -270,6 +286,7 @@ namespace Robust.Client.GameStates
 
             if (IsPredictionEnabled)
             {
+                using var _p = _prof.Group("Prediction");
                 using var _ = _timing.StartPastPredictionArea();
 
                 if (_pendingInputs.Count > 0)
@@ -282,7 +299,7 @@ namespace Robust.Client.GameStates
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
                 var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-                var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
+                var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
                 var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                                  (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 
@@ -290,6 +307,8 @@ namespace Robust.Client.GameStates
 
                 for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
                 {
+                    var groupStart = _prof.WriteGroupStart();
+
                     var tick = new GameTick(t);
                     _timing.CurTick = tick;
 
@@ -321,41 +340,51 @@ namespace Robust.Client.GameStates
 
                     if (t != targetTick)
                     {
-                        // Don't run EntitySystemManager.TickUpdate if this is the target tick,
-                        // because the rest of the main loop will call into it with the target tick later,
-                        // and it won't be a past prediction.
-                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: false);
-                        ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                        using (_prof.Group("Systems"))
+                        {
+                            // Don't run EntitySystemManager.TickUpdate if this is the target tick,
+                            // because the rest of the main loop will call into it with the target tick later,
+                            // and it won't be a past prediction.
+                            _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: false);
+                        }
+
+                        using (_prof.Group("Event queue"))
+                        {
+                            ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                        }
                     }
+
+                    _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(t));
                 }
             }
 
-            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
+            using (_prof.Group("Tick"))
+            {
+                _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
+            }
         }
 
         private void ResetPredictedEntities(GameTick curTick)
         {
-            foreach (var meta in _entityManager.EntityQuery<MetaDataComponent>(true))
+            using var _ = _prof.Group("ResetPredictedEntities");
+
+            var countReset = 0;
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var query = _entityManager.GetEntityQuery<MetaDataComponent>();
+
+            foreach (var entity in system.GetDirtyEntities(curTick))
             {
-                var entity = meta.Owner;
-
-                // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() || meta.EntityLastModifiedTick < curTick)
-                {
-                    continue;
-                }
-
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
-                {
                     _sawmill.Debug($"Entity {entity} was made dirty.");
-                }
 
                 if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
                     continue;
                 }
+
+                countReset += 1;
 
                 // TODO: handle component deletions/creations.
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
@@ -367,13 +396,21 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    _sawmill.Debug($"  And also its component {comp.GetType()}");
+                    if (_sawmill.Level <= LogLevel.Debug)
+                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
+                    comp.LastModifiedTick = curTick;
                 }
+                query.GetComponent(entity).EntityLastModifiedTick = curTick;
             }
+
+            system.Reset();
+
+            _prof.WriteValue("Reset count", ProfData.Int32(countReset));
         }
 
         private void MergeImplicitData(List<EntityUid> createdEntities)
@@ -409,27 +446,49 @@ namespace Robust.Client.GameStates
 
         private void AckGameState(GameTick sequence)
         {
-            var msg = _network.CreateNetMessage<MsgStateAck>();
+            var msg = new MsgStateAck();
             msg.Sequence = sequence;
             _network.ClientSendMessage(msg);
         }
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
-            _config.TickProcessMessages();
-            _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
-            var createdEntities = ApplyEntityStates(curState.EntityStates.Span, curState.EntityDeletions.Span,
-                nextState != null ? nextState.EntityStates.Span : default);
-            _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+            using var _ = _timing.StartStateApplicationArea();
 
-            GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+            using (_prof.Group("Config"))
+            {
+                _config.TickProcessMessages();
+            }
+
+            using (_prof.Group("Map Pre"))
+            {
+                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
+            }
+
+            List<EntityUid> createdEntities;
+            using (_prof.Group("Entity"))
+            {
+                createdEntities = ApplyEntityStates(curState.EntityStates.Span, curState.EntityDeletions.Span,
+                    nextState != null ? nextState.EntityStates.Span : default);
+            }
+
+            using (_prof.Group("Player"))
+            {
+                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+            }
+
+            using (_prof.Group("Callback"))
+            {
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+            }
+
             return createdEntities;
         }
 
         private List<EntityUid> ApplyEntityStates(ReadOnlySpan<EntityState> curEntStates, ReadOnlySpan<EntityUid> deletions,
             ReadOnlySpan<EntityState> nextEntStates)
         {
-            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>();
+            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>(curEntStates.Length);
             var toInitialize = new List<EntityUid>();
             var created = new List<EntityUid>();
 
@@ -537,6 +596,9 @@ namespace Robust.Client.GameStates
             }
 #endif
 
+            _prof.WriteValue("Created", ProfData.Int32(created.Count));
+            _prof.WriteValue("Applied", ProfData.Int32(toApply.Count));
+
             return created;
         }
 
@@ -548,6 +610,8 @@ namespace Robust.Client.GameStates
 
             if (curState != null)
             {
+                compStateWork.EnsureCapacity(curState.ComponentChanges.Span.Length);
+
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
                     if (compChange.Deleted)
@@ -580,6 +644,8 @@ namespace Robust.Client.GameStates
 
             if (nextState != null)
             {
+                compStateWork.EnsureCapacity(compStateWork.Count + nextState.ComponentChanges.Span.Length);
+
                 foreach (var compState in nextState.ComponentChanges.Span)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))

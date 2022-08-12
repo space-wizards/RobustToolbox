@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
@@ -53,7 +54,7 @@ namespace Robust.Shared.GameObjects
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
-        private bool _entityPaused;
+        internal bool _entityPaused;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
@@ -137,26 +138,32 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.
-        ///     Server-only.
         /// </summary>
-        [ViewVariables]
-        public int VisibilityMask { get; internal set; }
+        /// <remarks>
+        ///     Every entity will always have the first bit set to true.
+        /// </remarks>
+        [Access(typeof(MetaDataSystem))]
+        public int VisibilityMask = 1;
+
+        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
+        private int VVVisibilityMask
+        {
+            get => VisibilityMask;
+            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
+        }
 
         [ViewVariables]
         public bool EntityPaused
         {
             get => _entityPaused;
+            [Obsolete("Call MetaDataSystem to change this.")]
             set
             {
                 if (_entityPaused == value)
                     return;
 
-                var entMan = IoCManager.Resolve<IEntityManager>();
-                if (value && entMan.HasComponent<IgnorePauseComponent>(Owner))
-                    return;
-
                 _entityPaused = value;
-                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 
@@ -182,5 +189,9 @@ namespace Robust.Shared.GameObjects
         /// Whether the entity has states specific to a particular player.
         /// </summary>
         EntitySpecific = 1 << 0,
+        /// <summary>
+        /// Whether the entity is currently inside of a container.
+        /// </summary>
+        InContainer = 1 << 1,
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
@@ -56,10 +57,9 @@ namespace Robust.Shared.Localization
             string? suffix = null;
             Dictionary<string, string>? attributes = null;
 
-            while (true)
+            foreach (var prototype in _prototype.EnumerateParents<EntityPrototype>(prototypeId, true))
             {
-                var prototype = _prototype.Index<EntityPrototype>(prototypeId);
-                var locId = prototype.CustomLocalizationID ?? $"ent-{prototypeId}";
+                var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
 
                 if (TryGetMessage(locId, out var bundle, out var msg))
                 {
@@ -94,14 +94,16 @@ namespace Robust.Shared.Localization
 
                         var allErrors = new List<FluentError>();
                         if (desc == null
-                            && bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
+                            && !bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
                         {
+                            desc = null;
                             allErrors.AddRange(err1);
                         }
 
                         if (suffix == null
-                            && bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
+                            && !bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
                         {
+                            suffix = null;
                             allErrors.AddRange(err);
                         }
 
@@ -109,11 +111,11 @@ namespace Robust.Shared.Localization
                     }
                 }
 
-                name ??= prototype.SetName;
-                desc ??= prototype.SetDesc;
-                suffix ??= prototype.SetSuffix;
+                name ??= prototype?.SetName;
+                desc ??= prototype?.SetDesc;
+                suffix ??= prototype?.SetSuffix;
 
-                if (prototype.LocProperties.Count != 0)
+                if (prototype?.LocProperties != null && prototype.LocProperties.Count != 0)
                 {
                     foreach (var (attrib, value) in prototype.LocProperties)
                     {
@@ -124,11 +126,6 @@ namespace Robust.Shared.Localization
                         }
                     }
                 }
-
-                if (prototype.Parent == null)
-                    break;
-
-                prototypeId = prototype.Parent;
             }
 
             return new EntityLocData(

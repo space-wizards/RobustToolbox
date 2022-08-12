@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -11,9 +10,17 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set
 {
-    public sealed class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    public sealed class AbstractPrototypeIdHashSetSerializer<TPrototype> : PrototypeIdHashSetSerializer<TPrototype>
+        where TPrototype : class, IPrototype, IInheritingPrototype
     {
-        private readonly PrototypeIdSerializer<TPrototype> _prototypeSerializer = new();
+        protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
+            new AbstractPrototypeIdSerializer<TPrototype>();
+    }
+
+    [Virtual]
+    public class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    {
+        protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
         {
@@ -27,32 +34,29 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(_prototypeSerializer.Validate(serializationManager, value, dependencies, context));
+                list.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public HashSet<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            HashSet<string>? set = null)
         {
-            var set = new HashSet<string>();
-            var mappings = new List<DeserializationResult>();
+            set ??= new HashSet<string>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.Read(
+                set.Add(PrototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
-
-                set.Add((string) result.RawValue!);
-                mappings.Add(result);
+                    context));
             }
 
-            return new DeserializedCollection<HashSet<string>, string>(set, mappings,
-                elements => new HashSet<string>(elements));
+            return set;
         }
 
         public DataNode Write(ISerializationManager serializationManager, HashSet<string> value, bool alwaysWrite = false, ISerializationContext? context = null)
@@ -61,7 +65,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var str in value)
             {
-                list.Add(_prototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
+                list.Add(PrototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
             }
 
             return new SequenceDataNode(list);

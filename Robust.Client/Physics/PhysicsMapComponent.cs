@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -49,7 +50,7 @@ namespace Robust.Client.Physics
             // Also need to suss out having the client build the island anyway and just... not solving it?
             foreach (var body in AwakeBodies)
             {
-                if (body.Island || body.LinearVelocity.Length > _linSleepTolerance / 2f || body.AngularVelocity > _angSleepTolerance / 2f) continue;
+                if (body.LinearVelocity.Length > _linSleepTolerance / 2f || body.AngularVelocity * body.AngularVelocity > _angSleepTolerance / 2f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > _timeToSleep)
                 {

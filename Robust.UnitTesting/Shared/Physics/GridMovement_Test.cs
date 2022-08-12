@@ -10,7 +10,7 @@ using Robust.Shared.Physics.Dynamics;
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture, TestOf(typeof(SharedBroadphaseSystem))]
-public class GridMovement_Test : RobustIntegrationTest
+public sealed class GridMovement_Test : RobustIntegrationTest
 {
     [Test]
     public async Task TestFindGridContacts()

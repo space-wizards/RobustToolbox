@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -28,7 +27,7 @@ namespace Robust.Shared.Utility
     public struct UniqueIndex<TKey, TValue> : IUniqueIndex<TKey, TValue> where TKey : notnull
     {
 
-        private ImmutableDictionary<TKey, ISet<TValue>>? _index;
+        private ImmutableDictionary<TKey, HashSet<TValue>>? _index;
 
         /// <inheritdoc />
         public int KeyCount => _index?.Count ?? 0;
@@ -36,12 +35,12 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public bool Add(TKey key, TValue value)
         {
-            ISet<TValue>? set;
+            HashSet<TValue>? set;
 
             if (_index is null)
             {
                 set = new HashSet<TValue> {value};
-                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, ISet<TValue>>(key, set)});
+                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, HashSet<TValue>>(key, set)});
                 return true;
             }
 
@@ -57,12 +56,12 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public int AddRange(TKey key, IEnumerable<TValue> values)
         {
-            ISet<TValue>? set;
+            HashSet<TValue>? set;
 
             if (_index is null)
             {
                 set = new HashSet<TValue>(values);
-                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, ISet<TValue>>(key, set)});
+                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, HashSet<TValue>>(key, set)});
                 return set.Count;
             }
 
@@ -152,7 +151,7 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public void Touch(TKey key)
         {
-            _index ??= ImmutableDictionary<TKey, ISet<TValue>>.Empty;
+            _index ??= ImmutableDictionary<TKey, HashSet<TValue>>.Empty;
 
             if (_index.ContainsKey(key)) return;
 
@@ -160,29 +159,11 @@ namespace Robust.Shared.Utility
         }
 
         /// <inheritdoc />
-        public bool Freeze(TKey key)
-        {
-            if (_index is null)
-            {
-                return false;
-            }
-
-            if (!_index.TryGetValue(key, out var set)
-                || set is ImmutableHashSet<TValue>)
-            {
-                return false;
-            }
-
-            _index = _index.SetItem(key, ImmutableHashSet.CreateRange(set));
-            return true;
-        }
-
-        /// <inheritdoc />
         public void Initialize(IEnumerable<TKey> keys)
-            => Initialize(keys.Select(k => new KeyValuePair<TKey, ISet<TValue>>(k, new HashSet<TValue>())));
+            => Initialize(keys.Select(k => new KeyValuePair<TKey, HashSet<TValue>>(k, new HashSet<TValue>())));
 
         /// <inheritdoc />
-        public void Initialize(IEnumerable<KeyValuePair<TKey, ISet<TValue>>> index)
+        public void Initialize(IEnumerable<KeyValuePair<TKey, HashSet<TValue>>> index)
         {
             if (_index != null) throw new InvalidOperationException("Already initialized.");
 
@@ -193,11 +174,11 @@ namespace Robust.Shared.Utility
         {
             get
             {
-                ISet<TValue>? set;
+                HashSet<TValue>? set;
 
                 if (_index is null)
                 {
-                    _index = ImmutableDictionary<TKey, ISet<TValue>>.Empty;
+                    _index = ImmutableDictionary<TKey, HashSet<TValue>>.Empty;
                 }
                 else
                 {
@@ -215,14 +196,14 @@ namespace Robust.Shared.Utility
 
         /// <inheritdoc cref="IEnumerable{T}"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator()
+        public IEnumerator<KeyValuePair<TKey, HashSet<TValue>>> GetEnumerator()
         {
             if (_index != null)
             {
                 return _index.GetEnumerator();
             }
 
-            return Enumerable.Empty<KeyValuePair<TKey, ISet<TValue>>>().GetEnumerator();
+            return Enumerable.Empty<KeyValuePair<TKey, HashSet<TValue>>>().GetEnumerator();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

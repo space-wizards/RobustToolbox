@@ -13,7 +13,7 @@ namespace Robust.Server.ViewVariables
     ///     Traits define what behavior an object can have that VV cares about.
     ///     So like, is it enumerable, does it have VV accessible members. That kinda deal.
     ///     These are the "modular" way of extending VV.
-    ///     Server traits are bound to one <see cref="ViewVariablesesSession"/>, AKA one object.
+    ///     Server traits are bound to one <see cref="ViewVariablesSession"/>, AKA one object.
     /// </summary>
     internal abstract class ViewVariablesTrait
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -37,22 +37,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return mappingNode;
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager,
-            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+        public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
+            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            Dictionary<TKey, TValue>? dict)
         {
-            var dict = new Dictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
+            dict ??= new Dictionary<TKey, TValue>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook),
+                    serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return dict;
         }
 
         ValidationNode ITypeValidator<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
@@ -108,46 +105,39 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult
+        IReadOnlyDictionary<TKey, TValue>
             ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
                 IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+                bool skipHook, ISerializationContext? context, IReadOnlyDictionary<TKey, TValue>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
+
             var dict = new Dictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook), serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return dict;
         }
 
-        DeserializationResult
+        SortedDictionary<TKey, TValue>
             ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
                 IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+                bool skipHook, ISerializationContext? context, SortedDictionary<TKey, TValue>? dict)
         {
-            var dict = new SortedDictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
+            dict ??= new SortedDictionary<TKey, TValue>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook), serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));
+            return dict;
         }
 
         [MustUseReturnValue]
@@ -157,8 +147,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 target.Add(keyCopy, valueCopy);
             }
@@ -189,8 +179,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 dictionary.Add(keyCopy, valueCopy);
             }

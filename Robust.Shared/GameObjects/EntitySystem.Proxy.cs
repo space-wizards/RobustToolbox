@@ -69,6 +69,18 @@ public partial class EntitySystem
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery)
+    {
+        if (!metaQuery.TryGetComponent(uid, out var meta))
+            return true;
+
+        return meta.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted([NotNullWhen(false)] EntityUid? uid)
     {
         return !uid.HasValue || Deleted(uid.Value);
@@ -198,7 +210,7 @@ public partial class EntitySystem
         if(!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        return metaData.EntityName;
+        return metaData.EntityDescription;
     }
 
     /// <summary>
@@ -249,7 +261,7 @@ public partial class EntitySystem
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        metaData.EntityPaused = paused;
+        EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(uid, paused, metaData);
     }
 
     /// <summary>
@@ -410,7 +422,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp)
     {
         if (!uid.HasValue)
         {
@@ -515,15 +527,67 @@ public partial class EntitySystem
 
     #endregion
 
+    #region Component Remove Deferred
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred<T>(EntityUid uid) where T : class, IComponent
+    {
+        return EntityManager.RemoveComponentDeferred<T>(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Type)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemCompDeferred(EntityUid uid, Type type)
+    {
+        return EntityManager.RemoveComponentDeferred(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, IComponent component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
+    }
+    #endregion
+
+
     #region Component Remove
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemComp<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemComp<T>(EntityUid uid) where T : class, IComponent
     {
-        EntityManager.RemoveComponent<T>(uid);
+        return EntityManager.RemoveComponent<T>(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Type)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool RemComp(EntityUid uid, Type type)
+    {
+        return EntityManager.RemoveComponent(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponent(uid, component);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp(EntityUid uid, IComponent component)
+    {
+        EntityManager.RemoveComponent(uid, component);
+    }
     #endregion
 
     #region Entity Delete

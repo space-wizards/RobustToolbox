@@ -176,7 +176,7 @@ namespace Robust.Shared.ContentPack
 
             if (!path.IsRooted)
             {
-                throw new ArgumentException("Path must be rooted", nameof(path));
+                throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
             if (!IsPathValid(path))
@@ -262,6 +262,36 @@ namespace Robust.Shared.ContentPack
         public IEnumerable<ResourcePath> ContentFindFiles(string path)
         {
             return ContentFindFiles(new ResourcePath(path));
+        }
+
+        public IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path)
+        {
+            ArgumentNullException.ThrowIfNull(path, nameof(path));
+
+            if (!path.IsRooted)
+                throw new ArgumentException("Path is not rooted", nameof(path));
+
+            var entries = new HashSet<string>();
+
+            _contentRootsLock.EnterReadLock();
+            try
+            {
+                foreach (var (prefix, root) in _contentRoots)
+                {
+                    if (!path.TryRelativeTo(prefix, out var relative))
+                    {
+                        continue;
+                    }
+
+                    entries.UnionWith(root.GetEntries(relative));
+                }
+            }
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
+            }
+
+            return entries;
         }
 
         /// <inheritdoc />

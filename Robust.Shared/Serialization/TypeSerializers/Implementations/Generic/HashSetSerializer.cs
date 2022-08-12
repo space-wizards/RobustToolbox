@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,24 +19,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
-        DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, HashSet<T>? set)
         {
-            var set = new HashSet<T>();
-            var mappings = new List<DeserializationResult>();
+            set ??= new HashSet<T>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
-
-                set.Add(value);
-                mappings.Add(result);
+                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
             }
 
-            return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
+            return set;
         }
 
         ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
@@ -83,25 +79,23 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return sequence;
         }
 
-        DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, ImmutableHashSet<T>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
             var set = ImmutableHashSet.CreateBuilder<T>();
-            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
-
-                set.Add(value);
-                mappings.Add(result);
+                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
             }
 
-            return new DeserializedCollection<ImmutableHashSet<T>, T>(set.ToImmutable(), mappings, elements => ImmutableHashSet.Create(elements.ToArray()));
+            return set.ToImmutable();
         }
 
         [MustUseReturnValue]
@@ -114,7 +108,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 target.Add(elementCopy);
             }
 
@@ -129,7 +123,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 builder.Add(elementCopy);
             }
 

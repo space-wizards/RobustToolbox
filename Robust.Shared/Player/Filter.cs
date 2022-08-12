@@ -96,6 +96,12 @@ namespace Robust.Shared.Player
             return this;
         }
 
+        public static IEnumerable<ICommonSession> GetAllPlayers(ISharedPlayerManager? playerManager = null)
+        {
+            IoCManager.Resolve(ref playerManager);
+            return playerManager.NetworkedSessions;
+        }
+
         /// <summary>
         ///     Adds all players to the filter.
         /// </summary>
@@ -137,11 +143,11 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Add all players whose entity is on a certain grid.
         /// </summary>
-        public Filter AddInGrid(GridId gridId, IEntityManager? entMan = null)
+        public Filter AddInGrid(EntityUid uid, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
-            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).GridID == gridId);
+            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).GridUid == uid);
         }
 
         /// <summary>
@@ -303,7 +309,7 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     A new filter with all players whose attached entity is on a certain grid.
         /// </summary>
-        public static Filter BroadcastGrid(GridId grid)
+        public static Filter BroadcastGrid(EntityUid grid)
         {
             return Empty().AddInGrid(grid);
         }
@@ -317,7 +323,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this entity.
+        ///     A filter with every player whose PVS overlaps this entity.
         /// </summary>
         public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
@@ -325,7 +331,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
@@ -333,7 +339,7 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
@@ -341,11 +347,19 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
+        ///     A filter with every player whose PVS overlaps this point.
         /// </summary>
         public static Filter Pvs(MapCoordinates origin, float rangeMultiplier = 2f)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier);
+        }
+
+        /// <summary>
+        ///     A filter with every player whose PVS overlaps this point except the original player.
+        /// </summary>
+        public static Filter PvsExcept(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
+        {
+            return Pvs(origin, rangeMultiplier, entityManager).RemoveWhereAttachedEntity(e => e == origin);
         }
 
         /// <summary>

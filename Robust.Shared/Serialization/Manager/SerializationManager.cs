@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -29,13 +29,15 @@ namespace Robust.Shared.Serialization.Manager
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        public IReflectionManager ReflectionManager => _reflectionManager;
+
         public const string LogCategory = "serialization";
 
         private bool _initializing;
         private bool _initialized;
 
         // Using CWT<,> here in case we ever want assembly unloading.
-        private static readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
+        private readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -114,7 +116,7 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                DataDefinitions.GetValue(type, CreateDefinitionCallback);
+                DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
             var error = new StringBuilder();
@@ -168,12 +170,9 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private static readonly ConditionalWeakTable<Type, DataDefinition>.CreateValueCallback
-            CreateDefinitionCallback = CreateDataDefinition;
-
-        private static DataDefinition CreateDataDefinition(Type t)
+        private static DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
         {
-            return new(t);
+            return new(t, collection);
         }
 
         public void Shutdown()
@@ -212,7 +211,17 @@ namespace Robust.Shared.Serialization.Manager
 
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
-            var underlyingType = type.EnsureNotNullableType();
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType != null) // implies that type was nullable
+            {
+                if (node is ValueDataNode dataNode && dataNode.Value == "null")
+                    return new ValidatedValueNode(node);
+            }
+            else
+            {
+                underlyingType = type;
+            }
 
             if (underlyingType.IsArray)
             {
@@ -304,39 +313,6 @@ namespace Robust.Shared.Serialization.Manager
             return ValidateNodeWith(typeof(TType), typeof(TSerializer), node, context);
         }
 
-        public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false)
-            where T : notnull, new()
-        {
-            var obj = new T();
-            return PopulateDataDefinition(obj, new DeserializedDefinition<T>(obj, fields), skipHook);
-        }
-
-        public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false)
-            where T : notnull, new()
-        {
-            return PopulateDataDefinition(obj, (IDeserializedDefinition) definition, skipHook);
-        }
-
-        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
-        {
-            if (!TryGetDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
-
-            if (obj is IPopulateDefaultValues populateDefaultValues)
-            {
-                populateDefaultValues.PopulateDefaultValues();
-            }
-
-            var res = dataDefinition.Populate(obj, definition.Mapping);
-
-            if (!skipHook && res.RawValue is ISerializationHooks serializationHooksAfter)
-            {
-                serializationHooksAfter.AfterDeserialization();
-            }
-
-            return res;
-        }
-
         internal DataDefinition? GetDefinition(Type type)
         {
             return DataDefinitions.TryGetValue(type, out var dataDefinition)
@@ -344,7 +320,7 @@ namespace Robust.Shared.Serialization.Manager
                 : null;
         }
 
-        private bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
+        internal bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
         {
             dataDefinition = GetDefinition(type);
             return dataDefinition != null;
@@ -361,7 +337,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (value == null) return new MappingDataNode();
+            if (value == null) return new ValueDataNode("null");
 
             if (underlyingType.IsEnum)
             {
@@ -432,19 +408,15 @@ namespace Robust.Shared.Serialization.Manager
             return WriteWithSerializerRaw(type, serializer, value!, context, alwaysWrite);
         }
 
-        private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
+        private void CopyToTarget(object source, ref object target, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null)
-            {
-                return source;
-            }
-
             var sourceType = source.GetType();
             var targetType = target.GetType();
 
             if (sourceType.IsValueType && targetType.IsValueType)
             {
-                return source;
+                target = source;
+                return;
             }
 
             if (sourceType.IsValueType != targetType.IsValueType)
@@ -470,10 +442,11 @@ namespace Robust.Shared.Serialization.Manager
 
                 for (var i = 0; i < sourceArray.Length; i++)
                 {
-                    newArray.SetValue(CreateCopy(sourceArray.GetValue(i), context, skipHook), i);
+                    newArray.SetValue(Copy(sourceArray.GetValue(i), context, skipHook), i);
                 }
 
-                return newArray;
+                target = newArray;
+                return;
             }
 
             if (sourceType.IsArray != targetType.IsArray)
@@ -490,12 +463,13 @@ namespace Robust.Shared.Serialization.Manager
 
             if (_copyByRefRegistrations.Contains(commonType) || commonType.IsEnum)
             {
-                return source;
+                target = source;
+                return;
             }
 
             if (TryCopyRaw(commonType, source, ref target, skipHook, context))
             {
-                return target;
+                return;
             }
 
             if (target is IPopulateDefaultValues populateDefaultValues)
@@ -514,37 +488,61 @@ namespace Robust.Shared.Serialization.Manager
             {
                 afterHooks.AfterDeserialization();
             }
-
-            return target;
         }
 
-        [MustUseReturnValue]
-        public object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
+        public void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false)
         {
-            return CopyToTarget(source, target, context, skipHook);
+            if (target == null || source == null)
+            {
+                target = Copy(source, context, skipHook);
+            }
+            else
+            {
+                CopyToTarget(source, ref target, context, skipHook);
+            }
         }
 
-        [MustUseReturnValue]
-        public T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false)
+        public void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false)
         {
-            var copy = CopyToTarget(source, target, context, skipHook);
-
-            return copy == null ? default : (T?) copy;
+            var temp = (object?)target;
+            Copy(source, ref temp, context, skipHook);
+            target = (T)temp!;
         }
 
         [MustUseReturnValue]
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null) return source;
+            if (source == null)
+                return null;
+
+            // TODO should this respect _copyByRefRegistrations? Or should the type serializer be allowed to override this?
+
+            if (target == null)
+            {
+                // TODO allow type serializers to copy into null (or make them provide a parameterless constructor & copy into a
+                // new instance). For now, this needs to assume that this is a value type or that this has a parameterless ctor
+
+                var type = source.GetType();
+
+                if (type.IsPrimitive ||
+                    type.IsEnum ||
+                    source is string)
+                {
+                    target = source;
+                }
+                else
+                {
+                    target = Activator.CreateInstance(type)!;
+                }
+            }
 
             return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }
 
-        private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)
+        private object CreateCopyInternal(Type type, object source, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null ||
-                type.IsPrimitive ||
+            if (type.IsPrimitive ||
                 type.IsEnum ||
                 source is string ||
                 _copyByRefRegistrations.Contains(type))
@@ -553,25 +551,19 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var target = Activator.CreateInstance(source.GetType())!;
-            return Copy(source, target, context, skipHook);
+            CopyToTarget(source, ref target, context, skipHook);
+            return target;
         }
 
-        public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
+        public object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false)
         {
             if (source == null) return null;
             return CreateCopyInternal(source.GetType(), source, context, skipHook);
         }
 
-        public T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false)
+        public T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false)
         {
-            var copy = CreateCopyInternal(typeof(T), source, context, skipHook);
-
-            if (copy == null)
-            {
-                return default;
-            }
-
-            return (T?) copy;
+            return (T)Copy((object?)source, context, skipHook)!;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

@@ -11,6 +11,7 @@ using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
@@ -61,6 +62,8 @@ namespace Robust.Client
             IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<IResourceCacheInternal, ResourceCache>();
             IoCManager.Register<IClientNetManager, NetManager>();
+            IoCManager.Register<EntityManager, ClientEntityManager>();
+            IoCManager.Register<ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();
@@ -75,6 +78,7 @@ namespace Robust.Client
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<ProfViewManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             switch (mode)
             {

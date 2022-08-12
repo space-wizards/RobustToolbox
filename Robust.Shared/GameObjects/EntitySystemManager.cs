@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,10 +7,12 @@ using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using Dependency = Robust.Shared.IoC.DependencyAttribute;
+using Stopwatch = System.Diagnostics.Stopwatch;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -21,8 +22,9 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class EntitySystemManager : IEntitySystemManager
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+        [IoC.Dependency] private readonly ProfManager _profManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -61,6 +63,12 @@ namespace Robust.Shared.GameObjects
             where T : IEntitySystem
         {
             return _systemDependencyCollection.Resolve<T>();
+        }
+
+        public T? GetEntitySystemOrNull<T>() where T : IEntitySystem
+        {
+            _systemDependencyCollection.TryResolveType<T>(out var system);
+            return system;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
@@ -290,7 +298,9 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
+                    var sw = ProfSampler.StartNew();
                     updReg.System.Update(frameTime);
+                    _profManager.WriteValue(updReg.System.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -315,7 +325,9 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
+                    var sw = ProfSampler.StartNew();
                     system.FrameUpdate(frameTime);
+                    _profManager.WriteValue(system.GetType().Name, sw);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

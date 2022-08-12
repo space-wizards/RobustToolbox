@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Server.GameObjects
 {
@@ -11,7 +12,9 @@ namespace Robust.Server.GameObjects
 
         void FinishEntityLoad(EntityUid entity, IEntityLoadContext? context = null);
 
-        void FinishEntityInitialization(EntityUid entity);
+        void FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context = null);
+
+        void FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta = null);
 
         void FinishEntityStartup(EntityUid entity);
     }

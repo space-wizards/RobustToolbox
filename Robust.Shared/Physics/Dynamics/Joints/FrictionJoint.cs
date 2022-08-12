@@ -51,18 +51,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var bodyA = entityManager.GetComponent<PhysicsComponent>(UidA);
-            var bodyB = entityManager.GetComponent<PhysicsComponent>(UidB);
-
-            var joint = new FrictionJoint(bodyA, bodyB)
-            {
-                MaxForce = MaxForce,
-                MaxTorque = MaxTorque,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB,
-            };
-            return joint;
+            return new FrictionJoint(this);
         }
     }
 
@@ -97,13 +86,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The maximum friction force in N.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("maxForce")]
         public float MaxForce { get; set; }
 
         /// <summary>
         ///     The maximum friction torque in N-m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("maxTorque")]
         public float MaxTorque { get; set; }
+
+        public FrictionJoint() {}
 
         /// <summary>
         /// Constructor for FrictionJoint.
@@ -117,8 +110,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             if (useWorldCoordinates)
             {
-                LocalAnchorA = BodyA.GetLocalPoint(anchor);
-                LocalAnchorB = BodyB.GetLocalPoint(anchor);
+                LocalAnchorA = bodyA.GetLocalPoint(anchor);
+                LocalAnchorB = bodyB.GetLocalPoint(anchor);
             }
             else
             {
@@ -132,14 +125,20 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             if (useWorldCoordinates)
             {
-                LocalAnchorA = BodyA.GetLocalPoint(Vector2.Zero);
-                LocalAnchorB = BodyB.GetLocalPoint(Vector2.Zero);
+                LocalAnchorA = bodyA.GetLocalPoint(Vector2.Zero);
+                LocalAnchorB = bodyB.GetLocalPoint(Vector2.Zero);
             }
             else
             {
                 LocalAnchorA = Vector2.Zero;
                 LocalAnchorB = Vector2.Zero;
             }
+        }
+
+        internal FrictionJoint(FrictionJointState state) : base(state)
+        {
+            MaxForce = state.MaxForce;
+            MaxTorque = state.MaxTorque;
         }
 
         public override JointState GetState()
@@ -169,16 +168,16 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * _angularImpulse;
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-            _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = BodyA.LocalCenter;
-            _localCenterB = BodyB.LocalCenter;
-            _invMassA = BodyA.InvMass;
-            _invMassB = BodyB.InvMass;
-            _invIA = BodyA.InvI;
-            _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
             float aA = data.Angles[_indexA];
             Vector2 vA = data.LinearVelocities[_indexA];
@@ -221,7 +220,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
 
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting))
+            if (data.WarmStarting)
             {
                 // Scale impulses to support a variable time step.
                 _linearImpulse *= data.DtRatio;

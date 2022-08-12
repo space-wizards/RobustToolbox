@@ -18,6 +18,7 @@ namespace Robust.Shared.GameObjects
     {
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadOnly)]
+        [Obsolete("Resolve IComponentFactory and call GetComponentName instead")]
         public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />
@@ -35,35 +36,28 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
-        /// calling <see cref="OnAdd" />.
+        /// after raising a <see cref="ComponentAdd"/> event.
         /// </summary>
-        internal void LifeAddToEntity(IEntityManager entManager)
+        internal void LifeAddToEntity(IEntityManager entManager, CompIdx type)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
 
             LifeStage = ComponentLifeStage.Adding;
             CreationTick = entManager.CurrentTick;
-            entManager.EventBus.RaiseComponentEvent(this, CompAddInstance);
-            OnAdd();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Added)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
-            }
-#endif
+            entManager.EventBus.RaiseComponentEvent(this, type, CompAddInstance);
+            LifeStage = ComponentLifeStage.Added;
         }
 
         /// <summary>
         /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
         /// calling <see cref="Initialize" />.
         /// </summary>
-        internal void LifeInitialize(IEntityManager entManager)
+        internal void LifeInitialize(IEntityManager entManager, CompIdx type)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
             LifeStage = ComponentLifeStage.Initializing;
-            entManager.EventBus.RaiseComponentEvent(this, CompInitInstance);
+            entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
             Initialize();
 
 #if DEBUG
@@ -167,14 +161,6 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentRemove CompRemoveInstance = new();
 
         /// <summary>
-        /// Called when the component gets added to an entity.
-        /// </summary>
-        protected virtual void OnAdd()
-        {
-            LifeStage = ComponentLifeStage.Added;
-        }
-
-        /// <summary>
         /// Called when all of the entity's other components have been added and are available,
         /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
@@ -219,49 +205,14 @@ namespace Robust.Shared.GameObjects
             entManager.Dirty(this);
         }
 
-        /// <summary>
-        ///     Sends a message to all other components in this entity.
-        ///     This is an alias of 'Owner.SendMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendMessage(ComponentMessage message)
-        {
-            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner);
-            foreach (var component in components)
-            {
-                if (this != component)
-                    component.HandleMessage(message, this);
-            }
-        }
-
-        /// <summary>
-        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
-        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
-        {
-            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
-
         private static readonly ComponentState DefaultComponentState = new();
 
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()
         {
-            if (!(Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute))
-                throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without being networked.");
+            DebugTools.Assert(
+                Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) != null,
+                $"Calling base {nameof(GetComponentState)} without being networked.");
 
             return DefaultComponentState;
         }
@@ -348,29 +299,34 @@ namespace Robust.Shared.GameObjects
     /// The component has been added to the entity. This is the first function
     /// to be called after the component has been allocated and (optionally) deserialized.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentAdd : EntityEventArgs { }
 
     /// <summary>
     /// Raised when all of the entity's other components have been added and are available,
     /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentInit : EntityEventArgs { }
 
     /// <summary>
     /// Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
     /// This can be called multiple times during the component's life, and at any time.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentStartup : EntityEventArgs { }
 
     /// <summary>
     /// Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
     /// the component's life, and at any time.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentShutdown : EntityEventArgs { }
 
     /// <summary>
     /// The component has been removed from the entity. This is the last function
     /// that is called before the component is freed.
     /// </summary>
+    [ComponentEvent]
     public sealed class ComponentRemove : EntityEventArgs { }
 }

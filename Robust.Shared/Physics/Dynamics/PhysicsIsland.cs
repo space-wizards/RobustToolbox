@@ -141,6 +141,7 @@ stored in a single array since multiple arrays lead to multiple misses.
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        private SharedTransformSystem _transform = default!;
 #if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
@@ -165,7 +166,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
-        private Joint[] _joints = Array.Empty<Joint>();
+        private (Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)[] _joints = Array.Empty<(Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)>();
 
         private List<(Joint Joint, float ErrorSquared)> _brokenJoints = new();
 
@@ -217,6 +218,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
         }
 
         internal void LoadConfig(in IslandCfg cfg)
@@ -249,9 +251,12 @@ stored in a single array since multiple arrays lead to multiple misses.
                 Add(contact);
             }
 
+            var query = _entityManager.GetEntityQuery<PhysicsComponent>();
             foreach (var joint in joints)
             {
-                Add(joint);
+                var bodyA = query.GetComponent(joint.BodyAUid);
+                var bodyB = query.GetComponent(joint.BodyBUid);
+                Add((joint, bodyA, bodyB));
             }
         }
 
@@ -266,7 +271,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _contacts[ContactCount++] = contact;
         }
 
-        public void Add(Joint joint)
+        public void Add((Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB) joint)
         {
             _joints[JointCount++] = joint;
         }
@@ -389,9 +394,9 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             for (var i = 0; i < JointCount; i++)
             {
-                var joint = _joints[i];
+                var (joint, bodyA, bodyB) = _joints[i];
                 if (!joint.Enabled) continue;
-                joint.InitVelocityConstraints(SolverData);
+                joint.InitVelocityConstraints(SolverData, bodyA, bodyB);
             }
 
             // Velocity solver
@@ -399,7 +404,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 for (var j = 0; j < JointCount; ++j)
                 {
-                    Joint joint = _joints[j];
+                    Joint joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;
@@ -428,7 +433,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var angle = _angles[i];
 
                 var translation = linearVelocity * frameTime;
-                if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
+                if (translation.Length > _maxLinearVelocity)
                 {
                     var ratio = _maxLinearVelocity / translation.Length;
                     linearVelocity *= ratio;
@@ -460,7 +465,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 for (int j = 0; j < JointCount; ++j)
                 {
-                    var joint = _joints[j];
+                    var joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;
@@ -522,8 +527,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;
-                    transform.WorldPosition = bodyPos;
-                    transform.WorldRotation = angle;
+                    _transform.SetWorldPosition(transform, bodyPos, xforms);
+                    _transform.SetWorldRotation(transform, angle, xforms);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

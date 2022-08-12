@@ -11,4 +11,10 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Needed for FriendAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" />
+    <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" />
+  </ItemGroup>
+
 </Project>

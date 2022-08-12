@@ -19,6 +19,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
   name: tobacco
   seedName: tobacco
   displayName: tobacco plant
+  plantRsi: Objects/Specific/Hydroponics/tobacco.rsi
   productPrototypes:
     - LeavesTobacco
   harvestRepeat: Repeat
@@ -36,7 +37,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
       Max: 10
       PotencyDivisor: 10";
 
-        [DataField("id", required: true)] public string ID { get; set; } = default!;
+        [IdDataFieldAttribute] public string ID { get; set; } = default!;
 
         #region Tracking
         [DataField("name")] public string Name { get; set; } = string.Empty;

@@ -106,7 +106,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures {
             set {
-                PreparePlacementTexList(value, value != null);
+                PreparePlacementTexList(value, value != null, null);
             }
         }
 
@@ -418,7 +418,7 @@ namespace Robust.Client.Placement
             if (!IsActive || !Eraser) return;
             if (Hijack != null && Hijack.HijackDeletion(entity)) return;
 
-            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
             msg.EntityUid = entity;
             NetworkManager.ClientSendMessage(msg);
@@ -426,7 +426,7 @@ namespace Robust.Client.Placement
 
         public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
         {
-            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
             msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
             msg.RectSize = rect.Size;
@@ -492,7 +492,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer!.ControlledEntity is {Valid: true} ent)
+            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
             {
                 map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }
@@ -626,6 +626,7 @@ namespace Robust.Client.Placement
                 {
                     handle.UseShader(_drawingShader);
                     handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                    handle.UseShader(null);
                 }
                 return;
             }
@@ -680,10 +681,10 @@ namespace Robust.Client.Placement
             IsActive = true;
 
             var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
-            PreparePlacementTexList(lst, noRot);
+            PreparePlacementTexList(lst, noRot, prototype);
         }
 
-        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot)
+        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
         {
             var sc = SetupPlacementOverlayEntity();
             if (texs != null)
@@ -708,6 +709,12 @@ namespace Robust.Client.Placement
                 sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
+
+            if (prototype?.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp) == true)
+            {
+                sc.Scale = spriteComp.Scale;
+            }
+
         }
 
         private void PreparePlacementTile()
@@ -748,7 +755,7 @@ namespace Robust.Client.Placement
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = NetworkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.RequestPlacement;
 
             message.Align = CurrentMode.ModeName;

@@ -62,5 +62,15 @@ namespace Robust.Client.Timing
 
             IsFirstTimePredicted = true;
         }
+
+        public void StartStateApplication()
+        {
+            ApplyingState = true;
+        }
+
+        public void EndStateApplication()
+        {
+            ApplyingState = false;
+        }
     }
 }

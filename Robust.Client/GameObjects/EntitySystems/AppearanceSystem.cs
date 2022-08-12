@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 
@@ -61,9 +62,9 @@ namespace Robust.Client.GameObjects
         /// <remarks>
         ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
         /// </remarks>
-        private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
+        private Dictionary<Enum, object> CloneAppearanceData(Dictionary<Enum, object> data)
         {
-            Dictionary<object, object> newDict = new(data.Count);
+            Dictionary<Enum, object> newDict = new(data.Count);
 
             foreach (var (key, value) in data)
             {
@@ -94,17 +95,21 @@ namespace Robust.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            var spriteQuery = GetEntityQuery<SpriteComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
                 if (appearance.Deleted)
                     continue;
 
-                OnChangeData(appearance.Owner, appearance);
+                // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
+                spriteQuery.TryGetComponent(appearance.Owner, out var sprite);
+
+                OnChangeData(appearance.Owner, sprite, appearance);
                 UnmarkDirty(appearance);
             }
         }
 
-        public void OnChangeData(EntityUid uid, ClientAppearanceComponent? appearanceComponent = null)
+        public void OnChangeData(EntityUid uid, SpriteComponent? sprite, ClientAppearanceComponent? appearanceComponent = null)
         {
             if (!Resolve(uid, ref appearanceComponent, false)) return;
 
@@ -112,6 +117,7 @@ namespace Robust.Client.GameObjects
             {
                 Component = appearanceComponent,
                 AppearanceData = appearanceComponent.AppearanceData,
+                Sprite = sprite,
             };
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
@@ -132,6 +138,7 @@ namespace Robust.Client.GameObjects
     public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component;
-        public IReadOnlyDictionary<object, object> AppearanceData;
+        public IReadOnlyDictionary<Enum, object> AppearanceData;
+        public SpriteComponent? Sprite;
     }
 }

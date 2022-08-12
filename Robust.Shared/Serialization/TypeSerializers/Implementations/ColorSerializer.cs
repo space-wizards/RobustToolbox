@@ -3,7 +3,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -14,16 +13,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public Color Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, Color value = default)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)
                 ? color :
                 Color.FromHex(node.Value);
 
-            return new DeserializedValue<Color>(deserializedColor);
+            return deserializedColor;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

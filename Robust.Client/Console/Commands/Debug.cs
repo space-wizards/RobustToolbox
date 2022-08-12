@@ -19,6 +19,7 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -97,54 +98,72 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "monitor";
 
-        public string Help =>
-            "Usage: monitor <name>\nPossible monitors are: fps, net, bandwidth, coord, time, frames, mem, clyde, input";
+        public string Description => Loc.GetString("cmd-monitor-desc");
 
-        public string Description => "Toggles a debug monitor in the F3 menu.";
+        public string Help
+        {
+            get
+            {
+                var monitors = string.Join(", ", Enum.GetNames<DebugMonitor>());
+                return Loc.GetString("cmd-monitor-help", ("monitors", monitors));
+            }
+        }
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
+            var monitors = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
 
             if (args.Length != 1)
             {
-                shell.WriteLine(Help);
+                shell.WriteLine(Loc.GetString("cmd-monitor-arg-count"));
                 return;
             }
 
-            switch (args[0])
+            var monitorArg = args[0];
+            if (monitorArg.Equals("-all", StringComparison.OrdinalIgnoreCase))
             {
-                case "fps":
-                    monitor.ShowFPS ^= true;
-                    break;
-                case "net":
-                    monitor.ShowNet ^= true;
-                    break;
-                case "bandwidth":
-                    monitor.ShowNetBandwidth ^= true;
-                    break;
-                case "coord":
-                    monitor.ShowCoords ^= true;
-                    break;
-                case "time":
-                    monitor.ShowTime ^= true;
-                    break;
-                case "frames":
-                    monitor.ShowFrameGraph ^= true;
-                    break;
-                case "mem":
-                    monitor.ShowMemory ^= true;
-                    break;
-                case "clyde":
-                    monitor.ShowClyde ^= true;
-                    break;
-                case "input":
-                    monitor.ShowInput ^= true;
-                    break;
-                default:
-                    shell.WriteLine($"Invalid key: {args[0]}");
-                    break;
+                foreach (var monitor in Enum.GetValues<DebugMonitor>())
+                {
+                    monitors.SetMonitor(monitor, false);
+                }
+
+                return;
             }
+
+            if (monitorArg.Equals("+all", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var monitor in Enum.GetValues<DebugMonitor>())
+                {
+                    monitors.SetMonitor(monitor, true);
+                }
+
+                return;
+            }
+
+            if (!Enum.TryParse(monitorArg, true, out DebugMonitor parsedMonitor))
+            {
+                shell.WriteError(Loc.GetString("cmd-monitor-invalid-name"));
+                return;
+            }
+
+            monitors.ToggleMonitor(parsedMonitor);
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                var allOptions = new CompletionOption[]
+                {
+                    new("-all", Loc.GetString("cmd-monitor-minus-all-hint")),
+                    new("+all", Loc.GetString("cmd-monitor-plus-all-hint"))
+                };
+
+                var options = allOptions.Concat(Enum.GetNames<DebugMonitor>().Select(c => new CompletionOption(c)));
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-monitor-arg-monitor"));
+            }
+
+            return CompletionResult.Empty;
         }
     }
 
@@ -737,103 +756,6 @@ namespace Robust.Client.Console.Commands
             if (!mgr.LockConsoleAccess)
                 mgr.DrawLighting = !mgr.DrawLighting;
         }
-    }
-
-    internal sealed class GcCommand : IConsoleCommand
-    {
-        public string Command => "gc";
-        public string Description => "Run the GC.";
-        public string Help => "gc [generation]";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            if (args.Length == 0)
-            {
-                GC.Collect();
-            }
-            else
-            {
-                if (int.TryParse(args[0], out int result))
-                    GC.Collect(result);
-                else
-                    shell.WriteError("Failed to parse argument.");
-            }
-        }
-    }
-
-    internal sealed class GcFullCommand : IConsoleCommand
-    {
-        public string Command => "gcf";
-        public string Description => "Run the GC, fully, compacting LOH and everything.";
-        public string Help => "gcf";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect(2, GCCollectionMode.Forced, true, true);
-        }
-    }
-
-    internal sealed class GcModeCommand : IConsoleCommand
-    {
-
-        public string Command => "gc_mode";
-
-        public string Description => "Change/Read the GC Latency mode.";
-
-        public string Help => "gc_mode\nSee current GC Latencymode\ngc_mode [type]\n Change GC Latency mode to [type]";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            var prevMode = GCSettings.LatencyMode;
-            if (args.Length == 0)
-            {
-                shell.WriteLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
-                shell.WriteLine("possible modes:");
-                foreach (int mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
-                {
-                    shell.WriteLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
-                }
-            }
-            else
-            {
-                GCLatencyMode mode;
-                if (char.IsDigit(args[0][0]) && int.TryParse(args[0], out var modeNum))
-                {
-                    mode = (GCLatencyMode) modeNum;
-                }
-                else if (!Enum.TryParse(args[0], true, out mode))
-                {
-                    shell.WriteLine($"unknown gc latency mode: {args[0]}");
-                    return;
-                }
-
-                shell.WriteLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
-                GCSettings.LatencyMode = mode;
-                shell.WriteLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
-            }
-        }
-
-    }
-
-    internal sealed class SerializeStatsCommand : IConsoleCommand
-    {
-
-        public string Command => "szr_stats";
-
-        public string Description => "Report serializer statistics.";
-
-        public string Help => "szr_stats";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-
-            shell.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
-            shell.WriteLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
-            shell.WriteLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
-            shell.WriteLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
-        }
-
     }
 
     internal sealed class ChunkInfoCommand : IConsoleCommand

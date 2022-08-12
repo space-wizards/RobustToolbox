@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -689,28 +689,22 @@ namespace Robust.Client.UserInterface
         private static Vector2 ApplySizeConstraints(Control control, Vector2 avail)
         {
             var minW = control._minWidth;
-            var setW = control._setWidth;
-            var maxW = control._maxWidth;
-
-            var maxConstraint = float.IsNaN(setW) ? float.PositiveInfinity : setW;
-            maxW = MathHelper.Clamp(maxConstraint, minW, maxW);
-
-            var minConstraint = float.IsNaN(setW) ? 0 : setW;
-            minW = MathHelper.Clamp(maxW, minConstraint, minW);
+            var maxW = GetActualMaxSize(minW, control._maxWidth, control._setWidth);
 
             var minH = control._minHeight;
-            var setH = control._setHeight;
-            var maxH = control._maxHeight;
+            var maxH = GetActualMaxSize(minH, control._maxHeight, control._setHeight);
 
-            maxConstraint = float.IsNaN(setH) ? float.PositiveInfinity : setH;
-            maxH = MathHelper.Clamp(maxConstraint, minH, maxH);
+            return (Math.Clamp(avail.X, minW, maxW),
+                    Math.Clamp(avail.Y, minH, maxH));
 
-            minConstraint = float.IsNaN(setH) ? 0 : setH;
-            minH = MathHelper.Clamp(maxH, minConstraint, minH);
+        }
 
-            return (
-                Math.Clamp(avail.X, minW, maxW),
-                Math.Clamp(avail.Y, minH, maxH));
+        private static float GetActualMaxSize(float minSize, float maxSize, float setSize)
+        {
+            if (float.IsPositiveInfinity(maxSize) && !float.IsNaN(setSize) && setSize >= minSize)
+                return setSize;
+
+            return maxSize;
         }
 
         /// <summary>

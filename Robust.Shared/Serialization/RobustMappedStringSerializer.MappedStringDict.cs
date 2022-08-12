@@ -321,15 +321,15 @@ namespace Robust.Shared.Serialization
                     foreach (var node in doc.AllNodes)
                     {
                         var a = node.Anchor;
-                        if (!string.IsNullOrEmpty(a))
+                        if (!a.IsEmpty)
                         {
-                            AddString(a);
+                            AddString(a.Value);
                         }
 
                         var t = node.Tag;
-                        if (!string.IsNullOrEmpty(t))
+                        if (!t.IsEmpty)
                         {
-                            AddString(t);
+                            AddString(t.Value);
                         }
 
                         if (!(node is YamlScalarNode scalar))

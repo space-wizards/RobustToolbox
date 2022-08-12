@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 _children.Add(key.ToDataNode(), val.ToDataNode());
             }
 
-            Tag = mapping.Tag;
+            Tag = (mapping.Tag.IsNonSpecific || mapping.Tag.IsEmpty) ? null : mapping.Tag.Value;
         }
 
         public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)

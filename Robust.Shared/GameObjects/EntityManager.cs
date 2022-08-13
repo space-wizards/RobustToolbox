@@ -191,7 +191,25 @@ namespace Robust.Shared.GameObjects
         {
             var newEntity = CreateEntity(prototypeName);
             var transform = GetComponent<TransformComponent>(newEntity);
-            transform.AttachParent(_mapManager.GetMapEntityId(coordinates.MapId));
+
+            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
+            TryGetComponent(mapEnt, out TransformComponent? mapXform);
+
+            // If the entity is being spawned in null-space, we will parent the entity to the null-map, IF it exists.
+            // For whatever reason, tests create and expect null-space to have a map entity, and it does on the client, but it
+            // intentionally doesn't on the server??
+            if (coordinates.MapId == MapId.Nullspace &&
+                mapXform == null) 
+            {
+                transform._parent = EntityUid.Invalid;
+                transform.Anchored = false;
+                return newEntity;
+            }
+
+            if (mapXform == null)
+                throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
+
+            transform.AttachParent(mapXform);
 
             // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
             var oldAnchored = transform.Anchored;

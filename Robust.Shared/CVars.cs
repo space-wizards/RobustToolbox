@@ -469,7 +469,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.

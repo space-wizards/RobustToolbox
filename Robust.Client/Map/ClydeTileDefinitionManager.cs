@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -52,7 +54,7 @@ namespace Robust.Client.Map
 
         private void _genTextureAtlas()
         {
-            var defList = TileDefs.Where(t => !string.IsNullOrEmpty(t.SpriteName)).ToList();
+            var defList = TileDefs.Where(t => t.Sprite != null).ToList();
 
             // If there are no tile definitions, we do nothing.
             if (defList.Count <= 0)
@@ -94,10 +96,14 @@ namespace Robust.Client.Map
 
             var column = 1;
             var row = 0;
+
             foreach (var def in defList)
             {
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead(new ResourcePath(def.Path) / $"{def.SpriteName}.png"))
+                // Already know it's not null above
+                var path = def.Sprite!;
+
+                using (var stream = _resourceCache.ContentFileRead(path))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }
@@ -105,7 +111,7 @@ namespace Robust.Client.Map
                 if (image.Width != (tileSize * def.Variants) || image.Height != tileSize)
                 {
                     throw new NotSupportedException(
-                        $"Unable to load {new ResourcePath(def.Path) / $"{def.SpriteName}.png"}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
+                        $"Unable to load {path}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
                 }
 
                 var regionList = new Box2[def.Variants];

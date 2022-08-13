@@ -10,30 +10,13 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedAppearanceSystem : EntitySystem
 {
-    [Dependency] private readonly IReflectionManager _refMan = default!;
-
     public virtual void MarkDirty(AppearanceComponent component) {}
-
-    #region SetData
-    public void SetData(EntityUid uid, string key, object value, AppearanceComponent? component = null)
-    {
-        if (!Resolve(uid, ref component))
-            return;
-
-        if (_refMan.TryParseEnumReference(key, out var @enum))
-            SetDataPrivate(component, @enum, value);
-        else
-            SetDataPrivate(component, key, value);
-    }
 
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
-        if (Resolve(uid, ref component))
-            SetDataPrivate(component, key, value);
-    }
+        if (!Resolve(uid, ref component, false))
+            return;
 
-    private void SetDataPrivate(AppearanceComponent component, object key, object value)
-    {
         if (component.AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
 
@@ -42,22 +25,6 @@ public abstract class SharedAppearanceSystem : EntitySystem
         component.AppearanceData[key] = value;
         Dirty(component);
         MarkDirty(component);
-    }
-    #endregion
-
-    #region TryGetData
-    public bool TryGetData(EntityUid uid, string key, [MaybeNullWhen(false)] out object value, AppearanceComponent? component = null)
-    {
-        if (!Resolve(uid, ref component))
-        {
-            value = null;
-            return false;
-        }
-
-        if (_refMan.TryParseEnumReference(key, out var @enum))
-            return component.AppearanceData.TryGetValue(@enum, out value);
-        else
-            return component.AppearanceData.TryGetValue(key, out value);
     }
 
     public bool TryGetData(EntityUid uid, Enum key, [MaybeNullWhen(false)] out object value, AppearanceComponent? component = null)
@@ -70,15 +37,14 @@ public abstract class SharedAppearanceSystem : EntitySystem
 
         return component.AppearanceData.TryGetValue(key, out value);
     }
-    #endregion
 }
 
 [Serializable, NetSerializable]
 public sealed class AppearanceComponentState : ComponentState
 {
-    public readonly Dictionary<object, object> Data;
+    public readonly Dictionary<Enum, object> Data;
 
-    public AppearanceComponentState(Dictionary<object, object> data)
+    public AppearanceComponentState(Dictionary<Enum, object> data)
     {
         Data = data;
     }

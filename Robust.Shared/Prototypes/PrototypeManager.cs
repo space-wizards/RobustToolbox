@@ -58,6 +58,16 @@ namespace Robust.Shared.Prototypes
         IEnumerable<IPrototype> EnumeratePrototypes(string variant);
 
         /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false) where T : class, IPrototype, IInheritingPrototype;
+
+        /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false);
+
+        /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -224,7 +234,7 @@ namespace Robust.Shared.Prototypes
 
         private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
         private readonly Dictionary<Type, Dictionary<string, MappingDataNode>> _prototypeResults = new();
-        private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
+        private readonly Dictionary<Type, MultiRootInheritanceGraph<string>> _inheritanceTrees = new();
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -267,6 +277,67 @@ namespace Robust.Shared.Prototypes
         public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
         {
             return EnumeratePrototypes(GetVariantType(variant));
+        }
+
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)  where T : class, IPrototype, IInheritingPrototype
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            if(!TryIndex<T>(id, out var prototype))
+                yield break;
+            if (includeSelf) yield return prototype;
+            if (prototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(prototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if(!TryIndex<T>(prototypeId, out var parent))
+                    yield break;
+                yield return parent;
+                if (parent.Parents == null) continue;
+
+                foreach (var parentId in parent.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
+        }
+
+        public IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false)
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
+            {
+                throw new InvalidOperationException("The provided prototype type is not an inheriting prototype");
+            }
+
+            if(!TryIndex(type, id, out var prototype))
+                yield break;
+            if (includeSelf) yield return prototype;
+            var iPrototype = (IInheritingPrototype)prototype;
+            if (iPrototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(iPrototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if (!TryIndex(type, id, out var parent))
+                    continue;
+                yield return parent;
+                iPrototype = (IInheritingPrototype)parent;
+                if (iPrototype.Parents == null) continue;
+
+                foreach (var parentId in iPrototype.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
         }
 
         public T Index<T>(string id) where T : class, IPrototype
@@ -340,23 +411,42 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
+                var tree = _inheritanceTrees[type];
+                var processQueue = new Queue<string>();
                 foreach (var id in prototypes[type])
                 {
-                    if (!pushed.ContainsKey(type))
-                        pushed[type] = new HashSet<string>();
-                    if (pushed[type].Contains(id))
+                    processQueue.Enqueue(id);
+                }
+
+                while(processQueue.TryDequeue(out var id))
+                {
+                    var pushedSet = pushed.GetOrNew(type);
+
+                    if (tree.TryGetParents(id, out var parents))
                     {
-                        continue;
+                        var nonPushedParent = false;
+                        foreach (var parent in parents)
+                        {
+                            //our parent has been reloaded and has not been added to the pushedSet yet
+                            if (prototypes[type].Contains(parent) && !pushedSet.Contains(parent))
+                            {
+                                //we re-queue ourselves at the end of the queue
+                                processQueue.Enqueue(id);
+                                nonPushedParent = true;
+                                break;
+                            }
+                        }
+                        if(nonPushedParent) continue;
+
+                        foreach (var parent in parents)
+                        {
+                            PushInheritance(type, id, parent);
+                        }
                     }
 
-                    var set = new HashSet<string>();
-                    set.Add(id);
-                    PushInheritance(type, id, _inheritanceTrees[type].GetParent(id), set);
-                    foreach (var changedId in set)
-                    {
-                        TryReadPrototype(type, changedId, _prototypeResults[type][changedId]);
-                    }
-                    pushed[type].UnionWith(set);
+                    TryReadPrototype(type, id, _prototypeResults[type][id]);
+
+                    pushedSet.Add(id);
                 }
             }
 
@@ -397,10 +487,31 @@ namespace Robust.Shared.Prototypes
             types.Sort(SortPrototypesByPriority);
             foreach (var type in types)
             {
-                if(_inheritanceTrees.TryGetValue(type, out var tree)){
-                    foreach (var baseNode in tree.BaseNodes)
+                if(_inheritanceTrees.TryGetValue(type, out var tree))
+                {
+                    var processed = new HashSet<string>();
+                    var workList = new Queue<string>(tree.RootNodes);
+
+                    while (workList.TryDequeue(out var id))
                     {
-                        PushInheritance(type, baseNode);
+                        processed.Add(id);
+                        if (tree.TryGetParents(id, out var parents))
+                        {
+                            foreach (var parent in parents)
+                            {
+                                PushInheritance(type, id, parent);
+                            }
+                        }
+
+                        if (tree.TryGetChildren(id, out var children))
+                        {
+                            foreach (var child in children)
+                            {
+                                var childParents = tree.GetParents(child)!;
+                                if(childParents.All(p => processed.Contains(p)))
+                                    workList.Enqueue(child);
+                            }
+                        }
                     }
                 }
 
@@ -425,27 +536,10 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private void PushInheritance(Type type, string id, string? parent = null, HashSet<string>? changed = null)
-        {
-            if (parent != null)
-            {
-                PushInheritanceWithoutRecursion(type, id, parent, changed);
-            }
-
-            if(!_inheritanceTrees[type].HasId(id)) return;
-
-            foreach (var child in _inheritanceTrees[type].Children(id))
-            {
-                PushInheritance(type, child, id, changed);
-            }
-        }
-
-        private void PushInheritanceWithoutRecursion(Type type, string id, string parent,
-            HashSet<string>? changed = null)
+        private void PushInheritance(Type type, string id, string parent)
         {
             _prototypeResults[type][id] = _serializationManager.PushCompositionWithGenericNode(type,
                 new[] { _prototypeResults[type][parent] }, _prototypeResults[type][id]);
-            changed?.Add(id);
         }
 
         /// <inheritdoc />
@@ -624,12 +718,13 @@ namespace Robust.Shared.Prototypes
 
                     if (_inheritanceTrees.TryGetValue(type, out var tree))
                     {
-                        tree.RemoveId(id);
+                        tree.Remove(id, true);
                     }
 
                     if (_prototypes.TryGetValue(type, out var prototypeIds))
                     {
                         prototypeIds.Remove(id);
+                        _prototypeResults[type].Remove(id);
                     }
                 }
             }
@@ -677,8 +772,15 @@ namespace Robust.Shared.Prototypes
                 _prototypeResults[prototypeType][idNode.Value] = datanode;
                 if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    datanode.TryGet<ValueDataNode>(ParentDataFieldAttribute.Name, out var parentNode);
-                    _inheritanceTrees[prototypeType].AddId(idNode.Value, parentNode?.Value, true);
+                    if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+                    {
+                        var parents = _serializationManager.Read<string[]>(parentNode);
+                        _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
+                    }
+                    else
+                    {
+                        _inheritanceTrees[prototypeType].Add(idNode.Value);
+                    }
                 }
 
                 if (changed == null) continue;
@@ -872,7 +974,7 @@ namespace Robust.Shared.Prototypes
                 _prototypes[type] = new Dictionary<string, IPrototype>();
                 _prototypeResults[type] = new Dictionary<string, MappingDataNode>();
                 if (typeof(IInheritingPrototype).IsAssignableFrom(type))
-                    _inheritanceTrees[type] = new PrototypeInheritanceTree();
+                    _inheritanceTrees[type] = new MultiRootInheritanceGraph<string>();
             }
         }
 

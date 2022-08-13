@@ -3,7 +3,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -11,10 +10,8 @@ using Robust.Shared.Players;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public sealed class AudioSystem : SharedAudioSystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
         private uint _streamIndex;
 
         private sealed class AudioSourceServer : IPlayingAudioStream
@@ -33,12 +30,6 @@ namespace Robust.Server.GameObjects
             {
                 _audioSystem.InternalStop(_id, _sessions);
             }
-        }
-
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
         }
 
         private void InternalStop(uint id, IEnumerable<ICommonSession>? sessions = null)
@@ -65,10 +56,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public int OcclusionCollisionMask { get; set; }
-
-        /// <inheritdoc />
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -83,7 +71,7 @@ namespace Robust.Server.GameObjects
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
             AudioParams? audioParams = null)
         {
             if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
@@ -109,12 +97,12 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
             AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
 
-            var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(_entityManager));
+            var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager));
 
             var msg = new PlayAudioPositionalMessage
             {
@@ -128,6 +116,13 @@ namespace Robust.Server.GameObjects
             RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        }
+
+        /// <inheritdoc />
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        {
+            var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
+            return Play(sound, filter, source, audioParams);
         }
     }
 }

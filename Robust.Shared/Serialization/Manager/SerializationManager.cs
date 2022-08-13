@@ -410,22 +410,18 @@ namespace Robust.Shared.Serialization.Manager
 
         private void CopyToTarget(object source, ref object target, ISerializationContext? context = null, bool skipHook = false)
         {
-            var sourceType = source.GetType();
-            var targetType = target.GetType();
+            if (!TypeHelpers.TrySelectCommonType(source.GetType(), target.GetType(), out var commonType))
+            {
+                throw new InvalidOperationException($"Could not find common type in Copy for types {source.GetType()} and {target.GetType()}!");
+            }
 
-            if (sourceType.IsValueType && targetType.IsValueType)
+            if (ShouldReturnSource(commonType))
             {
                 target = source;
                 return;
             }
 
-            if (sourceType.IsValueType != targetType.IsValueType)
-            {
-                throw new InvalidOperationException(
-                    $"Source and target do not match. Source ({sourceType}) is value type? {sourceType.IsValueType}. Target ({targetType}) is value type? {targetType.IsValueType}");
-            }
-
-            if (sourceType.IsArray && targetType.IsArray)
+            if (commonType.IsArray)
             {
                 var sourceArray = (Array) source;
                 var targetArray = (Array) target;
@@ -449,32 +445,9 @@ namespace Robust.Shared.Serialization.Manager
                 return;
             }
 
-            if (sourceType.IsArray != targetType.IsArray)
-            {
-                throw new InvalidOperationException(
-                    $"Source and target do not match. Source ({sourceType}) is array type? {sourceType.IsArray}. Target ({targetType}) is array type? {targetType.IsArray}");
-            }
-
-            var commonType = TypeHelpers.SelectCommonType(sourceType, targetType);
-            if (commonType == null)
-            {
-                throw new InvalidOperationException("Could not find common type in Copy!");
-            }
-
-            if (_copyByRefRegistrations.Contains(commonType) || commonType.IsEnum)
-            {
-                target = source;
-                return;
-            }
-
             if (TryCopyRaw(commonType, source, ref target, skipHook, context))
             {
                 return;
-            }
-
-            if (target is IPopulateDefaultValues populateDefaultValues)
-            {
-                populateDefaultValues.PopulateDefaultValues();
             }
 
             if (!TryGetDefinition(commonType, out var dataDef))
@@ -542,10 +515,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private object CreateCopyInternal(Type type, object source, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (type.IsPrimitive ||
-                type.IsEnum ||
-                source is string ||
-                _copyByRefRegistrations.Contains(type))
+            if (ShouldReturnSource(type))
             {
                 return source;
             }
@@ -564,6 +534,15 @@ namespace Robust.Shared.Serialization.Manager
         public T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false)
         {
             return (T)Copy((object?)source, context, skipHook)!;
+        }
+
+        private bool ShouldReturnSource(Type type)
+        {
+            return type.IsPrimitive ||
+                   type.IsEnum ||
+                   type == typeof(string) ||
+                   _copyByRefRegistrations.Contains(type) ||
+                   type.IsValueType;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

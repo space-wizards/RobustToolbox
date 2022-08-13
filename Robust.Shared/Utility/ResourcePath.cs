@@ -1,4 +1,4 @@
-﻿// Because System.IO.Path sucks.
+// Because System.IO.Path sucks.
 
 using System;
 using System.Collections.Generic;
@@ -50,9 +50,13 @@ namespace Robust.Shared.Utility
         public string Separator { get; }
 
         /// <summary>
-        /// This exists for serv3.
+        /// This exists for serv3. Equivalent to ResourcePath("");
         /// </summary>
-        private ResourcePath() : this("") {}
+        public ResourcePath()
+        {
+            Separator = "/";
+            Segments = new string[] { "." };
+        }
 
         /// <summary>
         ///     Create a new path from a string, splitting it by the separator provided.

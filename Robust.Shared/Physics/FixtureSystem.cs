@@ -293,6 +293,7 @@ namespace Robust.Shared.Physics
                 return;
             }
 
+            component.SerializedFixtures.Clear();
             var toAddFixtures = new ValueList<Fixture>();
             var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;

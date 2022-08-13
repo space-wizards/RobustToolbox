@@ -215,7 +215,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType != null) // implies that type was nullable
             {
-                if (node is ValueDataNode dataNode && dataNode.Value == "null")
+                if (IsNull(node))
                     return new ValidatedValueNode(node);
             }
             else

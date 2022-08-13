@@ -48,7 +48,7 @@ namespace Robust.Client
 
             var mode = args.Headless ? DisplayMode.Headless : DisplayMode.Clyde;
 
-            InitIoC(mode);
+            InitIoC(mode, IoCManager.Instance!);
 
             var gc = IoCManager.Resolve<GameController>();
             gc.SetCommandLineArgs(args);

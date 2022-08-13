@@ -10,9 +10,9 @@ namespace Robust.Client
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     internal sealed partial class GameController
     {
-        private static void InitIoC(DisplayMode mode)
+        private static void InitIoC(DisplayMode mode, IDependencyCollection deps)
         {
-            ClientIoC.RegisterIoC(mode);
+            ClientIoC.RegisterIoC(mode, deps);
             IoCManager.BuildGraph();
             RegisterReflection();
         }

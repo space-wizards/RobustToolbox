@@ -13,7 +13,7 @@ namespace Robust.Benchmarks.Serialization
         public SerializationBenchmark()
         {
             IoCManager.InitThread();
-            ServerIoC.RegisterIoC();
+            ServerIoC.RegisterIoC(IoCManager.Instance!);
             IoCManager.BuildGraph();
 
             var assemblies = new[]

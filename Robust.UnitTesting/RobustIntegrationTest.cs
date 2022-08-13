@@ -586,7 +586,7 @@ namespace Robust.UnitTesting
             private BaseServer Init()
             {
                 IoCManager.InitThread(DependencyCollection, replaceExisting: true);
-                ServerIoC.RegisterIoC();
+                ServerIoC.RegisterIoC(DependencyCollection);
                 IoCManager.Register<INetManager, IntegrationNetManager>(true);
                 IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                 IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
@@ -732,7 +732,7 @@ namespace Robust.UnitTesting
             private GameController Init()
             {
                 IoCManager.InitThread(DependencyCollection, replaceExisting: true);
-                ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
+                ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, DependencyCollection);
                 IoCManager.Register<INetManager, IntegrationNetManager>(true);
                 IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                 IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);

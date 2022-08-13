@@ -16,11 +16,11 @@ namespace Robust.UnitTesting
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
+                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, IoCManager.Instance!);
                     break;
 
                 case UnitTestProject.Server:
-                    ServerIoC.RegisterIoC();
+                    ServerIoC.RegisterIoC(IoCManager.Instance!);
                     break;
 
                 default:

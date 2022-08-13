@@ -50,7 +50,7 @@ namespace Robust.Server
         {
             Thread.CurrentThread.Name = "Main Thread";
             IoCManager.InitThread();
-            ServerIoC.RegisterIoC();
+            ServerIoC.RegisterIoC(IoCManager.Instance!);
             IoCManager.BuildGraph();
             SetupLogging();
             InitReflectionManager();

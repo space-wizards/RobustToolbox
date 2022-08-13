@@ -44,7 +44,8 @@ namespace Robust.Shared.IoC
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
         void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
-            where TImplementation : class, TInterface;
+            where TImplementation : class, TInterface
+            where TInterface : class;
 
         /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>
@@ -62,7 +63,8 @@ namespace Robust.Shared.IoC
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
         void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
-            where TImplementation : class, TInterface;
+            where TImplementation : class, TInterface
+            where TInterface : class;
 
 
         /// <summary>
@@ -107,7 +109,8 @@ namespace Robust.Shared.IoC
         ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
         ///     that don't exist yet because you have not called BuildGraph, set this to true.
         /// </param>
-        void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false);
+        void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+            where TInterface : class;
 
         /// <summary>
         ///     Registers an interface to an existing instance of an implementation,

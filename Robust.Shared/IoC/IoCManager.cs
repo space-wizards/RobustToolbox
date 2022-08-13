@@ -101,6 +101,7 @@ namespace Robust.Shared.IoC
         /// </exception>
         public static void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
@@ -141,6 +142,7 @@ namespace Robust.Shared.IoC
         /// </exception>
         public static void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
@@ -166,6 +168,7 @@ namespace Robust.Shared.IoC
         ///     that don't exist yet because you have not called BuildGraph, set this to true.
         /// </param>
         public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 

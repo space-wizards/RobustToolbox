@@ -79,6 +79,7 @@ namespace Robust.Shared.IoC
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
         {
             Register<TInterface, TImplementation>(() =>
             {
@@ -118,6 +119,8 @@ namespace Robust.Shared.IoC
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
+
         {
             var interfaceType = typeof(TInterface);
             CheckRegisterInterface(interfaceType, typeof(TImplementation), overwrite);
@@ -198,6 +201,7 @@ namespace Robust.Shared.IoC
 
         /// <inheritdoc />
         public void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+            where TInterface : class
         {
             RegisterInstance(typeof(TInterface), implementation, overwrite, deferInject);
         }

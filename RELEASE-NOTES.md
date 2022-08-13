@@ -70,6 +70,7 @@ Template for new versions:
 * Word-wrapping logic has been split off from `RichTextEntry`, into a new helper struct `WordWrap`.
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
+* Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
 
 ## 0.62.1.0
 

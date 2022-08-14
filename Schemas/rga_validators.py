@@ -4,6 +4,7 @@ import validators
 class License(Validator):
     tag = "license"
     licenses = [
+        "CC-BY-3.0",
         "CC-BY-SA-3.0",
         "CC-BY-SA-4.0",
         "CC-BY-NC-3.0",
@@ -11,7 +12,8 @@ class License(Validator):
         "CC-BY-NC-SA-3.0",
         "CC-BY-NC-SA-4.0",
         "CC0-1.0",
-        "MIT"
+        "MIT",
+        "Custom"
         ]
 
     def _is_valid(self, value):

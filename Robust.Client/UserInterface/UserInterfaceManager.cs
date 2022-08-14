@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
-            InitializeControllers();
+            _setupControllers();
             _initializeCommon();
 
             DebugConsole = new DropDownDebugConsole();
@@ -111,11 +111,11 @@ namespace Robust.Client.UserInterface
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _initThemes();
-
         }
         public void PostInitialize()
         {
             _initializeScreens();
+            _initializeControllers();
         }
         private void _initializeCommon()
         {

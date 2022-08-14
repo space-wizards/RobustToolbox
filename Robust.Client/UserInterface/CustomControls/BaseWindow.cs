@@ -17,8 +17,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private Vector2 DragOffsetTopLeft;
         private Vector2 DragOffsetBottomRight;
 
-        protected bool _firstTimeOpened = true;
-
         public bool Resizable { get; set; } = true;
         public bool IsOpen => Parent != null;
 
@@ -210,7 +208,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             return true;
         }
-
         public void Open()
         {
             if (!Visible)
@@ -228,10 +225,16 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         public void OpenCentered() => OpenCenteredAt((0.5f, 0.5f));
+        public void SetCentered() => RecenterWindow((0.5f, 0.5f));
+
         public void OpenToLeft() => OpenCenteredAt((0, 0.5f));
+        public void SetLeft() => RecenterWindow((0, 0.5f));
         public void OpenCenteredLeft() => OpenCenteredAt((0.25f, 0.5f));
+        public void SetCenteredLeft() => RecenterWindow((0.25f, 0.5f));
         public void OpenToRight() => OpenCenteredAt((1, 0.5f));
+        public void SetRight() => RecenterWindow((1, 0.5f));
         public void OpenCenteredRight() => OpenCenteredAt((0.75f, 0.5f));
+        public void SetCenteredRight() => RecenterWindow((0.75f, 0.5f));
 
         /// <summary>
         ///     Opens a window, attempting to place the center of the window at some relative point on the screen.
@@ -240,17 +243,10 @@ namespace Robust.Client.UserInterface.CustomControls
         /// lower right.</param>
         public void OpenCenteredAt(Vector2 relativePosition)
         {
-            if (!_firstTimeOpened)
-            {
-                Open();
-                return;
-            }
-
             Measure(Vector2.Infinity);
             SetSize = DesiredSize;
             Open();
             RecenterWindow(relativePosition);
-            _firstTimeOpened = false;
         }
 
         /// <summary>
@@ -260,9 +256,13 @@ namespace Robust.Client.UserInterface.CustomControls
         /// lower right.</param>
         public void RecenterWindow(Vector2 relativePosition)
         {
+            bool recenterInactive = false;
             if (Parent == null)
-                return;
-
+            {//this will allow us to recenter windows that aren't active
+                Visible = false;
+                    UserInterfaceManager.WindowRoot.AddChild(this);
+                    recenterInactive = true;
+            }
             // Where we want the upper left corner of the window to be
             var corner = Parent!.Size * Vector2.Clamp(relativePosition, Vector2.Zero, Vector2.One) - DesiredSize / 2;
 
@@ -271,6 +271,12 @@ namespace Robust.Client.UserInterface.CustomControls
             // is bigger than the parent, this will currently prioritize showing the upper left corner.
             var pos = Vector2.Clamp(corner, Vector2.Zero, Parent.Size - DesiredSize);
             LayoutContainer.SetPosition(this, pos);
+
+
+            if (!recenterInactive) //also needed to recenter windows that are hidden
+                return;
+            Visible = true;
+            UserInterfaceManager.WindowRoot.RemoveChild(this);
         }
 
         protected virtual void Opened()

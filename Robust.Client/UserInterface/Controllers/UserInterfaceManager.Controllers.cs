@@ -174,7 +174,7 @@ internal partial class UserInterfaceManager
         return (T) GetUIController(typeof(T));
     }
 
-    private void InitializeControllers()
+    private void _setupControllers()
     {
         foreach (var uiControllerType in _reflectionManager.GetAllChildren<UIController>())
         {
@@ -253,7 +253,10 @@ internal partial class UserInterfaceManager
         _systemManager.SystemUnloaded += OnSystemUnloaded;
 
         _stateManager.OnStateChanged += OnStateChanged;
+    }
 
+    private void _initializeControllers()
+    {
         foreach (var controller in _uiControllers.Values)
         {
             controller.Initialize();

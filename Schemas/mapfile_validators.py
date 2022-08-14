@@ -5,6 +5,4 @@ class Component(Validator):
     tag = "comp"
 
     def _is_valid(self, value):
-        if value["type"]:
-            return True
-        return False
+        return 'type' in value

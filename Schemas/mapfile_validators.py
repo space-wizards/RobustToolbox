@@ -5,7 +5,4 @@ class Component(Validator):
     tag = "comp"
 
     def _is_valid(self, value):
-        data = yaml.safe_load(value)
-        if data["type"]:
-            return True
-        return False
+        return 'type' in value

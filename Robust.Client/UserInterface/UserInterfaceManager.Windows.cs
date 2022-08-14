@@ -75,7 +75,9 @@ internal partial class UserInterfaceManager
 
     public T CreateWindow<T>() where T : BaseWindow, new()
     {
-        var newWindow = _typeFactory.CreateInstance<T>();
+        //If we sandbox this we break creating engine windows. The argument is type bounded anyway so it only accepts
+        //public classes that inherit from BaseWindow.
+        var newWindow = _typeFactory.CreateInstanceUnchecked<T>();
         _windowsByType.GetOrNew(typeof(T)).Enqueue(newWindow);
         return newWindow;
     }

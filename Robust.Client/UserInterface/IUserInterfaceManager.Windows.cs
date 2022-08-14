@@ -13,6 +13,8 @@ public partial interface IUserInterfaceManager
 
     public bool RemoveFirstWindow<T>() where T : BaseWindow, new();
     public T CreateWindow<T>() where T : BaseWindow, new();
+
+    public void ClearWindows();
     public T GetFirstWindow<T>() where T : BaseWindow, new();
     public bool TryGetFirstWindow<T>(out T? window) where T : BaseWindow, new();
     public bool TryGetFirstWindow(Type type, out BaseWindow? window);

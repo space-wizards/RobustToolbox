@@ -13,12 +13,12 @@ grids:
 entities: list(include('entity'), min=1)
 ---
 chunk:
-  - ind: str() #todo regex
-    tiles: str()
+  ind: str() #todo regex
+  tiles: str()
 entity:
-  - uid: int()
-    type: str(required=False)
-    components: list(comp())
+  uid: int()
+  type: str(required=False)
+  components: list(comp())
 
 # Example
 # meta:

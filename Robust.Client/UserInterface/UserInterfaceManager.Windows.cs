@@ -105,13 +105,7 @@ internal partial class UserInterfaceManager
         window = winQueue.Peek();
         return true;
     }
-
-    private void OnStateUpdated(StateChangedEventArgs args)
-    {
-        CleanupWindowData();
-    }
-
-    private void CleanupWindowData()
+    public void ClearWindows()
     {
         foreach (var data in _windowsByType)
         {

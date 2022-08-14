@@ -110,7 +110,6 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
-            _stateManager.OnStateChanged += OnStateUpdated;
             _initThemes();
 
         }
@@ -340,7 +339,7 @@ namespace Robust.Client.UserInterface
 
         ~UserInterfaceManager()
         {
-            CleanupWindowData();
+            ClearWindows();
         }
     }
 }

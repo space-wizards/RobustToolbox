@@ -1,8 +1,11 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 
 namespace Robust.Shared.Map
 {
@@ -11,10 +14,10 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return;
 
-            if(!MapExists(mapId))
+            if (!MapExists(mapId))
                 throw new ArgumentException("That map does not exist.");
 
             if (paused)
@@ -51,7 +54,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void DoMapInitialize(MapId mapId)
         {
-            if(!MapExists(mapId))
+            if (!MapExists(mapId))
                 throw new ArgumentException("That map does not exist.");
 
             if (IsMapInitialized(mapId))
@@ -76,7 +79,7 @@ namespace Robust.Shared.Map
         {
             // RunMapInit can modify the TransformTree
             // ToArray caches deleted euids, we check here if they still exist.
-            if(!metaQuery.TryGetComponent(entity, out var meta))
+            if (!metaQuery.TryGetComponent(entity, out var meta))
                 return;
 
             EntityManager.RunMapInit(entity, meta);
@@ -96,7 +99,7 @@ namespace Robust.Shared.Map
 
         private void SetMapPause(MapId mapId)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
@@ -106,7 +109,7 @@ namespace Robust.Shared.Map
 
         private bool CheckMapPause(MapId mapId)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return false;
 
             var mapEuid = GetMapEntityId(mapId);
@@ -120,7 +123,7 @@ namespace Robust.Shared.Map
 
         private void ClearMapPause(MapId mapId)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
@@ -130,7 +133,7 @@ namespace Robust.Shared.Map
 
         private void SetMapPreInit(MapId mapId)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
@@ -140,7 +143,7 @@ namespace Robust.Shared.Map
 
         private bool CheckMapPreInit(MapId mapId)
         {
-            if(mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return false;
 
             var mapEuid = GetMapEntityId(mapId);
@@ -193,71 +196,83 @@ namespace Robust.Shared.Map
         {
             return !CheckMapPreInit(mapId);
         }
+    }
+}
 
-        /// <summary>
-        /// Initializes the map pausing system.
-        /// </summary>
-        private void InitializeMapPausing()
+internal sealed class PauseMapCommand : IConsoleCommand
+{
+    [Dependency] private readonly IMapManager _map = default!;
+
+    public string Command => "pausemap";
+    public string Description => "Pauses a map, pausing all simulation processing on it.";
+    public string Help => "pausemap <map ID>";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        if (args.Length != 1)
         {
-            _conhost.RegisterCommand("pausemap",
-                "Pauses a map, pausing all simulation processing on it.",
-                "pausemap <map ID>",
-                (shell, _, args) =>
-                {
-                    if (args.Length != 1)
-                    {
-                        shell.WriteError("Need to supply a valid MapId");
-                        return;
-                    }
-
-                    var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
-
-                    if (!MapExists(mapId))
-                    {
-                        shell.WriteError("That map does not exist.");
-                        return;
-                    }
-
-                    SetMapPaused(mapId, true);
-                });
-
-            _conhost.RegisterCommand("querymappaused",
-                "Check whether a map is paused or not.",
-                "querymappaused <map ID>",
-                (shell, _, args) =>
-                {
-                    var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
-
-                    if (!MapExists(mapId))
-                    {
-                        shell.WriteError("That map does not exist.");
-                        return;
-                    }
-
-                    shell.WriteLine(IsMapPaused(mapId).ToString());
-                });
-
-            _conhost.RegisterCommand("unpausemap",
-                "unpauses a map, resuming all simulation processing on it.",
-                "Usage: unpausemap <map ID>",
-                (shell, _, args) =>
-                {
-                    if (args.Length != 1)
-                    {
-                        shell.WriteLine("Need to supply a valid MapId");
-                        return;
-                    }
-
-                    var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
-
-                    if (!MapExists(mapId))
-                    {
-                        shell.WriteLine("That map does not exist.");
-                        return;
-                    }
-
-                    SetMapPaused(mapId, false);
-                });
+            shell.WriteError("Need to supply a valid MapId");
+            return;
         }
+
+        var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
+
+        if (!_map.MapExists(mapId))
+        {
+            shell.WriteError("That map does not exist.");
+            return;
+        }
+
+        _map.SetMapPaused(mapId, true);
+    }
+}
+
+internal sealed class QueryMapPausedCommand : IConsoleCommand
+{
+    [Dependency] private readonly IMapManager _map = default!;
+
+    public string Command => "querymappaused";
+    public string Description => "Check whether a map is paused or not.";
+    public string Help => "querymappaused <map ID>";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
+
+        if (!_map.MapExists(mapId))
+        {
+            shell.WriteError("That map does not exist.");
+            return;
+        }
+
+        shell.WriteLine(_map.IsMapPaused(mapId).ToString());
+    }
+}
+
+internal sealed class UnPauseMapCommand : IConsoleCommand
+{
+    [Dependency] private readonly IMapManager _map = default!;
+
+    public string Command => "unpausemap";
+    public string Description => "unpauses a map, resuming all simulation processing on it.";
+    public string Help => "Usage: unpausemap <map ID>";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        if (args.Length != 1)
+        {
+            shell.WriteLine("Need to supply a valid MapId");
+            return;
+        }
+
+        var mapId = new MapId(int.Parse(args[0], CultureInfo.InvariantCulture));
+
+        if (!_map.MapExists(mapId))
+        {
+            shell.WriteLine("That map does not exist.");
+            return;
+        }
+
+        _map.SetMapPaused(mapId, false);
     }
 }

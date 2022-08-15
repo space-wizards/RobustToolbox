@@ -14,8 +14,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     [field: Dependency] public IGameTiming GameTiming { get; } = default!;
     [field: Dependency] public IEntityManager EntityManager { get; } = default!;
 
-    [Dependency] private readonly IConsoleHost _conhost = default!;
-
     /// <inheritdoc />
     public void Initialize()
     {
@@ -24,7 +22,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         DebugTools.Assert(!_dbgGuardRunning);
         _dbgGuardInit = true;
 #endif
-        InitializeMapPausing();
     }
 
     /// <inheritdoc />

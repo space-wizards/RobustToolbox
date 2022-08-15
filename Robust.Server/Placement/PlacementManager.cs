@@ -133,12 +133,15 @@ namespace Robust.Server.Placement
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
-            var closest = _mapManager.IsGrid(coordinates.EntityId);
+            IMapGrid? grid;
 
-            if (closest) // stick to existing grid
+            _mapManager.TryGetGrid(coordinates.EntityId, out grid);
+
+            if (grid == null)
+                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out grid);
+
+            if (grid != null)  // stick to existing grid
             {
-                if (!_mapManager.TryGetGrid(coordinates.EntityId, out var grid)) return;
-
                 grid.SetTile(coordinates, new Tile(tileType));
             }
             else if (tileType != 0) // create a new grid

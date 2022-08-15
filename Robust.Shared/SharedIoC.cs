@@ -22,7 +22,7 @@ namespace Robust.Shared
 {
     internal static class SharedIoC
     {
-        public static void RegisterIoC(IDependencyCollection deps)
+        public static void RegisterIoC(IDependencyCollection deps, bool entities=true)
         {
             deps.Register<ISerializationManager, SerializationManager>();
             deps.Register<IConfigurationManager, NetConfigurationManager>();
@@ -30,7 +30,6 @@ namespace Robust.Shared
             deps.Register<IConfigurationManagerInternal, NetConfigurationManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            deps.Register<IEntitySystemManager, EntitySystemManager>();
             deps.Register<ILocalizationManager, LocalizationManager>();
             deps.Register<ILocalizationManagerInternal, LocalizationManager>();
             deps.Register<ILogManager, LogManager>();
@@ -51,6 +50,9 @@ namespace Robust.Shared
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             deps.Register<IParallelManager, ParallelManager>();
             deps.Register<IParallelManagerInternal, ParallelManager>();
+
+            if (entities)
+                deps.Register<IEntitySystemManager, EntitySystemManager>();
         }
     }
 }

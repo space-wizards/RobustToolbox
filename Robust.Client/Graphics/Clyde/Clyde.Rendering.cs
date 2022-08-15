@@ -382,6 +382,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        // NOTE: sRGB IS IN LINEAR IF FRAMEBUFFER_SRGB IS ACTIVE.
         private void ClearFramebuffer(Color color, int stencil = 0, ClearBufferMask mask = ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit)
         {
             GL.ClearColor(color.ConvertOpenTK());
@@ -390,6 +391,14 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             GL.Clear(mask);
             CheckGlError();
+        }
+
+        private Color ConvertClearFromSrgb(Color color)
+        {
+            if (!_hasGLSrgb)
+                return color;
+
+            return Color.FromSrgb(color);
         }
 
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)

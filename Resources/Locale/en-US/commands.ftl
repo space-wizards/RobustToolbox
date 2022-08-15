@@ -30,6 +30,7 @@ cmd-cvar-not-registered = CVar '{ $cvar }' is not registered. Use 'cvar ?' to ge
 cmd-cvar-parse-error = Input value is in incorrect format for type { $type }
 cmd-cvar-compl-list = List available CVars
 cmd-cvar-arg-name = <name | ?>
+cmd-cvar-value-hidden = <value hidden>
 
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter

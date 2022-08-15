@@ -94,14 +94,16 @@ namespace Robust.Shared.Localization
 
                         var allErrors = new List<FluentError>();
                         if (desc == null
-                            && bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
+                            && !bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
                         {
+                            desc = null;
                             allErrors.AddRange(err1);
                         }
 
                         if (suffix == null
-                            && bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
+                            && !bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
                         {
+                            suffix = null;
                             allErrors.AddRange(err);
                         }
 

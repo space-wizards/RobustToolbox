@@ -223,23 +223,16 @@ namespace Robust.Shared.Containers
         }
 
         [DataDefinition]
-        private struct ContainerPrototypeData : IPopulateDefaultValues
+        private struct ContainerPrototypeData
         {
-            [DataField("entities")]
-            public List<EntityUid> Entities;
+            [DataField("entities")] public List<EntityUid> Entities = new ();
 
-            [DataField("type")]
-            public string? Type;
+            [DataField("type")] public string? Type;
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
                 Entities = entities;
                 Type = type;
-            }
-
-            public void PopulateDefaultValues()
-            {
-                Entities = new List<EntityUid>();
             }
         }
 

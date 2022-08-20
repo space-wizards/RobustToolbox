@@ -226,7 +226,7 @@ namespace Robust.Shared.GameObjects
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
 

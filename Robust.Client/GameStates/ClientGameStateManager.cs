@@ -281,8 +281,7 @@ namespace Robust.Client.GameStates
                     }
                     catch (Exception e)
                     {
-                        // Something has gone wrong. Probably a missing meta-data component.
-                        Logger.Error("Something has gone wrong while applying a game state. Perhaps a full server state will fix it.");
+                        // Something has gone wrong. Probably a missing meta-data component. Perhaps a full server state will fix it.
                         RequestFullState();
                         throw;
                     }
@@ -872,12 +871,12 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    var wrapper = new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e);
 #if EXCEPTION_TOLERANCE
-                _runtimeLog.LogException(wrapper, "Component state apply");
+                _runtimeLog.LogException(new ComponentStateApplyException(
+                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e);, "Component state apply");
 #else
-                    throw wrapper;
+                    Logger.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                    throw;
 #endif
                 }
             }

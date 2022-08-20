@@ -25,11 +25,20 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
+#if DEBUG
+            SubscribeLocalEvent<FixturesComponent, ComponentInit>(OnInit);
+        }
+
+        private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
+        {
+            DebugTools.Assert(HasComp<PhysicsComponent>(uid), $"Initialized fixture component on an entity without physics: {ToPrettyString(uid)}");
+#endif
         }
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
@@ -288,8 +297,8 @@ namespace Robust.Shared.Physics
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
-                DebugTools.Assert(false);
-                Logger.ErrorS("physics", $"Tried to apply fixture state for {uid} which has name {nameof(PhysicsComponent)}");
+                //DebugTools.Assert(false, $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
+                Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
 

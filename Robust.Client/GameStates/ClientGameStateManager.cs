@@ -601,7 +601,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            // Detatch entities to null space
+            // Detach entities to null space
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys);
 
@@ -844,7 +844,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var compState in nextState.ComponentChanges.Span)
                 {
-                    if (compState.LastModifiedTick != toTick)
+                    if (compState.LastModifiedTick != toTick + 1)
                         continue;
 
                     if (!_entityManager.TryGetComponent(uid, compState.NetID, out var comp))

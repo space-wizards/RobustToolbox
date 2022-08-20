@@ -873,7 +873,7 @@ namespace Robust.Client.GameStates
                 {
 #if EXCEPTION_TOLERANCE
                 _runtimeLog.LogException(new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e);, "Component state apply");
+                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e), "Component state apply");
 #else
                     Logger.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
                     throw;

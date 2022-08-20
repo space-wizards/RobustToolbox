@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -17,8 +17,8 @@ namespace Robust.Client.GameStates
         ///     Minimum number of states needed in the buffer for everything to work.
         /// </summary>
         /// <remarks>
-        ///     With interpolation enabled minimum is 3 states in buffer for the system to work (last, cur, next).
-        ///     Without interpolation enabled minimum is 2 states in buffer for the system to work (last, cur).
+        ///     With interpolation enabled minimum is 2 states in buffer for the system to work (cur, next).
+        ///     Without interpolation enabled minimum is 2 states in buffer for the system to work (cur).
         /// </remarks>
         int MinBufferSize { get; }
 
@@ -27,12 +27,6 @@ namespace Robust.Client.GameStates
         ///     be greater or equal to <see cref="MinBufferSize"/>.
         /// </summary>
         int TargetBufferSize { get; }
-
-        /// <summary>
-        ///     Number of game states currently in the state buffer.
-        /// </summary>
-        /// <seealso cref="CalculateBufferSize"/>
-        int CurrentBufferSize { get; }
 
         /// <summary>
         ///     Is frame interpolation turned on?
@@ -46,29 +40,22 @@ namespace Robust.Client.GameStates
         ///     For Lan, set this to 0. For Excellent net conditions, set this to 1. For normal network conditions,
         ///     set this to 2. For worse conditions, set it higher.
         /// </remarks>
-        int InterpRatio { get; set; }
-
-        /// <summary>
-        ///     If the client clock runs ahead of the server and the buffer gets emptied, should fake extrapolated states be generated?
-        /// </summary>
-        bool Extrapolation { get; set; }
+        int BufferSize { get; set; }
 
         /// <summary>
         ///     Is debug logging enabled? This will dump debug info about every state to the log.
         /// </summary>
         bool Logging { get; set; }
 
-        /// <summary>
-        ///     The last REAL server tick that has been processed.
-        ///     i.e. not incremented on extrapolation.
-        /// </summary>
-        GameTick LastProcessedRealState { get; set; }
 
         /// <summary>
         ///     Adds a new state into the processor. These are usually from networking or replays.
         /// </summary>
         /// <param name="state">Newly received state.</param>
-        void AddNewState(GameState state);
+        /// <returns>Returns true if the state was accepted and should be acknowledged</returns>
+        bool AddNewState(GameState state);
+        //> usually from replays
+        //replays when
 
         /// <summary>
         ///     Calculates the current and next state to apply for a given game tick.
@@ -77,7 +64,7 @@ namespace Robust.Client.GameStates
         /// <param name="curState">Current state for the given tick. This can be null.</param>
         /// <param name="nextState">Current state for tick + 1. This can be null.</param>
         /// <returns>Was the function able to correctly calculate the states for the given tick?</returns>
-        bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState);
+        bool TryGetServerState([NotNullWhen(true)] out GameState? curState, out GameState? nextState);
 
         /// <summary>
         ///     Resets the processor back to its initial state.
@@ -96,21 +83,22 @@ namespace Robust.Client.GameStates
         ///     The data to merge.
         ///     It's a dictionary of entity ID -> (component net ID -> ComponentState)
         /// </param>
-        void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data);
+        void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> data);
 
         /// <summary>
         ///     Get the last state data from the server for an entity.
         /// </summary>
         /// <returns>Dictionary (net ID -> ComponentState)</returns>
-        Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity);
+        Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity);
 
         /// <summary>
-        ///     Calculate the size of the game state buffer from a given tick.
+        ///     Calculate the number of applicable states in the game state buffer from a given tick.
+        ///     This includes only applicable states. If there is a gap, future buffers are not included.
         /// </summary>
         /// <param name="fromTick">The tick to calculate from.</param>
         int CalculateBufferSize(GameTick fromTick);
 
         bool TryGetLastServerStates(EntityUid entity,
-            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary);
+            [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary);
     }
 }

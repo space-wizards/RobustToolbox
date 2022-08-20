@@ -8,8 +8,8 @@ namespace Robust.Client.State
         event Action<StateChangedEventArgs> OnStateChanged;
 
         State CurrentState { get; }
-        void RequestStateChange<T>() where T : State, new();
+        T RequestStateChange<T>() where T : State, new();
         void FrameUpdate(FrameEventArgs e);
-        void RequestStateChange(Type type);
+        State RequestStateChange(Type type);
     }
 }

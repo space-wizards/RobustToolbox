@@ -161,17 +161,23 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     object? copy;
                     if (sourceValue != null &&
                         targetValue != null &&
-                        TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
+                        !TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
                     {
-                        copy = manager.CreateCopy(sourceValue, context);
+                        copy = manager.Copy(sourceValue, context);
                     }
                     else
                     {
-                        copy = field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier
-                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                        if (field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                        {
+                            copy = manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
                                 targetValue,
-                                context)
-                            : manager.Copy(sourceValue, targetValue, context);
+                                context);
+                        }
+                        else
+                        {
+                            copy = targetValue;
+                            manager.Copy(sourceValue, ref copy, context);
+                        }
                     }
 
                     FieldAssigners[i](ref target, copy);

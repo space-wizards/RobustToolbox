@@ -226,7 +226,7 @@ namespace Robust.Shared.GameObjects
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
 
@@ -252,6 +252,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            DebugTools.Assert(component is MetaDataComponent ||
+                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -566,7 +570,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return _entTraitArray[CompIdx.ArrayIndex<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
+            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            return dict!.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -647,7 +653,8 @@ namespace Robust.Shared.GameObjects
         public T GetComponent<T>(EntityUid uid)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            if (dict.TryGetValue(uid, out var comp))
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            if (dict!.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -697,7 +704,8 @@ namespace Robust.Shared.GameObjects
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            if (dict.TryGetValue(uid, out var comp))
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            if (dict!.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -826,7 +834,16 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
         {
-            return new EntityQuery<TComp1>(_entTraitArray[CompIdx.ArrayIndex<TComp1>()]);
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
+            return new EntityQuery<TComp1>(comps!);
+        }
+
+        public EntityQuery<Component> GetEntityQuery(Type type)
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
+            return new EntityQuery<Component>(comps!);
         }
 
         /// <inheritdoc />
@@ -884,10 +901,11 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<T>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(T).Name}");
 
             if (includePaused)
             {
-                foreach (var t1Comp in comps.Values)
+                foreach (var t1Comp in comps!.Values)
                 {
                     if (t1Comp.Deleted) continue;
 
@@ -898,7 +916,7 @@ namespace Robust.Shared.GameObjects
             {
                 var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
-                foreach (var t1Comp in comps.Values)
+                foreach (var t1Comp in comps!.Values)
                 {
                     if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
 

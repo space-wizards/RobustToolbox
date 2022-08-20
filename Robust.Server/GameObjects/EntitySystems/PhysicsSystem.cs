@@ -37,11 +37,10 @@ namespace Robust.Server.GameObjects
             collideComp.BodyType = BodyType.Static;
         }
 
-        protected override void HandleMapCreated(MapChangedEvent eventArgs)
+        protected override void OnMapAdded(ref MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            var mapUid = MapManager.GetMapEntityIdOrThrow(eventArgs.Map);
-            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
+            EnsureComp<PhysicsMapComponent>(MapManager.GetMapEntityId(eventArgs.Map));
         }
 
         /// <inheritdoc />

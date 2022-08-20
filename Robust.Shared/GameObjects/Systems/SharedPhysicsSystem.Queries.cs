@@ -6,6 +6,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Debugging;
 
 namespace Robust.Shared.GameObjects
 {
@@ -14,6 +15,8 @@ namespace Robust.Shared.GameObjects
      */
     public partial class SharedPhysicsSystem
     {
+        [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+
         /// <summary>
         ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
         /// </summary>
@@ -279,23 +282,15 @@ namespace Robust.Shared.GameObjects
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
                     results.Add(result);
-#if DEBUG
-                    EntityManager.EventBus.QueueEvent(EventSource.Local,
-                        new DebugDrawRayMessage(
-                            new DebugRayData(ray, maxLength, result)));
-#endif
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
                     return true;
                 }, gridRay);
             }
 
-#if DEBUG
             if (results.Count == 0)
             {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
+                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
             }
-#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -363,14 +358,8 @@ namespace Robust.Shared.GameObjects
                 }, gridRay);
             }
 
-#if DEBUG
-            if (penetration > 0f)
-            {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
-            }
-#endif
+            // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
 
             return penetration;
         }

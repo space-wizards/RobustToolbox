@@ -388,6 +388,12 @@ namespace Robust.Shared.Configuration
             return _configVars.TryGetValue(name, out var cVar) && cVar.Registered;
         }
 
+        public CVar GetCVarFlags(string name)
+        {
+            using var _ = Lock.ReadGuard();
+            return _configVars[name].Flags;
+        }
+
         /// <inheritdoc />
         public IEnumerable<string> GetRegisteredCVars()
         {

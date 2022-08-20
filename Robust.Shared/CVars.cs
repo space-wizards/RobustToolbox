@@ -475,7 +475,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.
@@ -867,6 +867,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplayWindowingApi =
             CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true and on Windows 11 Build 22000,
+        /// specify <c>DWMWA_USE_IMMERSIVE_DARK_MODE</c> to have dark mode window titles if the system is set to dark mode.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
+            CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -1100,6 +1107,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> HubAdvertise =
             CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Comma-separated list of tags to advertise via the status server (and therefore, to the hub).
+        /// </summary>
+        public static readonly CVarDef<string> HubTags =
+            CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// URL of the master hub server to advertise to.

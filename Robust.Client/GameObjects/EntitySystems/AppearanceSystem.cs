@@ -62,9 +62,9 @@ namespace Robust.Client.GameObjects
         /// <remarks>
         ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
         /// </remarks>
-        private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
+        private Dictionary<Enum, object> CloneAppearanceData(Dictionary<Enum, object> data)
         {
-            Dictionary<object, object> newDict = new(data.Count);
+            Dictionary<Enum, object> newDict = new(data.Count);
 
             foreach (var (key, value) in data)
             {
@@ -143,7 +143,7 @@ namespace Robust.Client.GameObjects
     public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component;
-        public IReadOnlyDictionary<object, object> AppearanceData;
+        public IReadOnlyDictionary<Enum, object> AppearanceData;
         public SpriteComponent? Sprite;
     }
 }

@@ -46,22 +46,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var joint = new DistanceJoint(UidA, UidB, LocalAnchorA, LocalAnchorB)
-            {
-                ID = ID,
-                Breakpoint = Breakpoint,
-                CollideConnected = CollideConnected,
-                Enabled = Enabled,
-                Damping = Damping,
-                Length = Length,
-                MinLength = MinLength,
-                MaxLength = MaxLength,
-                Stiffness = Stiffness,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB
-            };
-
-            return joint;
+            return new DistanceJoint(this);
         }
     }
 
@@ -129,14 +114,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="bodyB">The second body</param>
         /// <param name="anchorA">The first body anchor</param>
         /// <param name="anchorB">The second body anchor</param>
-        public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
-            : base(bodyA, bodyB)
+        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
+            : base(bodyA.Owner, bodyB.Owner)
         {
-            Length = MathF.Max(PhysicsConstants.LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(PhysicsConstants.LinearSlop, (bodyB.GetWorldPoint(anchorB) - bodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
             LocalAnchorA = anchorA;
             LocalAnchorB = anchorB;
+        }
+
+        internal DistanceJoint(DistanceJointState state) : base(state)
+        {
+            _damping = state.Damping;
+            _length = state.Length;
+            _maxLength = state.MaxLength;
+            _minLength = state.MinLength;
+            _stiffness = state.Stiffness;
         }
 
         /// <summary>
@@ -289,18 +283,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return 0.0f;
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = BodyA.LocalCenter;
-            _localCenterB = BodyB.LocalCenter;
-	        _invMassA = BodyA.InvMass;
-	        _invMassB = BodyB.InvMass;
-	        _invIA = BodyA.InvI;
-	        _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
-	        var cA = data.Positions[_indexA];
+            var cA = data.Positions[_indexA];
 	        float aA = data.Angles[_indexA];
 	        var vA = data.LinearVelocities[_indexA];
 	        float wA = data.AngularVelocities[_indexA];

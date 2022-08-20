@@ -88,6 +88,10 @@ namespace Robust.Shared.Configuration
 
         private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
         {
+            var flags = cfg.GetCVarFlags(cVar);
+            if ((flags & CVar.CONFIDENTIAL) != 0)
+                return Loc.GetString("cmd-cvar-value-hidden");
+
             var value = cfg.GetCVar<object>(cVar).ToString() ?? "";
             if (value.Length > 50)
                 value = $"{value[..51]}…";

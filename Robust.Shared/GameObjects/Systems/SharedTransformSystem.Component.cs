@@ -188,7 +188,8 @@ public abstract partial class SharedTransformSystem
                 }
                 else
                 {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                    // We allow entities to be spawned directly into null-space.
+                    value = MapId.Nullspace;
                 }
             }
 

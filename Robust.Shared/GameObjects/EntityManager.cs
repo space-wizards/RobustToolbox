@@ -313,7 +313,7 @@ namespace Robust.Shared.GameObjects
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException(msg);
 #else
-                Logger.Error(msg);
+                Logger.Error($"{msg}. Stack: {Environment.StackTrace}");
 #endif
             }
 

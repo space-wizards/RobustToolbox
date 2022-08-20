@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -104,7 +104,6 @@ namespace Robust.Shared.Localization
                             && !bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
                         {
                             suffix = null;
-                            allErrors.AddRange(err);
                         }
 
                         WriteWarningForErrs(allErrors, locId);

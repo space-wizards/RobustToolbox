@@ -1,3 +1,7 @@
+using System;
+using Robust.Shared.Players;
+using Robust.Shared.Timing;
+
 namespace Robust.Server.GameStates
 {
     /// <summary>
@@ -16,5 +20,9 @@ namespace Robust.Server.GameStates
         void SendGameStateUpdate();
 
         ushort TransformNetId { get; set; }
+
+        Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
+
+        Action<ICommonSession, GameTick, GameTick>? ClientRequestFull { get; set; }
     }
 }

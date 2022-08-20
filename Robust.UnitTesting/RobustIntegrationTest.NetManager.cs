@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -252,10 +251,6 @@ namespace Robust.UnitTesting
             public void ServerSendMessage(NetMessage message, INetChannel recipient)
             {
                 DebugTools.Assert(IsServer);
-
-                // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
-                if (message is MsgState stateMsg)
-                    stateMsg._hasWritten = true;
 
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -16,7 +15,7 @@ namespace Robust.Client.GameStates;
 /// </summary>
 internal sealed class ClientDirtySystem : EntitySystem
 {
-    [Dependency] private readonly IClientGameTiming _timing = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
 
     private readonly Dictionary<GameTick, HashSet<EntityUid>> _dirtyEntities = new();
 
@@ -50,14 +49,14 @@ internal sealed class ClientDirtySystem : EntitySystem
         _dirtyEntities.Clear();
     }
 
-    public IEnumerable<EntityUid> GetDirtyEntities()
+    public IEnumerable<EntityUid> GetDirtyEntities(GameTick currentTick)
     {
         _dirty.Clear();
 
         // This is just to avoid collection being modified during iteration unfortunately.
         foreach (var (tick, dirty) in _dirtyEntities)
         {
-            if (tick < _timing.LastRealTick) continue;
+            if (tick < currentTick) continue;
             foreach (var ent in dirty)
             {
                 _dirty.Add(ent);

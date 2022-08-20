@@ -61,12 +61,6 @@ namespace Robust.Shared.GameObjects
         public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
 
         /// <summary>
-        ///     This is the tick at which the client last applied state data received from the server.
-        /// </summary>
-        [ViewVariables]
-        public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
-
-        /// <summary>
         ///     The in-game name of this entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -191,21 +185,13 @@ namespace Robust.Shared.GameObjects
     public enum MetaDataFlags : byte
     {
         None = 0,
-
         /// <summary>
-        /// Whether the entity has states specific to particular players. This will cause many state-attempt events to
-        /// be raised, and is generally somewhat expensive.
+        /// Whether the entity has states specific to a particular player.
         /// </summary>
         EntitySpecific = 1 << 0,
-
         /// <summary>
         /// Whether the entity is currently inside of a container.
         /// </summary>
         InContainer = 1 << 1,
-
-        /// <summary>
-        /// Used by clients to indicate that an entity has left their visible set.
-        /// </summary>
-        Detached = 1 << 2,
     }
 }

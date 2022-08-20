@@ -139,7 +139,7 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public void TickProcessMessages()
         {
-            if (!_timing.InSimulation || _timing.InPrediction)
+            if(!_timing.InSimulation || _timing.InPrediction)
                 return;
 
             // _netVarsMessages is not in any particular ordering.
@@ -150,7 +150,7 @@ namespace Robust.Shared.Configuration
             {
                 var msg = _netVarsMessages[i];
 
-                if (msg.Tick > _timing.CurTick)
+                if (msg.Tick > _timing.LastRealTick)
                     continue;
 
                 toApply.Add(msg);
@@ -168,8 +168,8 @@ namespace Robust.Shared.Configuration
             {
                 ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
 
-                if(msg.Tick != default && msg.Tick < _timing.CurTick)
-                    _sawmill.Warning($"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.CurTick} ).");
+                if(msg.Tick != default && msg.Tick < _timing.LastRealTick)
+                    _sawmill.Warning($"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
             }
         }
 

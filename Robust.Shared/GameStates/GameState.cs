@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics;
@@ -11,13 +11,6 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public sealed class GameState
     {
-        /// <summary>
-        ///     An extrapolated state that was created artificially by the client.
-        ///     It does not contain any real data from the server.
-        /// </summary>
-        [field:NonSerialized]
-        public bool Extrapolated { get; set; }
-
         /// <summary>
         ///     The serialized size in bytes of this game state.
         /// </summary>

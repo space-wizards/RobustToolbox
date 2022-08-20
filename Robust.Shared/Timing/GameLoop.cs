@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
@@ -177,13 +177,12 @@ namespace Robust.Shared.Timing
                 }
 #endif
                 _timing.InSimulation = true;
-                var tickPeriod = _timing.CalcAdjustedTickPeriod();
+                var tickPeriod = CalcTickPeriod();
 
                 using (_prof.Group("Ticks"))
                 {
                     var countTicksRan = 0;
                     // run the simulation for every accumulated tick
-
                     while (accumulator >= tickPeriod)
                     {
                         accumulator -= tickPeriod;
@@ -193,7 +192,6 @@ namespace Robust.Shared.Timing
                         if (_timing.Paused)
                             continue;
 
-                        _timing.TickRemainder = accumulator;
                         countTicksRan += 1;
 
                         // update the simulation
@@ -239,7 +237,7 @@ namespace Robust.Shared.Timing
                     }
 #endif
                         _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
-                        tickPeriod = _timing.CalcAdjustedTickPeriod();
+                        tickPeriod = CalcTickPeriod();
 
                         if (SingleStep)
                             _timing.Paused = true;
@@ -305,6 +303,14 @@ namespace Robust.Shared.Timing
                 if (SleepMode != SleepMode.None)
                     Thread.Sleep((int)SleepMode);
             }
+        }
+
+        private TimeSpan CalcTickPeriod()
+        {
+            // ranges from -1 to 1, with 0 being 'default'
+            var ratio = MathHelper.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var diff = TimeSpan.FromTicks((long)(_timing.TickPeriod.Ticks * ratio));
+            return _timing.TickPeriod - diff;
         }
     }
 

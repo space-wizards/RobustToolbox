@@ -734,7 +734,7 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(!xform.Anchored);
     }
 
-    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
+    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
     {
         var oldParent = xform._parent;
 
@@ -763,7 +763,7 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
-        oldConcrete ??= xformQuery.GetComponent(oldParent);
+        var oldConcrete = xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
         xform._parent = EntityUid.Invalid;

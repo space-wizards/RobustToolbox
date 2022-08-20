@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Client.Timing;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -14,144 +12,154 @@ namespace Robust.Client.GameStates
     /// <inheritdoc />
     internal sealed class GameStateProcessor : IGameStateProcessor
     {
-        private readonly IClientGameTiming _timing;
+        private readonly IGameTiming _timing;
 
         private readonly List<GameState> _stateBuffer = new();
+        private GameState? _lastFullState;
+        private bool _waitingForFull = true;
+        private int _interpRatio;
+        private GameTick _highestFromSequence;
 
-        private readonly Dictionary<GameTick, List<EntityUid>> _pvsDetachMessages = new();
-
-        public GameState? LastFullState { get; private set; }
-        public bool WaitingForFull => LastFullStateRequested.HasValue;
-        public GameTick? LastFullStateRequested
-        {
-            get => _lastFullStateRequested;
-            set
-            {
-                _lastFullStateRequested = value;
-                LastFullState = null;
-            }
-        }
-
-        public GameTick? _lastFullStateRequested = GameTick.Zero;
-
-        private int _bufferSize;
-
-        /// <summary>
-        /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
-        /// </summary>
-        private readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        private readonly Dictionary<EntityUid, Dictionary<uint, ComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />
-        public int MinBufferSize => Interpolation ? 2 : 1;
+        public int MinBufferSize => Interpolation ? 3 : 2;
 
         /// <inheritdoc />
-        public int TargetBufferSize => MinBufferSize + BufferSize;
+        public int TargetBufferSize => MinBufferSize + InterpRatio;
+
+        /// <inheritdoc />
+        public int CurrentBufferSize => CalculateBufferSize(_timing.CurTick);
 
         /// <inheritdoc />
         public bool Interpolation { get; set; }
 
         /// <inheritdoc />
-        public int BufferSize
+        public int InterpRatio
         {
-            get => _bufferSize;
-            set => _bufferSize = value < 0 ? 0 : value;
+            get => _interpRatio;
+            set => _interpRatio = value < 0 ? 0 : value;
         }
 
         /// <inheritdoc />
+        public bool Extrapolation { get; set; }
+
+        /// <inheritdoc />
         public bool Logging { get; set; }
+
+        public GameTick LastProcessedRealState { get; set; }
 
         /// <summary>
         ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
         /// </summary>
         /// <param name="timing">Timing information of the current state.</param>
-        public GameStateProcessor(IClientGameTiming timing)
+        public GameStateProcessor(IGameTiming timing)
         {
             _timing = timing;
         }
 
         /// <inheritdoc />
-        public bool AddNewState(GameState state)
+        public void AddNewState(GameState state)
         {
-            // Check for old states.
-            if (state.ToSequence <= _timing.LastRealTick)
+            // any state from tick 0 is a full state, and needs to be handled different
+            if (state.FromSequence == GameTick.Zero)
             {
-                if (Logging)
-                    Logger.DebugS("net.state", $"Received Old GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                // this is a newer full state, so discard the older one.
+                if (_lastFullState == null || (_lastFullState != null && _lastFullState.ToSequence < state.ToSequence))
+                {
+                    _lastFullState = state;
 
-                return false;
+                    if (Logging)
+                        Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
+
+                    return;
+                }
             }
 
-            // Check for a duplicate states.
-            foreach (var bufferState in _stateBuffer)
+            // NOTE: DispatchTick will be modifying CurTick, this is NOT thread safe.
+            var lastTick = new GameTick(_timing.CurTick.Value - 1);
+
+            if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
-                if (state.ToSequence != bufferState.ToSequence)
+                if (Logging)
+                    Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+
+                return;
+            }
+
+            // lets check for a duplicate state now.
+            for (var i = 0; i < _stateBuffer.Count; i++)
+            {
+                var iState = _stateBuffer[i];
+
+                if (state.ToSequence != iState.ToSequence)
                     continue;
 
                 if (Logging)
-                    Logger.DebugS("net.state", $"Received Dupe GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
-                return false;
-            }
-            
-            // Are we expecting a full state?
-            if (!WaitingForFull)
-            {
-                // This is a good state that we will be using.
-                _stateBuffer.Add(state);
-                if (Logging)
-                    Logger.DebugS("net.state", $"Received New GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
-                return true;
+                return;
             }
 
-            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value)
-            {
-                LastFullState = state;
-
-                if (Logging)
-                    Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
-
-                return true;
-            }
-
-            if (LastFullState == null || state.ToSequence <= LastFullState.ToSequence)
-                return false;
-
+            // this is a good state that we will be using.
             _stateBuffer.Add(state);
-            return true;
+
+            if (Logging)
+                Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
         }
 
-        /// <summary>
-        ///     Attempts to get the current and next states to apply.
-        /// </summary>
-        /// <remarks>
-        ///     If the processor is not currently waiting for a full state, the states to apply depends on <see
-        ///     cref="IGameTiming.LastProcessedTick"/>.
-        /// </remarks>
-        /// <returns>Returns true if the states should be applied.</returns>
-        public bool TryGetServerState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
+        /// <inheritdoc />
+        public bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
-            var applyNextState = WaitingForFull
-                ? TryGetFullState(out curState, out nextState)
-                : TryGetDeltaState(out curState, out nextState);
-
-            if (curState != null)
+            bool applyNextState;
+            if (_waitingForFull)
             {
-                DebugTools.Assert(curState.FromSequence <= curState.ToSequence,
+                applyNextState = CalculateFullState(out curState, out nextState, TargetBufferSize);
+            }
+            else // this will be how almost all states are calculated
+            {
+                applyNextState = CalculateDeltaState(curTick, out curState, out nextState);
+            }
+
+            if (applyNextState && !curState!.Extrapolated)
+                LastProcessedRealState = curState.ToSequence;
+
+            if (!_waitingForFull)
+            {
+                if (!applyNextState)
+                    _timing.CurTick = LastProcessedRealState;
+
+                // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
+                // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
+                // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
+                _timing.TickTimingAdjustment = (CurrentBufferSize - (float)TargetBufferSize) * 0.10f;
+            }
+            else
+            {
+                _timing.TickTimingAdjustment = 0f;
+            }
+
+            if (applyNextState)
+            {
+                DebugTools.Assert(curState!.Extrapolated || curState.FromSequence <= LastProcessedRealState,
                     "Tried to apply a non-extrapolated state that has too high of a FromSequence!");
 
                 if (Logging)
-                    Logger.DebugS("net.state", $"Applying State:  cTick={_timing.LastProcessedTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                {
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState!.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                }
             }
+
+            var cState = curState!;
+            curState = cState;
 
             return applyNextState;
         }
 
         public void UpdateFullRep(GameState state)
         {
-            // Note: the most recently received server state currently doesn't include pvs-leave messages (detaching
-            // transform to null-space). This is because a client should never predict an entity being moved back from
-            // null-space, so there should be no need to reset it back there.
+            // Logger.Debug($"UPDATE FULL REP: {string.Join(", ", state.EntityStates?.Select(e => e.Uid) ?? Enumerable.Empty<EntityUid>())}");
 
             if (state.FromSequence == GameTick.Zero)
             {
@@ -170,7 +178,7 @@ namespace Robust.Client.GameStates
             {
                 if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
                 {
-                    compData = new Dictionary<ushort, ComponentState>();
+                    compData = new Dictionary<uint, ComponentState>();
                     _lastStateFullRep.Add(entityState.Uid, compData);
                 }
 
@@ -188,138 +196,167 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private bool TryGetFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
+        private bool CalculateFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState, int targetBufferSize)
         {
-            nextState = null;
-            curState = null;
-
-            if (LastFullState == null)
-                return false;
-
-            // remove any old states we find to keep the buffer clean
-            // also look for the next state if we are interpolating.
-            var nextTick = LastFullState.ToSequence + 1;
-            for (var i = 0; i < _stateBuffer.Count; i++)
-            {
-                var state = _stateBuffer[i];
-
-                if (state.ToSequence < LastFullState.ToSequence) 
-                {
-                    _stateBuffer.RemoveSwap(i);
-                    i--;
-                }
-                else if (Interpolation && state.ToSequence == nextTick)
-                {
-                    nextState = state;
-                }
-            }
-
-            // we let the buffer fill up before starting to tick
-            if (_stateBuffer.Count >= TargetBufferSize && (!Interpolation || nextState != null))
+            if (_lastFullState != null)
             {
                 if (Logging)
-                    Logger.DebugS("net", $"Resync CurTick to: {LastFullState.ToSequence}");
+                    Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
 
-                curState = LastFullState;
-                return true;
+                var curTick = _timing.CurTick = _lastFullState.ToSequence;
+
+                if (Interpolation)
+                {
+                    // look for the next state
+                    var lastTick = new GameTick(curTick.Value - 1);
+                    var nextTick = new GameTick(curTick.Value + 1);
+                    nextState = null;
+
+                    for (var i = 0; i < _stateBuffer.Count; i++)
+                    {
+                        var state = _stateBuffer[i];
+                        if (state.ToSequence == nextTick)
+                        {
+                            nextState = state;
+                        }
+                        else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+                        {
+                            _stateBuffer.RemoveSwap(i);
+                            i--;
+                        }
+                    }
+
+                    // we let the buffer fill up before starting to tick
+                    if (nextState != null && _stateBuffer.Count >= targetBufferSize)
+                    {
+                        curState = _lastFullState;
+                        _waitingForFull = false;
+                        return true;
+                    }
+                }
+                else if (_stateBuffer.Count >= targetBufferSize)
+                {
+                    curState = _lastFullState;
+                    nextState = default;
+                    _waitingForFull = false;
+                    return true;
+                }
             }
 
-            // waiting for buffer to fill
             if (Logging)
-                Logger.DebugS("net", $"Have FullState, filling buffer... ({_stateBuffer.Count}/{TargetBufferSize})");
-            
+                Logger.DebugS("net", $"Have FullState, filling buffer... ({_stateBuffer.Count}/{targetBufferSize})");
+
+            // waiting for full state or buffer to fill
+            curState = default;
+            nextState = default;
             return false;
         }
 
-        internal void AddLeavePvsMessage(MsgStateLeavePvs message)
+        private bool CalculateDeltaState(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
-            // Late message may still need to be processed,
-            DebugTools.Assert(message.Entities.Count > 0);
-            _pvsDetachMessages.TryAdd(message.Tick, message.Entities);
-        }
+            var lastTick = new GameTick(curTick.Value - 1);
+            var nextTick = new GameTick(curTick.Value + 1);
 
-        public List<(GameTick Tick, List<EntityUid> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
-        {
-            var result = new List<(GameTick Tick, List<EntityUid> Entities)>();
-            foreach (var (tick, entities) in _pvsDetachMessages)
-            {
-                if (tick > toTick)
-                    continue;
-
-                if (budget >= entities.Count)
-                {
-                    budget -= entities.Count;
-                    _pvsDetachMessages.Remove(tick);
-                    result.Add((tick, entities));
-                    continue;
-                }
-
-                var index = entities.Count - budget;
-                result.Add((tick, entities.GetRange(index, budget)));
-                entities.RemoveRange(index, budget);
-                break;
-            }
-            return result;
-        }
-
-        private bool TryGetDeltaState(out GameState? curState, out GameState? nextState)
-        {
             curState = null;
             nextState = null;
 
-            var targetCurTick = _timing.LastProcessedTick + 1;
-            var targetNextTick = _timing.LastProcessedTick + 2;
-
             GameTick? futureStateLowestFromSeq = null;
+            uint lastStateInput = 0;
 
             for (var i = 0; i < _stateBuffer.Count; i++)
             {
                 var state = _stateBuffer[i];
 
                 // remember there are no duplicate ToSequence states in the list.
-                if (state.ToSequence == targetCurTick && state.FromSequence <= _timing.LastRealTick)
+                if (state.ToSequence == curTick)
                 {
                     curState = state;
-                    continue;
+                    _highestFromSequence = state.FromSequence;
                 }
-
-                if (Interpolation && state.ToSequence == targetNextTick)
+                else if (Interpolation && state.ToSequence == nextTick)
+                {
                     nextState = state;
 
-                if (state.ToSequence > targetCurTick && (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence))
-                {
-                    futureStateLowestFromSeq = state.FromSequence;
-                    continue;
+                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence)
+                    {
+                        futureStateLowestFromSeq = state.FromSequence;
+                    }
                 }
-
-                // remove any old states we find to keep the buffer clean
-                if (state.ToSequence <= _timing.LastRealTick) 
+                else if (state.ToSequence > curTick)
+                {
+                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence)
+                    {
+                        futureStateLowestFromSeq = state.FromSequence;
+                    }
+                }
+                else if (state.ToSequence == lastTick)
+                {
+                    lastStateInput = state.LastProcessedInput;
+                }
+                else if (state.ToSequence < _highestFromSequence) // remove any old states we find to keep the buffer clean
                 {
                     _stateBuffer.RemoveSwap(i);
                     i--;
                 }
             }
 
-            // Even if we can't find current state, maybe we have a future state?
-            return curState != null || (futureStateLowestFromSeq != null && futureStateLowestFromSeq <= _timing.LastRealTick);
+            // Make sure we can ACTUALLY apply this state.
+            // Can happen that we can't if there is a hole and we're doing extrapolation.
+            if (curState != null && curState.FromSequence > LastProcessedRealState)
+                curState = null;
+
+            // can't find current state, but we do have a future state.
+            if (!Extrapolation && curState == null && futureStateLowestFromSeq != null
+                && futureStateLowestFromSeq <= LastProcessedRealState)
+            {
+                //this is not actually extrapolation
+                curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
+                return true; // keep moving, we have a future state
+            }
+
+            // we won't extrapolate, and curState was not found, buffer is empty
+            if (!Extrapolation && curState == null)
+                return false;
+
+            // we found both the states to interpolate between, this should almost always be true.
+            if (Interpolation && curState != null)
+                return true;
+
+            if (!Interpolation && curState != null && nextState != null)
+                return true;
+
+            if (curState == null)
+            {
+                curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
+            }
+
+            if (nextState == null && Interpolation)
+            {
+                nextState = ExtrapolateState(_highestFromSequence, nextTick, lastStateInput);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Generates a completely fake GameState.
+        /// </summary>
+        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence, uint lastInput)
+        {
+            var state = new GameState(fromSequence, toSequence, lastInput, default, default, default, null);
+            state.Extrapolated = true;
+            return state;
         }
 
         /// <inheritdoc />
         public void Reset()
         {
             _stateBuffer.Clear();
-            LastFullState = null;
-            LastFullStateRequested = GameTick.Zero;
+            _lastFullState = null;
+            _waitingForFull = true;
         }
 
-        public void RequestFullState()
-        {
-            _stateBuffer.Clear();
-            LastFullState = null;
-            LastFullStateRequested = _timing.LastRealTick;
-        }
-
-        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> data)
+        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data)
         {
             foreach (var (uid, compData) in data)
             {
@@ -335,39 +372,20 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity)
+        public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
         {
             return _lastStateFullRep[entity];
         }
 
         public bool TryGetLastServerStates(EntityUid entity,
-            [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }
 
         public int CalculateBufferSize(GameTick fromTick)
         {
-            bool foundState;
-            var nextTick = fromTick;
-
-            do
-            {
-                foundState = false;
-
-                foreach (var state in _stateBuffer)
-                {
-                    if (state.ToSequence > nextTick && state.FromSequence <= nextTick)
-                    {
-                        foundState = true;
-                        nextTick += 1;
-                    }
-                }
-
-            }
-            while (foundState);
-
-            return (int) (nextTick.Value - fromTick.Value);
+            return _stateBuffer.Count(s => s.ToSequence >= fromTick);
         }
     }
 }

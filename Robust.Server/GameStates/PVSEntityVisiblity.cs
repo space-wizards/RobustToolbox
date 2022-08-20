@@ -1,4 +1,4 @@
-namespace Robust.Server.GameStates;
+﻿namespace Robust.Server.GameStates;
 
 public enum PVSEntityVisiblity : byte
 {

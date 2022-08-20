@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -25,7 +26,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            return (T)Read(typeof(T), node, context, skipHook, value)!;
+            return (T)Read(typeof(T), node, context, skipHook, EqualityComparer<T>.Default.Equals(value, default) ? null : value)!;
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
@@ -186,7 +187,6 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value);
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    var populateConst = Expression.Constant(value.IsAssignableTo(typeof(IPopulateDefaultValues)));
                     var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));
 
                     call = node switch
@@ -198,7 +198,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -210,7 +209,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(MappingDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -354,7 +352,6 @@ namespace Robust.Shared.Serialization.Manager
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -376,11 +373,6 @@ namespace Robust.Shared.Serialization.Manager
 
             instance ??= instantiator();
 
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
-            }
-
             if (node.Value != string.Empty)
             {
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
@@ -398,7 +390,6 @@ namespace Robust.Shared.Serialization.Manager
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -417,11 +408,6 @@ namespace Robust.Shared.Serialization.Manager
             if (definition == null)
             {
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
-            }
-
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
             }
 
             var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;

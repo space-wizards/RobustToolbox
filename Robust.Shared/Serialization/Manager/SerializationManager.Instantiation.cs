@@ -22,39 +22,25 @@ namespace Robust.Shared.Serialization.Manager
 
                 var generator = method.GetILGenerator();
 
-                if (type.IsValueType)
+                var constructor = type.GetConstructor(Type.EmptyTypes);
+
+                if (constructor == null)
                 {
+                    if (!type.IsValueType) return null;
                     generator.DeclareLocal(type);
-                    generator.DeclareLocal(typeof(object));
-
                     generator.Emit(OpCodes.Ldloca_S, 0);
-
                     generator.Emit(OpCodes.Initobj, type);
-
                     generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Box, type);
-                    generator.Emit(OpCodes.Stloc_1);
-
-                    generator.Emit(OpCodes.Ldloc_1);
-                    generator.Emit(OpCodes.Ret);
                 }
                 else
                 {
-                    generator.DeclareLocal(typeof(object));
-
-                    var constructor = type.GetConstructor(Type.EmptyTypes);
-
-                    if (constructor == null)
-                    {
-                        return null;
-                    }
-
                     generator.Emit(OpCodes.Newobj, constructor);
-                    generator.Emit(OpCodes.Stloc_0);
-
-                    generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Ret);
                 }
+
+                if (type.IsValueType)
+                    generator.Emit(OpCodes.Box, type);
+
+                generator.Emit(OpCodes.Ret);
 
                 return method.CreateDelegate<InstantiationDelegate<object>>();
             });

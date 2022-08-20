@@ -176,8 +176,8 @@ namespace Robust.Shared.Serialization.Manager
         {
             var sourceType = source.GetType();
             var targetType = target.GetType();
-            var commonType = TypeHelpers.SelectCommonType(sourceType, targetType) ??
-                             throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
+            if(!TypeHelpers.TrySelectCommonType(sourceType, targetType, out var commonType))
+                throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
 
             return GetOrCreateCopySerializerDelegate(commonType, sourceType, targetType, serializer)(source, ref target, skipHook, context);
         }

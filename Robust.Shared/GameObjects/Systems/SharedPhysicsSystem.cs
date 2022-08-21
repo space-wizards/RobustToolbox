@@ -46,6 +46,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
@@ -171,7 +172,7 @@ namespace Robust.Shared.GameObjects
 
             if (args.OldMapId != xform.MapID)
                 return;
-            
+
             _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
 
             if (body != null)
@@ -326,9 +327,20 @@ namespace Robust.Shared.GameObjects
             var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateBeforeSolve);
 
+            var targetMinTickrate = (float) _configurationManager.GetCVar(CVars.TargetMinimumTickrate);
+            var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
+
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
-                comp.Step(deltaTime, prediction);
+                if (serverTickrate < targetMinTickrate)
+                {
+                    Substep(deltaTime, targetMinTickrate, serverTickrate, comp, prediction);
+                    comp.Step(deltaTime, prediction);
+                }
+                else
+                {
+                    comp.Step(deltaTime, prediction);
+                }
             }
 
             var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
@@ -353,6 +365,23 @@ namespace Robust.Shared.GameObjects
             var batchSize = (int) MathF.Ceiling((float) count / batches);
 
             return (batches, batchSize);
+        }
+
+        private void Substep(float deltaTime, float targetMinTickrate, float serverTickrate, SharedPhysicsMapComponent comp, bool prediction)
+        {
+            //0.0166666005
+            var targetDelta = TimeSpan.FromTicks((long)(1.0 / targetMinTickrate * TimeSpan.TicksPerSecond));
+            var maxSubstepDelta = (float) targetDelta.TotalSeconds;
+
+            //Grab the max number of substeps allowed from cvars
+            var maxSubsteps = _configurationManager.GetCVar(CVars.MaxSubsteps);
+            //grab how many times this should substep, based on the calculation and maximum allowed substeps
+            var substeps = Math.Min((int)Math.Ceiling(targetMinTickrate / serverTickrate), maxSubsteps);
+
+            for (int i = 0; i < substeps; i++)
+            {
+                comp.Step(maxSubstepDelta, prediction);
+            }
         }
     }
 

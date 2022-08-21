@@ -850,7 +850,7 @@ namespace Robust.Shared.GameObjects
                     if (!joint.CollideConnected &&
                         (aUid == joint.BodyAUid &&
                          bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid ||
+                        (bUid == joint.BodyAUid &&
                          aUid == joint.BodyBUid)) return false;
                 }
             }

@@ -58,6 +58,35 @@ namespace Robust.Shared.GameObjects
         internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>
+        /// Debugging VV
+        /// </summary>
+        [ViewVariables]
+        private Box2? _broadphaseAABB
+        {
+            get
+            {
+                Box2? aabb = null;
+
+                if (Broadphase == null)
+                {
+                    return aabb;
+                }
+
+                var tree = Broadphase.Tree;
+
+                foreach (var (_, fixture) in IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        aabb = aabb?.Union(tree.GetProxy(proxy.ProxyId)!.AABB) ?? tree.GetProxy(proxy.ProxyId)!.AABB;
+                    }
+                }
+
+                return aabb;
+            }
+        }
+
+        /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
         ///     Key is Island's ID and value is our index.
         /// </summary>

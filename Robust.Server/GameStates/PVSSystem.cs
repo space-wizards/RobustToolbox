@@ -759,7 +759,12 @@ internal sealed partial class PVSSystem : EntitySystem
 
                 // This is pretty shit and there is probably a better way of doing this.
                 sessionData.Overflow = oldEntry.Value;
+
+#if !FULL_RELEASE
+                // This happens relatively frequently for the current TickBuffer value, and doesn't really provide any
+                // useful info when not debugging/testing locally. Hence disabled on FULL_RELEASE.
                 _sawmill.Warning($"Client {session} exceeded tick buffer.");
+#endif
             }
             else if (oldEntry.Value.Value != lastAcked)
                 _visSetPool.Return(oldEntry.Value.Value);

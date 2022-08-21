@@ -46,6 +46,8 @@ namespace Robust.UnitTesting
             private readonly Dictionary<Type, ProcessMessage> _callbacks = new();
             private readonly HashSet<Type> _registeredMessages = new();
 
+            private readonly Dictionary<string, Guid> _userGuids = new Dictionary<string, Guid>();
+
             /// <summary>
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
             /// </summary>
@@ -112,10 +114,14 @@ namespace Robust.UnitTesting
                             async Task DoConnect()
                             {
                                 var writer = connect.ChannelWriter;
-
                                 var uid = _genConnectionUid();
-                                var sessionId = new NetUserId(Guid.NewGuid());
-                                var userName = $"integration_{uid}";
+                                var userName = connect.Username ?? $"integration_{uid}";
+                                if (!_userGuids.TryGetValue(userName, out var userId))
+                                {
+                                    userId = Guid.NewGuid();
+                                    _userGuids.Add(userName, userId);
+                                }
+                                var sessionId = new NetUserId(userId);
                                 var userData = new NetUserData(sessionId, userName)
                                 {
                                     HWId = ImmutableArray<byte>.Empty
@@ -358,7 +364,7 @@ namespace Robust.UnitTesting
 
                 _clientConnectingUid = _genConnectionUid();
 
-                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter, _clientConnectingUid));
+                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter, _clientConnectingUid, userNameRequest));
             }
 
             public void ClientDisconnect(string reason)
@@ -462,14 +468,16 @@ namespace Robust.UnitTesting
 
             private sealed class ConnectMessage
             {
-                public ConnectMessage(ChannelWriter<object> channelWriter, int uid)
+                public ConnectMessage(ChannelWriter<object> channelWriter, int uid, string? username)
                 {
                     ChannelWriter = channelWriter;
                     Uid = uid;
+                    Username = username;
                 }
 
                 public ChannelWriter<object> ChannelWriter { get; }
                 public int Uid { get; }
+                public string? Username { get; }
             }
 
             private sealed class ConfirmConnectMessage

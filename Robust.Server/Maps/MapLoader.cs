@@ -855,7 +855,10 @@ namespace Robust.Server.Maps
                 meta.Add("name", "DemoStation");
                 meta.Add("author", "Space-Wizards");
 
-                var isPostInit = false;
+                //TODO: MapId is null when saveBP is used, another reason this jumbled mess needs to be rewritten
+                var isPostInit = MapId is not null && _mapManager.IsMapInitialized(MapId.Value);
+
+                //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
                     if (_mapManager.IsMapInitialized(grid.ParentMapId))

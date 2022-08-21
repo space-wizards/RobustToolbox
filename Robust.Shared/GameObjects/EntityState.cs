@@ -1,6 +1,7 @@
 using Robust.Shared.Serialization;
 using System;
 using NetSerializer;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -13,10 +14,13 @@ namespace Robust.Shared.GameObjects
 
         public bool Empty => ComponentChanges.Value is null or { Count: 0 };
 
-        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, bool hide = false)
+        public readonly GameTick EntityLastModified;
+
+        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified)
         {
             Uid = uid;
             ComponentChanges = changedComponents;
+            EntityLastModified = lastModified;
         }
     }
 
@@ -45,12 +49,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly ushort NetID;
 
-        public ComponentChange(ushort netId, bool created, bool deleted, ComponentState? state)
+        public readonly GameTick LastModifiedTick;
+
+        public ComponentChange(ushort netId, bool created, bool deleted, ComponentState? state, GameTick lastModifiedTick)
         {
             Deleted = deleted;
             State = state;
             NetID = netId;
             Created = created;
+            LastModifiedTick = lastModifiedTick;
         }
 
         public override string ToString()
@@ -58,19 +65,19 @@ namespace Robust.Shared.GameObjects
             return $"{(Deleted ? "D" : "C")} {NetID} {State?.GetType().Name}";
         }
 
-        public static ComponentChange Added(ushort netId, ComponentState? state)
+        public static ComponentChange Added(ushort netId, ComponentState? state, GameTick lastModifiedTick)
         {
-            return new(netId, true, false, state);
+            return new(netId, true, false, state, lastModifiedTick);
         }
 
-        public static ComponentChange Changed(ushort netId, ComponentState state)
+        public static ComponentChange Changed(ushort netId, ComponentState state, GameTick lastModifiedTick)
         {
-            return new(netId, false, false, state);
+            return new(netId, false, false, state, lastModifiedTick);
         }
 
         public static ComponentChange Removed(ushort netId)
         {
-            return new(netId, false, true, null);
+            return new(netId, false, true, null, default);
         }
     }
 }

@@ -6,6 +6,7 @@ using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -27,6 +28,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ISerializationManager _serManager = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
 
         #endregion Dependencies
@@ -250,19 +252,17 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Calling Dirty on a component will call this directly.
         /// </remarks>
-        public void Dirty(EntityUid uid)
+        public virtual void Dirty(EntityUid uid)
         {
-            var currentTick = CurrentTick;
-
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
             if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
                 throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
 
             var metadata = (MetaDataComponent)component;
 
-            if (metadata.EntityLastModifiedTick == currentTick) return;
+            if (metadata.EntityLastModifiedTick == _gameTiming.CurTick) return;
 
-            metadata.EntityLastModifiedTick = currentTick;
+            metadata.EntityLastModifiedTick = _gameTiming.CurTick;
 
             if (metadata.EntityLifeStage > EntityLifeStage.Initializing)
             {
@@ -270,7 +270,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void Dirty(Component component)
+        public virtual void Dirty(Component component)
         {
             var owner = component.Owner;
 
@@ -313,7 +313,7 @@ namespace Robust.Shared.GameObjects
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException(msg);
 #else
-                Logger.Error(msg);
+                Logger.Error($"{msg}. Stack: {Environment.StackTrace}");
 #endif
             }
 

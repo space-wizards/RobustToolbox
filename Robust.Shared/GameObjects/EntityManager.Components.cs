@@ -226,7 +226,7 @@ namespace Robust.Shared.GameObjects
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
 
@@ -252,6 +252,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            DebugTools.Assert(component is MetaDataComponent ||
+                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -1119,6 +1123,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
         {
+            DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 

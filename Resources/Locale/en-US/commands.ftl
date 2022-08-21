@@ -147,6 +147,8 @@ cmd-hint-loadmap-y-position = [y-position]
 cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
 
+cmd-hint-savebp-id = <Grid EntityID>
+
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.
 

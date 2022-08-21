@@ -61,7 +61,7 @@ namespace Robust.Shared.GameObjects
         /// Debugging VV
         /// </summary>
         [ViewVariables]
-        internal Box2? BroadphaseAABB
+        private Box2? _broadphaseAABB
         {
             get
             {

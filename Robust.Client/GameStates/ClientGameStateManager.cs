@@ -10,6 +10,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -603,7 +604,8 @@ namespace Robust.Client.GameStates
 
             // Detach entities to null space
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys);
+            var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -690,7 +692,7 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }
 
-        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys)
+        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys, ContainerSystem containerSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
             var detached = new List<EntityUid>();
@@ -726,7 +728,23 @@ namespace Robust.Client.GameStates
 
                     var xform = xforms.GetComponent(ent);
                     if (xform.ParentUid.IsValid())
+                    {
+                        // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
+                        // In those situations, we need to add the entity back to the list of expected entities after detaching.
+                        IContainer? container = null;
+                        if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                            metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
+                            (containerMeta.Flags & MetaDataFlags.Detached) == 0)
+                        {
+                            containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true);
+                        }
+
                         xformSys.DetachParentToNull(xform, xforms, metas);
+
+                        if (container != null)
+                            containerSys.AddExpectedEntity(ent, container);
+                    }
+
                     detached.Add(ent);
                 }
             }

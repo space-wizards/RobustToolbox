@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Client.Player;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -61,7 +62,7 @@ namespace Robust.Client.GameObjects
                         goto skip;
                 }
 
-                container.EmptyContainer(true, entMan: EntityManager);
+                EmptyContainer(container, true);
                 container.Shutdown();
                 toDelete.Add(id);
 
@@ -120,7 +121,7 @@ namespace Robust.Client.GameObjects
                 // Add new entities.
                 foreach (var entity in entityUids)
                 {
-                    if (!EntityManager.EntityExists(entity))
+                    if (!EntityManager.TryGetComponent(entity, out MetaDataComponent? meta))
                     {
                         AddExpectedEntity(entity, container);
                         continue;
@@ -133,7 +134,7 @@ namespace Robust.Client.GameObjects
                     // from the container. It would then subsequently be parented to the container without ever being
                     // re-inserted, leading to the client seeing what should be hidden entities attached to
                     // containers/players.
-                    if (Transform(entity).MapID == MapId.Nullspace)
+                    if ((meta.Flags & MetaDataFlags.Detached) != 0)
                     {
                         AddExpectedEntity(entity, container);
                         continue;

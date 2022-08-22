@@ -70,6 +70,7 @@ internal partial class UserInterfaceManager
     {
         if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
         {
+            bool closedAny = false;
             for (var i = _modalStack.Count - 1; i >= 0; i--)
             {
                 var top = _modalStack[i];
@@ -77,10 +78,14 @@ internal partial class UserInterfaceManager
                 if (top is not Popup {CloseOnEscape: false})
                 {
                     RemoveModal(top);
+                    closedAny = true;
                 }
             }
 
-            args.Handle();
+            if (closedAny)
+            {
+                args.Handle();
+            }
             return;
         }
 

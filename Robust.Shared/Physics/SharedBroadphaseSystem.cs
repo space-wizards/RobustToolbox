@@ -284,7 +284,7 @@ namespace Robust.Shared.Physics
                     var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
 
                     // Get Grid2 AABB in grid1 ref
-                    var aabb1 = grid.LocalAABB.Union(invWorldMatrix.TransformBox(otherGridBounds));
+                    var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
                     var ourChunks = mapGrid.GetLocalMapChunks(aabb1);

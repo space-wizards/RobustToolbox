@@ -1001,11 +1001,23 @@ namespace Robust.Client.GameStates
             if (!TryParseUid(shell, args, out var uid, out var meta))
                 return;
 
+            // If this is not a client-side entity, it also needs to be removed from the full-server state dictionary to
+            // avoid errors. This has to be done recursively for all children.
+            void _recursiveRemoveState(TransformComponent xform, EntityQuery<TransformComponent> query)
+            {
+                _processor._lastStateFullRep.Remove(xform.Owner);
+                foreach (var child in xform.ChildEntities)
+                {
+                    if (query.TryGetComponent(child, out var childXform))
+                        _recursiveRemoveState(childXform, query);
+                }
+            }
+
+            if (!uid.IsClientSide() && _entities.TryGetComponent(uid, out TransformComponent? xform))
+                _recursiveRemoveState(xform, _entities.GetEntityQuery<TransformComponent>());
+
             _entities.DeleteEntity(uid);
 
-            // If this is not a client-side entity, it also needs to be removed from the full-server state dictionary to
-            // avoid errors.
-            _processor._lastStateFullRep.Remove(uid);
         }
 
         /// <summary>

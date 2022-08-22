@@ -128,6 +128,7 @@ namespace Robust.Client.GameStates
 #if !FULL_RELEASE
             // disable on release, to avoid making it trivial to make walls/occluders disappear.
             _conHost.RegisterCommand("detachent", Loc.GetString("cmd-detach-ent-desc"), Loc.GetString("cmd-detach-ent-help"), DetachEntCommand);
+            _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
 #endif
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
@@ -984,6 +985,24 @@ namespace Robust.Client.GameStates
                 if (container != null)
                     containerSys.AddExpectedEntity(uid, container);
             }
+        }
+
+        /// <summary>
+        ///     Deletes an entity. Unlike the normal delete command, this is CLIENT-SIDE.
+        /// </summary>
+        /// <remarks>
+        ///     Unless the entity is a client-side entity, this will likely cause errors.
+        /// </remarks>
+        private void LocalDeleteEntCommand(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (!TryParseUid(shell, args, out var uid, out var meta))
+                return;
+
+            _entities.DeleteEntity(uid);
+
+            // If this is not a client-side entity, it also needs to be removed from the full-server state dictionary to
+            // avoid errors.
+            _processor._lastStateFullRep.Remove(uid);
         }
 
         /// <summary>

@@ -8,3 +8,6 @@ cmd-reset-all-ents-desc = Resets all entities to the most recently received serv
 
 cmd-detach-ent-help = Usage: detachent <Entity UID>
 cmd-detach-ent-desc = Detach an entity to null-space, as if it had left PVS range.
+
+cmd-local-delete-help = Usage: localdelete <Entity UID>
+cmd-local-delete-desc = Deletes an entity. Unlike the normal delete command, this is CLIENT-SIDE. Unless the entity is a client-side entity, this will likely cause errors.

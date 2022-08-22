@@ -2,6 +2,7 @@
 // Used in EXCEPTION_TOLERANCE preprocessor
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
@@ -10,6 +11,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
@@ -18,6 +20,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -52,6 +55,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
@@ -117,6 +121,14 @@ namespace Robust.Client.GameStates
             IsPredictionEnabled = _config.GetCVar(CVars.NetPredict);
             PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
             PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
+
+            _conHost.RegisterCommand("resetent", Loc.GetString("cmd-reset-ent-desc"), Loc.GetString("cmd-reset-ent-help"), ResetEntCommand);
+            _conHost.RegisterCommand("resetallents", Loc.GetString("cmd-reset-all-ents-desc"), Loc.GetString("cmd-reset-all-ents-help"), ResetAllEnts);
+
+#if !FULL_RELEASE
+            // disable on release, to avoid making it trivial to make walls/occluders disappear.
+            _conHost.RegisterCommand("detachent", Loc.GetString("cmd-detach-ent-desc"), Loc.GetString("cmd-detach-ent-help"), DetachEntCommand);
+#endif
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -899,6 +911,125 @@ namespace Robust.Client.GameStates
                 }
             }
         }
+
+        #region Debug Commands
+        private bool TryParseUid(IConsoleShell shell, string[] args, out EntityUid uid, [NotNullWhen(true)] out MetaDataComponent? meta)
+        {
+            if (args.Length != 1)
+            {
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+                uid = EntityUid.Invalid;
+                meta = null;
+                return false;
+            }
+
+            if (!EntityUid.TryParse(args[0], out uid))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-uid", ("arg", args[0])));
+                meta = null;
+                return false;
+            }
+
+            if (!_entities.TryGetComponent(uid, out meta))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-entity-exist", ("arg", args[0])));
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Reset an entity to the most recently received server state. This will also reset entities that have been detached to null-space.
+        /// </summary>
+        private void ResetEntCommand(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (!TryParseUid(shell, args, out var uid, out var meta))
+                return;
+
+            using var _ = _timing.StartStateApplicationArea();
+            ResetEnt(meta, false);
+        }
+
+        /// <summary>
+        ///     Detach an entity to null-space, as if it had left PVS range.
+        /// </summary>
+        private void DetachEntCommand(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (!TryParseUid(shell, args, out var uid, out var meta))
+                return;
+
+            if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                return;
+
+            using var _ = _timing.StartStateApplicationArea();
+
+            meta.Flags |= MetaDataFlags.Detached;
+
+            var containerSys = _entities.EntitySysManager.GetEntitySystem<ContainerSystem>();
+
+            var xform = _entities.GetComponent<TransformComponent>(uid);
+            if (xform.ParentUid.IsValid())
+            {
+                IContainer? container = null;
+                if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                    _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
+                    (containerMeta.Flags & MetaDataFlags.Detached) == 0)
+                {
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                }
+
+                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(xform);
+
+                if (container != null)
+                    containerSys.AddExpectedEntity(uid, container);
+            }
+        }
+
+        /// <summary>
+        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space. 
+        /// </summary>
+        private void ResetAllEnts(IConsoleShell shell, string argStr, string[] args)
+        {
+            using var _ = _timing.StartStateApplicationArea();
+
+            foreach (var meta in _entities.EntityQuery<MetaDataComponent>(true))
+            {
+                ResetEnt(meta);
+            }
+        }
+
+        /// <summary>
+        ///     Reset a given entity to the most recent server state.
+        /// </summary>
+        private void ResetEnt(MetaDataComponent meta, bool skipDetached = true)
+        {
+            if (skipDetached && (meta.Flags & MetaDataFlags.Detached) != 0)
+                return;
+
+            meta.Flags &= ~MetaDataFlags.Detached;
+
+            var uid = meta.Owner;
+
+            if (!_processor.TryGetLastServerStates(uid, out var data))
+                return;
+
+            foreach (var (id, state) in data)
+            {
+                if (!_entityManager.TryGetComponent(uid, id, out var comp))
+                {
+                    comp = _compFactory.GetComponent(id);
+                    var newComp = (Component)comp;
+                    newComp.Owner = uid;
+                    _entityManager.AddComponent(uid, newComp, true);
+                }
+
+                var handleState = new ComponentHandleState(state, null);
+                _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
+                comp.HandleComponentState(state, null);
+            }
+        }
+        #endregion
     }
 
     public sealed class GameStateAppliedArgs : EventArgs

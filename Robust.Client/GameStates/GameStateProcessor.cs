@@ -215,7 +215,7 @@ namespace Robust.Client.GameStates
             }
 
             // we let the buffer fill up before starting to tick
-            if (_stateBuffer.Count >= TargetBufferSize && (!Interpolation || nextState != null))
+            if (_stateBuffer.Count >= TargetBufferSize)
             {
                 if (Logging)
                     Logger.DebugS("net", $"Resync CurTick to: {LastFullState.ToSequence}");

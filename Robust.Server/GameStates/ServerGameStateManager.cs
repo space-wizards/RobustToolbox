@@ -141,7 +141,7 @@ namespace Robust.Server.GameStates
             ClientRequestFull?.Invoke(session, msg.Tick, lastAcked);
 
             // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
-            _ackedStates[msg.MsgChannel.ConnectionId] = msg.Tick;
+            _ackedStates[msg.MsgChannel.ConnectionId] = _gameTiming.CurTick;
         }
 
         private void HandleStateAck(MsgStateAck msg)

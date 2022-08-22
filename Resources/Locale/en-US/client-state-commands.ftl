@@ -11,3 +11,6 @@ cmd-detach-ent-desc = Detach an entity to null-space, as if it had left PVS rang
 
 cmd-local-delete-help = Usage: localdelete <Entity UID>
 cmd-local-delete-desc = Deletes an entity. Unlike the normal delete command, this is CLIENT-SIDE. Unless the entity is a client-side entity, this will likely cause errors.
+
+cmd-full-state-reset-help = Usage: fullstatereset
+cmd-full-state-reset-desc = Discards any entity state information and requests a full-state from the server.

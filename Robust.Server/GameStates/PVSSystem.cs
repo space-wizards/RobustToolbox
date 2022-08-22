@@ -187,10 +187,11 @@ internal sealed partial class PVSSystem : EntitySystem
             sessionData.Overflow = null;
         }
 
-        // return last acked to pool, but only if it is not still in the overflow dictionary.
+        // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAcked.Value > TickBuffer)
             _visSetPool.Return(sessionData.LastAcked);
 
+        sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
     }
 
@@ -220,7 +221,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
     {
-        // return last acked to pool, but only if it is not still in the overflow dictionary.
+        // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAckedTick.Value > TickBuffer)
             _visSetPool.Return(sessionData.LastAcked);
 
@@ -371,6 +372,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);
+        data.Overflow = null;
 
         if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
@@ -380,6 +382,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
         }
+
+        data.LastAcked = null;
     }
 
     private void OnGridRemoved(GridRemovalEvent ev)

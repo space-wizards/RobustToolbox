@@ -1,4 +1,4 @@
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
-    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence} ext={Extrapolated}")]
+    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence}")]
     [Serializable, NetSerializable]
     public sealed class GameState
     {

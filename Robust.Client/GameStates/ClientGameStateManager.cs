@@ -202,7 +202,7 @@ namespace Robust.Client.GameStates
             var targetProccessedTick = (bufferOverflow > 1)
                 ? _timing.LastProcessedTick + (uint)bufferOverflow
                 : _timing.LastProcessedTick + 1;
-            
+
             _prof.WriteValue($"State buffer size", curBufSize);
             _prof.WriteValue($"State apply count", targetProccessedTick.Value - _timing.LastProcessedTick.Value);
 
@@ -280,7 +280,7 @@ namespace Robust.Client.GameStates
                     createdEntities = ApplyGameState(curState, nextState);
 #if EXCEPTION_TOLERANCE
                     }
-                    catch (Exception e)
+                    catch (MissingMetadataException)
                     {
                         // Something has gone wrong. Probably a missing meta-data component. Perhaps a full server state will fix it.
                         RequestFullState();
@@ -577,7 +577,7 @@ namespace Robust.Client.GameStates
                     meta.LastStateApplied = curState.ToSequence;
                     continue;
                 }
-                
+
                 toApply.Add(es.Uid, (isEnteringPvs, meta.LastStateApplied, es, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
@@ -592,7 +592,7 @@ namespace Robust.Client.GameStates
                 {
                     var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                     if (metaState == null)
-                        throw new InvalidOperationException($"Server sent new entity state for {uid} without metadata component!");
+                        throw new MissingMetadataException(uid);
 
                     _entities.CreateEntity(metaState.PrototypeId, uid);
                     toApply.Add(uid, (false, GameTick.Zero, es, null));
@@ -910,6 +910,14 @@ namespace Robust.Client.GameStates
         {
             AppliedState = appliedState;
             Detached = detached;
+        }
+    }
+
+    public sealed class MissingMetadataException : Exception
+    {
+        public MissingMetadataException(EntityUid uid)
+            : base($"Server state is missing the metadata component for a new entity: {uid}.")
+        {
         }
     }
 }

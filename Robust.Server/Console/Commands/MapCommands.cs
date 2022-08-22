@@ -107,6 +107,20 @@ namespace Robust.Server.Console.Commands
             IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savebp-id"));
+                case 2:
+                    var res = IoCManager.Resolve<IResourceManager>();
+                    var opts = CompletionHelper.UserFilePath(args[1], res.UserData);
+                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+            }
+            return CompletionResult.Empty;
+        }
     }
 
     public sealed class LoadBp : IConsoleCommand
@@ -188,6 +202,11 @@ namespace Robust.Server.Console.Commands
             var mapLoader = IoCManager.Resolve<IMapLoader>();
             mapLoader.LoadBlueprint(mapId, args[1], loadOptions);
         }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            return LoadMap.GetCompletionResult(shell, args);
+        }
     }
 
     public sealed class SaveMap : IConsoleCommand
@@ -258,7 +277,7 @@ namespace Robust.Server.Console.Commands
         public string Description => Loc.GetString("cmd-loadmap-desc");
         public string Help => Loc.GetString("cmd-loadmap-help");
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
@@ -280,6 +299,11 @@ namespace Robust.Server.Console.Commands
             }
 
             return CompletionResult.Empty;
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            return GetCompletionResult(shell, args);
         }
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)

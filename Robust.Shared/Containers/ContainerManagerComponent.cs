@@ -144,7 +144,11 @@ namespace Robust.Shared.Containers
         {
             foreach (var container in Containers.Values)
             {
-                if (container.Contains(entity)) container.ForceRemove(entity);
+                if (container.Contains(entity))
+                {
+                    container.ForceRemove(entity);
+                    return;
+                }
             }
         }
 

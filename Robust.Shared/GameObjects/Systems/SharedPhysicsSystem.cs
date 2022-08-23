@@ -171,7 +171,7 @@ namespace Robust.Shared.GameObjects
 
             if (args.OldMapId != xform.MapID)
                 return;
-            
+
             _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
 
             if (body != null)
@@ -237,7 +237,8 @@ namespace Robust.Shared.GameObjects
                     DestroyContacts(body, oldMap); // This can modify body.Awake
                 DebugTools.Assert(body.Contacts.Count == 0);
 
-                if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
+                // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
+                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
                 {
                     // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
                     _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);

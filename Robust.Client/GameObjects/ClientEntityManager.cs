@@ -61,6 +61,14 @@ namespace Robust.Client.GameObjects
                 base.Dirty(component);
         }
 
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        {
+            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
+            else
+                return base.ToPrettyString(uid);
+        }
+
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;

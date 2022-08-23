@@ -834,10 +834,10 @@ namespace Robust.Shared.GameObjects
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
                     if (!joint.CollideConnected &&
-                        (aUid == joint.BodyAUid &&
+                        ((aUid == joint.BodyAUid &&
                          bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid ||
-                         aUid == joint.BodyBUid)) return false;
+                        (bUid == joint.BodyAUid &&
+                         aUid == joint.BodyBUid))) return false;
                 }
             }
 

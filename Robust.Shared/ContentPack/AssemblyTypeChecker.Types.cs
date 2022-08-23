@@ -381,10 +381,16 @@ namespace Robust.Shared.ContentPack
                     _ => false
                 };
             }
+
+            public override bool IsCoreTypeDefined()
+            {
+                return ResolutionScope.IsCoreTypeDefined();
+            }
         }
 
         internal abstract record MResScope
         {
+            public virtual bool IsCoreTypeDefined() => false;
         }
 
         internal sealed record MResScopeType(MType Type) : MResScope
@@ -401,6 +407,14 @@ namespace Robust.Shared.ContentPack
             {
                 return $"[{Name}]";
             }
+        }
+
+        internal sealed record MResScopeModuleDefinition : MResScope
+        {
+            public static readonly MResScopeModuleDefinition Instance = new();
+
+            public override bool IsCoreTypeDefined() => true;
+            public override string ToString() => "[SAME MODULE]";
         }
 
         internal sealed record MTypeGenericTypePlaceHolder(int Index) : MType

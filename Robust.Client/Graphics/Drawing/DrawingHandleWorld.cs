@@ -1,3 +1,5 @@
+using System;
+using System.Text;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -52,7 +54,7 @@ namespace Robust.Client.Graphics
         /// <param name="fallback">If the character is not available, render "�" instead.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
         public abstract float DrawChar(
-            DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
             Color color, bool fallback=true);
 
         /// <summary>
@@ -86,6 +88,40 @@ namespace Robust.Client.Graphics
             metrics = default;
             return false;
         }
+
+        public Vector2 GetTextDimensions(ReadOnlySpan<char> text, float scale = 1f)
+        {
+            var dimensions = Vector2.Zero;
+            if (text.IsEmpty)
+                return dimensions;
+
+            var width = 0;
+            var maxWidth = 0;
+
+            var height = GetHeight(scale);
+
+            foreach (var rune in text.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    maxWidth = Math.Max(width, maxWidth);
+                    width = 0;
+                    height += GetLineHeight(scale);
+                }
+                else
+                {
+                    var metrics = GetCharMetrics(rune, scale);
+                    if (metrics == null)
+                    {
+                        continue;
+                    }
+
+                    width += metrics.Value.Advance;
+                }
+            }
+
+            return new Vector2i(height, maxWidth);
+        }
     }
 
     /// <summary>
@@ -108,7 +144,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
@@ -131,7 +167,17 @@ namespace Robust.Client.Graphics
             }
 
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            handle.DrawTexture(texture, baseline, color);
+
+            switch (handle)
+            {
+                case DrawingHandleScreen screen:
+                    screen.DrawTexture(texture, baseline, color);
+                    break;
+                case DrawingHandleWorld world:
+                    world.DrawTexture(texture, baseline, color);
+                    break;
+            }
+
             return metrics.Value.Advance;
         }
 
@@ -168,7 +214,7 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => _main.GetLineHeight(scale);
 
         // DrawChar just proxies to the stack, or invokes _main's fallback.
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             foreach (var f in Stack)
             {
@@ -206,7 +252,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => default;
         public override int GetLineHeight(float scale) => default;
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;

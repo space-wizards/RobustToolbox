@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -20,18 +21,16 @@ using Robust.Shared.Utility;
 namespace Robust.Client
 {
     /// <inheritdoc />
-    public class BaseClient : IBaseClient
+    public sealed class BaseClient : IBaseClient
     {
         [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IPlayerManager _playMan = default!;
         [Dependency] private readonly INetConfigurationManager _configManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _entityLookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IClientGameStateManager _gameStates = default!;
-        [Dependency] private readonly IDebugDrawingManager _debugDrawMan = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -47,6 +46,8 @@ namespace Robust.Client
 
         public string? LastDisconnectReason { get; private set; }
 
+        private (TimeSpan, GameTick) _timeBase;
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -54,21 +55,34 @@ namespace Robust.Client
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
+            _net.RegisterNetMessage<MsgSyncTimeBase>(
+                SyncTimeBase,
+                NetMessageAccept.Handshake | NetMessageAccept.Client);
+
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
-            _debugDrawMan.Initialize();
             Reset();
         }
 
-        private void TickRateChanged(int tickrate)
+        private void SyncTimeBase(MsgSyncTimeBase message)
+        {
+            Logger.DebugS("client", $"Synchronized time base: {message.Tick}: {message.Time}");
+
+            if (RunLevel >= ClientRunLevel.Connected)
+                _timing.TimeBase = (message.Time, message.Tick);
+            else
+                _timeBase = (message.Time, message.Tick);
+        }
+
+        private void TickRateChanged(int tickrate, in CVarChangeInfo info)
         {
             if (GameInfo != null)
             {
                 GameInfo.TickRate = (byte) tickrate;
             }
 
-            _timing.TickRate = (byte) tickrate;
+            _timing.SetTickRateAt((byte) tickrate, info.TickChanged);
             Logger.InfoS("client", $"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
         }
 
@@ -77,7 +91,7 @@ namespace Robust.Client
         {
             if (RunLevel == ClientRunLevel.Connecting)
             {
-                _net.Shutdown("Client mashing that connect button.");
+                _net.Reset("Client mashing that connect button.");
                 Reset();
             }
 
@@ -205,7 +219,9 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
-            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
+            // Don't invoke PlayerLeaveServer if PlayerJoinedServer & GameStartedSetup hasn't been called yet.
+            if (RunLevel > ClientRunLevel.Connecting)
+                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
             LastDisconnectReason = args.Reason;
             GameStoppedReset();
@@ -215,9 +231,8 @@ namespace Robust.Client
         {
             _entityManager.Startup();
             _mapManager.Startup();
-            _entityLookup.Startup();
 
-            _timing.ResetSimTime();
+            _timing.ResetSimTime(_timeBase);
             _timing.Paused = false;
         }
 
@@ -226,7 +241,6 @@ namespace Robust.Client
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
-            _entityLookup.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
             _discord.ClearPresence();
@@ -293,7 +307,7 @@ namespace Robust.Client
     /// <summary>
     ///     Event arguments for when something changed with the player.
     /// </summary>
-    public class PlayerEventArgs : EventArgs
+    public sealed class PlayerEventArgs : EventArgs
     {
         /// <summary>
         ///     The session that triggered the event.
@@ -312,7 +326,7 @@ namespace Robust.Client
     /// <summary>
     ///     Event arguments for when the RunLevel has changed in the BaseClient.
     /// </summary>
-    public class RunLevelChangedEventArgs : EventArgs
+    public sealed class RunLevelChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     RunLevel that the BaseClient switched from.
@@ -337,7 +351,7 @@ namespace Robust.Client
     /// <summary>
     ///     Info about the server and player that is sent to the client while connecting.
     /// </summary>
-    public class ServerInfo
+    public sealed class ServerInfo
     {
         public ServerInfo(string serverName)
         {

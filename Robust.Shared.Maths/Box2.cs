@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>
+    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>, ISpanFormattable
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
@@ -191,7 +192,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool IsEmpty()
         {
-            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
+            return MathHelper.CloseToPercent(Width, 0.0f) && MathHelper.CloseToPercent(Height, 0.0f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -298,10 +299,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Box2 a, Box2 b)
         {
-            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
-                   MathHelper.CloseTo(a.Right, b.Right) &&
-                   MathHelper.CloseTo(a.Top, b.Top) &&
-                   MathHelper.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseToPercent(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseToPercent(a.Right, b.Right) &&
+                   MathHelper.CloseToPercent(a.Top, b.Top) &&
+                   MathHelper.CloseToPercent(a.Left, b.Left);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -310,13 +311,30 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
         }
 
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Bottom}, {Right}, {Top})");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float Area(in Box2 box)
+        public static float Area(in Box2 box)
             => box.Width * box.Height;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -365,18 +383,18 @@ namespace Robust.Shared.Maths
 
         public bool EqualsApprox(Box2 other)
         {
-            return MathHelper.CloseTo(Left, other.Left)
-                   && MathHelper.CloseTo(Bottom, other.Bottom)
-                   && MathHelper.CloseTo(Right, other.Right)
-                   && MathHelper.CloseTo(Top, other.Top);
+            return MathHelper.CloseToPercent(Left, other.Left)
+                   && MathHelper.CloseToPercent(Bottom, other.Bottom)
+                   && MathHelper.CloseToPercent(Right, other.Right)
+                   && MathHelper.CloseToPercent(Top, other.Top);
         }
 
         public bool EqualsApprox(Box2 other, double tolerance)
         {
-            return MathHelper.CloseTo(Left, other.Left, tolerance)
-                   && MathHelper.CloseTo(Bottom, other.Bottom, tolerance)
-                   && MathHelper.CloseTo(Right, other.Right, tolerance)
-                   && MathHelper.CloseTo(Top, other.Top, tolerance);
+            return MathHelper.CloseToPercent(Left, other.Left, tolerance)
+                   && MathHelper.CloseToPercent(Bottom, other.Bottom, tolerance)
+                   && MathHelper.CloseToPercent(Right, other.Right, tolerance)
+                   && MathHelper.CloseToPercent(Top, other.Top, tolerance);
         }
     }
 }

@@ -1,3 +1,7 @@
+using System;
+using Robust.Shared.Players;
+using Robust.Shared.Timing;
+
 namespace Robust.Server.GameStates
 {
     /// <summary>
@@ -15,7 +19,10 @@ namespace Robust.Server.GameStates
         /// </summary>
         void SendGameStateUpdate();
 
-        bool PvsEnabled { get; set; }
-        float PvsRange { get; set; }
+        ushort TransformNetId { get; set; }
+
+        Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
+
+        Action<ICommonSession, GameTick, GameTick>? ClientRequestFull { get; set; }
     }
 }

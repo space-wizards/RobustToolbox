@@ -1,6 +1,8 @@
-﻿using System;
+using System;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -26,17 +28,9 @@ namespace Robust.Client.GameStates
         int TargetBufferSize { get; }
 
         /// <summary>
-        ///     Number of game states currently in the state buffer.
+        ///     Number of applicable game states currently in the state buffer.
         /// </summary>
         int CurrentBufferSize { get; }
-
-        /// <summary>
-        ///     The current tick of the last server game state applied.
-        /// </summary>
-        /// <remarks>
-        ///     Use this to synchronize server-sent simulation events with the client's game loop.
-        /// </remarks>
-        GameTick CurServerTick { get; }
 
         /// <summary>
         ///     If the buffer size is this many states larger than the target buffer size,
@@ -45,9 +39,21 @@ namespace Robust.Client.GameStates
         int StateBufferMergeThreshold { get; }
 
         /// <summary>
+        /// Whether prediction is currently enabled on the client entirely.
+        /// This is NOT equal to <see cref="IGameTiming.InPrediction"/> or <see cref="IGameTiming.IsFirstTimePredicted"/>.
+        /// </summary>
+        /// <remarks>This is effectively an alias of <see cref="CVars.NetPredict"/>.</remarks>
+        bool IsPredictionEnabled { get; }
+
+        /// <summary>
         ///     This is called after the game state has been applied for the current tick.
         /// </summary>
         event Action<GameStateAppliedArgs> GameStateApplied;
+
+        /// <summary>
+        ///     This is invoked whenever a pvs-leave message is received.
+        /// </summary>
+        public event Action<MsgStateLeavePvs>? PvsLeave;
 
         /// <summary>
         ///     One time initialization of the service.
@@ -69,6 +75,11 @@ namespace Robust.Client.GameStates
         /// </summary>
         /// <param name="message">Message being dispatched.</param>
         void InputCommandDispatched(FullInputCmdMessage message);
+
+        /// <summary>
+        ///     Requests a full state from the server. This should override even implicit entity data.
+        /// </summary>
+        public void RequestFullState();
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
     }

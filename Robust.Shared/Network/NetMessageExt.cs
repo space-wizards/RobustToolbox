@@ -106,5 +106,15 @@ namespace Robust.Shared.Network
             message.Position += length * 8;
             return stream;
         }
+
+        public static TimeSpan ReadTimeSpan(this NetIncomingMessage message)
+        {
+            return TimeSpan.FromTicks(message.ReadInt64());
+        }
+
+        public static void Write(this NetOutgoingMessage message, TimeSpan timeSpan)
+        {
+            message.Write(timeSpan.Ticks);
+        }
     }
 }

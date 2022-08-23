@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
@@ -12,10 +15,11 @@ namespace Robust.Server.Player
     /// <summary>
     /// This is the session of a connected client.
     /// </summary>
-    internal class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : IPlayerSession
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
+        private readonly HashSet<EntityUid> _viewSubscriptions = new();
 
         public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerData data)
         {
@@ -34,15 +38,15 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
+        [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
+        public int ViewSubscriptionCount => _viewSubscriptions.Count;
+
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
-
-        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
+        /// <inheritdoc />
+        [ViewVariables] public EntityUid? AttachedEntity { get; set; }
 
         private SessionStatus _status = SessionStatus.Connecting;
-
-        /// <inheritdoc />
 
         [ViewVariables]
         internal string Name { get; set; }
@@ -94,7 +98,6 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public DateTime ConnectedTime { get; private set; }
 
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public int VisibilityMask { get; set; } = 1;
 
@@ -103,27 +106,32 @@ namespace Robust.Server.Player
         public NetUserId UserId { get; }
 
         private readonly PlayerData _data;
+
         [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity? a)
+        public void AttachToEntity(EntityUid? entity)
         {
             DetachFromEntity();
 
-            if (a == null)
-            {
+            if (entity == null)
                 return;
-            }
 
-            var actorComponent = a.AddComponent<ActorComponent>();
-            actorComponent.PlayerSession = this;
-            AttachedEntity = a;
-            a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
-            a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
-            UpdatePlayerState();
+            AttachToEntity((EntityUid) entity);
+        }
+
+        /// <inheritdoc />
+        public void AttachToEntity(EntityUid uid)
+        {
+            DetachFromEntity();
+
+            if (!EntitySystem.Get<ActorSystem>().Attach(uid, this))
+            {
+                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{uid}\"! Did it have a player already attached to it?");
+            }
         }
 
         /// <inheritdoc />
@@ -132,22 +140,21 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
-            if (AttachedEntity.Deleted)
+#if EXCEPTION_TOLERANCE
+            if (IoCManager.Resolve<IEntityManager>().Deleted(AttachedEntity!.Value))
             {
-                throw new InvalidOperationException("Tried to detach player, but my entity does not exist!");
-            }
-
-            if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))
-            {
-                AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
-                AttachedEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerDetachedSystemMessage(AttachedEntity));
-                AttachedEntity.RemoveComponent<ActorComponent>();
+                Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
+                // We can't contact ActorSystem because trying to fire an entity event would crash.
+                // Work around it.
                 AttachedEntity = null;
                 UpdatePlayerState();
+                return;
             }
-            else
+#endif
+
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity.Value))
             {
-                throw new InvalidOperationException("Tried to detach player, but entity does not have ActorComponent!");
+                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
         }
 
@@ -164,16 +171,9 @@ namespace Robust.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
+            UnsubscribeAllViews();
             DetachFromEntity();
             UpdatePlayerState();
-        }
-
-        private void SetAttachedEntityName()
-        {
-            if (Name != null && AttachedEntity != null)
-            {
-                AttachedEntity.Name = Name;
-            }
         }
 
         /// <summary>
@@ -190,14 +190,38 @@ namespace Robust.Server.Player
 
         public LoginType AuthType => ConnectedClient.AuthType;
 
+        /// <inheritdoc />
+        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
+        {
+            AttachedEntity = entity;
+            UpdatePlayerState();
+        }
+
+        void IPlayerSession.AddViewSubscription(EntityUid eye)
+        {
+            _viewSubscriptions.Add(eye);
+        }
+
+        void IPlayerSession.RemoveViewSubscription(EntityUid eye)
+        {
+            _viewSubscriptions.Remove(eye);
+        }
+
+        private void UnsubscribeAllViews()
+        {
+            var viewSubscriberSystem = EntitySystem.Get<ViewSubscriberSystem>();
+
+            foreach (var eye in _viewSubscriptions)
+            {
+                viewSubscriberSystem.RemoveViewSubscriber(eye, this);
+            }
+        }
+
         private void UpdatePlayerState()
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            if (AttachedEntity == null)
-                PlayerState.ControlledEntity = null;
-            else
-                PlayerState.ControlledEntity = AttachedEntity.Uid;
+            PlayerState.ControlledEntity = AttachedEntity;
 
             _playerManager.Dirty();
         }

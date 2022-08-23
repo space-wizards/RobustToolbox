@@ -31,6 +31,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         Box2 GetWorldViewport();
 
+        Box2Rotated GetWorldViewbounds();
+
         /// <summary>
         /// Calculates the projection matrix to transform a point from camera space
         /// to UI screen space.
@@ -52,8 +54,10 @@ namespace Robust.Client.Graphics
         /// <returns>Corresponding point in UI screen space.</returns>
         ScreenCoordinates CoordinatesToScreen(EntityCoordinates point);
 
+        ScreenCoordinates MapToScreen(MapCoordinates point);
+
         /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
+        /// Unprojects a point from UI screen space to world space using the viewport under the screen coordinates.
         /// </summary>
         /// <remarks>
         /// The game exists on the 2D X/Y plane, so this function returns a point o the plane
@@ -64,7 +68,7 @@ namespace Robust.Client.Graphics
         MapCoordinates ScreenToMap(ScreenCoordinates point);
 
         /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
+        /// Unprojects a point from UI screen space to world space using the main viewport.
         /// </summary>
         /// <remarks>
         /// The game exists on the 2D X/Y plane, so this function returns a point o the plane

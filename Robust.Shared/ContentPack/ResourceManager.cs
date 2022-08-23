@@ -23,6 +23,8 @@ namespace Robust.Shared.ContentPack
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
             new();
 
+        private StreamSeekMode _streamSeekMode;
+
         // Special file names on Windows like serial ports.
         private static readonly Regex BadPathSegmentRegex =
             new("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
@@ -45,6 +47,8 @@ namespace Robust.Shared.ContentPack
             {
                 UserData = new VirtualWritableDirProvider();
             }
+
+            _config.OnValueChanged(CVars.ResStreamSeekMode, i => _streamSeekMode = (StreamSeekMode)i, true);
         }
 
         /// <inheritdoc />
@@ -93,7 +97,7 @@ namespace Robust.Shared.ContentPack
             AddRoot(prefix, loader);
         }
 
-        protected void AddRoot(ResourcePath prefix, IContentRoot loader)
+        public void AddRoot(ResourcePath prefix, IContentRoot loader)
         {
             loader.Mount();
             _contentRootsLock.EnterWriteLock();
@@ -172,7 +176,7 @@ namespace Robust.Shared.ContentPack
 
             if (!path.IsRooted)
             {
-                throw new ArgumentException("Path must be rooted", nameof(path));
+                throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
             if (!IsPathValid(path))
@@ -191,8 +195,9 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    if (root.TryGetFile(relative, out fileStream))
+                    if (root.TryGetFile(relative, out var stream))
                     {
+                        fileStream = WrapStream(stream);
                         return true;
                     }
                 }
@@ -203,6 +208,35 @@ namespace Robust.Shared.ContentPack
             finally
             {
                 _contentRootsLock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Apply <see cref="_streamSeekMode"/> to the provided stream.
+        /// </summary>
+        private Stream WrapStream(Stream stream)
+        {
+            switch (_streamSeekMode)
+            {
+                case StreamSeekMode.None:
+                    return stream;
+
+                case StreamSeekMode.ForceSeekable:
+                    if (stream.CanSeek)
+                        return stream;
+
+                    var ms = new MemoryStream(stream.CopyToArray(), writable: false);
+                    stream.Dispose();
+                    return ms;
+
+                case StreamSeekMode.ForceNonSeekable:
+                    if (!stream.CanSeek)
+                        return stream;
+
+                    return new NonSeekableStream(stream);
+
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
@@ -228,6 +262,36 @@ namespace Robust.Shared.ContentPack
         public IEnumerable<ResourcePath> ContentFindFiles(string path)
         {
             return ContentFindFiles(new ResourcePath(path));
+        }
+
+        public IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path)
+        {
+            ArgumentNullException.ThrowIfNull(path, nameof(path));
+
+            if (!path.IsRooted)
+                throw new ArgumentException("Path is not rooted", nameof(path));
+
+            var entries = new HashSet<string>();
+
+            _contentRootsLock.EnterReadLock();
+            try
+            {
+                foreach (var (prefix, root) in _contentRoots)
+                {
+                    if (!path.TryRelativeTo(prefix, out var relative))
+                    {
+                        continue;
+                    }
+
+                    entries.UnionWith(root.GetEntries(relative));
+                }
+            }
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
+            }
+
+            return entries;
         }
 
         /// <inheritdoc />

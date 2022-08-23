@@ -2,16 +2,13 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using NetSerializer;
-using Newtonsoft.Json.Linq;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -78,39 +75,35 @@ namespace Robust.Shared.Serialization
 
             public int LoadFromPackage(Stream stream, out byte[] hash)
             {
-                _mappedStrings = ReadStringPackage(stream, out hash).ToArray();
+                _mappedStrings = ReadStringPackage(stream, out hash);
                 _stringMapping = GenMapDict(_mappedStrings);
 
                 return _mappedStrings.Length;
             }
 
-            private static List<string> ReadStringPackage(Stream stream, out byte[] hash)
+            private static string[] ReadStringPackage(Stream stream, out byte[] hash)
             {
-                var list = new List<string>();
                 var buf = ArrayPool<byte>.Shared.Rent(4096);
-                var hasher = IncrementalHash.CreateHash(PackHashAlgo);
-                using var zs = new DeflateStream(stream, CompressionMode.Decompress, true);
-                using var hasherStream = new HasherStream(zs, hasher, true);
+                using var zs = new ZStdDecompressStream(stream, ownStream: false);
+                using var hasherStream = Blake2BHasherStream.CreateReader(zs, ReadOnlySpan<byte>.Empty, 32);
 
                 Primitives.ReadPrimitive(hasherStream, out uint count);
+                var list = new string[count];
+
                 for (var i = 0; i < count; ++i)
                 {
                     Primitives.ReadPrimitive(hasherStream, out uint lu);
                     var l = (int) lu;
-                    var y = hasherStream.Read(buf, 0, l);
-                    if (y != l)
-                    {
-                        throw new InvalidDataException($"Could not read the full length of string #{i}.");
-                    }
+                    var span = buf.AsSpan(0, l);
+                    hasherStream.ReadExact(span);
 
-                    var str = Encoding.UTF8.GetString(buf, 0, l);
-                    list.Add(str);
+                    var str = Encoding.UTF8.GetString(span);
+                    list[i] = str;
                 }
 
-                hash = hasher.GetHashAndReset();
+                hash = hasherStream.Finish();
                 return list;
             }
-
 
             /// <summary>
             /// Writes a strings package to a stream.
@@ -122,30 +115,27 @@ namespace Robust.Shared.Serialization
                 // ReSharper disable once SuggestVarOrType_Elsewhere
                 Span<byte> buf = stackalloc byte[MaxMappedStringSize];
 
-                var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA512);
+                using var zs = new ZStdCompressStream(stream, ownStream: false);
+                using var hasherStream = Blake2BHasherStream.CreateWriter(zs, ReadOnlySpan<byte>.Empty, 32);
 
-                using (var zs = new DeflateStream(stream, CompressionLevel.Optimal, true))
+                Primitives.WritePrimitive(hasherStream, (uint) strings.Length);
+
+                foreach (var str in strings)
                 {
-                    using var hasherStream = new HasherStream(zs, hasher, true);
-                    Primitives.WritePrimitive(hasherStream, (uint) strings.Length);
+                    DebugTools.Assert(str.Length < MaxMappedStringSize);
 
-                    foreach (var str in strings)
+                    var l = Encoding.UTF8.GetBytes(str, buf);
+
+                    if (l >= MaxMappedStringSize)
                     {
-                        DebugTools.Assert(str.Length < MaxMappedStringSize);
-
-                        var l = Encoding.UTF8.GetBytes(str, buf);
-
-                        if (l >= MaxMappedStringSize)
-                        {
-                            throw new NotImplementedException("Overly long string in strings package.");
-                        }
-
-                        Primitives.WritePrimitive(hasherStream, (uint) l);
-                        hasherStream.Write(buf[..l]);
+                        throw new NotImplementedException("Overly long string in strings package.");
                     }
+
+                    Primitives.WritePrimitive(hasherStream, (uint) l);
+                    hasherStream.Write(buf[..l]);
                 }
 
-                hash = hasher.GetHashAndReset();
+                hash = hasherStream.Finish();
             }
 
 
@@ -352,55 +342,6 @@ namespace Robust.Shared.Serialization
                         }
 
                         AddString(v);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Add strings from the given <see cref="JObject"/> to the mapping.
-            /// </summary>
-            /// <remarks>
-            /// Strings are taken from JSON property names and string nodes.
-            /// </remarks>
-            /// <param name="obj">The JSON to collect strings from.</param>
-            public void AddStrings(JObject obj)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                foreach (var node in obj.DescendantsAndSelf())
-                {
-                    switch (node)
-                    {
-                        case JValue value:
-                        {
-                            if (value.Type != JTokenType.String)
-                            {
-                                continue;
-                            }
-
-                            var v = value.Value?.ToString();
-                            if (string.IsNullOrEmpty(v))
-                            {
-                                continue;
-                            }
-
-                            AddString(v);
-                            break;
-                        }
-                        case JProperty prop:
-                        {
-                            var propName = prop.Name;
-                            if (string.IsNullOrEmpty(propName))
-                            {
-                                continue;
-                            }
-
-                            AddString(propName);
-                            break;
-                        }
                     }
                 }
             }

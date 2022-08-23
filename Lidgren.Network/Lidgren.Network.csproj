@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <DefineConstants Condition="'$(TargetFramework)' == 'netstandard2.1' or '$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);HAS_FULL_SPAN</DefineConstants>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefaultItemExcludes>Lidgren.Network/**/*</DefaultItemExcludes>
     <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

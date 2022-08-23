@@ -9,7 +9,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -38,37 +37,41 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             SetupNetworking();
-            ReceivedComponentMessage += (_, compMsg) => DispatchComponentMessage(compMsg);
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
         }
 
-        IEntity IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
-            return AllocEntity(prototypeName, uid);
+            return AllocEntity(prototypeName, out _, uid);
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
+        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
         {
-            LoadEntity((Entity) entity, context);
+            LoadEntity(entity, context);
         }
 
-        void IServerEntityManagerInternal.FinishEntityInitialization(IEntity entity)
+        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context)
         {
-            InitializeEntity((Entity) entity);
+            LoadEntity(entity, context, prototype);
         }
 
-        void IServerEntityManagerInternal.FinishEntityStartup(IEntity entity)
+        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
         {
-            StartEntity((Entity) entity);
+            InitializeEntity(entity, meta);
         }
 
-        private protected override Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
+        {
+            StartEntity(entity);
+        }
+
+        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             var entity = base.CreateEntity(prototypeName, uid);
 
-            if (prototypeName != null)
+            if (!string.IsNullOrWhiteSpace(prototypeName))
             {
                 var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
 
@@ -76,24 +79,30 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, component) in GetNetComponents(entity))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
                     // And those aren't guaranteed to exist on the client, so don't clear them.
-                    if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+                    var compName = ComponentFactory.GetComponentName(component.GetType());
+                    if (prototype.Components.ContainsKey(compName))
+                        component.ClearTicks();
                 }
             }
 
             return entity;
         }
 
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        {
+            TryGetComponent(uid, out ActorComponent? actor);
+
+            return base.ToPrettyString(uid) with { Session = actor?.PlayerSession };
+        }
+
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
-
-        /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
@@ -103,12 +112,18 @@ namespace Robust.Server.GameObjects
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
             new();
 
+        private readonly Dictionary<EntityUid, List<(GameTick tick, ushort netId)>> _componentDeletionHistory = new();
+
         private bool _logLateMsgs;
 
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+            _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
+
+            // For syncing component deletions.
+            EntityDeleted += OnEntityRemoved;
+            ComponentRemoved += OnComponentRemoved;
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
@@ -116,7 +131,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void TickUpdate(float frameTime, Histogram? histogram)
+        public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
@@ -126,9 +141,9 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            base.TickUpdate(frameTime, histogram);
+            base.TickUpdate(frameTime, noPredictions, histogram);
 
-            EntitiesCount.Set(AllEntities.Count);
+            EntitiesCount.Set(Entities.Count);
         }
 
         public uint GetLastMessageSequence(IPlayerSession session)
@@ -136,37 +151,69 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
-            ComponentMessage message)
+        private void OnEntityRemoved(EntityUid e)
         {
-            if (_networkManager.IsClient)
+            if (_componentDeletionHistory.ContainsKey(e))
+                _componentDeletionHistory.Remove(e);
+        }
+
+        private void OnComponentRemoved(RemovedComponentEventArgs e)
+        {
+            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
+
+            // We only keep track of networked components being removed.
+            if (reg.NetID is not {} netId)
                 return;
 
-            if (!component.NetID.HasValue)
-                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
+            var uid = e.BaseArgs.Owner;
 
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
-            msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity.Uid;
-            msg.NetId = component.NetID.Value;
-            msg.ComponentMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
+            if (!_componentDeletionHistory.TryGetValue(uid, out var list))
+            {
+                list = new List<(GameTick tick, ushort netId)>();
+                _componentDeletionHistory[uid] = list;
+            }
 
-            // Logger.DebugS("net.ent", "Sending: {0}", msg);
+            list.Add((_gameTiming.CurTick, netId));
+        }
 
-            //Send the message
-            if (channel == null)
-                _networkManager.ServerSendToAll(msg);
-            else
-                _networkManager.ServerSendMessage(msg, channel);
+        public List<ushort> GetDeletedComponents(EntityUid uid, GameTick fromTick)
+        {
+            // TODO: Maybe make this a struct enumerator? Right now it's a list for consistency...
+            var list = new List<ushort>();
+
+            if (!_componentDeletionHistory.TryGetValue(uid, out var history))
+                return list;
+
+            foreach (var (tick, id) in history)
+            {
+                if (tick >= fromTick) list.Add(id);
+            }
+
+            return list;
+        }
+
+        public void CullDeletionHistory(GameTick oldestAck)
+        {
+            var remQueue = new RemQueue<EntityUid>();
+
+            foreach (var (uid, list) in _componentDeletionHistory)
+            {
+                list.RemoveAll(hist => hist.tick < oldestAck);
+
+                if(list.Count == 0)
+                    remQueue.Add(uid);
+            }
+
+            foreach (var uid in remQueue)
+            {
+                _componentDeletionHistory.Remove(uid);
+            }
         }
 
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message)
         {
-            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
+            var newMsg = new MsgEntity();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
@@ -177,7 +224,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
         {
-            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
+            var newMsg = new MsgEntity();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
@@ -223,19 +270,28 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            switch (message.Type)
+#if EXCEPTION_TOLERANCE
+            try
+#endif
             {
-                case EntityMessageType.ComponentMessage:
-                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
-                    return;
-
-                case EntityMessageType.SystemMessage:
-                    var msg = message.SystemMessage;
-                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
-                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
-                    return;
+                switch (message.Type)
+                {
+                    case EntityMessageType.SystemMessage:
+                        var msg = message.SystemMessage;
+                        var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                        var sessionMsg =
+                            Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
+                        ReceivedSystemMessage?.Invoke(this, msg);
+                        ReceivedSystemMessage?.Invoke(this, sessionMsg);
+                        return;
+                }
             }
+#if EXCEPTION_TOLERANCE
+            catch (Exception e)
+            {
+                Logger.ErrorS("net.ent", $"Caught exception while dispatching {message.Type}: {e}");
+            }
+#endif
         }
 
         private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)

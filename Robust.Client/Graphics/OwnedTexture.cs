@@ -42,6 +42,9 @@ namespace Robust.Client.Graphics
             SetSubImage(topLeft, sourceImage, UIBox2i.FromDimensions(0, 0, sourceImage.Width, sourceImage.Height));
         }
 
+        public abstract void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            where T : unmanaged, IPixel<T>;
+
         public void Dispose()
         {
             Dispose(true);

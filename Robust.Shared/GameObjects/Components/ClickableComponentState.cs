@@ -5,11 +5,11 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    class ClickableComponentState : ComponentState
+    sealed class ClickableComponentState : ComponentState
     {
         public Box2? LocalBounds { get; }
 
-        public ClickableComponentState(Box2? localBounds) : base(NetIDs.CLICKABLE)
+        public ClickableComponentState(Box2? localBounds)
         {
             LocalBounds = localBounds;
         }

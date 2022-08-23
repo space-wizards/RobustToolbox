@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console
@@ -11,6 +12,18 @@ namespace Robust.Shared.Console
     /// <param name="argStr">Unparsed text of the complete command with arguments.</param>
     /// <param name="args">An array of all the parsed arguments.</param>
     public delegate void ConCommandCallback(IConsoleShell shell, string argStr, string[] args);
+
+    /// <summary>
+    /// Called to fetch completions for a console command. See <see cref="IConsoleCommand.GetCompletion"/> for details.
+    /// </summary>
+    public delegate CompletionResult ConCommandCompletionCallback(IConsoleShell shell, string[] args);
+
+    /// <summary>
+    /// Called to fetch completions for a console command (async). See <see cref="IConsoleCommand.GetCompletionAsync"/> for details.
+    /// </summary>
+    public delegate ValueTask<CompletionResult> ConCommandCompletionAsyncCallback(IConsoleShell shell, string[] args);
+
+    public delegate void ConAnyCommandCallback(IConsoleShell shell, string commandName, string argStr, string[] args);
 
     /// <summary>
     /// The console host exists as a singleton subsystem that provides all of the features of the console API.
@@ -38,7 +51,10 @@ namespace Robust.Shared.Console
         /// </summary>
         IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
 
-
+        /// <summary>
+        /// Invoked before any console command is executed.
+        /// </summary>
+        event ConAnyCommandCallback AnyCommandExecuted;
         event EventHandler ClearText;
 
         /// <summary>
@@ -49,13 +65,66 @@ namespace Robust.Shared.Console
 
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to
-        /// creating an <see cref="IConsoleCommand" /> class.
+        /// creating an <see cref="IConsoleCommand"/> class.
         /// </summary>
         /// <param name="command">A string as identifier for this command.</param>
         /// <param name="description">Short one sentence description of the command.</param>
         /// <param name="help">Command format string.</param>
-        /// <param name="callback"></param>
-        void RegisterCommand(string command, string description, string help, ConCommandCallback callback);
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to
+        /// creating an <see cref="IConsoleCommand"/> class.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="description">Short one sentence description of the command.</param>
+        /// <param name="help">Command format string.</param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with.
+        /// </param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback completionCallback);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to
+        /// creating an <see cref="IConsoleCommand"/> class.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="description">Short one sentence description of the command.</param>
+        /// <param name="help">Command format string.</param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with (async variant).
+        /// </param>
+        void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback);
+
+        /// <summary>
+        /// Unregisters a console command that has been registered previously with <see cref="RegisterCommand(string,string,string,Robust.Shared.Console.ConCommandCallback)"/>.
+        /// If the specified command was registered automatically or isn't registered at all, the method will throw.
+        /// </summary>
+        /// <param name="command">The string identifier for the command.</param>
+        void UnregisterCommand(string command);
 
         /// <summary>
         /// Returns the console shell for a given active session.
@@ -69,10 +138,34 @@ namespace Robust.Shared.Console
         IConsoleShell GetSessionShell(ICommonSession session);
 
         /// <summary>
-        /// Execute a command string on the local shell.
+        /// Execute a command string immediately on the local shell, bypassing the command buffer completely.
         /// </summary>
         /// <param name="command">Command string to execute.</param>
         void ExecuteCommand(string command);
+
+        /// <summary>
+        /// Appends a command into the end of the command buffer on the local shell.
+        /// </summary>
+        /// <remarks>
+        ///  This command will be ran *sometime* in the future, depending on how many waits are in the buffer.
+        /// </remarks>
+        /// <param name="command">Command string to execute.</param>
+        void AppendCommand(string command);
+
+        /// <summary>
+        /// Inserts a command into the front of the command buffer on the local shell.
+        /// </summary>
+        /// <remarks>
+        ///  This command will preempt the next command executed in the command buffer.
+        /// </remarks>
+        /// <param name="command">Command string to execute.</param>
+        void InsertCommand(string command);
+
+        /// <summary>
+        /// Processes any contents of the command buffer on the local shell. This needs to be called regularly (once a tick),
+        /// inside the simulation. Pausing the server should prevent the buffer from being processed.
+        /// </summary>
+        void CommandBufferExecute();
 
         /// <summary>
         /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded
@@ -115,5 +208,14 @@ namespace Robust.Shared.Console
         /// Removes all text from the local console.
         /// </summary>
         void ClearLocalConsole();
+    }
+
+    internal interface IConsoleHostInternal : IConsoleHost
+    {
+        /// <summary>
+        /// Is this command executed on the server?
+        /// Always true when ran from server, true for server-proxy commands on the client.
+        /// </summary>
+        bool IsCmdServer(IConsoleCommand cmd);
     }
 }

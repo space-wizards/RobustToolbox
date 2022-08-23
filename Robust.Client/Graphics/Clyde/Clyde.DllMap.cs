@@ -11,37 +11,31 @@ namespace Robust.Client.Graphics.Clyde
     {
         static Clyde()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+            if (OperatingSystem.IsWindows() &&
                 RuntimeInformation.ProcessArchitecture == Architecture.X64 &&
                 Environment.GetEnvironmentVariable("ROBUST_INTEGRATED_GPU") != "1")
             {
-                try
-                {
-                    // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
-                    // This is 100x easier than nvidia's documented approach of NvOptimusEnablement,
-                    // and works while developing.
-                    NativeLibrary.Load("nvapi64.dll");
-                }
-                catch (Exception)
-                {
-                    // If this fails whatever.
-                }
+                // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
+                // This is 100x easier than nvidia's documented approach of NvOptimusEnablement,
+                // and works while developing.
+                NativeLibrary.TryLoad("nvapi64.dll", out _);
+                // If this fails whatever.
             }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 return;
             }
 
             NativeLibrary.SetDllImportResolver(typeof(GL).Assembly, (name, assembly, path) =>
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                if (OperatingSystem.IsLinux()
                     && _dllMapLinux.TryGetValue(name, out var mappedName))
                 {
                     return NativeLibrary.Load(mappedName);
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                if (OperatingSystem.IsMacOS()
                     && _dllMapMacOS.TryGetValue(name, out mappedName))
                 {
                     return NativeLibrary.Load(mappedName);

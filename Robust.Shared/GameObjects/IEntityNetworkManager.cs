@@ -9,12 +9,7 @@ namespace Robust.Shared.GameObjects
     public interface IEntityNetworkManager
     {
         /// <summary>
-        /// This event is raised when a component message comes in from the network.
-        /// </summary>
-        event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
-
-        /// <summary>
-        /// This event is raised when a component message comes in from the network.
+        /// This event is raised when a system message comes in from the network.
         /// </summary>
         event EventHandler<object> ReceivedSystemMessage;
 
@@ -22,21 +17,6 @@ namespace Robust.Shared.GameObjects
         /// Initializes networking for this manager. This should only be called once.
         /// </summary>
         void SetupNetworking();
-
-        /// <summary>
-        /// Allows a component owned by this entity to send a message to a counterpart component on the
-        /// counterpart entities on clients.
-        /// </summary>
-        /// <param name="channel">
-        /// Intended recipient of the message. On Server, if this is null, broadcast the message to all clients.
-        /// On clients, this should always be null.
-        /// </param>
-        /// <param name="entity">Entity sending the message (also entity to send to).</param>
-        /// <param name="component">Component that sent the message.</param>
-        /// <param name="message">Message to send.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
-            ComponentMessage message);
 
         /// <summary>
         /// Sends an Entity System Message to relevant System(s).

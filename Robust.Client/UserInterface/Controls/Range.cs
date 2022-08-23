@@ -5,6 +5,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public abstract class Range : Control
     {
         private float _maxValue = 100;
@@ -94,7 +95,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _ensureValueClamped()
         {
             var newValue = ClampValue(_value);
-            if (!MathHelper.CloseTo(newValue, _value))
+            if (!MathHelper.CloseToPercent(newValue, _value))
             {
                 _value = newValue;
                 OnValueChanged?.Invoke(this);

@@ -7,9 +7,9 @@ namespace Robust.Shared.Physics
     {
 
         /// <summary>
-        ///     The entity that was hit. <see langword="null" /> if no entity was hit.
+        ///     The entity that was hit.
         /// </summary>
-        public IEntity HitEntity { get; }
+        public EntityUid HitEntity { get; }
 
         /// <summary>
         ///     The point of contact where the entity was hit. Defaults to <see cref="Vector2.Zero"/> if no entity was hit.
@@ -21,7 +21,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public float Distance { get; }
 
-        public RayCastResults(float distance, Vector2 hitPos, IEntity hitEntity)
+        public RayCastResults(float distance, Vector2 hitPos, EntityUid hitEntity)
         {
             Distance = distance;
             HitPos = hitPos;

@@ -9,7 +9,7 @@ namespace Robust.Client.Log
     /// <summary>
     ///     Writes logs to the in-game debug console.
     /// </summary>
-    class DebugConsoleLogHandler : ILogHandler
+    sealed class DebugConsoleLogHandler : ILogHandler
     {
         readonly IClientConsoleHost Console;
 
@@ -20,6 +20,9 @@ namespace Robust.Client.Log
 
         public void Log(string sawmillName, LogEvent message)
         {
+            if (sawmillName == "CON")
+                return;
+
             var formatted = new FormattedMessage(8);
             var robustLevel = message.Level.ToRobust();
             formatted.PushColor(Color.DarkGray);

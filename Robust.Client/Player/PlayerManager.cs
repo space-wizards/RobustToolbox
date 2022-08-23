@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -19,11 +18,10 @@ namespace Robust.Client.Player
     ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
     ///     This class also communicates with the server to let the server control what entity it is attached to.
     /// </summary>
-    public class PlayerManager : IPlayerManager
+    public sealed class PlayerManager : IPlayerManager
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -82,8 +80,8 @@ namespace Robust.Client.Player
         {
             _client.RunLevelChanged += OnRunLevelChanged;
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
+            _network.RegisterNetMessage<MsgPlayerListReq>();
+            _network.RegisterNetMessage<MsgPlayerList>(HandlePlayerList);
         }
 
         /// <inheritdoc />
@@ -91,7 +89,7 @@ namespace Robust.Client.Player
         {
             LocalPlayer = new LocalPlayer();
 
-            var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
+            var msgList = new MsgPlayerListReq();
             // message is empty
             _network.ClientSendMessage(msgList);
         }
@@ -104,9 +102,9 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public void ApplyPlayerStates(IEnumerable<PlayerState>? list)
+        public void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list)
         {
-            if (list == null)
+            if (list.Count == 0)
             {
                 // This happens when the server says "nothing changed!"
                 return;
@@ -141,18 +139,17 @@ namespace Robust.Client.Player
         /// <param name="entity">AttachedEntity in the server session.</param>
         private void UpdateAttachedEntity(EntityUid? entity)
         {
-            if (LocalPlayer!.ControlledEntity?.Uid == entity)
+            if (LocalPlayer!.ControlledEntity == entity)
             {
                 return;
             }
-
             if (entity == null)
             {
                 LocalPlayer.DetachEntity();
                 return;
             }
 
-            LocalPlayer.AttachEntity(_entityManager.GetEntity(entity.Value));
+            LocalPlayer.AttachEntity(entity.Value);
         }
 
         /// <summary>

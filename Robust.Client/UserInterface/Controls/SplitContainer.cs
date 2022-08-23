@@ -1,39 +1,59 @@
 using System;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public abstract class SplitContainer : Container
+    [Virtual]
+    public class SplitContainer : Container
     {
         /// <summary>
         /// Defines how user-initiated moving of the split should work. See documentation
         /// for each enum value to see how the different options work.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public SplitResizeMode ResizeMode { get; set; }
 
         /// <summary>
         /// Width of the split in virtual pixels
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitWidth { get; set; }
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitEdgeSeparation { get; set; }
-
-        private protected abstract bool Vertical { get; }
 
         private float _splitCenter;
         private SplitState _splitState;
         private bool _dragging;
+        private SplitOrientation _orientation;
 
-        // min / max x and y extents in relative virtual pixels of where the split can go regardless
-        // of anything else.
-        private float SplitMin => SplitWidth + SplitEdgeSeparation;
+        private bool Vertical => Orientation == SplitOrientation.Vertical;
 
-        private float SplitMax =>
-            Vertical ? Height - (SplitWidth + SplitEdgeSeparation) : Width - (SplitWidth + SplitEdgeSeparation);
+        public SplitState State
+        {
+            get => _splitState;
+            set
+            {
+                _splitState = value;
+                InvalidateMeasure();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public SplitOrientation Orientation
+        {
+            get => _orientation;
+            set
+            {
+                _orientation = value;
+                InvalidateMeasure();
+            }
+        }
 
         public SplitContainer()
         {
@@ -55,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var newOffset = Vertical ? args.RelativePosition.Y : args.RelativePosition.X;
 
-                _splitCenter = ClampSplitCenter(newOffset);
+                _splitCenter = ClampSplitCenter(newOffset, Size);
                 DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
                 InvalidateArrange();
             }
@@ -115,9 +135,14 @@ namespace Robust.Client.UserInterface.Controls
         /// <param name="firstMinSize">min size of the first child, will calculate if null</param>
         /// <param name="secondMinSize">min size of the second child, will calculate if null</param>
         /// <returns></returns>
-        private float ClampSplitCenter(float splitCenter, float? firstMinSize = null, float? secondMinSize = null)
+        private float ClampSplitCenter(float splitCenter, Vector2 controlSize, float? firstMinSize = null, float? secondMinSize = null)
         {
-            splitCenter = MathHelper.Clamp(splitCenter, SplitMin, SplitMax);
+            // min / max x and y extents in relative virtual pixels of where the split can go regardless
+            // of anything else.
+
+            var splitMin = SplitWidth + SplitEdgeSeparation;
+            var splitMax = Vertical ? controlSize.Y - splitMin : controlSize.X - splitMin;
+            splitCenter = MathHelper.Clamp(splitCenter, splitMin, splitMax);
 
             if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
             {
@@ -126,7 +151,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
                 secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
-                var size = Vertical ? Height : Width;
+                var size = Vertical ? controlSize.Y : controlSize.X;
 
                 splitCenter = MathHelper.Clamp(splitCenter, firstMinSize.Value,
                     size - (secondMinSize.Value + SplitWidth));
@@ -151,7 +176,7 @@ namespace Robust.Client.UserInterface.Controls
             var firstMinSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
             var secondMinSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
-            var size = Vertical ? Height : Width;
+            var size = Vertical ? finalSize.Y : finalSize.X;
 
             var ratio = first.SizeFlagsStretchRatio / (first.SizeFlagsStretchRatio + second.SizeFlagsStretchRatio);
 
@@ -159,7 +184,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 case SplitState.Manual:
                     // min sizes of children may have changed, ensure the offset still respects the defined limits
-                    _splitCenter = ClampSplitCenter(_splitCenter, firstMinSize, secondMinSize);
+                    _splitCenter = ClampSplitCenter(_splitCenter, finalSize, firstMinSize, secondMinSize);
                     break;
                 case SplitState.Auto:
                 {
@@ -184,13 +209,13 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Vertical)
             {
-                first.Arrange(new UIBox2(0, 0, Width, _splitCenter));
-                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, Width, Height));
+                first.Arrange(new UIBox2(0, 0, finalSize.X, _splitCenter));
+                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, finalSize.X, finalSize.Y));
             }
             else
             {
-                first.Arrange(new UIBox2(0, 0, _splitCenter, Height));
-                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, Width, Height));
+                first.Arrange(new UIBox2(0, 0, _splitCenter, finalSize.Y));
+                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, finalSize.X, finalSize.Y));
             }
 
             return finalSize;
@@ -207,10 +232,21 @@ namespace Robust.Client.UserInterface.Controls
             var second = GetChild(1);
 
             // TODO: Probably bad implementation with the new WPF layout.
-            first.Measure(availableSize);
-            second.Measure(availableSize);
 
+            if (Vertical)
+                availableSize.Y = MathF.Max(0, availableSize.Y - SplitWidth);
+            else
+                availableSize.X = MathF.Max(0, availableSize.X - SplitWidth);
+
+            first.Measure(availableSize);
             var (firstSizeX, firstSizeY) = first.DesiredSize;
+
+            if (Vertical)
+                availableSize.Y = MathF.Max(0, availableSize.Y - firstSizeY);
+            else
+                availableSize.X = MathF.Max(0, availableSize.X - firstSizeX);
+
+            second.Measure(availableSize);
             var (secondSizeX, secondSizeY) = second.DesiredSize;
 
             if (Vertical)
@@ -252,7 +288,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Defines how the split position should be determined
         /// </summary>
-        private enum SplitState : byte
+        public enum SplitState : byte
         {
             /// <summary>
             /// Automatically adjust the split based on the width of the children
@@ -263,6 +299,12 @@ namespace Robust.Client.UserInterface.Controls
             /// Manually adjust the split by dragging it
             /// </summary>
             Manual = 1
+        }
+
+        public enum SplitOrientation : byte
+        {
+            Horizontal,
+            Vertical
         }
     }
 }

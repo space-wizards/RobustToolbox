@@ -24,45 +24,72 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
+    [NetworkedComponent(), ComponentProtoName("Physics")]
+    public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
-
-        /// <inheritdoc />
-        public override string Name => "Physics";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.PHYSICS;
 
         /// <summary>
         ///     Has this body been added to an island previously in this tick.
         /// </summary>
         public bool Island { get; set; }
 
+        [ViewVariables]
+        internal BroadphaseComponent? Broadphase { get; set; }
+
+        /// <summary>
+        /// Debugging VV
+        /// </summary>
+        [ViewVariables]
+        private Box2? _broadphaseAABB
+        {
+            get
+            {
+                Box2? aabb = null;
+
+                if (Broadphase == null)
+                {
+                    return aabb;
+                }
+
+                var tree = Broadphase.Tree;
+
+                foreach (var (_, fixture) in IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        aabb = aabb?.Union(tree.GetProxy(proxy.ProxyId)!.AABB) ?? tree.GetProxy(proxy.ProxyId)!.AABB;
+                    }
+                }
+
+                return aabb;
+            }
+        }
+
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
+        ///     Key is Island's ID and value is our index.
         /// </summary>
-        public int IslandIndex { get; set; }
+        public Dictionary<int, int> IslandIndex { get; set; } = new();
 
         // TODO: Actually implement after the initial pr dummy
         /// <summary>
@@ -72,21 +99,17 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
+        public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
+
+        [ViewVariables] public int ContactCount => Contacts.Count;
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal ContactEdge? ContactEdges { get; set; } = null;
+        internal readonly LinkedList<Contact> Contacts = new();
 
-        /// <summary>
-        ///     Linked-list of all of our joints.
-        /// </summary>
-        internal JointEdge? JointEdges { get; set; } = null;
-        // TODO: Should there be a VV thing for joints? Would be useful. Same with contacts.
-        // Though not sure how to do it well with the linked-list.
-
+        [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
-
-        internal PhysicsMap PhysicsMap { get; set; } = default!;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -100,17 +123,17 @@ namespace Robust.Shared.GameObjects
 
                 var oldType = _bodyType;
                 _bodyType = value;
-
                 ResetMassData();
 
                 if (_bodyType == BodyType.Static)
                 {
                     SetAwake(false);
-                    _linVelocity = Vector2.Zero;
-                    _angVelocity = 0.0f;
+                    _linearVelocity = Vector2.Zero;
+                    _angularVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
-                else
+                // Even if it's dynamic if it can't collide then don't force it awake.
+                else if (_canCollide)
                 {
                     SetAwake(true);
                 }
@@ -118,9 +141,10 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                RegenerateContacts();
+                _entMan.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
         }
 
@@ -128,51 +152,51 @@ namespace Robust.Shared.GameObjects
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
 
-        /// <summary>
-        /// Set awake without the sleeptimer being reset.
-        /// </summary>
-        internal void ForceAwake()
-        {
-            if (_awake || _bodyType == BodyType.Static) return;
-
-            _awake = true;
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-        }
-
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Awake
         {
             get => _awake;
-            set
-            {
-                if (_bodyType == BodyType.Static) return;
-
-                SetAwake(value);
-            }
+            set => SetAwake(value);
         }
 
-        private bool _awake = true;
+        private bool _awake = false;
 
-        private void SetAwake(bool value)
+        public void SetAwake(bool value, bool updateSleepTime = true)
         {
-            if (_awake == value) return;
+            if (_awake == value)
+                return;
+
+            if (value && _bodyType == BodyType.Static)
+                return;
+
+            // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+            if (value && !_canCollide)
+            {
+                CanCollide = true;
+                if (!_canCollide)
+                    return;
+            }
+
             _awake = value;
 
             if (value)
             {
-                _sleepTime = 0.0f;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                var ev = new PhysicsWakeEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
             else
             {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                var ev = new PhysicsSleepEvent(this);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
                 ResetDynamics();
-                _sleepTime = 0.0f;
             }
 
-            Dirty();
+            if (updateSleepTime)
+                _sleepTime = 0.0f;
+
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -193,7 +217,7 @@ namespace Robust.Shared.GameObjects
                     Awake = true;
 
                 _sleepingAllowed = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -208,7 +232,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _sleepTime))
+                if (MathHelper.CloseToPercent(value, _sleepTime))
                     return;
 
                 _sleepTime = value;
@@ -221,247 +245,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void WakeBody()
         {
+            CanCollide = true;
+
+            if (!_canCollide) return;
+
             Awake = true;
-        }
-
-        /// <summary>
-        ///     Removes all of our contacts and flags them as requiring regeneration next physics tick.
-        /// </summary>
-        public void RegenerateContacts()
-        {
-            var contactEdge = ContactEdges;
-            while (contactEdge != null)
-            {
-                var contactEdge0 = contactEdge;
-                contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
-            }
-
-            ContactEdges = null;
-            var broadphaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-
-            foreach (var fixture in Fixtures)
-            {
-                var proxyCount = fixture.ProxyCount;
-                foreach (var (gridId, proxies) in fixture.Proxies)
-                {
-                    var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
-                    if (broadPhase == null) continue;
-                    for (var i = 0; i < proxyCount; i++)
-                    {
-                        broadPhase.TouchProxy(proxies[i].ProxyId);
-                    }
-                }
-            }
-        }
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            foreach (var fixture in _fixtures)
-            {
-                fixture.Body = this;
-                fixture.ComputeProperties();
-                if (string.IsNullOrEmpty(fixture.Name))
-                {
-                    fixture.Name = GetFixtureName(fixture);
-                }
-            }
-
-            ResetMassData();
-
-            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
-            {
-                _invMass = 1.0f / _mass;
-            }
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession session)
-        {
-            // TODO: Could optimise the shit out of this because only linear velocity and angular velocity are changing 99% of the time.
-            var joints = new List<Joint>();
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                joints.Add(je.Joint);
-            }
-
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState is not PhysicsComponentState newState)
-                return;
-
-            SleepingAllowed = newState.SleepingAllowed;
-            FixedRotation = newState.FixedRotation;
-            CanCollide = newState.CanCollide;
-            BodyStatus = newState.Status;
-
-            // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
-            // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-
-            // We will pray that this deferred joint is handled properly.
-
-            // TODO: Crude as FUCK diffing here as well, fine for now.
-            /*
-             * -- Joints --
-             */
-
-            var existingJoints = new List<Joint>();
-
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                existingJoints.Add(je.Joint);
-            }
-
-            var jointsDiff = true;
-
-            if (existingJoints.Count == newState.Joints.Count)
-            {
-                var anyDiff = false;
-                for (var i = 0; i < existingJoints.Count; i++)
-                {
-                    var existing = existingJoints[i];
-                    var newJoint = newState.Joints[i];
-
-                    if (!existing.Equals(newJoint))
-                    {
-                        anyDiff = true;
-                        break;
-                    }
-                }
-
-                if (!anyDiff)
-                {
-                    jointsDiff = false;
-                }
-            }
-
-            if (jointsDiff)
-            {
-                ClearJoints();
-
-                foreach (var joint in newState.Joints)
-                {
-                    joint.EdgeA = new JointEdge();
-                    joint.EdgeB = new JointEdge();
-                    // Defer joints given it relies on 2 bodies.
-                    AddJoint(joint);
-                }
-            }
-
-            /*
-             * -- Fixtures --
-             */
-
-            var toAdd = new List<Fixture>();
-            var toRemove = new List<Fixture>();
-            var computeProperties = false;
-
-            // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new List<Fixture>(newState.Fixtures.Count);
-            foreach (var fixture in newState.Fixtures)
-            {
-                var newFixture = new Fixture();
-                fixture.CopyTo(newFixture);
-                newFixture.Body = this;
-                newFixtures.Add(newFixture);
-            }
-
-            // Add / update new fixtures
-            foreach (var fixture in newFixtures)
-            {
-                var found = false;
-
-                foreach (var existing in _fixtures)
-                {
-                    if (!fixture.Name.Equals(existing.Name)) continue;
-
-                    if (!fixture.Equals(existing))
-                    {
-                        toAdd.Add(fixture);
-                        toRemove.Add(existing);
-                    }
-
-                    found = true;
-                    break;
-                }
-
-                if (!found)
-                {
-                    toAdd.Add(fixture);
-                }
-            }
-
-            // Remove old fixtures
-            foreach (var existing in _fixtures)
-            {
-                var found = false;
-
-                foreach (var fixture in newFixtures)
-                {
-                    if (fixture.Name.Equals(existing.Name))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    toRemove.Add(existing);
-                }
-            }
-
-            foreach (var fixture in toRemove)
-            {
-                computeProperties = true;
-                RemoveFixture(fixture);
-            }
-
-            // TODO: We also still need event listeners for shapes (Probably need C# events)
-            foreach (var fixture in toAdd)
-            {
-                computeProperties = true;
-                AddFixture(fixture);
-                fixture.Shape.ApplyState();
-            }
-
-            /*
-             * -- Sundries --
-             */
-
-            Dirty();
-            if (computeProperties)
-            {
-                ResetMassData();
-            }
-
-            LinearVelocity = newState.LinearVelocity;
-            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
-            AngularVelocity = newState.AngularVelocity;
-            BodyType = newState.BodyType;
-            Predict = false;
-        }
-
-        public Fixture? GetFixture(string name)
-        {
-            // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
-            // temporary value on deserialization so we can store it as a dictionary of <name, fixture>
-            // given 100% of bodies have 1-2 fixtures this isn't really a performance problem right now but
-            // should probably be done at some stage
-            // If we really need it then you just deserialize onto a dummy field that then just never gets used again.
-            foreach (var fixture in _fixtures)
-            {
-                if (fixture.Name.Equals(name))
-                {
-                    return fixture;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -471,64 +259,50 @@ namespace Robust.Shared.GameObjects
         public void ResetDynamics()
         {
             Torque = 0;
-            _angVelocity = 0;
+            _angularVelocity = 0;
             Force = Vector2.Zero;
-            _linVelocity = Vector2.Zero;
-            Dirty();
+            _linearVelocity = Vector2.Zero;
+            Dirty(_entMan);
         }
 
-        public Box2 GetWorldAABB(IMapManager? mapManager = null)
+        public Box2 GetAABB(Transform transform)
         {
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            var bounds = new Box2();
+            var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in _fixtures)
+            // Applying transform component state can cause entity-lookup updates, which apparently sometimes trigger this
+            // function before a fixtures has been added? I'm not 100% sure how this happens.
+            if (!_entMan.TryGetComponent(Owner, out FixturesComponent? fixtures))
+                return bounds;
+
+            // TODO cache this to speed up entity lookups & tree updating
+            foreach (var fixture in fixtures.Fixtures.Values)
             {
-                foreach (var (gridId, proxies) in fixture.Proxies)
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
-                    Vector2 offset;
-
-                    if (gridId == GridId.Invalid)
-                    {
-                        offset = Vector2.Zero;
-                    }
-                    else
-                    {
-                        offset = mapManager.GetGrid(gridId).WorldPosition;
-                    }
-
-                    foreach (var proxy in proxies)
-                    {
-                        var shapeBounds = proxy.AABB.Translated(offset);
-                        bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
-                    }
+                    // TODO don't transform each fixture, just transform the final AABB
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
                 }
             }
 
-            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
+            return bounds;
         }
 
-        /// <inheritdoc />
-        [ViewVariables]
-        public IReadOnlyList<Fixture> Fixtures => _fixtures;
-
-        public IEnumerable<Joint> Joints
+        [Obsolete("Use the GetWorldAABB on EntityLookupSystem")]
+        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            get
+            if (worldPos == null && worldRot == null)
             {
-                JointEdge? edge = JointEdges;
-
-                while (edge != null)
-                {
-                    yield return edge.Joint;
-                    edge = edge.Next;
-                }
+                (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
             }
-        }
+            else
+            {
+                worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
+                worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
+            }
 
-        [DataField("fixtures")]
-        [NeverPushInheritance]
-        private List<Fixture> _fixtures = new();
+            return GetAABB(new Transform(worldPos.Value, (float)worldRot.Value.Theta));
+        }
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -545,16 +319,23 @@ namespace Robust.Shared.GameObjects
                 if (_canCollide == value)
                     return;
 
-                _canCollide = value;
+                // If we're recursively in a container then never set this.
+                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
+                    .IsEntityOrParentInContainer(Owner)) return;
 
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
-                Dirty();
+                if (!value)
+                {
+                    Awake = false;
+                }
+
+                _canCollide = value;
+                var ev = new CollisionChangeEvent(this, _canCollide);
+                _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
+                Dirty(_entMan);
             }
         }
 
-        [DataField("canCollide")]
-        private bool _canCollide = true;
+        [DataField("canCollide")] internal bool _canCollide = true;
 
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
@@ -564,66 +345,31 @@ namespace Robust.Shared.GameObjects
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Hard
-        {
-            get
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    if (fixture.Hard) return true;
-                }
-
-                return false;
-            }
-            set
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    fixture.Hard = value;
-                }
-            }
-        }
+        public bool Hard { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get
-            {
-                var layers = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    layers |= fixture.CollisionLayer;
-                return layers;
-            }
-        }
+        [ViewVariables]
+        public int CollisionLayer { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get
-            {
-                var mask = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    mask |= fixture.CollisionMask;
-                return mask;
-            }
-        }
-
         [ViewVariables]
-        public bool HasProxies { get; set; }
+        public int CollisionMask { get; internal set; }
+
+        /// <summary>
+        ///     The current total mass of the entities fixtures in kilograms. Ignores the body type.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float FixturesMass => _mass;
 
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
-        ///     Current mass of the entity in kilograms.
+        ///     Current mass of the entity in kilograms. This may be 0 depending on the body type.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables(VVAccess.ReadOnly)]
         public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
         private float _mass;
@@ -645,21 +391,21 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
+            get => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
                 if (_bodyType != BodyType.Dynamic) return;
 
-                if (MathHelper.CloseTo(_inertia, value)) return;
+                if (MathHelper.CloseToPercent(_inertia, value)) return;
 
                 if (value > 0.0f && !_fixedRotation)
                 {
-                    _inertia = value - Mass * Vector2.Dot(LocalCenter, LocalCenter);
+                    _inertia = value - Mass * Vector2.Dot(_localCenter, _localCenter);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
-                    Dirty();
+                    Dirty(_entMan);
                 }
             }
         }
@@ -690,9 +436,9 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _fixedRotation = value;
-                _angVelocity = 0.0f;
+                _angularVelocity = 0.0f;
                 ResetMassData();
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -700,7 +446,6 @@ namespace Robust.Shared.GameObjects
         [DataField("fixedRotation")]
         private bool _fixedRotation = true;
 
-        // TODO: Will be used someday
         /// <summary>
         ///     Get this body's center of mass offset to world position.
         /// </summary>
@@ -708,15 +453,17 @@ namespace Robust.Shared.GameObjects
         ///     AKA Sweep.LocalCenter in Box2D.
         ///     Not currently in use as this is set after mass data gets set (when fixtures update).
         /// </remarks>
+        [ViewVariables]
         public Vector2 LocalCenter
         {
             get => _localCenter;
             set
             {
                 if (_bodyType != BodyType.Dynamic) return;
+
                 if (value.EqualsApprox(_localCenter)) return;
 
-                throw new NotImplementedException();
+                _localCenter = value;
             }
         }
 
@@ -751,12 +498,12 @@ namespace Robust.Shared.GameObjects
             get => _friction;
             set
             {
-                if (MathHelper.CloseTo(value, _friction))
+                if (MathHelper.CloseToPercent(value, _friction))
                     return;
 
                 _friction = value;
                 // TODO
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
@@ -774,16 +521,16 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _linearDamping))
+                if (MathHelper.CloseToPercent(value, _linearDamping))
                     return;
 
                 _linearDamping = value;
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
         [DataField("linearDamping")]
-        private float _linearDamping = 0.02f;
+        private float _linearDamping = 0.2f;
 
         /// <summary>
         ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -798,24 +545,29 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _angularDamping))
+                if (MathHelper.CloseToPercent(value, _angularDamping))
                     return;
 
                 _angularDamping = value;
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
         [DataField("angularDamping")]
-        private float _angularDamping = 0.02f;
+        private float _angularDamping = 0.2f;
 
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
+        /// <remarks>
+        ///     This is the velocity relative to the parent, but is defined in terms of map coordinates. I.e., if the
+        ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
+        ///     local position).
+        /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LinearVelocity
         {
-            get => _linVelocity;
+            get => _linearVelocity;
             set
             {
                 // Curse you Q
@@ -827,15 +579,15 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value, 0.0001))
+                if (_linearVelocity.EqualsApprox(value, 0.0001f))
                     return;
 
-                _linVelocity = value;
-                Dirty();
+                _linearVelocity = value;
+                Dirty(_entMan);
             }
         }
 
-        private Vector2 _linVelocity;
+        internal Vector2 _linearVelocity;
 
         /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
@@ -843,7 +595,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float AngularVelocity
         {
-            get => _angVelocity;
+            get => _angularVelocity;
             set
             {
                 // TODO: This and linearvelocity asserts
@@ -855,15 +607,18 @@ namespace Robust.Shared.GameObjects
                 if (value * value > 0.0f)
                     Awake = true;
 
-                if (MathHelper.CloseTo(_angVelocity, value))
+                // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
+                // sleep-tolerance can damp down to sleeping.
+
+                if (MathHelper.CloseToPercent(_angularVelocity, value, 0.00001f))
                     return;
 
-                _angVelocity = value;
-                Dirty();
+                _angularVelocity = value;
+                Dirty(_entMan);
             }
         }
 
-        private float _angVelocity;
+        internal float _angularVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -888,7 +643,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _bodyStatus = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -902,27 +657,6 @@ namespace Robust.Shared.GameObjects
         private bool _predict;
 
         /// <summary>
-        ///     As we defer updates need to store the MapId we used for broadphase.
-        /// </summary>
-        public MapId BroadphaseMapId { get; set; }
-
-        public IEnumerable<PhysicsComponent> GetCollidingBodies()
-        {
-            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, Vector2.Zero))
-            {
-                yield return entity;
-            }
-        }
-
-        public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
-        {
-            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
-            {
-                yield return entity;
-            }
-        }
-
-        /// <summary>
         /// Gets a local point relative to the body's origin given a world point.
         /// Note that the vector only takes the rotation into account, not the position.
         /// </summary>
@@ -930,7 +664,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The corresponding local point relative to the body's origin.</returns>
         public Vector2 GetLocalPoint(in Vector2 worldPoint)
         {
-            return Physics.Transform.MulT(GetTransform(), worldPoint);
+            return Transform.MulT(GetTransform(), worldPoint);
         }
 
         /// <summary>
@@ -943,48 +677,48 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
+        public Vector2 GetLocalVector2(Vector2 worldVector)
+        {
+            return Transform.MulT(new Quaternion2D((float) _entMan.GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
+        }
+
+        public Transform GetTransform()
+        {
+            return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));
+        }
+
+        public Transform GetTransform(TransformComponent xform)
+        {
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+
+            var xf = new Transform(worldPos, (float) worldRot.Theta);
+            // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
+
+            return xf;
+        }
+
         /// <summary>
-        ///     Remove the proxies from all the broadphases.
+        /// Applies an impulse to the centre of mass.
         /// </summary>
-        public void ClearProxies()
-        {
-            if (!HasProxies) return;
-
-            var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-            var mapId = BroadphaseMapId;
-
-            foreach (var fixture in Fixtures)
-            {
-                fixture.ClearProxies(mapId, broadPhaseSystem);
-            }
-
-            HasProxies = false;
-        }
-
-        public void FixtureChanged(Fixture fixture)
-        {
-            // TODO: Optimise this a LOT
-            Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
-        }
-
-        internal string GetFixtureName(Fixture fixture)
-        {
-            // For any fixtures that aren't named in the code we will assign one.
-            return $"fixture-{_fixtures.IndexOf(fixture)}";
-        }
-
-        internal Transform GetTransform()
-        {
-            return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
-        }
-
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
             if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
+        }
+
+        /// <summary>
+        /// Applies an impulse from the specified point.
+        /// </summary>
+        public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
+        {
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+            // TODO: Sweep here
+            AngularVelocity += InvI * Vector2.Cross(point, impulse);
         }
 
         public void ApplyAngularImpulse(float impulse)
@@ -1003,229 +737,32 @@ namespace Robust.Shared.GameObjects
             Force += force;
         }
 
-        /// <summary>
-        ///     Get the proxies for each of our fixtures and add them to the broadphases.
-        /// </summary>
-        /// <param name="mapManager"></param>
-        /// <param name="broadPhaseSystem"></param>
-        public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
-        {
-            if (HasProxies) return;
-
-            BroadphaseMapId = Owner.Transform.MapID;
-
-            if (BroadphaseMapId == MapId.Nullspace)
-            {
-                HasProxies = true;
-                return;
-            }
-
-            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            var worldPosition = Owner.Transform.WorldPosition;
-            var mapId = Owner.Transform.MapID;
-            var worldAABB = GetWorldAABB();
-            var worldRotation = Owner.Transform.WorldRotation.Theta;
-
-            // TODO: For singularity and shuttles: Any fixtures that have a MapGrid layer / mask needs to be added to the default broadphase (so it can collide with grids).
-
-            foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
-            {
-                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-                DebugTools.AssertNotNull(broadPhase);
-                if (broadPhase == null) continue; // TODO
-
-                Vector2 offset = worldPosition;
-                double gridRotation = worldRotation;
-
-                if (gridId != GridId.Invalid)
-                {
-                    var grid = mapManager.GetGrid(gridId);
-                    offset -= grid.WorldPosition;
-                    // TODO: Should probably have a helper for this
-                    gridRotation = worldRotation - Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-                }
-
-                foreach (var fixture in Fixtures)
-                {
-                    fixture.ProxyCount = fixture.Shape.ChildCount;
-                    var proxies = new FixtureProxy[fixture.ProxyCount];
-
-                    // TODO: Will need to pass in childIndex to this as well
-                    for (var i = 0; i < fixture.ProxyCount; i++)
-                    {
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
-
-                        var proxy = new FixtureProxy(aabb, fixture, i);
-
-                        proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                        proxies[i] = proxy;
-                        DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
-                    }
-
-                    fixture.SetProxies(gridId, proxies);
-                }
-            }
-
-            HasProxies = true;
-        }
-
-        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
-        public void DestroyContacts()
-        {
-            ContactEdge? contactEdge = ContactEdges;
-            while (contactEdge != null)
-            {
-                var contactEdge0 = contactEdge;
-                contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
-            }
-
-            ContactEdges = null;
-        }
-
-        IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
-        {
-            return EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, offset, approx);
-        }
-
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            if (BodyType == BodyType.Static)
-            {
-                _awake = false;
-            }
-
-            Dirty();
-            // Yeah yeah TODO Combine these
-            // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.
-
-            if (CanCollide)
-            {
-                if (!Awake)
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
-                }
-                else
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-                }
-
-                if (Owner.IsInContainer())
-                {
-                    _canCollide = false;
-                }
-                else
-                {
-                    // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
-                }
-            }
-
-            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
-            {
-                PhysicsMap = map;
-            }
-        }
-
-        public void ClearJoints()
-        {
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                RemoveJoint(je.Joint);
-            }
-        }
-
-        public void AddFixture(Fixture fixture)
-        {
-            // TODO: SynchronizeFixtures could be more optimally done. Maybe just eventbus it
-            // Also we need to queue updates and also not teardown completely every time.
-            _fixtures.Add(fixture);
-            Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().AddFixture(this, fixture);
-        }
-
-        public void RemoveFixture(Fixture fixture)
-        {
-            if (!_fixtures.Contains(fixture))
-            {
-                Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
-                return;
-            }
-
-            ContactEdge? edge = ContactEdges;
-            while (edge != null)
-            {
-                var contact = edge.Contact!;
-                edge = edge.Next;
-
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixture == fixtureA || fixture == fixtureB)
-                {
-                    PhysicsMap.ContactManager.Destroy(contact);
-                }
-            }
-
-            _fixtures.Remove(fixture);
-            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
-            ResetMassData();
-
-            Dirty();
-        }
-
-        public void AddJoint(Joint joint)
-        {
-            PhysicsMap.AddJoint(joint);
-        }
-
-        public void RemoveJoint(Joint joint)
-        {
-            PhysicsMap.RemoveJoint(joint);
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-            // Need to do these immediately in case collision behaviors deleted the body
-            // TODO: Could be more optimal as currently broadphase will call this ANYWAY
-            DestroyContacts();
-            ClearProxies();
-            CanCollide = false;
-        }
-
-        public void ResetMassData()
+        public void ResetMassData(FixturesComponent? fixtures = null)
         {
             _mass = 0.0f;
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
-            // Sweep
+            _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
-            {
-                return;
-            }
-
+            // Temporary until ECS don't @ me.
+            fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
 
-            foreach (var fixture in _fixtures)
+            foreach (var (_, fixture) in fixtures.Fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 
-                var fixMass = fixture.Mass;
+                var data = new MassData {Mass = fixture.Mass};
+                FixtureSystem.GetMassData(fixture.Shape, ref data);
 
-                _mass += fixMass;
-                localCenter += fixture.Centroid * fixMass;
-                _inertia += fixture.Inertia;
+                _mass += data.Mass;
+                localCenter += data.Center * data.Mass;
+                _inertia += data.I;
             }
 
-            if (BodyType == BodyType.Static)
+            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return;
             }
@@ -1256,16 +793,19 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            /* TODO
-            // Move center of mass;
-            var oldCenter = _sweep.Center;
-            _sweep.LocalCenter = localCenter;
-            _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);
+            _localCenter = localCenter;
+
+            // TODO: Calculate Sweep
+
+            /*
+            var oldCenter = Sweep.Center;
+            Sweep.LocalCenter = localCenter;
+            Sweep.Center0 = Sweep.Center = Transform.Mul(GetTransform(), Sweep.LocalCenter);
+            */
 
             // Update center of mass velocity.
-            var a = _sweep.Center - oldCenter;
-            _linVelocity += new Vector2(-_angVelocity * a.y, _angVelocity * a.x);
-            */
+            // _linVelocity += Vector2.Cross(_angVelocity, Worl - oldCenter);
+
         }
 
         /// <summary>
@@ -1282,53 +822,71 @@ namespace Robust.Shared.GameObjects
             }
 
             // Does a joint prevent collision?
-            for (var jn = JointEdges; jn != null; jn = jn.Next)
+            // if one of them doesn't have jointcomp then they can't share a common joint.
+            // otherwise, only need to iterate over the joints of one component as they both store the same joint.
+            if (_entMan.TryGetComponent(Owner, out JointComponent? jointComponentA) &&
+                _entMan.TryGetComponent(other.Owner, out JointComponent? jointComponentB))
             {
-                if (jn.Other != other) continue;
-                if (jn.Joint.CollideConnected) continue;
-                return false;
+                var aUid = jointComponentA.Owner;
+                var bUid = jointComponentB.Owner;
+
+                foreach (var (_, joint) in jointComponentA.Joints)
+                {
+                    // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
+                    if (!joint.CollideConnected &&
+                        ((aUid == joint.BodyAUid &&
+                         bUid == joint.BodyBUid) ||
+                        (bUid == joint.BodyAUid &&
+                         aUid == joint.BodyBUid))) return false;
+                }
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 
-#pragma warning disable 618
-            foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
-            {
-                if (comp.PreventCollide(other)) return false;
-            }
+            preventCollideMessage = new PreventCollideEvent(other, this);
+            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
 
-            foreach (var comp in other.Owner.GetAllComponents<ICollideSpecial>())
-            {
-                if (comp.PreventCollide(this)) return false;
-            }
-#pragma warning restore 618
+            if (preventCollideMessage.Cancelled) return false;
 
             return true;
         }
+
+        // View variables conveniences properties.
+        [ViewVariables]
+        private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
+        [ViewVariables]
+        private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    [ByRefEvent]
+    public readonly struct PhysicsBodyTypeChangedEvent
     {
+        public readonly EntityUid Entity;
+
         /// <summary>
         ///     New BodyType of the entity.
         /// </summary>
-        public BodyType New { get; }
+        public readonly BodyType New;
 
         /// <summary>
         ///     Old BodyType of the entity.
         /// </summary>
-        public BodyType Old { get; }
+        public readonly BodyType Old;
 
-        public PhysicsBodyTypeChangedEvent(BodyType newType, BodyType oldType)
+        public readonly PhysicsComponent Component;
+
+        public PhysicsBodyTypeChangedEvent(EntityUid entity, BodyType newType, BodyType oldType, PhysicsComponent component)
         {
+            Entity = entity;
             New = newType;
             Old = oldType;
+            Component = component;
         }
     }
 }

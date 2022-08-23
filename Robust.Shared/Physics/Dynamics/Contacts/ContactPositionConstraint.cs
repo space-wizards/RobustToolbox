@@ -25,7 +25,7 @@ using Robust.Shared.Physics.Collision;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
-    internal sealed class ContactPositionConstraint
+    internal struct ContactPositionConstraint
     {
         /// <summary>
         ///     Index of BodyA in the island.
@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public int IndexB { get; set; }
 
-        public Vector2[] LocalPoints = new Vector2[2];
+        public Vector2[] LocalPoints;
 
         public Vector2 LocalNormal;
 

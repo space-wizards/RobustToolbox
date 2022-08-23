@@ -20,20 +20,33 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager = default!;
-        [Dependency] protected readonly IComponentManager ComponentManager = default!;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] protected readonly EntityManager EntityManager;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
 
+
+        public bool UpdatesOutsidePrediction { get; protected internal set; }
+
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
+
+        protected EntitySystem() : this(default!) { }
+
+        protected EntitySystem(IEntityManager entityManager)
+        {
+            EntityManager = (EntityManager)entityManager;
+            Subs = new Subscriptions(this);
+        }
 
         /// <inheritdoc />
         public virtual void Initialize() { }
 
         /// <inheritdoc />
+        /// <remarks>
+        /// Not ran on the client if prediction is disabled and
+        /// <see cref="UpdatesOutsidePrediction"/> is false (the default).
+        /// </remarks>
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />
@@ -45,12 +58,16 @@ namespace Robust.Shared.GameObjects
             ShutdownSubscriptions();
         }
 
-
         #region Event Proxy
 
         protected void RaiseLocalEvent<T>(T message) where T : notnull
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+        }
+
+        protected void RaiseLocalEvent<T>(ref T message) where T : notnull
+        {
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
         }
 
         protected void RaiseLocalEvent(object message)
@@ -81,16 +98,26 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
-            where T : EntityEventArgs
-        {
-            return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
-        }
-
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent : EntityEventArgs
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
+            where TEvent : notnull
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+        }
+
+        protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false)
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+        }
+
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
+        }
+
+        protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false)
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
         }
 
         #endregion
@@ -110,6 +137,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">entity system to get</typeparam>
         /// <returns></returns>
+        [Obsolete]
         public static T Get<T>() where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
@@ -121,6 +149,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
+        [Obsolete]
         public static bool TryGet<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem(out entitySystem);

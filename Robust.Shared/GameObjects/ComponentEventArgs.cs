@@ -1,73 +1,62 @@
-#nullable enable
-using System;
-
 namespace Robust.Shared.GameObjects
 {
 
     /// <summary>
     /// Arguments for an event related to a component.
     /// </summary>
-    public abstract class ComponentEventArgs : EventArgs
+    public readonly struct ComponentEventArgs
     {
-
         /// <summary>
         /// Component that this event relates to.
         /// </summary>
-        public IComponent Component { get; }
+        public Component Component { get; }
 
         /// <summary>
         /// EntityUid of the entity this component belongs to.
         /// </summary>
-        public EntityUid OwnerUid { get; }
+        public EntityUid Owner { get; }
 
         /// <summary>
         /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        /// <param name="ownerUid">EntityUid of the entity this component belongs to.</param>
-        protected ComponentEventArgs(IComponent component, EntityUid ownerUid)
+        /// <param name="owner">EntityUid of the entity this component belongs to.</param>
+        public ComponentEventArgs(Component component, EntityUid owner)
         {
             Component = component;
-            OwnerUid = ownerUid;
+            Owner = owner;
         }
     }
 
-    /// <summary>
-    /// Arguments for an event related to a component being added.
-    /// </summary>
-    public sealed class AddedComponentEventArgs : ComponentEventArgs
+    public readonly struct AddedComponentEventArgs
     {
-        /// <summary>
-        /// Constructs a new instance of <see cref="AddedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public AddedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
+        public readonly ComponentEventArgs BaseArgs;
+        public readonly CompIdx ComponentType;
+
+        public AddedComponentEventArgs(ComponentEventArgs baseArgs, CompIdx componentType)
+        {
+            BaseArgs = baseArgs;
+            ComponentType = componentType;
+        }
     }
 
-    /// <summary>
-    /// Arguments for an event related to a component being removed.
-    /// </summary>
-    public sealed class RemovedComponentEventArgs : ComponentEventArgs
+    public readonly struct RemovedComponentEventArgs
     {
-        /// <summary>
-        /// Constructs a new instance of <see cref="RemovedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public RemovedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
+        public readonly ComponentEventArgs BaseArgs;
+
+        public RemovedComponentEventArgs(ComponentEventArgs baseArgs)
+        {
+            BaseArgs = baseArgs;
+        }
     }
 
-    /// <summary>
-    /// Arguments for an event related to a component being deleted.
-    /// </summary>
-    public sealed class DeletedComponentEventArgs : ComponentEventArgs
+    public readonly struct DeletedComponentEventArgs
     {
-        /// <summary>
-        /// Constructs a new instance of <see cref="DeletedComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component">The relevant component</param>
-        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
-        public DeletedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
+        public readonly ComponentEventArgs BaseArgs;
+
+        public DeletedComponentEventArgs(ComponentEventArgs baseArgs)
+        {
+            BaseArgs = baseArgs;
+        }
     }
 }

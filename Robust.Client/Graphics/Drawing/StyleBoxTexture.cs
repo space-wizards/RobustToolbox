@@ -7,7 +7,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Style box based on a 9-patch texture.
     /// </summary>
-    public class StyleBoxTexture : StyleBox
+    public sealed class StyleBoxTexture : StyleBox
     {
         public StyleBoxTexture()
         {
@@ -110,12 +110,6 @@ namespace Robust.Client.Graphics
         public Color Modulate { get; set; } = Color.White;
 
         public Texture? Texture { get; set; }
-
-        [Obsolete("Use SetPatchMargin")]
-        public void SetMargin(Margin margin, float value)
-        {
-            SetPatchMargin(margin, value);
-        }
 
         public void SetPatchMargin(Margin margin, float value)
         {

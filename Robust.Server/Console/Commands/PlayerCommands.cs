@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -11,7 +13,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal class TeleportCommand : IConsoleCommand
+    internal sealed class TeleportCommand : IConsoleCommand
     {
         public string Command => "tp";
         public string Description => "Teleports a player to any location in the round.";
@@ -20,19 +22,22 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+            if (player?.Status != SessionStatus.InGame)
+                return;
+
+            var transform = player.AttachedEntityTransform;
+            if (transform == null)
                 return;
 
             if (args.Length < 2 || !float.TryParse(args[0], out var posX) || !float.TryParse(args[1], out var posY))
+            {
+                shell.WriteError(Help);
                 return;
+            }
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
             var position = new Vector2(posX, posY);
-            var transform = player.AttachedEntity?.Transform;
-
-            if(transform == null)
-                return;
 
             transform.AttachToGridOrMap();
 
@@ -56,7 +61,7 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                var mapEnt = mapMgr.GetMapEntity(mapId);
+                var mapEnt = mapMgr.GetMapEntityIdOrThrow(mapId);
                 transform.WorldPosition = position;
                 transform.AttachParent(mapEnt);
             }
@@ -65,35 +70,80 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class TeleportToPlayerCommand : IConsoleCommand
+    public sealed class TeleportToCommand : IConsoleCommand
     {
         public string Command => "tpto";
-        public string Description => "Teleports the current player to the location of another player.";
-        public string Help => "tpto <username>";
+        public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
+        public string Help => "tpto <username|uid> [username|uid]...";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+            if (args.Length == 0)
                 return;
 
-            if (args.Length < 1)
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var playerMan = IoCManager.Resolve<IPlayerManager>();
+
+            var target = args[^1];
+
+            if (!TryGetTransformFromUidOrUsername(target, shell, entMan, playerMan, out var targetTransform))
                 return;
 
-            var players = IoCManager.Resolve<IPlayerManager>();
-            var name = args[0];
+            var targetCoords = targetTransform.Coordinates;
 
-            if (players.TryGetSessionByUsername(name, out var target))
+            if (args.Length == 1)
             {
-                if (target.AttachedEntity == null)
+                var player = shell.Player as IPlayerSession;
+                if (player?.Status != SessionStatus.InGame)
+                {
+                    shell.WriteError("You need to be in game to teleport to an entity.");
                     return;
+                }
 
-                player.AttachedEntity.Transform.Coordinates = target.AttachedEntity.Transform.Coordinates;
+                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent? playerTransform))
+                {
+                    shell.WriteError("You don't have an entity.");
+                    return;
+                }
+
+                playerTransform.Coordinates = targetCoords;
             }
+            else
+            {
+                foreach (var victim in args)
+                {
+                    if (victim == target)
+                        continue;
+
+                    if (!TryGetTransformFromUidOrUsername(victim, shell, entMan, playerMan, out var victimTransform))
+                        return;
+
+                    victimTransform.Coordinates = targetCoords;
+                }
+            }
+        }
+
+        private static bool TryGetTransformFromUidOrUsername(string str, IConsoleShell shell, IEntityManager entMan,
+            IPlayerManager playerMan, [NotNullWhen(true)] out TransformComponent? transform)
+        {
+            if (int.TryParse(str, out var uid)
+                && entMan.TryGetComponent(new EntityUid(uid), out transform))
+                return true;
+
+            if (playerMan.TryGetSessionByUsername(str, out var session)
+                && entMan.TryGetComponent(session.AttachedEntity, out transform))
+                return true;
+
+            if (session == null)
+                shell.WriteError("Can't find username/id: " + str);
+            else
+                shell.WriteError(str + " does not have an entity.");
+            transform = null;
+            return false;
         }
     }
 
-    public class ListPlayers : IConsoleCommand
+    public sealed class ListPlayers : IConsoleCommand
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
@@ -107,7 +157,7 @@ namespace Robust.Server.Console.Commands
 
             var sb = new StringBuilder();
 
-            var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
+            var players = IoCManager.Resolve<IPlayerManager>().ServerSessions;
             sb.AppendLine($"{"Player Name",20} {"Status",12} {"Playing Time",14} {"Ping",9} {"IP EndPoint",20}");
             sb.AppendLine("-------------------------------------------------------------------------------");
 
@@ -125,7 +175,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class KickCommand : IConsoleCommand
+    internal sealed class KickCommand : IConsoleCommand
     {
         public string Command => "kick";
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
@@ -137,7 +187,7 @@ namespace Robust.Server.Console.Commands
             if (args.Length < 1)
             {
                 var player = shell.Player as IPlayerSession;
-                var toKickPlayer = player ?? players.GetAllPlayers().FirstOrDefault();
+                var toKickPlayer = player ?? players.ServerSessions.FirstOrDefault();
                 if (toKickPlayer == null)
                 {
                     shell.WriteLine("You need to provide a player to kick.");
@@ -153,14 +203,32 @@ namespace Robust.Server.Console.Commands
             {
                 var network = IoCManager.Resolve<IServerNetManager>();
 
-                var reason = "Kicked by console.";
+                string reason;
                 if (args.Length >= 2)
-                {
-                    reason = reason + args[1];
-                }
+                    reason = $"Kicked by console: {string.Join(' ', args[1..])}";
+                else
+                    reason = "Kicked by console";
 
                 network.DisconnectChannel(target.ConnectedClient, reason);
             }
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                var playerManager = IoCManager.Resolve<IPlayerManager>();
+                var options = playerManager.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
+
+                return CompletionResult.FromHintOptions(options, "<PlayerIndex>");
+            }
+
+            if (args.Length > 1)
+            {
+                return CompletionResult.FromHint("[<Reason>]");
+            }
+
+            return CompletionResult.Empty;
         }
     }
 }

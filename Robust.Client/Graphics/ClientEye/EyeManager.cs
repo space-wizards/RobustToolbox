@@ -2,6 +2,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -32,14 +33,20 @@ namespace Robust.Client.Graphics
         public IEye CurrentEye
         {
             get => _currentEye ?? _defaultEye;
-            set => _currentEye = value;
+            set
+            {
+                var old = _currentEye;
+                _currentEye = value;
+
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, new CurrentEyeChangedEvent(old, _currentEye));
+            }
         }
 
         public IViewportControl MainViewport { get; set; } = default!;
 
         public void ClearCurrentEye()
         {
-            _currentEye = _defaultEye;
+            CurrentEye = _defaultEye;
         }
 
         void IEyeManager.Initialize()
@@ -66,6 +73,28 @@ namespace Robust.Client.Graphics
             var top = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
 
             return new Box2(left, bottom, right, top);
+        }
+
+        /// <inheritdoc />
+        public Box2Rotated GetWorldViewbounds()
+        {
+            var vpSize = _displayManager.ScreenSize;
+
+            var topRight = ScreenToMap(new Vector2(vpSize.X, 0)).Position;
+            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y)).Position;
+
+            var rotation = new Angle(CurrentEye.Rotation);
+            var center = (bottomLeft + topRight) / 2;
+
+            var localTopRight = topRight - center;
+            var localBotLeft = bottomLeft - center;
+
+            localTopRight = rotation.RotateVec(localTopRight);
+            localBotLeft = rotation.RotateVec(localBotLeft);
+
+            var bounds = new Box2(localBotLeft, localTopRight).Translated(center);
+
+            return new Box2Rotated(bounds, -CurrentEye.Rotation, bounds.Center);
         }
 
         /// <inheritdoc />
@@ -104,6 +133,12 @@ namespace Robust.Client.Graphics
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
+            if (CurrentEye.Position.MapId != point.MapId)
+            {
+                Logger.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map ({CurrentEye.Position.MapId})");
+                return new(default, WindowId.Invalid);
+            }
+
             return new(WorldToScreen(point.Position), MainViewport.Window?.Id ?? default);
         }
 
@@ -111,16 +146,29 @@ namespace Robust.Client.Graphics
         public MapCoordinates ScreenToMap(ScreenCoordinates point)
         {
             var (pos, window) = point;
-            if (window != MainViewport.Window?.Id)
+
+            if (_uiManager.MouseGetControl(point) is not IViewportControl viewport)
                 return default;
 
-            return MainViewport.ScreenToMap(pos);
+            return viewport.ScreenToMap(pos);
         }
 
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             return MainViewport.ScreenToMap(point);
+        }
+    }
+
+    public sealed class CurrentEyeChangedEvent : EntityEventArgs
+    {
+        public IEye? Old { get; }
+        public IEye New { get; }
+
+        public CurrentEyeChangedEvent(IEye? oldEye, IEye newEye)
+        {
+            Old = oldEye;
+            New = newEye;
         }
     }
 }

@@ -5,10 +5,11 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorIPrototype<T> : VVPropEditor
+    public sealed class VVPropEditorIPrototype<T> : VVPropEditor
     {
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;
@@ -20,7 +21,11 @@ namespace Robust.Client.ViewVariables.Editors
         {
             _localValue = value;
 
-            var hbox = new HBoxContainer() { HorizontalExpand = true };
+            var hbox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                HorizontalExpand = true
+            };
 
             _lineEdit = new LineEdit()
             {
@@ -30,7 +35,7 @@ namespace Robust.Client.ViewVariables.Editors
                 Text = value switch
                 {
                     IPrototype prototype => prototype.ID,
-                    ViewVariablesBlobMembers.PrototypeReferenceToken token => token.ID,
+                    ViewVariablesBlobMembers.PrototypeReferenceToken token => token.ID ?? string.Empty,
                     _ => string.Empty
                 },
                 Editable = !ReadOnly

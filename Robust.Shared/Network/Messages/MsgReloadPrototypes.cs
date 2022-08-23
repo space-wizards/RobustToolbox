@@ -3,18 +3,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgReloadPrototypes : NetMessage
+    public sealed class MsgReloadPrototypes : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgReloadPrototypes);
-
-        public MsgReloadPrototypes(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         public ResourcePath[] Paths = default!;
 

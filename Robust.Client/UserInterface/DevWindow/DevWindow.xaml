@@ -1,0 +1,9 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindow">
+    <TabContainer>
+        <DebugConsole Name="DebugConsole" />
+        <DevWindowTabUI Name="UI" />
+        <DevWindowTabPerf Name="Perf" />
+    </TabContainer>
+</Control>

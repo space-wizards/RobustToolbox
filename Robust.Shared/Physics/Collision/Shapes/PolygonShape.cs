@@ -29,64 +29,30 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PolygonShape : IPhysShape, ISerializationHooks
+    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
     {
+        [ViewVariables]
+        public int VertexCount => Vertices.Length;
+
         /// <summary>
-        ///     Counter-clockwise (CCW) order.
+        /// This is public so engine code can manipulate it directly.
+        /// NOTE! If you wish to manipulate this then you need to update the normals and centroid yourself!
         /// </summary>
         [ViewVariables]
         [DataField("vertices")]
-        public List<Vector2> Vertices
-        {
-            get => _vertices;
-            set
-            {
-                _vertices = value;
+        public Vector2[] Vertices = Array.Empty<Vector2>();
 
-                var configManager = IoCManager.Resolve<IConfigurationManager>();
-                DebugTools.Assert(_vertices.Count >= 3 && _vertices.Count <= configManager.GetCVar(CVars.MaxPolygonVertices));
+        [ViewVariables]
+        public Vector2[] Normals = Array.Empty<Vector2>();
 
-                if (configManager.GetCVar(CVars.ConvexHullPolygons))
-                {
-                    //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
-                    //So instead of giftwrapping a triangle, we just force it to be clock wise.
-                    if (_vertices.Count <= 3)
-                        _vertices.ForceCounterClockwise();
-                    else
-                        _vertices = GiftWrap.GetConvexHull(_vertices);
-                }
-
-                _normals = new List<Vector2>(_vertices.Count);
-
-                // Compute normals. Ensure the edges have non-zero length.
-                for (int i = 0; i < _vertices.Count; ++i)
-                {
-                    int next = i + 1 < _vertices.Count ? i + 1 : 0;
-                    Vector2 edge = _vertices[next] - _vertices[i];
-                    DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
-
-                    //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
-                    Vector2 temp = new Vector2(edge.Y, -edge.X);
-                    _normals.Add(temp.Normalized);
-                }
-
-                // Compute the polygon mass data
-                // TODO: Update fixture. Maybe use events for it? Who tf knows.
-                // If we get grid polys then we'll actually need runtime updating of bbs.
-            }
-        }
-
-        private List<Vector2> _vertices = new();
-
-        [ViewVariables(VVAccess.ReadOnly)]
-        public List<Vector2> Normals => _normals;
-
-        private List<Vector2> _normals = new();
+        [ViewVariables]
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         public int ChildCount => 1;
 
@@ -99,7 +65,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 // TODO: Update
             }
@@ -107,11 +73,115 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius;
 
+        public void SetVertices(List<Vector2> vertices)
+        {
+            Span<Vector2> verts = stackalloc Vector2[vertices.Count];
+
+            for (var i = 0; i < vertices.Count; i++)
+            {
+                verts[i] = vertices[i];
+            }
+
+            SetVertices(verts);
+        }
+
+        public void SetVertices(Span<Vector2> vertices)
+        {
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= configManager.GetCVar(CVars.MaxPolygonVertices));
+            SetVertices(vertices, configManager.GetCVar(CVars.ConvexHullPolygons));
+        }
+
+        public void SetVertices(Span<Vector2> vertices, bool convexHulls)
+        {
+            var vertexCount = vertices.Length;
+
+            if (convexHulls)
+            {
+                //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
+                //So instead of giftwrapping a triangle, we just force it to be clock wise.
+                if (vertexCount <= 3)
+                    Vertices = Physics.Vertices.ForceCounterClockwise(vertices);
+                else
+                    Vertices = GiftWrap.SetConvexHull(vertices);
+            }
+            else
+            {
+                Array.Resize(ref Vertices, vertexCount);
+
+                for (var i = 0; i < vertices.Length; i++)
+                {
+                    Vertices[i] = vertices[i];
+                }
+            }
+
+            // Convex hull may prune some vertices hence the count may change by this point.
+            vertexCount = Vertices.Length;
+
+            Array.Resize(ref Normals, vertexCount);
+
+            // Compute normals. Ensure the edges have non-zero length.
+            for (var i = 0; i < vertexCount; i++)
+            {
+                var next = i + 1 < vertexCount ? i + 1 : 0;
+                var edge = Vertices[next] - Vertices[i];
+                DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
+
+                //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
+                var temp = new Vector2(edge.Y, -edge.X);
+                Normals[i] = temp.Normalized;
+            }
+
+            // TODO: Updates (network etc)
+            Centroid = ComputeCentroid(Vertices, VertexCount);
+        }
+
+        private static Vector2 ComputeCentroid(Vector2[] vs, int count)
+        {
+            DebugTools.Assert(count >= 3);
+
+            var c = new Vector2(0.0f, 0.0f);
+            float area = 0.0f;
+
+            // Get a reference point for forming triangles.
+            // Use the first vertex to reduce round-off errors.
+            var s = vs[0];
+
+            const float inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < count; ++i)
+            {
+                // Triangle vertices.
+                var p1 = vs[0] - s;
+                var p2 = vs[i] - s;
+                var p3 = i + 1 < count ? vs[i+1] - s : vs[0] - s;
+
+                var e1 = p2 - p1;
+                var e2 = p3 - p1;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                c += (p1 + p2 + p3) * triangleArea * inv3;
+            }
+
+            // Centroid
+            DebugTools.Assert(area > float.Epsilon);
+            c = c * (1.0f / area) + s;
+            return c;
+        }
+
         public ShapeType ShapeType => ShapeType.Polygon;
+
+        /// <inheritdoc />
+        public Box2 LocalBounds => CalcLocalBounds();
 
         public PolygonShape()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public PolygonShape(float radius)
@@ -119,76 +189,120 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = radius;
         }
 
-        public void SetAsBox(float width, float height)
+        void ISerializationHooks.AfterDeserialization()
         {
-            Vertices = new List<Vector2>()
+            SetVertices(Vertices);
+
+            DebugTools.Assert(Physics.Vertices.IsCounterClockwise(Vertices.AsSpan()));
+        }
+
+        public void SetAsBox(float halfWidth, float halfHeight)
+        {
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
+
+            Vertices[0] = new Vector2(-halfWidth, -halfHeight);
+            Vertices[1] = new Vector2(halfWidth, -halfHeight);
+            Vertices[2] = new Vector2(halfWidth,  halfHeight);
+            Vertices[3] = new Vector2(-halfWidth,  halfHeight);
+
+            Normals[0] = new Vector2(0.0f, -1.0f);
+            Normals[1] = new Vector2(1.0f, 0.0f);
+            Normals[2] = new Vector2(0.0f, 1.0f);
+            Normals[3] = new Vector2(-1.0f, 0.0f);
+
+            Centroid = Vector2.Zero;
+        }
+
+        public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
+        {
+            Vertices = new Vector2[4];
+            Normals = new Vector2[4];
+            // Damn normies
+
+            Vertices[0] = new Vector2(-halfWidth, -halfHeight);
+            Vertices[1] = new Vector2(halfWidth, -halfHeight);
+            Vertices[2] = new Vector2(halfWidth, halfHeight);
+            Vertices[3] = new Vector2(-halfWidth, halfHeight);
+            Normals[0] = new Vector2(0f, -1f);
+            Normals[1] = new Vector2(1f, 0f);
+            Normals[2] = new Vector2(0f, 1f);
+            Normals[3] = new Vector2(-1f, 0f);
+
+            Centroid = center;
+
+            var xf = new Transform(center, angle);
+
+            // Transform vertices and normals.
+            for (var i = 0; i < VertexCount; ++i)
             {
-                new(-width, -height),
-                new(width, -height),
-                new(width, height),
-                new(-width, height),
-            };
+                Vertices[i] = Transform.Mul(xf, Vertices[i]);
+                Normals[i] = Transform.Mul(xf.Quaternion2D, Normals[i]);
+            }
         }
 
-        /// <summary>
-        ///     A temporary optimisation that bypasses GiftWrapping until we get proper AABB and Rect collisions
-        /// </summary>
-        internal void SetVertices(List<Vector2> vertices)
-        {
-            DebugTools.Assert(vertices.Count == 4, "Vertices optimisation only usable on rectangles");
-
-            // TODO: Get what the normals should be
-            Vertices = vertices;
-            // _normals = new List<Vector2>()
-            // Verify on debug that the vertices skip was actually USEFUL
-            DebugTools.Assert(Vertices == vertices);
-        }
-
+        // Don't need to check Centroid for these below as it's based off of the vertices below
+        // (unless you wanted a potentially faster check up front?)
         public bool Equals(IPhysShape? other)
         {
             if (other is not PolygonShape poly) return false;
-            if (_vertices.Count != poly.Vertices.Count) return false;
-            for (var i = 0; i < _vertices.Count; i++)
+            if (Vertices.Length != poly.Vertices.Length) return false;
+            for (var i = 0; i < Vertices.Length; i++)
             {
-                var vert = _vertices[i];
-                if (!vert.EqualsApprox(poly.Vertices[i])) return false;
+                var vert = Vertices[i];
+                if (!vert.Equals(poly.Vertices[i])) return false;
             }
 
             return true;
         }
 
-        public Box2 CalculateLocalBounds(Angle rotation)
+        public bool EqualsApprox(PolygonShape other)
         {
-            if (Vertices.Count == 0) return new Box2();
+            return EqualsApprox(other, 0.001);
+        }
 
-            var aabb = new Box2();
-            Vector2 lower = Vertices[0];
-            Vector2 upper = lower;
-
-            for (int i = 1; i < Vertices.Count; ++i)
+        public bool EqualsApprox(PolygonShape other, double tolerance)
+        {
+            if (Vertices.Length != other.Vertices.Length) return false;
+            for (var i = 0; i < Vertices.Length; i++)
             {
-                Vector2 v = Vertices[i];
+                if (!Vertices[i].EqualsApprox(other.Vertices[i], tolerance)) return false;
+            }
+
+            return true;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+            var lower = Transform.Mul(transform, Vertices[0]);
+            var upper = lower;
+
+            for (var i = 1; i < Vertices.Length; ++i)
+            {
+                var v = Transform.Mul(transform, Vertices[i]);
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            Vector2 r = new Vector2(Radius, Radius);
-            aabb.BottomLeft = lower - r;
-            aabb.TopRight = upper + r;
-
-            return aabb;
+            var r = new Vector2(_radius, _radius);
+            return new Box2(lower - r, upper + r);
         }
 
-        public void ApplyState()
+        private Box2 CalcLocalBounds()
         {
-            return;
-        }
+            var lower = Vertices[0];
+            var upper = lower;
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
-        {
-            handle.SetTransform(modelMatrix);
-            handle.DrawPolygonShape(_vertices.ToArray(), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
+            for (var i = 1; i < Vertices.Length; ++i)
+            {
+                var v = Vertices[i];
+                lower = Vector2.ComponentMin(lower, v);
+                upper = Vector2.ComponentMax(upper, v);
+            }
+
+            var r = new Vector2(_radius, _radius);
+            return new Box2(lower - r, upper + r);
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)
@@ -196,44 +310,22 @@ namespace Robust.Shared.Physics.Collision.Shapes
             // TODO: Need a test for this probably, if there is no AABB manifold generator done at least.
             var bounds = aabb.LocalBounds;
 
-            // Don't use Vertices property given we can just unwind it ourselves faster.
-            // Ideal world we don't need this but for now.
+            // Don't use setter as we already know the winding.
             return new PolygonShape(aabb.Radius)
             {
-                // Giftwrap seems to use bottom-right first.
-                Vertices = new List<Vector2>
+                Vertices = new []
                 {
+                    bounds.BottomLeft,
                     bounds.BottomRight,
                     bounds.TopRight,
                     bounds.TopLeft,
-                    bounds.BottomLeft,
                 },
-
-                /*
-                _normals = new List<Vector2>
+                Normals = new []
                 {
-                    new(1, -0),
-                    new (0, 1),
-                    new (-1, -0),
-                    new (0, -1),
-                }
-                */
-            };
-        }
-
-        public static explicit operator PolygonShape(PhysShapeRect rect)
-        {
-            // Ideal world we don't even need PhysShapeRect?
-            var bounds = rect.CachedBounds;
-
-            return new PolygonShape(rect.Radius)
-            {
-                Vertices = new List<Vector2>
-                {
-                    bounds.BottomRight,
-                    bounds.TopRight,
-                    bounds.TopLeft,
-                    bounds.BottomLeft,
+                    new Vector2(0f, -1f),
+                    new Vector2(1f, 0f),
+                    new Vector2(0f, 1f),
+                    new Vector2(-1f, 0f),
                 },
             };
         }

@@ -10,6 +10,8 @@ namespace Robust.Shared.Configuration
 
         void Initialize(bool isServer);
 
+        void Shutdown();
+
         /// <summary>
         /// Sets up the ConfigurationManager and loads a TOML configuration file.
         /// </summary>

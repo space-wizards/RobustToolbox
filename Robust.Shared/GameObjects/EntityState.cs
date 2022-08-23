@@ -1,5 +1,7 @@
 using Robust.Shared.Serialization;
 using System;
+using NetSerializer;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -7,61 +9,75 @@ namespace Robust.Shared.GameObjects
     public sealed class EntityState
     {
         public EntityUid Uid { get; }
-        public ComponentChanged[]? ComponentChanges { get; }
-        public ComponentState[]? ComponentStates { get; }
 
-        public bool Empty => ComponentChanges is null && ComponentStates is null;
+        public NetListAsArray<ComponentChange> ComponentChanges { get; }
 
-        public EntityState(EntityUid uid, ComponentChanged[]? changedComponents, ComponentState[]? componentStates)
+        public bool Empty => ComponentChanges.Value is null or { Count: 0 };
+
+        public readonly GameTick EntityLastModified;
+
+        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified)
         {
             Uid = uid;
-
-            // empty lists are 5 bytes each
-            ComponentChanges = changedComponents == null || changedComponents.Length == 0 ? null : changedComponents;
-            ComponentStates = componentStates == null || componentStates.Length == 0 ? null : componentStates;
+            ComponentChanges = changedComponents;
+            EntityLastModified = lastModified;
         }
     }
 
     [Serializable, NetSerializable]
-    public readonly struct ComponentChanged
+    public readonly struct ComponentChange
     {
         // 15ish bytes to create a component (strings are big), 5 bytes to remove one
 
         /// <summary>
-        ///     Was the component added or removed from the entity.
+        ///     Was the component removed from the entity.
         /// </summary>
         public readonly bool Deleted;
 
         /// <summary>
-        ///     The Network ID of the component to remove.
+        /// Was the component added to the entity.
         /// </summary>
-        public readonly uint NetID;
+        public readonly bool Created;
 
         /// <summary>
-        ///     The prototype name of the component to add.
+        /// State data for the created/modified component, if any.
         /// </summary>
-        public readonly string? ComponentName;
+        public readonly ComponentState? State;
 
-        public ComponentChanged(bool deleted, uint netId, string? componentName)
+        /// <summary>
+        ///     The Network ID of the component to remove.
+        /// </summary>
+        public readonly ushort NetID;
+
+        public readonly GameTick LastModifiedTick;
+
+        public ComponentChange(ushort netId, bool created, bool deleted, ComponentState? state, GameTick lastModifiedTick)
         {
             Deleted = deleted;
+            State = state;
             NetID = netId;
-            ComponentName = componentName;
+            Created = created;
+            LastModifiedTick = lastModifiedTick;
         }
 
         public override string ToString()
         {
-            return $"{(Deleted ? "D" : "C")} {NetID} {ComponentName}";
+            return $"{(Deleted ? "D" : "C")} {NetID} {State?.GetType().Name}";
         }
 
-        public static ComponentChanged Added(uint netId, string componentName)
+        public static ComponentChange Added(ushort netId, ComponentState? state, GameTick lastModifiedTick)
         {
-            return new(false, netId, componentName);
+            return new(netId, true, false, state, lastModifiedTick);
         }
 
-        public static ComponentChanged Removed(uint netId)
+        public static ComponentChange Changed(ushort netId, ComponentState state, GameTick lastModifiedTick)
         {
-            return new(true, netId, null);
+            return new(netId, false, false, state, lastModifiedTick);
+        }
+
+        public static ComponentChange Removed(ushort netId)
+        {
+            return new(netId, false, true, null, default);
         }
     }
 }

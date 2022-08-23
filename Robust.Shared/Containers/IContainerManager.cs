@@ -27,7 +27,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="entity">The entity to remove.</param>
         /// <returns>True if the entity was successfuly removed.</returns>
-        bool Remove(IEntity entity);
+        bool Remove(EntityUid entity);
 
         /// <summary>
         /// Gets the container with the specified ID.
@@ -59,11 +59,11 @@ namespace Robust.Shared.Containers
         /// <param name="container">The container if it was found, <c>null</c> if not found.</param>
         /// <returns>True if the container was found, false otherwise.</returns>
         /// <returns>True if the container was found, false otherwise.</returns>
-        bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container);
+        bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out IContainer? container);
 
-        bool ContainsEntity(IEntity entity);
+        bool ContainsEntity(EntityUid entity);
 
-        void ForceRemove(IEntity entity);
+        void ForceRemove(EntityUid entity);
 
         /// <summary>
         /// DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown" /> instead.

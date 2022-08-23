@@ -5,20 +5,25 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitMembers : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
         private readonly IViewVariablesManagerInternal _vvm;
         private readonly IRobustSerializer _robustSerializer;
 
-        private VBoxContainer _memberList = default!;
+        private BoxContainer _memberList = default!;
 
         public override void Initialize(ViewVariablesInstanceObject instance)
         {
             base.Initialize(instance);
-            _memberList = new VBoxContainer {SeparationOverride = 0};
+            _memberList = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             instance.AddTab("Members", _memberList);
         }
 
@@ -40,7 +45,7 @@ namespace Robust.Client.ViewVariables.Traits
                 {
                     CreateMemberGroupHeader(
                         ref first,
-                        TypeAbbreviation.Abbreviate(group.Key),
+                        PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
                         _memberList);
 
                     foreach (var control in group)

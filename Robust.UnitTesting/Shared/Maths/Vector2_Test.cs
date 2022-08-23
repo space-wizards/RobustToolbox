@@ -6,7 +6,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestFixture]
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestOf(typeof(Vector2))]
-    public class Vector2_Test
+    public sealed class Vector2_Test
     {
         [Test]
         [Sequential]

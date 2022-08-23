@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables
 {
@@ -31,7 +32,7 @@ namespace Robust.Client.ViewVariables
         /// </summary>
         /// <param name="window">The window to initialize by adding GUI components.</param>
         /// <param name="obj">The object that is being VV'd</param>
-        public abstract void Initialize(SS14Window window, object obj);
+        public abstract void Initialize(DefaultWindow window, object obj);
 
         /// <summary>
         ///     Initializes this instance to work on a remote object.
@@ -40,7 +41,7 @@ namespace Robust.Client.ViewVariables
         /// <param name="window">The window to initialize by adding GUI components.</param>
         /// <param name="blob">The data blob sent by the server for this remote object.</param>
         /// <param name="session">The session connecting to the remote object.</param>
-        public virtual void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
+        public virtual void Initialize(DefaultWindow window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             throw new NotSupportedException();
         }
@@ -62,20 +63,18 @@ namespace Robust.Client.ViewVariables
 
             foreach (var fieldInfo in type.GetAllFields())
             {
-                var attr = fieldInfo.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(fieldInfo, out var access))
                 {
                     continue;
                 }
 
-                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
+                members.Add((fieldInfo, (VVAccess)access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
                     fieldInfo.FieldType));
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
             {
-                var attr = propertyInfo.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(propertyInfo, out var access))
                 {
                     continue;
                 }
@@ -85,7 +84,7 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
-                members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
+                members.Add((propertyInfo, (VVAccess)access, propertyInfo.GetValue(obj),
                     (v, _) => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }
 
@@ -99,7 +98,7 @@ namespace Robust.Client.ViewVariables
                         Editable = access == VVAccess.ReadWrite,
                         Name = memberInfo.Name,
                         Type = memberType.AssemblyQualifiedName,
-                        TypePretty = TypeAbbreviation.Abbreviate(memberType),
+                        TypePretty = PrettyPrint.PrintUserFacingTypeShort(memberType, 2),
                         Value = value
                     };
 
@@ -126,7 +125,11 @@ namespace Robust.Client.ViewVariables
             //        10);
 
             // Custom ToString() implementation.
-            var headBox = new VBoxContainer {SeparationOverride = 0};
+            var headBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             headBox.AddChild(new Label {Text = top, ClipText = true});
             headBox.AddChild(new Label
             {

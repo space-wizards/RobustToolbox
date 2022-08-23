@@ -2,6 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Animations
 {
@@ -18,8 +19,8 @@ namespace Robust.Client.Animations
                 throw new InvalidOperationException("Must set parameters to non-null values.");
             }
 
-            var entity = (IEntity) context;
-            var component = entity.GetComponent(ComponentType);
+            var entity = (EntityUid) context;
+            var component = IoCManager.Resolve<IEntityManager>().GetComponent(entity, ComponentType);
 
             if (component is IAnimationProperties properties)
             {

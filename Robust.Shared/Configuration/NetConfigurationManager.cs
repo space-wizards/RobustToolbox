@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -19,6 +20,16 @@ namespace Robust.Shared.Configuration
         /// Sets up the networking for the config manager.
         /// </summary>
         void SetupNetworking();
+
+        /// <summary>
+        /// Get a replicated client CVar for a specific client.
+        /// </summary>
+        /// <typeparam name="T">CVar type.</typeparam>
+        /// <param name="channel">channel of the connected client.</param>
+        /// <param name="definition">The CVar.</param>
+        /// <returns>Replicated CVar of the client.</returns>
+        public T GetClientCVar<T>(INetChannel channel, CVarDef<T> definition) where T : notnull =>
+            GetClientCVar<T>(channel, definition.Name);
 
         /// <summary>
         /// Get a replicated client CVar for a specific client.
@@ -62,7 +73,7 @@ namespace Robust.Shared.Configuration
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
-    internal class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
+    internal sealed class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
     {
         [Dependency] private readonly INetManager _netManager = null!;
         [Dependency] private readonly IGameTiming _timing = null!;
@@ -70,19 +81,34 @@ namespace Robust.Shared.Configuration
         private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
         private readonly List<MsgConVars> _netVarsMessages = new();
 
+        private ISawmill _sawmill = default!;
+
         public event EventHandler? ReceivedInitialNwVars;
         private bool _receivedInitialNwVars;
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            FlushMessages();
+            _replicatedCVars.Clear();
+            ReceivedInitialNwVars = null;
+            _receivedInitialNwVars = false;
+        }
 
         /// <inheritdoc />
         public void SetupNetworking()
         {
+            _sawmill = Logger.GetSawmill("cfg");
+            _sawmill.Level = LogLevel.Info;
+
             if(_isServer)
             {
                 _netManager.Connected += PeerConnected;
                 _netManager.Disconnect += PeerDisconnected;
             }
 
-            _netManager.RegisterNetMessage<MsgConVars>(MsgConVars.NAME, HandleNetVarMessage);
+            _netManager.RegisterNetMessage<MsgConVars>(HandleNetVarMessage);
         }
 
         private void PeerConnected(object? sender, NetChannelArgs e)
@@ -97,13 +123,13 @@ namespace Robust.Shared.Configuration
 
         private void HandleNetVarMessage(MsgConVars message)
         {
-            if(!_receivedInitialNwVars)
+            if (_netManager.IsClient && !_receivedInitialNwVars)
             {
                 _receivedInitialNwVars = true;
 
                 // apply the initial set immediately, so that they are available to
                 // for the rest of connection building
-                ApplyNetVarChange(message.MsgChannel, message.NetworkedVars);
+                ApplyNetVarChange(message.MsgChannel, message.NetworkedVars, message.Tick);
                 ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -113,23 +139,37 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public void TickProcessMessages()
         {
-            if(!_timing.InSimulation || _timing.InPrediction)
+            if (!_timing.InSimulation || _timing.InPrediction)
                 return;
 
+            // _netVarsMessages is not in any particular ordering.
+            // Copy any messages to apply to a separate list so we can sort before going through it.
+
+            ValueList<MsgConVars> toApply = default;
             for (var i = 0; i < _netVarsMessages.Count; i++)
             {
                 var msg = _netVarsMessages[i];
 
-                if (msg.Tick > _timing.LastRealTick)
+                if (msg.Tick > _timing.CurTick)
                     continue;
 
-                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
-
-                if(msg.Tick < _timing.LastRealTick)
-                    Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
+                toApply.Add(msg);
 
                 _netVarsMessages.RemoveSwap(i);
                 i--;
+            }
+
+            if (toApply.Count == 0)
+                return;
+
+            toApply.Sort((a, b) => a.Tick.CompareTo(b.Tick));
+
+            foreach (var msg in toApply)
+            {
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
+
+                if(msg.Tick != default && msg.Tick < _timing.CurTick)
+                    _sawmill.Warning($"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.CurTick} ).");
             }
         }
 
@@ -140,53 +180,64 @@ namespace Robust.Shared.Configuration
 
             foreach (var msg in _netVarsMessages)
             {
-                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars, msg.Tick);
             }
 
             _netVarsMessages.Clear();
         }
 
-        private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
+        private void ApplyNetVarChange(
+            INetChannel msgChannel,
+            List<(string name, object value)> networkedVars,
+            GameTick tick)
         {
-            Logger.DebugS("cfg", "Handling replicated cvars...");
+            _sawmill.Debug($"{msgChannel} Handling replicated cvars...");
+
+            if (_netManager.IsClient)
+            {
+                // Server sent us a CVar update.
+                foreach (var (name, value) in networkedVars)
+                {
+                    // Actually set the CVar
+                    SetCVarInternal(name, value, tick);
+
+                    _sawmill.Debug($"name={name}, val={value}");
+                }
+
+                return;
+            }
+
+            // Client sent us a CVar update
+            if (!_replicatedCVars.TryGetValue(msgChannel, out var clientCVars))
+            {
+                _sawmill.Warning($"{msgChannel} tried to replicate CVars but is not in _replicatedCVars.");
+                return;
+            }
+
+            using var _ = Lock.ReadGuard();
 
             foreach (var (name, value) in networkedVars)
             {
-                if (_netManager.IsClient) // Server sent us a CVar update.
+                if (!_configVars.TryGetValue(name, out var cVar))
                 {
-                    // Actually set the CVar
-                    base.SetCVar(name, value);
-                    Logger.DebugS("cfg", $"name={name}, val={value}");
+                    _sawmill.Warning($"{msgChannel} tried to replicate an unknown CVar '{name}.'");
+                    continue;
                 }
-                else // Client sent us a CVar update
+
+                if (!cVar.Registered)
                 {
-                    if (!_configVars.TryGetValue(name, out var cVar))
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unknown CVar '{name}.'");
-                        continue;
-                    }
+                    _sawmill.Warning($"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
+                    continue;
+                }
 
-                    if (!cVar.Registered)
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
-                        continue;
-                    }
-
-                    if((cVar.Flags & CVar.REPLICATED) != 0)
-                    {
-                        var clientCVars = _replicatedCVars[msgChannel];
-
-                        if (clientCVars.ContainsKey(name))
-                            clientCVars[name] = value;
-                        else
-                            clientCVars.Add(name, value);
-
-                        Logger.DebugS("cfg", $"name={name}, val={value}");
-                    }
-                    else
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
-                    }
+                if((cVar.Flags & CVar.REPLICATED) != 0)
+                {
+                    clientCVars[name] = value;
+                    _sawmill.Debug($"name={name}, val={value}");
+                }
+                else
+                {
+                    _sawmill.Warning($"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
                 }
             }
         }
@@ -194,6 +245,8 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public T GetClientCVar<T>(INetChannel channel, string name)
         {
+            using var _ = Lock.ReadGuard();
+
             if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
                 throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
 
@@ -208,43 +261,46 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public override void SetCVar(string name, object value)
         {
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
+            CVar flags;
+            using (Lock.ReadGuard())
             {
-                if (_netManager.IsClient)
+                if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
-                    if (_netManager.IsConnected)
+                    flags = cVar.Flags;
+                    if (_netManager.IsClient)
                     {
-                        if ((cVar.Flags & CVar.NOT_CONNECTED) != 0)
+                        if (_netManager.IsConnected)
                         {
-                            Logger.WarningS("cfg", $"'{name}' can only be changed when not connected to a server.");
+                            if ((cVar.Flags & CVar.NOT_CONNECTED) != 0)
+                            {
+                                _sawmill.Warning($"'{name}' can only be changed when not connected to a server.");
+                                return;
+                            }
+                        }
+
+                        if ((cVar.Flags & CVar.SERVER) != 0)
+                        {
+                            _sawmill.Warning($"Only the server can change '{name}'.");
                             return;
                         }
                     }
-
-                    if ((cVar.Flags & CVar.SERVER) != 0)
-                    {
-                        Logger.WarningS("cfg", $"Only the server can change '{name}'.");
-                        return;
-                    }
                 }
-            }
-            else
-            {
-                throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+                else
+                {
+                    throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+                }
             }
 
             // Actually set the CVar
             base.SetCVar(name, value);
 
-            var cvar = _configVars[name];
+            if ((flags & CVar.REPLICATED) == 0)
+                return;
 
             // replicate if needed
             if (_netManager.IsClient)
             {
-                if ((cvar.Flags & CVar.REPLICATED) == 0)
-                    return;
-
-                var msg = _netManager.CreateNetMessage<MsgConVars>();
+                var msg = new MsgConVars();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
                 {
@@ -254,10 +310,7 @@ namespace Robust.Shared.Configuration
             }
             else // Server
             {
-                if ((cvar.Flags & CVar.REPLICATED) == 0)
-                    return;
-
-                var msg = _netManager.CreateNetMessage<MsgConVars>();
+                var msg = new MsgConVars();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
                 {
@@ -273,9 +326,9 @@ namespace Robust.Shared.Configuration
             DebugTools.Assert(_netManager.IsConnected);
             DebugTools.Assert(_netManager.IsServer);
 
-            Logger.InfoS("cfg", $"{client}: Sending server info...");
+            _sawmill.Info($"{client}: Sending server info...");
 
-            var msg = _netManager.CreateNetMessage<MsgConVars>();
+            var msg = new MsgConVars();
             msg.Tick = _timing.CurTick;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ServerSendMessage(msg, client);
@@ -287,10 +340,10 @@ namespace Robust.Shared.Configuration
             DebugTools.Assert(_netManager.IsConnected);
             DebugTools.Assert(_netManager.IsClient);
 
-            Logger.InfoS("cfg", "Sending client info...");
+            _sawmill.Info("Sending client info...");
 
-            var msg = _netManager.CreateNetMessage<MsgConVars>();
-            msg.Tick = _timing.CurTick;
+            var msg = new MsgConVars();
+            msg.Tick = default;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ClientSendMessage(msg);
         }
@@ -302,6 +355,8 @@ namespace Robust.Shared.Configuration
 
         private List<(string name, object value)> GetReplicatedVars()
         {
+            using var _ = Lock.ReadGuard();
+
             var nwVars = new List<(string name, object value)>();
 
             foreach (var cVar in _configVars.Values)
@@ -315,9 +370,9 @@ namespace Robust.Shared.Configuration
                 if (_netManager.IsClient && (cVar.Flags & CVar.SERVER) != 0)
                     continue;
 
-                nwVars.Add((cVar.Name, cVar.Value ?? cVar.DefaultValue));
+                nwVars.Add((cVar.Name, GetConfigVarValue(cVar)));
 
-                Logger.DebugS("cfg", $"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
+                _sawmill.Debug($"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
             }
 
             return nwVars;

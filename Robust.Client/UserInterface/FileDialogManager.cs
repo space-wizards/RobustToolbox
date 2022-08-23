@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
 using Robust.Shared;
+using Robust.Shared.Console;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -25,15 +26,9 @@ namespace Robust.Client.UserInterface
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
 
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
-
-        static FileDialogManager()
-        {
-            DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
-        }
 
         public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
         {
@@ -56,9 +51,9 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<(Stream, bool)?> SaveFile()
+        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters)
         {
-            var name = await GetSaveFileName();
+            var name = await GetSaveFileName(filters);
             if (name == null)
             {
                 return null;
@@ -74,14 +69,14 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private async Task<string?> GetSaveFileName()
+        private async Task<string?> GetSaveFileName(FileDialogFilters? filters)
         {
             if (await IsKDialogAvailable())
             {
-                return await SaveFileKDialog();
+                return await SaveFileKDialog(filters);
             }
 
-            return await SaveFileNfd();
+            return await SaveFileNfd(filters);
         }
 
         private unsafe Task<string?> OpenFileNfd(FileDialogFilters? filters)
@@ -89,21 +84,15 @@ namespace Robust.Client.UserInterface
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
             {
-                var filterPtr = IntPtr.Zero;
                 byte* outPath;
 
-                if (filters != null)
-                {
-                    var filterString = string.Join(';', filters.Groups.Select(f => string.Join(',', f.Extensions)));
-
-                    filterPtr = Marshal.StringToCoTaskMemUTF8(filterString);
-                }
+                var filterPtr = FormatFiltersNfd(filters);
 
                 sw_nfdresult result;
 
                 try
                 {
-                    result = sw_NFD_OpenDialog((byte*) filterPtr, null, &outPath);
+                    result = sw_NFD_OpenDialog((byte*)filterPtr, null, &outPath);
                 }
                 finally
                 {
@@ -117,14 +106,39 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private unsafe Task<string?> SaveFileNfd()
+        private static IntPtr FormatFiltersNfd(FileDialogFilters? filters)
+        {
+            if (filters != null)
+            {
+                var filterString = string.Join(';', filters.Groups.Select(f => string.Join(',', f.Extensions)));
+
+                return Marshal.StringToCoTaskMemUTF8(filterString);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private unsafe Task<string?> SaveFileNfd(FileDialogFilters? filters)
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
             {
                 byte* outPath;
 
-                var result = sw_NFD_SaveDialog(null, null, &outPath);
+                var filterPtr = FormatFiltersNfd(filters);
+
+                sw_nfdresult result;
+                try
+                {
+                    result = sw_NFD_SaveDialog((byte*) filterPtr, null, &outPath);
+                }
+                finally
+                {
+                    if (filterPtr != IntPtr.Zero)
+                    {
+                        Marshal.FreeCoTaskMem(filterPtr);
+                    }
+                }
 
                 return HandleNfdResult(result, outPath);
             });
@@ -148,14 +162,13 @@ namespace Robust.Client.UserInterface
         // ReSharper disable once MemberCanBeMadeStatic.Local
         private Task<string?> RunAsyncMaybe(Func<string?> action)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (OperatingSystem.IsMacOS())
             {
-                // macOS seems pretty annoying about having the file dialog opened from the main thread.
-                // So we are forced to execute this synchronously on the main thread.
-                // Also I'm calling RunOnMainThread here to provide safety in case this is ran from a different thread.
-                // nativefiledialog doesn't provide any form of async API, so this WILL lock up the client.
+                // macOS seems pretty annoying about having the file dialog opened from the main windowing thread.
+                // So we are forced to execute this synchronously on the main windowing thread.
+                // nativefiledialog doesn't provide any form of async API, so this WILL lock up half the client.
                 var tcs = new TaskCompletionSource<string?>();
-                _taskManager.RunOnMainThread(() => tcs.SetResult(action()));
+                _clyde.RunOnWindowThread(() => tcs.SetResult(action()));
 
                 return tcs.Task;
             }
@@ -183,10 +196,10 @@ namespace Robust.Client.UserInterface
             {
                 case sw_nfdresult.SW_NFD_ERROR:
                     var errPtr = sw_NFD_GetError();
-                    throw new Exception(MarshalHelper.PtrToStringUTF8(errPtr));
+                    throw new Exception(Marshal.PtrToStringUTF8((IntPtr) errPtr));
 
                 case sw_nfdresult.SW_NFD_OKAY:
-                    var str = MarshalHelper.PtrToStringUTF8(outPath)!;
+                    var str = Marshal.PtrToStringUTF8((IntPtr) outPath)!;
 
                     sw_NFD_Free(outPath);
                     return str;
@@ -241,6 +254,13 @@ namespace Robust.Client.UserInterface
 
         private Task<string?> OpenFileKDialog(FileDialogFilters? filters)
         {
+            var filtersFormatted = FormatFiltersKDialog(filters);
+
+            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, filtersFormatted);
+        }
+
+        private static string FormatFiltersKDialog(FileDialogFilters? filters)
+        {
             var sb = new StringBuilder();
 
             if (filters != null && filters.Groups.Count != 0)
@@ -253,14 +273,14 @@ namespace Robust.Client.UserInterface
                         sb.Append('|');
                     }
 
-                    foreach (var extension in group.Extensions)
+                    foreach (var extension in @group.Extensions)
                     {
                         sb.AppendFormat(".{0} ", extension);
                     }
 
                     sb.Append('(');
 
-                    foreach (var extension in group.Extensions)
+                    foreach (var extension in @group.Extensions)
                     {
                         sb.AppendFormat("*.{0} ", extension);
                     }
@@ -273,12 +293,14 @@ namespace Robust.Client.UserInterface
                 sb.Append("| All Files (*)");
             }
 
-            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, sb.ToString());
+            return sb.ToString();
         }
 
-        private Task<string?> SaveFileKDialog()
+        private Task<string?> SaveFileKDialog(FileDialogFilters? filters)
         {
-            return RunKDialog("--getsavefilename");
+            var filtersFormatted = FormatFiltersKDialog(filters);
+
+            return RunKDialog("--getsavefilename", Environment.GetEnvironmentVariable("HOME")!, filtersFormatted);
         }
 
         /*
@@ -326,7 +348,7 @@ namespace Robust.Client.UserInterface
 
         private async Task<bool> IsKDialogAvailable()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (!OperatingSystem.IsLinux())
                 return false;
 
             if (!_checkedKDialogAvailable)
@@ -363,6 +385,19 @@ namespace Robust.Client.UserInterface
             SW_NFD_ERROR,
             SW_NFD_OKAY,
             SW_NFD_CANCEL,
+        }
+    }
+
+    public sealed class OpenFileCommand : IConsoleCommand
+    {
+        public string Command => "testopenfile";
+        public string Description => "";
+        public string Help => "";
+
+        public async void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var stream = await IoCManager.Resolve<IFileDialogManager>().OpenFile();
+            stream?.Dispose();
         }
     }
 }

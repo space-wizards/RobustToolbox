@@ -28,6 +28,6 @@ namespace Robust.Client.UserInterface
         /// The file stream the user chose to save to, and whether the file already existed.
         /// Null if the user cancelled the action.
         /// </returns>
-        Task<(Stream fileStream, bool alreadyExisted)?> SaveFile();
+        Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null);
     }
 }

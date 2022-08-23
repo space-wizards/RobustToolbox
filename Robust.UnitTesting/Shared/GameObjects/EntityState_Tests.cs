@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Server.Reflection;
@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -16,7 +17,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Serializable]
-    class EntityState_Tests
+    sealed class EntityState_Tests
     {
         /// <summary>
         ///     Used to measure the size of <see cref="object"/>s in bytes. This is not actually a test,
@@ -35,6 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
+            container.Register<ProfManager, ProfManager>();
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();
@@ -60,12 +62,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new EntityUid(512),
                     new []
                     {
-                        new ComponentChanged(false, NetIDs.MAP_GRID, nameof(MapGridComponent)),
-                    },
-                    new []
-                    {
-                        new MapGridComponentState(new GridId(0), true),
-                    });
+                        new ComponentChange(0, true, false, new MapGridComponentState(new GridId(0), 16), default)
+                    }, default);
 
                 serializer.Serialize(stream, payload);
                 array = stream.ToArray();

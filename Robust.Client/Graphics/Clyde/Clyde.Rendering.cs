@@ -6,10 +6,8 @@ using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Color = Robust.Shared.Maths.Color;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
@@ -106,7 +104,7 @@ namespace Robust.Client.Graphics.Clyde
             UniformConstantsUBO.Reallocate(constants);
         }
 
-        private static void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
+        private void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
         {
             proj = Matrix3.Identity;
             proj.R0C0 = 2f / screenSize.X;
@@ -114,10 +112,16 @@ namespace Robust.Client.Graphics.Clyde
             proj.R0C2 = -1;
             proj.R1C2 = 1;
 
+            if (_currentRenderTarget.FlipY)
+            {
+                proj.R1C1 *= -1;
+                proj.R1C2 *= -1;
+            }
+
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
+        private void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
             out Matrix3 proj, out Matrix3 view)
         {
             eye.GetViewMatrix(out view, renderScale);
@@ -126,11 +130,17 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
+        private void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
         {
             proj = Matrix3.Identity;
             proj.R0C0 = EyeManager.PixelsPerMeter * 2f / screenSize.X;
             proj.R1C1 = EyeManager.PixelsPerMeter * 2f / screenSize.Y;
+
+            if (_currentRenderTarget.FlipY)
+            {
+                proj.R1C1 *= -1;
+                proj.R1C2 *= -1;
+            }
         }
 
         private void SetProjViewBuffer(in Matrix3 proj, in Matrix3 view)
@@ -187,7 +197,9 @@ namespace Robust.Client.Graphics.Clyde
                         ref var color = ref command.Clear.Color;
                         GL.ClearColor(color.R, color.G, color.B, color.A);
                         CheckGlError();
-                        GL.Clear(ClearBufferMask.ColorBufferBit);
+                        GL.ClearStencil(command.Clear.Stencil);
+                        CheckGlError();
+                        GL.Clear(command.Clear.Mask);
                         CheckGlError();
                         break;
 
@@ -229,7 +241,6 @@ namespace Robust.Client.Graphics.Clyde
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 
-            program.SetUniformMaybe(UniIModulate, command.Modulate);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
@@ -353,7 +364,15 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Don't forget to flip it, these coordinates have bottom left as origin.
                 // TODO: Broken when rendering to non-screen render targets.
-                GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+
+                if (_currentRenderTarget.FlipY)
+                {
+                    GL.Scissor(box.Left, box.Top, box.Width, box.Height);
+                }
+                else
+                {
+                    GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+                }
                 CheckGlError();
             }
             else if (oldIsScissoring)
@@ -363,14 +382,23 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void ClearFramebuffer(Color color)
+        // NOTE: sRGB IS IN LINEAR IF FRAMEBUFFER_SRGB IS ACTIVE.
+        private void ClearFramebuffer(Color color, int stencil = 0, ClearBufferMask mask = ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit)
         {
             GL.ClearColor(color.ConvertOpenTK());
             CheckGlError();
-            GL.ClearStencil(0);
+            GL.ClearStencil(stencil);
             CheckGlError();
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            GL.Clear(mask);
             CheckGlError();
+        }
+
+        private Color ConvertClearFromSrgb(Color color)
+        {
+            if (!_hasGLSrgb)
+                return color;
+
+            return Color.FromSrgb(color);
         }
 
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
@@ -381,8 +409,36 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
+            // Handle stencil parameters.
+            if (instance.Stencil.Enabled)
+            {
+                if (!_isStencilling)
+                {
+                    GL.Enable(EnableCap.StencilTest);
+                    CheckGlError();
+                    _isStencilling = true;
+                }
+
+                GL.StencilMask(instance.Stencil.WriteMask);
+                CheckGlError();
+                GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
+                CheckGlError();
+                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                CheckGlError();
+            }
+            else if (_isStencilling)
+            {
+                GL.Disable(EnableCap.StencilTest);
+                CheckGlError();
+                _isStencilling = false;
+            }
+
+            if (!instance.ParametersDirty)
+                return (program, shader);
+
+            instance.ParametersDirty = false;
+
             int textureUnitVal = 0;
-            // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
                 if (!program.HasUniform(name))
@@ -397,8 +453,14 @@ namespace Robust.Client.Graphics.Clyde
                     case float f:
                         program.SetUniform(name, f);
                         break;
+                    case float[] fArr:
+                        program.SetUniform(name, fArr);
+                        break;
                     case Vector2 vector2:
                         program.SetUniform(name, vector2);
+                        break;
+                    case Vector2[] vector2Arr:
+                        program.SetUniform(name, vector2Arr);
                         break;
                     case Vector3 vector3:
                         program.SetUniform(name, vector3);
@@ -429,38 +491,13 @@ namespace Robust.Client.Graphics.Clyde
                         //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
                         //Might change this in the future?
                         TextureUnit cTarget = TextureUnit.Texture6 + textureUnitVal;
-                        SetTexture(cTarget, ((ClydeTexture) clydeTexture).TextureId);
+                        SetTexture(cTarget, clydeTexture.TextureId);
                         program.SetUniformTexture(name, cTarget);
                         textureUnitVal++;
                         break;
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
                 }
-            }
-
-            // Handle stencil parameters.
-
-            if (instance.Stencil.Enabled)
-            {
-                if (!_isStencilling)
-                {
-                    GL.Enable(EnableCap.StencilTest);
-                    CheckGlError();
-                    _isStencilling = true;
-                }
-
-                GL.StencilMask(instance.Stencil.WriteMask);
-                CheckGlError();
-                GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
-                CheckGlError();
-                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
-                CheckGlError();
-            }
-            else if (_isStencilling)
-            {
-                GL.Disable(EnableCap.StencilTest);
-                CheckGlError();
-                _isStencilling = false;
             }
 
             return (program, shader);
@@ -505,25 +542,25 @@ namespace Robust.Client.Graphics.Clyde
         /// <param name="br">Bottom right vertex of the quad in object space.</param>
         /// <param name="tl">Top left vertex of the quad in object space.</param>
         /// <param name="tr">Top right vertex of the quad in object space.</param>
-        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <param name="modulate">A color to multiply the texture by when shading. Non-linear.</param>
         /// <param name="texCoords">The four corners of the texture coordinates, matching the four vertices.</param>
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
             in Box2 texCoords)
         {
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
-            EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
+            EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
             tr = _currentMatrixModel.Transform(tr);
-            tl = _currentMatrixModel.Transform(tl);
+            tl = tr + bl - br;
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
@@ -531,7 +568,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
-            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices, in Color color)
+            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices)
         {
             FinishBatch();
             _batchMetaData = null;
@@ -561,7 +598,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = true;
             command.DrawBatch.StartIndex = BatchIndexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
-            command.DrawBatch.Modulate = color;
             command.DrawBatch.TextureId = textureId;
             command.DrawBatch.ShaderInstance = _queuedShader;
 
@@ -574,7 +610,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
-            in ReadOnlySpan<Vertex2D> vertices, in Color color)
+            in ReadOnlySpan<Vertex2D> vertices)
         {
             FinishBatch();
             _batchMetaData = null;
@@ -588,7 +624,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = false;
             command.DrawBatch.StartIndex = BatchVertexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
-            command.DrawBatch.Modulate = color;
             command.DrawBatch.TextureId = textureId;
             command.DrawBatch.ShaderInstance = _queuedShader;
 
@@ -617,15 +652,15 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
             EnsureBatchSpaceAvailable(2, 0);
-            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
+            EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentMatrixModel.Transform(a);
             b = _currentMatrixModel.Transform(b);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero);
-            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero);
+            BatchVertexData[vIdx + 0] = new Vertex2D(a, Vector2.Zero, color);
+            BatchVertexData[vIdx + 1] = new Vertex2D(b, Vector2.Zero, color);
             BatchVertexIndex += 2;
 
             _debugStats.LastClydeDrawCalls += 1;
@@ -659,13 +694,15 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShader = handle;
         }
 
-        private void DrawClear(Color color)
+        private void DrawClear(Color color, int stencil, ClearBufferMask mask)
         {
             BreakBatch();
 
             ref var command = ref AllocRenderCommand(RenderCommandType.Clear);
 
             command.Clear.Color = color;
+            command.Clear.Stencil = stencil;
+            command.Clear.Mask = mask;
         }
 
         private void DrawViewport(Box2i viewport)
@@ -692,14 +729,13 @@ namespace Robust.Client.Graphics.Clyde
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, in Color color, bool indexed,
+        private void EnsureBatchState(ClydeHandle textureId, bool indexed,
             BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
             {
                 var metaData = _batchMetaData.Value;
                 if (metaData.TextureId == textureId &&
-                    StrictColorEquality(metaData.Color, color) &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
                     metaData.ShaderInstance == shaderInstance)
@@ -713,7 +749,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // ... and start another.
-            _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
+            _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
                 indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
 
             /*
@@ -745,7 +781,6 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Indexed = indexed;
             command.DrawBatch.StartIndex = metaData.StartIndex;
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
-            command.DrawBatch.Modulate = metaData.Color;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
 
@@ -827,9 +862,11 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = false;
             _currentMatrixModel = Matrix3.Identity;
             SetScissorFull(null);
-            BindRenderTargetFull(_mainMainWindowRenderMainTarget);
+            BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShader = _defaultShader.Handle;
+
+            GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
 
         private void ResetBlendFunc()
@@ -839,98 +876,6 @@ namespace Robust.Client.Graphics.Clyde
                 BlendingFactorDest.OneMinusSrcAlpha,
                 BlendingFactorSrc.One,
                 BlendingFactorDest.OneMinusSrcAlpha);
-        }
-
-        private void BlitSecondaryWindows()
-        {
-            // Only got main window.
-            if (_windowing!.AllWindows.Count == 1)
-                return;
-
-            if (!_hasGLFenceSync && _cfg.GetCVar(CVars.DisplayForceSyncWindows))
-            {
-                GL.Finish();
-            }
-
-            if (EffectiveThreadWindowBlit)
-            {
-                foreach (var window in _windowing.AllWindows)
-                {
-                    if (window.IsMainWindow)
-                        continue;
-
-                    window.BlitDoneEvent!.Reset();
-                    window.BlitStartEvent!.Set();
-                    window.BlitDoneEvent.Wait();
-                }
-            }
-            else
-            {
-                foreach (var window in _windowing.AllWindows)
-                {
-                    if (window.IsMainWindow)
-                        continue;
-
-                    _windowing.GLMakeContextCurrent(window);
-                    BlitThreadDoSecondaryWindowBlit(window);
-                }
-
-                _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
-            }
-        }
-
-        private void BlitThreadDoSecondaryWindowBlit(WindowReg window)
-        {
-            var rt = window.RenderTexture!;
-
-            if (_hasGLFenceSync)
-            {
-                // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
-                var sync = rt!.LastGLSync;
-                GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
-                CheckGlError();
-            }
-
-            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
-            CheckGlError();
-
-            SetTexture(TextureUnit.Texture0, window.RenderTexture!.Texture);
-
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
-            CheckGlError();
-
-            window.BlitDoneEvent?.Set();
-            _windowing!.WindowSwapBuffers(window);
-        }
-
-        private void BlitThreadInit(WindowReg reg)
-        {
-            _windowing!.GLMakeContextCurrent(reg);
-            _windowing.GLSwapInterval(0);
-
-            if (!_isGLES)
-                GL.Enable(EnableCap.FramebufferSrgb);
-
-            var vao = GL.GenVertexArray();
-            GL.BindVertexArray(vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, WindowVBO.ObjectHandle);
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-
-            var program = _compileProgram(_winBlitShaderVert, _winBlitShaderFrag, new (string, uint)[]
-            {
-                ("aPos", 0),
-                ("tCoord", 1),
-            }, includeLib: false);
-
-            GL.UseProgram(program.Handle);
-            var loc = GL.GetUniformLocation(program.Handle, "tex");
-            SetTexture(TextureUnit.Texture0, reg.RenderTexture!.Texture);
-            GL.Uniform1(loc, 0);
         }
 
         private void FenceRenderTarget(RenderTargetBase rt)
@@ -964,7 +909,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             public ClydeHandle TextureId;
             public ClydeHandle ShaderInstance;
-            public Color Modulate;
 
             public int StartIndex;
             public int Count;
@@ -1000,6 +944,8 @@ namespace Robust.Client.Graphics.Clyde
         private struct RenderCommandClear
         {
             public Color Color;
+            public int Stencil;
+            public ClearBufferMask Mask;
         }
 
         private enum RenderCommandType : byte
@@ -1036,17 +982,15 @@ namespace Robust.Client.Graphics.Clyde
         private readonly struct BatchMetaData
         {
             public readonly ClydeHandle TextureId;
-            public readonly Color Color;
             public readonly bool Indexed;
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
 
-            public BatchMetaData(ClydeHandle textureId, in Color color, bool indexed, BatchPrimitiveType primitiveType,
+            public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
                 int startIndex, ClydeHandle shaderInstance)
             {
                 TextureId = textureId;
-                Color = color;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
@@ -1066,9 +1010,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class SpriteDrawingOrderComparer : IComparer<int>
         {
-            private readonly RefList<(SpriteComponent, Matrix3, Angle, float)> _drawList;
+            private readonly RefList<(SpriteComponent, Vector2, Angle, Box2)> _drawList;
 
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle, float)> drawList)
+            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Vector2, Angle, Box2)> drawList)
             {
                 _drawList = drawList;
             }
@@ -1078,7 +1022,7 @@ namespace Robust.Client.Graphics.Clyde
                 var a = _drawList[x].Item1;
                 var b = _drawList[y].Item1;
 
-                var cmp = (a.DrawDepth).CompareTo(b.DrawDepth);
+                var cmp = a.DrawDepth.CompareTo(b.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;
@@ -1091,14 +1035,15 @@ namespace Robust.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                cmp = _drawList[x].Item4.CompareTo(_drawList[y].Item4);
+                // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
+                cmp = _drawList[x].Item4.Top.CompareTo(_drawList[y].Item4.Top);
 
                 if (cmp != 0)
                 {
                     return cmp;
                 }
 
-                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+                return a.Owner.CompareTo(b.Owner);
             }
         }
 

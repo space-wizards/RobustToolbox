@@ -2,15 +2,19 @@
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Copy
 {
+    [MemoryDiagnoser]
+    [Virtual]
     public class SerializationCopyBenchmark : SerializationBenchmark
     {
         public SerializationCopyBenchmark()
@@ -24,7 +28,7 @@ namespace Robust.Benchmarks.Serialization.Copy
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.ReadValueOrThrow<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
         }
 
         private const string String = "ABC";
@@ -35,28 +39,32 @@ namespace Robust.Benchmarks.Serialization.Copy
 
         private SeedDataDefinition Seed { get; }
 
+        private BenchmarkFlagsEnum FlagZero = BenchmarkFlagsEnum.Zero;
+
+        private BenchmarkFlagsEnum FlagThirtyOne = BenchmarkFlagsEnum.ThirtyOne;
+
         [Benchmark]
         public string? CreateCopyString()
         {
-            return SerializationManager.CreateCopy(String);
+            return SerializationManager.Copy(String);
         }
 
         [Benchmark]
         public int? CreateCopyInteger()
         {
-            return SerializationManager.CreateCopy(Integer);
+            return SerializationManager.Copy(Integer);
         }
 
         [Benchmark]
         public DataDefinitionWithString? CreateCopyDataDefinitionWithString()
         {
-            return SerializationManager.CreateCopy(DataDefinitionWithString);
+            return SerializationManager.Copy(DataDefinitionWithString);
         }
 
         [Benchmark]
         public SeedDataDefinition? CreateCopySeedDataDefinition()
         {
-            return SerializationManager.CreateCopy(Seed);
+            return SerializationManager.Copy(Seed);
         }
 
         [Benchmark]
@@ -110,6 +118,36 @@ namespace Robust.Benchmarks.Serialization.Copy
             copy.SplatPrototype = Seed.SplatPrototype;
 
             return copy;
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public object? CopyFlagZero()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(FlagSerializer<BenchmarkFlags>),
+                (int) FlagZero,
+                (int) FlagZero);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public object? CopyFlagThirtyOne()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(FlagSerializer<BenchmarkFlags>),
+                (int) FlagThirtyOne,
+                (int) FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public object? CopyIntegerCustomSerializer()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(BenchmarkIntSerializer),
+                Integer,
+                Integer);
         }
     }
 }

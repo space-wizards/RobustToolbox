@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Robust.Shared;
 using System.Threading;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
@@ -8,6 +9,8 @@ using GlfwKey = OpenToolkit.GraphicsLibraryFramework.Keys;
 using GlfwButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
 using static Robust.Client.Input.Mouse;
 using static Robust.Client.Input.Keyboard;
+using Robust.Shared.IoC;
+using Robust.Shared.Configuration;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -22,6 +25,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private void InitKeyMap()
             {
+                _printableKeyNameMap.Clear();
                 // From GLFW's source code: this is the actual list of "printable" keys
                 // that GetKeyName returns something for.
                 CacheKey(Keys.KeyPadEqual);
@@ -41,8 +45,19 @@ namespace Robust.Client.Graphics.Clyde
                     if (rKey == Key.Unknown)
                         return;
 
-                    var name = GLFW.GetKeyName(key, 0);
-                    _printableKeyNameMap.Add(rKey, name);
+                    string name;
+
+                    if (!_clyde._cfg.GetCVar(CVars.DisplayUSQWERTYHotkeys))
+                    {
+                        name = GLFW.GetKeyName(key, 0);
+                    }
+                    else
+                    {
+                        name = key.ToString();
+                    }
+
+                    if (!string.IsNullOrEmpty(name))
+                        _printableKeyNameMap.Add(rKey, name);
                 }
             }
 
@@ -57,10 +72,10 @@ namespace Robust.Client.Graphics.Clyde
                 name = Keyboard.GetSpecialKeyName(key, _loc);
                 if (name != null)
                 {
-                    return Loc.GetString(name);
+                    return _loc.GetString(name);
                 }
 
-                return Loc.GetString("<unknown key>");
+                return _loc.GetString("<unknown key>");
             }
 
             public static Button ConvertGlfwButton(GlfwButton button)

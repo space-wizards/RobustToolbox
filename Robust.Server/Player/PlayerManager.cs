@@ -14,6 +14,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -25,7 +26,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
-    internal class PlayerManager : IPlayerManager
+    public sealed class PlayerManager : IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
             .CreateGauge("robust_player_count", "Number of players on the server.");
@@ -74,6 +75,8 @@ namespace Robust.Server.Player
             }
         }
 
+        public IEnumerable<IPlayerSession> ServerSessions => Sessions.Cast<IPlayerSession>();
+
         /// <inheritdoc />
         [ViewVariables]
         public int PlayerCount
@@ -107,12 +110,22 @@ namespace Robust.Server.Player
 
             MaxPlayers = maxPlayers;
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
+            _network.RegisterNetMessage<MsgPlayerListReq>(HandlePlayerListReq);
+            _network.RegisterNetMessage<MsgPlayerList>();
+            _network.RegisterNetMessage<MsgSyncTimeBase>();
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;
             _network.Disconnect += EndSession;
+        }
+
+        public void Shutdown()
+        {
+            KeyMap = default!;
+
+            _network.Connecting -= OnConnecting;
+            _network.Connected -= NewSession;
+            _network.Disconnect -= EndSession;
         }
 
         public bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out IPlayerSession? session)
@@ -210,9 +223,9 @@ namespace Robust.Server.Player
             _sessionsLock.EnterReadLock();
             try
             {
-                if (_sessions.TryGetValue(userId, out var _session))
+                if (_sessions.TryGetValue(userId, out var playerSession))
                 {
-                    session = _session;
+                    session = playerSession;
                     return true;
                 }
             }
@@ -227,6 +240,7 @@ namespace Robust.Server.Player
         /// <summary>
         ///     Causes all sessions to switch from the lobby to the the game.
         /// </summary>
+        [Obsolete]
         public void SendJoinGameToAll()
         {
             _sessionsLock.EnterReadLock();
@@ -256,6 +270,7 @@ namespace Robust.Server.Player
         /// <summary>
         ///     Causes all sessions to detach from their entity.
         /// </summary>
+        [Obsolete]
         public void DetachAll()
         {
             _sessionsLock.EnterReadLock();
@@ -278,22 +293,14 @@ namespace Robust.Server.Player
         /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
+        [Obsolete("Use player Filter or Inline me!")]
         public List<IPlayerSession> GetPlayersInRange(MapCoordinates worldPos, int range)
         {
-            _sessionsLock.EnterReadLock();
-            //TODO: This needs to be moved to the PVS system.
-            try
-            {
-                return
-                    _sessions.Values.Where(x =>
-                            x.AttachedEntity != null && worldPos.InRange(x.AttachedEntity.Transform.MapPosition, range))
-                        .Cast<IPlayerSession>()
-                        .ToList();
-            }
-            finally
-            {
-                _sessionsLock.ExitReadLock();
-            }
+            return Filter.Empty()
+                .AddInRange(worldPos, range)
+                .Recipients
+                .Cast<IPlayerSession>()
+                .ToList();
         }
 
         /// <summary>
@@ -302,40 +309,34 @@ namespace Robust.Server.Player
         /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
+        [Obsolete("Use player Filter or Inline me!")]
         public List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range)
         {
-            return GetPlayersInRange(worldPos.ToMap(_entityManager), range);
+            return Filter.Empty()
+                .AddInRange(worldPos.ToMap(_entityManager), range)
+                .Recipients
+                .Cast<IPlayerSession>()
+                .ToList();
         }
 
+        [Obsolete("Use player Filter or Inline me!")]
         public List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate)
         {
-            _sessionsLock.EnterReadLock();
-            try
-            {
-                return
-                    _sessions.Values.Where(predicate).ToList();
-            }
-            finally
-            {
-                _sessionsLock.ExitReadLock();
-            }
+            return Filter.Empty()
+                .AddWhere((session => predicate((IPlayerSession)session)))
+                .Recipients
+                .Cast<IPlayerSession>()
+                .ToList();
         }
 
         /// <summary>
         ///     Gets all players in the server.
         /// </summary>
         /// <returns></returns>
+        [Obsolete("Use player Filter or Inline me!")]
         public List<IPlayerSession> GetAllPlayers()
         {
-            _sessionsLock.EnterReadLock();
-            try
-            {
-                return _sessions.Values.Cast<IPlayerSession>().ToList();
-            }
-            finally
-            {
-                _sessionsLock.ExitReadLock();
-            }
+            return ServerSessions.ToList();
         }
 
         /// <summary>
@@ -390,7 +391,7 @@ namespace Robust.Server.Player
 
             var session = new PlayerSession(this, args.Channel, data);
 
-            session.PlayerStatusChanged += (obj, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
+            session.PlayerStatusChanged += (_, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
 
             _sessionsLock.EnterWriteLock();
             try
@@ -403,6 +404,11 @@ namespace Robust.Server.Player
             }
 
             PlayerCountMetric.Set(PlayerCount);
+
+            // Synchronize base time.
+            var msgTimeBase = new MsgSyncTimeBase();
+            (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
+            _network.ServerSendMessage(msgTimeBase, args.Channel);
 
             IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
         }
@@ -444,8 +450,8 @@ namespace Robust.Server.Player
         private void HandlePlayerListReq(MsgPlayerListReq message)
         {
             var channel = message.MsgChannel;
-            var players = GetAllPlayers().ToArray();
-            var netMsg = channel.CreateNetMessage<MsgPlayerList>();
+            var players = Sessions;
+            var netMsg = new MsgPlayerList();
 
             // client session is complete, set their status accordingly.
             // This is done before the packet is built, so that the client
@@ -456,9 +462,6 @@ namespace Robust.Server.Player
             var list = new List<PlayerState>();
             foreach (var client in players)
             {
-                if (client == null)
-                    continue;
-
                 var info = new PlayerState
                 {
                     UserId = client.UserId,
@@ -486,9 +489,9 @@ namespace Robust.Server.Player
 
         public bool TryGetPlayerData(NetUserId userId, [NotNullWhen(true)] out IPlayerData? data)
         {
-            if (_playerData.TryGetValue(userId, out var _data))
+            if (_playerData.TryGetValue(userId, out var playerData))
             {
-                data = _data;
+                data = playerData;
                 return true;
             }
             data = default;
@@ -514,7 +517,7 @@ namespace Robust.Server.Player
         }
     }
 
-    public class SessionStatusEventArgs : EventArgs
+    public sealed class SessionStatusEventArgs : EventArgs
     {
         public SessionStatusEventArgs(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
         {

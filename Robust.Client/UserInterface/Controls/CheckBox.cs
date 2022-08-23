@@ -6,6 +6,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A type of toggleable button that also has a checkbox.
     /// </summary>
+    [Virtual]
     public class CheckBox : ContainerButton
     {
         public const string StyleClassCheckBox = "checkBox";
@@ -14,12 +15,13 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public TextureRect TextureRect { get; }
 
-        public CheckBox() : base()
+        public CheckBox()
         {
             ToggleMode = true;
 
-            var hBox = new HBoxContainer
+            var hBox = new BoxContainer
             {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
                 StyleClasses = { StyleClassCheckBox },
             };
             AddChild(hBox);

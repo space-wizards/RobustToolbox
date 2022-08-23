@@ -10,13 +10,11 @@ using Robust.Shared.Players;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : EntitySystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem
     {
-        private const int AudioDistanceRange = 25;
-
         private uint _streamIndex;
 
-        private class AudioSourceServer : IPlayingAudioStream
+        private sealed class AudioSourceServer : IPlayingAudioStream
         {
             private readonly uint _id;
             private readonly AudioSystem _audioSystem;
@@ -32,12 +30,6 @@ namespace Robust.Server.GameObjects
             {
                 _audioSystem.InternalStop(_id, _sessions);
             }
-        }
-
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
         }
 
         private void InternalStop(uint id, IEnumerable<ICommonSession>? sessions = null)
@@ -64,13 +56,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public int DefaultSoundRange => AudioDistanceRange;
-
-        /// <inheritdoc />
-        public int OcclusionCollisionMask { get; set; }
-
-        /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -85,26 +71,25 @@ namespace Robust.Server.GameObjects
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
-        /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid,
+            AudioParams? audioParams = null)
         {
-            //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+            if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
+                return null;
 
             var id = CacheIdentifier();
+
+            var fallbackCoordinates = GetFallbackCoordinates(transform.MapPosition);
 
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
-                Coordinates = entity.Transform.Coordinates,
-                EntityUid = entity.Uid,
+                Coordinates = transform.Coordinates,
+                FallbackCoordinates = fallbackCoordinates,
+                EntityUid = uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
             };
-
-            // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f)
-                playerFilter = playerFilter.Clone().AddInRange(entity.Transform.MapPosition, range);
 
             RaiseNetworkEvent(msg, playerFilter);
 
@@ -112,27 +97,35 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
-            //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
-
             var id = CacheIdentifier();
+
+            var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager));
+
             var msg = new PlayAudioPositionalMessage
             {
                 FileName = filename,
                 Coordinates = coordinates,
+                FallbackCoordinates = fallbackCoordinates,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
 
-            // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f)
-                playerFilter = playerFilter.Clone().AddInRange(coordinates.ToMap(EntityManager), range);
-
             RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        }
+
+        /// <inheritdoc />
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        {
+            if (sound == null)
+                return null;
+
+            var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
+            return Play(sound, filter, source, audioParams);
         }
     }
 }

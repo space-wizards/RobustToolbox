@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -11,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
-    public class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
+    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -20,11 +18,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return Enum.TryParse(flagType, node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing flag.", false);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public int Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
-            return new DeserializedValue((int)Enum.Parse(flagType, node.Value));
+            return (int)Enum.Parse(flagType, node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, int value, bool alwaysWrite = false,
@@ -39,13 +37,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             // is 1 just in that position.
             //
             // Otherwise, this code may throw an exception
-            var maxFlagValue = ((int[])Enum.GetValues(flagType)).Max();
+            var maxFlagValue = serializationManager.GetFlagHighestBit(typeof(TTag));
 
-            for (var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex = bitIndex << 1)
+            for (var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex++)
             {
-                if ((bitIndex & value) == bitIndex)
+                var bitValue = 1 << bitIndex;
+
+                if ((bitValue & value) == bitValue)
                 {
-                    var flagName = Enum.GetName(flagType, bitIndex);
+                    var flagName = Enum.GetName(flagType, bitValue);
 
                     if (flagName == null)
                     {
@@ -79,8 +79,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return new ValidatedValueNode(node);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public int Read(ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
             var flags = 0;
@@ -91,7 +91,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
                 flags |= (int) Enum.Parse(flagType, valueDataNode.Value);
             }
 
-            return new DeserializedValue(flags);
+            return flags;
         }
     }
 }

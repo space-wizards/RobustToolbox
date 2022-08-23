@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using OpenToolkit.GraphicsLibraryFramework;
@@ -13,11 +13,6 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed partial class GlfwWindowingImpl
         {
-            // glfwPostEmptyEvent is broken on macOS and crashes when not called from the main thread
-            // (despite what the docs claim, and yes this makes it useless).
-            // Because of this, we just forego it and use glfwWaitEventsTimeout on macOS instead.
-            private static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
             private bool _windowingRunning;
             private ChannelWriter<CmdBase> _cmdWriter = default!;
             private ChannelReader<CmdBase> _cmdReader = default!;
@@ -53,12 +48,15 @@ namespace Robust.Client.Graphics.Clyde
 
                 while (_windowingRunning)
                 {
-                    if (IsMacOS)
+                    // glfwPostEmptyEvent is broken on macOS and crashes when not called from the main thread
+                    // (despite what the docs claim, and yes this makes it useless).
+                    // Because of this, we just forego it and use glfwWaitEventsTimeout on macOS instead.
+                    if (OperatingSystem.IsMacOS())
                         GLFW.WaitEventsTimeout(0.008);
                     else
                         GLFW.WaitEvents();
 
-                    while (_cmdReader.TryRead(out var cmd))
+                    while (_cmdReader.TryRead(out var cmd) && _windowingRunning)
                     {
                         ProcessGlfwCmd(cmd);
                     }
@@ -71,6 +69,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     case CmdTerminate:
                         _windowingRunning = false;
+                        _eventWriter.Complete();
                         break;
 
                     case CmdWinSetTitle cmd:
@@ -120,12 +119,25 @@ namespace Robust.Client.Graphics.Clyde
                     case CmdWinCursorSet cmd:
                         WinThreadWinCursorSet(cmd);
                         break;
+
+                    case CmdRunAction cmd:
+                        cmd.Action();
+                        break;
                 }
             }
 
             public void TerminateWindowLoop()
             {
                 SendCmd(new CmdTerminate());
+                _cmdWriter.Complete();
+
+                // Drain command queue ignoring it until the window thread confirms completion.
+#pragma warning disable RA0004
+                while (_eventReader.WaitToReadAsync().AsTask().Result)
+#pragma warning restore RA0004
+                {
+                    _eventReader.TryRead(out _);
+                }
             }
 
             private void InitChannels()
@@ -157,7 +169,7 @@ namespace Robust.Client.Graphics.Clyde
                 _cmdWriter.TryWrite(cmd);
 
                 // Post empty event to unstuck WaitEvents if necessary.
-                if (!IsMacOS)
+                if (!OperatingSystem.IsMacOS())
                     GLFW.PostEmptyEvent();
             }
 
@@ -169,6 +181,11 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     task.AsTask().Wait();
                 }
+            }
+
+            public void RunOnWindowThread(Action action)
+            {
+                SendCmd(new CmdRunAction(action));
             }
 
             private abstract record CmdBase;
@@ -206,14 +223,16 @@ namespace Robust.Client.Graphics.Clyde
             ) : CmdBase;
 
             private sealed record CmdWinCreate(
-                Renderer Renderer,
+                GLContextSpec? GLSpec,
                 WindowCreateParameters Parameters,
                 nint ShareWindow,
+                nint OwnerWindow,
                 TaskCompletionSource<GlfwWindowCreateResult> Tcs
             ) : CmdBase;
 
             private sealed record CmdWinDestroy(
-                nint Window
+                nint Window,
+                bool hadOwner
             ) : CmdBase;
 
             private sealed record GlfwWindowCreateResult(
@@ -244,6 +263,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private sealed record CmdCursorDestroy(
                 ClydeHandle Cursor
+            ) : CmdBase;
+
+            private sealed record CmdRunAction(
+                Action Action
             ) : CmdBase;
         }
     }

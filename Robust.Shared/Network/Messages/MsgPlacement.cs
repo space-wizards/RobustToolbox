@@ -9,13 +9,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgPlacement : NetMessage
+    public sealed class MsgPlacement : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Command;
-        public static readonly string NAME = nameof(MsgPlacement);
-        public MsgPlacement(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         public PlacementManagerMessage PlaceType { get; set; }
         public string Align { get; set; }

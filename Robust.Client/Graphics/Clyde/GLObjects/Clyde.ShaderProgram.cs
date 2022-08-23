@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -14,7 +14,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     You've been warned:
         ///     using things like <see cref="SetUniformTexture" /> if this buffer isn't bound WILL mess things up!
         /// </summary>
-        private class GLShaderProgram
+        private sealed class GLShaderProgram
         {
             private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();
@@ -178,9 +178,6 @@ namespace Robust.Client.Graphics.Clyde
                     case UniIModUV:
                         name = UniModUV;
                         break;
-                    case UniIModulate:
-                        name = UniModulate;
-                        break;
                     case UniILightTexture:
                         name = UniLightTexture;
                         break;
@@ -232,6 +229,19 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, single);
+            }
+
+            public void SetUniform(string uniformName, float[] singles)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, singles.Length, singles);
+                _clyde.CheckGlError();
+            }
+
+            public void SetUniform(int uniformName, float[] singles)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, singles.Length, singles);
             }
 
             public void SetUniform(string uniformName, in Matrix3 matrix)
@@ -370,6 +380,31 @@ namespace Robust.Client.Graphics.Clyde
                     fixed (Vector2* ptr = &vector)
                     {
                         GL.Uniform2(slot, 1, (float*)ptr);
+                        _clyde.CheckGlError();
+                    }
+                }
+            }
+
+            public void SetUniform(string uniformName, Vector2[] vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            public void SetUniform(int uniformName, Vector2[] vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetUniformDirect(int slot, Vector2[] vectors)
+            {
+                unsafe
+                {
+                    fixed (Vector2* ptr = &vectors[0])
+                    {
+                        GL.Uniform2(slot, vectors.Length, (float*)ptr);
                         _clyde.CheckGlError();
                     }
                 }

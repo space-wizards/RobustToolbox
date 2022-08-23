@@ -1,9 +1,10 @@
-﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
 {
@@ -11,25 +12,48 @@ namespace Robust.Client.GameObjects
     /// Updates the layer animation for every visible sprite.
     /// </summary>
     [UsedImplicitly]
-    public class SpriteSystem : EntitySystem
+    public sealed partial class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
-        private RenderingTreeSystem _treeSystem = default!;
+        private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
+        private HashSet<ISpriteComponent> _manualUpdate = new();
 
         public override void Initialize()
         {
             base.Initialize();
-            _treeSystem = Get<RenderingTreeSystem>();
+
+            _proto.PrototypesReloaded += OnPrototypesReloaded;
+            SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            _proto.PrototypesReloaded -= OnPrototypesReloaded;
+        }
+
+        private void QueueUpdateInert(SpriteUpdateInertEvent ev)
+        {
+            _inertUpdateQueue.Enqueue(ev.Sprite);
         }
 
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);
+            while (_inertUpdateQueue.TryDequeue(out var sprite))
+            {
+                sprite.DoUpdateIsInert();
+            }
+
+            foreach (var sprite in _manualUpdate)
+            {
+                if (!sprite.Deleted && !sprite.IsInert)
+                    sprite.FrameUpdate(frameTime);
+            }
+
+            var pvsBounds = _eyeManager.GetWorldViewbounds();
 
             var currentMap = _eyeManager.CurrentMap;
             if (currentMap == MapId.Nullspace)
@@ -37,23 +61,49 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(currentMap, pvsBounds, true))
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+
+            foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var gridBounds = gridId == GridId.Invalid ? pvsBounds : pvsBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
 
-                var mapTree = _treeSystem.GetSpriteTreeForMap(currentMap, gridId);
-
-                mapTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
+                comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
-                    if (value.IsInert)
+                    if (value.Component.IsInert)
                     {
                         return true;
                     }
 
-                    value.FrameUpdate(state);
+                    if (!_manualUpdate.Contains(value.Component))
+                        value.Component.FrameUpdate(state);
                     return true;
-                }, gridBounds, approx: true);
+                }, bounds, true);
             }
+
+            _manualUpdate.Clear();
+        }
+
+        /// <summary>
+        ///     Force update of the sprite component next frame
+        /// </summary>
+        public void ForceUpdate(ISpriteComponent sprite)
+        {
+            _manualUpdate.Add(sprite);
+        }
+    }
+
+    /// <summary>
+    ///     This event gets raised before a sprite gets drawn using it's post-shader.
+    /// </summary>
+    public sealed class BeforePostShaderRenderEvent : EntityEventArgs
+    {
+        public readonly SpriteComponent Sprite;
+        public readonly IClydeViewport Viewport;
+
+        public BeforePostShaderRenderEvent(SpriteComponent sprite, IClydeViewport viewport)
+        {
+            Sprite = sprite;
+            Viewport = viewport;
         }
     }
 }

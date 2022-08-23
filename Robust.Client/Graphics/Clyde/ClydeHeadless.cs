@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics.Clyde
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
     [UsedImplicitly]
-    internal sealed class ClydeHeadless : IClydeInternal, IClydeAudio
+    internal sealed class ClydeHeadless : IClydeInternal
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public IClydeWindow MainWindow { get; }
@@ -37,6 +37,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHeadless()
         {
+            Configuration.Default.PreferContiguousImageBuffers = true;
+
             var mainRt = new DummyRenderWindow(this);
             var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
 
@@ -54,7 +56,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyUp { add { } remove { } }
         public event Action<KeyEventArgs>? KeyDown { add { } remove { } }
         public event Action<MouseWheelEventArgs>? MouseWheel { add { } remove { } }
-        public event Action<WindowClosedEventArgs>? CloseWindow { add { } remove { } }
+        public event Action<WindowRequestClosedEventArgs>? CloseWindow { add { } remove { } }
         public event Action<WindowDestroyedEventArgs>? DestroyWindow { add { } remove { } }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
@@ -74,6 +76,11 @@ namespace Robust.Client.Graphics.Clyde
         public uint? GetX11WindowId()
         {
             return null;
+        }
+
+        public void RegisterGridEcsEvents()
+        {
+            // Nada.
         }
 
         public void SetWindowTitle(string title)
@@ -210,7 +217,7 @@ namespace Robust.Client.Graphics.Clyde
             yield break;
         }
 
-        public Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
+        public IClydeWindow CreateWindow(WindowCreateParameters parameters)
         {
             var window = new DummyWindow(CreateRenderTarget((123, 123), default))
             {
@@ -218,10 +225,10 @@ namespace Robust.Client.Graphics.Clyde
             };
             _windows.Add(window);
 
-            return Task.FromResult<IClydeWindow>(window);
+            return window;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
             return default;
         }
@@ -236,28 +243,6 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
-        {
-            // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new(default, default, 1, name);
-        }
-
-        public AudioStream LoadAudioWav(Stream stream, string? name = null)
-        {
-            // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new(default, default, 1, name);
-        }
-
-        public IClydeAudioSource CreateAudioSource(AudioStream stream)
-        {
-            return DummyAudioSource.Instance;
-        }
-
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
-        {
-            return DummyBufferedAudioSource.Instance;
-        }
-
         public Task<string> GetText()
         {
             return Task.FromResult(string.Empty);
@@ -268,12 +253,12 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public void SetMasterVolume(float newVolume)
+        public void RunOnWindowThread(Action action)
         {
-            // Nada.
+            action();
         }
 
-        private class DummyCursor : ICursor
+        private sealed class DummyCursor : ICursor
         {
             public void Dispose()
             {
@@ -281,6 +266,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        [Virtual]
         private class DummyAudioSource : IClydeAudioSource
         {
             public static DummyAudioSource Instance { get; } = new();
@@ -319,6 +305,26 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetVolume(float decibels)
+            {
+                // Nada.
+            }
+
+            public void SetVolumeDirect(float scale)
+            {
+                // Nada.
+            }
+
+            public void SetMaxDistance(float maxDistance)
+            {
+                // Nada.
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                // Nada.
+            }
+
+            public void SetReferenceDistance(float refDistance)
             {
                 // Nada.
             }
@@ -385,6 +391,16 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            {
+                // Just do nothing on mutate.
+            }
+
+            public override Color GetPixel(int x, int y)
+            {
+                return Color.Black;
+            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance
@@ -398,7 +414,15 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, float[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, Vector2 value)
+            {
+            }
+
+            private protected override void SetParameterImpl(string name, Vector2[] value)
             {
             }
 
@@ -542,6 +566,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 
@@ -554,6 +579,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return default;
             }
+
+            public Matrix3 WorldToLocalMatrix => default;
 
             public Vector2 WorldToLocal(Vector2 point)
             {
@@ -594,7 +621,9 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
             public bool DisposeOnClose { get; set; }
-            public event Action<WindowClosedEventArgs>? Closed { add { } remove { } }
+            public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
+            public event Action<WindowDestroyedEventArgs>? Destroyed;
+            public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {
@@ -603,6 +632,8 @@ namespace Robust.Client.Graphics.Clyde
             public void Dispose()
             {
                 IsDisposed = true;
+
+                Destroyed?.Invoke(new WindowDestroyedEventArgs(this));
             }
         }
     }

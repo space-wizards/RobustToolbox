@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(DictionarySerializer<,>))]
-    public class DictionarySerializerTest : SerializationTest
+    public sealed class DictionarySerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()
@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             node.Add("2", new ValueDataNode("B"));
             node.Add("3", new ValueDataNode("C"));
 
-            var deserializedDictionary = Serialization.ReadValue<Dictionary<int, string>>(node);
+            var deserializedDictionary = Serialization.Read<Dictionary<int, string>>(node);
 
             Assert.That(deserializedDictionary, Is.EqualTo(dictionary));
         }

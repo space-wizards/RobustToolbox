@@ -15,12 +15,15 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Allows the user to input and modify a line of text.
     /// </summary>
+    [Virtual]
     public class LineEdit : Control
     {
         private const float BlinkTime = 0.5f;
         private const float MouseScrollDelay = 0.001f;
 
         public const string StylePropertyStyleBox = "stylebox";
+        public const string StylePropertyCursorColor = "cursor-color";
+        public const string StylePropertySelectionColor = "selection-color";
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
@@ -46,6 +49,7 @@ namespace Robust.Client.UserInterface.Controls
         public event Action<LineEditEventArgs>? OnTextEntered;
         public event Action<LineEditEventArgs>? OnFocusEnter;
         public event Action<LineEditEventArgs>? OnFocusExit;
+        public event Action<LineEditEventArgs>? OnTabComplete;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -61,18 +65,22 @@ namespace Robust.Client.UserInterface.Controls
             get => _text;
             set
             {
-                if (value == null)
-                {
-                    value = "";
-                }
+                // Save cursor position or -1 for end
+                var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
 
-                if (!SetText(value))
+                if (!InternalSetText(value))
                 {
                     return;
                 }
 
-                _cursorPosition = 0;
-                _selectionStart = 0;
+                var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
+                while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
+                {
+                    clamped++;
+                }
+
+                _cursorPosition = clamped;
+                _selectionStart = _cursorPosition;
                 _updatePseudoClass();
             }
         }
@@ -199,7 +207,7 @@ namespace Robust.Client.UserInterface.Controls
             var lower = SelectionLower;
             var newContents = Text[..lower] + text + Text[SelectionUpper..];
 
-            if (!SetText(newContents))
+            if (!InternalSetText(newContents))
             {
                 return;
             }
@@ -212,7 +220,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         /// Does not fix cursor positions, those will have to be adjusted manually.
         /// </remarks>>
-        protected bool SetText(string newText)
+        private bool InternalSetText(string newText)
         {
             if (IsValid != null && !IsValid(newText))
             {
@@ -273,6 +281,8 @@ namespace Robust.Client.UserInterface.Controls
             return finalSize;
         }
 
+        public event Action<GUITextEventArgs>? OnTextTyped;
+
         protected internal override void TextEntered(GUITextEventArgs args)
         {
             base.TextEntered(args);
@@ -289,7 +299,10 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             InsertAtCursor(args.AsRune.ToString());
+            OnTextTyped?.Invoke(args);
         }
+
+        public event Action<LineEditBackspaceEventArgs>? OnBackspace;
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
@@ -307,6 +320,9 @@ namespace Robust.Client.UserInterface.Controls
                     if (Editable)
                     {
                         var changed = false;
+                        var oldText = _text;
+                        var cursor = _cursorPosition;
+                        var selectStart = _selectionStart;
                         if (_selectionStart != _cursorPosition)
                         {
                             _text = _text.Remove(SelectionLower, SelectionLength);
@@ -333,6 +349,7 @@ namespace Robust.Client.UserInterface.Controls
                             _selectionStart = _cursorPosition;
                             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                             _updatePseudoClass();
+                            OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
                         }
                     }
 
@@ -521,6 +538,15 @@ namespace Robust.Client.UserInterface.Controls
                     args.Handle();
                     return;
                 }
+                else if (args.Function == EngineKeyFunctions.TextTabComplete)
+                {
+                    if (Editable)
+                    {
+                        OnTabComplete?.Invoke(new LineEditEventArgs(this, _text));
+                    }
+
+                    args.Handle();
+                }
             }
             else
             {
@@ -635,6 +661,35 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return index;
+        }
+
+        /// <summary>
+        /// Get offset from the left of the control
+        /// to the left edge of the text glyph at the specified index in the text.
+        /// </summary>
+        /// <remarks>
+        /// The returned value can be outside the bounds of the control if the glyph is currently clipped off.
+        /// </remarks>
+        public float GetOffsetAtIndex(int index)
+        {
+            var style = _getStyleBox();
+            var contentBox = style.GetContentBox(PixelSizeBox);
+
+            var font = _getFont();
+            var i = 0;
+            var chrPosX = contentBox.Left - _drawOffset;
+            foreach (var rune in _text.EnumerateRunes())
+            {
+                if (i >= index)
+                    break;
+
+                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    chrPosX += metrics.Advance;
+
+                i += rune.Utf16SequenceLength;
+            }
+
+            return chrPosX / UIScale;
         }
 
         protected internal override void KeyboardFocusEntered()
@@ -793,7 +848,7 @@ namespace Robust.Client.UserInterface.Controls
             Whitespace
         }
 
-        public class LineEditEventArgs : EventArgs
+        public sealed class LineEditEventArgs : EventArgs
         {
             public LineEdit Control { get; }
             public string Text { get; }
@@ -802,6 +857,26 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Control = control;
                 Text = text;
+            }
+        }
+
+        public sealed class LineEditBackspaceEventArgs : EventArgs
+        {
+            public string OldText { get; }
+            public string NewText { get; }
+            public int OldCursorPosition { get; }
+            public int OldSelectionStart { get; }
+
+            public LineEditBackspaceEventArgs(
+                string oldText,
+                string newText,
+                int oldCursorPosition,
+                int oldSelectionStart)
+            {
+                OldText = oldText;
+                NewText = newText;
+                OldCursorPosition = oldCursorPosition;
+                OldSelectionStart = oldSelectionStart;
             }
         }
 
@@ -919,15 +994,25 @@ namespace Robust.Client.UserInterface.Controls
 
                     if (selectionLower != selectionUpper)
                     {
-                        handle.DrawRect(new UIBox2(selectionLower, contentBox.Top, selectionUpper, contentBox.Bottom),
+                        var color = _master.StylePropertyDefault(
+                            StylePropertySelectionColor,
                             Color.CornflowerBlue.WithAlpha(0.25f));
+
+                        handle.DrawRect(
+                            new UIBox2(selectionLower, contentBox.Top, selectionUpper, contentBox.Bottom),
+                            color);
                     }
 
                     if (_master._cursorCurrentlyLit)
                     {
+                        var color = _master.StylePropertyDefault(
+                            StylePropertyCursorColor,
+                            Color.White);
+
                         handle.DrawRect(
                             new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
-                                contentBox.Bottom), Color.White);
+                                contentBox.Bottom),
+                            color);
                     }
                 }
             }

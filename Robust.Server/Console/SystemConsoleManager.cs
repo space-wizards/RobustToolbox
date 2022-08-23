@@ -1,8 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Channels;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Con = System.Console;
 
 namespace Robust.Server.Console
@@ -12,6 +19,12 @@ namespace Robust.Server.Console
         [Dependency] private readonly IServerConsoleHost _conShell = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IBaseServer _baseServer = default!;
+        [Dependency] private readonly IServerNetManager _netManager = default!;
+        [Dependency] private readonly IGameTiming _time = default!;
+
+        //
+        // Command entry stuff.
+        //
 
         private readonly Dictionary<int, string> commandHistory = new();
         private string currentBuffer = "";
@@ -21,8 +34,37 @@ namespace Robust.Server.Console
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
 
+        //
+        // Title update stuff.
+        //
+
+        // This is ridiculously expensive to fetch for some reason.
+        // I'm gonna just assume that this can't change during the lifetime of the process. I hope.
+        // I want this ridiculous 0.1% CPU usage off my profiler.
+        private readonly bool _userInteractive = Environment.UserInteractive && !System.Console.IsInputRedirected;
+
+        private TimeSpan _lastTitleUpdate;
+        private long _lastReceivedBytes;
+        private long _lastSentBytes;
+
+
         public void Dispose()
         {
+            if (_rdLine != null)
+            {
+                _rdLine.Value.cts.Cancel();
+                _rdLine.Value.cts.Dispose();
+
+                try
+                {
+                    _rdLine.Value.task.Dispose();
+                }
+                catch
+                {
+                    // Don't care LOL
+                }
+            }
+
             if (Environment.UserInteractive)
             {
                 Con.CancelKeyPress -= CancelKeyHandler;
@@ -37,13 +79,96 @@ namespace Robust.Server.Console
             }
         }
 
-        public void Update()
+        public void UpdateTick()
         {
-            if (Con.IsInputRedirected)
+            UpdateTitle();
+        }
+
+        /// <summary>
+        ///     Updates the console window title with performance statistics.
+        /// </summary>
+        private void UpdateTitle()
+        {
+            if (!_userInteractive)
+                return;
+
+            // every 1 second update stats in the console window title
+            if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
+                return;
+
+            var netStats = UpdateBps();
+            var privateSize = Process.GetCurrentProcess().GetPrivateMemorySize64NotSlowHolyFuckingShitMicrosoft();
+
+            System.Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
+                Math.Round(_time.FramesPerSecondAvg, 2),
+                _time.RealFrameTimeStdDev.TotalMilliseconds,
+                netStats,
+                privateSize >> 10);
+            _lastTitleUpdate = _time.RealTime;
+        }
+
+        private string UpdateBps()
+        {
+            var stats = _netManager.Statistics;
+
+            var bps =
+                $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
+
+            _lastSentBytes = stats.SentBytes;
+            _lastReceivedBytes = stats.ReceivedBytes;
+
+            return bps;
+        }
+
+        private (Task task, CancellationTokenSource cts, Channel<string> chan)? _rdLine = null;
+
+        public void UpdateInput()
+        {
+            if (_userInteractive)
             {
+                HandleKeyboard();
                 return;
             }
 
+            if (_rdLine.HasValue) // Already running, check the channel.
+            {
+                if (_rdLine.Value.chan.Reader.TryRead(out var cmd))
+                    _conShell.ExecuteCommand(cmd);
+
+                return;
+            }
+
+            // Set up the new thread & thread accessories
+            var rlc = new CancellationTokenSource();
+            var chan = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity: 32)
+                {
+                    FullMode=BoundedChannelFullMode.Wait,
+                    SingleReader=true,
+                }
+            );
+
+            _rdLine = (
+                task: Task.Run(
+                    async () =>
+                    {
+                        while (!rlc.IsCancellationRequested)
+                        {
+                            var str = await Con.In
+                                .ReadLineAsync()
+                                .WaitAsync(TimeSpan.FromSeconds(2.0), rlc.Token);
+
+                            await chan.Writer.WriteAsync(str!, rlc.Token);
+                        }
+                    },
+                    rlc.Token
+                ),
+                cts: rlc,
+                chan: chan
+            );
+        }
+
+        public void HandleKeyboard()
+        {
             // Process keyboard input
             while (Con.KeyAvailable)
             {
@@ -161,7 +286,7 @@ namespace Robust.Server.Console
         {
             var currentLineCursor = Con.CursorTop;
             Con.SetCursorPosition(0, Con.CursorTop);
-            Con.Write(new string(' ', Con.WindowWidth-1));
+            Con.Write(new string(' ', Con.WindowWidth - 1));
             Con.SetCursorPosition(0, currentLineCursor);
         }
 
@@ -174,7 +299,8 @@ namespace Robust.Server.Console
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = _conShell.RegisteredCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = _conShell.RegisteredCommands.Keys.Where(key => key.StartsWith(currentBuffer))
+                    .ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;

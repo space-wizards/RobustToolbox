@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -13,17 +12,16 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using TerraFX.Interop.Windows;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
+using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
 namespace Robust.Client.GameObjects
 {
@@ -34,6 +32,9 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IEntityManager entities = default!;
+        [Dependency] private readonly IReflectionManager reflection = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -42,7 +43,13 @@ namespace Robust.Client.GameObjects
         public override bool Visible
         {
             get => _visible;
-            set => _visible = value;
+            set
+            {
+                if (_visible == value) return;
+                _visible = value;
+
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+            }
         }
 
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
@@ -69,7 +76,11 @@ namespace Robust.Client.GameObjects
         public Vector2 Scale
         {
             get => scale;
-            set => scale = value;
+            set
+            {
+                scale = value;
+                UpdateLocalMatrix();
+            }
         }
 
         [DataField("rotation")]
@@ -80,7 +91,11 @@ namespace Robust.Client.GameObjects
         public Angle Rotation
         {
             get => rotation;
-            set => rotation = value;
+            set
+            {
+                rotation = value;
+                UpdateLocalMatrix();
+            }
         }
 
         [DataField("offset")]
@@ -94,11 +109,17 @@ namespace Robust.Client.GameObjects
         public Vector2 Offset
         {
             get => offset;
-            set => offset = value;
+            set
+            {
+                offset = value;
+                UpdateLocalMatrix();
+            }
         }
 
         [DataField("color")]
         private Color color = Color.White;
+
+        public Matrix3 LocalMatrix = Matrix3.Identity;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -108,34 +129,8 @@ namespace Robust.Client.GameObjects
             set => color = value;
         }
 
-        /// <summary>
-        ///     Controls whether we use RSI directions to rotate, or just get angular rotation applied.
-        ///     If true, all rotation to this sprite component is negated (that is rotation from say the owner being rotated).
-        ///     Rotation transformations on individual layers still apply.
-        ///     If false, all layers get locked to south and rotation is a transformation.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use NoRotation and/or DirectionOverride")]
-        public bool Directional
-        {
-            get => _directional;
-            set => _directional = value;
-        }
-
-        [DataField("directional")]
-        private bool _directional = true;
-
-        /// <summary>
-        /// What MapId we are intersecting for RenderingTreeSystem.
-        /// </summary>
         [ViewVariables]
-        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
-
-        /// <summary>
-        /// What grids we're on for RenderingTreeSystem.
-        /// </summary>
-        [ViewVariables]
-        internal List<GridId> IntersectingGrids { get; } = new();
+        internal RenderingTreeComponent? RenderTree { get; set; } = null;
 
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums
@@ -152,120 +147,16 @@ namespace Robust.Client.GameObjects
             }
             set
             {
-                if(value == null) return;
+                if (value == null) return;
 
                 Layers.Clear();
                 foreach (var layerDatum in value)
                 {
-                    var anyTextureAttempted = false;
-                    var layer = new Layer(this);
-                    if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
-                    {
-                        var path = TextureRoot / layerDatum.RsiPath;
-                        try
-                        {
-                            layer.RSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(path).RSI;
-                        }
-                        catch
-                        {
-                            Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(layerDatum.State))
-                    {
-                        anyTextureAttempted = true;
-                        var theRsi = layer.RSI ?? BaseRSI;
-                        if (theRsi == null)
-                        {
-                            Logger.ErrorS(LogCategory,
-                                "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
-                                layerDatum.State);
-                        }
-                        else
-                        {
-                            var stateid = new RSI.StateId(layerDatum.State);
-                            layer.State = stateid;
-                            if (theRsi.TryGetState(stateid, out var state))
-                            {
-                                // Always use south because this layer will be cached in the serializer.
-                                layer.AnimationTimeLeft = state.GetDelay(0);
-                            }
-                            else
-                            {
-                                Logger.ErrorS(LogCategory,
-                                    $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
-                                    stateid);
-                            }
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
-                    {
-                        anyTextureAttempted = true;
-                        if (layer.State.IsValid)
-                        {
-                            Logger.ErrorS(LogCategory,
-                                "Cannot specify 'texture' on a layer if it has an RSI state specified."
-                            );
-                        }
-                        else
-                        {
-                            layer.Texture =
-                                IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
-                    {
-                        if (IoCManager.Resolve<IPrototypeManager>().TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
-                        {
-                            layer.Shader = prototype.Instance();
-                        }
-                        else
-                        {
-                            Logger.ErrorS(LogCategory,
-                                "Shader prototype '{0}' does not exist.",
-                                layerDatum.Shader);
-                        }
-                    }
-
-                    layer.Color = layerDatum.Color;
-                    layer.Rotation = layerDatum.Rotation;
-                    // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
-                    layer.Visible = anyTextureAttempted && layerDatum.Visible;
-                    layer.Scale = layerDatum.Scale;
-
-                    Layers.Add(layer);
-
-                    if (layerDatum.MapKeys != null)
-                    {
-                        var index = Layers.Count - 1;
-                        foreach (var keyString in layerDatum.MapKeys)
-                        {
-                            object key;
-                            if (IoCManager.Resolve<IReflectionManager>().TryParseEnumReference(keyString, out var @enum))
-                            {
-                                key = @enum;
-                            }
-                            else
-                            {
-                                key = keyString;
-                            }
-
-                            if (LayerMap.ContainsKey(key))
-                            {
-                                Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
-                                continue;
-                            }
-
-                            LayerMap.Add(key, index);
-                        }
-                    }
+                    AddLayer(layerDatum);
                 }
 
                 _layerMapShared = true;
-                UpdateIsInert();
+                QueueUpdateIsInert();
             }
         }
 
@@ -278,11 +169,12 @@ namespace Robust.Client.GameObjects
             get => _baseRsi;
             set
             {
+                if (value == _baseRsi)
+                    return;
+
                 _baseRsi = value;
                 if (value == null)
-                {
                     return;
-                }
 
                 for (var i = 0; i < Layers.Count; i++)
                 {
@@ -291,6 +183,8 @@ namespace Robust.Client.GameObjects
                     {
                         continue;
                     }
+
+                    layer.UpdateActualState();
 
                     if (value.TryGetState(layer.State, out var state))
                     {
@@ -308,19 +202,70 @@ namespace Robust.Client.GameObjects
         }
 
         [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new ();
+        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
+        /// <summary>
+        ///     Should this entity show up in containers regardless of whether the container can show contents?
+        /// </summary>
+        [DataField("overrideContainerOcclusion")]
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool OverrideContainerOcclusion;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded && !OverrideContainerOcclusion;
+            set
+            {
+                if (_containerOccluded == value) return;
+                _containerOccluded = value;
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+            }
+        }
+
+        private bool _containerOccluded;
+
+        private Box2 _bounds;
+
+        public Box2 Bounds => _bounds;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
 
+        [ViewVariables(VVAccess.ReadWrite)] private bool _inertUpdateQueued;
+
+        /// <summary>
+        ///     Shader instance to use when drawing the final sprite to the world.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
+
+        /// <summary>
+        ///     Whether or not to pass the screen texture to the <see cref="PostShader"/>.
+        /// </summary>
+        /// <remarks>
+        ///     Should be false unless you really need it. 
+        /// </remarks>
+        [DataField("getScreenTexture")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        private bool _getScreenTexture = false;
+        public bool GetScreenTexture
+        {
+            get => _getScreenTexture && PostShader != null;
+            set => _getScreenTexture = value;
+        }
+
+        /// <summary>
+        ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
+        ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
+        ///     information about the viewport / eye.
+        /// </summary>
+        [DataField("raiseShaderEvent")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool RaiseShaderEvent = false;
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
@@ -328,33 +273,25 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
-        // TODO: this should absolutely not be static.
-        private static ShaderInstance? _defaultShader;
-
-        [ViewVariables]
-        private ShaderInstance? DefaultShader => _defaultShader ??= prototypes
-            .Index<ShaderPrototype>("shaded")
-            .Instance();
-
         public const string LogCategory = "go.comp.sprite";
-        const string LayerSerializationCache = "spritelayer";
-        const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
 
         void ISerializationHooks.AfterDeserialization()
         {
+            IoCManager.InjectDependencies(this);
+
             {
                 if (!string.IsNullOrWhiteSpace(rsi))
                 {
                     var rsiPath = TextureRoot / rsi;
-                    try
+                    if(resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
                     {
-                        BaseRSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(rsiPath).RSI;
+                        BaseRSI = resource.RSI;
                     }
-                    catch (Exception e)
+                    else
                     {
-                        Logger.ErrorS(SpriteComponent.LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
                     }
                 }
             }
@@ -378,8 +315,11 @@ namespace Robust.Client.GameObjects
 
             if (layerDatums.Count != 0)
             {
+                LayerMap.Clear();
                 LayerDatums = layerDatums;
             }
+
+            UpdateLocalMatrix();
         }
 
         /// <summary>
@@ -391,13 +331,14 @@ namespace Robust.Client.GameObjects
         {
             //deep copying things to avoid entanglement
             _baseRsi = other._baseRsi;
-            _directional = other._directional;
+            _bounds = other._bounds;
             _visible = other._visible;
             _layerMapShared = other._layerMapShared;
             color = other.color;
             offset = other.offset;
             rotation = other.rotation;
             scale = other.scale;
+            UpdateLocalMatrix();
             drawDepth = other.drawDepth;
             _screenLock = other._screenLock;
             _overrideDirection = other._overrideDirection;
@@ -423,9 +364,14 @@ namespace Robust.Client.GameObjects
             RenderOrder = other.RenderOrder;
         }
 
+        internal void UpdateLocalMatrix()
+        {
+            LocalMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
+        }
+
         public Matrix3 GetLocalMatrix()
         {
-            return Matrix3.CreateTransform(in offset, in rotation, in scale);
+            return LocalMatrix;
         }
 
         /// <inheritdoc />
@@ -470,20 +416,36 @@ namespace Robust.Client.GameObjects
             _layerMapShared = false;
         }
 
-        public void LayerMapReserveBlank(object key)
+        public int LayerMapReserveBlank(object key)
         {
-            if (LayerMapTryGet(key, out var _))
+            if (LayerMapTryGet(key, out var index))
             {
-                return;
+                return index;
             }
 
-            LayerMapSet(key, AddBlankLayer());
+            index = AddBlankLayer();
+            LayerMapSet(key, index);
+
+            return index;
         }
 
         public int AddBlankLayer(int? newIndex = null)
         {
-            var layer = new Layer(this) {Visible = false};
+            var layer = new Layer(this);
             return AddLayer(layer, newIndex);
+        }
+
+        /// <summary>
+        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>.
+        /// </summary>
+        public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
+        {
+            var layer = new Layer(this);
+
+            var index = AddLayer(layer, newIndex);
+
+            LayerSetData(index, layerDatum);
+            return index;
         }
 
         public int AddLayer(string texturePath, int? newIndex = null)
@@ -511,13 +473,13 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(Texture? texture, int? newIndex = null)
         {
-            var layer = new Layer(this) {Texture = texture};
+            var layer = new Layer(this) { Texture = texture };
             return AddLayer(layer, newIndex);
         }
 
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
         {
-            var layer = new Layer(this) {State = stateId};
+            var layer = new Layer(this) { State = stateId };
             if (BaseRSI != null && BaseRSI.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
@@ -553,7 +515,7 @@ namespace Robust.Client.GameObjects
                 Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
-            return AddLayer(stateId, res?.RSI);
+            return AddLayer(stateId, res?.RSI, newIndex);
         }
 
         public int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null)
@@ -563,7 +525,7 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(RSI.StateId stateId, RSI? rsi, int? newIndex = null)
         {
-            var layer = new Layer(this) {State = stateId, RSI = rsi};
+            var layer = new Layer(this) { State = stateId, RSI = rsi };
             if (rsi != null && rsi.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
@@ -619,7 +581,8 @@ namespace Robust.Client.GameObjects
                 index = Layers.Count - 1;
             }
 
-            UpdateIsInert();
+            RebuildBounds();
+            QueueUpdateIsInert();
             return index;
         }
 
@@ -646,7 +609,8 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            UpdateIsInert();
+            RebuildBounds();
+            QueueUpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -661,7 +625,155 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        public void LayerSetShader(int layer, ShaderInstance? shader)
+        private void RebuildBounds()
+        {
+            _bounds = new Box2();
+            foreach (var layer in Layers)
+            {
+                if (!layer.Visible || layer.Blank) continue;
+
+                _bounds = _bounds.Union(layer.CalculateBoundingBox());
+            }
+        }
+
+        /// <summary>
+        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
+        /// </summary>
+        public void LayerSetData(int index, PrototypeLayerData layerDatum)
+        {
+            if (Layers.Count <= index)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set layer data! Trace:\n{1}",
+                    index, Environment.StackTrace);
+                return;
+            }
+
+            var layer = Layers[index];
+
+            if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
+            {
+                var path = TextureRoot / layerDatum.RsiPath;
+
+                if (resourceCache.TryGetResource(path, out RSIResource? resource))
+                {
+                    layer.RSI = resource.RSI;
+                }
+                else
+                {
+                    Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(layerDatum.State))
+            {
+                var theRsi = layer.RSI ?? BaseRSI;
+                if (theRsi == null)
+                {
+                    Logger.ErrorS(LogCategory,
+                        "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
+                        layerDatum.State);
+                }
+                else
+                {
+                    var stateid = new RSI.StateId(layerDatum.State);
+                    layer.State = stateid;
+                    if (theRsi.TryGetState(stateid, out var state))
+                    {
+                        // Always use south because this layer will be cached in the serializer.
+                        layer.AnimationTimeLeft = state.GetDelay(0);
+                        layer.AnimationTime = 0;
+                        layer.AnimationFrame = 0;
+                    }
+                    else
+                    {
+                        Logger.ErrorS(LogCategory,
+                            $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
+                            stateid);
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
+            {
+                if (layer.State.IsValid)
+                {
+                    Logger.ErrorS(LogCategory,
+                        "Cannot specify 'texture' on a layer if it has an RSI state specified."
+                    );
+                }
+                else
+                {
+                    layer.Texture =
+                        resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
+            {
+                if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
+                {
+                    layer.ShaderPrototype = layerDatum.Shader;
+                    layer.Shader = prototype.Instance();
+                }
+                else
+                {
+                    Logger.ErrorS(LogCategory,
+                        "Shader prototype '{0}' does not exist.",
+                        layerDatum.Shader);
+                }
+            }
+
+            if (layerDatum.MapKeys != null)
+            {
+                foreach (var keyString in layerDatum.MapKeys)
+                {
+                    object key;
+                    if (reflection.TryParseEnumReference(keyString, out var @enum))
+                    {
+                        key = @enum;
+                    }
+                    else
+                    {
+                        key = keyString;
+                    }
+
+                    if (LayerMap.TryGetValue(key, out var mappedIndex))
+                    {
+                        if (mappedIndex != index)
+                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                        continue;
+                    }
+
+                    _layerMapEnsurePrivate();
+                    LayerMap[key] = index;
+                }
+            }
+
+            layer.Color = layerDatum.Color ?? layer.Color;
+            layer._rotation = layerDatum.Rotation ?? layer._rotation;
+            layer._offset = layerDatum.Offset ?? layer._offset;
+            layer._scale = layerDatum.Scale ?? layer._scale;
+            layer.UpdateLocalMatrix();
+
+            // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
+            layer.Visible = layerDatum.Visible ?? layer.Visible;
+
+            RebuildBounds();
+        }
+
+        public void LayerSetData(object layerKey, PrototypeLayerData data)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetData(layer, data);
+        }
+
+        public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
             if (Layers.Count <= layer)
             {
@@ -672,9 +784,10 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Shader = shader;
+            theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance shader)
+        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
@@ -683,7 +796,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            LayerSetShader(layer, shader);
+            LayerSetShader(layer, shader, prototype);
         }
 
         public void LayerSetShader(int layer, string shaderName)
@@ -692,10 +805,12 @@ namespace Robust.Client.GameObjects
             {
                 Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
                     Environment.StackTrace);
+
+                LayerSetShader(layer, null, null);
+                return;
             }
 
-            // This will set the shader to null if it does not exist.
-            LayerSetShader(layer, prototype?.Instance());
+            LayerSetShader(layer, prototype.Instance(), shaderName);
         }
 
         public void LayerSetShader(object layerKey, string shaderName)
@@ -730,6 +845,8 @@ namespace Robust.Client.GameObjects
                 default:
                     throw new NotImplementedException();
             }
+
+            RebuildBounds();
         }
 
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
@@ -755,6 +872,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetTexture(texture);
+            RebuildBounds();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -820,6 +938,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetState(stateId);
+            RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -867,6 +986,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
@@ -924,6 +1045,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetRsi(rsi);
+            RebuildBounds();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -981,6 +1103,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Scale = scale;
+            RebuildBounds();
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
@@ -1007,6 +1130,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Rotation = rotation;
+            RebuildBounds();
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
@@ -1056,6 +1180,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Color = color;
+
+            RebuildBounds();
         }
 
         public void LayerSetColor(object layerKey, Color color)
@@ -1081,6 +1207,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.DirOffset = offset;
+
+            RebuildBounds();
         }
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
@@ -1132,6 +1260,8 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer].SetAutoAnimated(autoAnimated);
+
+            RebuildBounds();
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -1156,7 +1286,9 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            Layers[layer].SetOffset(layerOffset);
+            Layers[layer].Offset = layerOffset;
+
+            RebuildBounds();
         }
 
         public void LayerSetOffset(object layerKey, Vector2 layerOffset)
@@ -1201,13 +1333,12 @@ namespace Robust.Client.GameObjects
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         // Lobby SpriteView rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
         {
-            RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
         }
 
-        [DataField("noRot")]
-        private bool _screenLock = true;
+        [DataField("noRot")] private bool _screenLock = false;
 
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;
@@ -1228,7 +1359,7 @@ namespace Robust.Client.GameObjects
         public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
 
         // Sprite rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
+        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
             Direction? overrideDir = null;
             if (_enableOverrideDirection)
@@ -1236,80 +1367,34 @@ namespace Robust.Client.GameObjects
                 overrideDir = _overrideDirection;
             }
 
-            RenderInternal(drawingHandle, worldRotation, worldPosition, overrideDir);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, overrideDir);
         }
 
-        private void CalcModelMatrix(int numDirs, Angle worldRotation, Vector2 worldPosition, out Matrix3 modelMatrix)
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            Angle angle;
+            // Reduce the angles to fix math shenanigans
+            worldRotation = worldRotation.Reduced();
 
-            if (_screenLock)
-            {
-                angle = Angle.Zero;
-            }
-            else
-            {
-                angle = CalcRectWorldAngle(worldRotation, numDirs);
-            }
+            if (worldRotation.Theta < 0)
+                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            var sWorldRotation = angle;
-            modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
-        }
+            // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
+            // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
+            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation);
 
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
-        {
-            var localMatrix = GetLocalMatrix();
+            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
 
+            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             foreach (var layer in Layers)
             {
-                if (!layer.Visible)
-                {
-                    continue;
-                }
-
-                var numDirs = GetLayerDirectionCount(layer);
-
-                CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
-                Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
-                drawingHandle.SetTransform(in transformMatrix);
-
-                RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
-            }
-        }
-
-        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
-        {
-            var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
-
-            if (layer.Shader != null)
-            {
-                drawingHandle.UseShader(layer.Shader);
-            }
-
-            var layerColor = color * layer.Color;
-
-            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
-            var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
-            var quad = Box2.FromDimensions(position, textureSize);
-
-            // TODO: Implement layer-specific rotation and scale.
-            // Apply these directly to the box.
-            // Oh and when you do update Layer.LocalToLayer so content doesn't break.
-
-            // handle.Modulate changes the color
-            // drawingHandle.SetTransform() is set above, turning the quad into local space vertices
-            drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
-
-            if (layer.Shader != null)
-            {
-                drawingHandle.UseShader(null);
+                layer.Render(drawingHandle, ref transform, angle, overrideDirection);
             }
         }
 
         public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
-            var segSize = (MathF.PI*2) / (numDirections * 2);
+            var segSize = (Math.PI * 2) / (numDirections * 2);
             var segments = (int)(theta / segSize);
             var odd = segments % 2;
             var result = theta - (segments * segSize) - (odd * segSize);
@@ -1338,34 +1423,13 @@ namespace Robust.Client.GameObjects
             };
         }
 
-        private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
-        {
-            var texture = layer.Texture;
-
-            if (layer.State.IsValid)
-            {
-                // Pull texture from RSI state instead.
-                var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                {
-                    state = GetFallbackState(resourceCache);
-                }
-
-                var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
-                texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
-            }
-
-            texture ??= resourceCache.GetFallback<TextureResource>().Texture;
-            return texture;
-        }
-
         public void FrameUpdate(float delta)
         {
             foreach (var t in Layers)
             {
                 var layer = t;
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1406,18 +1470,18 @@ namespace Robust.Client.GameObjects
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not SpriteComponentState thestate)
                 return;
-
-            var thestate = (SpriteComponentState) curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;
-            Scale = thestate.Scale;
-            Rotation = thestate.Rotation;
-            Offset = thestate.Offset;
+            scale = thestate.Scale;
+            rotation = thestate.Rotation;
+            offset = thestate.Offset;
+            UpdateLocalMatrix();
             Color = thestate.Color;
             RenderOrder = thestate.RenderOrder;
+
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {
@@ -1434,77 +1498,35 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            // Maybe optimize this to NOT full clear.
-            Layers.Clear();
-            for (var i = 0; i < thestate.Layers.Count; i++)
-            {
-                var netlayer = thestate.Layers[i];
-                var layer = new Layer(this)
-                {
-                    // These are easy so do them here.
-                    Scale = netlayer.Scale,
-                    Rotation = netlayer.Rotation,
-                    Visible = netlayer.Visible,
-                    Color = netlayer.Color
-                };
-                Layers.Add(layer);
-
-                // Using the public API to handle errors.
-                // Probably slow as crap.
-                // Who am I kidding, DEFINITELY.
-                if (netlayer.Shader != null)
-                {
-                    LayerSetShader(i, netlayer.Shader);
-                }
-
-                if (netlayer.RsiPath != null)
-                {
-                    LayerSetRSI(i, netlayer.RsiPath);
-                }
-
-                if (netlayer.TexturePath != null)
-                {
-                    LayerSetTexture(i, netlayer.TexturePath);
-                }
-                else if (netlayer.State != null)
-                {
-                    LayerSetState(i, netlayer.State);
-                }
-            }
+            // Maybe optimize this to NOT fully clear the layers. (see LayerDatums setter function)
+            LayerDatums = thestate.Layers;
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
+        private void QueueUpdateIsInert()
         {
-            var dir = rsiDirectionType switch
-            {
-                RSI.State.DirectionType.Dir1 => Direction.South,
-                RSI.State.DirectionType.Dir4 => worldRotation.GetCardinalDir(),
-                RSI.State.DirectionType.Dir8 => worldRotation.GetDir(),
-                _ => throw new ArgumentException($"Unknown RSI DirectionType: {rsiDirectionType}.", nameof(rsiDirectionType))
-            };
+            // Look this was an easy way to get bounds checks for layer updates.
+            // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
+            if ((Owner != default ? entities : null)?.EventBus != null)
+                UpdateBounds();
 
-            return dir switch
-            {
-                Direction.North => RSI.State.Direction.North,
-                Direction.South => RSI.State.Direction.South,
-                Direction.East => RSI.State.Direction.East,
-                Direction.West => RSI.State.Direction.West,
-                Direction.SouthEast => RSI.State.Direction.SouthEast,
-                Direction.SouthWest => RSI.State.Direction.SouthWest,
-                Direction.NorthEast => RSI.State.Direction.NorthEast,
-                Direction.NorthWest => RSI.State.Direction.NorthWest,
-                _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
-            };
+            if (_inertUpdateQueued)
+                return;
+
+            _inertUpdateQueued = true;
+            // Yes that null check is valid because of that stupid fucking dummy IEntity.
+            // Who thought that was a good idea.
+            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
-        private void UpdateIsInert()
+        internal void DoUpdateIsInert()
         {
+            _inertUpdateQueued = false;
             IsInert = true;
 
             foreach (var layer in Layers)
             {
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
                 {
                     continue;
                 }
@@ -1523,55 +1545,11 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [Obsolete("Use SpriteSystem instead.")]
         internal static RSI.State GetFallbackState(IResourceCache cache)
         {
             var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
             return rsi["error"];
-        }
-
-        private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
-        {
-            // There is probably a better way to do this.
-            // Eh.
-            switch (offset)
-            {
-                case DirectionOffset.None:
-                    return dir;
-                case DirectionOffset.Clockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.East,
-                        RSI.State.Direction.East => RSI.State.Direction.South,
-                        RSI.State.Direction.South => RSI.State.Direction.West,
-                        RSI.State.Direction.West => RSI.State.Direction.North,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.CounterClockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.West,
-                        RSI.State.Direction.East => RSI.State.Direction.North,
-                        RSI.State.Direction.South => RSI.State.Direction.East,
-                        RSI.State.Direction.West => RSI.State.Direction.South,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.Flip:
-                    switch (dir)
-                    {
-                        case RSI.State.Direction.North:
-                            return RSI.State.Direction.South;
-                        case RSI.State.Direction.East:
-                            return RSI.State.Direction.West;
-                        case RSI.State.Direction.South:
-                            return RSI.State.Direction.North;
-                        case RSI.State.Direction.West:
-                            return RSI.State.Direction.East;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                default:
-                    throw new NotImplementedException();
-            }
         }
 
         public string GetDebugString()
@@ -1580,7 +1558,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation),
+                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RSI.State.DirectionType.Dir8),
                 DirectionOverride
             );
 
@@ -1601,36 +1579,52 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2 CalculateBoundingBox()
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
         {
             // fast check for empty sprites
-            if (Layers.Count == 0)
-                return new Box2();
-
-            // we need to calculate bounding box taking into account all nested layers
-            // because layers can have offsets, scale or rotation we need to calculate a new BB
-            // based on lowest bottomLeft and hightest topRight points from all layers
-            var box = Layers[0].CalculateBoundingBox();
-
-            for (int i = 1; i < Layers.Count; i++)
+            if (!Visible || Layers.Count == 0)
             {
-                var layer = Layers[i];
-                var layerBB = layer.CalculateBoundingBox();
-
-                box = box.Union(layerBB);
+                return new Box2Rotated(new Box2(worldPosition, worldPosition), Angle.Zero, worldPosition);
             }
 
-            // apply sprite transformations and calculate sprite bounding box
-            // we can optimize it a bit, if sprite doesn't have rotation
-            var spriteBox = box.Scale(Scale);
-            var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
-            var spriteBB = spriteHasRotation ?
-                new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+            // We need to modify world rotation so that it lies between 0 and 2pi.
+            // This matters for 4 or 8 directional sprites deciding which quadrant (octant?) they lie in.
+            // the 0->2pi convention is set by the sprite-rendering code that selects the layers.
+            // See RenderInternal().
 
-            // move it all to world transform system (with sprite offset)
-            var worldPosition = Owner.Transform.WorldPosition;
-            var worldBB = spriteBB.Translated(Offset + worldPosition);
-            return worldBB;
+            worldRotation = worldRotation.Reduced();
+            if (worldRotation.Theta < 0)
+                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+
+            eye ??= eyeManager.CurrentEye;
+
+            // we need to calculate bounding box taking into account all nested layers
+            // because layers can have offsets, scale or rotation, we need to calculate a new BB
+            // based on lowest bottomLeft and highest topRight points from all layers
+            var box = Bounds;
+
+            // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
+            // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
+            // transform our box by the combination of these matrices:
+
+            if (Scale != Vector2.One)
+                box = box.Scale(Scale);
+
+            var adjustedOffset = NoRotation
+                ? (-eye.Rotation).RotateVec(Offset)
+                : worldRotation.RotateVec(Offset);
+
+            Vector2 position = adjustedOffset + worldPosition;
+            Angle finalRotation = NoRotation
+                ? Rotation - eye.Rotation
+                : Rotation + worldRotation;
+
+            return new Box2Rotated(box.Translated(position), finalRotation, position);
+        }
+
+        internal void UpdateBounds()
+        {
+            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
         }
 
         /// <summary>
@@ -1659,27 +1653,86 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        public class Layer : ISpriteLayer
+        public sealed class Layer : ISpriteLayer, ISerializationHooks
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 
+            [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
-            [ViewVariables] public RSI? RSI;
-            [ViewVariables] public RSI.StateId State;
+            private RSI? _rsi;
+            [ViewVariables] public RSI? RSI
+            {
+                get => _rsi;
+                set
+                {
+                    if (_rsi == value)
+                        return;
+
+                    _rsi = value;
+                    UpdateActualState();
+                }
+            }
+
+            private RSI.StateId _state;
+            [ViewVariables] public RSI.StateId State
+            {
+                get => _state;
+                set
+                {
+                    if (_state == value)
+                        return;
+
+                    _state = value;
+                    UpdateActualState();
+                }
+            }
+
             [ViewVariables] public float AnimationTimeLeft;
             [ViewVariables] public float AnimationTime;
             [ViewVariables] public int AnimationFrame;
 
-            [ViewVariables(VVAccess.ReadWrite)]
-            public Vector2 Scale { get; set; } = Vector2.One;
+            private RSI.State? _actualState;
+            [ViewVariables] public RSI.State? ActualState => _actualState;
+
+            public Matrix3 LocalMatrix = Matrix3.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
-            public Angle Rotation { get; set; }
+            public Vector2 Scale
+            {
+                get => _scale;
+                set
+                {
+                    if (_scale.EqualsApprox(value)) return;
+
+                    _scale = value;
+                    UpdateLocalMatrix();
+                    _parent.UpdateBounds();
+                }
+            }
+            internal Vector2 _scale = Vector2.One;
+
+            [ViewVariables(VVAccess.ReadWrite)]
+            public Angle Rotation
+            {
+                get => _rotation;
+                set
+                {
+                    if (_rotation.EqualsApprox(value)) return;
+
+                    _rotation = value;
+                    UpdateLocalMatrix();
+                    _parent.UpdateBounds();
+                }
+            }
+            internal Angle _rotation = Angle.Zero;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
+            [ViewVariables]
+            public bool Blank => !State.IsValid && Texture == null;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
@@ -1688,7 +1741,20 @@ namespace Robust.Client.GameObjects
             public bool AutoAnimated = true;
 
             [ViewVariables(VVAccess.ReadWrite)]
-            public Vector2 Offset { get; set; }
+            public Vector2 Offset
+            {
+                get => _offset;
+                set
+                {
+                    if (_offset.EqualsApprox(value)) return;
+
+                    _offset = value;
+                    UpdateLocalMatrix();
+                    _parent.UpdateBounds();
+                }
+            }
+
+            internal Vector2 _offset;
 
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
@@ -1707,6 +1773,7 @@ namespace Robust.Client.GameObjects
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                    ShaderPrototype = toClone.ShaderPrototype;
                 }
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
@@ -1714,12 +1781,24 @@ namespace Robust.Client.GameObjects
                 AnimationTimeLeft = toClone.AnimationTimeLeft;
                 AnimationTime = toClone.AnimationTime;
                 AnimationFrame = toClone.AnimationFrame;
-                Scale = toClone.Scale;
-                Rotation = toClone.Rotation;
+                _scale = toClone.Scale;
+                _rotation = toClone.Rotation;
+                _offset = toClone.Offset;
+                UpdateLocalMatrix();
                 Visible = toClone.Visible;
                 Color = toClone.Color;
                 DirOffset = toClone.DirOffset;
                 AutoAnimated = toClone.AutoAnimated;
+            }
+
+            void ISerializationHooks.AfterDeserialization()
+            {
+                UpdateLocalMatrix();
+            }
+
+            internal void UpdateLocalMatrix()
+            {
+                LocalMatrix = Matrix3.CreateTransform(in _offset, in _rotation, in _scale);
             }
 
             RSI? ISpriteLayer.Rsi { get => RSI; set => SetRsi(value); }
@@ -1733,7 +1812,7 @@ namespace Robust.Client.GameObjects
                     Color = Color,
                     Rotation = Rotation,
                     Scale = Scale,
-                    //todo Shader = Shader,
+                    Shader = ShaderPrototype,
                     State = State.Name,
                     Visible = Visible,
                     RsiPath = RSI?.Path?.ToString(),
@@ -1762,7 +1841,7 @@ namespace Robust.Client.GameObjects
                 set => SetAutoAnimated(value);
             }
 
-            public RSI.State.Direction EffectiveDirection(Angle worldRotation)
+            public RSIDirection EffectiveDirection(Angle worldRotation)
             {
                 if (State == default)
                 {
@@ -1783,32 +1862,26 @@ namespace Robust.Client.GameObjects
                 return default;
             }
 
-            public Vector2 LocalToLayer(Vector2 localPos)
-            {
-                // TODO: scale & rotation for layers is currently unimplemented.
-                return localPos;
-            }
-
-            public RSI.State.Direction EffectiveDirection(RSI.State state, Angle worldRotation,
+            public RSIDirection EffectiveDirection(RSI.State state, Angle worldRotation,
                 Direction? overrideDirection)
             {
                 if (state.Directions == RSI.State.DirectionType.Dir1)
                 {
-                    return RSI.State.Direction.South;
+                    return RSIDirection.South;
                 }
                 else
                 {
-                    RSI.State.Direction dir;
+                    RSIDirection dir;
                     if (overrideDirection != null)
                     {
                         dir = overrideDirection.Value.Convert(state.Directions);
                     }
                     else
                     {
-                        dir = _parent.GetDir(state.Directions, worldRotation);
+                        dir = worldRotation.ToRsiDirection(state.Directions);
                     }
 
-                    return OffsetRsiDir(dir, DirOffset);
+                    return dir.OffsetRsiDir(DirOffset);
                 }
             }
 
@@ -1848,14 +1921,15 @@ namespace Robust.Client.GameObjects
             {
                 AutoAnimated = value;
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetVisible(bool value)
             {
                 Visible = value;
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
+                _parent.RebuildBounds();
             }
 
             public void SetRsi(RSI? rsi)
@@ -1881,13 +1955,13 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", State,
+                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI ({1}). Trace:\n{2}", State, rsi?.Path?.ToString() ?? "null",
                             Environment.StackTrace);
                         Texture = null;
                     }
                 }
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetState(RSI.StateId stateId)
@@ -1919,7 +1993,7 @@ namespace Robust.Client.GameObjects
                 AnimationTime = 0;
                 AnimationTimeLeft = state.GetDelay(0);
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetTexture(Texture? texture)
@@ -1927,12 +2001,7 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
-                _parent.UpdateIsInert();
-            }
-
-            public void SetOffset(Vector2 offset)
-            {
-                Offset = offset;
+                _parent.QueueUpdateIsInert();
             }
 
             /// <inheritdoc/>
@@ -1957,10 +2026,131 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
-                // TODO: scale & rotation for layers is currently unimplemented.
-                return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
+                var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
+
+                // If the parent has locked rotation and we don't have any rotation,
+                // we can take the quick path of just making a box the size of the texture.
+                if (_parent.NoRotation && _rotation != 0)
+                {
+                    return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
+                }
+
+                var longestSide = MathF.Max(textureSize.X, textureSize.Y);
+                var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
+
+                // Build the bounding box based on how many directions the sprite has
+                var box = (_rotation != 0, _actualState) switch
+                {
+                    // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
+                    // any possible rotation.
+                    (true, _) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+
+                    // Otherwise...
+                    // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
+                    (_, {Directions: RSI.State.DirectionType.Dir1} or null) => Box2.CenteredAround(Offset, textureSize),
+                    // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
+                    // This accounts for all possible rotations.
+                    (_, {Directions: RSI.State.DirectionType.Dir4}) => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
+                    // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
+                    // our bounding box.
+                    (_, {Directions: RSI.State.DirectionType.Dir8}) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+                };
+                return _scale == Vector2.One ? box : box.Scale(_scale);
             }
 
+            /// <summary>
+            ///     Update Cached RSI state. State is cached to avoid calling this every time an entity gets drawn.
+            /// </summary>
+            internal void UpdateActualState()
+            {
+                if (!State.IsValid)
+                {
+                    _actualState = null;
+                    return;
+                }
+
+                // Pull texture from RSI state
+                var rsi = RSI ?? _parent.BaseRSI;
+                if (rsi == null || !rsi.TryGetState(State, out _actualState))
+                {
+                    _actualState = GetFallbackState(_parent.resourceCache);
+                }
+            }
+
+            /// <summary>
+            ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
+            ///     relevant RSI direction.
+            /// </summary>
+            public void GetLayerDrawMatrix(RSIDirection dir, out Matrix3 layerDrawMatrix)
+            {
+                if (_parent.NoRotation || dir == RSIDirection.South)
+                    layerDrawMatrix = LocalMatrix;
+                else
+                {
+                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
+                }
+            }
+
+            private static Matrix3[] _rsiDirectionMatrices = new Matrix3[]
+            {
+                // array order chosen such that this array can be indexed by casing an RSI direction to an int
+                Matrix3.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3.CreateRotation(-Direction.North.ToAngle()),
+                Matrix3.CreateRotation(-Direction.East.ToAngle()),
+                Matrix3.CreateRotation(-Direction.West.ToAngle()),
+                Matrix3.CreateRotation(-Direction.SouthEast.ToAngle()),
+                Matrix3.CreateRotation(-Direction.SouthWest.ToAngle()),
+                Matrix3.CreateRotation(-Direction.NorthEast.ToAngle()),
+                Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
+            };
+
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
+            {
+                if (!Visible || Blank)
+                    return;
+
+                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
+                    ? RSIDirection.South
+                    : angle.ToRsiDirection(_actualState.Directions);
+
+                // Set the drawing transform for this  layer
+                GetLayerDrawMatrix(dir, out var layerMatrix);
+                Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
+                drawingHandle.SetTransform(in transformMatrix);
+
+                // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
+                // due to direction overrides or offsets.
+                if (overrideDirection != null && _actualState != null)
+                    dir = overrideDirection.Value.Convert(_actualState.Directions);
+                dir = dir.OffsetRsiDir(DirOffset);
+
+                // Get the correct directional texture from the state, and draw it!
+                var texture = GetRenderTexture(_actualState, dir);
+                RenderTexture(drawingHandle, texture);
+            }
+
+            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
+            {
+                if (Shader != null)
+                    drawingHandle.UseShader(Shader);
+
+                var layerColor = _parent.color * Color;
+                var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
+                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
+
+                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+
+                if (Shader != null)
+                    drawingHandle.UseShader(null);
+            }
+
+            private Texture GetRenderTexture(RSI.State? state, RSIDirection dir)
+            {
+                if (state == null)
+                    return Texture ?? _parent.resourceCache.GetFallback<TextureResource>().Texture;
+
+                return state.GetFrame(dir, AnimationFrame);
+            }
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)
@@ -1979,13 +2169,13 @@ namespace Robust.Client.GameObjects
             switch (layerProp)
             {
                 case "texture":
-                    LayerSetTexture(index, (string) value);
+                    LayerSetTexture(index, (string)value);
                     return;
                 case "state":
-                    LayerSetState(index, (string) value);
+                    LayerSetState(index, (string)value);
                     return;
                 case "color":
-                    LayerSetColor(index, (Color) value);
+                    LayerSetColor(index, (Color)value);
                     return;
                 default:
                     throw new ArgumentException($"Unknown layer property '{layerProp}'");
@@ -2017,53 +2207,62 @@ namespace Robust.Client.GameObjects
 
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
+            return GetPrototypeTextures(prototype, resourceCache, out var _);
+        }
+
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
+        {
+            var results = new List<IDirectionalTextureProvider>();
+            noRot = false;
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             if (icon != null)
             {
-                yield return icon;
-                yield break;
+                results.Add(icon);
+                return results;
             }
 
             if (!prototype.Components.TryGetValue("Sprite", out _))
             {
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
-                yield break;
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+                return results;
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
 
-            if (prototype.Components.TryGetValue("Appearance", out _))
-            {
-                var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                foreach (var layer in appearanceComponent.Visualizers)
-                {
-                    layer.InitializeEntity(dummy);
-                    layer.OnChangeData(appearanceComponent);
-                }
-            }
-
-            var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {
-                if (layer.Texture != null) yield return layer.Texture;
-                if (!layer.RsiState.IsValid || !layer.Visible) continue;
+                if (!layer.Visible) continue;
+
+                if (layer.Texture != null)
+                {
+                    results.Add(layer.Texture);
+                    continue;
+                }
+
+                if (!layer.RsiState.IsValid) continue;
 
                 var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
                 if (rsi == null ||
                     !rsi.TryGetState(layer.RsiState, out var state))
                     continue;
 
-                yield return state;
-                anyTexture = true;
+                results.Add(state);
             }
 
-            dummy.Delete();
+            noRot = spriteComponent.NoRotation;
 
-            if (!anyTexture)
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
+            entityManager.DeleteEntity(dummy);
+
+            if (results.Count == 0)
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+
+            return results;
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
@@ -2074,143 +2273,23 @@ namespace Robust.Client.GameObjects
                 return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-            dummy.Delete();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            entityManager.DeleteEntity(dummy);
 
-            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            return result;
         }
+    }
 
-        #region DummyIconEntity
-        private class DummyIconEntity : IEntity
-        {
-            public GameTick LastModifiedTick { get; } = GameTick.Zero;
-            public IEntityManager EntityManager { get; } = null!;
-            public string Name { get; set; } = string.Empty;
-            public EntityUid Uid { get; } = EntityUid.Invalid;
-            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
-            public bool Initialized { get; } = false;
-            public bool Initializing { get; } = false;
-            public bool Deleted { get; } = true;
-            public bool Paused { get; set; }
-            public EntityPrototype? Prototype { get; set; }
+    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    {
 
-            public string Description { get; set; } = string.Empty;
-            public bool IsValid()
-            {
-                return false;
-            }
+    }
 
-            public ITransformComponent Transform { get; } = null!;
-            public IMetaDataComponent MetaData { get; } = null!;
-
-            private Dictionary<Type, IComponent> _components = new();
-            private EntityLifeStage _lifeStage;
-
-            public T AddComponent<T>() where T : Component, new()
-            {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
-                _components[typeof(T)] = comp;
-                comp.Owner = this;
-
-                if (typeof(ISpriteComponent).IsAssignableFrom(typeof(T)))
-                {
-                    _components[typeof(ISpriteComponent)] = comp;
-                }
-
-                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
-                {
-                    comp = serializationManager.Copy(node, comp)!;
-                }
-
-                return comp;
-            }
-
-            public void RemoveComponent<T>()
-            {
-                _components.Remove(typeof(T));
-            }
-
-            public bool HasComponent<T>()
-            {
-                return _components.ContainsKey(typeof(T));
-            }
-
-            public bool HasComponent(Type type)
-            {
-                return _components.ContainsKey(type);
-            }
-
-            public T GetComponent<T>()
-            {
-                return (T) _components[typeof(T)];
-            }
-
-            public IComponent GetComponent(Type type)
-            {
-                return null!;
-            }
-
-            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-            {
-                component = null;
-                if (!_components.TryGetValue(typeof(T), out var value)) return false;
-                component = (T) value;
-                return true;
-            }
-
-            public T? GetComponentOrNull<T>() where T : class
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
-            {
-                component = null;
-                if (!_components.TryGetValue(type, out var value)) return false;
-                component = value;
-                return true;
-            }
-
-            public IComponent? GetComponentOrNull(Type type)
-            {
-                return null;
-            }
-
-            public void QueueDelete()
-            {
-            }
-
-            public void Delete()
-            {
-            }
-
-            public IEnumerable<IComponent> GetAllComponents()
-            {
-                return Enumerable.Empty<IComponent>();
-            }
-
-            public IEnumerable<T> GetAllComponents<T>()
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendMessage(IComponent? owner, ComponentMessage message)
-            {
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
-            {
-            }
-
-            public void Dirty()
-            {
-            }
-        }
-        #endregion
+    internal struct SpriteUpdateInertEvent
+    {
+        public SpriteComponent Sprite;
     }
 }

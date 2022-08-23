@@ -4,8 +4,6 @@ using Robust.Shared.GameObjects;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -15,11 +13,8 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteRenderableComponent))]
-    public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent, ISerializationHooks
+    public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
-        const string LayerSerializationCache = "spritelayersrv";
-
         [ViewVariables]
         [DataField("layers", priority: 2, readOnly: true)]
         private List<PrototypeLayerData> Layers = new();
@@ -38,9 +33,6 @@ namespace Robust.Server.GameObjects
 
         [DataField("color")]
         private Color _color = Color.White;
-
-        [DataField("directional")]
-        private bool _directional = true;
 
         [DataField("sprite")]
         private string? _baseRSIPath;
@@ -120,17 +112,6 @@ namespace Robust.Server.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Directional
-        {
-            get => _directional;
-            set
-            {
-                _directional = value;
-                Dirty();
-            }
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
         public string? BaseRSIPath
         {
             get => _baseRSIPath;
@@ -141,7 +122,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public uint _renderOrder;
+        private uint _renderOrder;
         [ViewVariables(VVAccess.ReadWrite)]
         public uint RenderOrder
         {
@@ -162,7 +143,7 @@ namespace Robust.Server.GameObjects
             {
                 if (state != null || texture != null)
                 {
-                    var layerZeroData = SharedSpriteComponent.PrototypeLayerData.New();
+                    var layerZeroData = new PrototypeLayerData();
                     if (!string.IsNullOrWhiteSpace(state))
                     {
                         layerZeroData.State = state;
@@ -183,7 +164,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
@@ -204,7 +185,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithTexture(string texture)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.TexturePath = texture;
             Layers.Add(layer);
             Dirty();
@@ -218,7 +199,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithState(string stateId)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.State = stateId;
             Layers.Add(layer);
             Dirty();
@@ -227,7 +208,7 @@ namespace Robust.Server.GameObjects
 
         public int AddLayerWithState(string stateId, string rsiPath)
         {
-            var layer = PrototypeLayerData.New();
+            var layer = new PrototypeLayerData();
             layer.State = stateId;
             layer.RsiPath = rsiPath;
             Layers.Add(layer);
@@ -441,7 +422,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color,
                 BaseRSIPath, Layers, RenderOrder);

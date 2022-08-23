@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -11,11 +14,15 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
-    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost
+    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+
+        public ServerConsoleHost() : base(isServer: true) {}
+
+        public override event ConAnyCommandCallback? AnyCommandExecuted;
 
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
@@ -30,7 +37,7 @@ namespace Robust.Server.Console
             if (!NetManager.IsConnected || session is null)
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            var msg = new MsgConCmd();
             msg.Text = command;
             NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
         }
@@ -53,24 +60,35 @@ namespace Robust.Server.Console
                 OutputText(null, text, true);
         }
 
+        public bool IsCmdServer(IConsoleCommand cmd) => true;
+
         /// <inheritdoc />
         public void Initialize()
         {
-            RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>",(shell, argStr, _) =>
+            RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>", (shell, argStr, _) =>
             {
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
-                ExecuteInShell(sudoShell, argStr.Substring("sudo ".Length));
+                ExecuteInShell(sudoShell, argStr["sudo ".Length..]);
+            }, (shell, args) =>
+            {
+                var localShell = shell.ConsoleHost.LocalShell;
+                var sudoShell = new SudoShell(this, localShell, shell);
+
+#pragma warning disable CA2012
+                return CalcCompletions(sudoShell, args);
+#pragma warning restore CA2012
             });
-            
+
             LoadConsoleCommands();
 
             // setup networking with clients
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
-            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
+            NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCmdAck>();
 
-            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
-                message => HandleRegistrationRequest(message.MsgChannel));
+            NetManager.RegisterNetMessage<MsgConCmdReg>(message => HandleRegistrationRequest(message.MsgChannel));
+            NetManager.RegisterNetMessage<MsgConCompletion>(HandleConCompletions);
+            NetManager.RegisterNetMessage<MsgConCompletionResp>();
         }
 
         private void ExecuteInShell(IConsoleShell shell, string command)
@@ -88,36 +106,35 @@ namespace Robust.Server.Console
 
                 if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
-                    if (shell.Player != null) // remote client
+                    args.RemoveAt(0);
+                    var cmdArgs = args.ToArray();
+                    if (!ShellCanExecute(shell, cmdName))
                     {
-                        if (_groupController.CanCommand((IPlayerSession) shell.Player, cmdName)) // client has permission
-                        {
-                            args.RemoveAt(0);
-                            conCmd.Execute(shell, command, args.ToArray());
-                        }
-                        else
-                            shell.WriteError($"Unknown command: '{cmdName}'");
+                        shell.WriteError($"Unknown command: '{cmdName}'");
+                        return;
                     }
-                    else // system console
-                    {
-                        args.RemoveAt(0);
-                        conCmd.Execute(shell, command, args.ToArray());
-                    }
+
+                    AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
+                    conCmd.Execute(shell, command, cmdArgs);
                 }
-                else
-                    shell.WriteError($"Unknown command: '{cmdName}'");
             }
             catch (Exception e)
             {
-                LogManager.GetSawmill(SawmillName).Warning($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
+                LogManager.GetSawmill(SawmillName)
+                    .Error($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
                 shell.WriteError($"There was an error while executing the command: {e}");
             }
+        }
+
+        private bool ShellCanExecute(IConsoleShell shell, string cmdName)
+        {
+            return shell.Player == null || _groupController.CanCommand((IPlayerSession)shell.Player, cmdName);
         }
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
             var netMgr = IoCManager.Resolve<IServerNetManager>();
-            var message = netMgr.CreateNetMessage<MsgConCmdReg>();
+            var message = new MsgConCmdReg();
 
             var counter = 0;
             message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
@@ -150,7 +167,7 @@ namespace Robust.Server.Console
         {
             if (session != null)
             {
-                var replyMsg = NetManager.CreateNetMessage<MsgConCmdAck>();
+                var replyMsg = new MsgConCmdAck();
                 replyMsg.Error = error;
                 replyMsg.Text = text;
                 NetManager.ServerSendMessage(replyMsg, session.ConnectedClient);
@@ -162,6 +179,46 @@ namespace Robust.Server.Console
         private static string FormatPlayerString(ICommonSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
+        }
+
+        private async void HandleConCompletions(MsgConCompletion message)
+        {
+            var session = _players.GetSessionByChannel(message.MsgChannel);
+            var shell = new ConsoleShell(this, session);
+
+            var result = await CalcCompletions(shell, message.Args);
+
+            var msg = new MsgConCompletionResp
+            {
+                Result = result,
+                Seq = message.Seq
+            };
+
+            if (!message.MsgChannel.IsConnected)
+                return;
+
+            NetManager.ServerSendMessage(msg, message.MsgChannel);
+        }
+
+        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args)
+        {
+            // Logger.Debug(string.Join(", ", args));
+
+            if (args.Length <= 1)
+            {
+                // Typing out command name, handle this ourselves.
+                return ValueTask.FromResult(CompletionResult.FromOptions(
+                    RegisteredCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
+            }
+
+            var cmdName = args[0];
+            if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
+                return ValueTask.FromResult(CompletionResult.Empty);
+
+            if (!ShellCanExecute(shell, cmdName))
+                return ValueTask.FromResult(CompletionResult.Empty);
+
+            return cmd.GetCompletionAsync(shell, args[1..], default);
         }
 
         private sealed class SudoShell : IConsoleShell

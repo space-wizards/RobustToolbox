@@ -1,7 +1,7 @@
 using System;
-using Robust.Shared.Map;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -9,15 +9,18 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetworkedComponent()]
+    [Virtual]
     public class OccluderComponent : Component
     {
-        public sealed override string Name => "Occluder";
-        public sealed override uint? NetID => NetIDs.OCCLUDER;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         [DataField("enabled")]
         private bool _enabled = true;
         [DataField("boundingBox")]
         private Box2 _boundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
+
+        internal OccluderTreeComponent? Tree = null;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 BoundingBox
@@ -27,13 +30,8 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
-                BoundingBoxChanged();
+                _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this), true);
             }
-        }
-
-        private void BoundingBoxChanged()
-        {
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new OccluderBoundingBoxChangedMessage(this));
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -46,31 +44,20 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _enabled = value;
+                if (_enabled)
+                {
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this), true);
+                }
+                else
+                {
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this), true);
+                }
+
                 Dirty();
             }
         }
 
-        protected override void Startup()
-        {
-            base.Startup();
-
-            EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
-        }
-
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-
-            var transform = Owner.Transform;
-            var map = transform.MapID;
-            if (map != MapId.Nullspace)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new OccluderTreeRemoveOccluderMessage(this, map, transform.GridID));
-            }
-        }
-
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new OccluderComponentState(Enabled, BoundingBox);
         }
@@ -94,21 +81,11 @@ namespace Robust.Shared.GameObjects
             public bool Enabled { get; }
             public Box2 BoundingBox { get; }
 
-            public OccluderComponentState(bool enabled, Box2 boundingBox) : base(NetIDs.OCCLUDER)
+            public OccluderComponentState(bool enabled, Box2 boundingBox)
             {
                 Enabled = enabled;
                 BoundingBox = boundingBox;
             }
-        }
-    }
-
-    internal struct OccluderBoundingBoxChangedMessage
-    {
-        public OccluderComponent Occluder;
-
-        public OccluderBoundingBoxChangedMessage(OccluderComponent occluder)
-        {
-            Occluder = occluder;
         }
     }
 }

@@ -2,16 +2,19 @@
 using Robust.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public sealed class TileSpawnWindow : SS14Window
+    public sealed class TileSpawnWindow : DefaultWindow
     {
         private readonly ITileDefinitionManager __tileDefinitionManager;
         private readonly IPlacementManager _placementManager;
@@ -32,9 +35,15 @@ namespace Robust.Client.UserInterface.CustomControls
             _placementManager = placementManager;
             _resourceCache = resourceCache;
 
-            var vBox = new VBoxContainer();
+            var vBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             Contents.AddChild(vBox);
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal
+            };
             vBox.AddChild(hBox);
             SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
@@ -52,6 +61,8 @@ namespace Robust.Client.UserInterface.CustomControls
             BuildTileList();
 
             _placementManager.PlacementChanged += OnPlacementCanceled;
+
+            OnClose += OnWindowClosed;
 
             Title = "Place Tiles";
             SearchBar.GrabKeyboardFocus();
@@ -71,6 +82,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            TileList.ClearSelected();
+            _placementManager.Clear();
             SearchBar.Clear();
             BuildTileList("");
             ClearButton.Disabled = true;
@@ -78,6 +91,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
+            TileList.ClearSelected();
+            _placementManager.Clear();
             BuildTileList(args.Text);
             ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
@@ -91,11 +106,11 @@ namespace Robust.Client.UserInterface.CustomControls
             if (!string.IsNullOrEmpty(searchStr))
             {
                 tileDefs = tileDefs.Where(s =>
-                    s.DisplayName.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0 ||
-                    s.Name.IndexOf(searchStr, StringComparison.OrdinalIgnoreCase) >= 0);
+                    s.Name.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0 ||
+                    s.ID.IndexOf(searchStr, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            tileDefs = tileDefs.OrderBy(d => d.DisplayName);
+            tileDefs = tileDefs.OrderBy(d => d.Name);
 
             _shownItems.Clear();
             _shownItems.AddRange(tileDefs);
@@ -103,12 +118,20 @@ namespace Robust.Client.UserInterface.CustomControls
             foreach (var entry in _shownItems)
             {
                 Texture? texture = null;
-                if (!string.IsNullOrEmpty(entry.SpriteName))
+                var path = entry.Sprite?.ToString();
+
+                if (path != null)
                 {
-                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Constructible/Tiles/{entry.SpriteName}.png");
+                    texture = _resourceCache.GetResource<TextureResource>(path);
                 }
-                TileList.AddItem(entry.DisplayName, texture);
+                TileList.AddItem(entry.Name, texture);
             }
+        }
+
+        private void OnWindowClosed()
+        {
+            TileList.ClearSelected();
+            _placementManager.Clear();
         }
 
         private void OnPlacementCanceled(object? sender, EventArgs e)

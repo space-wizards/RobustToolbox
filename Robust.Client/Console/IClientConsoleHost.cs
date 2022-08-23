@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Utility;
 
@@ -11,14 +14,11 @@ namespace Robust.Client.Console
         /// </summary>
         void Initialize();
 
-        /// <summary>
-        /// Resets the console to a post-initialized state.
-        /// </summary>
-        void Reset();
-
         event EventHandler<AddStringArgs> AddString;
         event EventHandler<AddFormattedMessageArgs> AddFormatted;
 
         void AddFormattedLine(FormattedMessage message);
+
+        Task<CompletionResult> GetCompletions(List<string> args, CancellationToken cancel);
     }
 }

@@ -8,6 +8,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Like a TextureRect... but layered
     /// </summary>
+    [Virtual]
     public class LayeredTextureRect : Control
     {
         public const string StylePropertyShader = "shader";

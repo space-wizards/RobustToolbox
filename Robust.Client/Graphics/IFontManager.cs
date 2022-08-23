@@ -5,9 +5,8 @@ namespace Robust.Client.Graphics
 {
     public interface IFontManager
     {
-
+        public void ClearFontCache();
     }
-
     internal interface IFontManagerInternal : IFontManager
     {
         IFontFaceHandle Load(Stream stream);

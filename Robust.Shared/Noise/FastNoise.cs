@@ -41,7 +41,9 @@ using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Noise
 {
+#pragma warning disable RA0003
     internal class FastNoise
+#pragma warning restore RA0003
     {
         private const MethodImplOptions FN_INLINE = MethodImplOptions.AggressiveInlining;
         private const int FN_CELLULAR_INDEX_MAX = 3;
@@ -2217,9 +2219,9 @@ namespace Robust.Shared.Noise
             int y3 = y1 + 2;
             int z3 = z1 + 2;
 
-            FN_DECIMAL xs = x - (FN_DECIMAL) x1;
-            FN_DECIMAL ys = y - (FN_DECIMAL) y1;
-            FN_DECIMAL zs = z - (FN_DECIMAL) z1;
+            FN_DECIMAL xs = x - x1;
+            FN_DECIMAL ys = y - y1;
+            FN_DECIMAL zs = z - z1;
 
             return CubicLerp(
                        CubicLerp(
@@ -2363,8 +2365,8 @@ namespace Robust.Shared.Noise
             int x3 = x1 + 2;
             int y3 = y1 + 2;
 
-            FN_DECIMAL xs = x - (FN_DECIMAL) x1;
-            FN_DECIMAL ys = y - (FN_DECIMAL) y1;
+            FN_DECIMAL xs = x - x1;
+            FN_DECIMAL ys = y - y1;
 
             return CubicLerp(
                        CubicLerp(ValCoord2D(seed, x0, y0), ValCoord2D(seed, x1, y0), ValCoord2D(seed, x2, y0),

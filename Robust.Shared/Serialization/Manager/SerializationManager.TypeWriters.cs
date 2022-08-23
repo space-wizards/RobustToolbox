@@ -61,7 +61,6 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryGetWriter<T>(
             ISerializationContext? context,
             [NotNullWhen(true)] out ITypeWriter<T>? writer)
-            where T : notnull
         {
             if (context != null && context.TypeWriters.TryGetValue(typeof(T), out var rawTypeWriter) ||
                 _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
@@ -78,7 +77,6 @@ namespace Robust.Shared.Serialization.Manager
             [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
-            where T : notnull
         {
             node = default;
             if (TryGetWriter<T>(context, out var writer))
@@ -90,9 +88,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryGetGenericWriter<T>(
-            [NotNullWhen(true)] out ITypeWriter<T>? rawWriter)
-            where T : notnull
+        private bool TryGetGenericWriter<T>([NotNullWhen(true)] out ITypeWriter<T>? rawWriter)
         {
             rawWriter = null;
 

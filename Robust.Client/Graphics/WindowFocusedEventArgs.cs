@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Robust.Client.Graphics
+﻿namespace Robust.Client.Graphics
 {
-    public class WindowFocusedEventArgs : EventArgs
+    public readonly struct WindowFocusedEventArgs
     {
         public WindowFocusedEventArgs(bool focused, IClydeWindow window)
         {

@@ -10,8 +10,7 @@ namespace Robust.Client
         GameControllerOptions Options { get; }
         bool ContentStart { get; set; }
         void SetCommandLineArgs(CommandLineArgs args);
-        bool LoadConfigAndUserData { get; set; }
-        void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null);
+        void Run(GameController.DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null);
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
         void TextEntered(TextEventArgs textEvent);

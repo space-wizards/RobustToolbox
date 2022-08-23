@@ -6,6 +6,7 @@ namespace Robust.Client.Input
     {
         BoundKeyState State { get; }
         BoundKeyFunction Function { get; }
+        string FunctionCommand { get; }
         KeyBindingType BindingType { get; }
 
         Keyboard.Key BaseKey { get; }

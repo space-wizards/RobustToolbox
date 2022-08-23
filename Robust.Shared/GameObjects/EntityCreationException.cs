@@ -10,6 +10,7 @@ namespace Robust.Shared.GameObjects
     ///     See the <see cref="Exception.InnerException"/> for the actual exception.
     /// </remarks>
     [Serializable]
+    [Virtual]
     public class EntityCreationException : Exception
     {
         public EntityCreationException()

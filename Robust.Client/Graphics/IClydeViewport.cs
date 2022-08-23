@@ -19,6 +19,11 @@ namespace Robust.Client.Graphics
         Vector2i Size { get; }
 
         /// <summary>
+        /// Color to clear the render target to before rendering. If null, no clearing will happen.
+        /// </summary>
+        Color? ClearColor { get; set; }
+
+        /// <summary>
         ///     This is, effectively, a multiplier to the eye's zoom.
         /// </summary>
         Vector2 RenderScale { get; set; }
@@ -37,6 +42,11 @@ namespace Robust.Client.Graphics
         ///     Converts a point in the viewport's screen to world coordinates.
         /// </summary>
         MapCoordinates LocalToWorld(Vector2 point);
+
+        /// <summary>
+        ///     Matrix equivalent of <see cref="LocalToWorld(Vector2)"/>.
+        /// </summary>
+        Matrix3 WorldToLocalMatrix { get; }
 
         /// <summary>
         ///     Converts a point in world-space to the viewport's screen coordinates.

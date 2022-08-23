@@ -1,4 +1,6 @@
 using System;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
@@ -15,57 +17,141 @@ namespace Robust.Shared.GameObjects
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
-        [ViewVariables]
-        public abstract string Name { get; }
+        [ViewVariables(VVAccess.ReadOnly)]
+        [Obsolete("Resolve IComponentFactory and call GetComponentName instead")]
+        public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />
-        [ViewVariables]
-        public virtual uint? NetID => null;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public virtual bool NetworkSynchronizeExistence => false;
-
-        /// <inheritdoc />
-        [ViewVariables]
         [DataField("netsync")]
-        public bool NetSyncEnabled { get; set; } = true;
+        public bool NetSyncEnabled { get; } = true;
+        //readonly. If you want to make it writable, you need to add the component to the entity's net-components
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner { get; set; } = default!;
+        public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Paused => Owner.Paused;
+        public ComponentLifeStage LifeStage { get; private set; } = ComponentLifeStage.PreAdd;
 
-        /// <inheritdoc />
-        [ViewVariables]
-        public bool Initialized { get; private set; }
+        /// <summary>
+        ///     If true, and if this is a networked component, then component data will only be sent to players if their
+        ///     controlled entity is the owner of this component. This is a faster alternative to <see
+        ///     cref="MetaDataFlags.EntitySpecific"/>.
+        /// </summary>
+        public virtual bool SendOnlyToOwner => false;
 
-        private bool _running;
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Running
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
+        /// after raising a <see cref="ComponentAdd"/> event.
+        /// </summary>
+        internal void LifeAddToEntity(IEntityManager entManager, CompIdx type)
         {
-            get => _running;
-            set
+            DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
+
+            LifeStage = ComponentLifeStage.Adding;
+            CreationTick = entManager.CurrentTick;
+            entManager.EventBus.RaiseComponentEvent(this, type, CompAddInstance);
+            LifeStage = ComponentLifeStage.Added;
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
+        /// calling <see cref="Initialize" />.
+        /// </summary>
+        internal void LifeInitialize(IEntityManager entManager, CompIdx type)
+        {
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
+
+            LifeStage = ComponentLifeStage.Initializing;
+            entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
+            Initialize();
+
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Initialized)
             {
-                if(_running == value)
-                    return;
-
-                if(value)
-                    Startup();
-                else
-                    Shutdown();
-
-                _running = value;
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
             }
+#endif
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Initialized" /> to
+        /// <see cref="ComponentLifeStage.Running" />, calling <see cref="Startup" />.
+        /// </summary>
+        internal void LifeStartup(IEntityManager entManager)
+        {
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized);
+
+            LifeStage = ComponentLifeStage.Starting;
+            entManager.EventBus.RaiseComponentEvent(this, CompStartupInstance);
+            Startup();
+
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Running)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Running" /> to <see cref="ComponentLifeStage.Stopped" />,
+        /// calling <see cref="Shutdown" />.
+        /// </summary>
+        /// <remarks>
+        /// Components are allowed to remove themselves in their own Startup function.
+        /// </remarks>
+        internal void LifeShutdown(IEntityManager entManager)
+        {
+            // Starting allows a component to remove itself in it's own Startup function.
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Starting || LifeStage == ComponentLifeStage.Running);
+
+            LifeStage = ComponentLifeStage.Stopping;
+            entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
+            Shutdown();
+
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Stopped)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Stopped" /> to <see cref="ComponentLifeStage.Deleted" />,
+        /// calling <see cref="OnRemove" />.
+        /// </summary>
+        internal void LifeRemoveFromEntity(IEntityManager entManager)
+        {
+            // can be called at any time after PreAdd, including inside other life stage events.
+            DebugTools.Assert(LifeStage != ComponentLifeStage.PreAdd);
+
+            LifeStage = ComponentLifeStage.Removing;
+            entManager.EventBus.RaiseComponentEvent(this, CompRemoveInstance);
+
+            OnRemove();
+
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Deleted)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
+            }
+#endif
         }
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Deleted { get; private set; }
+        public bool Initialized => LifeStage >= ComponentLifeStage.Initializing;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Running => ComponentLifeStage.Starting <= LifeStage && LifeStage <= ComponentLifeStage.Stopping;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Deleted => LifeStage >= ComponentLifeStage.Removing;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -73,7 +159,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; internal set; }
 
         private static readonly ComponentAdd CompAddInstance = new();
         private static readonly ComponentInit CompInitInstance = new();
@@ -81,150 +167,61 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentShutdown CompShutdownInstance = new();
         private static readonly ComponentRemove CompRemoveInstance = new();
 
-        private EntityEventBus GetBus()
-        {
-            // Apparently components are being created outside of the ComponentManager,
-            // and the Owner is not being set correctly.
-            // ReSharper disable once RedundantAssertionStatement
-            DebugTools.AssertNotNull(Owner);
-
-            return (EntityEventBus) Owner.EntityManager.EventBus;
-        }
-
-        /// <inheritdoc />
-        public virtual void OnRemove()
-        {
-            if (Running)
-                throw new InvalidOperationException("Cannot Remove a running entity!");
-
-            // We have been marked for deletion by the Component Manager.
-            Deleted = true;
-            GetBus().RaiseComponentEvent(this, CompRemoveInstance);
-        }
-
         /// <summary>
-        ///     Called when the component gets added to an entity.
+        /// Called when all of the entity's other components have been added and are available,
+        /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
-        public virtual void OnAdd()
+        protected virtual void Initialize()
         {
-            if (Initialized)
-                throw new InvalidOperationException("Cannot Add an Initialized component!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Add a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Add a Deleted component!");
-
-            CreationTick = Owner.EntityManager.CurrentTick;
-            GetBus().RaiseComponentEvent(this, CompAddInstance);
-        }
-
-        /// <inheritdoc />
-        public virtual void Initialize()
-        {
-            if (Initialized)
-                throw new InvalidOperationException("Component already Initialized!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Initialize a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Initialize a Deleted component!");
-
-            Initialized = true;
-            GetBus().RaiseComponentEvent(this, CompInitInstance);
+            LifeStage = ComponentLifeStage.Initialized;
         }
 
         /// <summary>
         ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
-        ///     This can be called multiple times during the component's life, and at any time.
         /// </summary>
+        /// <remarks>
+        /// Components are allowed to remove themselves in their own Startup function.
+        /// </remarks>
         protected virtual void Startup()
         {
-            if (!Initialized)
-                throw new InvalidOperationException("Cannot Start an uninitialized component!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Startup a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Start a Deleted component!");
-
-            _running = true;
-            GetBus().RaiseComponentEvent(this, CompStartupInstance);
+            LifeStage = ComponentLifeStage.Running;
         }
 
         /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
-        ///     the component's life, and at any time.
+        ///     Shuts down the component. The is called Automatically by OnRemove.
         /// </summary>
         protected virtual void Shutdown()
         {
-            if (!Initialized)
-                throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
-
-            if (!Running)
-                throw new InvalidOperationException("Cannot Shutdown an unstarted component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
-
-            _running = false;
-            GetBus().RaiseComponentEvent(this, CompShutdownInstance);
-        }
-
-        /// <inheritdoc />
-        public void Dirty()
-        {
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null)
-                return;
-
-            Owner.Dirty();
-            LastModifiedTick = Owner.EntityManager.CurrentTick;
+            LifeStage = ComponentLifeStage.Stopped;
         }
 
         /// <summary>
-        ///     Sends a message to all other components in this entity.
-        ///     This is an alias of 'Owner.SendMessage(this, message);'
+        /// Called when the component is removed from an entity.
+        /// Shuts down the component.
+        /// The component has already been marked as deleted in the component manager.
         /// </summary>
-        /// <param name="message">Message to send.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendMessage(ComponentMessage message)
+        protected virtual void OnRemove()
         {
-            Owner.SendMessage(this, message);
-        }
-
-        /// <summary>
-        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
-        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
-        {
-            Owner.SendNetworkMessage(this, message, channel);
+            LifeStage = ComponentLifeStage.Deleted;
         }
 
         /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
-
-        /// <param name="player"></param>
-        /// <inheritdoc />
-        public virtual ComponentState GetComponentState(ICommonSession player)
+        public void Dirty(IEntityManager? entManager = null)
         {
-            if (NetID == null)
-                throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
+            IoCManager.Resolve(ref entManager);
+            entManager.Dirty(this);
+        }
 
-            return new ComponentState(NetID.Value);
+        private static readonly ComponentState DefaultComponentState = new();
+
+        /// <inheritdoc />
+        public virtual ComponentState GetComponentState()
+        {
+            DebugTools.Assert(
+                Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) != null,
+                $"Calling base {nameof(GetComponentState)} without being networked.");
+
+            return DefaultComponentState;
         }
 
         /// <inheritdoc />
@@ -245,32 +242,98 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
+    /// The life stages of an ECS component.
+    /// </summary>
+    public enum ComponentLifeStage
+    {
+        /// <summary>
+        /// The component has just been allocated.
+        /// </summary>
+        PreAdd = 0,
+
+        /// <summary>
+        /// Currently being added to an entity.
+        /// </summary>
+        Adding,
+
+        /// <summary>
+        /// Has been added to an entity.
+        /// </summary>
+        Added,
+
+        /// <summary>
+        /// Currently being initialized.
+        /// </summary>
+        Initializing,
+
+        /// <summary>
+        /// Has been initialized.
+        /// </summary>
+        Initialized,
+
+        /// <summary>
+        /// Currently being started up.
+        /// </summary>
+        Starting,
+
+        /// <summary>
+        /// Has started up.
+        /// </summary>
+        Running,
+
+        /// <summary>
+        /// Currently shutting down.
+        /// </summary>
+        Stopping,
+
+        /// <summary>
+        /// Has been shut down.
+        /// </summary>
+        Stopped,
+
+        /// <summary>
+        /// Currently being removed from its entity.
+        /// </summary>
+        Removing,
+
+        /// <summary>
+        /// Removed from its entity, and is deleted.
+        /// </summary>
+        Deleted,
+    }
+
+    /// <summary>
     /// The component has been added to the entity. This is the first function
     /// to be called after the component has been allocated and (optionally) deserialized.
     /// </summary>
-    public class ComponentAdd : EntityEventArgs { }
+    [ComponentEvent]
+    public sealed class ComponentAdd : EntityEventArgs { }
 
     /// <summary>
     /// Raised when all of the entity's other components have been added and are available,
     /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
     /// </summary>
-    public class ComponentInit : EntityEventArgs { }
+    [ComponentEvent]
+    public sealed class ComponentInit : EntityEventArgs { }
 
     /// <summary>
     /// Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
     /// This can be called multiple times during the component's life, and at any time.
     /// </summary>
-    public class ComponentStartup : EntityEventArgs { }
+    [ComponentEvent]
+    public sealed class ComponentStartup : EntityEventArgs { }
 
     /// <summary>
     /// Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
     /// the component's life, and at any time.
     /// </summary>
-    public class ComponentShutdown : EntityEventArgs { }
+    [ComponentEvent]
+    public sealed class ComponentShutdown : EntityEventArgs { }
 
     /// <summary>
     /// The component has been removed from the entity. This is the last function
     /// that is called before the component is freed.
     /// </summary>
-    public class ComponentRemove : EntityEventArgs { }
+    [ComponentEvent]
+    public sealed class ComponentRemove : EntityEventArgs { }
 }

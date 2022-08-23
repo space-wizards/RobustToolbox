@@ -2,15 +2,19 @@
 using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Write
 {
+    [MemoryDiagnoser]
+    [Virtual]
     public class SerializationWriteBenchmark : SerializationBenchmark
     {
         public SerializationWriteBenchmark()
@@ -24,7 +28,7 @@ namespace Robust.Benchmarks.Serialization.Write
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.ReadValueOrThrow<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
         }
 
         private const string String = "ABC";
@@ -34,6 +38,10 @@ namespace Robust.Benchmarks.Serialization.Write
         private DataDefinitionWithString DataDefinitionWithString { get; }
 
         private SeedDataDefinition Seed { get; }
+
+        private BenchmarkFlagsEnum FlagZero = BenchmarkFlagsEnum.Zero;
+
+        private BenchmarkFlagsEnum FlagThirtyOne = BenchmarkFlagsEnum.ThirtyOne;
 
         [Benchmark]
         public DataNode WriteString()
@@ -93,6 +101,36 @@ namespace Robust.Benchmarks.Serialization.Write
             mapping.Add("chemicals", chemicals);
 
             return mapping;
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DataNode WriteFlagZero()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagZero);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DataNode WriteThirtyOne()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public DataNode WriteIntegerCustomSerializer()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(BenchmarkIntSerializer),
+                Integer);
         }
     }
 }

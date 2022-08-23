@@ -3,10 +3,11 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorKeyValuePair : VVPropEditor
+    public sealed class VVPropEditorKeyValuePair : VVPropEditor
     {
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariables = default!;
 
@@ -20,7 +21,10 @@ namespace Robust.Client.ViewVariables.Editors
 
         protected override Control MakeUI(object? value)
         {
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal
+            };
 
             dynamic d = value!;
 

@@ -77,7 +77,7 @@ namespace Robust.Shared.Input
     }
 
     /// <inheritdoc />
-    internal class InputContextContainer : IInputContextContainer
+    internal sealed class InputContextContainer : IInputContextContainer
     {
         /// <summary>
         ///     Default 'root' context unique name that always exists in the set.
@@ -121,7 +121,7 @@ namespace Robust.Shared.Input
                     {
                         var icc = _deferredContextSwitch;
                         _deferredContextSwitch = null;
-                        _setActiveContextImmediately(icc);
+                        _setActiveContextImmediately( icc);
                     }
                 }
             }
@@ -132,7 +132,7 @@ namespace Robust.Shared.Input
         /// </summary>
         public InputContextContainer()
         {
-            _contexts.Add(DefaultContextName, new InputCmdContext());
+            _contexts.Add(DefaultContextName, new InputCmdContext(DefaultContextName));
             SetActiveContext(DefaultContextName);
         }
 
@@ -151,7 +151,7 @@ namespace Robust.Shared.Input
             if (_contexts.ContainsKey(uniqueName))
                 throw new ArgumentException($"Context with name {uniqueName} already exists.", nameof(uniqueName));
 
-            var newContext = new InputCmdContext(parentContext);
+            var newContext = new InputCmdContext(parentContext, uniqueName);
             _contexts.Add(uniqueName, newContext);
             return newContext;
         }
@@ -168,7 +168,7 @@ namespace Robust.Shared.Input
             if (parent == null)
                 throw new ArgumentNullException(nameof(parent));
 
-            var newContext = new InputCmdContext(parent);
+            var newContext = new InputCmdContext(parent, uniqueName);
             _contexts.Add(uniqueName, newContext);
             return newContext;
         }
@@ -231,7 +231,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Event arguments for an input context change.
     /// </summary>
-    public class ContextChangedEventArgs : EventArgs
+    public sealed class ContextChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     The new context that became active.

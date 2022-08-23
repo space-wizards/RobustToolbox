@@ -1,5 +1,4 @@
 #if CLIENT_SCRIPTING
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -14,11 +13,11 @@ using Microsoft.CodeAnalysis.Text;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using Color = Robust.Shared.Maths.Color;
 
 #nullable enable
 
@@ -43,16 +42,19 @@ namespace Robust.Client.Console
 
         public ScriptConsoleClient()
         {
-            Title = Loc.GetString("Robust C# Interactive (CLIENT)");
+            Title = "Robust C# Interactive (CLIENT)";
             ScriptInstanceShared.InitDummy();
 
             _globals = new ScriptGlobalsImpl(this);
 
             IoCManager.InjectDependencies(this);
 
-            OutputPanel.AddText(Loc.GetString(@"Robust C# interactive console (CLIENT)."));
+            OutputPanel.AddText("Robust C# interactive console (CLIENT).");
             OutputPanel.AddText(">");
         }
+
+        // No-op for now.
+        protected override void Complete() { }
 
         protected override async void Run()
         {
@@ -118,7 +120,7 @@ namespace Robust.Client.Console
             }
             else
             {
-                var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
+                var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager).AddReferences(typeof(Image).Assembly);
                 newScript = CSharpScript.Create(code, options, typeof(ScriptGlobals));
             }
 
@@ -206,6 +208,23 @@ namespace Robust.Client.Console
             public override void vv(object a)
             {
                 vvm.OpenVV(a);
+            }
+
+            protected override void WriteSyntax(object toString)
+            {
+                var code = toString.ToString();
+
+                if (code == null)
+                    return;
+
+                var options = ScriptInstanceShared.GetScriptOptions(_owner._reflectionManager).AddReferences(typeof(Image).Assembly);
+                var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
+                script.Compile();
+
+                var syntax = new FormattedMessage();
+                ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _owner._highlightWorkspace);
+
+                _owner.OutputPanel.AddMessage(syntax);
             }
 
             public override void write(object toString)

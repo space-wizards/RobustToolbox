@@ -1,7 +1,6 @@
 varying highp vec2 UV;
 
 uniform sampler2D lightMap;
-uniform highp vec4 modulate;
 
 // [SHADER_HEADER_CODE]
 
@@ -13,5 +12,7 @@ void main()
 
     // [SHADER_CODE]
 
+    // NOTE: You may want to add modulation here. Problem: Game doesn't like that.
+    // In particular, walls disappear.
     gl_FragColor = zAdjustResult(COLOR);
 }

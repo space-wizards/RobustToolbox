@@ -1,17 +1,23 @@
+using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class DebugInputPanel : PanelContainer
+    internal sealed class DebugInputPanel : PanelContainer
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
 
         private readonly Label _label;
+
+        private readonly StringBuilder _textBuilder = new();
+        private readonly char[] _textBuffer = new char[512];
+
 
         public DebugInputPanel()
         {
@@ -36,7 +42,15 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            _label.Text = string.Join("\n", _inputManager.DownKeyFunctions);
+            _textBuilder.Clear();
+
+            _textBuilder.Append($"Input context: {_inputManager.Contexts.ActiveContext.Name}");
+            foreach (var func in _inputManager.DownKeyFunctions)
+            {
+                _textBuilder.Append($"\n  {func.FunctionName}");
+            }
+
+            _label.TextMemory = FormatHelpers.BuilderToMemory(_textBuilder, _textBuffer);
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Robust.Client.Console
 
                 RunButton.Disabled = true;
 
-                var msg = _client._netManager.CreateNetMessage<MsgScriptEval>();
+                var msg = new MsgScriptEval();
                 msg.ScriptSession = _session;
                 msg.Code = _lastEnteredText = InputBar.Text;
 
@@ -44,6 +44,16 @@ namespace Robust.Client.Console
                 InputBar.Clear();
 
 
+            }
+
+            protected override void Complete()
+            {
+                var msg = new MsgScriptCompletion();
+                msg.ScriptSession = _session;
+                msg.Code = InputBar.Text;
+                msg.Cursor = InputBar.CursorPosition;
+
+                _client._netManager.ClientSendMessage(msg);
             }
 
             public override void Close()
@@ -94,6 +104,12 @@ namespace Robust.Client.Console
                 OutputPanel.AddMessage(response.Response);
 
                 OutputPanel.AddText(">");
+            }
+
+            public void ReceiveCompletionResponse(MsgScriptCompletionResponse response)
+            {
+                Suggestions.SetSuggestions(response);
+                Suggestions.OpenAt((Position.X + Size.X, Position.Y), (Size.X / 2, Size.Y));
             }
         }
     }

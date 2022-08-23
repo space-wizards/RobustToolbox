@@ -1,42 +1,21 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public class ComponentFactory : IComponentFactory
+    [Virtual]
+    internal class ComponentFactory : IComponentFactory
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-
-        private class ComponentRegistration : IComponentRegistration
-        {
-            public string Name { get; }
-            public uint? NetID { get; }
-            public bool NetworkSynchronizeExistence { get; }
-            public Type Type { get; }
-            internal readonly List<Type> References = new();
-            IReadOnlyList<Type> IComponentRegistration.References => References;
-
-            public ComponentRegistration(string name, Type type, uint? netID, bool networkSynchronizeExistence)
-            {
-                Name = name;
-                NetID = netID;
-                NetworkSynchronizeExistence = networkSynchronizeExistence;
-                Type = type;
-                References.Add(type);
-            }
-
-            public override string ToString()
-            {
-                return $"ComponentRegistration({Name}: {Type})";
-            }
-        }
+        private readonly IDynamicTypeFactoryInternal _typeFactory;
+        private readonly IReflectionManager _reflectionManager;
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
@@ -52,53 +31,68 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of network ID to type.
         /// </summary>
-        private readonly Dictionary<uint, ComponentRegistration> netIDs = new();
+        private List<ComponentRegistration>? _networkedComponents;
 
         /// <summary>
         /// Mapping of concrete component types to their registration.
         /// </summary>
         private readonly Dictionary<Type, ComponentRegistration> types = new();
 
+        private ComponentRegistration[] _array = Array.Empty<ComponentRegistration>();
+
+        /// <summary>
+        /// Any component name requested that ends with this postfix, and is missing
+        /// will be treated as ignored, instead of throwing an error
+        /// </summary>
+        private string? _ignoreMissingComponentPostfix = null;
+
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new();
 
-        /// <inheritdoc />
-        public event Action<IComponentRegistration>? ComponentAdded;
+        private readonly Dictionary<CompIdx, Type> _idxToType = new();
 
         /// <inheritdoc />
-        public event Action<(IComponentRegistration, Type)>? ComponentReferenceAdded;
+        public event Action<ComponentRegistration>? ComponentAdded;
+
+        /// <inheritdoc />
+        public event Action<ComponentRegistration, CompIdx>? ComponentReferenceAdded;
 
         /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
-        
+
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
 
+        /// <inheritdoc />
+        public IReadOnlyList<ComponentRegistration>? NetworkedComponents => _networkedComponents;
+
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        public void Register<T>(bool overwrite = false) where T : IComponent, new()
+        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
         {
-            Register(typeof(T), overwrite);
+            _typeFactory = typeFactory;
+            _reflectionManager = reflectionManager;
         }
 
         private void Register(Type type, bool overwrite = false)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             if (types.ContainsKey(type))
             {
                 throw new InvalidOperationException($"Type is already registered: {type}");
             }
 
-            // Create a dummy to be able to fetch instance properties like name.
-            // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = (IComponent)Activator.CreateInstance(type)!;
+            if (!type.IsSubclassOf(typeof(Component)))
+            {
+                throw new InvalidOperationException($"Type is not derived from component: {type}");
+            }
 
-            var name = dummy.Name;
+            var name = CalculateComponentName(type);
             var lowerCaseName = name.ToLowerInvariant();
-            var netID = dummy.NetID;
-            var netSyncExist = dummy.NetworkSynchronizeExistence;
 
             if (IgnoredComponentNames.Contains(name))
             {
@@ -128,61 +122,108 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (netID != null && netIDs.ContainsKey(netID.Value))
-            {
-                if (!overwrite)
-                {
-                    throw new InvalidOperationException($"{name} has duplicate network ID {netID}, previous: {netIDs[netID.Value]}");
-                }
+            var idx = CompIdx.Index(type);
+            _idxToType[idx] = type;
 
-                RemoveComponent(netIDs[netID.Value].Name);
-            }
+            var registration = new ComponentRegistration(name, type, idx);
 
-            var registration = new ComponentRegistration(name, type, netID, netSyncExist);
             names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
-            if (netID != null)
-            {
-                netIDs[netID.Value] = registration;
-            }
-            ComponentAdded?.Invoke(registration);
-        }
+            CompIdx.AssignArray(ref _array, idx, registration);
 
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new()
-        {
-            RegisterReference(typeof(TTarget), typeof(TInterface));
+            ComponentAdded?.Invoke(registration);
+
+            static string CalculateComponentName(Type type)
+            {
+                // Backward compatible fallback
+#pragma warning disable CS0618
+                if (type.GetProperty(nameof(Component.Name))!.DeclaringType != typeof(Component))
+#pragma warning restore CS0618
+                {
+                    var instance = (IComponent) Activator.CreateInstance(type)!;
+                    return instance.Name;
+                }
+
+                // Attributes can use any name they want, they are for bypassing the automatic names
+                // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
+                if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
+                    return attribute.PrototypeName;
+
+                const string component = "Component";
+                var typeName = type.Name;
+                if (!typeName.EndsWith(component))
+                {
+                    throw new InvalidComponentNameException($"Component {type} must end with the word Component");
+                }
+
+                string name = typeName[..^component.Length];
+                const string client = "Client";
+                const string server = "Server";
+                const string shared = "Shared";
+                if (typeName.StartsWith(client, StringComparison.Ordinal))
+                {
+                    name = typeName[client.Length..^component.Length];
+                }
+                else if (typeName.StartsWith(server, StringComparison.Ordinal))
+                {
+                    name = typeName[server.Length..^component.Length];
+                }
+                else if (typeName.StartsWith(shared, StringComparison.Ordinal))
+                {
+                    name = typeName[shared.Length..^component.Length];
+                }
+                DebugTools.Assert(name != String.Empty, $"Component {type} has invalid name {type.Name}");
+                return name;
+            }
         }
 
         private void RegisterReference(Type target, Type @interface)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             if (!types.ContainsKey(target))
             {
                 throw new InvalidOperationException($"Unregistered type: {target}");
             }
 
+            if (@interface == typeof(MetaDataComponent) || @interface == typeof(TransformComponent))
+                throw new InvalidOperationException("Cannot make Transform or Metadata a reference type!");
+
+            var idx = CompIdx.Index(@interface);
+            _idxToType[idx] = @interface;
+
             var registration = types[target];
-            if (registration.References.Contains(@interface))
+            if (registration.References.Contains(idx))
             {
                 throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
-            registration.References.Add(@interface);
-            ComponentReferenceAdded?.Invoke((registration, @interface));
+            registration.References.Add(idx);
+            ComponentReferenceAdded?.Invoke(registration, idx);
+        }
+
+        public void IgnoreMissingComponents(string postfix = "")
+        {
+            if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)
+            {
+                throw new InvalidOperationException("Ignoring multiple prefixes is not supported");
+            }
+            _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
         {
             if (IgnoredComponentNames.Contains(name))
             {
-                throw new InvalidOperationException($"{name} is already registered as ignored");
+                throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as ignored");
             }
 
             if (names.ContainsKey(name))
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException($"{name} is already registered as a component");
+                    throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as a component");
                 }
 
                 RemoveComponent(name);
@@ -194,15 +235,14 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponent(string name)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             var registration = names[name];
-            
+
             names.Remove(registration.Name);
             _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);
-            if (registration.NetID != null)
-            {
-                netIDs.Remove(registration.NetID.Value);
-            }
         }
 
         public ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)
@@ -217,7 +257,9 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (IgnoredComponentNames.Contains(componentName))
+            if (IgnoredComponentNames.Contains(componentName) ||
+                (_ignoreMissingComponentPostfix != null &&
+                componentName.EndsWith(_ignoreMissingComponentPostfix)))
             {
                 return ComponentAvailability.Ignore;
             }
@@ -234,6 +276,11 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
         }
 
+        public IComponent GetComponent(CompIdx componentType)
+        {
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(_array[componentType.Value].Type);
+        }
+
         public T GetComponent<T>() where T : IComponent, new()
         {
             if (!types.ContainsKey(typeof(T)))
@@ -241,6 +288,11 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
             return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
+        }
+
+        public IComponent GetComponent(ComponentRegistration reg)
+        {
+            return (IComponent) _typeFactory.CreateInstanceUnchecked(reg.Type);
         }
 
         public IComponent GetComponent(string componentName, bool ignoreCase = false)
@@ -253,12 +305,12 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
-        public IComponent GetComponent(uint netId)
+        public IComponent GetComponent(ushort netId)
         {
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
         }
 
-        public IComponentRegistration GetRegistration(string componentName, bool ignoreCase = false)
+        public ComponentRegistration GetRegistration(string componentName, bool ignoreCase = false)
         {
             if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
             {
@@ -275,11 +327,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IComponentRegistration GetRegistration(uint netID)
+        public string GetComponentName(Type componentType)
         {
+            return GetRegistration(componentType).Name;
+        }
+
+        public ComponentRegistration GetRegistration(ushort netID)
+        {
+            if (_networkedComponents is null)
+                throw new ComponentRegistrationLockException();
+
             try
             {
-                return netIDs[netID];
+                return _networkedComponents[netID];
             }
             catch (KeyNotFoundException)
             {
@@ -287,7 +347,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IComponentRegistration GetRegistration(Type reference)
+        public ComponentRegistration GetRegistration(Type reference)
         {
             try
             {
@@ -299,17 +359,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IComponentRegistration GetRegistration<T>() where T : IComponent, new()
+        public ComponentRegistration GetRegistration<T>() where T : IComponent, new()
         {
             return GetRegistration(typeof(T));
         }
 
-        public IComponentRegistration GetRegistration(IComponent component)
+        public ComponentRegistration GetRegistration(IComponent component)
         {
             return GetRegistration(component.GetType());
         }
 
-        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = false)
+        public ComponentRegistration GetRegistration(CompIdx idx) => _array[idx.Value];
+
+        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out ComponentRegistration? registration, bool ignoreCase = false)
         {
             if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
             {
@@ -326,7 +388,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration)
+        public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out ComponentRegistration? registration)
         {
             if (types.TryGetValue(reference, out var tempRegistration))
             {
@@ -338,14 +400,14 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        public bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new()
+        public bool TryGetRegistration<T>([NotNullWhen(true)] out ComponentRegistration? registration) where T : IComponent, new()
         {
             return TryGetRegistration(typeof(T), out registration);
         }
 
-        public bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration)
+        public bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out ComponentRegistration? registration)
         {
-            if (netIDs.TryGetValue(netID, out var tempRegistration))
+            if (_networkedComponents is not null && _networkedComponents.TryGetValue(netID, out var tempRegistration))
             {
                 registration = tempRegistration;
                 return true;
@@ -355,7 +417,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        public bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration)
+        public bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out ComponentRegistration? registration)
         {
             return TryGetRegistration(component.GetType(), out registration);
         }
@@ -401,24 +463,48 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IEnumerable<Type> GetAllRefTypes()
+        public IEnumerable<CompIdx> GetAllRefTypes()
         {
             return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
 
-        public IEnumerable<uint> GetAllNetIds()
+        /// <inheritdoc />
+        public void GenerateNetIds()
         {
-            foreach (var registration in AllRegistrations)
+            // assumptions:
+            // component names are guaranteed to be unique
+            // component names are 1:1 with component concrete types
+
+            // a subset of component names are networked
+            var networkedRegs = new List<ComponentRegistration>(names.Count);
+
+            foreach (var kvRegistration in names)
             {
-                if (registration.NetID != null)
+                var registration = kvRegistration.Value;
+                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)
                 {
-                    yield return registration.NetID.Value;
+                    networkedRegs.Add(registration);
                 }
             }
+
+            // The sorting implementation is unstable, but there are no duplicate names, so that isn't a problem.
+            // Ordinal comparison is used so that the resulting order is always identical on every computer.
+            networkedRegs.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+            for (ushort i = 0; i < networkedRegs.Count; i++)
+            {
+                var registration = networkedRegs[i];
+                registration.NetID = i;
+            }
+
+            _networkedComponents = networkedRegs;
         }
+
+        public Type IdxToType(CompIdx idx) => _idxToType[idx];
     }
 
     [Serializable]
+    [Virtual]
     public class UnknownComponentException : Exception
     {
         public UnknownComponentException()
@@ -434,4 +520,10 @@ namespace Robust.Shared.GameObjects
           SerializationInfo info,
           StreamingContext context) : base(info, context) { }
     }
+
+    [Virtual]
+    public class ComponentRegistrationLockException : Exception { }
+
+    [Virtual]
+    public class InvalidComponentNameException : Exception { public InvalidComponentNameException(string message) : base(message) { } }
 }

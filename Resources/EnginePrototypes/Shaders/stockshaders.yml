@@ -1,0 +1,14 @@
+# Generic canvas shader without light shading.
+- type: shader
+  id: unshaded
+  kind: canvas
+  light_mode: unshaded
+
+- type: shader
+  id: shaded
+  kind: canvas
+
+- type: shader
+  id: bgra
+  kind: source
+  path: "/Shaders/Internal/bgra.swsl"

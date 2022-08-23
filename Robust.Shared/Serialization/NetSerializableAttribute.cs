@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization
     /// for more info.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
-    public class NetSerializableAttribute : Attribute
+    public sealed class NetSerializableAttribute : Attribute
     {
     }
 }

@@ -9,6 +9,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
+    [Virtual]
     public class OutputPanel : Control
     {
         public const string StylePropertyStyleBox = "stylebox";
@@ -149,7 +150,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (MathHelper.CloseTo(0, args.Delta.Y))
+            if (MathHelper.CloseToPercent(0, args.Delta.Y))
             {
                 return;
             }

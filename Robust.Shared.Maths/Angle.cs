@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -7,12 +8,9 @@ namespace Robust.Shared.Maths
     ///     A representation of an angle, in radians.
     /// </summary>
     [Serializable]
-    public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>
+    public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>, ISpanFormattable
     {
         public static Angle Zero { get; } = new();
-
-        [Obsolete("Use Angle.Zero")]
-        public static Angle South { get; } = new(-MathHelper.PiOver2);
 
         /// <summary>
         ///     Angle in radians.
@@ -57,14 +55,14 @@ namespace Robust.Shared.Maths
         ///     where an angle of zero is usually considered "south" (0, -1).
         /// </remarks>
         /// <returns>Unit Direction Vector</returns>
-        public Vector2 ToVec()
+        public readonly Vector2 ToVec()
         {
             var x = Math.Cos(Theta);
             var y = Math.Sin(Theta);
             return new Vector2((float) x, (float) y);
         }
 
-        public Vector2 ToWorldVec()
+        public readonly Vector2 ToWorldVec()
         {
             return (this - MathHelper.PiOver2).ToVec();
         }
@@ -72,7 +70,7 @@ namespace Robust.Shared.Maths
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
-        public Direction GetDir()
+        public readonly Direction GetDir()
         {
             var ang = Theta % (2 * Math.PI);
 
@@ -85,12 +83,12 @@ namespace Robust.Shared.Maths
         private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
         private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
 
-        public Direction GetCardinalDir()
+        public readonly Direction GetCardinalDir()
         {
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * Math.PI;
 
             return (Direction) (Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2 % 8);
         }
@@ -101,8 +99,11 @@ namespace Robust.Shared.Maths
         /// <param name="vec">Vector to rotate.</param>
         /// <returns>New rotated vector.</returns>
         [Pure]
-        public Vector2 RotateVec(in Vector2 vec)
+        public readonly Vector2 RotateVec(in Vector2 vec)
         {
+            // No calculation necessery when theta is zero
+            if (Theta == 0) return vec;
+
             var (x, y) = vec;
             var cos = Math.Cos(Theta);
             var sin = Math.Sin(Theta);
@@ -133,9 +134,9 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return MathHelper.CloseTo(aPositive, bPositive)
-                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive)
-                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi);
+            return MathHelper.CloseToPercent(aPositive, bPositive)
+                || MathHelper.CloseToPercent(aPositive + MathHelper.TwoPi, bPositive)
+                || MathHelper.CloseToPercent(aPositive, bPositive + MathHelper.TwoPi);
         }
 
         private static bool EqualsApprox(Angle a, Angle b, double tolerance)
@@ -149,15 +150,15 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return MathHelper.CloseTo(aPositive, bPositive, tolerance)
-                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive, tolerance)
-                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi, tolerance);
+            return MathHelper.CloseToPercent(aPositive, bPositive, tolerance)
+                || MathHelper.CloseToPercent(aPositive + MathHelper.TwoPi, bPositive, tolerance)
+                || MathHelper.CloseToPercent(aPositive, bPositive + MathHelper.TwoPi, tolerance);
         }
 
         /// <summary>
         ///     Removes revolutions from a positive or negative angle to make it as small as possible.
         /// </summary>
-        public Angle Reduced()
+        public readonly Angle Reduced()
         {
             return new(Reduce(Theta));
         }
@@ -173,20 +174,20 @@ namespace Robust.Shared.Maths
         }
 
         /// <inheritdoc />
-        public bool Equals(Angle other)
+        public readonly bool Equals(Angle other)
         {
-            return this.Theta.Equals(other.Theta);
+            return Theta.Equals(other.Theta);
         }
 
         /// <inheritdoc />
-        public override bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Angle angle && Equals(angle);
         }
 
         /// <inheritdoc />
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
 
             return Theta.GetHashCode();
@@ -203,12 +204,12 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
-        public Angle Opposite()
+        public readonly Angle Opposite()
         {
             return new Angle(FlipPositive(Theta-Math.PI));
         }
 
-        public Angle FlipPositive()
+        public readonly Angle FlipPositive()
         {
             return new(FlipPositive(Theta));
         }
@@ -225,16 +226,21 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Similar to Lerp but makes sure the angle wraps around to 360 degrees.
+        ///     Similar to Lerp but, but defaults to making sure that lerping from 1 to 359 degrees doesn't wrap around
+        ///     the whole circle.
         /// </summary>
         public static Angle Lerp(in Angle a, in Angle b, float factor)
         {
-            var degA = MathHelper.RadiansToDegrees(Reduce(a));
-            var degB = MathHelper.RadiansToDegrees(Reduce(b));
-            var delta = MathHelper.Mod((degB - degA), 360);
-            if (delta > 180)
-                delta -= 360;
-            return new Angle(MathHelper.DegreesToRadians(degA + delta * MathHelper.Clamp(factor, 0, 1)));
+            return a + ShortestDistance(a, b) * factor;
+        }
+
+        /// <summary>
+        ///     Returns the shortest distance between two angles.
+        /// </summary>
+        public static Angle ShortestDistance(in Angle a, in Angle b)
+        {
+            var delta = (b - a) % Math.Tau;
+            return 2 * delta % Math.Tau - delta;
         }
 
         /// <summary>
@@ -279,9 +285,29 @@ namespace Robust.Shared.Maths
         public static Angle operator -(Angle a, Angle b)
             => new(a.Theta - b.Theta);
 
+        public static Angle operator -(Angle orig)
+            => new(-orig.Theta);
+
         public override string ToString()
         {
             return $"{Theta} rad";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{Theta} rad");
         }
     }
 }

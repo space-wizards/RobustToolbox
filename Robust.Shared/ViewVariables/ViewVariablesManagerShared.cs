@@ -5,7 +5,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.ViewVariables
 {
-    internal class ViewVariablesManagerShared
+    internal abstract class ViewVariablesManagerShared
     {
         private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 
@@ -29,7 +29,7 @@ namespace Robust.Shared.ViewVariables
                     traits.Add(ViewVariablesTraits.Enumerable);
                 }
 
-                if (typeof(IEntity).IsAssignableFrom(type))
+                if (typeof(EntityUid).IsAssignableFrom(type))
                 {
                     traits.Add(ViewVariablesTraits.Entity);
                 }

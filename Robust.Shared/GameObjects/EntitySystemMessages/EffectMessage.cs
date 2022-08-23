@@ -6,7 +6,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class EffectSystemMessage : EntityEventArgs
+    public sealed class EffectSystemMessage : EntityEventArgs
     {
         /// <summary>
         ///     Path to the texture used for the effect.
@@ -28,12 +28,12 @@ namespace Robust.Shared.GameObjects
         /// Effect position attached to an entity
         /// </summary>
         public EntityUid? AttachedEntityUid { get; set; }
-        
+
         /// <summary>
         /// Effect offset relative to the parent
         /// </summary>
         public Vector2 AttachedOffset { get; set; } = Vector2.Zero;
-        
+
         /// <summary>
         /// Effect position relative to the emit position
         /// </summary>

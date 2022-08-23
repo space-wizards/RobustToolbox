@@ -29,7 +29,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics
 {
     // TODO: Probably replace this internally with just the Vector2 and radians but I'd need to re-learn trig so yeah....
-    internal struct Transform
+    public struct Transform
     {
         public Vector2 Position;
         public Quaternion2D Quaternion2D;
@@ -43,6 +43,12 @@ namespace Robust.Shared.Physics
         public Transform(float angle)
         {
             Position = Vector2.Zero;
+            Quaternion2D = new Quaternion2D(angle);
+        }
+
+        public Transform(Vector2 position, Angle angle)
+        {
+            Position = position;
             Quaternion2D = new Quaternion2D(angle);
         }
 
@@ -124,12 +130,19 @@ namespace Robust.Shared.Physics
             DebugTools.Assert(A.Length == 2);
             return new Vector2(A[0].X * v.X + A[1].X * v.Y, A[0].Y * v.X + A[1].Y * v.Y);
         }
+
+        public static Vector2 Mul(Matrix22 A, Vector2 v)
+        {
+            return new Vector2(A.EX.X * v.X + A.EY.X * v.Y, A.EX.Y * v.X + A.EY.Y * v.Y);
+        }
     }
 
     public struct Quaternion2D
     {
         public float C;
         public float S;
+
+        public float Angle => MathF.Atan2(S, C);
 
         public Quaternion2D(float cos, float sin)
         {
@@ -141,6 +154,14 @@ namespace Robust.Shared.Physics
         {
             C = MathF.Cos(angle);
             S = MathF.Sin(angle);
+        }
+
+        public Quaternion2D(Angle angle)
+        {
+            var radians = (float) angle.Theta;
+
+            C = MathF.Cos(radians);
+            S = MathF.Sin(radians);
         }
 
         public Quaternion2D Set(float angle)

@@ -64,7 +64,7 @@ namespace Robust.Shared.Exceptions
             return ret.ToString();
         }
 
-        private class LoggedException
+        private sealed class LoggedException
         {
             public Exception Exception { get; }
             public DateTime Time { get; }

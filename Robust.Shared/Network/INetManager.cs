@@ -116,8 +116,6 @@ namespace Robust.Shared.Network
         /// </summary>
         event EventHandler<NetDisconnectedArgs> Disconnect;
 
-        #region StringTable
-
         /// <summary>
         ///     Registers a NetMessage to be sent or received.
         /// </summary>
@@ -128,9 +126,9 @@ namespace Robust.Shared.Network
         /// The side of the network this message is accepted on.
         /// If we are not on the side specified, the receive callback will not be registered even if provided.
         /// </param>
-        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+        void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage;
+            where T : NetMessage, new();
 
         /// <summary>
         ///     Creates a new NetMessage to be sent.
@@ -140,9 +138,7 @@ namespace Robust.Shared.Network
         /// </remarks>
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
-        T CreateNetMessage<T>() where T : NetMessage;
-
-        #endregion StringTable
-
+        [Obsolete("Just new NetMessage directly")]
+        T CreateNetMessage<T>() where T : NetMessage, new();
     }
 }

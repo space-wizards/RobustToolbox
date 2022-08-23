@@ -9,7 +9,7 @@ namespace Robust.Shared.ViewVariables
     ///     refers to a member (field or property) on the object of the session.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesMemberSelector
+    public sealed class ViewVariablesMemberSelector
     {
         public ViewVariablesMemberSelector(int index)
         {
@@ -28,7 +28,7 @@ namespace Robust.Shared.ViewVariables
     ///     refers to an index in the results of a <see cref="IEnumerable"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesEnumerableIndexSelector
+    public sealed class ViewVariablesEnumerableIndexSelector
     {
         public ViewVariablesEnumerableIndexSelector(int index)
         {
@@ -39,7 +39,7 @@ namespace Robust.Shared.ViewVariables
     }
 
     [Serializable, NetSerializable]
-    public class ViewVariablesSelectorKeyValuePair
+    public sealed class ViewVariablesSelectorKeyValuePair
     {
         // If false it's the value instead.
         public bool Key { get; set; }

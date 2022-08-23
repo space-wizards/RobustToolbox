@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Utility
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    public class YamlHelpers_Test : RobustUnitTest
+    public sealed class YamlHelpers_Test : RobustUnitTest
     {
         [Test]
         [SetCulture("fr-FR")]

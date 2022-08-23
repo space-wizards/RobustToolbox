@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetSerializer;
-using Newtonsoft.Json.Linq;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -56,8 +55,6 @@ namespace Robust.Shared.Serialization
             '*', '(', ')', '^', '`', '"', '\'', '`', '~', '[', ']',
             '{', '}', ':', ';', '-'
         };
-
-        private static readonly HashAlgorithmName PackHashAlgo = HashAlgorithmName.SHA512;
 
         /// <summary>
         /// The shortest a string can be in order to be inserted in the mapping.
@@ -157,7 +154,7 @@ namespace Robust.Shared.Serialization
 
             _incompleteHandshakes.Add(channel, new InProgressHandshake(tcs));
 
-            var message = _net.CreateNetMessage<MsgMapStrServerHandshake>();
+            var message = new MsgMapStrServerHandshake();
             message.Hash = _stringMapHash;
             _net.ServerSendMessage(message, channel);
 
@@ -214,9 +211,9 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="OnClientCompleteHandshake"/>
         private void NetworkInitialize()
         {
-            _net.RegisterNetMessage<MsgMapStrServerHandshake>(nameof(MsgMapStrServerHandshake), HandleServerHandshake, NetMessageAccept.Client);
-            _net.RegisterNetMessage<MsgMapStrClientHandshake>(nameof(MsgMapStrClientHandshake), HandleClientHandshake, NetMessageAccept.Server);
-            _net.RegisterNetMessage<MsgMapStrStrings>(nameof(MsgMapStrStrings), HandleStringsMessage, NetMessageAccept.Client);
+            _net.RegisterNetMessage<MsgMapStrServerHandshake>(HandleServerHandshake, NetMessageAccept.Client | NetMessageAccept.Handshake);
+            _net.RegisterNetMessage<MsgMapStrClientHandshake>(HandleClientHandshake, NetMessageAccept.Server | NetMessageAccept.Handshake);
+            _net.RegisterNetMessage<MsgMapStrStrings>(HandleStringsMessage, NetMessageAccept.Client | NetMessageAccept.Handshake);
 
             _net.Disconnect += NetOnDisconnect;
         }
@@ -357,7 +354,7 @@ namespace Robust.Shared.Serialization
 
             handshake.HasRequestedStrings = true;
 
-            var strings = _net.CreateNetMessage<MsgMapStrStrings>();
+            var strings = new MsgMapStrStrings();
             strings.Package = _mappedStringsPackage;
             LogSzr.Debug(
                 $"Sending {_mappedStringsPackage!.Length} bytes sized mapped strings package to {channel.UserName}.");
@@ -412,7 +409,7 @@ namespace Robust.Shared.Serialization
             if (fileName == null || !File.Exists(fileName))
             {
                 LogSzr.Debug($"No string cache for {hashStr}.");
-                var handshake = _net.CreateNetMessage<MsgMapStrClientHandshake>();
+                var handshake = new MsgMapStrClientHandshake();
                 LogSzr.Debug("Asking server to send mapped strings.");
                 handshake.NeedsStrings = true;
                 msgMapStr.MsgChannel.SendMessage(handshake);
@@ -441,7 +438,7 @@ namespace Robust.Shared.Serialization
         private void OnClientCompleteHandshake(INetManager net, INetChannel channel)
         {
             LogSzr.Debug("Letting server know we're good to go.");
-            var handshake = net.CreateNetMessage<MsgMapStrClientHandshake>();
+            var handshake = new MsgMapStrClientHandshake();
             handshake.NeedsStrings = false;
             channel.SendMessage(handshake);
 
@@ -540,21 +537,6 @@ namespace Robust.Shared.Serialization
         }
 
         /// <summary>
-        /// Add strings from the given <see cref="JObject"/> to the mapping.
-        /// </summary>
-        /// <remarks>
-        /// Strings are taken from JSON property names and string nodes.
-        /// </remarks>
-        /// <param name="obj">The JSON to collect strings from.</param>
-        public void AddStrings(JObject obj)
-        {
-            if (!_net.IsClient)
-            {
-                _dict.AddStrings(obj);
-            }
-        }
-
-        /// <summary>
         /// Add strings from the given enumeration to the mapping.
         /// </summary>
         /// <param name="strings">The strings to add.</param>
@@ -638,6 +620,8 @@ namespace Robust.Shared.Serialization
 
             LogSzr.Debug($"Wrote string package in {sw.ElapsedMilliseconds}ms size {ByteHelpers.FormatBytes(_mappedStringsPackage.Length)}");
             LogSzr.Debug($"String hash is {ConvertToBase64Url(_stringMapHash)}");
+
+            // File.WriteAllText("strings.txt", string.Join("\n", _dict._mappedStrings!));
         }
 
         public void Initialize()

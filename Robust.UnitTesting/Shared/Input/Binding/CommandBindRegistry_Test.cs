@@ -9,14 +9,14 @@ using Robust.Shared.Players;
 namespace Robust.UnitTesting.Shared.Input.Binding
 {
     [TestFixture, TestOf(typeof(CommandBindRegistry))]
-    public class CommandBindRegistry_Test : RobustUnitTest
+    public sealed class CommandBindRegistry_Test : RobustUnitTest
     {
 
-        private class TypeA { }
-        private class TypeB { }
-        private class TypeC { }
+        private sealed class TypeA { }
+        private sealed class TypeB { }
+        private sealed class TypeC { }
 
-        private class TestInputCmdHandler : InputCmdHandler
+        private sealed class TestInputCmdHandler : InputCmdHandler
         {
             // these vars only for tracking / debugging during testing
             private readonly string name;
@@ -222,12 +222,12 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 .Bind(bkf, bHandler1)
                 .Bind(bkf, bHandler2)
                 .Register<TypeB>(registry);
+            CommandBinds.Builder
+                .Bind(bkf, cHandler1)
+                .BindAfter(bkf, cHandler2, typeof(TypeA))
+                .Register<TypeC>(registry);
 
-            Assert.Throws<InvalidOperationException>(() =>
-                CommandBinds.Builder
-                    .Bind(bkf, cHandler1)
-                    .BindAfter(bkf, cHandler2, typeof(TypeA))
-                    .Register<TypeC>(registry));
+            Assert.Throws<InvalidOperationException>(registry.RebuildGraph);
         }
     }
 }

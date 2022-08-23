@@ -30,7 +30,7 @@ namespace Robust.Client.Prototypes
         {
             base.Initialize();
 
-            _netManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, accept: NetMessageAccept.Server);
+            _netManager.RegisterNetMessage<MsgReloadPrototypes>(accept: NetMessageAccept.Server);
 
             _clyde.OnWindowFocused += WindowFocusedChanged;
 
@@ -57,7 +57,7 @@ namespace Robust.Client.Prototypes
 #if !FULL_RELEASE
             var sw = Stopwatch.StartNew();
 
-            var msg = _netManager.CreateNetMessage<MsgReloadPrototypes>();
+            var msg = new MsgReloadPrototypes();
             msg.Paths = _reloadQueue.ToArray();
             _netManager.ClientSendMessage(msg);
 

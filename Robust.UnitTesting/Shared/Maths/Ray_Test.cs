@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestFixture]
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestOf(typeof(Ray))]
-    class Ray_Test
+    sealed class Ray_Test
     {
         [Test]
         public void RayIntersectsBoxTest()

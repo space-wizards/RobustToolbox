@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
     [TestFixture]
     [TestOf(typeof(MultiselectOptionButton<>))]
-    public class MultiselectOptionButtonTest : RobustUnitTest
+    public sealed class MultiselectOptionButtonTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

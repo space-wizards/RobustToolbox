@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.Map;
@@ -28,10 +29,10 @@ namespace Robust.Client.Graphics
         event Action<KeyEventArgs> KeyUp;
         event Action<KeyEventArgs> KeyDown;
         event Action<MouseWheelEventArgs> MouseWheel;
-        event Action<WindowClosedEventArgs> CloseWindow;
+        event Action<WindowRequestClosedEventArgs> CloseWindow;
         event Action<WindowDestroyedEventArgs> DestroyWindow;
 
-        ClydeHandle LoadShader(ParsedShader shader, string? name = null);
+        ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null);
 
         void ReloadShader(ClydeHandle handle, ParsedShader newShader);
 
@@ -60,5 +61,9 @@ namespace Robust.Client.Graphics
 
         /// <returns>Null if not running on X11.</returns>
         uint? GetX11WindowId();
+
+        void RegisterGridEcsEvents();
+
+        void RunOnWindowThread(Action action);
     }
 }

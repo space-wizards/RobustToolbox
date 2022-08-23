@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -13,12 +14,14 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization
 {
 
-    public partial class RobustSerializer : IRobustSerializer
+    public sealed partial class RobustSerializer : IRobustSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
+
+        private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
         private ISawmill LogSzr => _lazyLogSzr.Value;
 
@@ -84,6 +87,12 @@ namespace Robust.Shared.Serialization
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
+            /*
+            foreach (var (t, i) in _serializer.GetTypeMap().OrderBy(kv => kv.Key.ToString()))
+            {
+                LogSzr.Info($"{TypeAbbreviation.Abbreviate(t)}: {i}");
+            }
+            */
         }
 
         public void Serialize(Stream stream, object toSerialize)
@@ -186,6 +195,15 @@ namespace Robust.Shared.Serialization
         /// <inheritdoc />
         public Type? FindSerializedType(Type assignableType, string serializedTypeName)
         {
+            if (!_cachedSerialized.TryGetValue(assignableType, out var assigned))
+            {
+                assigned = new Dictionary<string, Type?>();
+                _cachedSerialized[assignableType] = assigned;
+            }
+
+            if (assigned.TryGetValue(serializedTypeName, out var resolved))
+                return resolved;
+
             var types = _reflectionManager.GetAllChildren(assignableType);
             foreach (var type in types)
             {
@@ -195,9 +213,13 @@ namespace Robust.Shared.Serialization
                     continue;
 
                 if (serializedAttribute.SerializeName == serializedTypeName)
+                {
+                    assigned[serializedTypeName] = type;
                     return type;
+                }
             }
 
+            assigned[serializedTypeName] = null;
             return null;
         }
     }

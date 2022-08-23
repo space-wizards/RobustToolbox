@@ -4,13 +4,9 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgConCmdAck : NetMessage
+    public sealed class MsgConCmdAck : NetMessage
     {
-        #region REQUIRED
-        public const MsgGroups GROUP = MsgGroups.String;
-        public static readonly string NAME = nameof(MsgConCmdAck);
-        public MsgConCmdAck(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         public string Text { get; set; }
         public bool Error { get; set; }

@@ -1,7 +1,9 @@
 using System;
-using System.Diagnostics.Contracts;
+using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Reflection;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -41,7 +43,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        void Register<TInterface, TImplementation>(bool overwrite = false)
+        void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface;
 
         /// <summary>
@@ -62,20 +64,69 @@ namespace Robust.Shared.IoC
         void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface;
 
+
+        /// <summary>
+        /// Registers a simple implementation without an interface.
+        /// </summary>
+        /// <param name="implementation">The type that will be resolvable.</param>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false);
+
+        /// <summary>
+        /// Registers a simple implementation without an interface.
+        /// </summary>
+        /// <param name="interfaceType">The type that will be resolvable.</param>
+        /// <param name="implementation">The type that will be resolvable.</param>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false);
+
+        /// <summary>
+        ///     Registers an interface to an existing instance of an implementation,
+        ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance
+        ///     if deferredInject is false.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <param name="implementation">The existing instance to use as the implementation.</param>
+        /// <param name="overwrite">
+        ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        ///     replace the current implementation instead.
+        /// </param>
+        /// <param name="deferInject">
+        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
+        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
+        ///     that don't exist yet because you have not called BuildGraph, set this to true.
+        /// </param>
+        void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false);
+
         /// <summary>
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
         ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
         ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
         /// </summary>
-        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
-        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="type">The type that will be resolvable.</param>
         /// <param name="implementation">The existing instance to use as the implementation.</param>
         /// <param name="overwrite">
-        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
-        /// replace the current implementation instead.
+        ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        ///     replace the current implementation instead.
         /// </param>
-        void RegisterInstance<TInterface>(object implementation, bool overwrite = false);
+        /// <param name="deferInject">
+        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
+        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
+        ///     that don't exist yet because you have not called BuildGraph, set this to true.
+        /// </param>
+        void RegisterInstance(Type type, object implementation, bool overwrite = false, bool deferInject = false);
 
         /// <summary>
         /// Clear all services and types.
@@ -92,8 +143,29 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         T Resolve<T>();
+
+        /// <inheritdoc cref="Resolve{T}()"/>
+        void Resolve<T>([NotNull] ref T? instance);
+
+        /// <inheritdoc cref="Resolve{T}(ref T?)"/>
+        /// <summary>
+        /// Resolve two dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2);
+
+        /// <inheritdoc cref="Resolve{T1, T2}(ref T1?, ref T2?)"/>
+        /// <summary>
+        /// Resolve three dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3);
+
+        /// <inheritdoc cref="Resolve{T1, T2, T3}(ref T1?, ref T2?, ref T3?)"/>
+        /// <summary>
+        /// Resolve four dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4);
 
         /// <summary>
         /// Resolve a dependency manually.
@@ -103,8 +175,18 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         object ResolveType(Type type);
+
+        /// <summary>
+        /// Resolve a dependency manually.
+        /// </summary>
+        bool TryResolveType<T>([NotNullWhen(true)] out T? instance);
+
+        /// <summary>
+        /// Resolve a dependency manually.
+        /// </summary>
+        bool TryResolveType(Type objectType, [MaybeNullWhen(false)] out object instance);
 
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.

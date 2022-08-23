@@ -2,7 +2,7 @@
 
 namespace Robust.Client.UserInterface.XAML
 {
-    public class RobustXamlLoader
+    public static class RobustXamlLoader
     {
         public static void Load(object obj)
         {

@@ -11,6 +11,7 @@ namespace Robust.Client.Graphics.Clyde
         /// <summary>
         ///     Represents an OpenGL buffer object.
         /// </summary>
+        [Virtual]
         private class GLBuffer
         {
             private readonly Clyde _clyde;
@@ -178,7 +179,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     Subtype of buffers so that we can have a generic constructor.
         ///     Functionally equivalent to <see cref="GLBuffer"/> otherwise.
         /// </summary>
-        private class GLBuffer<T> : GLBuffer where T : unmanaged
+        private sealed class GLBuffer<T> : GLBuffer where T : unmanaged
         {
             public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<T> initialize,
                 string? name = null)

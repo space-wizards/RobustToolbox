@@ -1,0 +1,6 @@
+﻿// Swaps B and R channel so you can render BGRA stuff without swizzling at upload time.
+// Currently used by CEF.
+
+void fragment() {
+    COLOR = zTexture(UV).bgra;
+}

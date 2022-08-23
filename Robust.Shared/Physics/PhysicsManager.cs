@@ -1,61 +1,87 @@
-﻿using Robust.Shared.GameObjects;
+﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {
-    /// <inheritdoc />
-    public class PhysicsManager : IPhysicsManager
+    public interface IPhysicsManager
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        /// <summary>
+        /// Clear all of the cached transforms.
+        /// </summary>
+        void ClearTransforms();
 
-        public bool IsWeightless(EntityCoordinates coordinates)
-        {
-            var gridId = coordinates.GetGridId(_entityManager);
-            if (!gridId.IsValid())
-            {
-                // Not on a grid = no gravity for now.
-                // In the future, may want to allow maps to override to always have gravity instead.
-                return true;
-            }
+        public Transform EnsureTransform(PhysicsComponent body);
 
-            var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
-            return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
-        }
+        public Transform EnsureTransform(EntityUid uid);
+
+        public void SetTransform(EntityUid uid, Transform transform);
+
+        public Transform UpdateTransform(EntityUid uid);
 
         /// <summary>
-        ///     Calculates the normal vector for two colliding bodies
+        /// Get a cached transform for physics use.
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
+        public Transform GetTransform(PhysicsComponent body);
+    }
+
+    public sealed class PhysicsManager : IPhysicsManager
+    {
+        [Dependency] private readonly IEntityManager _entManager = default!;
+
+        private Dictionary<EntityUid, Transform> _transforms = new(64);
+
+        private Transform GetPhysicsTransform(EntityUid uid)
         {
-            var manifold = target.GetWorldAABB().Intersect(source.GetWorldAABB());
-            if (manifold.IsEmpty()) return Vector2.Zero;
-            if (manifold.Height > manifold.Width)
-            {
-                // X is the axis of seperation
-                var leftDist = source.GetWorldAABB().Right - target.GetWorldAABB().Left;
-                var rightDist = target.GetWorldAABB().Right - source.GetWorldAABB().Left;
-                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
-            }
-            else
-            {
-                // Y is the axis of seperation
-                var bottomDist = source.GetWorldAABB().Top - target.GetWorldAABB().Bottom;
-                var topDist = target.GetWorldAABB().Top - source.GetWorldAABB().Bottom;
-                return new Vector2(0, bottomDist > topDist ? 1 : -1);
-            }
+            var xformComp = _entManager.GetComponent<TransformComponent>(uid);
+            var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
+
+            return new(worldPos, (float) worldRot.Theta);
         }
 
-        public float CalculatePenetration(IPhysBody target, IPhysBody source)
+        /// <inheritdoc />
+        public void ClearTransforms()
         {
-            var manifold = target.GetWorldAABB().Intersect(source.GetWorldAABB());
-            if (manifold.IsEmpty()) return 0.0f;
-            return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
+            _transforms.Clear();
+        }
+
+        public Transform EnsureTransform(PhysicsComponent body)
+        {
+            return EnsureTransform((body).Owner);
+        }
+
+        public Transform EnsureTransform(EntityUid uid)
+        {
+            if (!_transforms.TryGetValue(uid, out var transform))
+            {
+                transform = GetPhysicsTransform(uid);
+                _transforms[uid] = transform;
+            }
+
+            return transform;
+        }
+
+        public void SetTransform(EntityUid uid, Transform transform)
+        {
+            _transforms[uid] = transform;
+        }
+
+        public Transform UpdateTransform(EntityUid uid)
+        {
+            var xform = GetPhysicsTransform(uid);
+            _transforms[uid] = xform;
+            return xform;
+        }
+
+        /// <inheritdoc />
+        public Transform GetTransform(PhysicsComponent body)
+        {
+            return _transforms[body.Owner];
+        }
+
+        public Transform GetTransform(EntityUid uid)
+        {
+            return _transforms[uid];
         }
     }
 }

@@ -22,6 +22,21 @@ namespace Robust.Shared.Utility
             }
         }
 
+        internal static MemoryStream ConsumeToMemoryStream(this Stream stream)
+        {
+            var ms = stream.CopyToMemoryStream();
+            stream.Dispose();
+            return ms;
+        }
+
+        internal static MemoryStream CopyToMemoryStream(this Stream stream)
+        {
+            var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
+        }
+
         /// <exception cref="EndOfStreamException">
         /// Thrown if not exactly <paramref name="amount"/> bytes could be read.
         /// </exception>
@@ -48,16 +63,13 @@ namespace Robust.Shared.Utility
         /// </exception>
         public static void ReadExact(this Stream stream, Span<byte> buffer)
         {
-            var read = 0;
-            while (read < buffer.Length)
+            while (buffer.Length > 0)
             {
                 var cRead = stream.Read(buffer);
                 if (cRead == 0)
-                {
                     throw new EndOfStreamException();
-                }
 
-                read += cRead;
+                buffer = buffer[cRead..];
             }
         }
 
@@ -85,6 +97,29 @@ namespace Robust.Shared.Utility
                 if (read == 0)
                     return totalRead;
             }
+        }
+
+        /// <summary>
+        /// Gets the span over the currently filled region of the memory stream, based on its length.
+        /// </summary>
+        public static Span<byte> AsSpan(this MemoryStream ms)
+        {
+            // Let it be forever immortalized that, while I was writing this function,
+            // Julian suggested that I should name it "AssSpan" to test if that would slip through review.
+
+            var buf = ms.GetBuffer();
+
+            return buf.AsSpan(0, (int) ms.Length);
+        }
+
+        /// <summary>
+        /// Gets the memory over the currently filled region of the memory stream, based on its length.
+        /// </summary>
+        public static Memory<byte> AsMemory(this MemoryStream ms)
+        {
+            var buf = ms.GetBuffer();
+
+            return buf.AsMemory(0, (int) ms.Length);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct UIBox2 : IEquatable<UIBox2>
+    public struct UIBox2 : IEquatable<UIBox2>, ISpanFormattable
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
@@ -78,7 +79,7 @@ namespace Robust.Shared.Maths
 
         public readonly bool IsEmpty()
         {
-            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
+            return MathHelper.CloseToPercent(Width, 0.0f) && MathHelper.CloseToPercent(Height, 0.0f);
         }
 
         public readonly bool Encloses(UIBox2 inner)
@@ -159,10 +160,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static bool operator ==(UIBox2 a, UIBox2 b)
         {
-            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
-                   MathHelper.CloseTo(a.Right, b.Right) &&
-                   MathHelper.CloseTo(a.Top, b.Top) &&
-                   MathHelper.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseToPercent(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseToPercent(a.Right, b.Right) &&
+                   MathHelper.CloseToPercent(a.Top, b.Top) &&
+                   MathHelper.CloseToPercent(a.Left, b.Left);
         }
 
         public static bool operator !=(UIBox2 a, UIBox2 b)
@@ -180,6 +181,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Top}, {Right}, {Bottom})");
         }
     }
 }

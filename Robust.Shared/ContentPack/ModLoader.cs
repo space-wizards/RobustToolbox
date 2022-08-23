@@ -36,6 +36,15 @@ namespace Robust.Shared.ContentPack
         private bool _useLoadContext = true;
         private bool _sandboxingEnabled;
 
+        private readonly List<string> _engineModuleDirectories = new();
+        private readonly List<ExtraModuleLoad> _extraModuleLoads = new();
+
+        public event ExtraModuleLoad ExtraModuleLoaders
+        {
+            add => _extraModuleLoads.Add(value);
+            remove => _extraModuleLoads.Remove(value);
+        }
+
         public ModLoader()
         {
             var id = Interlocked.Increment(ref _modLoaderId);
@@ -62,6 +71,11 @@ namespace Robust.Shared.ContentPack
 
         public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
 
+        public void AddEngineModuleDirectory(string dir)
+        {
+            _engineModuleDirectories.Add(dir);
+        }
+
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
             var sw = Stopwatch.StartNew();
@@ -76,7 +90,11 @@ namespace Robust.Shared.ContentPack
                 Logger.DebugS("res.mod", $"Found module '{fullPath}'");
 
                 using var asmFile = _res.ContentFileRead(fullPath);
-                var (asmRefs, asmName) = GetAssemblyReferenceData(asmFile);
+                var refData = GetAssemblyReferenceData(asmFile);
+                if (refData == null)
+                    continue;
+
+                var (asmRefs, asmName) = refData.Value;
 
                 if (!files.TryAdd(asmName, (fullPath, asmRefs)))
                 {
@@ -106,8 +124,16 @@ namespace Robust.Shared.ContentPack
                 Logger.DebugS("res.mod", $"Verified assemblies in {checkerSw.ElapsedMilliseconds}ms");
             }
 
+            var nodes = TopologicalSort.FromBeforeAfter(
+                files,
+                kv => kv.Key,
+                kv => kv.Value.Path,
+                _ => Array.Empty<string>(),
+                kv => kv.Value.references,
+                allowMissing: true); // missing refs would be non-content assemblies so allow that.
+
             // Actually load them in the order they depend on each other.
-            foreach (var path in TopologicalSortModules(files))
+            foreach (var path in TopologicalSort.Sort(nodes))
             {
                 Logger.DebugS("res.mod", $"Loading module: '{path}'");
                 try
@@ -136,48 +162,46 @@ namespace Robust.Shared.ContentPack
             return true;
         }
 
-        private static IEnumerable<ResourcePath> TopologicalSortModules(
-            IEnumerable<KeyValuePair<string, (ResourcePath Path, string[] references)>> modules)
+        private (string[] refs, string name)? GetAssemblyReferenceData(Stream stream)
         {
-            var elems = modules.ToDictionary(
-                node => node.Key,
-                node => (node.Value.Path, refs: new HashSet<string>(node.Value.references)));
-
-            // Remove assembly references we aren't sorting for.
-            foreach (var (_, set) in elems.Values)
-            {
-                set.RemoveWhere(r => !elems.ContainsKey(r));
-            }
-
-            while (elems.Count > 0)
-            {
-                var elem = elems.FirstOrNull(x => x.Value.refs.Count == 0);
-                if (elem == null)
-                {
-                    throw new InvalidOperationException(
-                        "Found circular dependency in assembly dependency graph");
-                }
-
-                elems.Remove(elem.Value.Key);
-                foreach (var sElem in elems)
-                {
-                    sElem.Value.refs.Remove(elem.Value.Key);
-                }
-
-                yield return elem.Value.Value.Path;
-            }
-        }
-
-        private static (string[] refs, string name) GetAssemblyReferenceData(Stream stream)
-        {
-            using var reader = new PEReader(stream);
+            using var reader = ModLoader.MakePEReader(stream);
             var metaReader = reader.GetMetadataReader();
 
             var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);
 
+            // Try to find SkipIfSandboxedAttribute.
+
+            if (_sandboxingEnabled && TryFindSkipIfSandboxed(metaReader))
+            {
+                Logger.DebugS("res.mod", "Module {ModuleName} has SkipIfSandboxedAttribute, ignoring.", name);
+                return null;
+            }
+
             return (metaReader.AssemblyReferences
                 .Select(a => metaReader.GetAssemblyReference(a))
                 .Select(a => metaReader.GetString(a.Name)).ToArray(), name);
+        }
+
+        private static bool TryFindSkipIfSandboxed(MetadataReader reader)
+        {
+            foreach (var attribHandle in reader.CustomAttributes)
+            {
+                var attrib = reader.GetCustomAttribute(attribHandle);
+                if (attrib.Parent.Kind != HandleKind.AssemblyDefinition)
+                    continue;
+
+                var ctor = attrib.Constructor;
+                if (ctor.Kind != HandleKind.MemberReference)
+                    continue;
+
+                var memberRef = reader.GetMemberReference((MemberReferenceHandle) ctor);
+                var typeRef = AssemblyTypeChecker.ParseTypeReference(reader, (TypeReferenceHandle)memberRef.Parent);
+
+                if (typeRef.Namespace == "Robust.Shared.ContentPack" && typeRef.Name == "SkipIfSandboxedAttribute")
+                    return true;
+            }
+
+            return false;
         }
 
         public void LoadGameAssembly(Stream assembly, Stream? symbols = null, bool skipVerify = false)
@@ -302,6 +326,9 @@ namespace Robust.Shared.ContentPack
                         }
                     }
 
+                    if (TryLoadExtra(name) is { } asm)
+                        return asm;
+
                     // Do not allow sideloading when sandboxing is enabled.
                     // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
                     if (!_sandboxingEnabled)
@@ -336,7 +363,7 @@ namespace Robust.Shared.ContentPack
         public void Dispose()
         {
             _loadContext.Unload();
-            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+            AssemblyLoadContext.Default.Resolving -= DefaultOnResolving;
         }
 
         private Assembly? DefaultOnResolving(AssemblyLoadContext ctx, AssemblyName name)
@@ -361,6 +388,20 @@ namespace Robust.Shared.ContentPack
                         return module;
                     }
                 }
+
+                if (TryLoadExtra(name) is { } asm)
+                    return asm;
+            }
+
+            return null;
+        }
+
+        private Assembly? TryLoadExtra(AssemblyName name)
+        {
+            foreach (var extra in _extraModuleLoads)
+            {
+                if (extra(name) is { } asm)
+                    return asm;
             }
 
             return null;
@@ -372,8 +413,17 @@ namespace Robust.Shared.ContentPack
             {
                 VerifyIL = _sandboxingEnabled,
                 DisableTypeCheck = !_sandboxingEnabled,
-                ExtraRobustLoader = VerifierExtraLoadHandler
+                ExtraRobustLoader = VerifierExtraLoadHandler,
+                EngineModuleDirectories = _engineModuleDirectories.ToArray()
             };
+        }
+
+        internal static PEReader MakePEReader(Stream stream, bool leaveOpen=false)
+        {
+            if (!stream.CanSeek)
+                stream = leaveOpen ? stream.CopyToMemoryStream() : stream.ConsumeToMemoryStream();
+
+            return new PEReader(stream, leaveOpen ? PEStreamOptions.LeaveOpen : default);
         }
     }
 }

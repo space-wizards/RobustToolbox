@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Robust.Client.Graphics
+﻿namespace Robust.Client.Graphics
 {
-    public sealed class WindowContentScaleEventArgs : EventArgs
+    public readonly struct WindowContentScaleEventArgs
     {
         public WindowContentScaleEventArgs(IClydeWindow window)
         {

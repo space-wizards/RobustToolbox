@@ -11,7 +11,7 @@ namespace Robust.Server.Utility
 
         public static void TimeBeginPeriod(uint period)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!OperatingSystem.IsWindows())
                 throw new InvalidOperationException();
 
             var ret = timeBeginPeriod(period);
@@ -21,7 +21,7 @@ namespace Robust.Server.Utility
 
         public static void TimeEndPeriod(uint period)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!OperatingSystem.IsWindows())
                 throw new InvalidOperationException();
 
             var ret = timeEndPeriod(period);

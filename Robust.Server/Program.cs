@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Server
 {
@@ -21,15 +22,17 @@ namespace Robust.Server
 
         internal static void Main(string[] args)
         {
-            Start(args);
+            Start(args, new ServerOptions());
         }
 
-        internal static void Start(string[] args, bool contentStart = false)
+        internal static void Start(string[] args, ServerOptions options, bool contentStart = false)
         {
             if (_hasStarted)
             {
                 throw new InvalidOperationException("Cannot start twice!");
             }
+
+            GlibcBug.Check();
 
             _hasStarted = true;
 
@@ -40,18 +43,10 @@ namespace Robust.Server
 
             ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
 
-            // this sets up TaskScheduler.Current for new tasks to be scheduled off the main thread
-            // the LongRunning option causes it to not be scheduled on the thread pool, so it's just a plain thread with a task context
-            new TaskFactory(
-                    CancellationToken.None,
-                    TaskCreationOptions.LongRunning,
-                    TaskContinuationOptions.None,
-                    RobustTaskScheduler.Instance
-                ).StartNew(() => ParsedMain(parsed, contentStart))
-                .GetAwaiter().GetResult();
+            ParsedMain(parsed, contentStart, options);
         }
 
-        private static void ParsedMain(CommandLineArgs args, bool contentStart)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart, ServerOptions options)
         {
             Thread.CurrentThread.Name = "Main Thread";
             IoCManager.InitThread();
@@ -67,7 +62,7 @@ namespace Robust.Server
 
             Logger.Info("Server -> Starting");
 
-            if (server.Start())
+            if (server.Start(options))
             {
                 Logger.Fatal("Server -> Can not start server");
                 //Not like you'd see this, haha. Perhaps later for logging.
@@ -98,7 +93,7 @@ namespace Robust.Server
 
         internal static void SetupLogging()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
 #if WINDOWS_USE_UTF8_CONSOLE
                 System.Console.OutputEncoding = Encoding.UTF8;

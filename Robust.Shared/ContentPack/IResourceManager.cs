@@ -19,6 +19,13 @@ namespace Robust.Shared.ContentPack
         IWritableDirProvider UserData { get; }
 
         /// <summary>
+        ///     Provides a way to mount a <see cref="IContentRoot"/> implementation to the VFS.
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="loader"></param>
+        void AddRoot(ResourcePath prefix, IContentRoot loader);
+
+        /// <summary>
         ///     Read a file from the mounted content roots.
         /// </summary>
         /// <param name="path">The path to the file in the VFS. Must be rooted.</param>
@@ -115,6 +122,18 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);
+
+        /// <summary>
+        /// Gets entries in a content directory.
+        /// </summary>
+        /// <remarks>
+        /// This is not a performant API; the VFS does not work natively with these kinds of directory entries.
+        /// This is intended for development tools such as console command completions,
+        /// not for general-purpose resource management.
+        /// </remarks>
+        /// <param name="path"></param>
+        /// <returns>A sequence of entry names. If the entry name ends in a slash, it's a directory.</returns>
+        IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path);
 
         /// <summary>
         ///     Returns a list of paths to all top-level content directories

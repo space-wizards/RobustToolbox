@@ -1,6 +1,7 @@
-﻿using System;
+using System;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -12,23 +13,26 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapComponent : IComponent
     {
+        bool LightingEnabled { get; set; }
         MapId WorldMap { get; }
-        void ClearMapId();
+        bool MapPaused { get; internal set; }
+        bool MapPreInit { get; internal set; }
     }
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
-    public class MapComponent : Component, IMapComponent
+    [NetworkedComponent]
+    public sealed class MapComponent : Component, IMapComponent
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
 
-        /// <inheritdoc />
-        public override string Name => "Map";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.MAP_MAP;
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField(("lightingEnabled"))]
+        public bool LightingEnabled { get; set; } = true;
 
         /// <inheritdoc />
         public MapId WorldMap
@@ -37,17 +41,39 @@ namespace Robust.Shared.GameObjects
             internal set => _mapIndex = value;
         }
 
+        [ViewVariables(VVAccess.ReadOnly)]
+        internal bool MapPaused { get; set; } = false;
+
         /// <inheritdoc />
-        public void ClearMapId()
+        bool IMapComponent.MapPaused
         {
-            _mapIndex = MapId.Nullspace;
+            get => this.MapPaused;
+            set => this.MapPaused = value;
         }
 
-        /// <param name="player"></param>
+        [ViewVariables(VVAccess.ReadOnly)]
+        internal bool MapPreInit { get; set; } = false;
+
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        bool IMapComponent.MapPreInit
         {
-            return new MapComponentState(_mapIndex);
+            get => this.MapPreInit;
+            set => this.MapPreInit = value;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemove()
+        {
+            base.OnRemove();
+
+            var mapMan = IoCManager.Resolve<IMapManagerInternal>();
+            mapMan.TrueDeleteMap(_mapIndex);
+        }
+
+        /// <inheritdoc />
+        public override ComponentState GetComponentState()
+        {
+            return new MapComponentState(_mapIndex, LightingEnabled);
         }
 
         /// <inheritdoc />
@@ -55,12 +81,14 @@ namespace Robust.Shared.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MapComponentState state))
+            if (curState is not MapComponentState state)
                 return;
 
             _mapIndex = state.MapId;
+            LightingEnabled = state.LightingEnabled;
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
 
-            ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
+            xformQuery.GetComponent(Owner).ChangeMapId(_mapIndex, xformQuery);
         }
     }
 
@@ -68,14 +96,15 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal class MapComponentState : ComponentState
+    internal sealed class MapComponentState : ComponentState
     {
         public MapId MapId { get; }
+        public bool LightingEnabled { get; }
 
-        public MapComponentState(MapId mapId)
-            : base(NetIDs.MAP_MAP)
+        public MapComponentState(MapId mapId, bool lightingEnabled)
         {
             MapId = mapId;
+            LightingEnabled = lightingEnabled;
         }
     }
 }

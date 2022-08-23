@@ -22,6 +22,8 @@ namespace Robust.Client.ResourceManagement
     {
         private static readonly float[] OneArray = {1};
 
+        public override ResourcePath? Fallback => new("/Textures/error.rsi");
+
         private static readonly JsonSerializerOptions SerializerOptions =
             new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
@@ -102,7 +104,9 @@ namespace Robust.Client.ResourceManagement
 
                 if (reg.Src.Width % frameSize.X != 0 || reg.Src.Height % frameSize.Y != 0)
                 {
-                    throw new RSILoadException("State image size is not a multiple of the icon size.");
+                    var regDims = $"{reg.Src.Width}x{reg.Src.Height}";
+                    var iconDims = $"{frameSize.X}x{frameSize.Y}";
+                    throw new RSILoadException($"State '{stateObject.StateId}' image size ({regDims}) is not a multiple of the icon size ({iconDims}).");
                 }
 
                 // Load all frames into a list so we can operate on it more sanely.
@@ -123,7 +127,7 @@ namespace Robust.Client.ResourceManagement
                 reg.Indices = foldedIndices;
                 reg.Offsets = callbackOffset;
 
-                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays,
+                var state = new RSI.State(frameSize, rsi, stateObject.StateId, stateObject.DirType, foldedDelays,
                     textures);
                 rsi.AddState(state);
 
@@ -228,7 +232,7 @@ namespace Robust.Client.ResourceManagement
 
             using (var manifestFile = cache.ContentFileRead(manifestPath))
             {
-                if (manifestFile.Length <= 4096)
+                if (manifestFile.CanSeek && manifestFile.Length <= 4096)
                 {
                     // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
                     // Avoids a ton of allocations with stream reader etc
@@ -250,7 +254,7 @@ namespace Robust.Client.ResourceManagement
             }
 
             if (manifestJson == null)
-                throw new RSILoadException("Manifest JSON was null!");
+                throw new RSILoadException($"Manifest JSON failed to deserialize!");
 
             var size = manifestJson.Size;
             var states = new StateMetadata[manifestJson.States.Length];
@@ -270,7 +274,7 @@ namespace Robust.Client.ResourceManagement
                         1 => RSI.State.DirectionType.Dir1,
                         4 => RSI.State.DirectionType.Dir4,
                         8 => RSI.State.DirectionType.Dir8,
-                        _ => throw new RSILoadException($"Invalid direction: {dirValue} expected 1, 4 or 8")
+                        _ => throw new RSILoadException($"Invalid direction for state '{stateName}': {dirValue}. Expected 1, 4 or 8")
                     };
                 }
                 else
@@ -291,7 +295,7 @@ namespace Robust.Client.ResourceManagement
                     if (delays.Length != dirValue)
                     {
                         throw new RSILoadException(
-                            "DirectionsdirectionFramesList count does not match amount of delays specified.");
+                            $"Direction frames list count ({dirValue}) does not match amount of delays specified ({delays.Length}) for state '{stateName}'.");
                     }
 
                     for (var i = 0; i < delays.Length; i++)
@@ -540,6 +544,7 @@ namespace Robust.Client.ResourceManagement
     }
 
     [Serializable]
+    [Virtual]
     public class RSILoadException : Exception
     {
         public RSILoadException()

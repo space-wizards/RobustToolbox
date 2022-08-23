@@ -21,9 +21,9 @@
 */
 
 using System;
-using System.IO;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
+using System.Threading;
+using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Utility;
@@ -32,13 +32,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     internal sealed class ContactSolver
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         private bool _warmStarting;
         private float _velocityThreshold;
         private float _baumgarte;
-        private float _linearSlop;
         private float _maxLinearCorrection;
+        private float _maxAngularCorrection;
 
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
         private float[] _angularVelocities = Array.Empty<float>();
@@ -52,24 +50,22 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
         private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
 
-        public void Initialize()
+        private int _velocityConstraintsPerThread;
+        private int _velocityConstraintsMinimumThreads;
+        private int _positionConstraintsPerThread;
+        private int _positionConstraintsMinimumThreads;
+
+        public void LoadConfig(in IslandCfg cfg)
         {
-            IoCManager.InjectDependencies(this);
-
-            _warmStarting = _configManager.GetCVar(CVars.WarmStarting);
-            _configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value);
-
-            _velocityThreshold = _configManager.GetCVar(CVars.VelocityThreshold);
-            _configManager.OnValueChanged(CVars.VelocityThreshold, value => _velocityThreshold = value);
-
-            _baumgarte = _configManager.GetCVar(CVars.Baumgarte);
-            _configManager.OnValueChanged(CVars.Baumgarte, value => _baumgarte = value);
-
-            _linearSlop = _configManager.GetCVar(CVars.LinearSlop);
-            _configManager.OnValueChanged(CVars.LinearSlop, value => _linearSlop = value);
-
-            _maxLinearCorrection = _configManager.GetCVar(CVars.MaxLinearCorrection);
-            _configManager.OnValueChanged(CVars.MaxLinearCorrection, value => _maxLinearCorrection = value);
+            _warmStarting = cfg.WarmStarting;
+            _velocityThreshold = cfg.VelocityThreshold;
+            _baumgarte = cfg.Baumgarte;
+            _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _maxAngularCorrection = cfg.MaxAngularCorrection;
+            _positionConstraintsPerThread = cfg.PositionConstraintsPerThread;
+            _positionConstraintsMinimumThreads = cfg.PositionConstraintsMinimumThreads;
+            _velocityConstraintsPerThread = cfg.VelocityConstraintsPerThread;
+            _velocityConstraintsMinimumThreads = cfg.VelocityConstraintsMinimumThreads;
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)
@@ -94,8 +90,31 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 for (var i = oldLength; i < _velocityConstraints.Length; i++)
                 {
-                    _velocityConstraints[i] = new ContactVelocityConstraint();
-                    _positionConstraints[i] = new ContactPositionConstraint();
+                    var velocity = new ContactVelocityConstraint
+                    {
+                        K = new Vector2[2],
+                        Points = new VelocityConstraintPoint[2],
+                        NormalMass = new Vector2[2],
+                    };
+
+                    for (var j = 0; j < 2; j++)
+                    {
+                        velocity.Points[j] = new VelocityConstraintPoint();
+                    }
+
+                    _velocityConstraints[i] = velocity;
+
+                    var position = new ContactPositionConstraint()
+                    {
+                        LocalPoints = new Vector2[2],
+                    };
+
+                    for (var j = 0; j < 2; j++)
+                    {
+                        position.LocalPoints[j] = Vector2.Zero;
+                    }
+
+                    _positionConstraints[i] = position;
                 }
             }
 
@@ -117,14 +136,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 int pointCount = manifold.PointCount;
                 DebugTools.Assert(pointCount > 0);
 
-                var velocityConstraint = _velocityConstraints[i];
+                ref var velocityConstraint = ref _velocityConstraints[i];
                 velocityConstraint.Friction = contact.Friction;
                 velocityConstraint.Restitution = contact.Restitution;
                 velocityConstraint.TangentSpeed = contact.TangentSpeed;
-                velocityConstraint.IndexA = bodyA.IslandIndex;
-                velocityConstraint.IndexB = bodyB.IslandIndex;
+                velocityConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
+                velocityConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
 
-                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
+                var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
+
+                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = (invMassA, invMassB);
                 velocityConstraint.InvIA = bodyA.InvI;
                 velocityConstraint.InvIB = bodyB.InvI;
                 velocityConstraint.ContactIndex = i;
@@ -136,13 +157,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     velocityConstraint.NormalMass[x] = Vector2.Zero;
                 }
 
-                var positionConstraint = _positionConstraints[i];
-                positionConstraint.IndexA = bodyA.IslandIndex;
-                positionConstraint.IndexB = bodyB.IslandIndex;
-                (positionConstraint.InvMassA, positionConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
-                // TODO: Dis
-                // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
-                // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;
+                ref var positionConstraint = ref _positionConstraints[i];
+                positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
+                positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
+                (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
                 positionConstraint.LocalCenterA = bodyA.LocalCenter;
                 positionConstraint.LocalCenterB = bodyB.LocalCenter;
 
@@ -155,10 +173,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 positionConstraint.RadiusB = radiusB;
                 positionConstraint.Type = manifold.Type;
 
-                for (int j = 0; j < pointCount; ++j)
+                for (var j = 0; j < pointCount; ++j)
                 {
                     var contactPoint = manifold.Points[j];
-                    var constraintPoint = velocityConstraint.Points[j];
+                    ref var constraintPoint = ref velocityConstraint.Points[j];
 
                     if (_warmStarting)
                     {
@@ -227,7 +245,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             for (var i = 0; i < _contactCount; ++i)
             {
-                var velocityConstraint = _velocityConstraints[i];
+                ref var velocityConstraint = ref _velocityConstraints[i];
                 var positionConstraint = _positionConstraints[i];
 
                 var radiusA = positionConstraint.RadiusA;
@@ -256,13 +274,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 DebugTools.Assert(manifold.PointCount > 0);
 
-                Transform xfA = new Transform(angleA);
-                Transform xfB = new Transform(angleB);
+                var xfA = new Transform(angleA);
+                var xfB = new Transform(angleB);
                 xfA.Position = centerA - Transform.Mul(xfA.Quaternion2D, localCenterA);
                 xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
-                Vector2 normal;
-                InitializeManifold(ref manifold, xfA, xfB, radiusA, radiusB, out normal, points);
+                InitializeManifold(ref manifold, xfA, xfB, radiusA, radiusB, out var normal, points);
 
                 velocityConstraint.Normal = normal;
 
@@ -270,7 +287,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 for (int j = 0; j < pointCount; ++j)
                 {
-                    VelocityConstraintPoint vcp = velocityConstraint.Points[j];
+                    ref var vcp = ref velocityConstraint.Points[j];
 
                     vcp.RelativeVelocityA = points[j] - centerA;
                     vcp.RelativeVelocityB = points[j] - centerB;
@@ -348,10 +365,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var invIB = velocityConstraint.InvIB;
                 var pointCount = velocityConstraint.PointCount;
 
-                var linVelocityA = _linearVelocities[indexA];
-                var angVelocityA = _angularVelocities[indexA];
-                var linVelocityB = _linearVelocities[indexB];
-                var angVelocityB = _angularVelocities[indexB];
+                ref var linVelocityA = ref _linearVelocities[indexA];
+                ref var angVelocityA = ref _angularVelocities[indexA];
+                ref var linVelocityB = ref _linearVelocities[indexB];
+                ref var angVelocityB = ref _angularVelocities[indexB];
 
                 var normal = velocityConstraint.Normal;
                 var tangent = Vector2.Cross(normal, 1.0f);
@@ -365,20 +382,33 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     angVelocityB += invIB * Vector2.Cross(constraintPoint.RelativeVelocityB, P);
                     linVelocityB += P * invMassB;
                 }
-
-                _linearVelocities[indexA] = linVelocityA;
-                _angularVelocities[indexA] = angVelocityA;
-                _linearVelocities[indexB] = linVelocityB;
-                _angularVelocities[indexB] = angVelocityB;
             }
         }
 
         public void SolveVelocityConstraints()
         {
-            // Here be dragons
-            for (var i = 0; i < _contactCount; ++i)
+            if (_contactCount > _velocityConstraintsPerThread * _velocityConstraintsMinimumThreads)
             {
-                var velocityConstraint = _velocityConstraints[i];
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _velocityConstraintsPerThread);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    SolveVelocityConstraints(start, end);
+                });
+            }
+            else
+            {
+                SolveVelocityConstraints(0, _contactCount);
+            }
+        }
+
+        public void SolveVelocityConstraints(int start, int end)
+        {
+            // Here be dragons
+            for (var i = start; i < end; ++i)
+            {
+                ref var velocityConstraint = ref _velocityConstraints[i];
 
                 var indexA = velocityConstraint.IndexA;
                 var indexB = velocityConstraint.IndexB;
@@ -388,10 +418,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var iB = velocityConstraint.InvIB;
                 var pointCount = velocityConstraint.PointCount;
 
-                var vA = _linearVelocities[indexA];
-                var wA = _angularVelocities[indexA];
-                var vB = _linearVelocities[indexB];
-                var wB = _angularVelocities[indexB];
+                ref var vA = ref _linearVelocities[indexA];
+                ref var wA = ref _angularVelocities[indexA];
+                ref var vB = ref _linearVelocities[indexB];
+                ref var wB = ref _angularVelocities[indexB];
 
                 var normal = velocityConstraint.Normal;
                 var tangent = Vector2.Cross(normal, 1.0f);
@@ -403,7 +433,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // than friction.
                 for (var j = 0; j < pointCount; ++j)
                 {
-                    VelocityConstraintPoint velConstraintPoint = velocityConstraint.Points[j];
+                    ref var velConstraintPoint = ref velocityConstraint.Points[j];
 
                     // Relative velocity at contact
                     var dv = vB + Vector2.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2.Cross(wA, velConstraintPoint.RelativeVelocityA);
@@ -431,7 +461,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // Solve normal constraints
                 if (velocityConstraint.PointCount == 1)
                 {
-                    VelocityConstraintPoint vcp = velocityConstraint.Points[0];
+                    ref var vcp = ref velocityConstraint.Points[0];
 
                     // Relative velocity at contact
                     Vector2 dv = vB + Vector2.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2.Cross(wA, vcp.RelativeVelocityA);
@@ -488,8 +518,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     //    = A * x + b'
                     // b' = b - A * a;
 
-                    VelocityConstraintPoint cp1 = velocityConstraint.Points[0];
-                    VelocityConstraintPoint cp2 = velocityConstraint.Points[1];
+                    ref var cp1 = ref velocityConstraint.Points[0];
+                    ref var cp2 = ref velocityConstraint.Points[1];
 
                     Vector2 a = new Vector2(cp1.NormalImpulse, cp2.NormalImpulse);
                     DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
@@ -648,44 +678,57 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         break;
                     }
                 }
-
-                _linearVelocities[indexA] = vA;
-                _angularVelocities[indexA] = wA;
-                _linearVelocities[indexB] = vB;
-                _angularVelocities[indexB] = wB;
             }
         }
 
         public void StoreImpulses()
         {
-            for (int i = 0; i < _contactCount; ++i)
+            for (var i = 0; i < _contactCount; ++i)
             {
                 ContactVelocityConstraint velocityConstraint = _velocityConstraints[i];
-                var manifold = _contacts[velocityConstraint.ContactIndex].Manifold;
+                ref var manifold = ref _contacts[velocityConstraint.ContactIndex].Manifold;
 
-                for (int j = 0; j < velocityConstraint.PointCount; ++j)
+                for (var j = 0; j < velocityConstraint.PointCount; ++j)
                 {
-                    ManifoldPoint point = manifold.Points[j];
+                    ref var point = ref manifold.Points[j];
                     point.NormalImpulse = velocityConstraint.Points[j].NormalImpulse;
                     point.TangentImpulse = velocityConstraint.Points[j].TangentImpulse;
-                    manifold.Points[j] = point;
                 }
-
-                _contacts[velocityConstraint.ContactIndex].Manifold = manifold;
             }
+        }
+
+        public bool SolvePositionConstraints()
+        {
+            if (_contactCount > _positionConstraintsPerThread * _positionConstraintsMinimumThreads)
+            {
+                var unsolved = 0;
+
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _positionConstraintsPerThread);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    if (!SolvePositionConstraints(start, end))
+                        Interlocked.Increment(ref unsolved);
+                });
+
+                return unsolved == 0;
+            }
+
+            return SolvePositionConstraints(0, _contactCount);
         }
 
         /// <summary>
         ///     Tries to solve positions for all contacts specified.
         /// </summary>
         /// <returns>true if all positions solved</returns>
-        public bool SolvePositionConstraints()
+        public bool SolvePositionConstraints(int start, int end)
         {
             float minSeparation = 0.0f;
 
-            for (int i = 0; i < _contactCount; ++i)
+            for (int i = start; i < end; ++i)
             {
-                ContactPositionConstraint pc = _positionConstraints[i];
+                var pc = _positionConstraints[i];
 
                 int indexA = pc.IndexA;
                 int indexB = pc.IndexB;
@@ -697,11 +740,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 float iB = pc.InvIB;
                 int pointCount = pc.PointCount;
 
-                Vector2 centerA = _positions[indexA];
-                float angleA = _angles[indexA];
-
-                Vector2 centerB = _positions[indexB];
-                float angleB = _angles[indexB];
+                ref var centerA = ref _positions[indexA];
+                ref var angleA = ref _angles[indexA];
+                ref var centerB = ref _positions[indexB];
+                ref var angleB = ref _angles[indexB];
 
                 // Solve normal constraints
                 for (int j = 0; j < pointCount; ++j)
@@ -724,7 +766,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     minSeparation = Math.Min(minSeparation, separation);
 
                     // Prevent large corrections and allow slop.
-                    float C = Math.Clamp(_baumgarte * (separation + _linearSlop), -_maxLinearCorrection, 0.0f);
+                    float C = Math.Clamp(_baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
 
                     // Compute the effective mass.
                     float rnA = Vector2.Cross(rA, normal);
@@ -742,17 +784,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     centerB += P * mB;
                     angleB += iB * Vector2.Cross(rB, P);
                 }
-
-                _positions[indexA] = centerA;
-                _angles[indexA] = angleA;
-
-                _positions[indexB] = centerB;
-                _angles[indexB] = angleB;
             }
 
             // We can't expect minSpeparation >= -b2_linearSlop because we don't
             // push the separation above -b2_linearSlop.
-            return minSeparation >= -3.0f * _linearSlop;
+            return minSeparation >= -3.0f * PhysicsConstants.LinearSlop;
         }
 
         /// <summary>

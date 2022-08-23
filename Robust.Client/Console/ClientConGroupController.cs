@@ -2,7 +2,7 @@
 
 namespace Robust.Client.Console
 {
-    public class ClientConGroupController : IClientConGroupController
+    public sealed class ClientConGroupController : IClientConGroupController
     {
         private IClientConGroupImplementation? _implementation;
         public event Action? ConGroupUpdated;
@@ -23,7 +23,7 @@ namespace Robust.Client.Console
 
         public bool CanCommand(string cmdName)
         {
-            return _implementation?.CanCommand(cmdName) ?? false;
+            return _implementation?.CanCommand(cmdName) ?? true;
         }
 
         public bool CanViewVar()

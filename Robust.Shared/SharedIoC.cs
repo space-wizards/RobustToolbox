@@ -10,10 +10,12 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Profiling;
 using Robust.Shared.Random;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared
@@ -23,7 +25,6 @@ namespace Robust.Shared
         public static void RegisterIoC()
         {
             IoCManager.Register<ISerializationManager, SerializationManager>();
-            IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
@@ -33,20 +34,23 @@ namespace Robust.Shared
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
             IoCManager.Register<ILocalizationManagerInternal, LocalizationManager>();
             IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<IPauseManager, PauseManager>();
             IoCManager.Register<IModLoader, ModLoader>();
             IoCManager.Register<IModLoaderInternal, ModLoader>();
             IoCManager.Register<INetManager, NetManager>();
-            IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
+            IoCManager.Register<TaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<ProfManager, ProfManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
-            IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IManifoldManager, CollisionManager>();
+            IoCManager.Register<IIslandManager, IslandManager>();
+            IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
+            IoCManager.Register<IParallelManager, ParallelManager>();
+            IoCManager.Register<IParallelManagerInternal, ParallelManager>();
         }
     }
 }

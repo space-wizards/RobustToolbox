@@ -24,7 +24,7 @@ namespace Robust.Server.Prototypes
         {
             base.Initialize();
 
-            _netManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, HandleReloadPrototypes, NetMessageAccept.Server);
+            _netManager.RegisterNetMessage<MsgReloadPrototypes>(HandleReloadPrototypes, NetMessageAccept.Server);
         }
 
         private void HandleReloadPrototypes(MsgReloadPrototypes msg)

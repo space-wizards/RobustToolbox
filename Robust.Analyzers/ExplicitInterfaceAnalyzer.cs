@@ -24,14 +24,14 @@ namespace Robust.Analyzers
             SyntaxKind.OverrideKeyword
         };
 
-        public const string DiagnosticId = "RA0000";
-
-        private const string Title = "No explicit interface specified";
-        private const string MessageFormat = "No explicit interface specified";
-        private const string Description = "Make sure to specify the interface in your method-declaration.";
-        private const string Category = "Usage";
-
-        [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+        [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new(
+            Diagnostics.IdExplicitInterface,
+            "No explicit interface specified",
+            "No explicit interface specified",
+            "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "Make sure to specify the interface in your method-declaration.");
 
         private const string RequiresExplicitImplementationAttributeMetadataName =
             "Robust.Shared.Analyzers.RequiresExplicitImplementationAttribute";

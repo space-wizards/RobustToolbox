@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics;
+using System;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
@@ -12,9 +13,8 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    public class IconComponent : Component, ISerializationHooks
+    public sealed class IconComponent : Component, ISerializationHooks
     {
-        public override string Name => "Icon";
         public IDirectionalTextureProvider? Icon { get; private set; }
 
         [DataField("sprite")]
@@ -33,11 +33,13 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
+        [Obsolete("Use SpriteSystem instead.")]
         private static IRsiStateLike TextureForConfig(IconComponent compData, IResourceCache resourceCache)
         {
             return compData.Icon?.Default ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
 
+        [Obsolete("Use SpriteSystem instead.")]
         public static IRsiStateLike? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var compData))
@@ -45,7 +47,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            return TextureForConfig((IconComponent)compData, resourceCache);
+            return TextureForConfig((IconComponent)compData.Component, resourceCache);
         }
     }
 }

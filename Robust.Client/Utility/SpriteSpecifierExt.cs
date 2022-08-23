@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -22,20 +22,25 @@ namespace Robust.Client.Utility
                 .Texture;
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
-            if (cache.TryGetResource<RSIResource>(
-                SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath,
-                out var theRsi) &&
-                theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
+            if (!cache.TryGetResource<RSIResource>(SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
+            {
+                Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);
+                return SpriteComponent.GetFallbackState(cache);
+            }
+
+            if (theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
             {
                 return state;
             }
 
-            Logger.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
+            Logger.Error($"SpriteSpecifier has invalid RSI state '{rsiSpecifier.RsiState}' for RSI: {rsiSpecifier.RsiPath}");
             return SpriteComponent.GetFallbackState(cache);
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static Texture Frame0(this SpriteSpecifier specifier)
         {
             return specifier.RsiStateLike().Default;
@@ -80,6 +85,7 @@ namespace Robust.Client.Utility
             return specifier.RsiStateLike();
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike RsiStateLike(this SpriteSpecifier specifier)
         {
             var resC = IoCManager.Resolve<IResourceCache>();

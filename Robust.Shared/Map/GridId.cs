@@ -1,9 +1,12 @@
-﻿using System;
+using System;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
     [Serializable, NetSerializable]
+    [Obsolete("Use EntityUids instead.")]
     public struct GridId : IEquatable<GridId>
     {
         /// <summary>
@@ -13,6 +16,14 @@ namespace Robust.Shared.Map
 
         internal readonly int Value;
 
+        /// <summary>
+        /// Constructs a new instance of <see cref="GridId"/>.
+        /// </summary>
+        /// <remarks>
+        /// This should NOT be used in regular code, and is only public for special/legacy
+        /// cases. Generally you should only use this for parsing a GridId in console commands
+        /// and immediately check if the grid actually exists in the <see cref="IMapManager"/>.
+        /// </remarks>
         public GridId(int value)
         {
             Value = value;

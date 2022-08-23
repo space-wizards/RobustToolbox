@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Robust.Client.GameObjects;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
@@ -12,7 +12,7 @@ namespace Robust.Client.Player
     /// <summary>
     ///     Variables and functions that deal with the local client's session.
     /// </summary>
-    public class LocalPlayer
+    public sealed class LocalPlayer
     {
         /// <summary>
         ///     An entity has been attached to the local player.
@@ -25,11 +25,10 @@ namespace Robust.Client.Player
         public event Action<EntityDetachedEventArgs>? EntityDetached;
 
         /// <summary>
-        ///     Game entity that the local player is controlling. If this is null, the player
-        ///     is in free/spectator cam.
+        ///     Game entity that the local player is controlling. If this is default, the player is not attached to any
+        ///     entity at all.
         /// </summary>
-        [ViewVariables] public IEntity? ControlledEntity { get; private set; }
-
+        [ViewVariables] public EntityUid? ControlledEntity { get; private set; }
 
         [ViewVariables] public NetUserId UserId { get; set; }
 
@@ -56,7 +55,7 @@ namespace Robust.Client.Player
         ///     Attaches a client to an entity.
         /// </summary>
         /// <param name="entity">Entity to attach the client to.</param>
-        public void AttachEntity(IEntity entity)
+        public void AttachEntity(EntityUid entity)
         {
             // Detach and cleanup first
             DetachEntity();
@@ -64,17 +63,20 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {
-                eye = ControlledEntity.AddComponent<EyeComponent>();
+                eye = entMan.AddComponent<EyeComponent>(entity);
             }
             eye.Current = true;
 
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
-            entity.SendMessage(null, new PlayerAttachedMsg());
 
             // notify ECS Systems
-            ControlledEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
+            var eventBus = entMan.EventBus;
+            eventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(entity));
+            eventBus.RaiseLocalEvent(entity, new PlayerAttachedEvent(entity), true);
         }
 
         /// <summary>
@@ -82,21 +84,24 @@ namespace Robust.Client.Player
         /// </summary>
         public void DetachEntity()
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
             var previous = ControlledEntity;
-            if (previous != null && previous.Initialized && !previous.Deleted)
+            if (entMan.TryGetComponent(previous, out MetaDataComponent? metaData) &&
+                metaData.EntityInitialized &&
+                !metaData.EntityDeleted)
             {
-                previous.GetComponent<EyeComponent>().Current = false;
-                previous.SendMessage(null, new PlayerDetachedMsg());
+                entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
 
                 // notify ECS Systems
-                previous.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
+                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
+                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
             }
 
-            ControlledEntity = null;
+            ControlledEntity = default;
 
             if (previous != null)
             {
-                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
+                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
             }
         }
 
@@ -122,7 +127,7 @@ namespace Robust.Client.Player
     /// <summary>
     ///     Event arguments for when the status of a session changes.
     /// </summary>
-    public class StatusEventArgs : EventArgs
+    public sealed class StatusEventArgs : EventArgs
     {
         /// <summary>
         ///     Status that the session switched from.
@@ -144,23 +149,23 @@ namespace Robust.Client.Player
         }
     }
 
-    public class EntityDetachedEventArgs : EventArgs
+    public sealed class EntityDetachedEventArgs : EventArgs
     {
-        public EntityDetachedEventArgs(IEntity oldEntity)
+        public EntityDetachedEventArgs(EntityUid oldEntity)
         {
             OldEntity = oldEntity;
         }
 
-        public IEntity OldEntity { get; }
+        public EntityUid OldEntity { get; }
     }
 
-    public class EntityAttachedEventArgs : EventArgs
+    public sealed class EntityAttachedEventArgs : EventArgs
     {
-        public EntityAttachedEventArgs(IEntity newEntity)
+        public EntityAttachedEventArgs(EntityUid newEntity)
         {
             NewEntity = newEntity;
         }
 
-        public IEntity NewEntity { get; }
+        public EntityUid NewEntity { get; }
     }
 }

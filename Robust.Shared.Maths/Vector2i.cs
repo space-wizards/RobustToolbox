@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
-    [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public struct Vector2i : IEquatable<Vector2i>
+    public struct Vector2i : IEquatable<Vector2i>, ISpanFormattable
     {
         public static readonly Vector2i Zero = (0, 0);
         public static readonly Vector2i One = (1, 1);
@@ -171,6 +170,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({X}, {Y})";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({X}, {Y})");
         }
     }
 }

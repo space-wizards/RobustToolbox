@@ -119,7 +119,7 @@ namespace Robust.Shared.Utility
             }
         }
 
-        public static IEnumerable<AbstractFieldInfo> GetAllPropertiesAndFields(this Type type)
+        internal static IEnumerable<AbstractFieldInfo> GetAllPropertiesAndFields(this Type type)
         {
             foreach (var field in type.GetAllFields())
             {
@@ -132,21 +132,22 @@ namespace Robust.Shared.Utility
             }
         }
 
-        public static Type? SelectCommonType(Type type1, Type type2)
+        public static bool TrySelectCommonType(Type type1, Type type2, [NotNullWhen(true)] out Type? commonType)
         {
-            Type? commonType = null;
+            commonType = null;
             if (type1.IsAssignableFrom(type2))
             {
                 commonType = type1;
-            }else if (type2.IsAssignableFrom(type1))
+            }
+            else if (type2.IsAssignableFrom(type1))
             {
                 commonType = type2;
             }
 
-            return commonType;
+            return commonType != null;
         }
 
-        public static SpecificFieldInfo? GetBackingField(this Type type, string propertyName)
+        internal static SpecificFieldInfo? GetBackingField(this Type type, string propertyName)
         {
             foreach (var parent in type.GetClassHierarchy())
             {
@@ -167,7 +168,7 @@ namespace Robust.Shared.Utility
             return type.GetBackingField(propertyName) != null;
         }
 
-        public static bool TryGetBackingField(this Type type, string propertyName,
+        internal static bool TryGetBackingField(this Type type, string propertyName,
             [NotNullWhen(true)] out SpecificFieldInfo? field)
         {
             return (field = type.GetBackingField(propertyName)) != null;

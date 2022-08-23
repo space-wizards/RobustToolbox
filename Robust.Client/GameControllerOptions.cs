@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client
 {
-    public class GameControllerOptions
+    public sealed class GameControllerOptions
     {
         /// <summary>
         ///     Whether content sandboxing will be enabled & enforced.
@@ -30,12 +30,18 @@ namespace Robust.Client
         /// <summary>
         ///     Default window title.
         /// </summary>
-        public string DefaultWindowTitle { get; init; } = "Space Station 14";
+        /// <remarks>
+        /// Defaults to <c>RobustToolbox</c> if unset.
+        /// </remarks>
+        public string? DefaultWindowTitle { get; init; }
 
         /// <summary>
         ///     Assemblies with this prefix will be loaded.
         /// </summary>
-        public string ContentModulePrefix { get; init; } = "Content.";
+        /// <remarks>
+        /// Defaults to <c>Content.</c> if unset.
+        /// </remarks>
+        public string? ContentModulePrefix { get; init; }
 
         /// <summary>
         ///     Name of the content build directory, for game pack mounting purposes.
@@ -43,9 +49,24 @@ namespace Robust.Client
         public string ContentBuildDirectory { get; init; } = "Content.Client";
 
         /// <summary>
+        ///     Directory to load all assemblies from.
+        /// </summary>
+        public ResourcePath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
+
+        /// <summary>
         ///     Directory to load all prototypes from.
         /// </summary>
         public ResourcePath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
+
+        /// <summary>
+        /// Directory resource path containing window icons to load.
+        /// </summary>
+        public ResourcePath? WindowIconSet { get; init; }
+
+        /// <summary>
+        /// Resource path for splash image to show when the game starts up.
+        /// </summary>
+        public ResourcePath? SplashLogo { get; init; }
 
         /// <summary>
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.
@@ -53,8 +74,13 @@ namespace Robust.Client
         public bool ResourceMountDisabled { get; init; } = false;
 
         /// <summary>
-        ///     Whether to disable command line args server auto-connecting.
+        ///     Whether to mount content resources when not on FULL_RELEASE.
         /// </summary>
-        public bool DisableCommandLineConnect { get; init; } = false;
+        public bool LoadContentResources { get; init; } = true;
+
+        /// <summary>
+        ///     Whether to load config and user data.
+        /// </summary>
+        public bool LoadConfigAndUserData { get; init; } = true;
     }
 }

@@ -5,6 +5,8 @@ namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     [MeansImplicitAssignment]
+    [MeansImplicitUse(ImplicitUseKindFlags.Assign)]
+    [Virtual]
     public class DataFieldAttribute : Attribute
     {
         public readonly string Tag;

@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ContainerButton : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";
@@ -13,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
 
-        public ContainerButton() : base()
+        public ContainerButton()
         {
             DrawModeChanged();
         }

@@ -1,0 +1,41 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindowTabPerf">
+    <SplitContainer Orientation="Horizontal">
+        <!-- Snapshot list and settings overview -->
+        <BoxContainer Orientation="Vertical" Margin="2" MinWidth="250">
+            <Label Text="Snapshot list" Margin="0 0 0 4" />
+            <BoxContainer Orientation="Horizontal" Margin="0 0 0 4">
+                <Button Text="Snap" Name="SnapButton" />
+            </BoxContainer>
+            <ScrollContainer HScrollEnabled="False" VScrollEnabled="True"
+                             VerticalExpand="True">
+                <BoxContainer Orientation="Vertical" Name="SnapList" />
+            </ScrollContainer>
+
+            <!-- Settings overview -->
+            <ProfSettings />
+        </BoxContainer>
+
+        <!-- Main right panel -->
+        <Control Margin="2">
+            <BoxContainer Orientation="Vertical">
+                <Label Text="Snapshot view"></Label>
+
+                <Control VerticalExpand="True">
+                    <Label Text="Make a snapshot on the left to get started"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Name="RightPanelPlaceholder" />
+                    <BoxContainer Orientation="Vertical" Name="RightPanel" Visible="False">
+                        <BoxContainer Orientation="Horizontal">
+                            <Label Name="LabelTopText" HorizontalExpand="True" />
+                            <Button Name="ButtonDeleteSnap" Text="Delete snapshot" />
+                        </BoxContainer>
+                        <ProfGraphView Name="GraphView" MinHeight="96" MouseFilter="Stop" Margin="0 4" />
+                        <ProfTree Name="Tree" VerticalExpand="True" />
+                    </BoxContainer>
+                </Control>
+            </BoxContainer>
+        </Control>
+    </SplitContainer>
+</Control>

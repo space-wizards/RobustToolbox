@@ -10,16 +10,17 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.3" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="5.0.4" />
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
+    <PackageReference Include="SpaceWizards.HttpListener" Version="0.1.0" />
+    <!--  -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.7" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
-    <PackageReference Include="Serilog.Sinks.Loki" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0" />
+    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\ManagedHttpListener\src\System.Net.HttpListener.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
@@ -29,6 +30,9 @@
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="ExtraMappedSerializerStrings.txt">
+      <LogicalName>Robust.Server.ExtraMappedSerializerStrings.txt</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

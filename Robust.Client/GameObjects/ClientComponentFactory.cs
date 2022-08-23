@@ -1,12 +1,14 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Physics;
+using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 
 namespace Robust.Client.GameObjects
 {
-    public class ClientComponentFactory : ComponentFactory
+    internal sealed class ClientComponentFactory : ComponentFactory
     {
-        public ClientComponentFactory()
+        public ClientComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
+            : base(typeFactory, reflectionManager)
         {
             // Required for the engine to work
             RegisterIgnore("KeyBindingInput");
@@ -22,19 +24,13 @@ namespace Robust.Client.GameObjects
             RegisterClass<InputComponent>();
             RegisterClass<SpriteComponent>();
             RegisterClass<ClientOccluderComponent>();
+            RegisterClass<OccluderTreeComponent>();
             RegisterClass<EyeComponent>();
-            RegisterClass<AppearanceComponent>();
-            RegisterClass<AppearanceTestComponent>();
-            RegisterClass<SnapGridComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();
-
-#if DEBUG
             RegisterClass<DebugExceptionOnAddComponent>();
             RegisterClass<DebugExceptionInitializeComponent>();
             RegisterClass<DebugExceptionStartupComponent>();
-#endif
-
         }
     }
 }

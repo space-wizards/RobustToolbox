@@ -19,6 +19,16 @@ out highp vec4 colourOutput;
 #endif
 #endif
 
+#ifndef NO_ARRAY_PRECISION
+#define ARRAY_LOWP lowp
+#define ARRAY_MEDIUMP mediump
+#define ARRAY_HIGHP highp
+#else
+#define ARRAY_LOWP lowp
+#define ARRAY_MEDIUMP mediump
+#define ARRAY_HIGHP highp
+#endif
+
 // -- shadow depth --
 
 // If float textures are supported, puts the values in the R/G fields.
@@ -67,14 +77,14 @@ highp vec4 zToSrgb(highp vec4 sRGB)
 #ifdef HAS_UNIFORM_BUFFERS
 layout (std140) uniform projectionViewMatrices
 {
-    mat3 projectionMatrix;
-    mat3 viewMatrix;
+    highp mat3 projectionMatrix;
+    highp mat3 viewMatrix;
 };
 
 layout (std140) uniform uniformConstants
 {
-    vec2 SCREEN_PIXEL_SIZE;
-    float TIME;
+    highp vec2 SCREEN_PIXEL_SIZE;
+    highp float TIME;
 };
 #else
 uniform highp mat3 projectionMatrix;

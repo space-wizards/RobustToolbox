@@ -1,15 +1,16 @@
+using Robust.Server.Bql;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
-using Robust.Server.Map;
 using Robust.Server.Maps;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Scripting;
+using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
@@ -19,6 +20,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -37,16 +39,17 @@ namespace Robust.Server
 
             IoCManager.Register<IBaseServer, BaseServer>();
             IoCManager.Register<IBaseServerInternal, BaseServer>();
+            IoCManager.Register<BaseServer, BaseServer>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
+            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
+            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
-            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
-            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
-            IoCManager.Register<IMapManager, ServerMapManager>();
-            IoCManager.Register<IMapManagerInternal, ServerMapManager>();
-            IoCManager.Register<IServerMapManager, ServerMapManager>();
+            IoCManager.Register<IMapManager, NetworkedMapManager>();
+            IoCManager.Register<IMapManagerInternal, NetworkedMapManager>();
+            IoCManager.Register<INetworkedMapManager, NetworkedMapManager>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
-            IoCManager.Register<IEntityLookup, EntityLookup>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityManager>();
             IoCManager.Register<IMapLoader, MapLoader>();
@@ -54,9 +57,9 @@ namespace Robust.Server
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<ISharedPlayerManager, PlayerManager>();
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
-            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<IResourceManagerInternal, ResourceManager>();
+            IoCManager.Register<EntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
             IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
@@ -65,11 +68,13 @@ namespace Robust.Server
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
-            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
+            IoCManager.Register<IBqlQueryManager, BqlQueryManager>();
+            IoCManager.Register<HubManager, HubManager>();
         }
     }
 }

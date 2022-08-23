@@ -27,6 +27,8 @@ namespace Robust.Shared.ContentPack
         bool IsContentAssembly(Assembly typeAssembly);
     }
 
+    internal delegate Assembly? ExtraModuleLoad(AssemblyName name);
+
     internal interface IModLoaderInternal : IModLoader
     {
         /// <summary>
@@ -69,5 +71,10 @@ namespace Robust.Shared.ContentPack
         void SetEnableSandboxing(bool sandboxing);
 
         Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
+
+        void AddEngineModuleDirectory(string dir);
+
+        void Shutdown();
+        event ExtraModuleLoad ExtraModuleLoaders;
     }
 }

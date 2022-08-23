@@ -21,19 +21,17 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var entityUid = EntityUid.Parse(args[0]);
+            var entity = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var compManager = IoCManager.Resolve<IComponentManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var entity = entityManager.GetEntity(entityUid);
             var component = (Component) compFactory.GetComponent(componentName);
 
             component.Owner = entity;
 
-            compManager.AddComponent(entity, component);
+            entityManager.AddComponent(entity, component);
         }
     }
 
@@ -55,12 +53,12 @@ namespace Robust.Client.Console.Commands
             var entityUid = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var compManager = IoCManager.Resolve<IComponentManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
             var registration = compFactory.GetRegistration(componentName);
 
-            compManager.RemoveComponent(entityUid, registration.Type);
+            entManager.RemoveComponent(entityUid, registration.Type);
         }
     }
 }

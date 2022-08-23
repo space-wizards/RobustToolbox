@@ -130,6 +130,6 @@ namespace Robust.Client.Graphics
 
         IEnumerable<IClydeMonitor> EnumerateMonitors();
 
-        Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters);
+        IClydeWindow CreateWindow(WindowCreateParameters parameters);
     }
 }

@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using Prometheus;
-using Robust.Client.GameStates;
-using Robust.Shared.Exceptions;
+using Robust.Client.Player;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -21,42 +16,62 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
         public override void Initialize()
         {
             SetupNetworking();
-            ReceivedComponentMessage += (_, compMsg) => DispatchComponentMessage(compMsg);
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
         }
 
-        IEntity IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid? uid)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
         {
             return base.CreateEntity(prototypeName, uid);
         }
 
-        void IClientEntityManagerInternal.InitializeEntity(IEntity entity)
+        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
         {
-            EntityManager.InitializeEntity((Entity)entity);
+            base.InitializeEntity(entity, meta);
         }
 
-        void IClientEntityManagerInternal.StartEntity(IEntity entity)
+        void IClientEntityManagerInternal.StartEntity(EntityUid entity)
         {
-            base.StartEntity((Entity)entity);
+            base.StartEntity(entity);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty(EntityUid uid)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(uid);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty(Component component)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(component);
+        }
+
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        {
+            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
+            else
+                return base.ToPrettyString(uid);
         }
 
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
-
-        /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
@@ -67,14 +82,14 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+            _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
         }
 
-        public override void TickUpdate(float frameTime, Histogram? histogram)
+        public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameStateManager.CurServerTick)
+                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
                     var (_, msg) = _queue.Take();
                     // Logger.DebugS("net.ent", "Dispatching: {0}: {1}", seq, msg);
@@ -82,7 +97,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            base.TickUpdate(frameTime, histogram);
+            base.TickUpdate(frameTime, noPredictions, histogram);
         }
 
         /// <inheritdoc />
@@ -93,7 +108,7 @@ namespace Robust.Client.GameObjects
 
         public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
+            var msg = new MsgEntity();
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
@@ -108,26 +123,9 @@ namespace Robust.Client.GameObjects
             throw new NotSupportedException();
         }
 
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component, ComponentMessage message)
-        {
-            if (!component.NetID.HasValue)
-                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
-
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
-            msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity.Uid;
-            msg.NetId = component.NetID.Value;
-            msg.ComponentMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
-
-            _networkManager.ClientSendMessage(msg);
-        }
-
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            if (message.SourceTick <= _gameStateManager.CurServerTick)
+            if (message.SourceTick <= _gameTiming.LastRealTick)
             {
                 DispatchMsgEntity(message);
                 return;
@@ -143,12 +141,12 @@ namespace Robust.Client.GameObjects
         {
             switch (message.Type)
             {
-                case EntityMessageType.ComponentMessage:
-                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message));
-                    return;
-
                 case EntityMessageType.SystemMessage:
-                    ReceivedSystemMessage?.Invoke(this, message.SystemMessage);
+                    var msg = message.SystemMessage;
+                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
+                    ReceivedSystemMessage?.Invoke(this, msg);
+                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }
         }

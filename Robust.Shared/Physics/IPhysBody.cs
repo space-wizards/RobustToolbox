@@ -15,7 +15,7 @@ namespace Robust.Shared.Physics
     {
         bool IgnoreGravity { get; set; }
 
-        int IslandIndex { get; set; }
+        Dictionary<int, int> IslandIndex { get; set; }
 
         /// <summary>
         ///     Has this body already been added to a physics island
@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        Box2 GetWorldAABB(IMapManager? mapManager = null);
+        Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null);
 
         /// <summary>
         /// Whether or not this body can collide.
@@ -48,17 +48,6 @@ namespace Robust.Shared.Physics
         /// all of the shapes of this body.
         /// </summary>
         int CollisionMask { get; }
-
-        void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null);
-
-        void ClearProxies();
-
-        /// <summary>
-        ///     Removes all of the currently active contacts for this body.
-        /// </summary>
-        void DestroyContacts();
-
-        IReadOnlyList<Fixture> Fixtures { get; }
 
         /// <summary>
         /// The type of the body, which determines how collisions effect this object.
@@ -87,12 +76,18 @@ namespace Robust.Shared.Physics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        bool Hard { get; set; }
+        bool Hard { get; }
 
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
+
+        /// <summary>
+        /// Mass of the entities fixtures in kilograms
+        /// Ignores body type
+        /// </summary>
+        float FixturesMass { get; }
 
         /// <summary>
         /// Mass of the entity in kilograms
@@ -148,7 +143,5 @@ namespace Robust.Shared.Physics
         void ApplyLinearImpulse(in Vector2 impulse);
 
         void ApplyAngularImpulse(float impulse);
-
-        IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

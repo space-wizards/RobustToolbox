@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
+    [Virtual]
     internal partial class ResourceManager
     {
         /// <summary>
         ///     Holds info about a directory that is mounted in the VFS.
         /// </summary>
-        class DirLoader : IContentRoot
+        sealed class DirLoader : IContentRoot
         {
             private readonly DirectoryInfo _directory;
             private readonly ISawmill _sawmill;
@@ -78,6 +80,23 @@ namespace Robust.Shared.ContentPack
                     var relPath = filePath.Substring(_directory.FullName.Length);
                     yield return ResourcePath.FromRelativeSystemPath(relPath);
                 }
+            }
+
+            public IEnumerable<string> GetEntries(ResourcePath path)
+            {
+                var fullPath = GetPath(path);
+                if (!Directory.Exists(fullPath))
+                    return Enumerable.Empty<string>();
+
+                return Directory.EnumerateFileSystemEntries(fullPath)
+                    .Select(c =>
+                    {
+                        var rel = Path.GetRelativePath(fullPath, c);
+                        if (Directory.Exists(c))
+                            return rel + "/";
+
+                        return rel;
+                    });
             }
 
             [Conditional("DEBUG")]

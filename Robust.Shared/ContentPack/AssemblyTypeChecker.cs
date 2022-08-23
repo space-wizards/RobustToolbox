@@ -40,6 +40,7 @@ namespace Robust.Shared.ContentPack
 
         public DumpFlags Dump { get; init; } = DumpFlags.None;
         public bool VerifyIL { get; init; } = true;
+        public string[]? EngineModuleDirectories;
 
         private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
 
@@ -62,23 +63,32 @@ namespace Robust.Shared.ContentPack
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
             var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
-            string[] loadDirs;
+            var loadDirs = new List<string> { dotnetDir };
+
             if (string.IsNullOrEmpty(ourPath))
             {
                 _sawmill.Debug("Robust directory not available");
-                loadDirs = new[] {dotnetDir};
             }
             else
             {
                 _sawmill.Debug("Robust directory is {0}", ourPath);
-                loadDirs = new[] {dotnetDir, Path.GetDirectoryName(ourPath)!};
+                loadDirs.Add(Path.GetDirectoryName(ourPath)!);
             }
 
             _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
+            if (EngineModuleDirectories != null)
+            {
+                foreach (var moduleDir in EngineModuleDirectories)
+                {
+                    _sawmill.Debug("Adding engine module directory: {ModuleDirectory}", moduleDir);
+                    loadDirs.Add(moduleDir);
+                }
+            }
+
             return new Resolver(
                 this,
-                loadDirs,
+                loadDirs.ToArray(),
                 new[] {new ResourcePath("/Assemblies/")}
             );
         }
@@ -101,10 +111,16 @@ namespace Robust.Shared.ContentPack
             var fullStopwatch = Stopwatch.StartNew();
 
             var resolver = CreateResolver();
-            using var peReader = new PEReader(assembly, PEStreamOptions.LeaveOpen);
+            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true);
             var reader = peReader.GetMetadataReader();
 
             var asmName = reader.GetString(reader.GetAssemblyDefinition().Name);
+
+            if (peReader.PEHeaders.CorHeader?.ManagedNativeHeaderDirectory is {Size: not 0})
+            {
+                _sawmill.Error($"Assembly {asmName} contains native code.");
+                return false;
+            }
 
             if (VerifyIL)
             {
@@ -154,7 +170,9 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+#pragma warning disable RA0004
             var loadedConfig = _config.Result;
+#pragma warning restore RA0004
 
             // We still do explicit type reference scanning, even though the actual whitelists work with raw members.
             // This is so that we can simplify handling of generic type specifications during member checking:
@@ -172,6 +190,14 @@ namespace Robust.Shared.ContentPack
             CheckInheritance(loadedConfig, inherited, errors);
 
             _sawmill.Debug($"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
+
+            CheckNoUnmanagedMethodDefs(reader, errors);
+
+            _sawmill.Debug($"Unmanaged methods... {fullStopwatch.ElapsedMilliseconds}ms");
+
+            CheckNoTypeAbuse(reader, errors);
+
+            _sawmill.Debug($"Type abuse... {fullStopwatch.ElapsedMilliseconds}ms");
 
             CheckMemberReferences(loadedConfig, members, errors);
 
@@ -209,7 +235,9 @@ namespace Robust.Shared.ContentPack
                 }
             });
 
+#pragma warning disable RA0004
             var loadedCfg = _config.Result;
+#pragma warning restore RA0004
 
             var verifyErrors = false;
             foreach (var res in bag)
@@ -227,11 +255,7 @@ namespace Robust.Shared.ContentPack
                     if (!res.Method.IsNil)
                     {
                         var method = reader.GetMethodDefinition(res.Method);
-                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
-                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
-
-                        var methodName =
-                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+                        var methodName = FormatMethodName(reader, method);
 
                         msg = $"{msg}, method: {methodName}";
                     }
@@ -259,6 +283,61 @@ namespace Robust.Shared.ContentPack
             }
 
             return true;
+        }
+
+        private static string FormatMethodName(MetadataReader reader, MethodDefinition method)
+        {
+            var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+            var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+
+            return
+                $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+        }
+
+        [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
+        private static void CheckNoUnmanagedMethodDefs(MetadataReader reader, ConcurrentBag<SandboxError> errors)
+        {
+            foreach (var methodDefHandle in reader.MethodDefinitions)
+            {
+                var methodDef = reader.GetMethodDefinition(methodDefHandle);
+                var implAttr = methodDef.ImplAttributes;
+                var attr = methodDef.Attributes;
+
+                if ((implAttr & MethodImplAttributes.Unmanaged) != 0 ||
+                    (implAttr & MethodImplAttributes.CodeTypeMask) is not (MethodImplAttributes.IL
+                    or MethodImplAttributes.Runtime))
+                {
+                    var err = $"Method has illegal MethodImplAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+
+                if ((attr & (MethodAttributes.PinvokeImpl | MethodAttributes.UnmanagedExport)) != 0)
+                {
+                    var err = $"Method has illegal MethodAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+            }
+        }
+
+        private static void CheckNoTypeAbuse(MetadataReader reader, ConcurrentBag<SandboxError> errors)
+        {
+            foreach (var typeDefHandle in reader.TypeDefinitions)
+            {
+                var typeDef = reader.GetTypeDefinition(typeDefHandle);
+                if ((typeDef.Attributes & TypeAttributes.ExplicitLayout) != 0)
+                {
+                    // The C# compiler emits explicit layout types for some array init logic. These have no fields.
+                    // Only ban explicit layout if it has fields.
+
+                    var type = GetTypeFromDefinition(reader, typeDefHandle);
+
+                    if (typeDef.GetFields().Count > 0)
+                    {
+                        var err = $"Explicit layout type {type} may not have fields.";
+                        errors.Add(new SandboxError(err));
+                    }
+                }
+            }
         }
 
         private void CheckMemberReferences(
@@ -404,7 +483,8 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private bool IsTypeAccessAllowed(SandboxConfig sandboxConfig, MTypeReferenced type, [NotNullWhen(true)] out TypeConfig? cfg)
+        private bool IsTypeAccessAllowed(SandboxConfig sandboxConfig, MTypeReferenced type,
+            [NotNullWhen(true)] out TypeConfig? cfg)
         {
             if (type.Namespace == null)
             {
@@ -695,7 +775,7 @@ namespace Robust.Shared.ContentPack
         /// <exception href="UnsupportedMetadataException">
         ///     Thrown if the metadata does something funny we don't "support" like type forwarding.
         /// </exception>
-        private static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
+        internal static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
         {
             var typeRef = reader.GetTypeReference(handle);
             var name = reader.GetString(typeRef.Name);
@@ -802,13 +882,13 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    return new PEReader(File.OpenRead(path));
+                    return ModLoader.MakePEReader(File.OpenRead(path));
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
                 if (extraStream != null)
                 {
-                    return new PEReader(extraStream);
+                    return ModLoader.MakePEReader(extraStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)
@@ -816,7 +896,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         var path = resLoadPath / dllName;
-                        return new PEReader(_parent._res.ContentFileRead(path));
+                        return ModLoader.MakePEReader(_parent._res.ContentFileRead(path));
                     }
                     catch (FileNotFoundException)
                     {
@@ -832,7 +912,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private sealed class TypeProvider : ISignatureTypeProvider<MType, int>
+        internal sealed class TypeProvider : ISignatureTypeProvider<MType, int>
         {
             public MType GetSZArrayType(MType elementType)
             {

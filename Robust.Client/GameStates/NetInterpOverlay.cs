@@ -1,19 +1,19 @@
 using Robust.Shared.Enums;
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
-using System;
+using Robust.Shared.Containers;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
-    internal class NetInterpOverlay : Overlay
+    internal sealed class NetInterpOverlay : Overlay
     {
-        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
@@ -31,14 +31,14 @@ namespace Robust.Client.GameStates
             var handle = args.DrawingHandle;
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
-            var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
+            var viewport = args.WorldAABB;
+            foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
-                var transform = ((IComponent)boundingBox).Owner.Transform;
+                var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);
 
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
+                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer(_entityManager))
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it
@@ -65,7 +65,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetShowInterpCommand : IConsoleCommand
+        private sealed class NetShowInterpCommand : IConsoleCommand
         {
             public string Command => "net_draw_interp";
             public string Help => "net_draw_interp <0|1>";

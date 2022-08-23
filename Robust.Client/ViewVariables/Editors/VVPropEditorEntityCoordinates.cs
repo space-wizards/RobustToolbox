@@ -5,16 +5,18 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorEntityCoordinates : VVPropEditor
+    public sealed class VVPropEditorEntityCoordinates : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {
             var coords = (EntityCoordinates) value!;
-            var hBoxContainer = new HBoxContainer
+            var hBoxContainer = new BoxContainer
             {
+                Orientation = LayoutOrientation.Horizontal,
                 MinSize = new Vector2(240, 0),
             };
 

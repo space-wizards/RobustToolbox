@@ -1,21 +1,28 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Shared.GameObjects
 {
-    public class TimerComponent : Component
+    public sealed class TimerComponent : Component
     {
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
-        public override string Name => "Timer";
-
         private readonly List<(Timer timer, CancellationToken source)>
             _timers = new();
+
+        public int TimerCount => _timers.Count;
+
+        /// <summary>
+        /// Should this component be removed when no more timers are running?
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool RemoveOnEmpty { get; set; } = true;
 
         public void Update(float frameTime)
         {

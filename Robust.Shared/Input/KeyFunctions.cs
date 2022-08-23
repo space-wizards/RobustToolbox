@@ -69,6 +69,9 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
         public static readonly BoundKeyFunction TextDelete = "TextDelete";
+        public static readonly BoundKeyFunction TextTabComplete = "TextTabComplete";
+        public static readonly BoundKeyFunction TextCompleteNext = "TextCompleteNext";
+        public static readonly BoundKeyFunction TextCompletePrev = "TextCompletePrev";
     }
 
     [Serializable, NetSerializable]
@@ -150,5 +153,5 @@ namespace Robust.Shared.Input
     ///     Makes all constant strings on this static class be added as input functions.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class KeyFunctionsAttribute : Attribute { }
+    public sealed class KeyFunctionsAttribute : Attribute { }
 }

@@ -9,6 +9,7 @@ namespace Robust.Shared.IoC.Exceptions
     /// </summary>
     /// <seealso cref="IoCManager" />
     /// <seealso cref="IReflectionManager" />
+    [Virtual]
     public class InvalidImplementationException : Exception
     {
         private readonly string message;

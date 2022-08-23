@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -34,7 +34,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
-        private class LoadedShader
+        private sealed class LoadedShader
         {
             public GLShaderProgram Program = default!;
             public bool HasLighting = true;
@@ -42,9 +42,11 @@ namespace Robust.Client.Graphics.Clyde
             public string? Name;
         }
 
-        private class LoadedShaderInstance
+        private sealed class LoadedShaderInstance
         {
             public ClydeHandle ShaderHandle;
+
+            public bool ParametersDirty = true;
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
             public readonly Dictionary<string, object> Parameters = new();
@@ -52,11 +54,11 @@ namespace Robust.Client.Graphics.Clyde
             public StencilParameters Stencil = StencilParameters.Default;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name, defines: defines);
 
             if (_hasGLUniformBuffers)
             {
@@ -141,7 +143,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
-            (string, uint)[] attribLocations, string? name = null, bool includeLib=true)
+            (string, uint)[] attribLocations, string? name = null, bool includeLib=true, Dictionary<string,string>? defines=null)
         {
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
@@ -150,12 +152,22 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_isGLES)
             {
-                // GLES2 uses a different GLSL versioning scheme to desktop GL.
-                versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
-                if (_hasGLStandardDerivatives)
+                if (_hasGLES3Shaders)
                 {
-                    versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                    versionHeader = "#version 300 es\n";
                 }
+                else
+                {
+                    // GLES2 uses a different GLSL versioning scheme to desktop GL.
+                    versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
+                    if (_hasGLStandardDerivatives)
+                    {
+                        versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                    }
+
+                    versionHeader += "#define NO_ARRAY_PRECISION\n";
+                }
+
             }
 
             if (_hasGLStandardDerivatives)
@@ -176,6 +188,14 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLUniformBuffers)
             {
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
+            }
+
+            if (defines is not null)
+            {
+                foreach (var k in defines.Keys)
+                {
+                    versionHeader += $"#define {k} {defines[k]}\n";
+                }
             }
 
             var lib = includeLib ? _shaderLibrary : "";
@@ -376,66 +396,91 @@ namespace Robust.Client.Graphics.Clyde
             private protected override void SetParameterImpl(string name, float value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
+                data.Parameters[name] = value;
+            }
+
+            private protected override void SetParameterImpl(string name, float[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Vector2 value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
+                data.Parameters[name] = value;
+            }
+
+            private protected override void SetParameterImpl(string name, Vector2[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Vector3 value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Vector4 value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Color value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, int value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Vector2i value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, bool value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, in Matrix3 value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, in Matrix4 value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 
             private protected override void SetParameterImpl(string name, Texture value)
             {
                 var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
 

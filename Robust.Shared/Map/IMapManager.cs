@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -14,9 +14,10 @@ namespace Robust.Shared.Map
     public interface IMapManager
     {
         /// <summary>
-        ///     The default <see cref="MapId" /> that is always available. Equivalent to SS13 Null space.
+        /// A faster version of <see cref="GetAllGrids"/>
         /// </summary>
-        MapId DefaultMap { get; }
+        [Obsolete("EntityQuery for MapGridComponent instead")]
+        GridEnumerator GetAllGridsEnumerator();
 
         IEnumerable<IMapGrid> GetAllGrids();
 
@@ -25,6 +26,16 @@ namespace Robust.Shared.Map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
         bool SuppressOnTileChanged { get; set; }
+
+        /// <summary>
+        /// Get the set of grids that have moved on this map in this tick.
+        /// </summary>
+        HashSet<IMapGrid> GetMovedGrids(MapId mapId);
+
+        /// <summary>
+        /// Clear the set of grids that have moved on this map in this tick.
+        /// </summary>
+        void ClearMovedGrids(MapId mapId);
 
         /// <summary>
         ///     Starts up the map system.
@@ -39,27 +50,27 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Creates a new map.
         /// </summary>
-        /// <param name="mapID">
+        /// <param name="mapId">
         ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
         /// </param>
         /// <returns>The new map.</returns>
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        MapId CreateMap(MapId? mapID = null);
+        MapId CreateMap(MapId? mapId = null);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.
         /// </summary>
-        /// <param name="mapID">The map ID to check existance of.</param>
+        /// <param name="mapId">The map ID to check existence of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
-        bool MapExists(MapId mapID);
+        bool MapExists(MapId mapId);
 
         /// <summary>
         /// Creates a new entity, then sets it as the map entity.
         /// </summary>
         /// <returns>Newly created entity.</returns>
-        IEntity CreateNewMapEntity(MapId mapId);
+        EntityUid CreateNewMapEntity(MapId mapId);
 
         /// <summary>
         /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
@@ -68,22 +79,33 @@ namespace Robust.Shared.Map
         void SetMapEntity(MapId mapId, EntityUid newMapEntityId);
 
         /// <summary>
-        /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
-        /// before the new one is set.
+        /// Returns the map entity ID for a given map.
         /// </summary>
-        void SetMapEntity(MapId mapId, IEntity newMapEntity);
-
         EntityUid GetMapEntityId(MapId mapId);
-        IEntity GetMapEntity(MapId mapId);
+
+        /// <summary>
+        /// Replaces GetMapEntity()'s throw-on-failure semantics.
+        /// </summary>
+        EntityUid GetMapEntityIdOrThrow(MapId mapId);
 
         IEnumerable<MapId> GetAllMapIds();
 
-        void DeleteMap(MapId mapID);
+        void DeleteMap(MapId mapId);
 
-        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16);
-        IMapGrid GetGrid(GridId gridID);
+        [Obsolete("Use overload without GridId parameter instead")]
+        // ReSharper disable once MethodOverloadWithOptionalParameter
+        IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
+        IMapGrid CreateGrid(MapId currentMapId, in GridCreateOptions options);
+        IMapGrid CreateGrid(MapId currentMapId);
+        [Obsolete("Use EntityUids instead")]
+        IMapGrid GetGrid(GridId gridId);
+        IMapGrid GetGrid(EntityUid gridId);
+        [Obsolete("Use EntityUids instead")]
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists(GridId gridID);
+        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
+        [Obsolete("Use EntityUids instead")]
+        bool GridExists(GridId gridId);
+        bool GridExists([NotNullWhen(true)] EntityUid? euid);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
         /// <summary>
@@ -109,39 +131,105 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
-        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
 
-        IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false);
+        /// <summary>
+        /// Returns the grids intersecting this AABB.
+        /// </summary>
+        /// <param name="mapId">The relevant MapID</param>
+        /// <param name="worldAabb">The AABB to intersect</param>
+        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
+        /// <returns></returns>
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false);
 
-        void DeleteGrid(GridId gridID);
+        /// <summary>
+        /// Returns the grids intersecting this AABB.
+        /// </summary>
+        /// <param name="mapId">The relevant MapID</param>
+        /// <param name="worldArea">The AABB to intersect</param>
+        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
+
+        [Obsolete("Delete the grid's entity instead")]
+        void DeleteGrid(GridId gridId);
 
         /// <summary>
         ///     A tile is being modified.
         /// </summary>
+        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
         event EventHandler<TileChangedEventArgs> TileChanged;
 
+        [Obsolete("Subscribe to GridStartupEvent on the event bus.")]
         event GridEventHandler OnGridCreated;
 
+        [Obsolete("Subscribe to GridRemovalEvent on the event bus.")]
         event GridEventHandler OnGridRemoved;
 
         /// <summary>
         ///     A Grid was modified.
         /// </summary>
+        [Obsolete("Subscribe to GridModifiedEvent on the event bus.")]
         event EventHandler<GridChangedEventArgs> GridChanged;
 
         /// <summary>
         ///     A new map has been created.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Created is true.")]
         event EventHandler<MapEventArgs> MapCreated;
 
         /// <summary>
         ///     An existing map has been destroyed.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Destroyed is true.")]
         event EventHandler<MapEventArgs> MapDestroyed;
 
         bool HasMapEntity(MapId mapId);
 
+        bool IsGrid(EntityUid uid);
+        bool IsMap(EntityUid uid);
+
+        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        GridId NextGridId();
+        [Obsolete("Use EntityUids instead")]
+        EntityUid GetGridEuid(GridId id);
+        [Obsolete("Use EntityUids instead")]
+        IMapGridComponent GetGridComp(GridId id);
+        IMapGridComponent GetGridComp(EntityUid euid);
+
+        //
+        // Pausing functions
+        //
+
+        void SetMapPaused(MapId mapId, bool paused);
+
+        void DoMapInitialize(MapId mapId);
+
+        void AddUninitializedMap(MapId mapId);
+
+        [Pure]
+        bool IsMapPaused(MapId mapId);
+
+        [Pure]
+        bool IsGridPaused(IMapGrid grid);
+
+        [Pure]
+        [Obsolete("Use EntityUids instead")]
+        bool IsGridPaused(GridId gridId);
+
+        [Pure]
+        bool IsGridPaused(EntityUid gridId);
+
+        [Pure]
+        bool IsMapInitialized(MapId mapId);
+    }
+
+    public struct GridCreateOptions
+    {
+        public static readonly GridCreateOptions Default = new()
+        {
+            ChunkSize = 16
+        };
+
+        public ushort ChunkSize;
     }
 }

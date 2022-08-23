@@ -18,6 +18,11 @@ namespace Robust.Server.Player
         BoundKeyMap KeyMap { get; }
 
         /// <summary>
+        /// Same as the common sessions, but the server version.
+        /// </summary>
+        IEnumerable<IPlayerSession> ServerSessions { get; }
+
+        /// <summary>
         ///     Raised when the <see cref="SessionStatus" /> of a <see cref="IPlayerSession" /> is changed.
         /// </summary>
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
@@ -27,6 +32,8 @@ namespace Robust.Server.Player
         /// </summary>
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
+
+        void Shutdown();
 
         bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out IPlayerSession? session);
 
@@ -63,10 +70,16 @@ namespace Robust.Server.Player
 
         IEnumerable<IPlayerData> GetAllPlayerData();
 
+
+        [Obsolete]
         void DetachAll();
+        [Obsolete("Use player Filter or Inline me!")]
         List<IPlayerSession> GetPlayersInRange(MapCoordinates worldPos, int range);
+        [Obsolete("Use player Filter or Inline me!")]
         List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range);
+        [Obsolete("Use player Filter or Inline me!")]
         List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate);
+        [Obsolete("Use player Filter or Inline me!")]
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState>? GetPlayerStates(GameTick fromTick);
     }

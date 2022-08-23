@@ -129,5 +129,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
         /// for controlling sRGB rendering and a created OpenGL ES context will always have sRGB rendering enabled.
         /// </summary>
         SrgbCapable = 0x0002100E,
+
+        ScaleToMonitor = 0x0002200C,
     }
 }

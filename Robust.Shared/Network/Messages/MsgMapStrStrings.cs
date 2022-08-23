@@ -13,13 +13,9 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgMapStrStrings : NetMessage
+    internal sealed class MsgMapStrStrings : NetMessage
     {
-
-        public MsgMapStrStrings(INetChannel ch)
-            : base(nameof(MsgMapStrStrings), MsgGroups.Core)
-        {
-        }
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         /// <value>
         /// The raw bytes of the string mapping held by the server.
@@ -48,7 +44,5 @@ namespace Robust.Shared.Network.Messages
                 throw new InvalidOperationException("Not all of the bytes were written to the message.");
             }
         }
-
     }
-
 }

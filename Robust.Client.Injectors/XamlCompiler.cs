@@ -77,7 +77,7 @@ namespace Robust.Build.Tasks
                 },
                 ContentAttributes =
                 {
-                    typeSystem.GetType("Robust.Client.UserInterface.XAML.ContentAttribute")
+                    typeSystem.GetType("Avalonia.Metadata.ContentAttribute")
                 },
                 UsableDuringInitializationAttributes =
                 {
@@ -304,8 +304,8 @@ namespace Robust.Build.Tasks
                     }
                     catch (Exception e)
                     {
-                        engine.LogWarningEvent(new BuildWarningEventArgs("XAMLIL", "", res.Uri, 0, 0, 0, 0,
-                            e.ToString(), "", "CompileRobustXaml"));
+                        engine.LogErrorEvent(new BuildErrorEventArgs("XAMLIL", "", res.FilePath, 0, 0, 0, 0,
+                            $"{res.FilePath}: {e.Message}", "", "CompileRobustXaml"));
                     }
                 }
                 return true;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -9,9 +8,10 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(OccluderComponent))]
-    internal sealed class ClientOccluderComponent : OccluderComponent
+    public sealed class ClientOccluderComponent : OccluderComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
@@ -32,21 +32,22 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.Transform.Anchored)
+            if (_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
             {
-                SnapGridOnPositionChanged();
+                AnchorStateChanged();
             }
         }
 
-        public void SnapGridOnPositionChanged()
+        public void AnchorStateChanged()
         {
-            SendDirty();
+            var xform = _entityManager.GetComponent<TransformComponent>(Owner);
+            SendDirty(xform);
 
-            if(!Owner.Transform.Anchored)
+            if(!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-            _lastPosition = (Owner.Transform.GridID, grid.TileIndicesFor(Owner.Transform.Coordinates));
+            var grid = _mapManager.GetGrid(xform.GridID);
+            _lastPosition = (xform.GridID, grid.TileIndicesFor(xform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -56,11 +57,12 @@ namespace Robust.Client.GameObjects
             SendDirty();
         }
 
-        private void SendDirty()
+        private void SendDirty(TransformComponent? xform = null)
         {
-            if (Owner.Transform.Anchored)
+            xform ??= _entityManager.GetComponent<TransformComponent>(Owner);
+            if (xform.Anchored)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                _entityManager.EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));
             }
         }
@@ -69,18 +71,34 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || !Owner.Transform.Anchored)
+            if (Deleted)
+                return;
+
+            // Content may want to override the default behavior for occlusion.
+            var xform = _entityManager.GetComponent<TransformComponent>(Owner);
+            var ev = new OccluderDirectionsEvent
             {
+                Component = xform,
+            };
+
+            _entityManager.EventBus.RaiseLocalEvent(Owner, ref ev, true);
+
+            if (ev.Handled)
+            {
+                Occluding = ev.Directions;
                 return;
             }
 
+            if (!xform.Anchored)
+                return;
+
+            var grid = _mapManager.GetGrid(xform.GridID);
+            var position = xform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-                var position = Owner.Transform.Coordinates;
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
-                    if (Owner.EntityManager.ComponentManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
+                    if (_entityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;
@@ -88,20 +106,43 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            CheckDir(Direction.North, OccluderDir.North);
-            CheckDir(Direction.East, OccluderDir.East);
-            CheckDir(Direction.South, OccluderDir.South);
-            CheckDir(Direction.West, OccluderDir.West);
-        }
+            var angle = xform.LocalRotation;
+            var dirRolling = angle.GetCardinalDir();
+            // dirRolling starts at effective south
 
-        [Flags]
-        internal enum OccluderDir : byte
-        {
-            None = 0,
-            North = 1,
-            East = 1 << 1,
-            South = 1 << 2,
-            West = 1 << 3,
+            CheckDir(dirRolling, OccluderDir.South);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.West);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.North);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.East);
         }
+    }
+
+    [Flags]
+    public enum OccluderDir : byte
+    {
+        None = 0,
+        North = 1,
+        East = 1 << 1,
+        South = 1 << 2,
+        West = 1 << 3,
+    }
+
+    /// <summary>
+    /// Raised by occluders when trying to get occlusion directions.
+    /// </summary>
+    [ByRefEvent]
+    public struct OccluderDirectionsEvent
+    {
+        public bool Handled = false;
+        public OccluderDir Directions = OccluderDir.None;
+        public TransformComponent Component = default!;
+
+        public OccluderDirectionsEvent() {}
     }
 }

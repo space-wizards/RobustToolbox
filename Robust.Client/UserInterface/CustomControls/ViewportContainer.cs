@@ -9,6 +9,7 @@ namespace Robust.Client.UserInterface.CustomControls
     /// <summary>
     ///     A viewport container shows a viewport.
     /// </summary>
+    [Virtual]
     public class ViewportContainer : Control, IViewportControl
     {
         private readonly IClyde _displayManager;
@@ -72,6 +73,9 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
+                if (Viewport.Eye == null)
+                    return;
+
                 var viewportBounds = UIBox2i.FromDimensions(GlobalPixelPosition, PixelSize);
                 Viewport.RenderScreenOverlaysBelow(handle, this, viewportBounds);
 

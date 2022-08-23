@@ -6,7 +6,7 @@ namespace Robust.Shared.Timing
     ///     Provides a set of methods and properties that you can use to accurately
     ///     measure elapsed time.
     /// </summary>
-    public class Stopwatch : IStopwatch
+    public sealed class Stopwatch : IStopwatch
     {
         private readonly System.Diagnostics.Stopwatch _stopwatch;
 

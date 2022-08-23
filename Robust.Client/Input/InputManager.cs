@@ -16,6 +16,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -30,6 +31,7 @@ using static Robust.Client.Input.Keyboard;
 
 namespace Robust.Client.Input
 {
+    [Virtual]
     internal class InputManager : IInputManager
     {
         // This is for both userdata and resources.
@@ -41,7 +43,8 @@ namespace Robust.Client.Input
 
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
+        [Dependency] private readonly IConsoleHost _console = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -97,6 +100,7 @@ namespace Robust.Client.Input
         public event KeyEventAction? FirstChanceOnKeyEvent;
         public event Action<IKeyBinding>? OnKeyBindingAdded;
         public event Action<IKeyBinding>? OnKeyBindingRemoved;
+        public event Action? OnInputModeChanged;
 
         /// <inheritdoc />
         public void Initialize()
@@ -130,7 +134,7 @@ namespace Robust.Client.Input
                 .SelectMany(p => p)
                 .Select(p => new KeyBindingRegistration
                 {
-                    Function = p.Function,
+                    Function = p.Function.FunctionName,
                     BaseKey = p.BaseKey,
                     Mod1 = p.Mod1,
                     Mod2 = p.Mod2,
@@ -151,7 +155,7 @@ namespace Robust.Client.Input
             mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
-            using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
+            using var writer = _resourceMan.UserData.OpenWriteText(path);
             var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
@@ -212,7 +216,7 @@ namespace Robust.Client.Input
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
-                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
+                if (binding.BindingType != KeyBindingType.Command && !Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                     continue;
 
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
@@ -248,7 +252,15 @@ namespace Robust.Client.Input
             var uiOnly = false;
             if (hasCanFocus)
             {
-                uiOnly = _userInterfaceManagerInternal.HandleCanFocusDown(MouseScreenPosition);
+                uiOnly = _uiMgr.HandleCanFocusDown(MouseScreenPosition, out _);
+            }
+
+            if (_uiMgr.KeyboardFocused is IRawInputControl rawInput)
+            {
+                var block = RaiseRawKeyInput(args, rawInput, args.IsRepeat ? RawKeyAction.Repeat : RawKeyAction.Down);
+
+                if (block)
+                    return;
             }
 
             foreach (var binding in bindsDown)
@@ -258,6 +270,21 @@ namespace Robust.Client.Input
                     break;
                 }
             }
+        }
+
+        private bool RaiseRawKeyInput(KeyEventArgs args, IRawInputControl rawInput, RawKeyAction action)
+        {
+            DebugTools.AssertNotNull(_uiMgr.KeyboardFocused);
+
+            var mousePos = _uiMgr.CalcRelativeMousePositionFor(_uiMgr.KeyboardFocused!, _uiMgr.MousePositionScaled);
+            var keyEvent = new GuiRawKeyEvent(
+                args.Key,
+                args.ScanCode,
+                action,
+                (Vector2i) (mousePos ?? Vector2.Zero));
+
+            var block = rawInput.RawKeyEvent(keyEvent);
+            return block;
         }
 
         /// <inheritdoc />
@@ -289,8 +316,11 @@ namespace Robust.Client.Input
 
             if (hasCanFocus)
             {
-                _userInterfaceManagerInternal.HandleCanFocusUp();
+                _uiMgr.HandleCanFocusUp();
             }
+
+            if (_uiMgr.KeyboardFocused is IRawInputControl rawInput)
+                RaiseRawKeyInput(args, rawInput, RawKeyAction.Up);
         }
 
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
@@ -332,6 +362,12 @@ namespace Robust.Client.Input
 
         private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly = false)
         {
+            if (binding.BindingType == KeyBindingType.Command && state == BoundKeyState.Down)
+            {
+                _console.ExecuteCommand(binding.FunctionCommand);
+                return true;
+            }
+
             // christ this crap *is* re-entrant thanks to PlacementManager and
             // I honestly have no idea what the best solution here is.
             // note from the future: context switches won't cause re-entrancy anymore because InputContextContainer defers context switches
@@ -461,14 +497,14 @@ namespace Robust.Client.Input
 
             if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = serializationManager.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
-                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
+                    if (reg.Type != KeyBindingType.Command && !NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
                         Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
-                            reg.Function.FunctionName);
+                            reg.Function);
                         continue;
                     }
 
@@ -490,7 +526,7 @@ namespace Robust.Client.Input
 
             if (userData && robustMapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
+                var leaveEmpty = serializationManager.Read<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {
@@ -505,6 +541,17 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
+            var binding = new KeyBinding(this, function.FunctionName, bindingType, baseKey, false, false, false,
+                0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+
+            RegisterBinding(binding);
+
+            return binding;
+        }
+
+        public IKeyBinding RegisterBinding(string function, KeyBindingType bindingType,
+            Key baseKey, Key? mod1, Key? mod2, Key? mod3)
+        {
             var binding = new KeyBinding(this, function, bindingType, baseKey, false, false, false,
                 0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
@@ -515,7 +562,7 @@ namespace Robust.Client.Input
 
         public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true)
         {
-            var binding = new KeyBinding(this, reg.Function, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
+            var binding = new KeyBinding(this, reg.Function.FunctionName, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
                 reg.AllowSubCombs, reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
 
             RegisterBinding(binding, markModified);
@@ -541,6 +588,8 @@ namespace Robust.Client.Input
             _bindings.Remove(cast);
             OnKeyBindingRemoved?.Invoke(binding);
         }
+
+        public void InputModeChanged() => OnInputModeChanged?.Invoke();
 
         private void RegisterBinding(KeyBinding binding, bool markModified = true)
         {
@@ -607,6 +656,11 @@ namespace Robust.Client.Input
             return _modifiedKeyFunctions.Contains(function);
         }
 
+        public bool IsKeyDown(Key key)
+        {
+            return _keysPressed[(int) key];
+        }
+
         /// <inheritdoc />
         public bool TryGetKeyBinding(BoundKeyFunction function, [NotNullWhen(true)] out IKeyBinding? binding)
         {
@@ -645,13 +699,14 @@ namespace Robust.Client.Input
         }
 
         [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]
-        private class KeyBinding : IKeyBinding
+        private sealed class KeyBinding : IKeyBinding
         {
             private readonly InputManager _inputManager;
 
             [ViewVariables] public BoundKeyState State { get; set; }
             public PackedKeyCombo PackedKeyCombo { get; }
             [ViewVariables] public BoundKeyFunction Function { get; }
+            [ViewVariables] public string FunctionCommand => Function.FunctionName;
             [ViewVariables] public KeyBindingType BindingType { get; }
 
             [ViewVariables] public Key BaseKey => PackedKeyCombo.BaseKey;
@@ -679,7 +734,9 @@ namespace Robust.Client.Input
 
             [ViewVariables] public int Priority { get; internal set; }
 
-            public KeyBinding(InputManager inputManager, BoundKeyFunction function,
+            public KeyBinding(
+                InputManager inputManager,
+                string function,
                 KeyBindingType bindingType,
                 Key baseKey,
                 bool canFocus, bool canRepeat, bool allowSubCombs, int priority, Key mod1 = Key.Unknown,
@@ -739,7 +796,7 @@ namespace Robust.Client.Input
             public override string ToString()
             {
                 var sb = new StringBuilder();
-                sb.AppendFormat("{0}: {1}", Function.FunctionName, BaseKey);
+                sb.AppendFormat("{0}: {1}", Function, BaseKey);
                 if (Mod1 != Key.Unknown)
                 {
                     sb.AppendFormat("+{0}", Mod1);
@@ -836,6 +893,10 @@ namespace Robust.Client.Input
         Unknown = 0,
         State,
         Toggle,
+        /// <summary>
+        /// This keybind does not execute a real key function but instead causes a console command to be executed.
+        /// </summary>
+        Command,
     }
 
     public enum CommandState : byte
@@ -846,7 +907,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class BindCommand : IConsoleCommand
+    internal sealed class BindCommand : IConsoleCommand
     {
         public string Command => "bind";
         public string Description => "Binds an input key to an input command.";
@@ -890,7 +951,7 @@ namespace Robust.Client.Input
 
             var registration = new KeyBindingRegistration
             {
-                Function = new BoundKeyFunction(inputCommand),
+                Function = inputCommand,
                 BaseKey = keyId,
                 Type = keyMode
             };
@@ -900,7 +961,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class SaveBindCommand : IConsoleCommand
+    internal sealed class SaveBindCommand : IConsoleCommand
     {
         public string Command => "svbind";
         public string Description => "";

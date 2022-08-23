@@ -1,9 +1,13 @@
-﻿using System;
+using System;
+using JetBrains.Annotations;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -12,7 +16,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MetaDataComponent"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class MetaDataComponentState : ComponentState
+    public sealed class MetaDataComponentState : ComponentState
     {
         /// <summary>
         ///     The in-game name of this entity.
@@ -35,7 +39,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="description">The in-game description of this entity.</param>
         /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
         public MetaDataComponentState(string? name, string? description, string? prototypeId)
-            : base(NetIDs.META_DATA)
         {
             Name = name;
             Description = description;
@@ -46,43 +49,27 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    public interface IMetaDataComponent
+    [NetworkedComponent]
+    public sealed class MetaDataComponent : Component
     {
+        [DataField("name")] internal string? _entityName;
+        [DataField("desc")] internal string? _entityDescription;
+        internal EntityPrototype? _entityPrototype;
+        internal bool _entityPaused;
+
+        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
+        [ViewVariables]
+        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
+
+        /// <summary>
+        ///     This is the tick at which the client last applied state data received from the server.
+        /// </summary>
+        [ViewVariables]
+        public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
+
         /// <summary>
         ///     The in-game name of this entity.
         /// </summary>
-        string EntityName { get; set; }
-
-        /// <summary>
-        ///     The in-game description of this entity.
-        /// </summary>
-        string EntityDescription { get; set; }
-
-        /// <summary>
-        ///     The prototype this entity was created from, if any.
-        /// </summary>
-        EntityPrototype? EntityPrototype { get; set; }
-    }
-
-    /// <inheritdoc cref="IMetaDataComponent"/>
-    [ComponentReference(typeof(IMetaDataComponent))]
-    internal class MetaDataComponent : Component, IMetaDataComponent
-    {
-        [Dependency] private readonly IPrototypeManager _prototypes = default!;
-
-        [DataField("name")]
-        private string? _entityName;
-        [DataField("desc")]
-        private string? _entityDescription;
-        private EntityPrototype? _entityPrototype;
-
-        /// <inheritdoc />
-        public override string Name => "MetaData";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.META_DATA;
-
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityName
         {
@@ -106,7 +93,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The in-game description of this entity.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityDescription
         {
@@ -130,7 +119,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The prototype this entity was created from, if any.
+        /// </summary>
         [ViewVariables]
         public EntityPrototype? EntityPrototype
         {
@@ -142,27 +133,61 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <param name="player"></param>
-        /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        /// <summary>
+        ///     The current lifetime stage of this entity. You can use this to check
+        ///     if the entity is initialized or being deleted.
+        /// </summary>
+        [ViewVariables]
+        public EntityLifeStage EntityLifeStage { get; internal set; }
+
+        [ViewVariables]
+        public MetaDataFlags Flags
         {
-            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
+            get => _flags;
+            internal set
+            {
+                // In container and detached to null are mutually exclusive flags.
+                DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
+                _flags = value;
+            }
         }
 
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
+        internal MetaDataFlags _flags;
+
+        /// <summary>
+        ///     The sum of our visibility layer and our parent's visibility layers.
+        /// </summary>
+        /// <remarks>
+        ///     Every entity will always have the first bit set to true.
+        /// </remarks>
+        [Access(typeof(MetaDataSystem))]
+        public int VisibilityMask = 1;
+
+        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
+        private int VVVisibilityMask
         {
-            base.HandleComponentState(curState, nextState);
-
-            if (!(curState is MetaDataComponentState state))
-                return;
-
-            _entityName = state.Name;
-            _entityDescription = state.Description;
-
-            if(state.PrototypeId != null)
-                _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
+            get => VisibilityMask;
+            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
         }
+
+        [ViewVariables]
+        public bool EntityPaused
+        {
+            get => _entityPaused;
+            [Obsolete("Call MetaDataSystem to change this.")]
+            set
+            {
+                if (_entityPaused == value)
+                    return;
+
+                _entityPaused = value;
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+            }
+        }
+
+        public bool EntityInitialized => EntityLifeStage >= EntityLifeStage.Initialized;
+        public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
+        public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
         internal override void ClearTicks()
         {
@@ -172,5 +197,27 @@ namespace Robust.Shared.GameObjects
             // (Creation can still be cleared though)
             ClearCreationTick();
         }
+    }
+
+    [Flags]
+    public enum MetaDataFlags : byte
+    {
+        None = 0,
+
+        /// <summary>
+        /// Whether the entity has states specific to particular players. This will cause many state-attempt events to
+        /// be raised, and is generally somewhat expensive.
+        /// </summary>
+        EntitySpecific = 1 << 0,
+
+        /// <summary>
+        /// Whether the entity is currently inside of a container.
+        /// </summary>
+        InContainer = 1 << 1,
+
+        /// <summary>
+        /// Used by clients to indicate that an entity has left their visible set.
+        /// </summary>
+        Detached = 1 << 2,
     }
 }

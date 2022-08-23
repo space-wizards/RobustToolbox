@@ -55,12 +55,6 @@ namespace Robust.Client.Graphics
             DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
             Color color, bool fallback=true);
 
-        [Obsolete("Use Rune variant instead")]
-        public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
-        {
-            return DrawChar(handle, (Rune) chr, baseline, scale, color);
-        }
-
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
         /// </summary>
@@ -147,6 +141,61 @@ namespace Robust.Client.Graphics
             if (metrics == null && !Rune.IsWhiteSpace(rune) && fallback)
                 return Handle.GetCharMetrics(new Rune('�'), scale);
             return metrics;
+        }
+    }
+
+    public sealed class StackedFont : Font
+    {
+        // _main is the "default" font; the top of the Stack.
+        public readonly Font _main;
+        public readonly Font[] Stack;
+
+        public StackedFont(params Font[] args)
+        {
+            if (args.Length < 1)
+                throw new ArgumentException("At least one font is required");
+
+            Stack = args;
+            _main = args[0];
+        }
+
+        // All metrics methods use the default font (_main).
+        // Technically these could vary between stacked fonts, but that is a case
+        // that really should already be avoided for so many other reasons.
+        public override int GetAscent(float scale) => _main.GetAscent(scale);
+        public override int GetHeight(float scale) => _main.GetHeight(scale);
+        public override int GetDescent(float scale) => _main.GetDescent(scale);
+        public override int GetLineHeight(float scale) => _main.GetLineHeight(scale);
+
+        // DrawChar just proxies to the stack, or invokes _main's fallback.
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        {
+            foreach (var f in Stack)
+            {
+                var w = f.DrawChar(handle, rune, baseline, scale, color, fallback: false);
+                if (w != 0f)
+                    return w;
+            }
+
+            if (fallback)
+                return _main.DrawChar(handle, rune, baseline, scale, color, fallback: true);
+
+            return 0f;
+        }
+
+        public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
+        {
+            foreach (var f in Stack)
+            {
+                var m = f.GetCharMetrics(rune, scale, fallback: false);
+                if (m != null)
+                    return m;
+            }
+
+            if (!Rune.IsWhiteSpace(rune) && fallback)
+                return _main.GetCharMetrics(rune, scale, fallback: true);
+
+            return null;
         }
     }
 

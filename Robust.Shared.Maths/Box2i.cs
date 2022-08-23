@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct Box2i : IEquatable<Box2i>
+    public struct Box2i : IEquatable<Box2i>, ISpanFormattable
     {
         [FieldOffset(sizeof(int) * 0)] public int Left;
         [FieldOffset(sizeof(int) * 1)] public int Bottom;
@@ -21,6 +22,8 @@ namespace Robust.Shared.Maths
         public readonly int Width => Math.Abs(Right - Left);
         public readonly int Height => Math.Abs(Top - Bottom);
         public readonly Vector2i Size => new(Width, Height);
+
+        public readonly int Area => Width * Height;
 
         public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
@@ -64,6 +67,11 @@ namespace Robust.Shared.Maths
                 ? point.Y >= Bottom ^ point.Y > Top
                 : point.Y > Bottom ^ point.Y >= Top;
             return xOk && yOk;
+        }
+
+        public readonly bool IsEmpty()
+        {
+            return Bottom == Top || Left == Right;
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
@@ -127,6 +135,35 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({Left}, {Bottom}, {Right}, {Top})");
+        }
+
+        /// <summary>
+        /// Multiplies each side of the box by the scalar.
+        /// </summary>
+        public Box2i Scale(int scalar)
+        {
+            return new Box2i(
+                Left * scalar,
+                Bottom * scalar,
+                Right * scalar,
+                Top * scalar);
         }
     }
 }

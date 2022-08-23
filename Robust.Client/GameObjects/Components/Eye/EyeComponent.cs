@@ -3,20 +3,16 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedEyeComponent))]
-    public class EyeComponent : SharedEyeComponent
+    public sealed class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-
-        /// <inheritdoc />
-        public override string Name => "Eye";
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         [ViewVariables]
         private Eye? _eye = default!;
@@ -27,7 +23,6 @@ namespace Robust.Client.GameObjects
         private bool _setDrawFovOnInitialize = true;
         [DataField("zoom")]
         private Vector2 _setZoomOnInitialize = Vector2.One;
-        private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
 
@@ -85,14 +80,11 @@ namespace Robust.Client.GameObjects
 
         public override Vector2 Offset
         {
-            get => _offset;
+            get => _eye?.Offset ?? default;
             set
             {
-                if(_offset.EqualsApprox(value))
-                    return;
-
-                _offset = value;
-                UpdateEyePosition();
+                if (_eye != null)
+                    _eye.Offset = value;
             }
         }
 
@@ -116,13 +108,13 @@ namespace Robust.Client.GameObjects
         public MapCoordinates? Position => _eye?.Position;
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 
             _eye = new Eye
             {
-                Position = Owner.Transform.MapPosition,
+                Position = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition,
                 Zoom = _setZoomOnInitialize,
                 DrawFov = _setDrawFovOnInitialize
             };
@@ -156,7 +148,7 @@ namespace Robust.Client.GameObjects
             VisibilityMask = state.VisibilityMask;
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 
@@ -170,8 +162,8 @@ namespace Robust.Client.GameObjects
         public void UpdateEyePosition()
         {
             if (_eye == null) return;
-            var mapPos = Owner.Transform.MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position + _offset, mapPos.MapId);
+            var mapPos = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition;
+            _eye.Position = new MapCoordinates(mapPos.Position, mapPos.MapId);
         }
     }
 }

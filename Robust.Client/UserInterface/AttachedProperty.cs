@@ -15,6 +15,7 @@ namespace Robust.Client.UserInterface
     ///     without having to modify the base <see cref="Control" /> class to add it.
     ///     This is useful for storing data for specific controls like <see cref="LayoutContainer" />
     /// </summary>
+    [Virtual]
     public class AttachedProperty
     {
         /// <summary>
@@ -92,9 +93,9 @@ namespace Robust.Client.UserInterface
         internal AttachedProperty(string name, Type owningType, T defaultValue,
             Func<T, bool>? validate = null, AttachedPropertyChangedCallback<T>? changed = null)
             : base(name, owningType, typeof(T), defaultValue,
-                validate != null ? o => validate!((T) o!) : (Func<object?, bool>?) null,
+                validate != null ? o => validate!((T) o!) : null,
                 changed != null
-                    ? (AttachedPropertyChangedCallback?) ((o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!)))
+                    ? (o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!))
                     : null)
         {
             Validate = validate;

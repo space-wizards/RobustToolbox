@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -101,6 +101,7 @@ namespace Robust.Shared.Reflection
         ///     The string enum reference, including the "enum." prefix.
         ///     If this prefix does not exist, it is assumed to not be a reference and ignored.</param>
         /// <param name="enum"></param>
+        /// <param name="shouldThrow">If true, the function will throw an exception if the given string is an invalid enum reference</param>
         /// <returns>
         ///     True if the string was an enum reference that parsed correctly, false if it was not a reference.
         ///     Note that if it was a reference and it could not be resolved, the function throws a <see cref="ArgumentException"/> instead.
@@ -108,8 +109,14 @@ namespace Robust.Shared.Reflection
         /// <exception cref="ArgumentException">
         ///     Thrown if this string is an enum reference, but the enum could not be resolved.
         /// </exception>
-        bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum);
+        bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum, bool shouldThrow = true);
+
+        /// <summary>
+        ///     Turns an enum into a string that can be resolved back into an enum via <see cref="TryParseEnumReference(string, out Enum?)"/>.
+        /// </summary>
+        string GetEnumReference(Enum @enum);
 
         Type? YamlTypeTagLookup(Type baseType, string typeName);
+        IEnumerable<Type> FindAllTypes();
     }
 }

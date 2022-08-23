@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -6,7 +7,7 @@ namespace Robust.Shared.Maths
     ///     Represents a circle with a 2D position and a radius.
     /// </summary>
     [Serializable]
-    public struct Circle : IEquatable<Circle>
+    public struct Circle : IEquatable<Circle>, ISpanFormattable
     {
         /// <summary>
         ///     Position of the circle in 2D space.
@@ -69,7 +70,7 @@ namespace Robust.Shared.Maths
             var r2 = Radius * Radius;
 
             // Instead of d2 <= r2, use MathHelper.CloseTo to allow for some tolerance.
-            return (d2 < r2) || MathHelper.CloseTo(d2, r2);
+            return (d2 < r2) || MathHelper.CloseToPercent(d2, r2);
         }
 
         /// <inheritdoc />
@@ -107,6 +108,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"Circle ({Position.X}, {Position.Y}), {Radius} r";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"Circle ({Position.X}, {Position.Y}), {Radius} r");
         }
     }
 }

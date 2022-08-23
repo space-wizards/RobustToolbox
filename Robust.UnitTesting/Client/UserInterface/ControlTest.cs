@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 {
     [TestFixture]
     [TestOf(typeof(Control))]
-    public class ControlTest : RobustUnitTest
+    public sealed class ControlTest : RobustUnitTest
     {
         private static readonly AttachedProperty _refTypeAttachedProperty
             = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");
@@ -166,27 +166,27 @@ namespace Robust.UnitTesting.Client.UserInterface
             };
 
             control.PlayAnimation(animation, "foo");
-            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(0.5f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(0f)); // Should still be 0.
 
-            control.DoFrameUpdate(new FrameEventArgs(0.5001f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(0.5001f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(1f, 0.01)); // Should now be 1.
 
-            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(0.5f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(1.5f, 0.01)); // Should now be 1.5.
 
-            control.DoFrameUpdate(new FrameEventArgs(1.0f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(1.0f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(2.5f, 0.01)); // Should now be 2.5.
 
-            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(0.5f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(3f, 0.01)); // Should now be 3.
 
-            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+            control.DoFrameUpdateRecursive(new FrameEventArgs(0.5f));
 
             Assert.That(control.Foo, new ApproxEqualityConstraint(3f, 0.01)); // Should STILL be 3.
         }

@@ -6,19 +6,36 @@ namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
     ///     A container that lays out its children sequentially.
-    ///     Use <see cref="VBoxContainer"/> or <see cref="HBoxContainer"/> for an implementation.
     /// </summary>
-    public abstract class BoxContainer : Container
+    [Virtual]
+    public class BoxContainer : Container
     {
+        private LayoutOrientation _orientation;
         public const string StylePropertySeparation = "separation";
 
         private const int DefaultSeparation = 0;
-        private protected abstract bool Vertical { get; }
 
         /// <summary>
-        ///     Specifies "where" the controls should be laid out.
+        /// Specifies the alignment of the controls <b>along the orientation axis.</b>
         /// </summary>
+        /// <remarks>
+        /// This is along the orientation axis, not cross to it.
+        /// This means that if your orientation is vertical and you set this to center,
+        /// your controls will be laid out in the vertical <i>center</i> of the box control instead of the top.
+        /// </remarks>
         public AlignMode Align { get; set; }
+
+        private bool Vertical => Orientation == LayoutOrientation.Vertical;
+
+        public LayoutOrientation Orientation
+        {
+            get => _orientation;
+            set
+            {
+                _orientation = value;
+                InvalidateMeasure();
+            }
+        }
 
         private int ActualSeparation
         {
@@ -236,6 +253,22 @@ namespace Robust.Client.UserInterface.Controls
             ///     Controls are laid out from the end of the box container.
             /// </summary>
             End = 2
+        }
+
+        /// <summary>
+        /// Orientation for a box container.
+        /// </summary>
+        public enum LayoutOrientation : byte
+        {
+            /// <summary>
+            /// Controls are laid out horizontally, left to right.
+            /// </summary>
+            Horizontal,
+
+            /// <summary>
+            /// Controls are laid out vertically, top to bottom.
+            /// </summary>
+            Vertical
         }
     }
 }

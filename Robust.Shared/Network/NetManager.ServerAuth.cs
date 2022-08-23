@@ -2,39 +2,35 @@
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Newtonsoft.Json;
+using Robust.Shared.AuthLib;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
-using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
     partial class NetManager
     {
-        private const int RsaKeySize = 2048;
+        private readonly static string DisconnectReasonWrongKey = NetStructuredDisconnectMessages.Encode("Token decryption failed.\nPlease reconnect to this server from the launcher.", true);
 
-        private RSA? _authRsaPrivateKey;
+        private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 
-        public byte[]? RsaPublicKey { get; private set; }
+        public byte[] CryptoPublicKey { get; } = new byte[CryptoBox.PublicKeyBytes];
         public AuthMode Auth { get; private set; }
 
         public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
         public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
 
-        private void SAGenerateRsaKeys()
+        private void SAGenerateKeys()
         {
-            _authRsaPrivateKey = RSA.Create(RsaKeySize);
-            RsaPublicKey = _authRsaPrivateKey.ExportRSAPublicKey();
+            CryptoBox.KeyPair(CryptoPublicKey, _cryptoPrivateKey);
 
-            /*
-            Logger.DebugS("auth", "Private RSA key is {0}",
-                Convert.ToBase64String(_authRsaPrivateKey.ExportRSAPrivateKey()));
-            */
-            Logger.DebugS("auth", "Public RSA key is {0}", Convert.ToBase64String(RsaPublicKey));
+            Logger.DebugS("auth", "Public key is {0}", Convert.ToBase64String(CryptoPublicKey));
         }
 
         private async void HandleHandshake(NetPeerData peer, NetConnection connection)
@@ -72,7 +68,7 @@ namespace Robust.Shared.Network
                     RandomNumberGenerator.Fill(verifyToken);
                     var msgEncReq = new MsgEncryptionRequest
                     {
-                        PublicKey = needPk ? RsaPublicKey : Array.Empty<byte>(),
+                        PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken
                     };
 
@@ -87,48 +83,43 @@ namespace Robust.Shared.Network
                     var msgEncResponse = new MsgEncryptionResponse();
                     msgEncResponse.ReadFromBuffer(incPacket);
 
-                    byte[] verifyTokenCheck;
-                    byte[] sharedSecret;
-                    try
-                    {
-                        verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
-                            msgEncResponse.VerifyToken,
-                            RSAEncryptionPadding.OaepSHA256);
-                        sharedSecret = _authRsaPrivateKey!.Decrypt(
-                            msgEncResponse.SharedSecret,
-                            RSAEncryptionPadding.OaepSHA256);
-                    }
-                    catch (CryptographicException)
+                    var encResp = new byte[verifyToken.Length + SharedKeyLength];
+                    var ret = CryptoBox.SealOpen(
+                        encResp,
+                        msgEncResponse.SealedData,
+                        CryptoPublicKey,
+                        _cryptoPrivateKey);
+
+                    if (!ret)
                     {
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
                         // In that case, the decrypt can fail here.
-                        connection.Disconnect(
-                            "Token decryption failed.\nPlease reconnect to this server from the launcher.");
+                        connection.Disconnect(DisconnectReasonWrongKey);
                         return;
                     }
 
-                    if (!verifyToken.SequenceEqual(verifyTokenCheck))
+                    // Data is [shared]+[verify]
+                    var verifyTokenCheck = encResp[SharedKeyLength..];
+                    var sharedSecret = encResp[..SharedKeyLength];
+
+                    if (!verifyToken.AsSpan().SequenceEqual(verifyTokenCheck))
                     {
                         connection.Disconnect("Verify token is invalid");
                         return;
                     }
 
-                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+                    if (msgLogin.Encrypt)
+                        encryption = new NetEncryption(sharedSecret, isServer: true);
 
-                    var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
+                    var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
                     var client = new HttpClient();
                     var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    var joinedResp = await client.GetAsync(url);
+                    var joinedRespJson = await client.GetFromJsonAsync<HasJoinedResponse>(url);
 
-                    joinedResp.EnsureSuccessStatusCode();
-
-                    var resp = await joinedResp.Content.ReadAsStringAsync();
-                    var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(resp);
-
-                    if (!joinedRespJson.IsValid)
+                    if (joinedRespJson is not {IsValid: true})
                     {
                         connection.Disconnect("Failed to validate login");
                         return;
@@ -234,7 +225,7 @@ namespace Robust.Shared.Network
 
                 Logger.InfoS("net",
                     "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
-                    connection.RemoteEndPoint, userData.UserName, userData.UserName);
+                    connection.RemoteEndPoint, userData.UserName, userData.UserId);
 
                 // Handshake complete!
                 HandleInitialHandshakeComplete(peer, connection, userData, encryption, type);
@@ -306,19 +297,9 @@ namespace Robust.Shared.Network
             message.SenderConnection.Approve();
         }
 
-        private sealed class HasJoinedResponse
-        {
-#pragma warning disable 649
-            public bool IsValid;
-            public HasJoinedUserData? UserData;
-
-            public sealed class HasJoinedUserData
-            {
-                public string UserName = default!;
-                public Guid UserId = default!;
-                public string? PatronTier;
-            }
-#pragma warning restore 649
-        }
+        // ReSharper disable ClassNeverInstantiated.Local
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
+        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        // ReSharper restore ClassNeverInstantiated.Local
     }
 }

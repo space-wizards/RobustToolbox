@@ -2,13 +2,15 @@
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.Exceptions;
+using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Timing
 {
     [TestFixture]
     [TestOf(typeof(GameLoop))]
-    class GameLoop_Test : RobustUnitTest
+    sealed class GameLoop_Test : RobustUnitTest
     {
         /// <summary>
         ///     With single step enabled, the game loop should run 1 tick and then pause again.
@@ -26,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Timing
             newStopwatch.SetupGet(p => p.Elapsed).Returns(elapsedVal);
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.Paused = false;
-            var loop = new GameLoop(gameTiming);
+            var loop = new GameLoop(gameTiming, new RuntimeLog(), new ProfManager());
 
             var callCount = 0;
             loop.Tick += (sender, args) => callCount++;

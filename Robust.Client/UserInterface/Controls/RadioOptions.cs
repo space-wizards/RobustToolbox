@@ -2,11 +2,13 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using static Robust.Client.UserInterface.Controls.BaseButton;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
     public enum RadioOptionsLayout { Horizontal, Vertical }
 
+    [Virtual]
     public class RadioOptions<T> : Control
     {
         private int internalIdCount = 0;
@@ -34,11 +36,17 @@ namespace Robust.Client.UserInterface.Controls
             switch (layout)
             {
                 case RadioOptionsLayout.Vertical:
-                    _container = new VBoxContainer();
+                    _container = new BoxContainer
+                    {
+                        Orientation = LayoutOrientation.Vertical
+                    };
                     break;
                 case RadioOptionsLayout.Horizontal:
                 default:
-                    _container = new HBoxContainer();
+                    _container = new BoxContainer
+                    {
+                        Orientation = LayoutOrientation.Horizontal
+                    };
                     break;
             }
 
@@ -221,7 +229,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
     }
-    public class RadioOptionItemSelectedEventArgs<T> : EventArgs
+    public sealed class RadioOptionItemSelectedEventArgs<T> : EventArgs
     {
         public RadioOptions<T> Button { get; }
 

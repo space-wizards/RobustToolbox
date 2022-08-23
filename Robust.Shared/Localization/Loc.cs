@@ -25,7 +25,7 @@ namespace Robust.Shared.Localization
         private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
 
         /// <summary>
-        ///     Gets a language approrpiate string represented by the supplied messageId.
+        ///     Gets a language appropriate string represented by the supplied messageId.
         /// </summary>
         /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
@@ -55,29 +55,6 @@ namespace Robust.Shared.Localization
             params (string, object)[] args)
         {
             return LocalizationManager.TryGetString(messageId, out value, args);
-        }
-
-        /// <summary>
-        ///     Load data for a culture.
-        /// </summary>
-        /// <param name="resourceManager"></param>
-        /// <param name="culture"></param>
-        [Obsolete("Use ILocalizationManager directly for setup methods.")]
-        public static void LoadCulture(IResourceManager resourceManager, CultureInfo culture)
-        {
-            LocalizationManager.LoadCulture(resourceManager, culture);
-        }
-
-
-        /// <summary>
-        /// Remnants of the old Localization system.
-        /// It exists to prevent source errors and allow existing game text to *mostly* work
-        /// </summary>
-        [Obsolete]
-        [StringFormatMethod("text")]
-        public static string GetString(string text, params object[] args)
-        {
-            return LocalizationManager.GetString(text, args);
         }
     }
 }

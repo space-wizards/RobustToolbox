@@ -4,7 +4,6 @@ using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -13,21 +12,21 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
+    public sealed class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+        public (T1, T2) Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, (T1, T2) val = default)
         {
             if (node.Children.Count != 1)
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.ReadValueOrThrow<T1>(entry.Key, context, skipHook);
-            var v2 = serializationManager.ReadValueOrThrow<T2>(entry.Value, context, skipHook);
+            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook, val.Item1);
+            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook, val.Item2);
 
-            return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
+            return (v1, v2);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -65,8 +64,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             bool skipHook,
             ISerializationContext? context = null)
         {
-            return (serializationManager.Copy(source.Item1, target.Item1)!,
-                serializationManager.Copy(source.Item2, source.Item2)!);
+            var i1 = target.Item1;
+            var i2 = target.Item2;
+            serializationManager.Copy(source.Item1, ref i1, context, skipHook);
+            serializationManager.Copy(source.Item2, ref i2, context, skipHook);
+            return (i1, i2);
         }
     }
 }

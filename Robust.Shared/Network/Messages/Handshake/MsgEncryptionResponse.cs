@@ -7,30 +7,25 @@ namespace Robust.Shared.Network.Messages.Handshake
 {
     internal sealed class MsgEncryptionResponse : NetMessage
     {
-        public MsgEncryptionResponse() : base("", MsgGroups.Core)
-        {
-        }
+        public override string MsgName => string.Empty;
+
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public Guid UserId;
-        public byte[] SharedSecret;
-        public byte[] VerifyToken;
+        public byte[] SealedData;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             UserId = buffer.ReadGuid();
             var keyLength = buffer.ReadVariableInt32();
-            SharedSecret = buffer.ReadBytes(keyLength);
-            var tokenLength = buffer.ReadVariableInt32();
-            VerifyToken = buffer.ReadBytes(tokenLength);
+            SealedData = buffer.ReadBytes(keyLength);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write(UserId);
-            buffer.WriteVariableInt32(SharedSecret.Length);
-            buffer.Write(SharedSecret);
-            buffer.WriteVariableInt32(VerifyToken.Length);
-            buffer.Write(VerifyToken);
+            buffer.WriteVariableInt32(SealedData.Length);
+            buffer.Write(SealedData);
         }
     }
 }

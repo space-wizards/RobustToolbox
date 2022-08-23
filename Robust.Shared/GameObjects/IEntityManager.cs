@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
-    public interface IEntityManager
+    /// <summary>
+    ///     Holds a collection of entities and the components attached to them.
+    /// </summary>
+    [PublicAPI]
+    public partial interface IEntityManager
     {
         /// <summary>
         ///     The current simulation tick being processed.
@@ -18,30 +22,42 @@ namespace Robust.Shared.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
-        void TickUpdate(float frameTime, Histogram? histogram=null);
+
+        /// <summary>
+        ///     Drops every entity, component and entity system.
+        /// </summary>
+        void Cleanup();
+
+        /// <param name="noPredictions">
+        /// Only run systems with <see cref="EntitySystem.UpdatesOutsidePrediction"/> set true.
+        /// </param>
+        void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.
         /// </summary>
         void FrameUpdate(float frameTime);
 
-        IComponentManager ComponentManager { get; }
+        IComponentFactory ComponentFactory { get; }
         IEntitySystemManager EntitySysManager { get; }
         IEntityNetworkManager? EntityNetManager { get; }
         IEventBus EventBus { get; }
 
         #region Entity Management
 
-        event EventHandler<EntityUid>? EntityAdded;
-        event EventHandler<EntityUid>? EntityInitialized;
-        event EventHandler<EntityUid>? EntityStarted;
-        event EventHandler<EntityUid>? EntityDeleted;
+        event Action<EntityUid>? EntityAdded;
+        event Action<EntityUid>? EntityInitialized;
+        event Action<EntityUid>? EntityStarted;
+        event Action<EntityUid>? EntityDeleted;
+        event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
-        IEntity CreateEntityUninitialized(string? prototypeName);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
 
-        IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName);
 
-        IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -49,7 +65,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -57,45 +73,29 @@ namespace Robust.Shared.GameObjects
         /// <param name="protoName"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <summary>
-        /// Returns an entity by id
+        /// How many entities are currently active.
         /// </summary>
-        /// <param name="uid"></param>
-        /// <returns>Entity or throws if entity id doesn't exist</returns>
-        IEntity GetEntity(EntityUid uid);
+        int EntityCount { get; }
 
         /// <summary>
-        /// Attempt to get an entity, returning whether or not an entity was gotten.
+        /// Returns all entities
         /// </summary>
-        /// <param name="uid"></param>
-        /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
-        /// <returns>True if a value was returned, false otherwise.</returns>
-        bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity);
+        /// <returns></returns>
+        IEnumerable<EntityUid> GetEntities();
 
-        /// <summary>
-        /// Returns all entities that match with the provided query.
-        /// </summary>
-        /// <param name="query">The query to test.</param>
-        /// <returns>An enumerable over all matching entities.</returns>
-        [Obsolete("IEntityQuery is obsolete")]
-        IEnumerable<IEntity> GetEntities(IEntityQuery query);
+        public void Dirty(EntityUid uid);
 
-        IEnumerable<IEntity> GetEntities();
-
-        public void QueueDeleteEntity(IEntity entity);
+        public void Dirty(Component component);
 
         public void QueueDeleteEntity(EntityUid uid);
 
-        /// <summary>
-        /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
-        /// </summary>
-        /// <param name="e">Entity to remove</param>
-        void DeleteEntity(IEntity e);
+        public bool IsQueuedForDeletion(EntityUid uid);
 
         /// <summary>
-        /// Shuts-down and removes the entity with the given <see cref="EntityUid"/>. This is also broadcast to all clients.
+        /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
         void DeleteEntity(EntityUid uid);
@@ -104,6 +104,28 @@ namespace Robust.Shared.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);
+
+        /// <summary>
+        /// Checks whether an entity with the specified ID exists.
+        /// </summary>
+        bool EntityExists([NotNullWhen(true)] EntityUid? uid);
+
+        /// <summary>
+        /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
+        /// </summary>
+        bool Deleted(EntityUid uid);
+
+        /// <summary>
+        /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
+        /// </summary>
+        bool Deleted([NotNullWhen(false)] EntityUid? uid);
+
+        void RunMapInit(EntityUid entity, MetaDataComponent meta);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
     }

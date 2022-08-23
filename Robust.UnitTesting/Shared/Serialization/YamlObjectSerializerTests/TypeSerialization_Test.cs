@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    public class TypeSerialization_Test : RobustUnitTest
+    public sealed class TypeSerialization_Test : RobustUnitTest
     {
         [OneTimeSetUp]
         public void Setup()
@@ -56,7 +56,7 @@ test:
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var type = serMan.ReadValue<ITestType>(new MappingDataNode(mapping)["test"]);
+            var type = serMan.Read<ITestType>(new MappingDataNode(mapping)["test"]);
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeOne>(type);
@@ -67,7 +67,7 @@ test:
 
     [SerializedType("testtype1")]
     [DataDefinition]
-    public class TestTypeOne : ITestType
+    public sealed class TestTypeOne : ITestType
     {
     }
 }

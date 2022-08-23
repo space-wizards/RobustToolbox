@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 #nullable disable
@@ -11,15 +12,9 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent from client to server to request to open a session.
     /// </summary>
-    public class MsgViewVariablesReqSession : NetMessage
+    public sealed class MsgViewVariablesReqSession : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesReqSession);
-        public MsgViewVariablesReqSession(INetChannel channel) : base(NAME, GROUP) { }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     An ID the client assigns so it knows which request was accepted/denied through
@@ -46,13 +41,11 @@ namespace Robust.Shared.Network.Messages
         {
             buffer.Write(RequestId);
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(stream, Selector);
-                buffer.Write((int)stream.Length);
-                stream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
-            }
+
+            var stream = new MemoryStream();
+            serializer.Serialize(stream, Selector);
+            buffer.Write((int)stream.Length);
+            buffer.Write(stream.AsSpan());
         }
     }
 }

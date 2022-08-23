@@ -46,5 +46,13 @@ namespace Robust.UnitTesting
         }
 
         public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
+
+        public void AddEngineModuleDirectory(string dir)
+        {
+            // Only used for ILVerify, not necessary.
+        }
+#pragma warning disable CS0067 // Needed by interface
+        public event ExtraModuleLoad? ExtraModuleLoaders;
+#pragma warning restore CS0067
     }
 }

@@ -24,10 +24,10 @@ namespace Robust.Client.Player
         void Startup();
         void Shutdown();
 
-        void ApplyPlayerStates(IEnumerable<PlayerState>? list);
+        void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list);
     }
 
-    public class LocalPlayerChangedEventArgs : EventArgs
+    public sealed class LocalPlayerChangedEventArgs : EventArgs
     {
         public readonly LocalPlayer? OldPlayer;
         public readonly LocalPlayer? NewPlayer;

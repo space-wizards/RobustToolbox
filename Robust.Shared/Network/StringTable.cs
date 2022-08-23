@@ -22,7 +22,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Contains a networked mapping of IDs -> Strings.
     /// </summary>
-    public class StringTable
+    public sealed class StringTable
     {
         /// <summary>
         ///     The ID of the <see cref="MsgStringTableEntries"/> packet.
@@ -61,10 +61,10 @@ namespace Robust.Shared.Network
 
             _callback = callback;
             _updateCallback = updateCallback;
-            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, ReceiveEntries,
-                NetMessageAccept.Client);
+            _network.RegisterNetMessage<MsgStringTableEntries>(ReceiveEntries, NetMessageAccept.Client | NetMessageAccept.Handshake);
 
             Reset();
+            _initialized = true;
         }
 
         private void ReceiveEntries(MsgStringTableEntries message)
@@ -113,9 +113,9 @@ namespace Robust.Shared.Network
             _initialized = false;
 
             // manually register the id on the client so it can bootstrap itself with incoming table entries
-            if (!TryFindStringId(MsgStringTableEntries.NAME, out _))
+            if (!TryFindStringId(nameof(MsgStringTableEntries), out _))
             {
-                _strings.Add(StringTablePacketId, MsgStringTableEntries.NAME);
+                _strings.Add(StringTablePacketId, nameof(MsgStringTableEntries));
 
                 if (_network.IsClient)
                 {
@@ -123,7 +123,7 @@ namespace Robust.Shared.Network
                         new MsgStringTableEntries.Entry
                         {
                             Id = StringTablePacketId,
-                            String = MsgStringTableEntries.NAME
+                            String = nameof(MsgStringTableEntries)
                         }
                     });
                 }
@@ -236,7 +236,7 @@ namespace Robust.Shared.Network
             if (!_network.IsRunning)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntries>();
+            var message = new MsgStringTableEntries();
 
             message.Entries = new MsgStringTableEntries.Entry[1];
             message.Entries[0].Id = id;
@@ -254,7 +254,7 @@ namespace Robust.Shared.Network
             if (_network.IsClient)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntries>();
+            var message = new MsgStringTableEntries();
 
             var count = _strings.Count;
             message.Entries = new MsgStringTableEntries.Entry[count];
@@ -276,13 +276,9 @@ namespace Robust.Shared.Network
     /// <summary>
     /// A net message for transmitting a string table entry to clients.
     /// </summary>
-    public class MsgStringTableEntries : NetMessage
+    public sealed class MsgStringTableEntries : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.String;
-        public static readonly string NAME = nameof(MsgStringTableEntries);
-        public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         public Entry[] Entries { get; set; } = default!;
 

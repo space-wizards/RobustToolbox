@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Enums;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Placement
@@ -11,6 +12,16 @@ namespace Robust.Client.Placement
         bool Eraser { get; }
         PlacementMode? CurrentMode { get; set; }
         PlacementInformation? CurrentPermission { get; set; }
+
+        /// <summary>
+        /// The direction to spawn the entity in (presently exposed for EntitySpawnWindow UI)
+        /// </summary>
+        Direction Direction { get; set; }
+
+        /// <summary>
+        /// Gets called when Direction changed (presently for EntitySpawnWindow UI)
+        /// </summary>
+        event EventHandler DirectionChanged;
 
         /// <summary>
         /// Gets called when the PlacementManager changed its build/erase mode or when the hijacks changed

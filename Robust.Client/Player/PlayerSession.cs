@@ -17,10 +17,7 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public IEntity? AttachedEntity { get; set; }
-
-        /// <inheritdoc />
-        public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
+        public EntityUid? AttachedEntity { get; set; }
 
         /// <inheritdoc />
         public NetUserId UserId { get; }

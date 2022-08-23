@@ -1,8 +1,10 @@
-﻿using System;
+using System;
+using System.Buffers;
+using System.Diagnostics;
+using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using System.IO;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -10,54 +12,89 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgState : NetMessage
+    public sealed class MsgState : NetMessage
     {
         // If a state is large enough we send it ReliableUnordered instead.
         // This is to avoid states being so large that they consistently fail to reach the other end
         // (due to being in many parts).
         public const int ReliableThreshold = 1300;
 
-        #region REQUIRED
+        // If a state is larger than this, compress it with deflate.
+        public const int CompressionThreshold = 256;
 
-        public static readonly MsgGroups GROUP = MsgGroups.Entity;
-        public static readonly string NAME = nameof(MsgState);
-
-        public MsgState(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
+        public ZStdCompressionContext CompressionContext;
 
-        private bool _hasWritten;
+        internal bool _hasWritten;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             MsgSize = buffer.LengthBytes;
-            var length = buffer.ReadVariableInt32();
-            using var stream = buffer.ReadAlignedMemory(length);
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
-            serializer.DeserializeDirect(stream, out State);
+            var uncompressedLength = buffer.ReadVariableInt32();
+            var compressedLength = buffer.ReadVariableInt32();
+            MemoryStream finalStream;
 
-            State.PayloadSize = length;
+            // State is compressed.
+            if (compressedLength > 0)
+            {
+                var stream = buffer.ReadAlignedMemory(compressedLength);
+                using var decompressStream = new ZStdDecompressStream(stream);
+                var decompressedStream = new MemoryStream(uncompressedLength);
+                decompressStream.CopyTo(decompressedStream, uncompressedLength);
+                decompressedStream.Position = 0;
+                finalStream = decompressedStream;
+            }
+            // State is uncompressed.
+            else
+            {
+                var stream = buffer.ReadAlignedMemory(uncompressedLength);
+                finalStream = stream;
+            }
+
+            var serializer = IoCManager.Resolve<IRobustSerializer>();
+            serializer.DeserializeDirect(finalStream, out State);
+            finalStream.Dispose();
+
+            State.PayloadSize = uncompressedLength;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            using (var stateStream = new MemoryStream())
-            {
-                DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
-                serializer.SerializeDirect(stateStream, State);
-                buffer.WriteVariableInt32((int) stateStream.Length);
+            var stateStream = new MemoryStream();
+            serializer.SerializeDirect(stateStream, State);
+            buffer.WriteVariableInt32((int)stateStream.Length);
 
-                // Always succeeds.
-                stateStream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
+            // We compress the state.
+            if (stateStream.Length > CompressionThreshold)
+            {
+                // var sw = Stopwatch.StartNew();
+                stateStream.Position = 0;
+                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)stateStream.Length));
+                var length = CompressionContext.Compress2(buf, stateStream.AsSpan());
+
+                buffer.WriteVariableInt32(length);
+
+                buffer.Write(buf.AsSpan(0, length));
+
+                // var elapsed = sw.Elapsed;
+                // System.Console.WriteLine(
+                //    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
+
+                ArrayPool<byte>.Shared.Return(buf);
+            }
+            // The state is sent as is.
+            else
+            {
+                // 0 means that the state isn't compressed.
+                buffer.WriteVariableInt32(0);
+
+                buffer.Write(stateStream.AsSpan());
             }
 
-            _hasWritten = false;
+            _hasWritten = true;
             MsgSize = buffer.LengthBytes;
         }
 
@@ -68,12 +105,7 @@ namespace Robust.Shared.Network.Messages
         /// <returns></returns>
         public bool ShouldSendReliably()
         {
-            // This check will be true in integration tests.
-            // TODO: Maybe handle this better so that packet loss integration testing can be done?
-            if (!_hasWritten)
-            {
-                return true;
-            }
+            DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
             return MsgSize > ReliableThreshold;
         }
 

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
@@ -13,19 +12,28 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static Robust.Client.Utility.LiterallyJustMessageBox;
+using TerraFX.Interop.Windows;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
+using GL = OpenToolkit.Graphics.OpenGL4.GL;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    internal partial class Clyde
+    internal partial class  Clyde
     {
+        private readonly List<WindowReg> _windows = new();
         private readonly List<WindowHandle> _windowHandles = new();
-        private readonly List<MonitorHandle> _monitorHandles = new();
+        private readonly Dictionary<int, MonitorHandle> _monitorHandles = new();
+
+        private int _primaryMonitorId;
+        private WindowReg? _mainWindow;
 
         private IWindowingImpl? _windowing;
+#pragma warning disable 414
+        // Keeping this for if/when we ever get a new renderer.
         private Renderer _chosenRenderer;
+#pragma warning restore 414
 
+        private ResourcePath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
@@ -39,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
-        public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowRequestClosedEventArgs>? CloseWindow;
         public event Action<WindowDestroyedEventArgs>? DestroyWindow;
         public event Action<WindowContentScaleEventArgs>? OnWindowScaleChanged;
         public event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -47,18 +55,18 @@ namespace Robust.Client.Graphics.Clyde
 
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
-        public IClydeWindow MainWindow => _windowing?.MainWindow?.Handle ??
+        public IClydeWindow MainWindow => _mainWindow?.Handle ??
                                           throw new InvalidOperationException("Windowing is not initialized");
 
-        public Vector2i ScreenSize => _windowing?.MainWindow?.FramebufferSize ??
+        public Vector2i ScreenSize => _mainWindow?.FramebufferSize ??
                                       throw new InvalidOperationException("Windowing is not initialized");
 
-        public bool IsFocused => _windowing?.MainWindow?.IsFocused ??
+        public bool IsFocused => _mainWindow?.IsFocused ??
                                  throw new InvalidOperationException("Windowing is not initialized");
 
         public IEnumerable<IClydeWindow> AllWindows => _windowHandles;
 
-        public Vector2 DefaultWindowScale => _windowing?.MainWindow?.WindowScale ??
+        public Vector2 DefaultWindowScale => _mainWindow?.WindowScale ??
                                              throw new InvalidOperationException("Windowing is not initialized");
 
         public ScreenCoordinates MouseScreenPosition
@@ -82,56 +90,134 @@ namespace Robust.Client.Graphics.Clyde
 
         public uint? GetX11WindowId()
         {
-            return _windowing?.WindowGetX11Id(_windowing.MainWindow!) ?? null;
+            return _windowing?.WindowGetX11Id(_mainWindow!) ?? null;
         }
 
         private bool InitWindowing()
         {
+            if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngleEs3On10_0))
+            {
+                Environment.SetEnvironmentVariable("ANGLE_FEATURE_OVERRIDES_ENABLED", "allowES3OnFL10_0");
+            }
+
+            var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
+            if (!string.IsNullOrWhiteSpace(iconPath))
+                _windowIconPath = new ResourcePath(iconPath);
+
             _windowingThread = Thread.CurrentThread;
 
-            _windowing = new GlfwWindowingImpl(this);
+            var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
+            IWindowingImpl winImpl;
 
+            switch (windowingApi)
+            {
+                case "glfw":
+                    winImpl = new GlfwWindowingImpl(this);
+                    break;
+                case "sdl2":
+                    winImpl = new Sdl2WindowingImpl(this);
+                    break;
+                default:
+                    _logManager.GetSawmill("clyde.win").Log(
+                        LogLevel.Error, "Unknown windowing API: {name}. Falling back to GLFW.", windowingApi);
+                    goto case "glfw";
+            }
+
+            _windowing = winImpl;
             return _windowing.Init();
+        }
+
+        private bool TryInitMainWindow(GLContextSpec? glSpec, [NotNullWhen(false)] out string? error)
+        {
+            DebugTools.AssertNotNull(_glContext);
+
+            var width = _cfg.GetCVar(CVars.DisplayWidth);
+            var height = _cfg.GetCVar(CVars.DisplayHeight);
+            var prevWidth = width;
+            var prevHeight = height;
+
+            IClydeMonitor? monitor = null;
+            var fullscreen = false;
+
+            if (_windowMode == WindowMode.Fullscreen)
+            {
+                monitor = _monitorHandles[_primaryMonitorId];
+                width = monitor.Size.X;
+                height = monitor.Size.Y;
+                fullscreen = true;
+            }
+
+            var parameters = new WindowCreateParameters
+            {
+                Width = width,
+                Height = height,
+                Monitor = monitor,
+                Fullscreen = fullscreen
+            };
+
+            var (reg, err) = SharedWindowCreate(glSpec, parameters, null, isMain: true);
+
+            if (reg == null)
+            {
+                error = err!;
+                return false;
+            }
+
+            DebugTools.Assert(reg.Id == WindowId.Main);
+
+            if (fullscreen)
+            {
+                reg.PrevWindowSize = (prevWidth, prevHeight);
+                reg.PrevWindowPos = (50, 50);
+            }
+
+            error = null;
+            return true;
         }
 
         private unsafe bool InitMainWindowAndRenderer()
         {
             DebugTools.AssertNotNull(_windowing);
+            DebugTools.AssertNotNull(_glContext);
 
-            _chosenRenderer = (Renderer) _cfg.GetCVar(CVars.DisplayRenderer);
-
-            var renderers = _chosenRenderer == Renderer.Default
-                ? stackalloc Renderer[]
-                {
-                    Renderer.OpenGL33,
-                    Renderer.OpenGL31,
-                    Renderer.OpenGLES2
-                }
-                : stackalloc Renderer[] {_chosenRenderer};
+            _chosenRenderer = Renderer.OpenGL;
 
             var succeeded = false;
             string? lastError = null;
-            foreach (var renderer in renderers)
+
+            if (_glContext!.RequireWindowGL)
             {
-                if (!_windowing!.TryInitMainWindow(renderer, out lastError))
+                var specs = _glContext!.SpecsToTry;
+
+                foreach (var glSpec in specs)
                 {
-                    Logger.DebugS("clyde.win", $"{renderer} unsupported: {lastError}");
-                    continue;
+                    if (!TryInitMainWindow(glSpec, out lastError))
+                    {
+                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
+                        continue;
+                    }
+
+                    succeeded = true;
+                    break;
                 }
-
-                // We should have a main window now.
-                DebugTools.AssertNotNull(_windowing.MainWindow);
-
-                succeeded = true;
-                _chosenRenderer = renderer;
-                _isGLES = _chosenRenderer == Renderer.OpenGLES2;
-                _isCore = _chosenRenderer == Renderer.OpenGL33;
-                break;
             }
+            else
+            {
+                if (!TryInitMainWindow(null, out lastError))
+                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
+                else
+                    succeeded = true;
+            }
+
+            // We should have a main window now.
+            DebugTools.AssertNotNull(_mainWindow);
+
+            // _openGLVersion must be set by _glContext.
+            DebugTools.Assert(_openGLVersion != RendererOpenGLVersion.Auto);
 
             if (!succeeded)
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (OperatingSystem.IsWindows())
                 {
                     var msgBoxContent = "Failed to create the game window. " +
                                         "This probably means your GPU is too old to play the game. " +
@@ -139,10 +225,14 @@ namespace Robust.Client.Graphics.Clyde
                                         "or enable compatibility mode in the launcher if that fails.\n" +
                                         $"The exact error is: {lastError}";
 
-                    MessageBoxW(null,
-                        msgBoxContent,
-                        "Space Station 14: Failed to create window",
-                        MB_OK | MB_ICONERROR);
+                    fixed (char* pText = msgBoxContent)
+                    fixed (char* pCaption = "RobustToolbox: Failed to create window")
+                    {
+                        Windows.MessageBoxW(HWND.NULL,
+                            (ushort*) pText,
+                            (ushort*) pCaption,
+                            MB.MB_OK | MB.MB_ICONERROR);
+                    }
                 }
 
                 Logger.FatalS("clyde.win",
@@ -153,24 +243,29 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
-            _windowing!.GLInitMainContext(_isGLES);
+            if (!_earlyGLInit)
+                InitOpenGL();
 
-            UpdateMainWindowLoadedRtSize();
+            _sawmillOgl.Debug("Setting viewport and rendering splash...");
 
-            _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
-            InitOpenGL();
+            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            CheckGlError();
+
+            // Quickly do a render with _drawingSplash = true so the screen isn't blank.
+            Render();
+
             return true;
         }
 
         private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (OperatingSystem.IsMacOS() || _windowIconPath == null)
             {
                 // Does nothing on macOS so don't bother.
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
+            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
@@ -190,31 +285,89 @@ namespace Robust.Client.Graphics.Clyde
         public void SetWindowTitle(string title)
         {
             DebugTools.AssertNotNull(_windowing);
+            DebugTools.AssertNotNull(_mainWindow);
 
-            _windowing!.WindowSetTitle(_windowing.MainWindow!, title);
+            _windowing!.WindowSetTitle(_mainWindow!, title);
         }
 
         public void SetWindowMonitor(IClydeMonitor monitor)
         {
             DebugTools.AssertNotNull(_windowing);
+            DebugTools.AssertNotNull(_mainWindow);
 
-            var window = _windowing!.MainWindow!;
-
-            _windowing.WindowSetMonitor(window, monitor);
+            _windowing!.WindowSetMonitor(_mainWindow!, monitor);
         }
 
         public void RequestWindowAttention()
         {
             DebugTools.AssertNotNull(_windowing);
+            DebugTools.AssertNotNull(_mainWindow);
 
-            _windowing!.WindowRequestAttention(_windowing.MainWindow!);
+            _windowing!.WindowRequestAttention(_mainWindow!);
         }
 
-        public async Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
+        public IClydeWindow CreateWindow(WindowCreateParameters parameters)
         {
             DebugTools.AssertNotNull(_windowing);
+            DebugTools.AssertNotNull(_glContext);
+            DebugTools.AssertNotNull(_mainWindow);
 
-            return await _windowing!.WindowCreate(parameters);
+            var glSpec = _glContext!.GetNewWindowSpec();
+
+            _glContext.BeforeSharedWindowCreateUnbind();
+
+            var (reg, error) = SharedWindowCreate(
+                glSpec,
+                parameters,
+                glSpec == null ? null : _mainWindow,
+                isMain: false);
+
+            // Rebinding is handed by WindowCreated in the GL context.
+
+            if (error != null)
+                throw new Exception(error);
+
+            return reg!.Handle;
+        }
+
+        private (WindowReg?, string? error) SharedWindowCreate(
+            GLContextSpec? glSpec,
+            WindowCreateParameters parameters,
+            WindowReg? share,
+            bool isMain)
+        {
+            WindowReg? owner = null;
+            if (parameters.Owner != null)
+                owner = ((WindowHandle)parameters.Owner).Reg;
+
+            var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share, owner);
+
+            if (reg != null)
+            {
+                // Window init succeeded, do setup.
+                reg.IsMainWindow = isMain;
+                if (isMain)
+                    _mainWindow = reg;
+
+                _windows.Add(reg);
+                _windowHandles.Add(reg.Handle);
+
+                var rtId = AllocRid();
+                _renderTargets.Add(rtId, new LoadedRenderTarget
+                {
+                    Size = reg.FramebufferSize,
+                    IsWindow = true,
+                    WindowId = reg.Id,
+                    IsSrgb = true
+                });
+
+                reg.RenderTarget = new RenderWindow(this, rtId);
+
+                _glContext!.WindowCreated(glSpec, reg);
+            }
+
+            // Pass through result whether successful or not, caller handles it.
+            return (reg, error);
         }
 
         private void DoDestroyWindow(WindowReg reg)
@@ -222,8 +375,20 @@ namespace Robust.Client.Graphics.Clyde
             if (reg.IsMainWindow)
                 throw new InvalidOperationException("Cannot destroy main window.");
 
+            if (reg.IsDisposed)
+                return;
+
+            reg.IsDisposed = true;
+
+            _glContext!.WindowDestroyed(reg);
             _windowing!.WindowDestroy(reg);
-            reg.BlitDoneEvent?.Set();
+
+            _windows.Remove(reg);
+            _windowHandles.Remove(reg.Handle);
+
+            var destroyed = new WindowDestroyedEventArgs(reg.Handle);
+            DestroyWindow?.Invoke(destroyed);
+            reg.Closed?.Invoke(destroyed);
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
@@ -232,28 +397,15 @@ namespace Robust.Client.Graphics.Clyde
             DispatchEvents();
         }
 
-        private void SwapMainBuffers()
+        private void SwapAllBuffers()
         {
-            _windowing?.WindowSwapBuffers(_windowing.MainWindow!);
+            _glContext?.SwapAllBuffers();
         }
 
         private void VSyncChanged(bool newValue)
         {
             _vSync = newValue;
-            _windowing?.UpdateVSync();
-        }
-
-        private void CreateWindowRenderTexture(WindowReg reg)
-        {
-            reg.RenderTexture?.Dispose();
-
-            reg.RenderTexture = CreateRenderTarget(reg.FramebufferSize, new RenderTargetFormatParameters
-            {
-                ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
-                HasDepthStencil = true
-            });
-            // Necessary to correctly sync multi-context blitting.
-            reg.RenderTexture.MakeGLFence = true;
+            _glContext?.UpdateVSync();
         }
 
         private void WindowModeChanged(int mode)
@@ -264,17 +416,17 @@ namespace Robust.Client.Graphics.Clyde
 
         Task<string> IClipboardManager.GetText()
         {
-            return _windowing?.ClipboardGetText() ?? Task.FromResult("");
+            return _windowing?.ClipboardGetText(_mainWindow!) ?? Task.FromResult("");
         }
 
         void IClipboardManager.SetText(string text)
         {
-            _windowing?.ClipboardSetText(text);
+            _windowing?.ClipboardSetText(_mainWindow!, text);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
         {
-            return _monitorHandles;
+            return _monitorHandles.Values;
         }
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
@@ -295,7 +447,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _windowing!.CursorSet(_windowing.MainWindow!, cursor);
+            _windowing!.CursorSet(_mainWindow!, cursor);
         }
 
 
@@ -306,66 +458,11 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetVisible(reg, visible);
         }
 
-        private void InitWindowBlitThread(WindowReg reg)
+        public void RunOnWindowThread(Action a)
         {
-            if (EffectiveThreadWindowBlit)
-            {
-                reg.BlitStartEvent = new ManualResetEventSlim();
-                reg.BlitDoneEvent = new ManualResetEventSlim();
-                reg.BlitThread = new Thread(() => BlitThread(reg))
-                {
-                    Name = $"WinBlitThread ID:{reg.Id}",
-                    IsBackground = true
-                };
+            DebugTools.AssertNotNull(_windowing);
 
-                // System.Console.WriteLine("A");
-                reg.BlitThread.Start();
-                // Wait for thread to finish init.
-                reg.BlitDoneEvent.Wait();
-            }
-            else
-            {
-                // Binds GL context.
-                BlitThreadInit(reg);
-
-                _windowing!.GLMakeContextCurrent(_windowing.MainWindow!);
-            }
-        }
-
-        private void BlitThread(WindowReg reg)
-        {
-            BlitThreadInit(reg);
-
-            reg.BlitDoneEvent!.Set();
-
-            try
-            {
-                while (true)
-                {
-                    reg.BlitStartEvent!.Wait();
-                    if (reg.IsDisposed)
-                    {
-                        BlitThreadCleanup(reg);
-                        return;
-                    }
-
-                    reg.BlitStartEvent!.Reset();
-
-                    // Do channel blit.
-                    BlitThreadDoSecondaryWindowBlit(reg);
-                }
-            }
-            catch (AggregateException e)
-            {
-                // ok channel closed, we exit.
-                e.Handle(ec => ec is ChannelClosedException);
-            }
-        }
-
-        private static void BlitThreadCleanup(WindowReg reg)
-        {
-            reg.BlitDoneEvent!.Dispose();
-            reg.BlitStartEvent!.Dispose();
+            _windowing!.RunOnWindowThread(a);
         }
 
         private abstract class WindowReg
@@ -385,21 +482,19 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
+            public IClydeWindow? Owner;
 
             public bool DisposeOnClose;
 
-            // Used EXCLUSIVELY to run the two rendering commands to blit to the window.
-            public Thread? BlitThread;
-            public ManualResetEventSlim? BlitStartEvent;
-            public ManualResetEventSlim? BlitDoneEvent;
-
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
-            public RenderTexture? RenderTexture;
-            public Action<WindowClosedEventArgs>? Closed;
+            public RenderWindow RenderTarget = default!;
+            public Action<WindowRequestClosedEventArgs>? RequestClosed;
+            public Action<WindowDestroyedEventArgs>? Closed;
+            public Action<WindowResizedEventArgs>? Resized;
         }
 
-        private sealed class WindowHandle : IClydeWindow
+        private sealed class WindowHandle : IClydeWindowInternal
         {
             // So funny story
             // When this class was a record, the C# compiler on .NET 5 stack overflowed
@@ -407,65 +502,68 @@ namespace Robust.Client.Graphics.Clyde
             // VERY funny.
 
             private readonly Clyde _clyde;
-            private readonly WindowReg _reg;
+            public readonly WindowReg Reg;
 
-            public bool IsDisposed => _reg.IsDisposed;
-            public WindowId Id => _reg.Id;
+            public bool IsDisposed => Reg.IsDisposed;
+            public WindowId Id => Reg.Id;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {
                 _clyde = clyde;
-                _reg = reg;
+                Reg = reg;
             }
 
             public void Dispose()
             {
-                _clyde.DoDestroyWindow(_reg);
+                _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => _reg.FramebufferSize;
+            public Vector2i Size => Reg.FramebufferSize;
 
-            public IRenderTarget RenderTarget
-            {
-                get
-                {
-                    if (_reg.IsMainWindow)
-                    {
-                        return _clyde._mainMainWindowRenderMainTarget;
-                    }
-
-                    return _reg.RenderTexture!;
-                }
-            }
+            public IRenderTarget RenderTarget => Reg.RenderTarget;
 
             public string Title
             {
-                get => _reg.Title;
-                set => _clyde._windowing!.WindowSetTitle(_reg, value);
+                get => Reg.Title;
+                set => _clyde._windowing!.WindowSetTitle(Reg, value);
             }
 
-            public bool IsFocused => _reg.IsFocused;
-            public bool IsMinimized => _reg.IsMinimized;
+            public bool IsFocused => Reg.IsFocused;
+            public bool IsMinimized => Reg.IsMinimized;
 
             public bool IsVisible
             {
-                get => _reg.IsVisible;
-                set => _clyde.SetWindowVisible(_reg, value);
+                get => Reg.IsVisible;
+                set => _clyde.SetWindowVisible(Reg, value);
             }
 
-            public Vector2 ContentScale => _reg.WindowScale;
+            public Vector2 ContentScale => Reg.WindowScale;
 
             public bool DisposeOnClose
             {
-                get => _reg.DisposeOnClose;
-                set => _reg.DisposeOnClose = value;
+                get => Reg.DisposeOnClose;
+                set => Reg.DisposeOnClose = value;
             }
 
-            public event Action<WindowClosedEventArgs> Closed
+            public event Action<WindowRequestClosedEventArgs> RequestClosed
             {
-                add => _reg.Closed += value;
-                remove => _reg.Closed -= value;
+                add => Reg.RequestClosed += value;
+                remove => Reg.RequestClosed -= value;
             }
+
+            public event Action<WindowDestroyedEventArgs>? Destroyed
+            {
+                add => Reg.Closed += value;
+                remove => Reg.Closed -= value;
+            }
+
+            public event Action<WindowResizedEventArgs>? Resized
+            {
+                add => Reg.Resized += value;
+                remove => Reg.Resized -= value;
+            }
+
+            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

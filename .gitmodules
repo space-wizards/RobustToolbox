@@ -10,6 +10,6 @@
 [submodule "Robust.LoaderApi"]
 	path = Robust.LoaderApi
 	url = https://github.com/space-wizards/Robust.LoaderApi.git
-[submodule "ManagedHttpListener"]
-	path = ManagedHttpListener
-	url = https://github.com/space-wizards/ManagedHttpListener.git
+[submodule "cefglue"]
+	path = cefglue
+	url = https://github.com/space-wizards/cefglue.git

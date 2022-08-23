@@ -1,38 +1,39 @@
-﻿using Moq;
+using Moq;
 using NUnit.Framework;
 using Robust.Client.GameStates;
+using Robust.Client.Timing;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.GameStates
 {
     [TestFixture, Parallelizable, TestOf(typeof(GameStateProcessor))]
-    class GameStateProcessor_Tests
+    sealed class GameStateProcessor_Tests
     {
         [Test]
         public void FillBufferBlocksProcessing()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
+            processor.Interpolation = true;
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2)); // buffer is at 2/3, so processing should be blocked
 
             // calculate states for first tick
-            timing.CurTick = new GameTick(3);
-            var result = processor.ProcessTickStates(new GameTick(1), out _, out _);
+            timing.LastProcessedTick = new GameTick(0);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
-            Assert.That(timing.CurTick.Value, Is.EqualTo(1));
         }
 
         [Test]
         public void FillBufferAndCalculateFirstState()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
@@ -43,12 +44,11 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
             // calculate states for first tick
-            timing.CurTick = new GameTick(1);
-            var result = processor.ProcessTickStates(new GameTick(1), out var curState, out var nextState);
+            timing.LastProcessedTick = new GameTick(0);
+            var result = processor.TryGetServerState(out var curState, out var nextState);
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.False);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(1));
             Assert.That(nextState, Is.Null);
         }
@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Client.GameStates
         [Test]
         public void FullStateResyncsCurTick()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
@@ -71,10 +71,11 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
             // calculate states for first tick
-            timing.CurTick = new GameTick(3);
-            processor.ProcessTickStates(timing.CurTick, out _, out _);
+            timing.LastProcessedTick = new GameTick(2);
+            processor.TryGetServerState(out var state, out _);
 
-            Assert.That(timing.CurTick.Value, Is.EqualTo(1));
+            Assert.NotNull(state);
+            Assert.That(state.ToSequence.Value, Is.EqualTo(1));
         }
 
         [Test]
@@ -82,12 +83,10 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var (timing, processor) = SetupProcessorFactory();
 
-            processor.Extrapolation = false;
-
             // a few moments later...
-            timing.CurTick = new GameTick(5); // current clock is ahead of server
+            timing.LastProcessedTick = new GameTick(4); // current clock is ahead of server
             processor.AddNewState(GameStateFactory(3, 4)); // received a late state
-            var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
         }
@@ -101,55 +100,11 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var (timing, processor) = SetupProcessorFactory();
 
-            processor.Extrapolation = false;
-
             // a few moments later...
-            timing.CurTick = new GameTick(5); // current clock is ahead of server
-            var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
+            timing.LastProcessedTick = new GameTick(4); // current clock is ahead of server
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
-        }
-
-        /// <summary>
-        ///     When processing is blocked because the client is ahead of the server, reset CurTick to the last
-        ///     received state.
-        /// </summary>
-        [Test]
-        public void ServerLagsWithoutExtrapolationSetsCurTick()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = false;
-
-            // a few moments later...
-            timing.CurTick = new GameTick(4); // current clock is ahead of server (server=1, client=5)
-            var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
-
-            Assert.That(result, Is.False);
-            Assert.That(timing.CurTick.Value, Is.EqualTo(1));
-        }
-
-        /// <summary>
-        ///     The server fell behind the client, so the client clock is now ahead of the incoming states.
-        ///     With extrapolation, processing returns a fake extrapolated state for the current tick.
-        /// </summary>
-        [Test]
-        public void ServerLagsWithExtrapolation()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = true;
-
-            // a few moments later...
-            timing.CurTick = new GameTick(5); // current clock is ahead of server
-
-            var result = processor.ProcessTickStates(timing.CurTick, out var curState, out var nextState);
-
-            Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.True);
-            Assert.That(curState.ToSequence.Value, Is.EqualTo(5));
-            Assert.That(nextState, Is.Null);
         }
 
         /// <summary>
@@ -162,11 +117,10 @@ namespace Robust.UnitTesting.Client.GameStates
             var (timing, processor) = SetupProcessorFactory();
 
             processor.AddNewState(GameStateFactory(4, 5));
-            processor.LastProcessedRealState = new GameTick(3);
+            timing.LastRealTick = new GameTick(3);
+            timing.LastProcessedTick = new GameTick(3);
 
-            timing.CurTick = new GameTick(4);
-
-            var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
+            var result = processor.TryGetServerState(out _, out _);
 
             Assert.That(result, Is.False);
         }
@@ -182,52 +136,24 @@ namespace Robust.UnitTesting.Client.GameStates
 
             processor.Interpolation = true;
 
-            timing.CurTick = new GameTick(4);
+            timing.LastProcessedTick = new GameTick(3);
 
-            processor.LastProcessedRealState = new GameTick(3);
+            timing.LastRealTick = new GameTick(3);
             processor.AddNewState(GameStateFactory(3, 5));
 
             // We're missing the state for this tick so go into extrap.
-            var result = processor.ProcessTickStates(timing.CurTick, out var curState, out _);
+            var result = processor.TryGetServerState(out var curState, out _);
 
             Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.True);
+            Assert.That(curState, Is.Null);
 
-            timing.CurTick = new GameTick(5);
+            timing.LastProcessedTick = new GameTick(4);
 
             // But we DO have the state for the tick after so apply away!
-            result = processor.ProcessTickStates(timing.CurTick, out curState, out _);
+            result = processor.TryGetServerState(out curState, out _);
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.Extrapolated, Is.False);
-        }
-
-        /// <summary>
-        ///     The client started extrapolating and now received the state it needs to "continue as normal".
-        ///     In this scenario the CurTick passed to the game state processor
-        ///     is higher than the real next tick to apply, IF it went into extrapolation.
-        ///     The processor needs to go back to the next REAL tick.
-        /// </summary>
-        [Test, Ignore("Extrapolation is currently non functional anyways")]
-        public void UndoExtrapolation()
-        {
-            var (timing, processor) = SetupProcessorFactory();
-
-            processor.Extrapolation = true;
-
-            processor.AddNewState(GameStateFactory(4, 5));
-            processor.AddNewState(GameStateFactory(3, 4));
-            processor.LastProcessedRealState = new GameTick(3);
-
-            timing.CurTick = new GameTick(5);
-
-            var result = processor.ProcessTickStates(timing.CurTick, out var curState, out _);
-
-            Assert.That(result, Is.True);
-            Assert.That(curState, Is.Not.Null);
-            Assert.That(curState!.ToSequence, Is.EqualTo(new GameTick(4)));
         }
 
         /// <summary>
@@ -235,17 +161,19 @@ namespace Robust.UnitTesting.Client.GameStates
         /// </summary>
         private static GameState GameStateFactory(uint from, uint to)
         {
-            return new(new GameTick(@from), new GameTick(to), 0, null, null, null, null);
+            return new(new GameTick(@from), new GameTick(to), 0, default, default, default, null);
         }
 
         /// <summary>
         ///     Creates a new GameTiming and GameStateProcessor, fills the processor with enough states, and calculate the first tick.
         ///     CurTick = 1, states 1 - 3 are in the buffer.
         /// </summary>
-        private static (IGameTiming timing, GameStateProcessor processor) SetupProcessorFactory()
+        private static (IClientGameTiming timing, GameStateProcessor processor) SetupProcessorFactory()
         {
-            var timingMock = new Mock<IGameTiming>();
+            var timingMock = new Mock<IClientGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
+            timingMock.SetupProperty(p => p.LastProcessedTick);
+            timingMock.SetupProperty(p => p.LastRealTick);
             timingMock.SetupProperty(p => p.TickTimingAdjustment);
 
             var timing = timingMock.Object;
@@ -255,9 +183,8 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.AddNewState(GameStateFactory(1, 2));
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
-            // calculate states for first tick
-            timing.CurTick = new GameTick(1);
-            processor.ProcessTickStates(timing.CurTick, out _, out _);
+            processor.LastFullStateRequested = null;
+            timing.LastProcessedTick = timing.LastRealTick = new GameTick(1);
 
             return (timing, processor);
         }

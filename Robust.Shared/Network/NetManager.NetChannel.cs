@@ -8,7 +8,7 @@ namespace Robust.Shared.Network
 {
     public partial class NetManager
     {
-        private class NetChannel : INetChannel
+        private sealed class NetChannel : INetChannel
         {
             private readonly NetManager _manager;
             private readonly NetConnection _connection;
@@ -46,6 +46,8 @@ namespace Robust.Shared.Network
             [ViewVariables] public NetUserId UserId => UserData.UserId;
             [ViewVariables] public NetUserData UserData { get; }
 
+            public bool IsHandshakeComplete { get; set; }
+
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
 
@@ -65,7 +67,7 @@ namespace Robust.Shared.Network
 
             /// <inheritdoc />
             public T CreateNetMessage<T>()
-                where T : NetMessage
+                where T : NetMessage, new()
             {
                 return _manager.CreateNetMessage<T>();
             }
@@ -85,8 +87,18 @@ namespace Robust.Shared.Network
             /// <inheritdoc />
             public void Disconnect(string reason)
             {
+                Disconnect(reason, true);
+            }
+
+            public void Disconnect(string reason, bool sendBye)
+            {
                 if (_connection.Status == NetConnectionStatus.Connected)
-                    _connection.Disconnect(reason);
+                    _connection.Disconnect(reason, sendBye);
+            }
+
+            public override string ToString()
+            {
+                return $"{RemoteEndPoint}/{UserId}";
             }
         }
     }

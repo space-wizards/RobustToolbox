@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -130,22 +130,29 @@ namespace Robust.Client.UserInterface.CustomControls
                 var (left, top) = Position;
                 var (right, bottom) = Position + SetSize;
 
+                if (float.IsNaN(SetSize.X)) {
+                    right = Position.X + Size.X;
+                }
+                if (float.IsNaN(SetSize.Y)) {
+                    bottom = Position.Y + Size.Y;
+                }
+
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, bottom);
+                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, Math.Min(bottom, bottom - MinSize.Y));
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, Math.Max(top, top + MinSize.Y));
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, right);
+                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, Math.Min(right, right - MinSize.X));
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, Math.Max(left, left + MinSize.X));
                 }
 
                 var rect = new UIBox2(left, top, right, bottom);
@@ -165,6 +172,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected internal override void MouseExited()
         {
+            base.MouseExited();
+
             if (Resizable && CurrentDrag == DragMode.None)
             {
                 DefaultCursorShape = CursorShape.Arrow;
@@ -207,7 +216,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (!Visible)
             {
                 Visible = true;
-                Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on SS14Window.");
+                Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on DefaultWindow.");
             }
 
             if (!IsOpen)
@@ -218,39 +227,50 @@ namespace Robust.Client.UserInterface.CustomControls
             Opened();
         }
 
-        public void OpenCentered()
+        public void OpenCentered() => OpenCenteredAt((0.5f, 0.5f));
+        public void OpenToLeft() => OpenCenteredAt((0, 0.5f));
+        public void OpenCenteredLeft() => OpenCenteredAt((0.25f, 0.5f));
+        public void OpenToRight() => OpenCenteredAt((1, 0.5f));
+        public void OpenCenteredRight() => OpenCenteredAt((0.75f, 0.5f));
+
+        /// <summary>
+        ///     Opens a window, attempting to place the center of the window at some relative point on the screen.
+        /// </summary>
+        /// <param name="relativePosition">Fractional screen position. So (0,0) is the upper left, and (1,1) is the
+        /// lower right.</param>
+        public void OpenCenteredAt(Vector2 relativePosition)
         {
-            if (_firstTimeOpened)
-            {
-                Measure(Vector2.Infinity);
-                SetSize = DesiredSize;
-                Open();
-                // An explaination: The BadOpenGLVersionWindow was showing up off the top-left corner of the screen.
-                // Basically, if OpenCentered happens super-early, RootControl doesn't get time to layout children.
-                // But we know that this is always going to be one of the roots anyway for now.
-                LayoutContainer.SetPosition(this, (UserInterfaceManager.RootControl.Size - SetSize) / 2);
-                _firstTimeOpened = false;
-            }
-            else
+            if (!_firstTimeOpened)
             {
                 Open();
+                return;
             }
+
+            Measure(Vector2.Infinity);
+            SetSize = DesiredSize;
+            Open();
+            RecenterWindow(relativePosition);
+            _firstTimeOpened = false;
         }
 
-        public void OpenToLeft()
+        /// <summary>
+        ///     Repositions a window, attempting to place the center of the window at some relative point on the screen.
+        /// </summary>
+        /// <param name="relativePosition">Fractional screen position. So (0,0) is the upper left, and (1,1) is the
+        /// lower right.</param>
+        public void RecenterWindow(Vector2 relativePosition)
         {
-            if (_firstTimeOpened)
-            {
-                Measure(Vector2.Infinity);
-                SetSize = DesiredSize;
-                Open();
-                LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - DesiredSize.Y) / 2));
-                _firstTimeOpened = false;
-            }
-            else
-            {
-                Open();
-            }
+            if (Parent == null)
+                return;
+
+            // Where we want the upper left corner of the window to be
+            var corner = Parent!.Size * Vector2.Clamp(relativePosition, Vector2.Zero, Vector2.One) - DesiredSize / 2;
+
+            // Attempt to keep the whole window is visible, regardless of the target position. e.g., if the target for
+            // the center is (0,0), this will actually open the window so that the upper left is at (0,0). If the window
+            // is bigger than the parent, this will currently prioritize showing the upper left corner.
+            var pos = Vector2.Clamp(corner, Vector2.Zero, Parent.Size - DesiredSize);
+            LayoutContainer.SetPosition(this, pos);
         }
 
         protected virtual void Opened()

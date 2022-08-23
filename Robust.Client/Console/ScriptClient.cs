@@ -6,7 +6,7 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Client.Console
 {
-    public partial class ScriptClient : IScriptClient
+    public sealed partial class ScriptClient : IScriptClient
     {
         [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
@@ -17,11 +17,13 @@ namespace Robust.Client.Console
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgScriptStop>(MsgScriptStop.NAME);
-            _netManager.RegisterNetMessage<MsgScriptEval>(MsgScriptEval.NAME);
-            _netManager.RegisterNetMessage<MsgScriptStart>(MsgScriptStart.NAME);
-            _netManager.RegisterNetMessage<MsgScriptResponse>(MsgScriptResponse.NAME, ReceiveScriptResponse);
-            _netManager.RegisterNetMessage<MsgScriptStartAck>(MsgScriptStartAck.NAME, ReceiveScriptStartAckResponse);
+            _netManager.RegisterNetMessage<MsgScriptStop>();
+            _netManager.RegisterNetMessage<MsgScriptEval>();
+            _netManager.RegisterNetMessage<MsgScriptStart>();
+            _netManager.RegisterNetMessage<MsgScriptCompletion>();
+            _netManager.RegisterNetMessage<MsgScriptCompletionResponse>(ReceiveScriptCompletionResponse);
+            _netManager.RegisterNetMessage<MsgScriptResponse>(ReceiveScriptResponse);
+            _netManager.RegisterNetMessage<MsgScriptStartAck>(ReceiveScriptStartAckResponse);
         }
 
         private void ReceiveScriptStartAckResponse(MsgScriptStartAck message)
@@ -44,6 +46,16 @@ namespace Robust.Client.Console
             console.ReceiveResponse(message);
         }
 
+        private void ReceiveScriptCompletionResponse(MsgScriptCompletionResponse message)
+        {
+            if (!_activeConsoles.TryGetValue(message.ScriptSession, out var console))
+            {
+                return;
+            }
+
+            console.ReceiveCompletionResponse(message);
+        }
+
         public bool CanScript => _conGroupController.CanScript();
 
         public void StartSession()
@@ -53,7 +65,7 @@ namespace Robust.Client.Console
                 throw new InvalidOperationException("We do not have scripting permission.");
             }
 
-            var msg = _netManager.CreateNetMessage<MsgScriptStart>();
+            var msg = new MsgScriptStart();
             msg.ScriptSession = _nextSessionId++;
             _netManager.ClientSendMessage(msg);
         }
@@ -62,7 +74,7 @@ namespace Robust.Client.Console
         {
             _activeConsoles.Remove(session);
 
-            var msg = _netManager.CreateNetMessage<MsgScriptStop>();
+            var msg = new MsgScriptStop();
             msg.ScriptSession = session;
             _netManager.ClientSendMessage(msg);
         }

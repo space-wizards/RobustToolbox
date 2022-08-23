@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
@@ -15,7 +16,9 @@ namespace Robust.Client.UserInterface
         void FrameUpdate(FrameEventArgs args);
 
         /// <returns>True if a UI control was hit and the key event should not pass through past UI.</returns>
-        bool HandleCanFocusDown(ScreenCoordinates pointerPosition);
+        bool HandleCanFocusDown(
+            ScreenCoordinates pointerPosition,
+            [NotNullWhen(true)] out (Control control, Vector2i rel)? hitData);
 
         void HandleCanFocusUp();
 
@@ -52,6 +55,10 @@ namespace Robust.Client.UserInterface
         /// was not supplied by tooltip supplier or tooltip is not showing for the control).
         /// </summary>
         Control? GetSuppliedTooltipFor(Control control);
+
+        Vector2? CalcRelativeMousePositionFor(Control control, ScreenCoordinates mousePos);
+
+        Color GetMainClearColor();
     }
 }
 

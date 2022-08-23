@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -7,6 +9,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Console
 {
@@ -16,13 +20,17 @@ namespace Robust.Shared.Console
         protected const string SawmillName = "con";
 
         [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
-        protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+
+        private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
         /// <inheritdoc />
-        public bool IsServer => NetManager.IsServer;
+        public bool IsServer { get; }
 
         /// <inheritdoc />
         public IConsoleShell LocalShell { get; }
@@ -30,8 +38,11 @@ namespace Robust.Shared.Console
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
 
-        protected ConsoleHost()
+        public abstract event ConAnyCommandCallback? AnyCommandExecuted;
+
+        protected ConsoleHost(bool isServer)
         {
+            IsServer = isServer;
             LocalShell = new ConsoleShell(this, null);
         }
 
@@ -44,7 +55,7 @@ namespace Robust.Shared.Console
             // search for all client commands in all assemblies, and register them
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand) Activator.CreateInstance(type, null)!;
+                var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
                 if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
@@ -55,14 +66,58 @@ namespace Robust.Shared.Console
             }
         }
 
-        /// <inheritdoc />
-        public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback)
         {
             if (AvailableCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback);
             AvailableCommands.Add(command, newCmd);
+        }
+
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback completionCallback)
+        {
+            if (AvailableCommands.ContainsKey(command))
+                throw new InvalidOperationException($"Command already registered: {command}");
+
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
+            AvailableCommands.Add(command, newCmd);
+        }
+
+        public void RegisterCommand(
+            string command,
+            string description,
+            string help,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback)
+        {
+            if (AvailableCommands.ContainsKey(command))
+                throw new InvalidOperationException($"Command already registered: {command}");
+
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
+            AvailableCommands.Add(command, newCmd);
+        }
+
+        /// <inheritdoc />
+        public void UnregisterCommand(string command)
+        {
+            if (!AvailableCommands.TryGetValue(command, out var cmd))
+                throw new KeyNotFoundException($"Command {command} is not registered.");
+
+            if (cmd is not RegisteredCommand)
+                throw new InvalidOperationException(
+                    "You cannot unregister commands that have been registered automatically.");
+
+            AvailableCommands.Remove(command);
         }
 
         //TODO: Pull up
@@ -99,13 +154,45 @@ namespace Robust.Shared.Console
             ExecuteCommand(null, command);
         }
 
+        /// <inheritdoc />
+        public void AppendCommand(string command)
+        {
+            _commandBuffer.Append(command);
+        }
+
+        /// <inheritdoc />
+        public void InsertCommand(string command)
+        {
+            _commandBuffer.Insert(command);
+        }
+
+        /// <inheritdoc />
+        public void CommandBufferExecute()
+        {
+            _commandBuffer.Tick(_timing.TickRate);
+
+            while (_commandBuffer.TryGetCommand(out var cmd))
+            {
+                try
+                {
+                    ExecuteCommand(cmd);
+                }
+                catch (Exception e)
+                {
+                    LocalShell.WriteError(e.Message);
+                }
+            }
+        }
+
         /// <summary>
         /// A console command that was registered inline through <see cref="IConsoleHost"/>.
         /// </summary>
         [Reflect(false)]
-        private class RegisteredCommand : IConsoleCommand
+        public sealed class RegisteredCommand : IConsoleCommand
         {
-            private readonly ConCommandCallback _callback;
+            public ConCommandCallback Callback { get; }
+            public ConCommandCompletionCallback? CompletionCallback { get; }
+            public ConCommandCompletionAsyncCallback? CompletionCallbackAsync { get; }
 
             /// <inheritdoc />
             public string Command { get; }
@@ -123,18 +210,76 @@ namespace Robust.Shared.Console
             /// <param name="description">Short description of the command.</param>
             /// <param name="help">Extended description for the command.</param>
             /// <param name="callback">Callback function that is ran when the command is executed.</param>
-            public RegisteredCommand(string command, string description, string help, ConCommandCallback callback)
+            /// <param name="completionCallback">Callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback)
             {
                 Command = command;
+                // Should these two be localized somehow?
                 Description = description;
                 Help = help;
-                _callback = callback;
+                Callback = callback;
             }
+
+            /// <summary>
+            /// Constructs a new instance of <see cref="RegisteredCommand"/>.
+            /// </summary>
+            /// <param name="command">Name of the command.</param>
+            /// <param name="description">Short description of the command.</param>
+            /// <param name="help">Extended description for the command.</param>
+            /// <param name="callback">Callback function that is ran when the command is executed.</param>
+            /// <param name="completionCallback">Callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback,
+                ConCommandCompletionCallback completionCallback) : this(command, description, help, callback)
+            {
+                CompletionCallback = completionCallback;
+            }
+
+            /// <summary>
+            /// Constructs a new instance of <see cref="RegisteredCommand"/>.
+            /// </summary>
+            /// <param name="command">Name of the command.</param>
+            /// <param name="description">Short description of the command.</param>
+            /// <param name="help">Extended description for the command.</param>
+            /// <param name="callback">Callback function that is ran when the command is executed.</param>
+            /// <param name="completionCallback">Asynchronous callback function to get console completions.</param>
+            public RegisteredCommand(
+                string command,
+                string description,
+                string help,
+                ConCommandCallback callback,
+                ConCommandCompletionAsyncCallback completionCallback)
+                : this(command, description, help, callback)
+            {
+                CompletionCallbackAsync = completionCallback;
+            }
+
 
             /// <inheritdoc />
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                _callback(shell, argStr, args);
+                Callback(shell, argStr, args);
+            }
+
+            public ValueTask<CompletionResult> GetCompletionAsync(
+                IConsoleShell shell,
+                string[] args,
+                CancellationToken cancel)
+            {
+                if (CompletionCallbackAsync != null)
+                    return CompletionCallbackAsync(shell, args);
+
+                if (CompletionCallback != null)
+                    return ValueTask.FromResult(CompletionCallback(shell, args));
+
+                return ValueTask.FromResult(CompletionResult.Empty);
             }
         }
     }

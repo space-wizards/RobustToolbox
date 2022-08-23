@@ -4,6 +4,6 @@
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]
 
-#if NET5_0
+#if NET5_0_OR_GREATER
 [module: SkipLocalsInit]
 #endif

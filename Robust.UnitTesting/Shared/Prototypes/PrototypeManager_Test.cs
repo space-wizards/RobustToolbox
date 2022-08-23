@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System;
 using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -8,12 +8,13 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    public class PrototypeManager_Test : RobustUnitTest
+    public sealed class PrototypeManager_Test : RobustUnitTest
     {
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
@@ -27,8 +28,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.LoadFromStream(new StringReader(DOCUMENT));
-            manager.Resync();
+            manager.RegisterType(typeof(EntityPrototype));
+            manager.LoadString(DOCUMENT);
+            manager.ResolveResults();
         }
 
         [Test]
@@ -37,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            var mapping = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var mapping = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
             Assert.That(mapping!.Foo, Is.EqualTo("bar!"));
         }
 
@@ -55,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"] as PointLightComponent;
+            var componentData = prototype.Components["PointLight"].Component as PointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }
@@ -64,9 +66,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void TestYamlHelpersPrototype()
         {
             var prototype = manager.Index<EntityPrototype>("yamltester");
-            Assert.That(prototype.Components, Contains.Key("TestBasicPrototypeComponent"));
+            Assert.That(prototype.Components, Contains.Key("TestBasicPrototype"));
 
-            var componentData = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var componentData = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
 
             Assert.NotNull(componentData);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));
@@ -107,10 +109,47 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void TestLoadString()
         {
             manager.LoadString(LoadStringDocument);
+            manager.ResolveResults();
 
             var prototype = manager.Index<EntityPrototype>(LoadStringTestDummyId);
 
             Assert.That(prototype.Name, Is.EqualTo(LoadStringTestDummyId));
+        }
+
+        [Test]
+        public void TestCircleException()
+        {
+            string GenerateCircleTestPrototype(string id, string parent)
+            {
+                return $@"- type: circle
+  id: {id}
+  parent: {parent}";
+            }
+
+            manager.RegisterType(typeof(CircleTestPrototype));
+
+            var directCircle = $@"{GenerateCircleTestPrototype("1", "2")}
+{GenerateCircleTestPrototype("2", "1")}";
+
+            Assert.Throws<PrototypeLoadException>(() => manager.LoadString(directCircle));
+            manager.RemoveString(directCircle);
+
+            var indirectCircle = $@"{GenerateCircleTestPrototype("1", "2")}
+{GenerateCircleTestPrototype("2", "3")}
+{GenerateCircleTestPrototype("3", "1")}";
+
+            Assert.Throws<PrototypeLoadException>(() => manager.LoadString(indirectCircle));
+        }
+
+        [Prototype("circle")]
+        private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
+        {
+            [IdDataField()]
+            public string ID { get; } = default!;
+            [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<CircleTestPrototype>))]
+            public string[]? Parents { get; }
+            [AbstractDataField]
+            public bool Abstract { get; }
         }
 
         public enum YamlTestEnum : byte
@@ -124,7 +163,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   id: wrench
   name: Not a wrench. Tricked!
   components:
-  - type: TestBasicPrototypeComponent
+  - type: TestBasicPrototype
     foo: bar!
 
 - type: entity
@@ -143,7 +182,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 - type: entity
   id: yamltester
   components:
-  - type: TestBasicPrototypeComponent
+  - type: TestBasicPrototype
     str: hi!
     int: 10
     float: 10
@@ -182,9 +221,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public class TestBasicPrototypeComponent : Component
+    public sealed class TestBasicPrototypeComponent : Component
     {
-        public override string Name => "TestBasicPrototypeComponent";
 
         [DataField("foo")] public string Foo = null!;
 

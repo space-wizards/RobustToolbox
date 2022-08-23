@@ -8,11 +8,12 @@ using Robust.Shared.Input;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.ViewVariables.Instances
 {
-    internal class ViewVariablesInstanceObject : ViewVariablesInstance
+    internal sealed class ViewVariablesInstanceObject : ViewVariablesInstance
     {
         private TabContainer _tabs = default!;
         private Button _refreshButton = default!;
@@ -28,7 +29,7 @@ namespace Robust.Client.ViewVariables.Instances
         public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
             : base(vvm, robustSerializer) { }
 
-        public override void Initialize(SS14Window window, object obj)
+        public override void Initialize(DefaultWindow window, object obj)
         {
             Object = obj;
             var type = obj.GetType();
@@ -44,7 +45,7 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        public override void Initialize(SS14Window window,
+        public override void Initialize(DefaultWindow window,
             ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             Session = session;
@@ -58,14 +59,15 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        private void _wrappingInit(SS14Window window, string top, string bottom)
+        private void _wrappingInit(DefaultWindow window, string top, string bottom)
         {
             // Wrapping containers.
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
-            var vBoxContainer = new VBoxContainer
+            var vBoxContainer = new BoxContainer
             {
+                Orientation = LayoutOrientation.Vertical,
                 HorizontalExpand = true,
                 VerticalExpand = true,
             };
@@ -73,7 +75,10 @@ namespace Robust.Client.ViewVariables.Instances
 
             // Handle top bar.
             {
-                var headBox = new HBoxContainer();
+                var headBox = new BoxContainer
+                {
+                    Orientation = LayoutOrientation.Horizontal
+                };
                 var name = MakeTopBar(top, bottom);
                 name.HorizontalExpand = true;
                 headBox.AddChild(name);

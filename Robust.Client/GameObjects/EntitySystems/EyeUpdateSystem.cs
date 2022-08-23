@@ -1,12 +1,16 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 #nullable enable
 
@@ -16,17 +20,8 @@ namespace Robust.Client.GameObjects
     /// Updates the position of every Eye every frame, so that the camera follows the player around.
     /// </summary>
     [UsedImplicitly]
-    internal class EyeUpdateSystem : EntitySystem
+    public sealed class EyeUpdateSystem : EntitySystem
     {
-        // How fast the camera rotates in radians
-        private const float CameraRotateSpeed = MathF.PI;
-        private const float CameraSnapTolerance = 0.01f;
-
-#pragma warning disable 649, CS8618
-        // ReSharper disable once NotNullMemberIsNotInitialized
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649, CS8618
-
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -54,40 +49,7 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
-            var currentEye = _eyeManager.CurrentEye;
-            var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
-
-            var direction = 0;
-            if (inputSystem.CmdStates[EngineKeyFunctions.CameraRotateRight] == BoundKeyState.Down)
-            {
-                direction += 1;
-            }
-
-            if (inputSystem.CmdStates[EngineKeyFunctions.CameraRotateLeft] == BoundKeyState.Down)
-            {
-                direction -= 1;
-            }
-
-            // apply camera rotation
-            if(direction != 0)
-            {
-                currentEye.Rotation += CameraRotateSpeed * frameTime * direction;
-                currentEye.Rotation = currentEye.Rotation.Reduced();
-            }
-            else
-            {
-                // snap to cardinal directions
-                var closestDir = currentEye.Rotation.GetCardinalDir().ToVec();
-                var currentDir = currentEye.Rotation.ToVec();
-
-                var dot = Vector2.Dot(closestDir, currentDir);
-                if (MathHelper.CloseTo(dot, 1, CameraSnapTolerance))
-                {
-                    currentEye.Rotation = closestDir.ToAngle();
-                }
-            }
-
-            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))
+            foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))
             {
                 eyeComponent.UpdateEyePosition();
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -32,6 +32,9 @@ namespace Robust.Shared.Reflection
         private readonly Dictionary<string, Type> _looseTypeCache = new();
 
         private readonly Dictionary<string, Enum> _enumCache = new();
+        private readonly Dictionary<Enum, string> _reverseEnumCache = new();
+
+        private readonly List<Type> _getAllTypesCache = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
@@ -42,56 +45,47 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren(Type baseType, bool inclusive = false)
         {
-            var typeLists = new List<Type[]>(Assemblies.Count);
-            try
+            EnsureGetAllTypesCache();
+
+            foreach (var type in _getAllTypesCache)
             {
-                // There's very little assemblies, so storing these temporarily is cheap.
-                // We need to do it ahead of time so that we can catch ReflectionTypeLoadException HERE,
-                // so whoever is using us doesn't have to handle them.
-                foreach (var assembly in Assemblies)
-                {
-                    typeLists.Add(assembly.GetTypes());
-                }
+                if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
+                    continue;
+
+                if (baseType == type && !inclusive)
+                    continue;
+
+                yield return type;
             }
-            catch (ReflectionTypeLoadException e)
-            {
-                Logger.Error("Caught ReflectionTypeLoadException! Dumping child exceptions:");
-                if (e.LoaderExceptions != null)
-                {
-                    foreach (var inner in e.LoaderExceptions)
-                    {
-                        if (inner != null)
-                        {
-                            Logger.Error(inner.ToString());
-                        }
-                    }
-                }
+        }
 
-                throw;
+        private void EnsureGetAllTypesCache()
+        {
+            if (_getAllTypesCache.Count != 0)
+                return;
+
+            var totalLength = 0;
+            var typeSets = new List<Type[]>();
+
+            foreach (var assembly in assemblies)
+            {
+                var types = assembly.GetTypes();
+                typeSets.Add(types);
+                totalLength += types.Length;
             }
 
-            foreach (var t in typeLists)
-            {
-                foreach (var type in t)
-                {
-                    if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
-                    {
-                        continue;
-                    }
+            _getAllTypesCache.Capacity = totalLength;
 
+            foreach (var typeSet in typeSets)
+            {
+                foreach (var type in typeSet)
+                {
                     var attribute = (ReflectAttribute?) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
 
                     if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
-                    {
                         continue;
-                    }
 
-                    if (baseType == type && !inclusive)
-                    {
-                        continue;
-                    }
-
-                    yield return type;
+                    _getAllTypesCache.Add(type);
                 }
             }
         }
@@ -101,6 +95,7 @@ namespace Robust.Shared.Reflection
         public void LoadAssemblies(IEnumerable<Assembly> assemblies)
         {
             this.assemblies.AddRange(assemblies);
+            _getAllTypesCache.Clear();
             OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }
 
@@ -133,7 +128,7 @@ namespace Robust.Shared.Reflection
                 return ret;
             }
 
-            throw new ArgumentException("Unable to find type.");
+            throw new ArgumentException($"Unable to find type: {name}.");
         }
 
         public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
@@ -167,18 +162,48 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public IEnumerable<Type> FindTypesWithAttribute(Type attributeType)
         {
-            var types = new List<Type>();
+            EnsureGetAllTypesCache();
+            return _getAllTypesCache.Where(type => Attribute.IsDefined(type, attributeType));
+        }
 
-            foreach (var assembly in Assemblies)
-            {
-                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, attributeType)));
-            }
-
-            return types;
+        public IEnumerable<Type> FindAllTypes()
+        {
+            EnsureGetAllTypesCache();
+            return _getAllTypesCache;
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum)
+        public string GetEnumReference(Enum @enum)
+        {
+            if (_reverseEnumCache.TryGetValue(@enum, out var reference))
+                return reference;
+
+            // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
+            // but if possible we want to avoid that and use a shorter string.
+
+            var fullName = @enum.GetType().FullName!;
+            var dotIndex = fullName.LastIndexOf('.');
+            if (dotIndex > 0 && dotIndex != fullName.Length)
+            {
+                var name = fullName.Substring(dotIndex + 1);
+                reference = $"enum.{name}.{@enum}";
+
+                if (TryParseEnumReference(reference, out var resolvedEnum, false) && resolvedEnum == @enum)
+                {
+                    // TryParse will have filled in the cache already.
+                    return reference;
+                }
+            }
+
+            // If that failed, just use the full name.
+            reference = $"enum.{fullName}.{@enum}";
+            _reverseEnumCache[@enum] = reference;
+            _enumCache[reference] = @enum;
+            return reference;
+        }
+
+        /// <inheritdoc />
+        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum, bool shouldThrow = true)
         {
             if (!reference.StartsWith("enum."))
             {
@@ -200,18 +225,24 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !type.FullName!.EndsWith(typeName))
+                    if (!type.IsEnum || !(
+                            type.FullName!.Equals(typeName) ||
+                            type.FullName!.EndsWith("." + typeName) ||
+                            type.FullName!.EndsWith("+" + typeName)))
                     {
                         continue;
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
                     _enumCache[reference] = @enum;
+                    _reverseEnumCache[@enum] = reference;
                     return true;
                 }
             }
 
-            throw new ArgumentException("Could not resolve enum reference.");
+            if (shouldThrow)
+                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
+            return false;
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)

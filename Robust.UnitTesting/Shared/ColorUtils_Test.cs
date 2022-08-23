@@ -5,7 +5,7 @@ namespace Robust.UnitTesting.Shared
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    public class ColorUtils_Test
+    public sealed class ColorUtils_Test
     {
         [Test]
         public void TestInterpolateBetween()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations
@@ -38,8 +39,8 @@ namespace Robust.Client.Animations
         {
             DebugTools.AssertNotNull(LayerKey);
 
-            var entity = (IEntity) context;
-            var sprite = entity.GetComponent<ISpriteComponent>();
+            var entity = (EntityUid) context;
+            var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<ISpriteComponent>(entity);
 
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;

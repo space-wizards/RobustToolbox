@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    public class CollectionExtensions_Test
+    public sealed class CollectionExtensions_Test
     {
         [Test]
         public void RemoveSwapTest()

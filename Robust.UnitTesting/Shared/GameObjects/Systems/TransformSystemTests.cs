@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
@@ -7,7 +8,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
     [TestFixture, Parallelizable]
-    class TransformSystemTests
+    sealed class TransformSystemTests
     {
         private static ISimulation SimulationFactory()
         {
@@ -35,10 +36,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
 
-            ent1.Transform.LocalPosition = Vector2.One;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = Vector2.One;
 
             Assert.That(calledCount, Is.EqualTo(1));
-            void MoveEventHandler(MoveEvent ev)
+            void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;
                 Assert.That(ev.OldPosition, Is.EqualTo(new EntityCoordinates(new EntityUid(1), Vector2.Zero)));
@@ -46,6 +47,67 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             }
         }
 
-        private class Subscriber : IEntityEventSubscriber { }
+        /// <summary>
+        /// Checks that the MoverCoordinates between parent and children is correct.
+        /// </summary>
+        [Test]
+        public void MoverCoordinatesCorrect()
+        {
+            var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
+            var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            var mapId = new MapId(1);
+
+            var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var xform = entManager.GetComponent<TransformComponent>(parent);
+            Assert.That(xform.LocalPosition, Is.EqualTo(Vector2.One));
+
+            var child1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var child2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
+
+            var child1Xform = entManager.GetComponent<TransformComponent>(child1);
+            var child2Xform = entManager.GetComponent<TransformComponent>(child2);
+            child1Xform.AttachParent(xform);
+            child2Xform.AttachParent(xform);
+
+            var mover1 = xformSystem.GetMoverCoordinates(child1Xform);
+            var mover2 = xformSystem.GetMoverCoordinates(child2Xform);
+
+            Assert.That(mover1.Position, Is.EqualTo(Vector2.One));
+            Assert.That(mover2.Position, Is.EqualTo(new Vector2(10f, 10f)));
+
+            var child3 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var child3Xform = entManager.GetComponent<TransformComponent>(child3);
+            child3Xform.AttachParent(child2Xform);
+
+            Assert.That(xformSystem.GetMoverCoordinates(child3Xform).Position, Is.EqualTo(Vector2.One));
+        }
+
+        /// <summary>
+        /// Asserts that when a transformcomponent is detached to null all of its children update their mapids.
+        /// </summary>
+        [Test]
+        public void DetachMapRecursive()
+        {
+            var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
+            var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            var mapId = new MapId(1);
+
+            var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var xform = entManager.GetComponent<TransformComponent>(parent);
+
+            var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+            var childXform = entManager.GetComponent<TransformComponent>(child);
+
+            Assert.That(xform.MapID, Is.EqualTo(mapId));
+            Assert.That(childXform.MapID, Is.EqualTo(mapId));
+
+            xformSystem.DetachParentToNull(xform);
+            Assert.That(xform.MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(childXform.MapID, Is.EqualTo(MapId.Nullspace));
+        }
+
+        private sealed class Subscriber : IEntityEventSubscriber { }
     }
 }

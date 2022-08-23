@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
@@ -32,7 +32,7 @@ namespace Robust.Client.UserInterface
         /// (such as by pressing a different mouse button down over a different control) or when the keyup event
         /// happens. When focus is lost on a control, it always fires Control.ControlFocusExited.
         /// </summary>
-        Control? ControlFocused { get; }
+        Control? ControlFocused { get; set; }
 
         ViewportContainer MainViewport { get; }
 
@@ -53,8 +53,7 @@ namespace Robust.Client.UserInterface
         float DefaultUIScale { get; }
 
         /// <summary>
-        ///     The "root" control to which all other controls are parented,
-        ///     potentially indirectly.
+        ///     The root control for the main game window.
         /// </summary>
         WindowRoot RootControl { get; }
 
@@ -103,5 +102,27 @@ namespace Robust.Client.UserInterface
         void PushModal(Control modal);
         WindowRoot CreateWindowRoot(IClydeWindow window);
         void DestroyWindowRoot(IClydeWindow window);
+
+        /// <summary>
+        /// Get the UI root associated with a window.
+        /// </summary>
+        /// <returns>Null if the window has no UI root.</returns>
+        WindowRoot? GetWindowRoot(IClydeWindow window);
+
+        IEnumerable<UIRoot> AllRoots { get; }
+
+        event Action<PostDrawUIRootEventArgs> OnPostDrawUIRoot;
+    }
+
+    public readonly struct PostDrawUIRootEventArgs
+    {
+        public readonly UIRoot Root;
+        public readonly DrawingHandleScreen DrawingHandle;
+
+        public PostDrawUIRootEventArgs(UIRoot root, DrawingHandleScreen drawingHandle)
+        {
+            Root = root;
+            DrawingHandle = drawingHandle;
+        }
     }
 }

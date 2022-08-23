@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -9,7 +10,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>
+    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, ISpanFormattable
     {
         /// <summary>
         ///     The X component of the vector.
@@ -92,10 +93,48 @@ namespace Robust.Shared.Maths
             }
         }
 
+        /// <summary>
+        ///     Returns a new, rotated 90 degrees clockwise (in world Y-up orientation), vector.
+        /// </summary>
+        /// <returns></returns>
+        public readonly Vector2 Rotated90DegreesClockwiseWorld
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return new Vector2(Y, -X);
+            }
+        }
+
+        /// <summary>
+        ///     Returns a new, rotated 90 degrees anticlockwise (in world Y-up orientation), vector.
+        /// </summary>
+        /// <returns></returns>
+        public readonly Vector2 Rotated90DegreesAnticlockwiseWorld
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return new Vector2(-Y, X);
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Vector2 Rounded()
         {
             return new(MathF.Round(X), MathF.Round(Y));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector2i Floored()
+        {
+            return new((int) MathF.Floor(X), (int) MathF.Floor(Y));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector2i Ceiled()
+        {
+            return new((int) MathF.Ceiling(X), (int) MathF.Ceiling(Y));
         }
 
         /// <summary>
@@ -344,6 +383,23 @@ namespace Robust.Shared.Maths
             return $"({X}, {Y})";
         }
 
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({X}, {Y})");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Vector2 a, Vector2 b)
         {
@@ -403,6 +459,12 @@ namespace Robust.Shared.Maths
         public readonly bool EqualsApprox(Vector2 other, double tolerance)
         {
             return MathHelper.CloseTo(X, other.X, tolerance) && MathHelper.CloseTo(Y, other.Y, tolerance);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool EqualsApproxPercent(Vector2 other, double tolerance = 0.0001)
+        {
+            return MathHelper.CloseToPercent(X, other.X, tolerance) && MathHelper.CloseToPercent(Y, other.Y, tolerance);
         }
     }
 }

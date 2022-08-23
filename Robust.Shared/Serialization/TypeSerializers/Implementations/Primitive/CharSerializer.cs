@@ -2,7 +2,6 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -11,7 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
     [TypeSerializer]
-    public class CharSerializer : ITypeSerializer<char, ValueDataNode>
+    public sealed class CharSerializer : ITypeSerializer<char, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -21,10 +20,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
                 : new ErrorNode(node, $"Failed parsing char value: {node.Value}");
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public char Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, char value = default)
         {
-            return new DeserializedValue<char>(char.Parse(node.Value));
+            return char.Parse(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, char value, bool alwaysWrite = false,

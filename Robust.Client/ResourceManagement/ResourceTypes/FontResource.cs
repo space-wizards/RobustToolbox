@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement
 {
-    public class FontResource : BaseResource
+    public sealed class FontResource : BaseResource
     {
         internal IFontFaceHandle FontFaceHandle { get; private set; } = default!;
 

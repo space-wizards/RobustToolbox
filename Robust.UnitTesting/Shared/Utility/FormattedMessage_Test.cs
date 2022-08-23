@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [Parallelizable(ParallelScope.All)]
     [TestFixture]
     [TestOf(typeof(FormattedMessage))]
-    public class FormattedMessage_Test
+    public sealed class FormattedMessage_Test
     {
         [Test]
         public static void TestParseMarkup()
@@ -60,6 +60,16 @@ namespace Robust.UnitTesting.Shared.Utility
         public string TestRemoveMarkup(string test)
         {
             return FormattedMessage.RemoveMarkup(test);
+        }
+
+        [Test]
+        [TestCase("Foo")]
+        [TestCase("[color=#FF000000]Foo[/color]")]
+        [TestCase("[color=#00FF00FF]Foo[/color]bar")]
+        public static void TestToMarkup(string text)
+        {
+            var message = FormattedMessage.FromMarkup(text);
+            Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(text));
         }
     }
 }

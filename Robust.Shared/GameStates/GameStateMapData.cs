@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -9,48 +10,33 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public sealed class GameStateMapData
     {
-        // Dict of the new maps
-        public readonly MapId[]? CreatedMaps;
-        public readonly KeyValuePair<GridId, GridCreationDatum>[]? CreatedGrids;
-        public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
-        public readonly GridId[]? DeletedGrids;
-        public readonly MapId[]? DeletedMaps;
+        public readonly KeyValuePair<EntityUid, GridDatum>[]? GridData;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? deletedGrids, MapId[]? deletedMaps, MapId[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
+        public GameStateMapData(KeyValuePair<EntityUid, GridDatum>[]? gridData)
         {
             GridData = gridData;
-            DeletedGrids = deletedGrids;
-            DeletedMaps = deletedMaps;
-            CreatedMaps = createdMaps;
-            CreatedGrids = createdGrids;
-        }
-
-        [Serializable, NetSerializable]
-        public struct GridCreationDatum
-        {
-            public readonly ushort ChunkSize;
-
-            public GridCreationDatum(ushort chunkSize)
-            {
-                ChunkSize = chunkSize;
-            }
         }
 
         [Serializable, NetSerializable]
         public struct GridDatum
         {
+            // TransformComponent State
             public readonly MapCoordinates Coordinates;
+            public readonly Angle Angle;
+
+            // MapGridComponent State
             public readonly ChunkDatum[] ChunkData;
 
-            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates)
+            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates, Angle angle)
             {
                 ChunkData = chunkData;
                 Coordinates = coordinates;
+                Angle = angle;
             }
         }
 
         [Serializable, NetSerializable]
-        public struct ChunkDatum
+        public readonly struct ChunkDatum
         {
             public readonly Vector2i Index;
 
@@ -59,10 +45,25 @@ namespace Robust.Shared.GameStates
             // Also it's stored row-major.
             public readonly Tile[] TileData;
 
-            public ChunkDatum(Vector2i index, Tile[] tileData)
+            public bool IsDeleted()
+            {
+                return TileData == default;
+            }
+
+            private ChunkDatum(Vector2i index, Tile[] tileData)
             {
                 Index = index;
                 TileData = tileData;
+            }
+
+            public static ChunkDatum CreateModified(Vector2i index, Tile[] tileData)
+            {
+                return new ChunkDatum(index, tileData);
+            }
+
+            public static ChunkDatum CreateDeleted(Vector2i index)
+            {
+                return new ChunkDatum(index, default!);
             }
         }
     }

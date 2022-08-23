@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Robust.Client.Timing;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.IoC;
@@ -13,7 +14,7 @@ namespace Robust.Client
     {
         private IGameLoop? _mainLoop;
 
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
 
         private static bool _hasStarted;
@@ -22,15 +23,17 @@ namespace Robust.Client
 
         public static void Main(string[] args)
         {
-            Start(args);
+            Start(args, new GameControllerOptions());
         }
 
-        public static void Start(string[] args, bool contentStart = false, IMainArgs? loaderArgs=null, GameControllerOptions? options = null)
+        public static void Start(string[] args, GameControllerOptions options, bool contentStart = false, IMainArgs? loaderArgs=null)
         {
             if (_hasStarted)
             {
                 throw new InvalidOperationException("Cannot start twice!");
             }
+
+            GlibcBug.Check();
 
             _hasStarted = true;
 
@@ -40,7 +43,7 @@ namespace Robust.Client
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args, bool contentStart, IMainArgs? loaderArgs, GameControllerOptions? options)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart, IMainArgs? loaderArgs, GameControllerOptions options)
         {
             IoCManager.InitThread();
 
@@ -51,15 +54,13 @@ namespace Robust.Client
             var gc = IoCManager.Resolve<GameController>();
             gc.SetCommandLineArgs(args);
             gc._loaderArgs = loaderArgs;
-            if(options != null)
-                gc.Options = options;
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.
             // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
             gc.ContentStart = contentStart;
 
-            gc.Run(mode);
+            gc.Run(mode, options);
         }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
@@ -67,9 +68,9 @@ namespace Robust.Client
             _mainLoop = gameLoop;
         }
 
-        public void Run(DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null)
+        public void Run(DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
-            if (!StartupSystemSplash(logHandlerFactory))
+            if (!StartupSystemSplash(options, logHandlerFactory))
             {
                 Logger.Fatal("Failed to start game controller!");
                 return;
@@ -103,7 +104,7 @@ namespace Robust.Client
                 ContinueStartupAndLoop(mode);
             }
 
-            Cleanup();
+            CleanupWindowThread();
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
@@ -129,6 +130,8 @@ namespace Robust.Client
 
             DebugTools.AssertNotNull(_mainLoop);
             _mainLoop!.Run();
+
+            CleanupGameThread();
         }
     }
 }

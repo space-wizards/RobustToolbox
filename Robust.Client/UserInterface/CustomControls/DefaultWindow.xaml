@@ -1,0 +1,13 @@
+﻿<DefaultWindow xmlns="https://spacestation14.io" MinWidth="100" MinHeight="50">
+    <PanelContainer StyleClasses="windowPanel" />
+    <BoxContainer Orientation="Vertical" SeparationOverride="0">
+        <PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
+            <BoxContainer Orientation="Horizontal">
+                <Label Margin="5 0 0 0" HorizontalExpand="true" Name="TitleLabel" StyleIdentifier="foo" ClipText="True"
+                       Text="{Loc 'defaultwindow-placeholder-title'}" VAlign="Center" StyleClasses="windowTitle" />
+                <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
+            </BoxContainer>
+        </PanelContainer>
+        <Control Name="ContentsContainer" Margin="10" RectClipContent="True" VerticalExpand="true" />
+    </BoxContainer>
+</DefaultWindow>

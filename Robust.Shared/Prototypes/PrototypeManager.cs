@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
 using JetBrains.Annotations;
+using Prometheus;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -15,10 +16,10 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -57,6 +58,16 @@ namespace Robust.Shared.Prototypes
         IEnumerable<IPrototype> EnumeratePrototypes(string variant);
 
         /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false) where T : class, IPrototype, IInheritingPrototype;
+
+        /// <summary>
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// </summary>
+        IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false);
+
+        /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -78,6 +89,9 @@ namespace Robust.Shared.Prototypes
         bool HasIndex<T>(string id) where T : class, IPrototype;
         bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
+
+        bool HasMapping<T>(string id);
+        bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
         /// <summary>
         ///     Returns whether a prototype variant <param name="variant"/> exists.
@@ -131,13 +145,15 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
-        List<IPrototype> LoadDirectory(ResourcePath path);
+        void LoadDirectory(ResourcePath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
         Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
 
-        List<IPrototype> LoadFromStream(TextReader stream);
+        void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
-        List<IPrototype> LoadString(string str);
+        void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+
+        void RemoveString(string prototypes);
 
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
@@ -147,7 +163,13 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
-        void Resync();
+        void ResolveResults();
+
+        /// <summary>
+        /// Reload the changes from LoadString
+        /// </summary>
+        /// <param name="prototypes">Changes from load string</param>
+        void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes);
 
         /// <summary>
         ///     Registers a specific prototype name to be ignored.
@@ -180,7 +202,7 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
-    public class PrototypeAttribute : Attribute
+    public sealed class PrototypeAttribute : Attribute
     {
         private readonly string type;
         public string Type => type;
@@ -193,7 +215,8 @@ namespace Robust.Shared.Prototypes
         }
     }
 
-    public class PrototypeManager : IPrototypeManager, IPostInjectInit
+    [Virtual]
+    public class PrototypeManager : IPrototypeManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
@@ -210,8 +233,8 @@ namespace Robust.Shared.Prototypes
         #region IPrototypeManager members
 
         private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
-        private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
-        private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
+        private readonly Dictionary<Type, Dictionary<string, MappingDataNode>> _prototypeResults = new();
+        private readonly Dictionary<Type, MultiRootInheritanceGraph<string>> _inheritanceTrees = new();
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -223,6 +246,7 @@ namespace Robust.Shared.Prototypes
             }
 
             _initialized = true;
+            ReloadPrototypeTypes();
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -232,7 +256,12 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _prototypes[typeof(T)].Values.Select(p => (T) p);
+            var protos = _prototypes[typeof(T)];
+
+            foreach (var (_, proto) in protos)
+            {
+                yield return (T) proto;
+            }
         }
 
         public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
@@ -248,6 +277,67 @@ namespace Robust.Shared.Prototypes
         public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
         {
             return EnumeratePrototypes(GetVariantType(variant));
+        }
+
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)  where T : class, IPrototype, IInheritingPrototype
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            if(!TryIndex<T>(id, out var prototype))
+                yield break;
+            if (includeSelf) yield return prototype;
+            if (prototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(prototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if(!TryIndex<T>(prototypeId, out var parent))
+                    yield break;
+                yield return parent;
+                if (parent.Parents == null) continue;
+
+                foreach (var parentId in parent.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
+        }
+
+        public IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false)
+        {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
+
+            if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
+            {
+                throw new InvalidOperationException("The provided prototype type is not an inheriting prototype");
+            }
+
+            if(!TryIndex(type, id, out var prototype))
+                yield break;
+            if (includeSelf) yield return prototype;
+            var iPrototype = (IInheritingPrototype)prototype;
+            if (iPrototype.Parents == null) yield break;
+
+            var queue = new Queue<string>(iPrototype.Parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if (!TryIndex(type, id, out var parent))
+                    continue;
+                yield return parent;
+                iPrototype = (IInheritingPrototype)parent;
+                if (iPrototype.Parents == null) continue;
+
+                foreach (var parentId in iPrototype.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
         }
 
         public T Index<T>(string id) where T : class, IPrototype
@@ -293,57 +383,81 @@ namespace Robust.Shared.Prototypes
         protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
         {
 #if !FULL_RELEASE
-            var changed = filePaths.SelectMany(f => LoadFile(f.ToRootedPath(), true)).ToList();
+            var changed = new Dictionary<Type, HashSet<string>>();
+            foreach (var filePath in filePaths)
+            {
+                LoadFile(filePath.ToRootedPath(), true, changed);
+            }
+            ReloadPrototypes(changed);
+#endif
+        }
 
-            changed.Sort((a, b) => SortPrototypesByPriority(a.GetType(), b.GetType()));
+        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
+        {
+#if !FULL_RELEASE
+            var prototypeTypeOrder = prototypes.Keys.ToList();
+            prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
             var pushed = new Dictionary<Type, HashSet<string>>();
 
-            foreach (var prototype in changed)
+            foreach (var type in prototypeTypeOrder)
             {
-                if (prototype is not IInheritingPrototype inheritingPrototype) continue;
-                var type = prototype.GetType();
-                if (!pushed.ContainsKey(type)) pushed[type] = new HashSet<string>();
-                var baseNode = prototype.ID;
-
-                if (pushed[type].Contains(baseNode))
+                if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
+                    foreach (var id in prototypes[type])
+                    {
+                        _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, _prototypeResults[type][id])!;
+                    }
                     continue;
                 }
 
                 var tree = _inheritanceTrees[type];
-                var currentNode = inheritingPrototype.Parent;
-
-                if (currentNode == null)
+                var processQueue = new Queue<string>();
+                foreach (var id in prototypes[type])
                 {
-                    PushInheritance(type, baseNode, null, pushed[type]);
-                    continue;
+                    processQueue.Enqueue(id);
                 }
 
-                while (true)
+                while(processQueue.TryDequeue(out var id))
                 {
-                    var parent = tree.GetParent(currentNode);
+                    var pushedSet = pushed.GetOrNew(type);
 
-                    if (parent == null)
+                    if (tree.TryGetParents(id, out var parents))
                     {
-                        break;
+                        var nonPushedParent = false;
+                        foreach (var parent in parents)
+                        {
+                            //our parent has been reloaded and has not been added to the pushedSet yet
+                            if (prototypes[type].Contains(parent) && !pushedSet.Contains(parent))
+                            {
+                                //we re-queue ourselves at the end of the queue
+                                processQueue.Enqueue(id);
+                                nonPushedParent = true;
+                                break;
+                            }
+                        }
+                        if(nonPushedParent) continue;
+
+                        foreach (var parent in parents)
+                        {
+                            PushInheritance(type, id, parent);
+                        }
                     }
 
-                    baseNode = currentNode;
-                    currentNode = parent;
-                }
+                    TryReadPrototype(type, id, _prototypeResults[type][id]);
 
-                PushInheritance(type, currentNode, baseNode, null, pushed[type]);
+                    pushedSet.Add(id);
+                }
             }
 
+            //todo paul i hate it but i am not opening that can of worms in this refactor
             PrototypesReloaded?.Invoke(
                 new PrototypesReloadedEventArgs(
-                    changed
-                        .GroupBy(p => p.GetType())
+                    prototypes
                         .ToDictionary(
                             g => g.Key,
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.ToDictionary(a => a.ID, a => a)))));
+                                g.Value.Where(x => _prototypes[g.Key].ContainsKey(x)).ToDictionary(a => a, a => _prototypes[g.Key][a])))));
 
             // TODO filter by entity prototypes changed
             if (!pushed.ContainsKey(typeof(EntityPrototype))) return;
@@ -352,100 +466,93 @@ namespace Robust.Shared.Prototypes
 
             foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
-                foreach (var entity in _entityManager.GetEntities()
-                    .Where(e => e.Prototype != null && e.Prototype.ID == prototype))
+                foreach (var entity in _entityManager.GetEntities())
                 {
-                    ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
-                }
-            }
-
-#endif
-        }
-
-        public void Resync()
-        {
-            var trees = _inheritanceTrees.Keys.ToList();
-            trees.Sort(SortPrototypesByPriority);
-            foreach (var type in trees)
-            {
-                var tree = _inheritanceTrees[type];
-                foreach (var baseNode in tree.BaseNodes)
-                {
-                    PushInheritance(type, baseNode, null, new HashSet<string>());
-                }
-
-                // Go over all prototypes and double check that their parent actually exists.
-                var typePrototypes = _prototypes[type];
-                foreach (var (id, proto) in typePrototypes)
-                {
-                    var iProto = (IInheritingPrototype) proto;
-
-                    var parent = iProto.Parent;
-                    if (parent != null && !typePrototypes.ContainsKey(parent!))
+                    var metaData = _entityManager.GetComponent<MetaDataComponent>(entity);
+                    if (metaData.EntityPrototype != null && metaData.EntityPrototype.ID == prototype)
                     {
-                        Logger.ErrorS("Serv3", $"{iProto.GetType().Name} '{id}' has invalid parent: {parent}");
+                        ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity(entity);
                     }
                 }
             }
+#endif
         }
 
-        public void PushInheritance(Type type, string id, string child, DeserializationResult? baseResult,
-            HashSet<string> changed)
+        /// <summary>
+        /// Resolves the mappings stored in memory to actual prototypeinstances.
+        /// </summary>
+        public void ResolveResults()
         {
-            changed.Add(id);
-
-            var myRes = _prototypeResults[type][id];
-            var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
-
-            PushInheritance(type, child, newResult, changed);
-
-            newResult.CallAfterDeserializationHook();
-            var populatedRes =
-                _serializationManager.PopulateDataDefinition(_prototypes[type][id], (IDeserializedDefinition) newResult);
-            _prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
-        }
-
-        public void PushInheritance(Type type, string id, DeserializationResult? baseResult, HashSet<string> changed)
-        {
-            changed.Add(id);
-
-            var myRes = _prototypeResults[type][id];
-            var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
-
-            foreach (var childID in _inheritanceTrees[type].Children(id))
+            var types = _prototypeResults.Keys.ToList();
+            types.Sort(SortPrototypesByPriority);
+            foreach (var type in types)
             {
-                PushInheritance(type, childID, newResult, changed);
+                if(_inheritanceTrees.TryGetValue(type, out var tree))
+                {
+                    var processed = new HashSet<string>();
+                    var workList = new Queue<string>(tree.RootNodes);
+
+                    while (workList.TryDequeue(out var id))
+                    {
+                        processed.Add(id);
+                        if (tree.TryGetParents(id, out var parents))
+                        {
+                            foreach (var parent in parents)
+                            {
+                                PushInheritance(type, id, parent);
+                            }
+                        }
+
+                        if (tree.TryGetChildren(id, out var children))
+                        {
+                            foreach (var child in children)
+                            {
+                                var childParents = tree.GetParents(child)!;
+                                if(childParents.All(p => processed.Contains(p)))
+                                    workList.Enqueue(child);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var (id, mapping) in _prototypeResults[type])
+                {
+                    TryReadPrototype(type, id, mapping);
+                }
             }
+        }
 
-            if (newResult.RawValue is not IInheritingPrototype inheritingPrototype)
-            {
-                Logger.ErrorS("Serv3", $"PushInheritance was called on non-inheriting prototype! ({type}, {id})");
+        private void TryReadPrototype(Type type, string id, MappingDataNode mapping)
+        {
+            if(mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
                 return;
+            try
+            {
+                _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, mapping)!;
             }
+            catch (Exception e)
+            {
+                Logger.ErrorS("PROTO", $"Reading {type}({id}) threw the following exception: {e}");
+            }
+        }
 
-            if (!inheritingPrototype.Abstract)
-                newResult.CallAfterDeserializationHook();
-            var populatedRes =
-                _serializationManager.PopulateDataDefinition(_prototypes[type][id], (IDeserializedDefinition) newResult);
-            _prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
+        private void PushInheritance(Type type, string id, string parent)
+        {
+            _prototypeResults[type][id] = _serializationManager.PushCompositionWithGenericNode(type,
+                new[] { _prototypeResults[type][parent] }, _prototypeResults[type][id]);
         }
 
         /// <inheritdoc />
-        public List<IPrototype> LoadDirectory(ResourcePath path)
+        public void LoadDirectory(ResourcePath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var changedPrototypes = new List<IPrototype>();
-
             _hasEverBeenReloaded = true;
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
             foreach (var resourcePath in streams)
             {
-                var filePrototypes = LoadFile(resourcePath);
-                changedPrototypes.AddRange(filePrototypes);
+                LoadFile(resourcePath, overwrite, changed);
             }
-
-            return changedPrototypes;
         }
 
         public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
@@ -528,17 +635,15 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
+        public void LoadFile(ResourcePath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var changedPrototypes = new HashSet<IPrototype>();
-
             try
             {
                 using var reader = ReadFile(file, !overwrite);
 
                 if (reader == null)
                 {
-                    return changedPrototypes;
+                    return;
                 }
 
                 var yamlStream = new YamlStream();
@@ -550,8 +655,7 @@ namespace Robust.Shared.Prototypes
                 {
                     try
                     {
-                        var documentPrototypes = LoadFromDocument(yamlStream.Documents[i], overwrite);
-                        changedPrototypes.UnionWith(documentPrototypes);
+                        LoadFromDocument(yamlStream.Documents[i], overwrite, changed);
                     }
                     catch (Exception e)
                     {
@@ -564,13 +668,10 @@ namespace Robust.Shared.Prototypes
                 var sawmill = Logger.GetSawmill("eng");
                 sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
             }
-
-            return changedPrototypes;
         }
 
-        public List<IPrototype> LoadFromStream(TextReader stream)
+        public void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var changedPrototypes = new List<IPrototype>();
             _hasEverBeenReloaded = true;
             var yaml = new YamlStream();
             yaml.Load(stream);
@@ -579,8 +680,7 @@ namespace Robust.Shared.Prototypes
             {
                 try
                 {
-                    var documentPrototypes = LoadFromDocument(yaml.Documents[i]);
-                    changedPrototypes.AddRange(documentPrototypes);
+                    LoadFromDocument(yaml.Documents[i], overwrite, changed);
                 }
                 catch (Exception e)
                 {
@@ -589,22 +689,48 @@ namespace Robust.Shared.Prototypes
             }
 
             LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
-
-            return changedPrototypes;
         }
 
-        public List<IPrototype> LoadString(string str)
+        public void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
-            return LoadFromStream(new StringReader(str));
+            LoadFromStream(new StringReader(str), overwrite, changed);
+        }
+
+        public void RemoveString(string prototypes)
+        {
+            var reader = new StringReader(prototypes);
+            var yaml = new YamlStream();
+
+            yaml.Load(reader);
+
+            foreach (var document in yaml.Documents)
+            {
+                var root = (YamlSequenceNode) document.RootNode;
+                foreach (var node in root.Cast<YamlMappingNode>())
+                {
+                    var typeString = node.GetNode("type").AsString();
+                    if (!_prototypeTypes.TryGetValue(typeString, out var type))
+                    {
+                        continue;
+                    }
+
+                    var id = node.GetNode("id").AsString();
+
+                    if (_inheritanceTrees.TryGetValue(type, out var tree))
+                    {
+                        tree.Remove(id, true);
+                    }
+
+                    if (_prototypes.TryGetValue(type, out var prototypeIds))
+                    {
+                        prototypeIds.Remove(id);
+                        _prototypeResults[type].Remove(id);
+                    }
+                }
+            }
         }
 
         #endregion IPrototypeManager members
-
-        public void PostInject()
-        {
-            _reflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
-            ReloadPrototypeTypes();
-        }
 
         private void ReloadPrototypeTypes()
         {
@@ -615,14 +741,14 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private HashSet<IPrototype> LoadFromDocument(YamlDocument document, bool overwrite = false)
+        private void LoadFromDocument(YamlDocument document, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var changedPrototypes = new HashSet<IPrototype>();
             var rootNode = (YamlSequenceNode) document.RootNode;
 
-            foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+            foreach (var node in rootNode.Cast<YamlMappingNode>())
             {
-                var type = node.GetNode("type").AsString();
+                var datanode = node.ToDataNodeCast<MappingDataNode>();
+                var type = datanode.Get<ValueDataNode>("type").Value;
                 if (!_prototypeTypes.ContainsKey(type))
                 {
                     if (_ignoredPrototypeTypes.Contains(type))
@@ -634,30 +760,35 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = _prototypeTypes[type];
-                var res = _serializationManager.Read(prototypeType, node.ToDataNode(), skipHook: true);
-                var prototype = (IPrototype) res.RawValue!;
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(prototype.ID))
+                if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
+                    throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+
+                if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
                 {
-                    throw new PrototypeLoadException($"Duplicate ID: '{prototype.ID}'");
+                    throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
                 }
 
-                _prototypeResults[prototypeType][prototype.ID] = res;
-                if (prototype is IInheritingPrototype inheritingPrototype)
+                _prototypeResults[prototypeType][idNode.Value] = datanode;
+                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    _inheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
-                }
-                else
-                {
-                    //we call it here since it wont get called when pushing inheritance
-                    res.CallAfterDeserializationHook();
+                    if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+                    {
+                        var parents = _serializationManager.Read<string[]>(parentNode);
+                        _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
+                    }
+                    else
+                    {
+                        _inheritanceTrees[prototypeType].Add(idNode.Value);
+                    }
                 }
 
-                _prototypes[prototypeType][prototype.ID] = prototype;
-                changedPrototypes.Add(prototype);
+                if (changed == null) continue;
+
+                if (!changed.TryGetValue(prototypeType, out var set))
+                    changed[prototypeType] = set = new HashSet<string>();
+                set.Add(idNode.Value);
             }
-
-            return changedPrototypes;
         }
 
         public bool HasIndex<T>(string id) where T : class, IPrototype
@@ -685,6 +816,21 @@ namespace Robust.Shared.Prototypes
             }
 
             return index.TryGetValue(id, out prototype);
+        }
+
+        public bool HasMapping<T>(string id)
+        {
+            if (!_prototypeResults.TryGetValue(typeof(T), out var index))
+            {
+                throw new UnknownPrototypeException(id);
+            }
+
+            return index.ContainsKey(id);
+        }
+
+        public bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
+        {
+            return _prototypeResults[type].TryGetValue(id, out mappings);
         }
 
         /// <inheritdoc />
@@ -767,15 +913,68 @@ namespace Robust.Shared.Prototypes
                     $"Duplicate prototype type ID: {attribute.Type}. Current: {_prototypeTypes[attribute.Type]}");
             }
 
+            var foundIdAttribute = false;
+            var foundParentAttribute = false;
+            var foundAbstractAttribute = false;
+            foreach (var info in type.GetAllPropertiesAndFields())
+            {
+                var hasId = info.HasAttribute<IdDataFieldAttribute>();
+                var hasParent = info.HasAttribute<ParentDataFieldAttribute>();
+                if (hasId)
+                {
+                    if (foundIdAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IPrototype),
+                            $"Found two {nameof(IdDataFieldAttribute)}");
+
+                    foundIdAttribute = true;
+                }
+
+                if (hasParent)
+                {
+                    if (foundParentAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IInheritingPrototype),
+                            $"Found two {nameof(ParentDataFieldAttribute)}");
+
+                    foundParentAttribute = true;
+                }
+
+                if (hasId && hasParent)
+                    throw new InvalidImplementationException(type,
+                        typeof(IPrototype),
+                        $"Prototype {type} has the Id- & ParentDatafield on single member {info.Name}");
+
+                if (info.HasAttribute<AbstractDataFieldAttribute>())
+                {
+                    if (foundAbstractAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IInheritingPrototype),
+                            $"Found two {nameof(AbstractDataFieldAttribute)}");
+
+                    foundAbstractAttribute = true;
+                }
+            }
+
+            if (!foundIdAttribute)
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    $"Did not find any member annotated with the {nameof(IdDataFieldAttribute)}");
+
+            if (type.IsAssignableTo(typeof(IInheritingPrototype)) && (!foundParentAttribute || !foundAbstractAttribute))
+                throw new InvalidImplementationException(type,
+                    typeof(IInheritingPrototype),
+                    $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
+
             _prototypeTypes[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;
 
             if (typeof(IPrototype).IsAssignableFrom(type))
             {
                 _prototypes[type] = new Dictionary<string, IPrototype>();
-                _prototypeResults[type] = new Dictionary<string, DeserializationResult>();
+                _prototypeResults[type] = new Dictionary<string, MappingDataNode>();
                 if (typeof(IInheritingPrototype).IsAssignableFrom(type))
-                    _inheritanceTrees[type] = new PrototypeInheritanceTree();
+                    _inheritanceTrees[type] = new MultiRootInheritanceGraph<string>();
             }
         }
 
@@ -784,6 +983,7 @@ namespace Robust.Shared.Prototypes
     }
 
     [Serializable]
+    [Virtual]
     public class PrototypeLoadException : Exception
     {
         public PrototypeLoadException()
@@ -804,6 +1004,7 @@ namespace Robust.Shared.Prototypes
     }
 
     [Serializable]
+    [Virtual]
     public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;

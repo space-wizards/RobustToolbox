@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
@@ -17,7 +17,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PhysShapeAabb : IPhysShape
+    public sealed class PhysShapeAabb : IPhysShape
     {
         public int ChildCount => 1;
 
@@ -30,35 +30,23 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
-                OnDataChanged?.Invoke();
             }
         }
 
         private float _radius;
 
-        public ShapeType ShapeType => ShapeType.Aabb;
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
+        public ShapeType ShapeType => ShapeType.Unknown;
 
         [DataField("bounds")]
+        [ViewVariables(VVAccess.ReadWrite)]
         private Box2 _localBounds = Box2.UnitCentered;
 
-        /// <summary>
-        /// Local AABB bounds of this shape.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Box2 LocalBounds
-        {
-            get => _localBounds;
-            set
-            {
-                if (_localBounds == value)
-                    return;
-
-                _localBounds = value;
-                OnDataChanged?.Invoke();
-            }
-        }
+        /// <inheritdoc />
+        public Box2 LocalBounds => _localBounds;
 
         public PhysShapeAabb(float radius)
         {
@@ -67,33 +55,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PhysShapeAabb()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
-        /// <inheritdoc />
-        public void ApplyState() { }
-
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
+        public Box2 ComputeAABB(Transform transform, int childIndex)
         {
-            var m = Matrix3.Identity;
-            m.R0C2 = modelMatrix.R0C2;
-            m.R1C2 = modelMatrix.R1C2;
-
-            handle.SetTransform(m);
-            handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
-        }
-
-        // TODO
-        [field: NonSerialized]
-        public event Action? OnDataChanged;
-
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
-            return _localBounds.Scale(1 + Radius);
+            return new Box2Rotated(_localBounds.Translated(transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox().Enlarged(_radius);
         }
 
         [Pure]

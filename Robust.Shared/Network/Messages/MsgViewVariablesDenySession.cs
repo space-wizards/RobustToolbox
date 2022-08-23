@@ -7,15 +7,9 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to deny a <see cref="MsgViewVariablesReqSession"/>.
     /// </summary>
-    public class MsgViewVariablesDenySession : NetMessage
+    public sealed class MsgViewVariablesDenySession : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesDenySession);
-        public MsgViewVariablesDenySession(INetChannel channel) : base(NAME, GROUP) { }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     The request ID to identify WHICH request has been denied.

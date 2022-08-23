@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -11,6 +12,7 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     /// <typeparam name="TKey">type to use as the unique key for each option. Functions similarly
     /// to dictionary key, so the type should make sure to respect dictionary key semantics.</typeparam>
+    [Virtual]
     public class MultiselectOptionButton<TKey> : ContainerButton where TKey : notnull
     {
         public const string StyleClassOptionButton = "optionButton";
@@ -20,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
         // map from key to buttondata index
         private Dictionary<TKey, int> _keyMap = new();
         private readonly Popup _popup;
-        private readonly VBoxContainer _popupVBox;
+        private readonly BoxContainer _popupVBox;
         private readonly Label _label;
 
         public event Action<ItemPressedEventArgs>? OnItemSelected;
@@ -60,11 +62,17 @@ namespace Robust.Client.UserInterface.Controls
             AddStyleClass(StyleClassButton);
             OnPressed += OnPressedInternal;
 
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal
+            };
             AddChild(hBox);
 
             _popup = new Popup();
-            _popupVBox = new VBoxContainer();
+            _popupVBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             _popup.AddChild(_popupVBox);
             _popup.OnPopupHide += OnPopupHide;
 
@@ -282,7 +290,7 @@ namespace Robust.Client.UserInterface.Controls
             TogglePopup(false);
         }
 
-        public class ItemPressedEventArgs : EventArgs
+        public sealed class ItemPressedEventArgs : EventArgs
         {
             public readonly MultiselectOptionButton<TKey> Button;
             /// <summary>

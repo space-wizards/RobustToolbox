@@ -4,7 +4,6 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
 {
-
     /// <summary>
     /// The client part of the string-exchange handshake, sent after the
     /// client receives the mapping hash and after the client receives a
@@ -19,13 +18,9 @@ namespace Robust.Shared.Network.Messages
     /// </remarks>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgMapStrClientHandshake : NetMessage
+    internal sealed class MsgMapStrClientHandshake : NetMessage
     {
-
-        public MsgMapStrClientHandshake(INetChannel ch)
-            : base(nameof(MsgMapStrClientHandshake), MsgGroups.Core)
-        {
-        }
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         /// <value>
         /// <c>true</c> if the client needs a new copy of the mapping,
@@ -38,7 +33,5 @@ namespace Robust.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
             => buffer.Write(NeedsStrings);
-
     }
-
 }

@@ -1,16 +1,10 @@
 ﻿using Lidgren.Network;
 
-#nullable disable
-
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgPlayerListReq : NetMessage
+    public sealed class MsgPlayerListReq : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly string NAME = nameof(MsgPlayerListReq);
-        public MsgPlayerListReq(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

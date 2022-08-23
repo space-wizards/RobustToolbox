@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
-    public class PropertyAndFieldDefinitionTest : SerializationTest
+    public sealed class PropertyAndFieldDefinitionTest : SerializationTest
     {
         private const string GetOnlyPropertyName = "GetOnlyProperty";
         private const string GetOnlyPropertyFieldTargetedName = "GetOnlyPropertyFieldTargeted";
@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             mapping.Add(GetOnlyPropertyWithOtherAttributeFieldTargetedName, new ValueDataNode("25"));
             mapping.Add(GetOnlyPropertyFieldTargetedAndOtherAttributeName, new ValueDataNode("30"));
 
-            var definition = Serialization.ReadValue<PropertyAndFieldDefinitionTestDefinition>(mapping);
+            var definition = Serialization.Read<PropertyAndFieldDefinitionTestDefinition>(mapping);
 
             Assert.NotNull(definition);
 
@@ -74,7 +74,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             // And I don't want to debug that ever again.
             Assert.NotNull(propertyInfo.DeclaringType);
 
-            var dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(propertyInfo.DeclaringType!);
+            var dataDefinition = ((SerializationManager) Serialization).GetDefinition(propertyInfo.DeclaringType!);
             Assert.NotNull(dataDefinition);
 
             var alwaysPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
@@ -105,13 +105,13 @@ namespace Robust.UnitTesting.Shared.Serialization
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
-            dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property!.DeclaringType!);
+            dataDefinition = ((SerializationManager) Serialization).GetDefinition(property!.DeclaringType!);
             Assert.NotNull(dataDefinition);
             Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehavior.Never));
         }
 
         [Robust.Shared.Serialization.Manager.Attributes.DataDefinition]
-        public class PropertyAndFieldDefinitionTestDefinition
+        public sealed class PropertyAndFieldDefinitionTestDefinition
         {
             [DataField(GetOnlyPropertyName)]
             public int GetOnlyProperty { get; }

@@ -4,12 +4,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.TestPrettyPrint
 {
-    public class Foo
+    public sealed class Foo
     {
         override public string ToString() { return "ACustomFooRep"; }
     }
 
-    public class Bar {}
+    public sealed class Bar {}
 }
 
 namespace Robust.UnitTesting.Shared.Utility
@@ -19,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestFixture]
     [Parallelizable(ParallelScope.Fixtures | ParallelScope.All)]
     [TestOf(typeof(PrettyPrint))]
-    public class PrettyPrint_Test
+    public sealed class PrettyPrint_Test
     {
         private static IEnumerable<(object val, string expectedRep, string expectedTypeRep)> TestCases { get; } = new (object, string, string)[]
         {

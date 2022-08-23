@@ -16,11 +16,11 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
+using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
-    internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
+    internal sealed class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
@@ -29,7 +29,7 @@ namespace Robust.Client.ViewVariables
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
 
-        private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
+        private readonly Dictionary<ViewVariablesInstance, DefaultWindow> _windows =
             new();
 
         private readonly Dictionary<uint, ViewVariablesRemoteSession> _sessions =
@@ -43,17 +43,13 @@ namespace Robust.Client.ViewVariables
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME,
-                _netMessageOpenSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME,
-                _netMessageRemoteData);
-            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(MsgViewVariablesCloseSession.NAME,
-                _netMessageCloseSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(MsgViewVariablesDenySession.NAME,
-                _netMessageDenySession);
-            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(MsgViewVariablesModifyRemote.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(MsgViewVariablesReqSession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
+            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
+            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(_netMessageDenySession);
+            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
         }
 
         public VVPropEditor PropertyFor(Type? type)
@@ -217,7 +213,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is IEntity entity && !entity.Deleted)
+            if (obj is EntityUid entity && _entityManager.EntityExists(entity))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
@@ -226,7 +222,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new DefaultWindow {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -236,7 +232,7 @@ namespace Robust.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window
+            var window = new DefaultWindow
             {
                 Title = "View Variables",
                 SetSize = _defaultWindowSize
@@ -262,7 +258,7 @@ namespace Robust.Client.ViewVariables
             var type = Type.GetType(blob.ObjectType);
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (type != null && typeof(IEntity).IsAssignableFrom(type))
+            if (type != null && typeof(EntityUid).IsAssignableFrom(type))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
@@ -281,7 +277,7 @@ namespace Robust.Client.ViewVariables
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)
         {
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesReqSession>();
+            var msg = new MsgViewVariablesReqSession();
             msg.Selector = selector;
             msg.RequestId = _nextReqId++;
             _netManager.ClientSendMessage(msg);
@@ -297,7 +293,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException("Session is closed", nameof(session));
             }
 
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesReqData>();
+            var msg = new MsgViewVariablesReqData();
             var reqId = msg.RequestId = _nextReqId++;
             msg.RequestMeta = meta;
             msg.SessionId = session.SessionId;
@@ -319,7 +315,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException();
             }
 
-            var closeMsg = _netManager.CreateNetMessage<MsgViewVariablesCloseSession>();
+            var closeMsg = new MsgViewVariablesCloseSession();
             closeMsg.SessionId = session.SessionId;
             _netManager.ClientSendMessage(closeMsg);
         }
@@ -336,7 +332,7 @@ namespace Robust.Client.ViewVariables
                 throw new ArgumentException();
             }
 
-            var msg = _netManager.CreateNetMessage<MsgViewVariablesModifyRemote>();
+            var msg = new MsgViewVariablesModifyRemote();
             msg.SessionId = session.SessionId;
             msg.ReinterpretValue = reinterpretValue;
             msg.PropertyIndex = propertyIndex;
@@ -412,6 +408,7 @@ namespace Robust.Client.ViewVariables
         }
     }
 
+    [Virtual]
     public class SessionDenyException : Exception
     {
         public SessionDenyException(MsgViewVariablesDenySession.DenyReason reason)

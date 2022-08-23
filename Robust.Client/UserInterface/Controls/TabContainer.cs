@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class TabContainer : Container
     {
         public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
@@ -75,7 +76,7 @@ namespace Robust.Client.UserInterface.Controls
             var control = GetChild(tab);
             var title = control.GetValue(TabTitleProperty);
 
-            return title ?? control.Name ?? Loc.GetString("No title");
+            return title ?? control.Name ?? Loc.GetString("tab-container-not-tab-title-provided");
         }
 
         public static string? GetTabTitle(Control control)

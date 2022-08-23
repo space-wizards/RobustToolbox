@@ -1,6 +1,7 @@
 using System;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.Analyzers;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 
@@ -10,7 +11,7 @@ namespace Robust.UnitTesting.Shared.IoC
     /// This fixture CAN NOT be parallelized, because <see cref="IoCManager"/> is a static singleton.
     /// </remarks>
     [TestFixture, TestOf(typeof(IoCManager))]
-    public class IoCManager_Test
+    public sealed class IoCManager_Test
     {
         [OneTimeSetUp]
         public void OneTimeSetup()
@@ -137,6 +138,71 @@ namespace Robust.UnitTesting.Shared.IoC
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
         }
 
+        private sealed class DependencyA
+        {
+            [Dependency] public readonly DependencyB _depB = default!;
+        }
+        private sealed class DependencyB
+        {
+            [Dependency] public readonly DependencyA _depA = default!;
+        }
+
+        [Test]
+        public void IoCRegInstancesBeforeBuildGraph()
+        {
+            var instanceA = new DependencyA();
+            IoCManager.RegisterInstance<DependencyA>(instanceA, deferInject: true);
+
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.BuildGraph();
+
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceA, Is.EqualTo(resolveA));
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
+        [Test]
+        public void IoCRegInstanceBeforeBuildGraph()
+        {
+            IoCManager.Register<DependencyA, DependencyA>();
+
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.BuildGraph();
+
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
+        [Test]
+        public void IoCRegInstanceDepBeforeBuildGraph()
+        {
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.Register<DependencyA, DependencyA>();
+
+            IoCManager.BuildGraph();
+
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
         [Test]
         public void TestExplicitInjection()
         {
@@ -152,12 +218,12 @@ namespace Robust.UnitTesting.Shared.IoC
 
     public interface IIoCTestPriorities { }
 
-    public class IoCTestPriorities1 : IIoCTestPriorities { }
-    public class IoCTestPriorities2 : IIoCTestPriorities { }
+    public sealed class IoCTestPriorities1 : IIoCTestPriorities { }
+    public sealed class IoCTestPriorities2 : IIoCTestPriorities { }
 
     public interface IConstructorException { }
 
-    public class ConstructorException : IConstructorException
+    public sealed class ConstructorException : IConstructorException
     {
         public ConstructorException()
         {
@@ -165,10 +231,12 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
+    [Virtual]
     public class TestConstructorExceptionException : Exception
     {
     }
 
+    [Virtual]
     public class TestFieldInjectionParent
     {
         [Dependency]
@@ -186,7 +254,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
-    public class TestFieldInjection : TestFieldInjectionParent
+    public sealed class TestFieldInjection : TestFieldInjectionParent
     {
         [Dependency]
 #pragma warning disable 649
@@ -204,7 +272,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
-    public class TestConstructorInjection
+    public sealed class TestConstructorInjection
     {
         public TestFieldInjection FieldInjection { get; }
 
@@ -214,7 +282,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
-    public class TestUnregisteredInjection
+    public sealed class TestUnregisteredInjection
     {
         [Dependency]
 #pragma warning disable 414
@@ -222,11 +290,11 @@ namespace Robust.UnitTesting.Shared.IoC
 #pragma warning restore 414
     }
 
-    public class TestFailImplementation : IIoCFailInterface { }
+    public sealed class TestFailImplementation : IIoCFailInterface { }
 
     public interface ITestDisposeExceptionCaught { }
 
-    public class TestDisposeExceptionCaught : ITestDisposeExceptionCaught, IDisposable
+    public sealed class TestDisposeExceptionCaught : ITestDisposeExceptionCaught, IDisposable
     {
         public void Dispose()
         {
@@ -234,7 +302,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
-    public class ExplicitInjectionTest
+    public sealed class ExplicitInjectionTest
     {
         [Dependency] public readonly IDependencyCollection DependencyCollection = default!;
     }

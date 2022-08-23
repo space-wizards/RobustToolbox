@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Robust.Shared.Network
 {
     /// <summary>
     /// Arguments for NetChannel events.
     /// </summary>
+    [Virtual]
     public class NetChannelArgs : EventArgs
     {
         /// <summary>
@@ -26,7 +29,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// Arguments for incoming connection event.
     /// </summary>
-    public class NetConnectingArgs : EventArgs
+    public sealed class NetConnectingArgs : EventArgs
     {
         public bool IsDenied => DenyReason != null;
 
@@ -63,25 +66,47 @@ namespace Robust.Shared.Network
     }
 
     /// <summary>
-    /// Arguments for a failed connection attempt.
+    /// Structured reason common interface.
     /// </summary>
-    public class NetConnectFailArgs : EventArgs
+    public interface INetStructuredReason
     {
-        public NetConnectFailArgs(string reason)
-        {
-            Reason = reason;
-        }
-
-        public string Reason { get; }
+        JsonObject StructuredReason { get; }
+        string Reason { get; }
+        bool RedialFlag { get; }
     }
 
-    public class NetDisconnectedArgs : NetChannelArgs
+    /// <summary>
+    /// Arguments for a failed connection attempt.
+    /// </summary>
+    public sealed class NetConnectFailArgs : EventArgs, INetStructuredReason
     {
-        public NetDisconnectedArgs(INetChannel channel, string reason) : base(channel)
+        public NetConnectFailArgs(string reason) : this(NetStructuredDisconnectMessages.Decode(reason))
         {
-            Reason = reason;
         }
 
-        public string Reason { get; }
+        public NetConnectFailArgs(JsonObject reason)
+        {
+            StructuredReason = reason;
+        }
+
+        public JsonObject StructuredReason { get; }
+        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
+        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
+    }
+
+    public sealed class NetDisconnectedArgs : NetChannelArgs, INetStructuredReason
+    {
+        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetStructuredDisconnectMessages.Decode(reason))
+        {
+        }
+
+        public NetDisconnectedArgs(INetChannel channel, JsonObject reason) : base(channel)
+        {
+            StructuredReason = reason;
+        }
+
+        public JsonObject StructuredReason { get; }
+        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
+        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
     }
 }

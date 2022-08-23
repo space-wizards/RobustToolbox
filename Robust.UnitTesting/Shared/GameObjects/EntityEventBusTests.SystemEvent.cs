@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -11,10 +10,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
         private static EntityEventBus BusFactory()
         {
-            var entityMan = new Mock<IEntityManager>();
-            var compMan = new Mock<IComponentManager>();
-            entityMan.Setup(m => m.ComponentManager).Returns(compMan.Object);
-            var bus = new EntityEventBus(entityMan.Object);
+            var compFacMock = new Mock<IComponentFactory>();
+            var entManMock = new Mock<IEntityManager>();
+            entManMock.SetupGet(e => e.ComponentFactory).Returns(compFacMock.Object);
+            var bus = new EntityEventBus(entManMock.Object);
             return bus;
         }
 
@@ -140,8 +139,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
+            void TestEventHandler(TestEventArgs args) { }
+
             // Act
-            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null!);
+            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)TestEventHandler);
 
             //Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);
@@ -216,22 +217,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);
-        }
-
-        /// <summary>
-        /// Trying to queue a null event causes a <see cref="ArgumentNullException"/> to be thrown.
-        /// </summary>
-        [Test]
-        public void RaiseEvent_NullEvent_ArgumentNullException()
-        {
-            // Arrange
-            var bus = BusFactory();
-
-            // Act
-            void Code() => bus.RaiseEvent(EventSource.Local, null!);
-
-            // Assert
-            Assert.Throws<ArgumentNullException>(Code);
         }
 
         /// <summary>
@@ -428,51 +413,60 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public async Task AwaitEvent()
+        public void RaiseEvent_Ordered()
         {
             // Arrange
             var bus = BusFactory();
-            var args = new TestEventArgs();
+
+            // Expected order is A -> C -> B
+            var a = false;
+            var b = false;
+            var c = false;
+
+            void HandlerA(TestEventArgs ev)
+            {
+                Assert.That(b, Is.False, "A should run before B");
+                Assert.That(c, Is.False, "A should run before C");
+
+                a = true;
+            }
+
+            void HandlerB(TestEventArgs ev)
+            {
+                Assert.That(c, Is.True, "B should run after C");
+                b = true;
+            }
+
+            void HandlerC(TestEventArgs ev) => c = true;
+
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubA(), HandlerA, typeof(SubA), before: new []{typeof(SubB), typeof(SubC)});
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubB(), HandlerB, typeof(SubB), after: new []{typeof(SubC)});
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubC(), HandlerC, typeof(SubC));
 
             // Act
-            var task = bus.AwaitEvent<TestEventArgs>(EventSource.Local);
-            bus.RaiseEvent(EventSource.Local, args);
-            var result = await task;
+            bus.RaiseEvent(EventSource.Local, new TestEventArgs());
 
             // Assert
-            Assert.That(result, Is.EqualTo(args));
+            Assert.That(a, Is.True, "A did not fire");
+            Assert.That(b, Is.True, "B did not fire");
+            Assert.That(c, Is.True, "C did not fire");
         }
 
-        [Test]
-        public void AwaitEvent_SourceNone_ArgOutOfRange()
+        public sealed class SubA : IEntityEventSubscriber
         {
-            // Arrange
-            var bus = BusFactory();
-
-            // Act
-            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.None);
-
-            // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(Code);
         }
 
-        [Test]
-        public void AwaitEvent_DoubleTask_InvalidException()
+        public sealed class SubB : IEntityEventSubscriber
         {
-            // Arrange
-            var bus = BusFactory();
-            bus.AwaitEvent<TestEventArgs>(EventSource.Local);
+        }
 
-            // Act
-            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.Local);
-
-            // Assert
-            Assert.Throws<InvalidOperationException>(Code);
+        public sealed class SubC : IEntityEventSubscriber
+        {
         }
     }
 
-    internal class TestEventSubscriber : IEntityEventSubscriber { }
+    internal sealed class TestEventSubscriber : IEntityEventSubscriber { }
 
-    internal class TestEventArgs : EntityEventArgs { }
-    internal class TestEventTwoArgs : EntityEventArgs { }
+    internal sealed class TestEventArgs : EntityEventArgs { }
+    internal sealed class TestEventTwoArgs : EntityEventArgs { }
 }

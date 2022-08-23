@@ -9,6 +9,7 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ItemList : Control, IList<ItemList.Item>
     {
         private bool _isAtBottom = true;
@@ -186,6 +187,8 @@ namespace Robust.Client.UserInterface.Controls
 
         private void Select(int idx)
         {
+            if(SelectMode != ItemListSelectMode.Multiple)
+                ClearSelected(idx);
             OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
         }
 
@@ -208,18 +211,19 @@ namespace Robust.Client.UserInterface.Controls
             Deselect(idx);
         }
 
-        public void ClearSelected()
+        public void ClearSelected(int? except = null)
         {
             foreach (var item in GetSelected())
             {
+                if(IndexOf(item) == except) continue;
                 item.Selected = false;
             }
         }
 
-        public void SortItemsByText()
-        {
-            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
-        }
+        public void SortItemsByText() => Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
+
+        public void Sort(Comparison<Item> comparison) => _itemList.Sort(comparison);
+
 
         public void EnsureCurrentIsVisible()
         {
@@ -318,6 +322,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
+            var sizeBox = PixelSizeBox;
+
             var font = ActualFont;
             var listBg = ActualBackground;
             var iconBg = ActualItemBackground;
@@ -346,31 +352,38 @@ namespace Robust.Client.UserInterface.Controls
                     itemHeight = item.IconSize.Y;
                 }
 
-                itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
+                itemHeight = Math.Max(itemHeight, font.GetHeight(UIScale));
                 itemHeight += ActualItemBackground.MinimumSize.Y;
 
-                item.Region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
+                var region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
+                item.Region = region;
 
-                bg.Draw(handle, item.Region.Value);
-
-                var contentBox = bg.GetContentBox(item.Region.Value);
-                var drawOffset = contentBox.TopLeft;
-                if (item.Icon != null)
+                if (region.Intersects(sizeBox))
                 {
-                    if (item.IconRegion.Size == Vector2.Zero)
-                    {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconModulate);
-                    }
-                    else
-                    {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconRegion, item.IconModulate);
-                    }
-                }
+                    bg.Draw(handle, item.Region.Value);
 
-                if (item.Text != null)
-                {
-                    var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right, contentBox.Bottom);
-                    DrawTextInternal(handle, item.Text, textBox);
+                    var contentBox = bg.GetContentBox(item.Region.Value);
+                    var drawOffset = contentBox.TopLeft;
+                    if (item.Icon != null)
+                    {
+                        if (item.IconRegion.Size == Vector2.Zero)
+                        {
+                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                                item.IconModulate);
+                        }
+                        else
+                        {
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                                item.IconRegion, item.IconModulate);
+                        }
+                    }
+
+                    if (item.Text != null)
+                    {
+                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right,
+                            contentBox.Bottom);
+                        DrawTextInternal(handle, item.Text, textBox);
+                    }
                 }
 
                 offset += itemHeight;
@@ -438,8 +451,6 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    if(SelectMode != ItemListSelectMode.Multiple)
-                        ClearSelected();
                     item.Selected = true;
                     if (SelectMode == ItemListSelectMode.Button)
                         Timer.Spawn(ButtonDeselectDelay, () => {  item.Selected = false; } );
@@ -466,7 +477,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (MathHelper.CloseTo(0, args.Delta.Y))
+            if (MathHelper.CloseToPercent(0, args.Delta.Y))
             {
                 return;
             }
@@ -513,20 +524,20 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > PixelHeight;
         }
 
-        public class ItemListEventArgs : EventArgs
+        public abstract class ItemListEventArgs : EventArgs
         {
             /// <summary>
             ///     The ItemList this event originated from.
             /// </summary>
             public ItemList ItemList { get; }
 
-            public ItemListEventArgs(ItemList list)
+            protected ItemListEventArgs(ItemList list)
             {
                 ItemList = list;
             }
         }
 
-        public class ItemListSelectedEventArgs : ItemListEventArgs
+        public sealed class ItemListSelectedEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.
@@ -539,7 +550,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public class ItemListDeselectedEventArgs : ItemListEventArgs
+        public sealed class ItemListDeselectedEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.
@@ -552,7 +563,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public class ItemListHoverEventArgs : ItemListEventArgs
+        public sealed class ItemListHoverEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.

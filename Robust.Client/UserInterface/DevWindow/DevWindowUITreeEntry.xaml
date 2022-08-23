@@ -1,0 +1,14 @@
+<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindowUITreeEntry">
+    <BoxContainer Orientation="Vertical">
+        <!-- Main button for this entry -->
+        <PanelContainer Name="Header" MouseFilter="Stop">
+            <BoxContainer Orientation="Horizontal" >
+                <Button Name="ExpandButton" ToggleMode="True" Text=">" />
+                <Label Name="ControlName" HorizontalExpand="True" ClipText="True" />
+            </BoxContainer>
+        </PanelContainer>
+        <BoxContainer Orientation="Vertical" Name="ChildEntryContainer" Margin="8 0 0 0" />
+    </BoxContainer>
+</Control>

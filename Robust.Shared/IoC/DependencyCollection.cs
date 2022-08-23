@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Utility;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -13,7 +16,7 @@ namespace Robust.Shared.IoC
         where T : class;
 
     /// <inheritdoc />
-    internal class DependencyCollection : IDependencyCollection
+    internal sealed class DependencyCollection : IDependencyCollection
     {
         private delegate void InjectorDelegate(object target, object[] services);
         private static readonly Type[] InjectorParameters = {typeof(object), typeof(object[])};
@@ -32,11 +35,46 @@ namespace Robust.Shared.IoC
         private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
 
         private readonly Queue<Type> _pendingResolves = new();
+        private readonly Queue<object> _newInstances = new();
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
         private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
             new();
+
+        private readonly IDependencyCollection? _parentCollection;
+
+        public DependencyCollection() { }
+
+        public DependencyCollection(IDependencyCollection parentCollection)
+        {
+            _parentCollection = parentCollection;
+        }
+
+        /// <inheritdoc />
+        public bool TryResolveType<T>([NotNullWhen(true)] out T? instance)
+        {
+            if (TryResolveType(typeof(T), out object? rawInstance))
+            {
+                if (rawInstance is T typedInstance)
+                {
+                    instance = typedInstance;
+                    return true;
+                }
+            }
+
+            instance = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryResolveType(Type objectType, [MaybeNullWhen(false)] out object instance)
+        {
+            if(!_services.TryGetValue(objectType, out instance))
+                return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
+
+            return true;
+        }
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
@@ -45,11 +83,12 @@ namespace Robust.Shared.IoC
             Register<TInterface, TImplementation>(() =>
             {
                 var objectType  = typeof(TImplementation);
-                var constructors = objectType.GetConstructors();
+                var constructors = objectType.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' requires exactly one constructor.");
 
+                var chosenConstructor = constructors[0];
                 var constructorParams = constructors[0].GetParameters();
                 var parameters = new object[constructorParams.Length];
 
@@ -57,8 +96,10 @@ namespace Robust.Shared.IoC
                 {
                     var param = constructorParams[index];
 
-                    if (_services.TryGetValue(param.ParameterType, out var instance))
+                    if (TryResolveType(param.ParameterType, out var instance))
+                    {
                         parameters[index] = instance;
+                    }
                     else
                     {
                         if (_resolveTypes.ContainsKey(param.ParameterType))
@@ -70,10 +111,11 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return (TImplementation) Activator.CreateInstance(objectType, parameters)!;
+                return (TImplementation) chosenConstructor.Invoke(parameters);
             }, overwrite);
         }
 
+        /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
         {
@@ -82,6 +124,52 @@ namespace Robust.Shared.IoC
 
             _resolveTypes[interfaceType] = typeof(TImplementation);
             _resolveFactories[typeof(TImplementation)] = factory;
+            _pendingResolves.Enqueue(interfaceType);
+        }
+
+        /// <inheritdoc />
+        public void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false) => Register(implementation, implementation, factory, overwrite);
+
+        public void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false)
+        {
+            CheckRegisterInterface(interfaceType, implementation, overwrite);
+
+            object DefaultFactory()
+            {
+                var constructors = implementation.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (constructors.Length != 1)
+                    throw new InvalidOperationException($"Dependency '{implementation.FullName}' requires exactly one constructor.");
+
+                var chosenConstructor = constructors[0];
+                var constructorParams = chosenConstructor.GetParameters();
+                var parameters = new object[constructorParams.Length];
+
+                for (var index = 0; index < constructorParams.Length; index++)
+                {
+                    var param = constructorParams[index];
+
+                    if (TryResolveType(param.ParameterType, out var instance))
+                    {
+                        parameters[index] = instance;
+                    }
+                    else
+                    {
+                        if (_resolveTypes.ContainsKey(param.ParameterType))
+                        {
+                            throw new InvalidOperationException($"Dependency '{implementation.FullName}' ctor requires {param.ParameterType.FullName} registered before it.");
+                        }
+
+                        throw new InvalidOperationException($"Dependency '{implementation.FullName}' ctor has unknown dependency {param.ParameterType.FullName}");
+                    }
+                }
+
+                return chosenConstructor.Invoke(parameters);
+            }
+
+            _resolveTypes[interfaceType] = implementation;
+            _resolveFactories[implementation] = factory ?? DefaultFactory;
             _pendingResolves.Enqueue(interfaceType);
         }
 
@@ -109,25 +197,41 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+        {
+            RegisterInstance(typeof(TInterface), implementation, overwrite, deferInject);
+        }
+
+        /// <inheritdoc />
+        public void RegisterInstance(Type type, object implementation, bool overwrite = false, bool deferInject = false)
         {
             if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
 
-            if (!(implementation is TInterface))
+            if (!implementation.GetType().IsAssignableTo(type))
                 throw new InvalidOperationException(
-                    $"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
+                    $"Implementation type {implementation.GetType()} is not assignable to type {type}");
 
-            CheckRegisterInterface(typeof(TInterface), implementation.GetType(), overwrite);
+            CheckRegisterInterface(type, implementation.GetType(), overwrite);
 
-            // do the equivalent of BuildGraph with a single type.
-            _resolveTypes[typeof(TInterface)] = implementation.GetType();
-            _services[typeof(TInterface)] = implementation;
+            if(!deferInject)
+            {
+                // do the equivalent of BuildGraph with a single type.
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
 
-            InjectDependencies(implementation, true);
+                InjectDependencies(implementation, true);
 
-            if (implementation is IPostInjectInit init)
-                init.PostInject();
+                if (implementation is IPostInjectInit init)
+                    init.PostInject();
+            }
+            else
+            {
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
+
+                _newInstances.Enqueue(implementation);
+            }
         }
 
         /// <inheritdoc />
@@ -141,6 +245,8 @@ namespace Robust.Shared.IoC
             _services.Clear();
             _resolveTypes.Clear();
             _resolveFactories.Clear();
+            _pendingResolves.Clear();
+            _newInstances.Clear();
             _injectorCache.Clear();
         }
 
@@ -151,11 +257,39 @@ namespace Robust.Shared.IoC
             return (T) ResolveType(typeof(T));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T>([NotNull] ref T? instance)
+        {
+            // Resolve<T>() will either throw or return a concrete instance, therefore we suppress the nullable warning.
+            instance ??= Resolve<T>()!;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+        {
+            Resolve(ref instance1);
+            Resolve(ref instance2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3, ref instance4);
+        }
+
         /// <inheritdoc />
         [System.Diagnostics.Contracts.Pure]
         public object ResolveType(Type type)
         {
-            if (_services.TryGetValue(type, out var value))
+            if (TryResolveType(type, out var value))
             {
                 return value;
             }
@@ -219,6 +353,12 @@ namespace Robust.Shared.IoC
             // delegates. Also we need to free the delegates because lambdas capture variables.
             _resolveFactories.Clear();
 
+            // add all the newly registered instances to the inject list
+            while (_newInstances.Count > 0)
+            {
+                injectList.Add(_newInstances.Dequeue());
+            }
+
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)
             {
@@ -268,21 +408,22 @@ namespace Robust.Shared.IoC
                 }
 
                 // Not using Resolve<T>() because we're literally building it right now.
-                if (!_services.ContainsKey(field.FieldType))
+                if (TryResolveType(field.FieldType, out var dep))
                 {
-                    // A hard-coded special case so the DependencyCollection can inject itself.
-                    // This is not put into the services so it can be overridden if needed.
-                    if (field.FieldType == typeof(IDependencyCollection))
-                    {
-                        field.SetValue(obj, this);
-                        continue;
-                    }
-
-                    throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                    // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
+                    field.SetValue(obj, dep);
+                    continue;
                 }
 
-                // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
-                field.SetValue(obj, _services[field.FieldType]);
+                // A hard-coded special case so the DependencyCollection can inject itself.
+                // This is not put into the services so it can be overridden if needed.
+                if (field.FieldType == typeof(IDependencyCollection))
+                {
+                    field.SetValue(obj, this);
+                    continue;
+                }
+
+                throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
             }
         }
 
@@ -322,7 +463,7 @@ namespace Robust.Shared.IoC
                 generator.Emit(OpCodes.Ldarg_0);
 
                 // Not using Resolve<T>() because we're literally building it right now.
-                if (!_services.TryGetValue(field.FieldType, out var service))
+                if (!TryResolveType(field.FieldType, out var service))
                 {
                     // A hard-coded special case so the DependencyCollection can inject itself.
                     // This is not put into the services so it can be overridden if needed.

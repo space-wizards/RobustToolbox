@@ -1,10 +1,13 @@
 using Robust.Shared.IoC.Exceptions;
 using System;
-using System.Diagnostics.Contracts;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -96,12 +99,29 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        public static void Register<TInterface, TImplementation>(bool overwrite = false)
+        public static void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
             _container.Value!.Register<TInterface, TImplementation>(overwrite);
+        }
+
+        /// <summary>
+        /// Register an implementation, to make it accessible to <see cref="Resolve{T}"/>
+        /// </summary>
+        /// <typeparam name="T">The type that will be resolvable and implementation.</typeparam>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="T"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
+        /// </exception>
+        public static void Register<[MeansImplicitUse] T>(bool overwrite = false) where T : class
+        {
+            Register<T, T>(overwrite);
         }
 
         /// <summary>
@@ -131,19 +151,25 @@ namespace Robust.Shared.IoC
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
         ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
-        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance
+        ///     if deferredInject is false.
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
         /// <param name="implementation">The existing instance to use as the implementation.</param>
         /// <param name="overwrite">
-        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
-        /// replace the current implementation instead.
+        ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        ///     replace the current implementation instead.
         /// </param>
-        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        /// <param name="deferInject">
+        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
+        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
+        ///     that don't exist yet because you have not called BuildGraph, set this to true.
+        /// </param>
+        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite);
+            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite, deferInject);
         }
 
         /// <summary>
@@ -165,12 +191,57 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public static T Resolve<T>()
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
             return _container.Value!.Resolve<T>();
+        }
+
+        /// <inheritdoc cref="Resolve{T}()"/>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T>([NotNull] ref T? instance)
+        {
+            // Do not call into IDependencyCollection immediately for this,
+            // avoids thread local lookup if instance is already given.
+            instance ??= Resolve<T>()!;
+        }
+
+        /// <inheritdoc cref="Resolve{T}(ref T?)"/>
+        /// <summary>
+        /// Resolve two dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2);
+        }
+
+        /// <inheritdoc cref="Resolve{T1, T2}(ref T1?, ref T2?)"/>
+        /// <summary>
+        /// Resolve three dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3);
+        }
+
+        /// <inheritdoc cref="Resolve{T1, T2, T3}(ref T1?, ref T2?, ref T3?)"/>
+        /// <summary>
+        /// Resolve four dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
         }
 
         /// <summary>
@@ -181,7 +252,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public static object ResolveType(Type type)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);

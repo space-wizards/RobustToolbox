@@ -10,7 +10,7 @@ namespace Robust.Shared.Map
     ///     This is a collection of tiles in a grid format.
     /// </summary>
     [PublicAPI]
-    public interface IMapGrid : IDisposable
+    public interface IMapGrid
     {
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.
@@ -25,6 +25,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     The identifier of this grid.
         /// </summary>
+        [Obsolete("Use EntityUids instead")]
         GridId Index { get; }
 
         /// <summary>
@@ -32,10 +33,17 @@ namespace Robust.Shared.Map
         /// </summary>
         ushort TileSize { get; }
 
+        Box2Rotated WorldBounds { get; }
+
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
-        Box2 WorldBounds { get; }
+        Box2 WorldAABB { get; }
+
+        /// <summary>
+        ///     The bounding box of the grid in local coordinates.
+        /// </summary>
+        Box2 LocalAABB { get; }
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -48,11 +56,22 @@ namespace Robust.Shared.Map
         Vector2 WorldPosition { get; set; }
 
         /// <summary>
-        ///     Whether or not this grid has gravity
+        ///     The rotation of the grid in world terms.
         /// </summary>
-        bool HasGravity { get; set; }
+        Angle WorldRotation { get; set; }
+
+        Matrix3 WorldMatrix { get; }
+
+        Matrix3 InvWorldMatrix { get; }
 
         #region TileAccess
+
+        /// <summary>
+        ///     Gets a tile a the given world coordinates. This will not create a new chunk.
+        /// </summary>
+        /// <param name="coords">The location of the tile in coordinates.</param>
+        /// <returns>The tile at the world coordinates.</returns>
+        TileRef GetTileRef(MapCoordinates coords);
 
         /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
@@ -72,7 +91,12 @@ namespace Robust.Shared.Map
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
         /// </summary>
         /// <returns>All tiles in the chunk.</returns>
-        IEnumerable<TileRef> GetAllTiles(bool ignoreSpace = true);
+        IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true);
+
+        /// <summary>
+        ///     Returns an enumerator that gets all tiles in the grid without empty ones, in row-major order [xTileIndex, yTileIndex].
+        /// </summary>
+        GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true);
 
         /// <summary>
         ///     Replaces a single tile inside of the grid.
@@ -89,6 +113,18 @@ namespace Robust.Shared.Map
         void SetTile(Vector2i gridIndices, Tile tile);
 
         /// <summary>
+        ///     Modifies many tiles inside of a chunk. Avoids regenerating collision until the end.
+        /// </summary>
+        /// <param name="tiles"></param>
+        void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
+
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
+        IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
+        IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
+        /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
         /// </summary>
         /// <param name="worldArea">An area in the world to search for tiles.</param>
@@ -103,15 +139,24 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        int AnchoredEntityCount(Vector2i pos);
+        IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB);
+        IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
+        IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
+        IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds);
+
+        // Struct enumerators
+        AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos);
 
         Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
         Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);
 
-        void AddToSnapGridCell(Vector2i pos, EntityUid euid);
-        void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
+        bool IsAnchored(EntityCoordinates coords, EntityUid euid);
+        bool AddToSnapGridCell(Vector2i pos, EntityUid euid);
+        bool AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
         void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid);
         void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid);
 
@@ -199,14 +244,21 @@ namespace Robust.Shared.Map
         bool TryGetTileRef(EntityCoordinates coords, out TileRef tile);
 
         /// <summary>
+        ///     Transforms a world position into a tile reference, returns false if no tile is found.
+        /// </summary>
+        bool TryGetTileRef(Vector2 worldPos, out TileRef tile);
+
+        /// <summary>
         /// Transforms grid tile indices to chunk indices.
         /// </summary>
         Vector2i GridTileToChunkIndices(Vector2i gridTile);
 
         /// <summary>
-        /// Transforms local grid coordinates to chunk indices.
+        /// Transforms EntityCoordinates to chunk indices relative to grid origin.
         /// </summary>
         Vector2i LocalToChunkIndices(EntityCoordinates gridPos);
+
+        Vector2 LocalToGrid(EntityCoordinates position);
 
         #endregion Transforms
 

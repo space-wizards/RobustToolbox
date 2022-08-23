@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    public class VelocityDebugSystem : EntitySystem
+    public sealed class VelocityDebugSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -35,17 +35,17 @@ namespace Robust.Client.GameObjects
 
             var player = _playerManager.LocalPlayer?.ControlledEntity;
 
-            if (player == null || !player.TryGetComponent(out PhysicsComponent? body))
+            if (player == null || !EntityManager.TryGetComponent(player.Value, out PhysicsComponent? body))
             {
                 _label.Visible = false;
                 return;
             }
 
-            var screenPos = _eyeManager.WorldToScreen(player.Transform.WorldPosition);
+            var screenPos = _eyeManager.WorldToScreen(EntityManager.GetComponent<TransformComponent>(player.Value).WorldPosition);
             LayoutContainer.SetPosition(_label, screenPos + new Vector2(0, 50));
             _label.Visible = true;
 
-            _label.Text = $"Speed: {body.LinearVelocity.Length}\nLinear: {body.LinearVelocity.X:0.00}, {body.LinearVelocity.Y:0.00}\nAngular:{body.AngularVelocity}";
+            _label.Text = $"Speed: {body.LinearVelocity.Length:0.00}\nLinear: {body.LinearVelocity.X:0.00}, {body.LinearVelocity.Y:0.00}\nAngular: {body.AngularVelocity}";
         }
     }
 }

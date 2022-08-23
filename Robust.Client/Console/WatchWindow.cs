@@ -8,19 +8,18 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Timing;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console
 {
-    public class WatchWindow : SS14Window
+    public sealed class WatchWindow : DefaultWindow
     {
         private readonly IReflectionManager _reflectionManager;
 
-        private readonly VBoxContainer _watchesVBox;
+        private readonly BoxContainer _watchesVBox;
         private readonly LineEdit _addWatchEdit;
         private readonly Button _addWatchButton;
 
@@ -31,29 +30,32 @@ namespace Robust.Client.Console
 
             ScriptInstanceShared.InitDummy();
 
-            Title = Loc.GetString("Watch Window");
+            Title = "Watch Window";
 
-            var mainVBox = new VBoxContainer
+            var mainVBox = new BoxContainer
             {
+                Orientation = LayoutOrientation.Vertical,
                 MinSize = (500, 300),
                 Children =
                 {
-                    (_watchesVBox = new VBoxContainer
+                    (_watchesVBox = new BoxContainer
                     {
+                        Orientation = LayoutOrientation.Vertical,
                         VerticalExpand = true
                     }),
-                    new HBoxContainer
+                    new BoxContainer
                     {
+                        Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (_addWatchEdit = new HistoryLineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = Loc.GetString("Add watch (C# interactive)")
+                                PlaceHolder = "Add watch (C# interactive)"
                             }),
                             (_addWatchButton = new Button
                             {
-                                Text = Loc.GetString("Add")
+                                Text = "Add"
                             })
                         }
                     }
@@ -107,8 +109,9 @@ namespace Robust.Client.Console
                 Button delButton;
                 _runner = runner;
 
-                AddChild(new HBoxContainer
+                AddChild(new BoxContainer
                 {
+                    Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         (_outputLabel = new Label
@@ -118,7 +121,7 @@ namespace Robust.Client.Console
                         }),
                         (delButton = new Button
                         {
-                            Text = Loc.GetString("Remove")
+                            Text = "Remove"
                         }),
                     }
                 });
@@ -152,6 +155,11 @@ namespace Robust.Client.Console
                 IoCManager.InjectDependencies(this);
             }
 
+            protected override void WriteSyntax(object toString)
+            {
+                // No-op: nothing to write to.
+            }
+
             public override void write(object toString)
             {
                 // No-op: nothing to write to.
@@ -168,8 +176,9 @@ namespace Robust.Client.Console
             public CompilationErrorControl(string message)
             {
                 Button delButton;
-                AddChild(new HBoxContainer
+                AddChild(new BoxContainer
                 {
+                    Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         new Label
@@ -178,7 +187,7 @@ namespace Robust.Client.Console
                             ClipText = true,
                             HorizontalExpand = true
                         },
-                        (delButton = new Button {Text = Loc.GetString("Remove")})
+                        (delButton = new Button {Text = "Remove"})
                     }
                 });
 

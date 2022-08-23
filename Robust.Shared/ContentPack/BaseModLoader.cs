@@ -103,6 +103,17 @@ namespace Robust.Shared.ContentPack
             _testingCallbacks.Add(testingCallbacks);
         }
 
+        public void Shutdown()
+        {
+            foreach (var module in Mods)
+            {
+                foreach (var entryPoint in module.EntryPoints)
+                {
+                    entryPoint.Dispose();
+                }
+            }
+        }
+
         /// <summary>
         ///     Holds info about a loaded assembly.
         /// </summary>

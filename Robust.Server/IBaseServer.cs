@@ -23,7 +23,7 @@ namespace Robust.Server
         ///     Sets up the server, loads the game, gets ready for client connections.
         /// </summary>
         /// <returns></returns>
-        bool Start(Func<ILogHandler>? logHandler = null);
+        bool Start(ServerOptions options, Func<ILogHandler>? logHandler = null);
 
         /// <summary>
         ///     Hard restarts the server, shutting it down, kicking all players, and starting the server again.
@@ -44,11 +44,10 @@ namespace Robust.Server
 
     internal interface IBaseServerInternal : IBaseServer
     {
+        ServerOptions Options { get; }
         bool ContentStart { set; }
-        bool LoadConfigAndUserData { set; }
 
         void OverrideMainLoop(IGameLoop gameLoop);
-
         void SetCommandLineArgs(CommandLineArgs args);
     }
 }

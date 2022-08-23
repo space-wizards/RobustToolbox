@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 #nullable disable
@@ -11,18 +12,9 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent client to server to request data from the server.
     /// </summary>
-    public class MsgViewVariablesReqData : NetMessage
+    public sealed class MsgViewVariablesReqData : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesReqData);
-
-        public MsgViewVariablesReqData(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     The request ID that will be sent in <see cref="MsgViewVariablesRemoteData"/> to
@@ -55,13 +47,12 @@ namespace Robust.Shared.Network.Messages
             buffer.Write(RequestId);
             buffer.Write(SessionId);
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(stream, RequestMeta);
-                buffer.Write((int)stream.Length);
-                stream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
-            }
+
+            var stream = new MemoryStream();
+            serializer.Serialize(stream, RequestMeta);
+
+            buffer.Write((int)stream.Length);
+            buffer.Write(stream.AsSpan());
         }
     }
 }

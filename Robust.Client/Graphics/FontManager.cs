@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics
 {
@@ -58,6 +59,14 @@ namespace Robust.Client.Graphics
             return instance;
         }
 
+        public void ClearFontCache()
+        {
+            foreach (var fontInstance in _loadedInstances)
+            {
+                fontInstance.Value.ClearSizeData();
+            }
+        }
+
         private ScaledFontData _generateScaledDatum(FontInstanceHandle instance, float scale)
         {
             var ftFace = instance.FaceHandle.Face;
@@ -73,11 +82,13 @@ namespace Robust.Client.Graphics
             return data;
         }
 
-        private void CacheGlyph(FontInstanceHandle instance, ScaledFontData scaled, float scale, uint glyph)
+        private GlyphInfo EnsureGlyphCached(FontInstanceHandle instance, ScaledFontData scaled, float scale, uint glyph)
         {
             // Check if already cached.
-            if (scaled.AtlasData.ContainsKey(glyph))
-                return;
+            if (scaled.GlyphInfos.TryGetValue(glyph, out var info))
+                return info;
+
+            info = new GlyphInfo();
 
             var face = instance.FaceHandle.Face;
             face.SetCharSize(0, instance.Size, 0, (uint) (_baseFontDpi * scale));
@@ -85,7 +96,7 @@ namespace Robust.Client.Graphics
             face.Glyph.RenderGlyph(RenderMode.Normal);
 
             var glyphMetrics = face.Glyph.Metrics;
-            var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
+            info.Metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
                 glyphMetrics.HorizontalBearingY.ToInt32(),
                 glyphMetrics.HorizontalAdvance.ToInt32(),
                 glyphMetrics.Width.ToInt32(),
@@ -171,17 +182,14 @@ namespace Robust.Client.Graphics
                         bitmap.Width,
                         bitmap.Rows));
 
-                scaled.AtlasData.Add(glyph, atlasTexture);
+                info.Texture = atlasTexture;
 
                 scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
                 scaled.CurSheetX += bitmap.Width;
             }
-            else
-            {
-                scaled.AtlasData.Add(glyph, null);
-            }
 
-            scaled.MetricsMap.Add(glyph, metrics);
+            scaled.GlyphInfos.Add(glyph, info);
+            return info;
 
             OwnedTexture GenSheet()
             {
@@ -219,7 +227,7 @@ namespace Robust.Client.Graphics
             return bitmapImage;
         }
 
-        private class FontFaceHandle : IFontFaceHandle
+        private sealed class FontFaceHandle : IFontFaceHandle
         {
             public Face Face { get; }
 
@@ -230,7 +238,7 @@ namespace Robust.Client.Graphics
         }
 
         [PublicAPI]
-        private class FontInstanceHandle : IFontInstanceHandle
+        private sealed class FontInstanceHandle : IFontInstanceHandle
         {
             public FontFaceHandle FaceHandle { get; }
             public int Size { get; }
@@ -246,6 +254,18 @@ namespace Robust.Client.Graphics
                 FaceHandle = faceHandle;
             }
 
+            public void ClearSizeData()
+            {
+                foreach (var scaleData in _scaledData)
+                {
+                    foreach (var ownedTexture in scaleData.Value.AtlasTextures)
+                    {
+                        ownedTexture.Dispose();
+                    }
+                }
+                _scaledData.Clear();
+            }
+
             public Texture? GetCharTexture(Rune codePoint, float scale)
             {
                 var glyph = GetGlyph(codePoint);
@@ -253,10 +273,9 @@ namespace Robust.Client.Graphics
                     return null;
 
                 var scaled = GetScaleDatum(scale);
-                _fontManager.CacheGlyph(this, scaled, scale, glyph);
+                var glyphInfo = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
 
-                scaled.AtlasData.TryGetValue(glyph, out var texture);
-                return texture;
+                return glyphInfo.Texture;
             }
 
             public CharMetrics? GetCharMetrics(Rune codePoint, float scale)
@@ -268,9 +287,9 @@ namespace Robust.Client.Graphics
                 }
 
                 var scaled = GetScaleDatum(scale);
-                _fontManager.CacheGlyph(this, scaled, scale, glyph);
+                var info = _fontManager.EnsureGlyphCached(this, scaled, scale, glyph);
 
-                return scaled.MetricsMap[glyph];
+                return info.Metrics;
             }
 
             public int GetAscent(float scale)
@@ -325,7 +344,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        private class ScaledFontData
+        private sealed class ScaledFontData
         {
             public ScaledFontData(int ascent, int descent, int height, int lineHeight)
             {
@@ -336,8 +355,7 @@ namespace Robust.Client.Graphics
             }
 
             public readonly List<OwnedTexture> AtlasTextures = new();
-            public readonly Dictionary<uint, AtlasTexture?> AtlasData = new();
-            public readonly Dictionary<uint, CharMetrics> MetricsMap = new();
+            public readonly Dictionary<uint, GlyphInfo> GlyphInfos = new();
             public readonly int Ascent;
             public readonly int Descent;
             public readonly int Height;
@@ -346,6 +364,12 @@ namespace Robust.Client.Graphics
             public int CurSheetX;
             public int CurSheetY;
             public int CurSheetMaxY;
+        }
+
+        public sealed class GlyphInfo
+        {
+            public CharMetrics Metrics;
+            public AtlasTexture? Texture;
         }
     }
 }

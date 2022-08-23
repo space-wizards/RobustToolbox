@@ -43,7 +43,6 @@ namespace Robust.Shared.Serialization.Manager
             IDependencyCollection dependencies,
             ISerializationContext? context,
             [NotNullWhen(true)] out ValidationNode? valid)
-            where T : notnull
             where TNode : DataNode
         {
             if (TryGetValidator<T, TNode>(null, out var reader))
@@ -59,7 +58,6 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryGetValidator<T, TNode>(
             ISerializationContext? context,
             [NotNullWhen(true)] out ITypeValidator<T, TNode>? reader)
-            where T : notnull
             where TNode : DataNode
         {
             if (context != null && context.TypeValidators.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeValidator) ||
@@ -73,7 +71,7 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         private bool TryGetGenericValidator<T, TNode>([NotNullWhen(true)] out ITypeValidator<T, TNode>? rawReader)
-            where TNode : DataNode where T : notnull
+            where TNode : DataNode
         {
             rawReader = null;
 

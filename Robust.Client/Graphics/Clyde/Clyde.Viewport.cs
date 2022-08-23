@@ -92,6 +92,8 @@ namespace Robust.Client.Graphics.Clyde
             // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
             public RenderTexture LightRenderTarget = default!;
 
+            public RenderTexture LightBlurTarget = default!;
+
             // Unused, to be removed.
             public RenderTexture WallMaskRenderTarget = default!;
 
@@ -110,6 +112,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; set; }
+            public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; } = Vector2.One;
             public bool AutomaticRender { get; set; }
 
@@ -141,7 +144,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (Eye == null)
                     return default;
 
-                var eye = (IEye) Eye;
+                var eye = Eye;
                 var newPoint = point;
 
                 eye.GetViewMatrix(out var viewMatrix, RenderScale);
@@ -152,6 +155,19 @@ namespace Robust.Client.Graphics.Clyde
                 newPoint += Size / 2f;
 
                 return newPoint;
+            }
+
+            public Matrix3 WorldToLocalMatrix
+            {
+                get {
+                    if (Eye == null)
+                        return default;
+
+                    Eye.GetViewMatrix(out var viewMatrix, RenderScale * (EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter));
+                    viewMatrix.R0C2 += Size.X / 2f;
+                    viewMatrix.R1C2 += Size.Y / 2f;
+                    return viewMatrix;
+                }
             }
 
             public void RenderScreenOverlaysBelow(

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Log
 {
@@ -38,6 +40,16 @@ namespace Robust.Shared.Log
             finally
             {
                 _sawmillsLock.ExitWriteLock();
+            }
+        }
+
+        public IEnumerable<ISawmill> AllSawmills
+        {
+            get
+            {
+                using var _ = _sawmillsLock.ReadGuard();
+
+                return sawmills.Values.ToArray();
             }
         }
 

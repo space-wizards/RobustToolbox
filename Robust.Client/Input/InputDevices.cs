@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Localization;
-using Robust.Shared.Map;
 
 namespace Robust.Client.Input
 {
@@ -179,9 +178,9 @@ namespace Robust.Client.Input
             var locId = $"input-key-{key}";
             if (key == Key.LSystem || key == Key.RSystem)
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (OperatingSystem.IsWindows())
                     locId += "-win";
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                else if (OperatingSystem.IsMacOS())
                     locId += "-mac";
                 else
                     locId += "-linux";

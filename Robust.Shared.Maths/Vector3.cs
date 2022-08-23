@@ -29,6 +29,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.Maths
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector3 : IEquatable<Vector3>
+    public struct Vector3 : IEquatable<Vector3>, ISpanFormattable
     {
         #region Fields
 
@@ -956,7 +957,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float CalculateAngle(Vector3 first, Vector3 second)
         {
-            return (float) MathF.Acos(Dot(first, second) / (first.Length * second.Length));
+            return MathF.Acos(Dot(first, second) / (first.Length * second.Length));
         }
 
         /// <summary>Calculates the angle (in radians) between two vectors.</summary>
@@ -968,7 +969,7 @@ namespace Robust.Shared.Maths
         public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
         {
             Dot(ref first, ref second, out var temp);
-            result = (float) MathF.Acos(temp / (first.Length * second.Length));
+            result = MathF.Acos(temp / (first.Length * second.Length));
         }
 
         #endregion
@@ -1130,9 +1131,26 @@ namespace Robust.Shared.Maths
         /// Returns a System.String that represents the current Vector3.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"({X}, {Y}, {Z})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({X}, {Y}, {Z})");
         }
 
         #endregion

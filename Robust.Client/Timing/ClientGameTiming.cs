@@ -6,9 +6,17 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Timing
 {
-    public class ClientGameTiming : GameTiming, IClientGameTiming
+    public sealed class ClientGameTiming : GameTiming, IClientGameTiming
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
+
+        public override bool InPrediction => !ApplyingState && CurTick > LastRealTick;
+
+        /// <inheritdoc />
+        public GameTick LastRealTick { get; set; }
+
+        /// <inheritdoc />
+        public GameTick LastProcessedTick { get; set; }
 
         public override TimeSpan ServerTime
         {
@@ -61,6 +69,16 @@ namespace Robust.Client.Timing
             DebugTools.Assert(!IsFirstTimePredicted);
 
             IsFirstTimePredicted = true;
+        }
+
+        public void StartStateApplication()
+        {
+            ApplyingState = true;
+        }
+
+        public void EndStateApplication()
+        {
+            ApplyingState = false;
         }
     }
 }

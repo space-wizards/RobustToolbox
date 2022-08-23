@@ -10,23 +10,26 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Client.Player;
 
 namespace Robust.Client.GameStates
 {
     /// <summary>
     ///     Visual debug overlay for the network diagnostic graph.
     /// </summary>
-    internal class NetGraphOverlay : Overlay
+    internal sealed class NetGraphOverlay : Overlay
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
         private const int MidrangePayloadBps = 33600 / 8; // mid-range line
         private const int BytesPerPixel = 2; // If you are running the game on a DSL connection, you can scale the graph to fit your absurd bandwidth.
         private const int LowerGraphOffset = 100; // Offset on the Y axis in pixels of the lower lag/interp graph.
+        private const int LeftMargin = 500; // X offset, to avoid interfering with the f3 menu.
         private const int MsPerPixel = 4; // Latency Milliseconds per pixel, for scaling the graph.
 
         /// <inheritdoc />
@@ -78,46 +81,51 @@ namespace Robust.Client.GameStates
             var conShell = IoCManager.Resolve<IConsoleHost>().LocalShell;
 
             var entStates = args.AppliedState.EntityStates;
-            if (entStates is not null)
+            if (entStates.HasContents)
             {
                 var sb = new StringBuilder();
-                foreach (var entState in entStates)
+                foreach (var entState in entStates.Span)
                 {
-                    if (entState.Uid == WatchEntId)
-                    {
-                        if(entState.ComponentChanges is not null)
-                        {
-                            sb.Append($"\n  Changes:");
-                            foreach (var compChange in entState.ComponentChanges)
-                            {
-                                var del = compChange.Deleted ? 'D' : 'C';
-                                sb.Append($"\n    [{del}]{compChange.NetID}:{compChange.ComponentName}");
-                            }
-                        }
+                    if (entState.Uid != WatchEntId)
+                        continue;
 
-                        if (entState.ComponentStates is not null)
-                        {
-                            sb.Append($"\n  States:");
-                            foreach (var compState in entState.ComponentStates)
-                            {
-                                sb.Append($"\n    {compState.NetID}:{compState.GetType().Name}");
-                            }
-                        }
+                    if (!entState.ComponentChanges.HasContents)
+                    {
+                        sb.Append("\n Entered PVS");
+                        break;
+                    }
+
+                    sb.Append($"\n  Changes:");
+                    foreach (var compChange in entState.ComponentChanges.Span)
+                    {
+                        var registration = _componentFactory.GetRegistration(compChange.NetID);
+                        var create = compChange.Created ? 'C' : '\0';
+                        var mod = !(compChange.Created || compChange.Created) ? 'M' : '\0';
+                        var del = compChange.Deleted ? 'D' : '\0';
+                        sb.Append($"\n    [{create}{mod}{del}]{compChange.NetID}:{registration.Name}");
+
+                        if (compChange.State is not null)
+                            sb.Append($"\n      STATE:{compChange.State.GetType().Name}");
                     }
                 }
                 entStateString = sb.ToString();
             }
 
-            var entDeletes = args.AppliedState.EntityDeletions;
-            if (entDeletes is not null)
+            foreach (var ent in args.Detached)
             {
-                var sb = new StringBuilder();
-                foreach (var entDelete in entDeletes)
+                if (ent != WatchEntId)
+                    continue;
+
+                conShell.WriteLine($"watchEnt: Left PVS at tick {args.AppliedState.ToSequence}, eid={WatchEntId}" + "\n");
+            }
+
+            var entDeletes = args.AppliedState.EntityDeletions;
+            if (entDeletes.HasContents)
+            {
+                foreach (var entDelete in entDeletes.Span)
                 {
                     if (entDelete == WatchEntId)
-                    {
                         entDelString = "\n  Deleted";
-                    }
                 }
             }
 
@@ -157,17 +165,16 @@ namespace Robust.Client.GameStates
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 
-            var leftMargin = 300;
             var width = HistorySize;
             var height = 500;
             var drawSizeThreshold = Math.Min(_totalHistoryPayload / HistorySize, 300);
             var handle = args.ScreenHandle;
 
             // bottom payload line
-            handle.DrawLine(new Vector2(leftMargin, height), new Vector2(leftMargin + width, height), Color.DarkGray.WithAlpha(0.8f));
+            handle.DrawLine(new Vector2(LeftMargin, height), new Vector2(LeftMargin + width, height), Color.DarkGray.WithAlpha(0.8f));
 
             // bottom lag line
-            handle.DrawLine(new Vector2(leftMargin, height + LowerGraphOffset), new Vector2(leftMargin + width, height + LowerGraphOffset), Color.DarkGray.WithAlpha(0.8f));
+            handle.DrawLine(new Vector2(LeftMargin, height + LowerGraphOffset), new Vector2(LeftMargin + width, height + LowerGraphOffset), Color.DarkGray.WithAlpha(0.8f));
 
             int lastLagY = -1;
             int lastLagMs = -1;
@@ -177,14 +184,14 @@ namespace Robust.Client.GameStates
                 var state = _history[i];
 
                 // draw the payload size
-                var xOff = leftMargin + i;
+                var xOff = LeftMargin + i;
                 var yoff = height - state.Payload / BytesPerPixel;
                 handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LightGreen.WithAlpha(0.8f));
 
                 // Draw size if above average
                 if (drawSizeThreshold * 1.5 < state.Payload)
                 {
-                    DrawString(handle, _font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
+                    handle.DrawString(_font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
                 }
 
                 // second tick marks
@@ -213,25 +220,25 @@ namespace Robust.Client.GameStates
 
             // average payload line
             var avgyoff = height - drawSizeThreshold / BytesPerPixel;
-            handle.DrawLine(new Vector2(leftMargin, avgyoff), new Vector2(leftMargin + width, avgyoff), Color.DarkGray.WithAlpha(0.8f));
+            handle.DrawLine(new Vector2(LeftMargin, avgyoff), new Vector2(LeftMargin + width, avgyoff), Color.DarkGray.WithAlpha(0.8f));
 
             // top payload warning line
             var warnYoff = height - _warningPayloadSize / BytesPerPixel;
-            handle.DrawLine(new Vector2(leftMargin, warnYoff), new Vector2(leftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
+            handle.DrawLine(new Vector2(LeftMargin, warnYoff), new Vector2(LeftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
 
             // mid payload line
             var midYoff = height - _midrangePayloadSize / BytesPerPixel;
-            handle.DrawLine(new Vector2(leftMargin, midYoff), new Vector2(leftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
+            handle.DrawLine(new Vector2(LeftMargin, midYoff), new Vector2(LeftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
 
             // payload text
-            DrawString(handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
-            DrawString(handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
+            handle.DrawString(_font, new Vector2(LeftMargin + width, warnYoff), "56K");
+            handle.DrawString(_font, new Vector2(LeftMargin + width, midYoff), "33.6K");
 
             // interp text info
             if(lastLagY != -1)
-                DrawString(handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
+                handle.DrawString(_font, new Vector2(LeftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
-            DrawString(handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
+            handle.DrawString(_font, new Vector2(LeftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
         protected override void DisposeBehavior()
@@ -241,46 +248,22 @@ namespace Robust.Client.GameStates
             base.DisposeBehavior();
         }
 
-        private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
-        {
-            var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
-
-            foreach (var rune in str.EnumerateRunes())
-            {
-                var advance = font.DrawChar(handle, rune, baseLine, 1, Color.White);
-                baseLine += new Vector2(advance, 0);
-            }
-        }
-
-        private class NetShowGraphCommand : IConsoleCommand
+        private sealed class NetShowGraphCommand : IConsoleCommand
         {
             public string Command => "net_graph";
-            public string Help => "net_graph <0|1>";
+            public string Help => "net_graph";
             public string Description => "Toggles the net statistics pannel.";
 
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                if (args.Length != 1)
-                {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
-                    return;
-                }
-
-                if (!byte.TryParse(args[0], out var iValue))
-                {
-                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
-                    return;
-                }
-
-                var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                if(!overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
                     shell.WriteLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                else
                 {
                     overlayMan.RemoveOverlay(typeof(NetGraphOverlay));
                     shell.WriteLine("Disabled network overlay.");
@@ -288,7 +271,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetWatchEntCommand : IConsoleCommand
+        private sealed class NetWatchEntCommand : IConsoleCommand
         {
             public string Command => "net_watchent";
             public string Help => "net_watchent <0|EntityUid>";
@@ -296,13 +279,12 @@ namespace Robust.Client.GameStates
 
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                if (args.Length != 1)
+                EntityUid eValue;
+                if (args.Length == 0)
                 {
-                    shell.WriteError("Invalid argument amount. Expected 1 argument.");
-                    return;
+                    eValue = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
                 }
-
-                if (!EntityUid.TryParse(args[0], out var eValue))
+                else if (!EntityUid.TryParse(args[0], out eValue))
                 {
                     shell.WriteError("Invalid argument: Needs to be 0 or an entityId.");
                     return;
@@ -310,12 +292,13 @@ namespace Robust.Client.GameStates
 
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                if (!overlayMan.TryGetOverlay(out NetGraphOverlay? overlay))
                 {
-                    var netOverlay = overlayMan.GetOverlay<NetGraphOverlay>();
-
-                    netOverlay.WatchEntId = eValue;
+                    overlay = new();
+                    overlayMan.AddOverlay(overlay);
                 }
+
+                overlay.WatchEntId = eValue;
             }
         }
     }

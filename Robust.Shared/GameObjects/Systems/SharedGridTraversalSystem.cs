@@ -1,4 +1,4 @@
-using Robust.Shared.Containers;
+using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 
@@ -9,61 +9,114 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+
+        public Stack<MoveEvent> QueuedEvents = new();
+        private HashSet<EntityUid> _handledThisTick = new();
+
+        private List<MapGrid> _gridBuffer = new();
 
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(HandleMove);
+            SubscribeLocalEvent<MoveEvent>(OnMove);
         }
 
-        private void HandleMove(MoveEvent moveEvent)
+        private void OnMove(ref MoveEvent ev)
+        {
+            // If move event arose from state handling, don't bother to run grid traversal logic.
+            if (ev.FromStateHandling)
+                return;
+
+            if (ev.Component.MapID == MapId.Nullspace)
+                return;
+
+            QueuedEvents.Push(ev);
+        }
+
+        public void ProcessMovement()
+        {
+            var maps = GetEntityQuery<MapComponent>();
+            var grids = GetEntityQuery<MapGridComponent>();
+            var bodies = GetEntityQuery<PhysicsComponent>();
+            var xforms = GetEntityQuery<TransformComponent>();
+            var metas = GetEntityQuery<MetaDataComponent>();
+
+            while (QueuedEvents.TryPop(out var moveEvent))
+            {
+                if (!_handledThisTick.Add(moveEvent.Sender)) continue;
+
+                HandleMove(ref moveEvent, xforms, bodies, maps, grids, metas);
+            }
+
+            _handledThisTick.Clear();
+        }
+
+        private void HandleMove(
+            ref MoveEvent moveEvent,
+            EntityQuery<TransformComponent> xforms,
+            EntityQuery<PhysicsComponent> bodies,
+            EntityQuery<MapComponent> maps,
+            EntityQuery<MapGridComponent> grids,
+            EntityQuery<MetaDataComponent> metas)
         {
             var entity = moveEvent.Sender;
 
-            if (entity.Deleted ||
-                entity.HasComponent<IMapComponent>() ||
-                entity.HasComponent<IMapGridComponent>() ||
-                entity.IsInContainer())
+            if (!metas.TryGetComponent(entity, out var meta) ||
+                meta.EntityDeleted ||
+                (meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer ||
+                maps.HasComponent(entity) ||
+                grids.HasComponent(entity) ||
+                !xforms.TryGetComponent(entity, out var xform) ||
+                // If the entity is anchored then we know for sure it's on the grid and not traversing
+                xform.Anchored)
             {
                 return;
             }
 
-            var transform = entity.Transform;
+            // DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
+
+            // We only do grid-traversal parent changes if the entity is currently parented to a map or a grid.
+            var parentIsMap = xform.GridUid == null && maps.HasComponent(xform.ParentUid);
+            if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
+                return;
+            var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+            _gridBuffer.Clear();
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
-                grid.GridEntityId.IsValid() &&
-                grid.GridEntityId != entity.Uid)
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-                if (grid.Index != transform.GridID)
+                if (grid.GridEntityId != xform.GridUid)
                 {
-                    transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
-                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, transform.GridID, grid.Index));
+                    xform.AttachParent(grid.GridEntityId);
+                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.GridEntityId);
+                    RaiseLocalEvent(entity, ref ev, true);
                 }
             }
             else
             {
-                var oldGridId = transform.GridID;
+                var oldGridId = xform.GridUid;
 
                 // Attach them to map / they are on an invalid grid
-                if (oldGridId != GridId.Invalid)
+                if (oldGridId != null)
                 {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
-                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
+                    xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
+                    var ev = new ChangedGridEvent(entity, oldGridId, null);
+                    RaiseLocalEvent(entity, ref ev, true);
                 }
             }
         }
     }
 
-    public sealed class ChangedGridMessage : EntityEventArgs
+    [ByRefEvent]
+    public readonly struct ChangedGridEvent
     {
-        public IEntity Entity;
-        public GridId OldGrid;
-        public GridId NewGrid;
+        public readonly EntityUid Entity;
+        public readonly EntityUid? OldGrid;
+        public readonly EntityUid? NewGrid;
 
-        public ChangedGridMessage(IEntity entity, GridId oldGrid, GridId newGrid)
+        public ChangedGridEvent(EntityUid entity, EntityUid? oldGrid, EntityUid? newGrid)
         {
             Entity = entity;
             OldGrid = oldGrid;

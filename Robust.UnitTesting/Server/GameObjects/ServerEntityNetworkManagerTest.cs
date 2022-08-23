@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.GameObjects
 {
-    public class ServerEntityNetworkManagerTest
+    public sealed class ServerEntityNetworkManagerTest
     {
         [Test]
         public void TestMessageSort()
@@ -17,12 +17,12 @@ namespace Robust.UnitTesting.Server.GameObjects
             var tickA = new GameTick(5);
             var tickB = new GameTick(3);
             var channel = new Mock<INetChannel>().Object;
-            var msgA = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 10};
-            var msgB = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 13};
-            var msgC = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 12};
-            var msgD = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 14};
-            var msgE = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 7};
-            var msgF = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 4};
+            var msgA = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 10};
+            var msgB = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 13};
+            var msgC = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 12};
+            var msgD = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickA, Sequence = 14};
+            var msgE = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 7};
+            var msgF = new MsgEntity() {MsgChannel = channel, Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 4};
 
             var pq = new PriorityQueue<MsgEntity>(new ServerEntityManager.MessageSequenceComparer())
             {

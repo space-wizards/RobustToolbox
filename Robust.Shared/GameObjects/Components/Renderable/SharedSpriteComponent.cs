@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -7,11 +8,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetworkedComponent()]
     public abstract class SharedSpriteComponent : Component
     {
-        public override string Name => "Sprite";
-        public override uint? NetID => NetIDs.SPRITE;
-
         public abstract bool Visible { get; set; }
 
         /// <summary>
@@ -20,7 +19,7 @@ namespace Robust.Shared.GameObjects
         public static readonly ResourcePath TextureRoot = new("/Textures");
 
         [Serializable, NetSerializable]
-        protected class SpriteComponentState : ComponentState
+        protected sealed class SpriteComponentState : ComponentState
         {
             public readonly bool Visible;
             public readonly int DrawDepth;
@@ -42,7 +41,6 @@ namespace Robust.Shared.GameObjects
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
-                : base(NetIDs.SPRITE)
             {
                 Visible = visible;
                 DrawDepth = drawDepth;
@@ -58,7 +56,7 @@ namespace Robust.Shared.GameObjects
 
         [Serializable, NetSerializable]
         [DataDefinition]
-        public class PrototypeLayerData
+        public sealed class PrototypeLayerData
         {
             [DataField("shader")]
             public string? Shader;
@@ -69,25 +67,21 @@ namespace Robust.Shared.GameObjects
             [DataField("state")]
             public string? State;
             [DataField("scale")]
-            public Vector2 Scale = Vector2.One;
+            public Vector2? Scale;
             [DataField("rotation")]
-            public Angle Rotation = Angle.Zero;
+            public Angle? Rotation;
+            [DataField("offset")]
+            public Vector2? Offset;
             [DataField("visible")]
-            public bool Visible = true;
+            public bool? Visible;
             [DataField("color")]
-            public Color Color = Color.White;
+            public Color? Color;
             [DataField("map")]
-            public List<string>? MapKeys;
+            public HashSet<string>? MapKeys;
 
-            public static PrototypeLayerData New()
-            {
-                return new()
-                {
-                    Scale = Vector2.One,
-                    Color = Color.White,
-                    Visible = true,
-                };
-            }
+            // TODO delete this.
+            // requires content PR and I cbf the current PR to a content one.
+            public static PrototypeLayerData New() => new();
         }
     }
 }

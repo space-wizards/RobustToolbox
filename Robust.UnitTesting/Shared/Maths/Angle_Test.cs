@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Angle))]
-    public class Angle_Test
+    public sealed class Angle_Test
     {
         private const double Epsilon = 1.0e-8;
 
@@ -142,7 +142,7 @@ namespace Robust.UnitTesting.Shared.Maths
 
             var result = angle.RotateVec(vec);
 
-            Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f)));
+            Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f), 0.001));
         }
 
         [TestCase(0, 4, ExpectedResult = 0f)]

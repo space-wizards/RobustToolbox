@@ -39,7 +39,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
         /// </summary>
-        private readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        internal readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />

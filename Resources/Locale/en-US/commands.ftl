@@ -1,10 +1,14 @@
 ﻿### Localization for engine console commands
 
-## generic
+## generic command errors
+
+cmd-invalid-arg-number-error = Invalid number of arguments.
 
 cmd-parse-failure-integer = {$arg} is not a valid integer.
 cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
+cmd-parse-failure-uid = {$arg} is not a valid entity UID.
+cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
 
 ## 'help' command

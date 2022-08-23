@@ -324,37 +324,30 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateBeforeSolve);
-
             var targetMinTickrate = (float) _configurationManager.GetCVar(CVars.TargetMinimumTickrate);
             var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
+            var substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
 
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            for (int i = 0; i < substeps; i++)
             {
-                if (serverTickrate < targetMinTickrate)
+                var frameTime = deltaTime / substeps;
+
+                var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateBeforeSolve);
+
+                foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
-                    Substep(deltaTime, targetMinTickrate, serverTickrate, comp, prediction);
-                    comp.Step(deltaTime, prediction);
-                }
-                else
-                {
-                    comp.Step(deltaTime, prediction);
+                    comp.Step(frameTime, prediction);
+                    var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
+                    RaiseLocalEvent(ref updateAfterSolve);
+
+                    comp.ProcessQueue();
+
+                    _traversal.ProcessMovement();
+
+                    _physicsManager.ClearTransforms();
                 }
             }
-
-            var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateAfterSolve);
-
-            // Go through and run all of the deferred events now
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
-            {
-                comp.ProcessQueue();
-            }
-
-            _traversal.ProcessMovement();
-
-            _physicsManager.ClearTransforms();
         }
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
@@ -365,23 +358,6 @@ namespace Robust.Shared.GameObjects
             var batchSize = (int) MathF.Ceiling((float) count / batches);
 
             return (batches, batchSize);
-        }
-
-        private void Substep(float deltaTime, float targetMinTickrate, float serverTickrate, SharedPhysicsMapComponent comp, bool prediction)
-        {
-            //0.0166666005
-            var targetDelta = TimeSpan.FromTicks((long)(1.0 / targetMinTickrate * TimeSpan.TicksPerSecond));
-            var maxSubstepDelta = (float) targetDelta.TotalSeconds;
-
-            //Grab the max number of substeps allowed from cvars
-            var maxSubsteps = _configurationManager.GetCVar(CVars.MaxSubsteps);
-            //grab how many times this should substep, based on the calculation and maximum allowed substeps
-            var substeps = Math.Min((int)Math.Ceiling(targetMinTickrate / serverTickrate), maxSubsteps);
-
-            for (int i = 0; i < substeps; i++)
-            {
-                comp.Step(maxSubstepDelta, prediction);
-            }
         }
     }
 

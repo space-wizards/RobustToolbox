@@ -922,18 +922,6 @@ namespace Robust.Shared
         public static readonly CVarDef<int> TargetMinimumTickrate =
             CVarDef.Create("physics.target_minimum_tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
-        /// <summary>
-        /// Enables or disables substepping. True by default.
-        /// </summary>
-        public static readonly CVarDef<bool> Substep =
-            CVarDef.Create("physics.substep", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
-
-        /// <summary>
-        /// The max number of substeps that should be made.
-        /// </summary>
-        public static readonly CVarDef<int> MaxSubsteps =
-            CVarDef.Create("physics.max_substeps", 2, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
-
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.

@@ -61,6 +61,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(meta == null || meta.Owner == toinsert);
+            DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container

@@ -739,7 +739,6 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.Detached) != 0)
                         continue;
 
-                    meta.Flags |= MetaDataFlags.Detached;
                     meta.LastStateApplied = toTick;
 
                     var xform = xforms.GetComponent(ent);
@@ -750,12 +749,15 @@ namespace Robust.Client.GameStates
                         IContainer? container = null;
                         if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                             metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
-                            (containerMeta.Flags & MetaDataFlags.Detached) == 0)
+                            (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
+                            containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true);
+                            container.ForceRemove(ent, _entities, meta);
                         }
 
+                        meta._flags |= MetaDataFlags.Detached;
                         xformSys.DetachParentToNull(xform, xforms, metas);
+                        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                         if (container != null)
                             containerSys.AddExpectedEntity(ent, container);

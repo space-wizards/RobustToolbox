@@ -478,14 +478,19 @@ namespace Robust.Client.GameStates
                     // Was this component added during prediction?
                     if (comp.CreationTick > _timing.LastRealTick)
                     {
-                        // TODO check if this component was previously removed during prediction.
-                        // If it was, we don't need to remove then re-add it, just apply the server state.
-                        // This might speed things up... or maybe doing the check for each comp will slow things down?
-
-                        toRemove.Add(comp);
-                        if (_sawmill.Level <= LogLevel.Debug)
-                            _sawmill.Debug($"  A new component was added: {comp.GetType()}");
-                        continue;
+                        if (last.ContainsKey(netId))
+                        {
+                            // Component was probably removed and then re-addedd during a single prediction run
+                            // Just reset state as normal.
+                            comp.ClearCreationTick();
+                        }
+                        else
+                        {
+                            toRemove.Add(comp);
+                            if (_sawmill.Level <= LogLevel.Debug)
+                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                            continue;
+                        }
                     }
 
                     if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))

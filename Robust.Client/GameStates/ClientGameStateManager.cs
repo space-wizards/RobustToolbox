@@ -455,7 +455,7 @@ namespace Robust.Client.GameStates
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
-            foreach (var entity in system.GetDirtyEntities())
+            foreach (var entity in system.DirtyEntities)
             {
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
@@ -468,8 +468,6 @@ namespace Robust.Client.GameStates
                 }
 
                 countReset += 1;
-
-                var removed = system.GetRemovedComponents(entity);
 
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
@@ -498,55 +496,45 @@ namespace Robust.Client.GameStates
                     if (_sawmill.Level <= LogLevel.Debug)
                         _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                    // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = _timing.LastRealTick;
                 }
 
-                // Remove predicted additions
+                // Remove predicted component additions
                 foreach (var comp in toRemove)
                 {
                     _entities.RemoveComponent(comp.Owner, comp);
                 }
 
                 // Re-add predicted removals
-                foreach (var type in system.GetRemovedComponents(entity))
+                if (system.RemovedComponents.TryGetValue(entity, out var netIds))
                 {
-                    if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  A component was removed: {type}");
+                    foreach (var netId in netIds)
+                    {
+                        if (_entities.HasComponent(entity, netId))
+                            continue;
 
+                        if (!last.TryGetValue(netId, out var state))
+                            continue;
 
-                    // ClearTicks after creating
+                        var comp = _entityManager.AddComponent(entity, netId);
 
-                    // Sometimes predicted removal is un-done by the application of other component states. E.g. if the
-                    // end of a status effect was predicted, then we will be applying a status effect while resetting
-                    // the state, which may add a component, thus undoing a removal. Hence we need to check if the
-                    // component was already re-added.
-                    if (!_entityManager.TryGetComponent(entity, type, out var comp))
-                        comp = _entityManager.AddComponent(entity, type);
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was removed: {comp.GetType()}");
 
-                    var reg = _compFactory.GetRegistration(type);
-                    if (reg.NetID == null)
-                        continue;
-
-                    if (!last.TryGetValue(reg.NetID.Value, out var compState))
-                        continue;
-
-                    var handleState = new ComponentHandleState(compState, null);
-                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.HandleComponentState(compState, null);
-
-                    // Thanks IComponent
-                    ((Component)comp).LastModifiedTick = _timing.LastRealTick;
+                        var stateEv = new ComponentHandleState(state, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                        comp.HandleComponentState(state, null);
+                        comp.ClearCreationTick(); // don't undo the re-adding.
+                        comp.LastModifiedTick = _timing.LastRealTick;
+                    }
                 }
 
-                query.GetComponent(entity).EntityLastModifiedTick = _timing.LastRealTick;
-
                 var meta = query.GetComponent(entity);
-                DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
+                DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
             }
 
             system.Reset();

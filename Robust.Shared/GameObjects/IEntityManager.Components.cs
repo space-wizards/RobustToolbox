@@ -48,6 +48,11 @@ namespace Robust.Shared.GameObjects
         Component AddComponent(EntityUid uid, Type type);
 
         /// <summary>
+        ///     Adds a Component with a given network id to an entity.
+        /// </summary>
+        Component AddComponent(EntityUid uid, ushort netId);
+
+        /// <summary>
         ///     Adds an uninitialized Component type to an entity.
         /// </summary>
         /// <remarks>

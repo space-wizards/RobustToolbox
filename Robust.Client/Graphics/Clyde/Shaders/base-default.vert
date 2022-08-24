@@ -36,5 +36,5 @@ void main()
     gl_Position = vec4(VERTEX, 0.0, 1.0);
     Pos = (VERTEX + 1.0) / 2.0;
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
-    VtxModulate = modulate;
+    VtxModulate = zFromSrgb(modulate);
 }

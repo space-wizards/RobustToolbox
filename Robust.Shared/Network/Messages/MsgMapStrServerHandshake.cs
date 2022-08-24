@@ -15,7 +15,7 @@ namespace Robust.Shared.Network.Messages
     [UsedImplicitly]
     internal sealed class MsgMapStrServerHandshake : NetMessage
     {
-        public override MsgGroups MsgGroup => MsgGroups.Core;
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         /// <value>
         /// The hash of the current string mapping held by the server.

@@ -1,10 +1,15 @@
-using Robust.Shared.Log;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedPhysicsSystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+
     /// <summary>
     ///     This is the total rate of change of the entity's map-position, resulting from the linear and angular
     ///     velocities of this entity and any parents.
@@ -139,7 +144,14 @@ public abstract partial class SharedPhysicsSystem
 
     private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, ref EntParentChangedMessage args, TransformComponent xform)
     {
+        // If parent changed due to state handling, don't modify velocities. The physics comp state will take care of itself..
+        if (_gameTiming.ApplyingState)
+            return;
+
         if (physics.LifeStage != ComponentLifeStage.Running)
+            return;
+
+        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics._canCollide)
             return;
 
         // When transferring bodies, we will preserve map angular and linear velocities. For this purpose, we simply
@@ -156,7 +168,7 @@ public abstract partial class SharedPhysicsSystem
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
 
         // for the old velocities, we need to re-implement this function while using the old parent and old local position:
-        if (args.OldParent is not EntityUid { Valid: true} parent)
+        if (args.OldParent is not EntityUid { Valid: true } parent)
         {
             // no previous parent --> simple
             physics.LinearVelocity += physics.LinearVelocity - newLinear;

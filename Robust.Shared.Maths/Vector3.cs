@@ -29,6 +29,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.Maths
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector3 : IEquatable<Vector3>
+    public struct Vector3 : IEquatable<Vector3>, ISpanFormattable
     {
         #region Fields
 
@@ -1130,9 +1131,26 @@ namespace Robust.Shared.Maths
         /// Returns a System.String that represents the current Vector3.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"({X}, {Y}, {Z})";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"({X}, {Y}, {Z})");
         }
 
         #endregion

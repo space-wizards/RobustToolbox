@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -19,6 +20,8 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSys = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private ISawmill _logger = default!;
 
@@ -35,9 +38,10 @@ namespace Robust.Shared.Physics
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
-        // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
+        /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
@@ -65,8 +69,6 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
@@ -282,7 +284,7 @@ namespace Robust.Shared.Physics
                     var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
 
                     // Get Grid2 AABB in grid1 ref
-                    var aabb1 = grid.LocalAABB.Union(invWorldMatrix.TransformBox(otherGridBounds));
+                    var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
                     var ourChunks = mapGrid.GetLocalMapChunks(aabb1);
@@ -330,6 +332,8 @@ namespace Robust.Shared.Physics
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<BroadphaseComponent> broadphaseQuery)
         {
+            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+
             var proxyBody = proxy.Fixture.Body;
 
             // Broadphase can't intersect with entities on itself so skip.
@@ -337,7 +341,14 @@ namespace Robust.Shared.Physics
 
             // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
             Box2 aabb;
-            var proxyBroad = proxyBody.Broadphase!;
+            var proxyBroad = proxyBody.Broadphase;
+
+            if (proxyBroad == null)
+            {
+                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
+                DebugTools.Assert(false);
+                return;
+            }
 
             // If it's the same broadphase as our body's one then don't need to translate the AABB.
             if (proxyBroad.Owner == broadphase)
@@ -354,6 +365,7 @@ namespace Robust.Shared.Physics
 
             foreach (var other in broadphaseComp.Tree.QueryAabb(_queryBuffer, aabb))
             {
+                DebugTools.Assert(other.Fixture.Body.CanCollide);
                 // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
 
                 // Do fast checks first and slower checks after (in ContactManager).
@@ -386,59 +398,109 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
-        internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(EntityUid uid, MapId oldMapId, TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager, ref xform) ||
-                _mapManager.IsGrid(body.Owner)) return;
+            if (!Resolve(uid, ref xform))
+                return;
 
-            var oldBroadphase = body.Broadphase;
-            var newBroadphase = GetBroadphase(xform);
+            var bodyQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
-            if (oldBroadphase == newBroadphase) return;
+            var newBroadphase = GetBroadphase(xform, broadQuery, xformQuery);
+            TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
 
-            DestroyProxies(body, manager);
+            RecursiveBroadphaseUpdate(xform, bodyQuery, fixturesQuery, xformQuery, broadQuery, newBroadphase, oldMoveBuffer);
+        }
 
-            // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
-            CreateProxies(body, manager);
+        private void RecursiveBroadphaseUpdate(
+            TransformComponent xform,
+            EntityQuery<PhysicsComponent> bodyQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<BroadphaseComponent> broadQuery,
+            BroadphaseComponent? newBroadphase,
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer)
+        {
+            var uid = xform.Owner;
+            var childEnumerator = xform.ChildEnumerator;
+
+            if (bodyQuery.TryGetComponent(uid, out var body) &&
+                body._canCollide &&
+                fixturesQuery.TryGetComponent(uid, out var manager))
+            {
+                // TODO while iterating down through children, evaluate world position & rotation and pass into this function
+                UpdateBodyBroadphase(body, manager, xform, newBroadphase, xformQuery, oldMoveBuffer);
+            }
+
+            if (xform.MapID != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroad))
+                newBroadphase = parentBroad;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                if (xformQuery.TryGetComponent(child, out var childXform))
+                    RecursiveBroadphaseUpdate(childXform, bodyQuery, fixturesQuery, xformQuery, broadQuery, newBroadphase, oldMoveBuffer);
+            }
+        }
+
+        internal void UpdateBodyBroadphase(
+            PhysicsComponent body,
+            FixturesComponent manager,
+            TransformComponent xform,
+            BroadphaseComponent? newBroadphase,
+            EntityQuery<TransformComponent> xformQuery,
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer)
+        {
+            if (body.Broadphase == newBroadphase)
+                return;
+
+            DestroyProxies(body, manager, oldMoveBuffer);
+            body.Broadphase = newBroadphase;
+
+            if (newBroadphase == null)
+                return;
+
+            // TODO optimize map moving. Seeing as we iterate downwards through children, world position/rotation can be
+            // tracked, instead of re-calculated each time by iterating upwards though parents. But for deletions,
+            // newBroadphase is null anyways, so this only matters for things like shuttles moving across maps.
+            var (worldPos, worldRot) = _xformSys.GetWorldPositionRotation(xform, xformQuery);
+
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                // TODO pass in broadphaseXform
+                CreateProxies(fixture, worldPos, worldRot);
+            }
         }
 
         /// <summary>
         /// Remove all of our fixtures from the broadphase.
         /// </summary>
-        private void DestroyProxies(PhysicsComponent body, FixturesComponent? manager = null)
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent manager)
         {
-            if (!Resolve(body.Owner, ref manager)) return;
-
-            var broadphase = body.Broadphase;
-
-            if (broadphase == null) return;
-
-            // Juussttt in case anything slips through
-            if (!broadphase.Owner.IsValid() ||
-                !TryComp(broadphase.Owner, out MetaDataComponent? meta) ||
-                meta.EntityLifeStage >= EntityLifeStage.Terminating)
-            {
-                // Don't log because this may happen due to recursive deletions.
-                body.Broadphase = null;
-
-                foreach (var (_, fixture) in manager.Fixtures)
-                {
-                    foreach (var proxy in fixture.Proxies)
-                    {
-                        proxy.ProxyId = DynamicTree.Proxy.Free;
-                    }
-
-                    fixture.ProxyCount = 0;
-                }
-
+            if (body.Broadphase == null)
                 return;
-            }
 
-            var mapId = Transform(broadphase.Owner).MapID;
+            DestroyProxies(body, manager, _moveBuffer[Transform(body.Broadphase.Owner).MapID]);
+        }
+
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent manager, Dictionary<FixtureProxy, Box2>? moveBuffer)
+        {
+            if (body.Broadphase == null)
+                return;
 
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                DestroyProxies(broadphase, fixture, mapId);
+                var proxyCount = fixture.ProxyCount;
+                for (var i = 0; i < proxyCount; i++)
+                {
+                    var proxy = fixture.Proxies[i];
+                    body.Broadphase.Tree.RemoveProxy(proxy.ProxyId);
+                    proxy.ProxyId = DynamicTree.Proxy.Free;
+                    moveBuffer?.Remove(proxy);
+                }
+
+                fixture.ProxyCount = 0;
             }
 
             body.Broadphase = null;
@@ -496,16 +558,7 @@ namespace Robust.Shared.Physics
 
         public void RegenerateContacts(PhysicsComponent body)
         {
-            // TODO: PhysicsMap actually needs to be made nullable (or needs a re-design to not be on the body).
-            // Eventually it'll be a component on the map so nullspace won't have one anyway and we need to handle that scenario.
-            // Technically it is nullable coz of networking (previously it got away with being able to ignore it
-            // but anchoring can touch BodyType in HandleComponentState so we need to handle this here).
-            if (body.PhysicsMap != null)
-            {
-                body.DestroyContacts();
-            }
-
-            DebugTools.Assert(body.Contacts.Count == 0);
+            _physicsSystem.DestroyContacts(body);
 
             var broadphase = body.Broadphase;
 
@@ -655,7 +708,24 @@ namespace Robust.Shared.Physics
             if(mapId == MapId.Nullspace)
                 return;
 
+            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+
             _moveBuffer[mapId][proxy] = aabb;
+        }
+
+        // For use when recursively deleting an entity, to avoid may dictionary lookups
+        internal bool TryGetMoveBuffer(MapId mapId, [NotNullWhen(true)]out Dictionary<FixtureProxy, Box2>? buffer)
+            => _moveBuffer.TryGetValue(mapId, out buffer);
+
+        internal void RemoveFromMoveBuffer(FixturesComponent manager, Dictionary<FixtureProxy, Box2> buffer)
+        {
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    buffer.Remove(fixture.Proxies[i]);
+                }
+            }
         }
 
         /// <summary>
@@ -737,6 +807,7 @@ namespace Robust.Shared.Physics
             {
                 var bounds = fixture.Shape.ComputeAABB(transform, i);
                 var proxy = new FixtureProxy(bounds, fixture, i);
+                DebugTools.Assert(fixture.Body.CanCollide);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
 
@@ -751,15 +822,17 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Destroy the proxies for this fixture on the broadphase.
         /// </summary>
-        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture, MapId mapId)
+        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture, MapId map)
         {
             if (broadphase == null)
             {
                 throw new InvalidBroadphaseException($"Unable to find broadphase for destroy on {fixture.Body}");
             }
 
+            DebugTools.Assert(Transform(broadphase.Owner).MapID == map);
+
             var proxyCount = fixture.ProxyCount;
-            var moveBuffer = _moveBuffer[mapId];
+            var moveBuffer = _moveBuffer[map];
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -770,24 +843,6 @@ namespace Robust.Shared.Physics
             }
 
             fixture.ProxyCount = 0;
-        }
-
-        private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = false;
-            physicsComponent.Awake = false;
-        }
-
-        private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
-        {
-            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
-                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
-
-            physicsComponent.CanCollide = true;
-            physicsComponent.Awake = true;
         }
 
         public override void Shutdown()
@@ -814,7 +869,8 @@ namespace Robust.Shared.Physics
 
         private void OnGridAdd(GridAddEvent ev)
         {
-            EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
+            // Must be done before initialization as that's when broadphase data starts getting set.
+            EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
@@ -835,14 +891,16 @@ namespace Robust.Shared.Physics
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
+            return GetBroadphase(xform, broadQuery, xformQuery);
+        }
+
+        public BroadphaseComponent? GetBroadphase(TransformComponent xform, EntityQuery<BroadphaseComponent> broadQuery, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (xform.MapID == MapId.Nullspace) return null;
+
             var parent = xform.ParentUid;
 
-            // if it's map return null. Grids should return the map's broadphase.
-            if (broadQuery.HasComponent(xform.Owner) &&
-                !parent.IsValid())
-            {
-                return null;
-            }
+            // if it's map (or in null-space) return null. Grids should return the map's broadphase.
 
             while (parent.IsValid())
             {
@@ -873,7 +931,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                var grid = (IMapGridInternal) _mapManager.GetGrid(mapGrid.GridIndex);
+                var grid = (IMapGridInternal) mapGrid.Grid;
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
                 var chunkEnumerator = grid.GetMapChunks(aabb);

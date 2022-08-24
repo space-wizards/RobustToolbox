@@ -2,6 +2,8 @@
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+#pragma warning disable CS0618
 
 namespace Robust.Shared.Map
 {
@@ -9,13 +11,14 @@ namespace Robust.Shared.Map
     ///     All of the information needed to reference a tile in the game.
     /// </summary>
     [PublicAPI]
-    public readonly struct TileRef : IEquatable<TileRef>
+    public readonly struct TileRef : IEquatable<TileRef>, ISpanFormattable
     {
         public static TileRef Zero => new(GridId.Invalid, EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
 
         /// <summary>
         ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
         /// </summary>
+        [Obsolete("Use EntityUids instead")]
         public readonly GridId GridIndex;
 
         /// <summary>
@@ -73,6 +76,23 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return $"TileRef: {X},{Y} ({Tile})";
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"TileRef: {X},{Y} ({Tile})");
         }
 
         /// <inheritdoc />

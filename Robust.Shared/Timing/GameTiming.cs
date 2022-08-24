@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing
@@ -48,7 +49,7 @@ namespace Robust.Shared.Timing
         //
         // Notice that it starts from GameTick 1  - the "first tick" has no impact
         // on timing
-        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);
+        public (TimeSpan, GameTick) TimeBase { get; set; } = (TimeSpan.Zero, GameTick.First);
 
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
@@ -59,7 +60,7 @@ namespace Robust.Shared.Timing
             get
             {
                 // last tickrate change epoch
-                var (time, lastTimeTick) = _cachedCurTimeInfo;
+                var (time, lastTimeTick) = TimeBase;
 
                 // add our current time to it.
                 // the server never rewinds time, and the client never rewinds time outside of prediction.
@@ -67,7 +68,7 @@ namespace Robust.Shared.Timing
                 //DebugTools.Assert(CurTick >= lastTimeTick);
                 //TODO: turns out prediction leaves CurTick at the last predicted tick, and not at the last processed server tick
                 //so time gets rewound when processing events like TickRate.
-                time += TickPeriod * (CurTick.Value - lastTimeTick.Value);
+                time += TickPeriod.Mul(CurTick.Value - lastTimeTick.Value);
 
                 if (!InSimulation) // rendering can draw frames between ticks
                 {
@@ -131,18 +132,7 @@ namespace Robust.Shared.Timing
         public byte TickRate
         {
             get => _tickRate;
-            set
-            {
-                // Check this, because TickRate is a divisor in the cache calculation
-                // The first time TickRate is set, no time will have passed anyways
-                if (_tickRate != 0)
-                    // Cache BEFORE updating the tick rate, because ticks up until
-                    // now have been on a different rate, so they count for a
-                    // different amount of time
-                    CacheCurTime();
-
-                _tickRate = value;
-            }
+            set => SetTickRateAt(value, CurTick);
         }
 
         /// <summary>
@@ -162,6 +152,14 @@ namespace Robust.Shared.Timing
                 DebugTools.Assert(TimeSpan.Zero <= TickRemainder);
                 _tickRemainder = value;
             }
+        }
+
+        public TimeSpan CalcAdjustedTickPeriod()
+        {
+            // ranges from -1 to 1, with 0 being 'default'
+            var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
+            var ticks = (1.0 / TickRate * TimeSpan.TicksPerSecond) - (TickPeriod.Ticks * ratio);
+            return TimeSpan.FromTicks((long) ticks);
         }
 
         /// <summary>
@@ -205,19 +203,14 @@ namespace Robust.Shared.Timing
 
         // Calculate and store the current time value, based on the current tick rate.
         // Call this whenever you change the TickRate.
-        private void CacheCurTime()
+        private void CacheCurTime(GameTick atTick)
         {
-            var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
+            var (cachedTime, lastTimeTick) = TimeBase;
 
-            TimeSpan newTime;
-
-            if (CurTick.Value >= lastTimeTick.Value)
-              newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
-            else
-              newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
+            var newTime = cachedTime + TickPeriod.Mul(atTick.Value - lastTimeTick.Value);
 
             DebugTools.Assert(TimeSpan.Zero <= newTime);
-            _cachedCurTimeInfo = (newTime, CurTick);
+            TimeBase = (newTime, atTick);
         }
 
         /// <summary>
@@ -225,10 +218,28 @@ namespace Robust.Shared.Timing
         /// </summary>
         public void ResetSimTime()
         {
-            _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);;
+            ResetSimTime((TimeSpan.Zero, GameTick.First));
+        }
+
+        public void ResetSimTime((TimeSpan, GameTick) timeBase)
+        {
+            TimeBase = timeBase;
             CurTick = GameTick.First;
             TickRemainder = TimeSpan.Zero;
             Paused = true;
+        }
+
+        public void SetTickRateAt(byte tickRate, GameTick atTick)
+        {
+            // Check this, because TickRate is a divisor in the cache calculation
+            // The first time TickRate is set, no time will have passed anyways
+            if (_tickRate != 0)
+                // Cache BEFORE updating the tick rate, because ticks up until
+                // now have been on a different rate, so they count for a
+                // different amount of time
+                CacheCurTime(atTick);
+
+            _tickRate = tickRate;
         }
 
         public virtual TimeSpan RealLocalToServer(TimeSpan local)
@@ -249,10 +260,10 @@ namespace Robust.Shared.Timing
         public bool IsFirstTimePredicted { get; protected set; } = true;
 
         /// <inheritdoc />
-        public bool InPrediction => CurTick > LastRealTick;
+        public virtual bool InPrediction => false;
 
         /// <inheritdoc />
-        public GameTick LastRealTick { get; set; }
+        public bool ApplyingState {get; protected set; }
 
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.

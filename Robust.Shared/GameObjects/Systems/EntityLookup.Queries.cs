@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -5,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -62,7 +64,7 @@ public sealed partial class EntityLookupSystem
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
 
-        foreach (var uid in lookup.Tree.QueryAabb(localAABB))
+        foreach (var uid in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             if (uid == ignored) continue;
             return true;
@@ -356,11 +358,15 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = Transform(uid).MapPosition;
+        var xform = Transform(uid);
+        var mapId = xform.MapID;
 
-        if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
+        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var intersecting = GetEntitiesIntersecting(mapPos, flags).ToHashSet();
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        var bounds = GetAABBNoContainer(uid, worldPos, worldRot);
+
+        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags).ToHashSet();
         intersecting.Remove(uid);
         return intersecting;
     }
@@ -438,6 +444,8 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles
@@ -449,13 +457,20 @@ public sealed partial class EntityLookupSystem
 
     #region Grid Methods
 
+    [Obsolete("Use Grid EntityUid")]
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
+    }
+
     /// <summary>
     /// Returns the entities intersecting any of the supplied tiles. Faster than doing each tile individually.
     /// </summary>
     /// <param name="gridId"></param>
     /// <param name="gridIndices"></param>
     /// <returns></returns>
-    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
@@ -489,7 +504,14 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    [Obsolete("Use Grid EntityUid")]
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
+    }
+
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
@@ -519,7 +541,14 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    [Obsolete("Use grid EntityUid")]
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, worldAABB, flags);
+    }
+
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
@@ -527,7 +556,7 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var intersecting = new HashSet<EntityUid>();
 
-        AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
+        AddEntitiesIntersecting(gridId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
         if ((flags & LookupFlags.Anchored) != 0x0)
         {
@@ -541,7 +570,14 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    [Obsolete("Use grid EntityUid")]
     public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, worldBounds, flags);
+    }
+
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
@@ -567,7 +603,7 @@ public sealed partial class EntityLookupSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, LookupFlags flags = DefaultFlags)
     {
-        return GetEntitiesIntersecting(tileRef.GridIndex, tileRef.GridIndices, flags);
+        return GetEntitiesIntersecting(tileRef.GridUid, tileRef.GridIndices, flags);
     }
 
     #endregion
@@ -580,14 +616,14 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var localAABB = xformQuery.GetComponent(component.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {
-            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {
                 intersecting.Add(uid);
             }
@@ -602,14 +638,14 @@ public sealed partial class EntityLookupSystem
     {
         var intersecting = new HashSet<EntityUid>();
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
         {
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {
-            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {
                 intersecting.Add(uid);
             }
@@ -677,7 +713,7 @@ public sealed partial class EntityLookupSystem
 
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
     {
-        var grid = _mapManager.GetGrid(tileRef.GridIndex);
+        var grid = _mapManager.GetGrid(tileRef.GridUid);
 
         if (worldMatrix == null || angle == null)
         {

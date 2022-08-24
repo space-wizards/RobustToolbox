@@ -76,7 +76,7 @@ namespace Robust.Client.Player
             // notify ECS Systems
             var eventBus = entMan.EventBus;
             eventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(entity));
-            eventBus.RaiseLocalEvent(entity, new PlayerAttachedEvent(entity));
+            eventBus.RaiseLocalEvent(entity, new PlayerAttachedEvent(entity), true);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Robust.Client.Player
 
                 // notify ECS Systems
                 entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
-                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value));
+                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
             }
 
             ControlledEntity = default;

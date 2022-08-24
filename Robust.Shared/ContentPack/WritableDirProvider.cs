@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -81,6 +82,9 @@ namespace Robust.Shared.ContentPack
         {
             var fullPath = GetFullPath(path);
 
+            if (!Directory.Exists(fullPath))
+                yield break;
+
             foreach (var entry in Directory.EnumerateFileSystemEntries(fullPath))
             {
                 yield return Path.GetRelativePath(fullPath, entry);
@@ -110,7 +114,7 @@ namespace Robust.Shared.ContentPack
 
         #endregion
 
-        private string GetFullPath(ResourcePath path)
+        public string GetFullPath(ResourcePath path)
         {
             if (!path.IsRooted)
             {

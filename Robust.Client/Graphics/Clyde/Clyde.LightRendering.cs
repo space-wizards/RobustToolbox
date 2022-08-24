@@ -13,6 +13,7 @@ using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -537,6 +538,7 @@ namespace Robust.Client.Graphics.Clyde
             GetLightsToRender(MapId map, in Box2Rotated worldBounds, in Box2 worldAABB)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
             var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
@@ -545,11 +547,11 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = xformSystem.GetInvWorldMatrix(comp.Owner, xforms).TransformBox(worldBounds);
 
                 comp.LightTree.QueryAabb(ref state,
                     (ref (Clyde clyde, Box2 worldAABB, int count, int shadowCastingCount) state,
-                        in PointLightComponent light) =>
+                        in ComponentTreeEntry<PointLightComponent> value) =>
                     {
                         if (state.count >= LightsToRenderListSize)
                         {
@@ -557,13 +559,12 @@ namespace Robust.Client.Graphics.Clyde
                             return false;
                         }
 
-                        var transform = xforms.GetComponent(light.Owner);
+                        var (light, transform) = value;
 
                         if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y))
                             return true;
 
-                        var lightPos = transform.WorldMatrix.Transform(light.Offset);
-
+                        var lightPos = xformSystem.GetWorldMatrix(transform, xforms).Transform(light.Offset);
                         var circle = new Circle(lightPos, light.Radius);
 
                         // If the light doesn't touch anywhere the camera can see, it doesn't matter.
@@ -881,7 +882,7 @@ namespace Robust.Client.Graphics.Clyde
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            var clipToDiff = new Matrix3(ref uX, ref uY, ref uZero);
+            var clipToDiff = new Matrix3(in uX, in uY, in uZero);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);
@@ -912,6 +913,7 @@ namespace Robust.Client.Graphics.Clyde
             try
             {
                 var occluderSystem = _entitySystemManager.GetEntitySystem<OccluderSystem>();
+                var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
 
                 var ai = 0;
                 var avi = 0;
@@ -925,9 +927,9 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var treeBounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
-                    comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
+                    comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {
-                        var transform = xforms.GetComponent(sOccluder.Owner);
+                        var (sOccluder, transform) = entry;
                         if (!sOccluder.Enabled)
                         {
                             return true;
@@ -935,13 +937,13 @@ namespace Robust.Client.Graphics.Clyde
 
                         var occluder = (ClientOccluderComponent)sOccluder;
 
-                        var worldTransform = transform.WorldMatrix;
+                        var worldTransform = xformSystem.GetWorldMatrix(transform, xforms);
                         var box = sOccluder.BoundingBox;
 
                         var tl = worldTransform.Transform(box.TopLeft);
                         var tr = worldTransform.Transform(box.TopRight);
                         var br = worldTransform.Transform(box.BottomRight);
-                        var bl = worldTransform.Transform(box.BottomLeft);
+                        var bl = tl + br - tr;
 
                         // Faces.
                         var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
@@ -983,7 +985,7 @@ namespace Robust.Client.Graphics.Clyde
                         var dTl = eyeTransform.Transform(tl);
                         var dTr = eyeTransform.Transform(tr);
                         var dBl = eyeTransform.Transform(bl);
-                        var dBr = eyeTransform.Transform(br);
+                        var dBr = dBl + dTr - dTl;
 
                         // Get which neighbors are occluding.
                         var no = (occluder.Occluding & OccluderDir.North) != 0;
@@ -992,17 +994,18 @@ namespace Robust.Client.Graphics.Clyde
                         var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                         // Do visibility tests for occluders (described above).
-                        bool CheckFaceEyeVis(Vector2 a, Vector2 b)
+                        static bool CheckFaceEyeVis(Vector2 a, Vector2 b)
                         {
-                            // get normal
-                            var alongNormal = b - a;
-                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld.Normalized;
                             // determine which side of the plane the face is on
                             // the plane is at the origin of this coordinate system, which is also the eye
                             // the normal of the plane is that of the face
                             // therefore, if the dot <= 0, the face is facing the camera
                             // I don't like this, but rotated occluders started happening
-                            return Vector2.Dot(normal, a) <= 0;
+
+                            // var normal =  (b - a).Rotated90DegreesAnticlockwiseWorld;
+                            // Vector2.Dot(normal, a) <= 0;
+                            // equivalent to:
+                            return a.X * b.Y > a.Y * b.X;
                         }
 
                         var nV = ((!no) && CheckFaceEyeVis(dTl, dTr));

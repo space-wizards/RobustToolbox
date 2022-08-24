@@ -45,7 +45,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             try
             {
-                return IoCManager.Resolve<IResourceManager>().ContentFileExists(path)
+                return dependencies.Resolve<IResourceManager>().ContentFileExists(path)
                     ? new ValidatedValueNode(node)
                     : new ErrorNode(node, $"File not found. ({path})");
             }

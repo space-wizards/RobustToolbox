@@ -31,7 +31,7 @@ namespace Robust.Client.GameStates
             var handle = args.DrawingHandle;
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
-            var viewport = _eyeManager.GetWorldViewport();
+            var viewport = args.WorldAABB;
             foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent

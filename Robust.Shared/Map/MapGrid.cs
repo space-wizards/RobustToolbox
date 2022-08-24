@@ -9,6 +9,9 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
+// GridId obsolete
+#pragma warning disable CS0618
+
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
@@ -109,6 +112,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use EntityUids instead")]
         public GridId Index { get; }
 
         /// <summary>
@@ -119,6 +123,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Vector2 WorldPosition
         {
             get
@@ -140,6 +145,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Angle WorldRotation
         {
             get
@@ -161,6 +167,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Matrix3 WorldMatrix
         {
             get
@@ -175,6 +182,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use Transform System + GridEntityId")]
         public Matrix3 InvWorldMatrix
         {
             get
@@ -280,6 +288,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
+            if (tiles.Count == 0) return;
+
             var chunks = new HashSet<MapChunk>();
 
             foreach (var (gridIndices, tile) in tiles)
@@ -296,6 +306,12 @@ namespace Robust.Shared.Map
             }
 
             RegenerateCollision(chunks);
+        }
+
+        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
+        {
+            var localAABB = localArea.CalcBoundingBox();
+            return GetLocalTilesIntersecting(localAABB, ignoreEmpty, predicate);
         }
 
         /// <inheritdoc />
@@ -323,16 +339,17 @@ namespace Robust.Shared.Map
             }
         }
 
-        private IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
+        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
         {
             // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
             // that way we can avoid the GetComp here.
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
-            var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
+            // If we have 20.1 we want to include that tile but if we have 20 then we don't.
+            var gridTileRt = new Vector2i((int)Math.Ceiling(localArea.Right), (int)Math.Ceiling(localArea.Top));
 
-            for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
+            for (var x = gridTileLb.X; x < gridTileRt.X; x++)
             {
-                for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
+                for (var y = gridTileLb.Y; y < gridTileRt.Y; y++)
                 {
                     var gridChunk = GridTileToChunkIndices(new Vector2i(x, y));
 
@@ -409,7 +426,7 @@ namespace Robust.Shared.Map
 
             if (_chunks.Count == 0)
             {
-                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index});
+                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index}, true);
             }
         }
 
@@ -899,10 +916,12 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Regenerate collision for multiple chunks at once; faster than doing it individually.
         /// </summary>
-        public void RegenerateCollision(IReadOnlySet<MapChunk> chunks, bool checkSplit = true)
+        public void RegenerateCollision(IReadOnlySet<MapChunk> chunks)
         {
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
+            var removedChunks = new List<MapChunk>();
             var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+            _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system);
 
             foreach (var mapChunk in chunks)
             {
@@ -921,6 +940,8 @@ namespace Robust.Shared.Map
                     {
                         fixtureSystem.DestroyFixture(fixture, false);
                     }
+
+                    removedChunks.Add(mapChunk);
                 }
             }
 
@@ -945,21 +966,15 @@ namespace Robust.Shared.Map
             }
 
             _mapManager.OnGridBoundsChange(GridEntityId, this);
-
-            if (chunkRectangles.Count == 0)
-            {
-                // May have been deleted from the bulk update above!
-                if (!_entityManager.Deleted(GridEntityId))
-                    fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
-            }
-            else if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
-                system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
+            // May have been deleted from the bulk update above!
+            if (!_entityManager.Deleted(GridEntityId))
+                system?.RegenerateCollision(GridEntityId, chunkRectangles, removedChunks);
         }
 
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.
         /// </summary>
-        public void RegenerateCollision(MapChunk mapChunk, bool checkSplit = true)
+        public void RegenerateCollision(MapChunk mapChunk)
         {
             // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
             if (mapChunk.FilledTiles == 0)
@@ -999,16 +1014,11 @@ namespace Robust.Shared.Map
 
             if (!_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) ||
                 _entityManager.Deleted(GridEntityId)) return;
-                
+
             // TODO: Move this to the component when we combine.
             _mapManager.OnGridBoundsChange(GridEntityId, this);
 
-            // TryGet because unit tests YAY
-            if (mapChunk.FilledTiles > 0)
-                system.RegenerateCollision(GridEntityId, mapChunk, rectangles, checkSplit);
-            // if the chunk gets annihilated we still want to update the neighbours.
-            else
-                system.GenerateSplitNode(GridEntityId, mapChunk);
+            system.RegenerateCollision(GridEntityId, mapChunk, rectangles);
         }
 
         /// <summary>

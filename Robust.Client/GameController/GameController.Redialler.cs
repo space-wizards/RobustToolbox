@@ -55,10 +55,10 @@ internal partial class GameController
         {
             _loaderArgs!.RedialApi!.Redial(new Uri(address), text ?? "");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             Interlocked.Decrement(ref _hasRedialled);
-            throw ex;
+            throw;
         }
 
         Shutdown("Redial");

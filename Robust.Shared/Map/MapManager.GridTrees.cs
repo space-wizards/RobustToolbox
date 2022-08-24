@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -11,9 +10,14 @@ internal partial class MapManager
 {
     // TODO: Move IMapManager stuff to the system
     private Dictionary<MapId, B2DynamicTree<MapGrid>> _gridTrees = new();
+
     private Dictionary<MapId, HashSet<IMapGrid>> _movedGrids = new();
 
-    // Gets the grids that have moved this tick until broadphase has run.
+    /// <summary>
+    /// Gets the grids that have moved this tick until broadphase has run.
+    /// </summary>
+    /// <param name="mapId"></param>
+    /// <returns></returns>
     public HashSet<IMapGrid> GetMovedGrids(MapId mapId)
     {
         return _movedGrids[mapId];
@@ -74,7 +78,7 @@ internal partial class MapManager
 
     private void OnGridInit(GridInitializeEvent args)
     {
-        var grid = (MapGrid) GetGrid(args.GridId);
+        var grid = (MapGrid) GetGrid(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
         var mapId = xform.MapID;
 
@@ -95,7 +99,7 @@ internal partial class MapManager
 
     private void OnGridRemove(GridRemovalEvent args)
     {
-        var grid = (MapGrid) GetGrid(args.GridId);
+        var grid = (MapGrid) GetGrid(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
         // Can't check for free proxy because DetachParentToNull gets called first woo!
@@ -143,23 +147,19 @@ internal partial class MapManager
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy
-        // Want gridinit / gridremoval to handle this hence specialcase those situations.
-        if (lifestage is < EntityLifeStage.Initialized or >= EntityLifeStage.Terminating) return;
-
-        var oldMapId = args.OldParent == null
-            ? MapId.Nullspace
-            : EntityManager.GetComponent<TransformComponent>(args.OldParent.Value).MapID;
+        // Want gridinit to handle this hence specialcase those situations.
+        if (lifestage < EntityLifeStage.Initialized) return;
 
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
+        var mapId = args.Transform.MapID;
 
         // y'all need jesus
-        if (oldMapId == mapId) return;
+        if (args.OldMapId == mapId) return;
 
-        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(oldMapId, out var oldMovedGrids))
+        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
-            RemoveGrid(aGrid, oldMapId);
+            RemoveGrid(aGrid, args.OldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))

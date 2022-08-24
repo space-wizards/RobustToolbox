@@ -55,6 +55,9 @@ namespace Robust.Client.Placement
         /// </summary>
         private bool _placenextframe;
 
+        // Massive hack to avoid creating a billion grids for now.
+        private bool _gridFrameBuffer;
+
         /// <summary>
         /// Allows various types of placement as singular, line, or grid placement where placement mode allows this type of placement
         /// </summary>
@@ -106,7 +109,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures {
             set {
-                PreparePlacementTexList(value, value != null);
+                PreparePlacementTexList(value, value != null, null);
             }
         }
 
@@ -259,6 +262,7 @@ namespace Robust.Client.Placement
                         if (!CurrentPermission!.IsTile)
                             HandlePlacement();
 
+                        _gridFrameBuffer = false;
                         _placenextframe = false;
                         return true;
                     }))
@@ -394,6 +398,7 @@ namespace Robust.Client.Placement
                     DeactivateSpecialPlacement();
                     break;
                 case PlacementTypes.Grid:
+                    _gridFrameBuffer = true;
                     foreach (var coordinate in CurrentMode!.GridCoordinates())
                     {
                         RequestPlacement(coordinate);
@@ -492,7 +497,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer!.ControlledEntity is {Valid: true} ent)
+            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
             {
                 map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }
@@ -570,8 +575,10 @@ namespace Robust.Client.Placement
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
             // continues tile placement but placement of entities only occurs on mouseUp
-            if (_placenextframe && CurrentPermission!.IsTile)
+            if (_placenextframe && CurrentPermission!.IsTile && !_gridFrameBuffer)
+            {
                 HandlePlacement();
+            }
         }
 
         private void ActivateLineMode()
@@ -626,6 +633,7 @@ namespace Robust.Client.Placement
                 {
                     handle.UseShader(_drawingShader);
                     handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                    handle.UseShader(null);
                 }
                 return;
             }
@@ -680,10 +688,10 @@ namespace Robust.Client.Placement
             IsActive = true;
 
             var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
-            PreparePlacementTexList(lst, noRot);
+            PreparePlacementTexList(lst, noRot, prototype);
         }
 
-        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot)
+        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
         {
             var sc = SetupPlacementOverlayEntity();
             if (texs != null)
@@ -708,6 +716,12 @@ namespace Robust.Client.Placement
                 sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
+
+            if (prototype?.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp) == true)
+            {
+                sc.Scale = spriteComp.Scale;
+            }
+
         }
 
         private void PreparePlacementTile()

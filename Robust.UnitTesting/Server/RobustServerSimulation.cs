@@ -4,9 +4,12 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Debugging;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
+using Robust.Server.Player;
 using Robust.Server.Reflection;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -201,6 +204,7 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, EntityManager>();
+            container.Register<EntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IPrototypeManager, PrototypeManager>();
@@ -209,10 +213,17 @@ namespace Robust.UnitTesting.Server
             container.Register<IIslandManager, IslandManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
-            container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
+
+            // I just wanted to load pvs system
+            container.Register<IServerEntityManager, ServerEntityManager>();
+            container.Register<INetConfigurationManager, NetConfigurationManager>();
+            container.Register<IServerNetManager, NetManager>();
+            // god help you if you actually need to test pvs functions
+            container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
+            container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -241,6 +252,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
+            compFactory.RegisterClass<CollisionWakeComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -253,16 +265,20 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugRayDrawingSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<CollisionWakeSystem>();
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
-            entitySystemMan.LoadExtraSystemType<MetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<PVSSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

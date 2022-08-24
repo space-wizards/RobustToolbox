@@ -16,20 +16,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var joint = new WeldJoint(UidA, UidB)
-            {
-                ID = ID,
-                Breakpoint = Breakpoint,
-                CollideConnected = CollideConnected,
-                Enabled = Enabled,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB,
-                Stiffness = Stiffness,
-                Damping = Damping,
-                Bias = Bias,
-            };
-
-            return joint;
+            return new WeldJoint(this);
         }
     }
 
@@ -83,6 +70,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public WeldJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
+        internal WeldJoint(WeldJointState state) : base(state)
+        {
+            Stiffness = state.Stiffness;
+            Damping = state.Damping;
+            Bias = state.Bias;
+        }
+
         public override JointType JointType => JointType.Weld;
         public override JointState GetState()
         {
@@ -103,19 +97,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * _impulse.Z;
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = BodyA.LocalCenter;
-	        _localCenterB = BodyB.LocalCenter;
-	        _invMassA = BodyA.InvMass;
-	        _invMassB = BodyB.InvMass;
-	        _invIA = BodyA.InvI;
-	        _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
-	        float aA = data.Angles[_indexA];
-	        var vA = data.LinearVelocities[_indexA];
+            float aA = data.Angles[_indexA];
+            var vA = data.LinearVelocities[_indexA];
 	        float wA = data.AngularVelocities[_indexA];
 
 	        float aB = data.Angles[_indexB];

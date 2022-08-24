@@ -22,6 +22,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Shared.Players;
 
 namespace Robust.Server.GameStates
 {
@@ -51,6 +52,9 @@ namespace Robust.Server.GameStates
 
         public ushort TransformNetId { get; set; }
 
+        public Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
+        public Action<ICommonSession, GameTick, GameTick>? ClientRequestFull { get; set; }
+
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");
@@ -60,7 +64,9 @@ namespace Robust.Server.GameStates
         public void Initialize()
         {
             _networkManager.RegisterNetMessage<MsgState>();
+            _networkManager.RegisterNetMessage<MsgStateLeavePvs>();
             _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
+            _networkManager.RegisterNetMessage<MsgStateRequestFull>(HandleFullStateRequest);
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
@@ -118,10 +124,7 @@ namespace Robust.Server.GameStates
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)
         {
-            if (!_ackedStates.ContainsKey(e.Channel.ConnectionId))
-                _ackedStates.Add(e.Channel.ConnectionId, GameTick.Zero);
-            else
-                _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
+            _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
         }
 
         private void HandleClientDisconnect(object? sender, NetChannelArgs e)
@@ -129,38 +132,36 @@ namespace Robust.Server.GameStates
             _ackedStates.Remove(e.Channel.ConnectionId);
         }
 
-        private void HandleStateAck(MsgStateAck msg)
+        private void HandleFullStateRequest(MsgStateRequestFull msg)
         {
-            Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
+            if (!_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session) ||
+                !_ackedStates.TryGetValue(msg.MsgChannel.ConnectionId, out var lastAcked))
+                return;
+
+            ClientRequestFull?.Invoke(session, msg.Tick, lastAcked);
+
+            // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
+            _ackedStates[msg.MsgChannel.ConnectionId] = _gameTiming.CurTick;
         }
 
-        private void Ack(long uniqueIdentifier, GameTick stateAcked)
+        private void HandleStateAck(MsgStateAck msg)
         {
-            DebugTools.Assert(_networkManager.IsServer);
+            if (_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session))
+                Ack(msg.MsgChannel.ConnectionId, msg.Sequence, session);
+        }
 
-            if (_ackedStates.TryGetValue(uniqueIdentifier, out var lastAck))
-            {
-                if (stateAcked > lastAck) // most of the time this is true
-                {
-                    _ackedStates[uniqueIdentifier] = stateAcked;
-                }
-                else if (stateAcked == GameTick.Zero) // client signaled they need a full state
-                {
-                    //Performance/Abuse: Should this be rate limited?
-                    _ackedStates[uniqueIdentifier] = GameTick.Zero;
-                }
+        private void Ack(long uniqueIdentifier, GameTick stateAcked, IPlayerSession playerSession)
+        {
+            if (!_ackedStates.TryGetValue(uniqueIdentifier, out var lastAck) || stateAcked <= lastAck)
+                return;
 
-                //else stateAcked was out of order or client is being silly, just ignore
-            }
-            else
-                DebugTools.Assert("How did the client send us an ack without being connected?");
+            ClientAck?.Invoke(playerSession, stateAcked, lastAck);
+            _ackedStates[uniqueIdentifier] = stateAcked;
         }
 
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
-            DebugTools.Assert(_networkManager.IsServer);
-
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
@@ -257,7 +258,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CullingEnabled
+                var (entStates, deletions, leftPvs, fromTick) = _pvs.CullingEnabled
                     ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
                         playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
@@ -267,7 +268,7 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
+                var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
                     entStates, playerStates, deletions, mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
@@ -276,6 +277,8 @@ namespace Robust.Server.GameStates
                 var stateUpdateMessage = new MsgState();
                 stateUpdateMessage.State = state;
                 stateUpdateMessage.CompressionContext = resources.CompressionContext;
+
+                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
                 // If the state is too big we let Lidgren send it reliably.
                 // This is to avoid a situation where a state is so large that it consistently gets dropped
@@ -286,11 +289,15 @@ namespace Robust.Server.GameStates
                     // TODO: remove this lock by having a single state object per session that contains all per-session state needed.
                     lock (_ackedStates)
                     {
-                        _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                        Ack(channel.ConnectionId, _gameTiming.CurTick, session);
                     }
                 }
 
-                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
+                // separately, we send PVS detach / left-view messages reliably. This is not resistant to packet loss,
+                // but unlike game state it doesn't really matter. This also significantly reduces the size of game
+                // state messages PVS chunks move out of view.
+                if (leftPvs != null && leftPvs.Count > 0)
+                    _networkManager.ServerSendMessage(new MsgStateLeavePvs() { Entities = leftPvs, Tick = _gameTiming.CurTick }, channel);
             }
 
             if (_pvs.CullingEnabled)

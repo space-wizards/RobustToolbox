@@ -144,7 +144,11 @@ namespace Robust.Shared.Containers
         {
             foreach (var container in Containers.Values)
             {
-                if (container.Contains(entity)) container.ForceRemove(entity);
+                if (container.Contains(entity))
+                {
+                    container.ForceRemove(entity);
+                    return;
+                }
             }
         }
 
@@ -163,23 +167,6 @@ namespace Robust.Shared.Containers
             }
 
             return true; // If we don't contain the entity, it will always be removed
-        }
-
-        /// <inheritdoc />
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-
-            // On shutdown we won't get to process remove events in the containers so this has to be manually done.
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            foreach (var container in Containers.Values)
-            {
-                foreach (var containerEntity in container.ContainedEntities)
-                {
-                    entMan.EventBus.RaiseEvent(EventSource.Local,
-                        new UpdateContainerOcclusionMessage(containerEntity));
-                }
-            }
         }
 
         private IContainer MakeContainer(string id, Type type)
@@ -240,23 +227,16 @@ namespace Robust.Shared.Containers
         }
 
         [DataDefinition]
-        private struct ContainerPrototypeData : IPopulateDefaultValues
+        private struct ContainerPrototypeData
         {
-            [DataField("entities")]
-            public List<EntityUid> Entities;
+            [DataField("entities")] public List<EntityUid> Entities = new ();
 
-            [DataField("type")]
-            public string? Type;
+            [DataField("type")] public string? Type;
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
                 Entities = entities;
                 Type = type;
-            }
-
-            public void PopulateDefaultValues()
-            {
-                Entities = new List<EntityUid>();
             }
         }
 

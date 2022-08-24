@@ -16,7 +16,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
     public sealed class AnchoredSystemTests
     {
         private static readonly MapId TestMapId = new(1);
-        private static readonly GridId TestGridId = new(1);
 
         private sealed class Subscriber : IEntityEventSubscriber { }
 
@@ -28,7 +27,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
   - type: Transform
     anchored: true";
 
-        private static ISimulation SimulationFactory()
+        private static (ISimulation, EntityUid gridId) SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
@@ -44,9 +43,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapManager.CreateMap(TestMapId);
 
             // Add grid 1, as the default grid to anchor things to.
-            mapManager.CreateGrid(TestMapId, TestGridId);
+            var grid = mapManager.CreateGrid(TestMapId);
 
-            return sim;
+            return (sim, grid.GridEntityId);
         }
 
         // An entity is anchored to the tile it is over on the target grid.
@@ -65,14 +64,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_WorldPosition_TileCenter()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
@@ -97,14 +96,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_Parent_SetToGrid()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
@@ -130,11 +129,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_EmptyTile_Nop()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, Tile.Empty);
@@ -153,11 +152,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_NonEmptyTile_Anchors()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -180,7 +179,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_SetPosition_Nop()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
@@ -188,7 +187,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var coordinates = new MapCoordinates(new Vector2(7.5f, 7.5f), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
@@ -217,13 +216,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_ChangeParent_Unanchors()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
@@ -246,11 +245,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_SetParentSame_Nop()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -269,11 +268,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_TileToSpace_Unanchors()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -298,11 +297,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_AddToContainer_Unanchors()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -326,11 +325,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_AddPhysComp_IsStaticBody()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -349,14 +348,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_HasPhysicsComp_IsStaticBody()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
@@ -375,11 +374,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnUnanchored_HasPhysicsComp_IsDynamicBody()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -398,11 +397,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void SpawnAnchored_EmptyTile_Unanchors()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
 
             // Act
             var ent1 = entMan.SpawnEntity("anchoredEnt", new MapCoordinates(new Vector2(7, 7), TestMapId));
@@ -419,11 +418,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_InContainer_Nop()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
@@ -447,14 +446,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Unanchored_Unanchor_Nop()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
@@ -480,14 +479,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void Anchored_Unanchored_ParentUnchanged()
         {
-            var sim = SimulationFactory();
+            var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
             // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
+            var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
             var ent1 = entMan.SpawnEntity("anchoredEnt", grid.MapToGrid(coordinates));
 

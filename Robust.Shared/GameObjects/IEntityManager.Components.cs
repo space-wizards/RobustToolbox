@@ -10,18 +10,18 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     A component was added to the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentAdded;
+        event Action<AddedComponentEventArgs>? ComponentAdded;
 
         /// <summary>
         ///     A component was removed from the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentRemoved;
+        event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
         ///     A component was deleted. This is usually deferred until some time after it was removed.
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
-        event EventHandler<ComponentEventArgs>? ComponentDeleted;
+        event Action<DeletedComponentEventArgs>? ComponentDeleted;
 
         /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
@@ -52,7 +52,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         ///     This function returns a disposable initialize handle that you can use in a <see langword="using" /> statement, to set up a component
-        ///     before initialization is ran on it. 
+        ///     before initialization is ran on it.
         /// </remarks>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <param name="uid">Entity being modified.</param>
@@ -100,11 +100,44 @@ namespace Robust.Shared.GameObjects
         void RemoveComponent(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes the specified component. Throws if the given component does not belong to the entity.
+        ///     Removes the specified component at a later time.
+        ///     Without needing to have the component itself.
+        /// </summary>
+        /// <typeparam name="T">The component reference type to remove.</typeparam>
+        /// <param name="uid">Entity UID to modify.</param>
+        bool RemoveComponentDeferred<T>(EntityUid uid);
+
+        /// <summary>
+        ///     Removes the specified component with a specified type at a later time.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Removes the component with a specified network ID at a later time.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="netID">Network ID of the component to remove.</param>
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, ushort netID);
+
+        /// <summary>
+        ///     Removes the specified component at a later time.
+        ///     Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="component">Component to remove.</param>
-        void RemoveComponent(EntityUid uid, Component component);
+        void RemoveComponentDeferred(EntityUid uid, IComponent component);
+
+        /// <summary>
+        ///     Removes the specified component at a later time.
+        ///     Throws if the given component does not belong to the entity.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="component">Component to remove.</param>
+        void RemoveComponentDeferred(EntityUid uid, Component component);
 
         /// <summary>
         ///     Removes all components from an entity, except the required components.
@@ -201,6 +234,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to look on.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>The component of Type from the Entity.</returns>
+        IComponent GetComponent(EntityUid uid, CompIdx type);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to look on.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>The component of Type from the Entity.</returns>
         IComponent GetComponent(EntityUid uid, Type type);
 
         /// <summary>
@@ -219,7 +260,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component);
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -228,7 +269,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component);
+        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -238,6 +279,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent([NotNullWhen(true)] EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -272,6 +322,8 @@ namespace Robust.Shared.GameObjects
         /// Returns a cached struct enumerator with the specified component.
         /// </summary>
         EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+
+        EntityQuery<Component> GetEntityQuery(Type type);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

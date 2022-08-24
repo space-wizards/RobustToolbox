@@ -52,7 +52,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         {
                             ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
                             SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
-                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping
+                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
+                            _ => throw new InvalidOperationException()
                         })
                     {
                         result = serializationManager.ReadWithTypeSerializer(type,
@@ -79,7 +80,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate()
+        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -100,7 +101,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     if (fieldDefinition.Attribute.ServerOnly &&
-                        !IoCManager.Resolve<INetManager>().IsServer)
+                        !collection.Resolve<INetManager>().IsServer)
                     {
                         continue;
                     }
@@ -160,17 +161,23 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     object? copy;
                     if (sourceValue != null &&
                         targetValue != null &&
-                        TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
+                        !TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
                     {
-                        copy = manager.CreateCopy(sourceValue, context);
+                        copy = manager.Copy(sourceValue, context);
                     }
                     else
                     {
-                        copy = field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier
-                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                        if (field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                        {
+                            copy = manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
                                 targetValue,
-                                context)
-                            : manager.Copy(sourceValue, targetValue, context);
+                                context);
+                        }
+                        else
+                        {
+                            copy = targetValue;
+                            manager.Copy(sourceValue, ref copy, context);
+                        }
                     }
 
                     FieldAssigners[i](ref target, copy);

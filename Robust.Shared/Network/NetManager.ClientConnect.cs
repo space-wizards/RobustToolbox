@@ -115,6 +115,7 @@ namespace Robust.Shared.Network
                 return;
             }
 
+            DebugTools.Assert(ChannelCount > 0 && winningPeer.Channels.Count > 0);
             ClientConnectState = ClientConnectionState.Connected;
             Logger.DebugS("net", "Handshake completed, connection established.");
         }
@@ -175,8 +176,9 @@ namespace Robust.Shared.Network
 
                 if (keyBytes.Length != CryptoBox.PublicKeyBytes)
                 {
-                    connection.Disconnect("Invalid public key length");
-                    return;
+                    var msg = $"Invalid public key length. Expected {CryptoBox.PublicKeyBytes}, but was {keyBytes.Length}.";
+                    connection.Disconnect(msg);
+                    throw new Exception(msg);
                 }
 
                 // Data is [shared]+[verify]
@@ -371,7 +373,7 @@ namespace Robust.Shared.Network
                             Logger.DebugS("net", "First peer failed.");
                             firstPeer.Peer.Shutdown("You failed.");
                             _toCleanNetPeers.Add(firstPeer.Peer);
-                            firstReason = firstPeerChanged.Result;
+                            firstReason = await firstPeerChanged;
                             await secondPeerChanged;
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;

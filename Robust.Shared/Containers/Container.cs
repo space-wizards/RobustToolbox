@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
@@ -36,10 +37,12 @@ namespace Robust.Shared.Containers
         public override string ContainerType => ClassName;
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta = null)
+        protected override void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
         {
+            // Why TF is this even a list??????
+            DebugTools.Assert(!_containerList.Contains(toinsert));
             _containerList.Add(toinsert);
-            base.InternalInsert(toinsert, entMan, meta);
+            base.InternalInsert(toinsert, oldParent, entMan);
         }
 
         /// <inheritdoc />

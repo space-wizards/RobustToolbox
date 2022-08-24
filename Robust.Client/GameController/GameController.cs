@@ -517,7 +517,7 @@ namespace Robust.Client
                 using (_prof.Group("Entity"))
                 {
                     // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                    _gameTiming.LastRealTick = _gameTiming.CurTick;
+                    _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
                     _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 }
             }
@@ -659,15 +659,20 @@ namespace Robust.Client
             Clyde,
         }
 
-        internal void Cleanup()
+        internal void CleanupGameThread()
         {
             _modLoader.Shutdown();
 
+            // CEF specifically makes a massive silent stink of it if we don't shut it down from the correct thread.
             _webViewHook?.Shutdown();
 
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
             _entityManager.Shutdown();
+        }
+
+        internal void CleanupWindowThread()
+        {
             _clyde.Shutdown();
             _clydeAudio.Shutdown();
         }

@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -12,7 +14,7 @@ namespace Robust.Shared.Containers
         {
             base.Initialize();
 
-            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -294,7 +296,7 @@ namespace Robust.Shared.Containers
 
             while (parent.IsValid())
             {
-                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) && 
+                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
                     conQuery.TryGetComponent(parent, out var conManager) &&
                     conManager.TryGetContainer(child, out var parentContainer))
                 {
@@ -309,10 +311,118 @@ namespace Robust.Shared.Containers
             return container != null;
         }
 
+        /// <summary>
+        /// Attempts to remove an entity from its container, if any.
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="force">Whether to forcibly remove the entity from the container.</param>
+        /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
+        /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        public bool TryRemoveFromContainer(EntityUid entity, bool force, out bool wasInContainer)
+        {
+            DebugTools.Assert(Exists(entity));
+
+            if (TryGetContainingContainer(entity, out var container))
+            {
+                wasInContainer = true;
+
+                if (!force)
+                    return container.Remove(entity);
+
+                container.ForceRemove(entity);
+                return true;
+            }
+
+            wasInContainer = false;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to remove an entity from its container, if any.
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="force">Whether to forcibly remove the entity from the container.</param>
+        /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        public bool TryRemoveFromContainer(EntityUid entity, bool force = false)
+        {
+            return TryRemoveFromContainer(entity, force, out _);
+        }
+
+        /// <summary>
+        /// Attempts to remove all entities in a container.
+        /// </summary>
+        public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
+            bool attachToGridOrMap = false)
+        {
+            foreach (var entity in container.ContainedEntities.ToArray())
+            {
+                if (Deleted(entity))
+                    continue;
+
+                if (force)
+                    container.ForceRemove(entity);
+                else
+                    container.Remove(entity);
+
+                if (moveTo.HasValue)
+                    Transform(entity).Coordinates = moveTo.Value;
+
+                if (attachToGridOrMap)
+                    Transform(entity).AttachToGridOrMap();
+            }
+        }
+
+        /// <summary>
+        /// Attempts to remove and delete all entities in a container.
+        /// </summary>
+        public void CleanContainer(IContainer container)
+        {
+            foreach (var ent in container.ContainedEntities.ToArray())
+            {
+                if (Deleted(ent)) continue;
+                container.ForceRemove(ent);
+                Del(ent);
+            }
+        }
+
+        public void AttachParentToContainerOrGrid(TransformComponent transform)
+        {
+            if (transform.Parent == null
+                || !TryGetContainingContainer(transform.Parent.Owner, out var container)
+                || !TryInsertIntoContainer(transform, container))
+                transform.AttachToGridOrMap();
+        }
+
+        private bool TryInsertIntoContainer(TransformComponent transform, IContainer container)
+        {
+            if (container.Insert(transform.Owner)) return true;
+
+            if (Transform(container.Owner).Parent != null
+                && TryGetContainingContainer(container.Owner, out var newContainer))
+                return TryInsertIntoContainer(transform, newContainer);
+
+            return false;
+        }
+
+        internal bool TryGetManagerComp(EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
+        {
+            DebugTools.Assert(Exists(entity));
+
+            if (TryComp(entity, out manager))
+                return true;
+
+            // RECURSION ALERT
+            var transform = Transform(entity);
+            if (transform.ParentUid.IsValid())
+                return TryGetManagerComp(transform.ParentUid, out manager);
+
+            return false;
+        }
+
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        protected virtual void HandleParentChanged(ref EntParentChangedMessage message)
+        protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 

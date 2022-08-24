@@ -27,7 +27,7 @@ namespace Robust.Shared.Prototypes
 
     public interface IInheritingPrototype
     {
-        string? Parent { get; }
+        string[]? Parents { get; }
 
         bool Abstract { get; }
     }

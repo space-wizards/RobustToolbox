@@ -70,13 +70,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// The target number of game states to keep buffered up to smooth out against network inconsistency.
+        /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
-        public static readonly CVarDef<int> NetInterpRatio =
-            CVarDef.Create("net.interp_ratio", 0, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetBufferSize =
+            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -138,6 +138,12 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
+        /// The amount of pvs-exiting entities that a client will process in a single tick.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSEntityExitBudget =
+            CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// ZSTD compression level to use when compressing game states.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
@@ -155,6 +161,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Offset CurTime at server start by this amount (in seconds).
+        /// </summary>
+        public static readonly CVarDef<int> NetTimeStartOffset =
+            CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
 
         /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
@@ -463,7 +475,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.
@@ -852,6 +864,16 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<string> DisplayWindowingApi =
+            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true and on Windows 11 Build 22000,
+        /// specify <c>DWMWA_USE_IMMERSIVE_DARK_MODE</c> to have dark mode window titles if the system is set to dark mode.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
+            CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -1085,6 +1107,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> HubAdvertise =
             CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Comma-separated list of tags to advertise via the status server (and therefore, to the hub).
+        /// </summary>
+        public static readonly CVarDef<string> HubTags =
+            CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// URL of the master hub server to advertise to.

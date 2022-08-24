@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -20,20 +20,25 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly SharedContainerSystem _containers = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
         {
             base.Initialize();
+
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
+            var xform = Transform(uid);
+            if (xform.MapID == Map.MapId.Nullspace)
+                return;
+
             // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
             // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
             // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
@@ -44,8 +49,10 @@ namespace Robust.Shared.Physics
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            body.DestroyContacts();
+            _physics.DestroyContacts(body, xform.MapID, xform);
             _broadphaseSystem.RemoveBody(body, component);
+
+            // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
             body.CanCollide = false;
         }
         #region Public
@@ -67,6 +74,8 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
+            DebugTools.Assert(MetaData(body.Owner).EntityLifeStage < EntityLifeStage.Terminating);
+
             if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
@@ -190,17 +199,20 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            foreach (var (_, contact) in fixture.Contacts.ToArray())
+            var xform = Transform(body.Owner);
+            var map = xform.MapUid;
+
+            if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
             {
-                body.PhysicsMap?.ContactManager.Destroy(contact);
+                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                {
+                    physicsMap.ContactManager.Destroy(contact);
+                }
             }
 
-            var broadphase = body.Broadphase;
-
-            if (broadphase != null)
+            if (body.Broadphase != null)
             {
-                var mapId = Transform(broadphase.Owner).MapID;
-                _broadphaseSystem.DestroyProxies(broadphase, fixture, mapId);
+                _broadphaseSystem.DestroyProxies(body.Broadphase, fixture, xform.MapID);
             }
 
             if (updates)
@@ -219,10 +231,9 @@ namespace Robust.Shared.Physics
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        private void OnPhysicsInit(ref PhysicsInitializedEvent ev)
+        internal void OnPhysicsInit(EntityUid uid)
         {
-            var component = EnsureComp<FixturesComponent>(ev.Uid);
-
+            var component = EntityManager.EnsureComponent<FixturesComponent>(uid);
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
             foreach (var fixture in component.SerializedFixtures)
@@ -239,7 +250,7 @@ namespace Robust.Shared.Physics
 
             // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
-            if (EntityManager.TryGetComponent(ev.Uid, out PhysicsComponent? body))
+            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
                 foreach (var (_, fixture) in component.Fixtures)
                 {
@@ -247,11 +258,11 @@ namespace Robust.Shared.Physics
                 }
 
                 // Make sure all the right stuff is set on the body
-                FixtureUpdate(component);
+                FixtureUpdate(component, body, false);
 
                 if (body.CanCollide)
                 {
-                    DebugTools.Assert(!_containers.IsEntityInContainer(ev.Uid));
+                    DebugTools.Assert(!_containers.IsEntityInContainer(uid));
                     _broadphaseSystem.AddBody(body, component);
                 }
             }
@@ -268,7 +279,7 @@ namespace Robust.Shared.Physics
         {
             args.State = new FixtureManagerComponentState
             {
-                Fixtures = component.Fixtures.Values.ToList(),
+                Fixtures = component.Fixtures.Values.ToArray(),
             };
         }
 
@@ -278,23 +289,24 @@ namespace Robust.Shared.Physics
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
-                DebugTools.Assert(false);
-                Logger.ErrorS("physics", $"Tried to apply fixture state for {uid} which has name {nameof(PhysicsComponent)}");
+                Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
 
-            var toAddFixtures = new List<Fixture>();
-            var toRemoveFixtures = new List<Fixture>();
+            component.SerializedFixtures.Clear();
+            var toAddFixtures = new ValueList<Fixture>();
+            var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new List<Fixture>(state.Fixtures.Count);
-            foreach (var fixture in state.Fixtures)
+            var newFixtures = new Fixture[state.Fixtures.Length];
+            for (var i = 0; i < state.Fixtures.Length; i++)
             {
+                var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixture.Body = physics;
-                newFixtures.Add(newFixture);
+                newFixtures[i] = newFixture;
             }
 
             // Add / update new fixtures
@@ -411,7 +423,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.
         /// </summary>
-        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
+        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null, bool dirty = true)
         {
             if (!Resolve(component.Owner, ref body))
                 return;
@@ -433,13 +445,14 @@ namespace Robust.Shared.Physics
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
-            Dirty(component);
+            if (dirty)
+                Dirty(component);
         }
 
         [Serializable, NetSerializable]
         private sealed class FixtureManagerComponentState : ComponentState
         {
-            public List<Fixture> Fixtures = default!;
+            public Fixture[] Fixtures = default!;
         }
     }
 }

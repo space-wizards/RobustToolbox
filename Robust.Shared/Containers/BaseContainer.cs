@@ -60,6 +60,8 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
+            DebugTools.Assert(meta == null || meta.Owner == toinsert);
+            DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container
@@ -67,15 +69,28 @@ namespace Robust.Shared.Containers
                 return false;
 
             transform ??= entMan.GetComponent<TransformComponent>(toinsert);
+            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
 
-            // CanInsert already checks nullability of Parent (or container forgot to call base that does)
-            if (toinsert.TryGetContainerMan(out var containerManager, entMan) && !containerManager.Remove(toinsert))
-                return false; // Can't remove from existing container, can't insert.
+            // remove from any old containers.
+            if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                entMan.TryGetComponent(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
+                oldManager.TryGetContainer(toinsert, out var oldContainer) &&
+                !oldContainer.Remove(toinsert, entMan, transform, meta, false))
+            {
+                // failed to remove from container --> cannot insert.
+                return false;
+            }
 
-            // Attach to parent first so we can check IsInContainer more easily.
+            // Update metadata first, so that parent change events can check IsInContainer.
+            meta.Flags |= MetaDataFlags.InContainer;
+
             ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
+            var oldParent = transform.ParentUid;
             transform.AttachParent(ownerTransform);
-            InternalInsert(toinsert, entMan, meta);
+            InternalInsert(toinsert, oldParent, entMan);
+
+            // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -115,12 +130,12 @@ namespace Robust.Shared.Containers
 
             //raise events
             var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
-            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent, true);
             if (insertAttemptEvent.Cancelled)
                 return false;
 
             var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
-            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent, true);
             if (gettingInsertedAttemptEvent.Cancelled)
                 return false;
 
@@ -128,7 +143,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null)
+        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -140,8 +155,12 @@ namespace Robust.Shared.Containers
             if (!CanRemove(toremove, entMan)) return false;
             InternalRemove(toremove, entMan, meta);
 
-            xform ??= entMan.GetComponent<TransformComponent>(toremove);
-            xform.AttachParentToContainerOrGrid(entMan);
+            if (reparent)
+            {
+                xform ??= entMan.GetComponent<TransformComponent>(toremove);
+                xform.AttachParentToContainerOrGrid(entMan);
+            }
+
             return true;
         }
 
@@ -169,12 +188,12 @@ namespace Robust.Shared.Containers
 
             //raise events
             var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
-            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent, true);
             if (removeAttemptEvent.Cancelled)
                 return false;
 
             var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
-            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent);
+            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent, true);
             if (gettingRemovedAttemptEvent.Cancelled)
                 return false;
 
@@ -196,15 +215,10 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta = null)
+        protected virtual void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
         {
             DebugTools.Assert(!Deleted);
-            DebugTools.Assert(meta == null || meta.Owner == toinsert);
-
-            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
-            meta.Flags |= MetaDataFlags.InContainer;
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
-            entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
             Manager.Dirty(entMan);
         }
 
@@ -223,8 +237,8 @@ namespace Robust.Shared.Containers
 
             meta ??= entMan.GetComponent<MetaDataComponent>(toremove);
             meta.Flags &= ~MetaDataFlags.InContainer;
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
-            entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this), true);
+            entMan.EventBus.RaiseLocalEvent(toremove, new EntGotRemovedFromContainerMessage(toremove, this), false);
             Manager.Dirty(entMan);
         }
     }

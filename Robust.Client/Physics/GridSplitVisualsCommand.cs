@@ -13,6 +13,6 @@ public sealed class GridSplitVisualCommand : IConsoleCommand
     {
         var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
         system.EnableDebug ^= true;
-        shell.WriteLine($"Toggled gridsplit node visuals");
+        shell.WriteLine($"Toggled gridsplit node visuals to {system.EnableDebug}");
     }
 }

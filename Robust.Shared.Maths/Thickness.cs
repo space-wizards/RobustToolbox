@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
 {
     [PublicAPI]
-    public struct Thickness : IEquatable<Thickness>
+    public struct Thickness : IEquatable<Thickness>, ISpanFormattable
     {
         public float Left;
         public float Top;
@@ -108,9 +109,27 @@ namespace Robust.Shared.Maths
             return !left.Equals(in right);
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"{Left},{Top},{Right},{Bottom}";
+        }
+
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{Left},{Top},{Right},{Bottom}");
         }
 
         public readonly void Deconstruct(out float left, out float top, out float right, out float bottom)

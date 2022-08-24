@@ -31,6 +31,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
 
@@ -46,7 +47,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Color : IEquatable<Color>
+    public struct Color : IEquatable<Color>, ISpanFormattable
     {
         /// <summary>
         ///     The red component of this Color4 structure.
@@ -237,6 +238,23 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
+        }
+
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
+        }
+
+        public readonly bool TryFormat(
+            Span<char> destination,
+            out int charsWritten,
+            ReadOnlySpan<char> format,
+            IFormatProvider? provider)
+        {
+            return FormatHelpers.TryFormatInto(
+                destination,
+                out charsWritten,
+                $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}");
         }
 
         public readonly Color WithRed(float newR)

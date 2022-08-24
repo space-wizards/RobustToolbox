@@ -14,9 +14,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
+using SixLabors.ImageSharp;
+using Color = Robust.Shared.Maths.Color;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -75,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _currentBoundRenderTarget = default!;
             _currentRenderTarget = default!;
+            Configuration.Default.PreferContiguousImageBuffers = true;
         }
 
         public bool InitializePreWindowing()
@@ -314,7 +316,7 @@ namespace Robust.Client.Graphics.Clyde
             // Batch rendering
             {
                 BatchVBO = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                    Vertex2D.SizeOf * BatchVertexData.Length, nameof(BatchVBO));
+                    sizeof(Vertex2D) * BatchVertexData.Length, nameof(BatchVBO));
 
                 BatchVAO = new GLHandle(GenVertexArray());
                 BindVertexArray(BatchVAO.Handle);
@@ -332,7 +334,7 @@ namespace Robust.Client.Graphics.Clyde
 
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-            ApplySampleParameters(TextureSampleParameters.Default);
+            ApplySampleParameters(new TextureSampleParameters() { Filter = false, WrapMode = TextureWrapMode.MirroredRepeat});
             // TODO: This is atrocious and broken and awful why did I merge this
             ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32);
         }

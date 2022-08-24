@@ -44,7 +44,6 @@ namespace Robust.Shared.GameObjects
     public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
 
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
@@ -56,6 +55,35 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables]
         internal BroadphaseComponent? Broadphase { get; set; }
+
+        /// <summary>
+        /// Debugging VV
+        /// </summary>
+        [ViewVariables]
+        private Box2? _broadphaseAABB
+        {
+            get
+            {
+                Box2? aabb = null;
+
+                if (Broadphase == null)
+                {
+                    return aabb;
+                }
+
+                var tree = Broadphase.Tree;
+
+                foreach (var (_, fixture) in IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        aabb = aabb?.Union(tree.GetProxy(proxy.ProxyId)!.AABB) ?? tree.GetProxy(proxy.ProxyId)!.AABB;
+                    }
+                }
+
+                return aabb;
+            }
+        }
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
@@ -71,11 +99,6 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
-        // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
-        // on physics bodies for massive shuttle perf savings.
-        [Obsolete("Use FixturesComponent instead.")]
-        public IReadOnlyList<Fixture> Fixtures => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values.ToList();
-
         public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
         [ViewVariables] public int ContactCount => Contacts.Count;
@@ -83,12 +106,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal LinkedList<Contact> Contacts = new();
+        internal readonly LinkedList<Contact> Contacts = new();
 
         [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
-
-        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -120,10 +141,10 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
+                _entMan.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
         }
 
@@ -131,52 +152,49 @@ namespace Robust.Shared.GameObjects
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
 
-        /// <summary>
-        /// Set awake without the sleeptimer being reset.
-        /// </summary>
-        internal void ForceAwake()
-        {
-            if (_awake || _bodyType == BodyType.Static) return;
-
-            _awake = true;
-            var ev = new PhysicsWakeEvent(this);
-            _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
-        }
-
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Awake
         {
             get => _awake;
-            set
-            {
-                if (_bodyType == BodyType.Static) return;
-
-                SetAwake(value);
-            }
+            set => SetAwake(value);
         }
 
-        internal bool _awake = true;
+        private bool _awake = false;
 
-        private void SetAwake(bool value)
+        public void SetAwake(bool value, bool updateSleepTime = true)
         {
-            if (_awake == value) return;
+            if (_awake == value)
+                return;
+
+            if (value && _bodyType == BodyType.Static)
+                return;
+
+            // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
+            if (value && !_canCollide)
+            {
+                CanCollide = true;
+                if (!_canCollide)
+                    return;
+            }
+
             _awake = value;
 
             if (value)
             {
-                _sleepTime = 0.0f;
                 var ev = new PhysicsWakeEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
             }
             else
             {
                 var ev = new PhysicsSleepEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
                 ResetDynamics();
-                _sleepTime = 0.0f;
             }
+
+            if (updateSleepTime)
+                _sleepTime = 0.0f;
 
             Dirty(_entMan);
         }
@@ -227,6 +245,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void WakeBody()
         {
+            CanCollide = true;
+
+            if (!_canCollide) return;
+
             Awake = true;
         }
 
@@ -247,10 +269,17 @@ namespace Robust.Shared.GameObjects
         {
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
+            // Applying transform component state can cause entity-lookup updates, which apparently sometimes trigger this
+            // function before a fixtures has been added? I'm not 100% sure how this happens.
+            if (!_entMan.TryGetComponent(Owner, out FixturesComponent? fixtures))
+                return bounds;
+
+            // TODO cache this to speed up entity lookups & tree updating
+            foreach (var fixture in fixtures.Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
+                    // TODO don't transform each fixture, just transform the final AABB
                     var boundy = fixture.Shape.ComputeAABB(transform, i);
                     bounds = bounds.Union(boundy);
                 }
@@ -272,20 +301,7 @@ namespace Robust.Shared.GameObjects
                 worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
             }
 
-            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
-
-            var bounds = new Box2(transform.Position, transform.Position);
-
-            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
+            return GetAABB(new Transform(worldPos.Value, (float)worldRot.Value.Theta));
         }
 
         /// <summary>
@@ -300,9 +316,17 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value ||
-                    value && Owner.IsInContainer(_entMan))
+                if (_canCollide == value)
                     return;
+
+                // If we're recursively in a container then never set this.
+                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
+                    .IsEntityOrParentInContainer(Owner)) return;
+
+                if (!value)
+                {
+                    Awake = false;
+                }
 
                 _canCollide = value;
                 var ev = new CollisionChangeEvent(this, _canCollide);
@@ -335,11 +359,17 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public int CollisionMask { get; internal set; }
 
+        /// <summary>
+        ///     The current total mass of the entities fixtures in kilograms. Ignores the body type.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float FixturesMass => _mass;
+
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
-        ///     Current mass of the entity in kilograms.
+        ///     Current mass of the entity in kilograms. This may be 0 depending on the body type.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables(VVAccess.ReadOnly)]
         public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
         private float _mass;
@@ -588,7 +618,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _angularVelocity;
+        internal float _angularVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -625,14 +655,6 @@ namespace Robust.Shared.GameObjects
         }
 
         private bool _predict;
-
-        public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
-        {
-            foreach (var entity in _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(_entMan.GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
-            {
-                yield return entity;
-            }
-        }
 
         /// <summary>
         /// Gets a local point relative to the body's origin given a world point.
@@ -715,21 +737,6 @@ namespace Robust.Shared.GameObjects
             Force += force;
         }
 
-        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
-        public void DestroyContacts()
-        {
-            var node = Contacts.First;
-
-            while (node != null)
-            {
-                var contact = node.Value;
-                node = node.Next;
-                PhysicsMap?.ContactManager.Destroy(contact);
-            }
-
-            DebugTools.Assert(Contacts.Count == 0);
-        }
-
         public void ResetMassData(FixturesComponent? fixtures = null)
         {
             _mass = 0.0f;
@@ -738,15 +745,9 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             _localCenter = Vector2.Zero;
 
-            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return;
-            }
-
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {
@@ -758,6 +759,12 @@ namespace Robust.Shared.GameObjects
                 _mass += data.Mass;
                 localCenter += data.Center * data.Mass;
                 _inertia += data.I;
+            }
+
+            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
+            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
+            {
+                return;
             }
 
             if (_mass > 0.0f)
@@ -827,20 +834,20 @@ namespace Robust.Shared.GameObjects
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
                     if (!joint.CollideConnected &&
-                        (aUid == joint.BodyAUid &&
+                        ((aUid == joint.BodyAUid &&
                          bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid ||
-                         aUid == joint.BodyBUid)) return false;
+                        (bUid == joint.BodyAUid &&
+                         aUid == joint.BodyBUid))) return false;
                 }
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
 
             if (preventCollideMessage.Cancelled) return false;
 
@@ -849,9 +856,9 @@ namespace Robust.Shared.GameObjects
 
         // View variables conveniences properties.
         [ViewVariables]
-        private Vector2 _mapLinearVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
+        private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
         [ViewVariables]
-        private float _mapAngularVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
+        private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 
     /// <summary>

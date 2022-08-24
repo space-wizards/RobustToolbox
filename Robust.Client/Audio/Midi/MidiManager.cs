@@ -100,6 +100,8 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
+    private const float MaxDistanceForOcclusion = 1000;
+
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
     private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
@@ -285,65 +287,68 @@ internal sealed partial class MidiManager : IMidiManager
         }
 
         // Update positions of streams every frame.
-        foreach (var renderer in _renderers)
+        lock (_renderers)
         {
-            if (renderer.Disposed)
-                continue;
-
-            if(_volumeDirty)
-                renderer.Source.SetVolume(Volume);
-
-            if (!renderer.Mono)
+            foreach (var renderer in _renderers)
             {
-                renderer.Source.SetGlobal();
-                continue;
-            }
+                if (renderer.Disposed)
+                    continue;
 
-            MapCoordinates? mapPos = null;
-            var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-            if (trackingEntity)
-            {
-                renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
-            }
+                if(_volumeDirty)
+                    renderer.Source.SetVolume(Volume);
 
-            if (renderer.TrackingCoordinates != null)
-            {
-                mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-            }
-
-            if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
-            {
-                var pos = mapPos.Value;
-
-                var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                var occlusion = 0f;
-                if (sourceRelative.Length > 0)
+                if (!renderer.Mono)
                 {
-                    occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                        pos.MapId,
-                        new CollisionRay(
-                            pos.Position,
-                            sourceRelative.Normalized,
-                            OcclusionCollisionMask),
-                        sourceRelative.Length,
-                        renderer.TrackingEntity);
+                    renderer.Source.SetGlobal();
+                    continue;
                 }
 
-                renderer.Source.SetOcclusion(occlusion);
-
-                if (!renderer.Source.SetPosition(pos.Position))
-                {
-                    return;
-                }
-
+                MapCoordinates? mapPos = null;
+                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
                 if (trackingEntity)
                 {
-                    renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
+                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
                 }
-            }
-            else
-            {
-                renderer.Source.SetOcclusion(float.MaxValue);
+
+                if (renderer.TrackingCoordinates != null)
+                {
+                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+                }
+
+                if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
+                {
+                    var pos = mapPos.Value;
+
+                    var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                    var occlusion = 0f;
+                    if (sourceRelative.Length > 0)
+                    {
+                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                            pos.MapId,
+                            new CollisionRay(
+                                pos.Position,
+                                sourceRelative.Normalized,
+                                OcclusionCollisionMask),
+                            MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
+                            renderer.TrackingEntity);
+                    }
+
+                    renderer.Source.SetOcclusion(occlusion);
+
+                    if (!renderer.Source.SetPosition(pos.Position))
+                    {
+                        return;
+                    }
+
+                    if (trackingEntity)
+                    {
+                        renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
+                    }
+                }
+                else
+                {
+                    renderer.Source.SetOcclusion(float.MaxValue);
+                }
             }
         }
 

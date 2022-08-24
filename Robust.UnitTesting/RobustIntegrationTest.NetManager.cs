@@ -5,8 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -17,6 +19,7 @@ namespace Robust.UnitTesting
         internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
             [Dependency] private readonly IGameTiming _gameTiming = default!;
+            [Dependency] private readonly ITaskManager _taskManager = default!;
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
             public bool IsRunning { get; private set; }
@@ -42,6 +45,8 @@ namespace Robust.UnitTesting
 
             private readonly Dictionary<Type, ProcessMessage> _callbacks = new();
             private readonly HashSet<Type> _registeredMessages = new();
+
+            private readonly Dictionary<string, Guid> _userGuids = new Dictionary<string, Guid>();
 
             /// <summary>
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
@@ -106,13 +111,17 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsServer);
 
-                            async void DoConnect()
+                            async Task DoConnect()
                             {
                                 var writer = connect.ChannelWriter;
-
                                 var uid = _genConnectionUid();
-                                var sessionId = new NetUserId(Guid.NewGuid());
-                                var userName = $"integration_{uid}";
+                                var userName = connect.Username ?? $"integration_{uid}";
+                                if (!_userGuids.TryGetValue(userName, out var userId))
+                                {
+                                    userId = Guid.NewGuid();
+                                    _userGuids.Add(userName, userId);
+                                }
+                                var sessionId = new NetUserId(userId);
                                 var userData = new NetUserData(sessionId, userName)
                                 {
                                     HWId = ImmutableArray<byte>.Empty
@@ -139,7 +148,7 @@ namespace Robust.UnitTesting
                                 Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
 
-                            DoConnect();
+                            _taskManager.BlockWaitOnTask(DoConnect());
 
                             break;
                         }
@@ -250,6 +259,10 @@ namespace Robust.UnitTesting
             {
                 DebugTools.Assert(IsServer);
 
+                // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
+                if (message is MsgState stateMsg)
+                    stateMsg._hasWritten = true;
+
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
             }
@@ -351,7 +364,7 @@ namespace Robust.UnitTesting
 
                 _clientConnectingUid = _genConnectionUid();
 
-                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter, _clientConnectingUid));
+                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter, _clientConnectingUid, userNameRequest));
             }
 
             public void ClientDisconnect(string reason)
@@ -455,14 +468,16 @@ namespace Robust.UnitTesting
 
             private sealed class ConnectMessage
             {
-                public ConnectMessage(ChannelWriter<object> channelWriter, int uid)
+                public ConnectMessage(ChannelWriter<object> channelWriter, int uid, string? username)
                 {
                     ChannelWriter = channelWriter;
                     Uid = uid;
+                    Username = username;
                 }
 
                 public ChannelWriter<object> ChannelWriter { get; }
                 public int Uid { get; }
+                public string? Username { get; }
             }
 
             private sealed class ConfirmConnectMessage

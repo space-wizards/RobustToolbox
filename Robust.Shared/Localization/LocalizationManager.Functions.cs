@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Linguini.Bundle;
 using Linguini.Bundle.Types;
 using Linguini.Shared.Types.Bundle;
@@ -9,6 +11,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Localization
 {
@@ -35,6 +38,7 @@ namespace Robust.Shared.Localization
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
+            AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
         }
 
         /// <summary>
@@ -54,6 +58,106 @@ namespace Robust.Shared.Localization
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");
+        }
+
+        private static readonly string[] IndefExceptions = { "euler", "heir", "honest" };
+        private static readonly char[] IndefCharList = { 'a', 'e', 'd', 'h', 'i', 'l', 'm', 'n', 'o', 'r', 's', 'x' };
+        private static readonly Regex[] IndefRegexes =
+        {
+            new ("^e[uw]"),
+            new ("^onc?e\b"),
+            new ("^uni([^nmd]|mo)"),
+            new ("^u[bcfhjkqrst][aeiou]")
+        };
+
+        private static readonly Regex IndefRegexFjo =
+            new("(?!FJO|[HLMNS]Y.|RY[EO]|SQU|(F[LR]?|[HL]|MN?|N|RH?|S[CHKLMNPTVW]?|X(YL)?)[AEIOU])[FHLMNRSX][A-Z]");
+
+        private static readonly Regex IndefRegexU = new("^U[NK][AIEO]");
+
+        private static readonly Regex IndefRegexY =
+            new("^y(b[lor]|cl[ea]|fere|gg|p[ios]|rou|tt)");
+
+        private static readonly char[] IndefVowels = { 'a', 'e', 'i', 'o', 'u' };
+
+        private ILocValue FuncIndefinite(LocArgs args)
+        {
+            ILocValue val = args.Args[0];
+            if (val.Value == null)
+                return new LocValueString("an");
+
+            string? word;
+            string? input;
+            if (val.Value is EntityUid entity)
+            {
+                if (TryGetEntityLocAttrib(entity, "indefinite", out var indef))
+                    return new LocValueString(indef);
+
+                input = _entMan.GetComponent<MetaDataComponent>(entity).EntityName;
+            }
+            else
+            {
+                input = val.Format(new LocContext());
+            }
+
+            if (String.IsNullOrEmpty(input))
+                return new LocValueString("");
+
+            var a = new LocValueString("a");
+            var an = new LocValueString("an");
+
+            var m = Regex.Match(input, @"\w+");
+            if (m.Success)
+            {
+                word = m.Groups[0].Value;
+            }
+            else
+            {
+                return an;
+            }
+
+            var wordi = word.ToLower();
+            if (IndefExceptions.Any(anword => wordi.StartsWith(anword)))
+            {
+                return an;
+            }
+
+            if (wordi.StartsWith("hour") && !wordi.StartsWith("houri"))
+                return an;
+
+            if (wordi.Length == 1)
+            {
+                return wordi.IndexOfAny(IndefCharList) == 0 ? an : a;
+            }
+
+            if (IndefRegexFjo.Match(word)
+                .Success)
+            {
+                return an;
+            }
+
+            foreach (var regex in IndefRegexes)
+            {
+                if (regex.IsMatch(wordi))
+                    return a;
+            }
+
+            if (IndefRegexU.IsMatch(word))
+            {
+                return a;
+            }
+
+            if (word == word.ToUpper())
+            {
+                return wordi.IndexOfAny(IndefCharList) == 0 ? an : a;
+            }
+
+            if (wordi.IndexOfAny(IndefVowels) == 0)
+            {
+                return an;
+            }
+
+            return IndefRegexY.IsMatch(wordi) ? an : a;
         }
 
         /// <summary>
@@ -186,11 +290,14 @@ namespace Robust.Shared.Localization
         private void AddCtxFunction(FluentBundle ctx, string name, LocFunction function)
         {
             ctx.AddFunction(name, (args, options)
-                => CallFunction(function, args, options), out _, InsertBehavior.Overriding);
+                => CallFunction(function, ctx, args, options), out _, InsertBehavior.Overriding);
         }
 
-        private IFluentType CallFunction(LocFunction function,
-            IList<IFluentType> positionalArgs, IDictionary<string, IFluentType> namedArgs)
+        private IFluentType CallFunction(
+            LocFunction function,
+            FluentBundle bundle,
+            IList<IFluentType> positionalArgs,
+            IDictionary<string, IFluentType> namedArgs)
         {
             var args = new ILocValue[positionalArgs.Count];
             for (var i = 0; i < args.Length; i++)
@@ -205,7 +312,7 @@ namespace Robust.Shared.Localization
             }
 
             var argStruct = new LocArgs(args, options);
-            return function.Invoke(argStruct).FluentFromVal();
+            return function.Invoke(argStruct).FluentFromVal(new LocContext(bundle));
         }
 
         public void AddFunction(CultureInfo culture, string name, LocFunction function)
@@ -213,22 +320,24 @@ namespace Robust.Shared.Localization
             var bundle = _contexts[culture];
 
             bundle.AddFunction(name, (args, options)
-                => CallFunction(function, args, options), out _, InsertBehavior.Overriding);
+                => CallFunction(function, bundle, args, options), out _, InsertBehavior.Overriding);
         }
     }
 
     internal sealed class FluentLocWrapperType : IFluentType
     {
         public readonly ILocValue WrappedValue;
+        private readonly LocContext _context;
 
-        public FluentLocWrapperType(ILocValue wrappedValue)
+        public FluentLocWrapperType(ILocValue wrappedValue, LocContext context)
         {
             WrappedValue = wrappedValue;
+            _context = context;
         }
 
         public string AsString()
         {
-            return WrappedValue.Format(new LocContext());
+            return WrappedValue.Format(_context);
         }
 
         public IFluentType Copy()
@@ -251,14 +360,15 @@ namespace Robust.Shared.Localization
             };
         }
 
-        public static IFluentType FluentFromObject(this object obj)
+        public static IFluentType FluentFromObject(this object obj, LocContext context)
         {
             return obj switch
             {
-                ILocValue wrap => new FluentLocWrapperType(wrap),
-                EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity)),
-                DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
-                TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan)),
+                ILocValue wrap => new FluentLocWrapperType(wrap, context),
+                EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity), context),
+                DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime), context),
+                TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan), context),
+                Color color => (FluentString)color.ToHex(),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
                 string str => (FluentString)str,
                 byte num => (FluentNumber)num,
@@ -275,14 +385,14 @@ namespace Robust.Shared.Localization
             };
         }
 
-        public static IFluentType FluentFromVal(this ILocValue locValue)
+        public static IFluentType FluentFromVal(this ILocValue locValue, LocContext context)
         {
             return locValue switch
             {
                 LocValueNone => FluentNone.None,
                 LocValueNumber number => (FluentNumber)number.Value,
                 LocValueString str => (FluentString)str.Value,
-                _ => new FluentLocWrapperType(locValue),
+                _ => new FluentLocWrapperType(locValue, context),
             };
         }
     }

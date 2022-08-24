@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Robust.Client.Timing;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.IoC;
@@ -13,7 +14,7 @@ namespace Robust.Client
     {
         private IGameLoop? _mainLoop;
 
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
 
         private static bool _hasStarted;
@@ -31,6 +32,8 @@ namespace Robust.Client
             {
                 throw new InvalidOperationException("Cannot start twice!");
             }
+
+            GlibcBug.Check();
 
             _hasStarted = true;
 
@@ -101,7 +104,7 @@ namespace Robust.Client
                 ContinueStartupAndLoop(mode);
             }
 
-            Cleanup();
+            CleanupWindowThread();
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
@@ -127,6 +130,8 @@ namespace Robust.Client
 
             DebugTools.AssertNotNull(_mainLoop);
             _mainLoop!.Run();
+
+            CleanupGameThread();
         }
     }
 }

@@ -5,6 +5,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Client.State;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
@@ -26,7 +27,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
@@ -116,6 +117,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
+            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
@@ -245,6 +247,19 @@ namespace Robust.Client.UserInterface
 
         public void FrameUpdate(FrameEventArgs args)
         {
+            using (_prof.Group("Update"))
+            {
+                foreach (var root in _roots)
+                {
+                    using (_prof.Group("Root"))
+                    {
+                        var totalUpdated = root.DoFrameUpdateRecursive(args);
+
+                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
+                    }
+                }
+            }
+
             // Process queued style & layout updates.
             using (_prof.Group("Style"))
             {
@@ -295,19 +310,6 @@ namespace Robust.Client.UserInterface
                 }
 
                 _prof.WriteValue("Total", ProfData.Int32(total));
-            }
-
-            using (_prof.Group("Update"))
-            {
-                foreach (var root in _roots)
-                {
-                    using (_prof.Group("Root"))
-                    {
-                        var totalUpdated = root.DoFrameUpdateRecursive(args);
-
-                        _prof.WriteValue("Total", ProfData.Int32(totalUpdated));
-                    }
-                }
             }
 
             // count down tooltip delay if we're not showing one yet and

@@ -100,7 +100,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent playerTransform))
+                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent? playerTransform))
                 {
                     shell.WriteError("You don't have an entity.");
                     return;

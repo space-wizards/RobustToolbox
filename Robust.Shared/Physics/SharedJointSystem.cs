@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -48,10 +49,12 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
+        [Dependency] private readonly SharedContainerSystem _container = default!;
+
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
-        private HashSet<JointComponent> _dirtyJoints = new();
-        private HashSet<Joint> _addedJoints = new();
+        private readonly HashSet<JointComponent> _dirtyJoints = new();
+        protected readonly HashSet<Joint> AddedJoints = new();
 
         private ISawmill _sawmill = default!;
 
@@ -69,19 +72,34 @@ namespace Robust.Shared.Physics
 
         private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
         {
-            foreach (var (_, joint) in component.Joints)
+            foreach (var (id, joint) in component.Joints)
             {
-                var bodyA = EntityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
-                var bodyB = EntityManager.GetComponent<PhysicsComponent>(joint.BodyBUid);
+                var other = uid == joint.BodyAUid ? joint.BodyBUid : joint.BodyAUid;
+
+                // Client may not yet know about the other entity.
+                // But whenever that other entity enters PVS, its own joint initialization should hopefully run this again anyways.
+                if (!TryComp(joint.BodyAUid, out PhysicsComponent? bodyA) || !TryComp(joint.BodyBUid, out PhysicsComponent? bodyB) || !TryComp(other, out JointComponent? otherComp))
+                    continue;
+
+                if (!otherComp.Joints.ContainsKey(id))
+                {
+                    // This can happen if the other joint handled its state before this entity was initialized. In this
+                    // case we need to re-add the joint to the other entity.
+                    if (uid == joint.BodyAUid)
+                        InitJoint(joint, bodyA, bodyB, component, otherComp, ignoreExisting: true);
+                    else
+                        InitJoint(joint, bodyA, bodyB, otherComp, component, ignoreExisting: true);
+                    continue;
+                }
 
                 bodyA.WakeBody();
                 bodyB.WakeBody();
 
                 // Raise broadcast last so we can do both sides of directed first.
                 var vera = new JointAddedEvent(joint, bodyA, bodyB);
-                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                RaiseLocalEvent(bodyA.Owner, vera);
                 var smug = new JointAddedEvent(joint, bodyB, bodyA);
-                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                RaiseLocalEvent(bodyB.Owner, smug);
                 EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
             }
         }
@@ -109,12 +127,12 @@ namespace Robust.Shared.Physics
         {
             base.Update(frameTime);
 
-            foreach (var joint in _addedJoints)
+            foreach (var joint in AddedJoints)
             {
                 InitJoint(joint);
             }
 
-            _addedJoints.Clear();
+            AddedJoints.Clear();
 
             foreach (var joint in _dirtyJoints)
             {
@@ -125,46 +143,70 @@ namespace Robust.Shared.Physics
             _dirtyJoints.Clear();
         }
 
-        private void InitJoint(Joint joint)
+        private void InitJoint(Joint joint,
+            PhysicsComponent? bodyA = null,
+            PhysicsComponent? bodyB = null,
+            JointComponent? jointComponentA = null,
+            JointComponent? jointComponentB = null,
+            bool ignoreExisting = false)
         {
             var aUid = joint.BodyAUid;
             var bUid = joint.BodyBUid;
 
-            if (!TryComp<PhysicsComponent>(aUid, out var bodyA) ||
-                !TryComp<PhysicsComponent>(bUid, out var bodyB)) return;
+            if (!Resolve(aUid, ref bodyA, false) || !Resolve(bUid, ref bodyB, false))
+                return;
 
-            var jointComponentA = EnsureComp<JointComponent>(bodyA.Owner);
-            var jointComponentB = EnsureComp<JointComponent>(bodyB.Owner);
+            DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
+
+            jointComponentA ??= EnsureComp<JointComponent>(bodyA.Owner);
+            jointComponentB ??= EnsureComp<JointComponent>(bodyB.Owner);
+            DebugTools.Assert(jointComponentA.Owner == aUid && jointComponentB.Owner == bUid);
+
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 
-            if (jointsA.ContainsKey(joint.ID))
+
+            _sawmill.Debug($"Initializing joint {joint.ID}");
+
+            // Check for existing joints
+            if (!ignoreExisting && jointsA.TryGetValue(joint.ID, out var existing))
             {
+                if (existing.BodyBUid != bUid)
+                {
+                    _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
+                    return;
+                }
+
                 // If they both already have it we should be gucci
                 // This can occur because of client states coming in blah blah
                 // The reason for this is we defer everything until Update
                 // (and the reason we defer is to avoid modifying components during iteration when we do the EnsureComponent)
-                if (jointsB.ContainsKey(joint.ID)) return;
+                if (jointsB.ContainsKey(joint.ID))
+                {
+                    DebugTools.Assert(jointsB[joint.ID].BodyAUid == aUid);
+                    return;
+                }
 
-                _sawmill.Error($"Existing joint {joint.ID} on {bodyA.Owner}");
-                return;
+                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
             }
-
-            if (jointsB.ContainsKey(joint.ID))
+            else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
             {
-                _sawmill.Error($"Existing joint {joint.ID} on {bodyB.Owner}");
-                return;
+                if (existing.BodyAUid != aUid)
+                {
+                    _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
+                    return;
+                }
+
+                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
             }
 
-            _sawmill.Debug($"Added joint {joint.ID}");
-
-            jointsA.Add(joint.ID, joint);
-            jointsB.Add(joint.ID, joint);
+            jointsA.TryAdd(joint.ID, joint);
+            jointsB.TryAdd(joint.ID, joint);
 
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)
             {
-                FilterContactsForJoint(joint);
+                FilterContactsForJoint(joint, bodyA, bodyB);
             }
 
             bodyA.CanCollide = true;
@@ -205,7 +247,7 @@ namespace Robust.Shared.Physics
             anchorA ??= Vector2.Zero;
             anchorB ??= Vector2.Zero;
 
-            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
+            var joint = new DistanceJoint(Comp<PhysicsComponent>(bodyA), Comp<PhysicsComponent>(bodyB), anchorA.Value, anchorB.Value);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -345,10 +387,13 @@ namespace Robust.Shared.Physics
 
         #region Joints
 
-        protected void AddJoint(Joint joint)
+        protected void AddJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+                return;
+
+            if (!joint.CollideConnected)
+                FilterContactsForJoint(joint, bodyA, bodyB);
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
             var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
@@ -368,14 +413,25 @@ namespace Robust.Shared.Physics
             }
 
             // Need to defer this for prediction reasons, yay!
-            _addedJoints.Add(joint);
+            AddedJoints.Add(joint);
         }
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!TryComp<JointComponent>(body.Owner, out var joint)) return;
+            if (TryComp<JointComponent>(body.Owner, out var joint))
+                ClearJoints(joint);
+        }
 
-            _dirtyJoints.Add(joint);
+        public void ClearJoints(JointComponent joint)
+        {
+            // TODO PERFORMANCE
+            // This will re-fetch the joint & body component for this entity ( & ever connected
+            // entity), for each and every joint. at the very least, we could pass in the joint & physics comp. As long
+            // as most entities only have a single joint, fetching connected components probably isn't worth it.
+            foreach (var a in joint.Joints.Values.ToArray())
+            {
+                RemoveJoint(a);
+            }
         }
 
         public void RemoveJoint(Joint joint)
@@ -409,14 +465,16 @@ namespace Robust.Shared.Physics
 
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !_container.IsEntityInContainer(bodyAUid))
             {
                 bodyA.CanCollide = true;
                 bodyA.Awake = true;
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
+                !_container.IsEntityInContainer(bodyBUid))
             {
                 bodyB.CanCollide = true;
                 bodyB.Awake = true;
@@ -441,11 +499,22 @@ namespace Robust.Shared.Physics
                 FilterContactsForJoint(joint);
             }
 
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            if (bodyA == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyAUid)} without a physics component?");
+            }
+            else if (bodyB == null)
+            {
+                _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyBUid)} without a physics component?");
+            }
+            else
+            {
+                var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            }
 
             // We can't just check up front due to how prediction works.
             _dirtyJoints.Add(jointComponentA);
@@ -454,10 +523,10 @@ namespace Robust.Shared.Physics
 
         #endregion
 
-        internal void FilterContactsForJoint(Joint joint)
+        internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+                return;
 
             var node = bodyB.Contacts.First;
 

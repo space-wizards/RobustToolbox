@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager;
+        [Dependency] protected readonly EntityManager EntityManager;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
 
         protected EntitySystem(IEntityManager entityManager)
         {
-            EntityManager = entityManager;
+            EntityManager = (EntityManager)entityManager;
             Subs = new Subscriptions(this);
         }
 
@@ -98,30 +98,24 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
-            where T : EntityEventArgs
-        {
-            return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
-        }
-
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
-        protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = true)
+        protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false)
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = true)
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
         }
 
-        protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = true)
+        protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false)
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
         }
@@ -143,6 +137,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">entity system to get</typeparam>
         /// <returns></returns>
+        [Obsolete]
         public static T Get<T>() where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
@@ -154,6 +149,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
+        [Obsolete]
         public static bool TryGet<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem(out entitySystem);

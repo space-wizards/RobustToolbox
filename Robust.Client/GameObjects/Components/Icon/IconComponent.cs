@@ -47,7 +47,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            return TextureForConfig((IconComponent)compData, resourceCache);
+            return TextureForConfig((IconComponent)compData.Component, resourceCache);
         }
     }
 }

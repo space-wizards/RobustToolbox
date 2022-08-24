@@ -84,7 +84,9 @@ namespace Robust.Server.Maps
         public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGridBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             DebugTools.Assert(_mapManager.MapExists(mapId));
-            options.LoadMap = false;
+
+            var oldLoadMapOpt = options.LoadMap; // lets not mutate the default options
+            options.LoadMap = false; 
 
             var resPath = Rooted(path);
 
@@ -113,6 +115,7 @@ namespace Robust.Server.Maps
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
+                options.LoadMap = oldLoadMapOpt;
             }
 
             return (entities, grid?.GridEntityId);

@@ -533,8 +533,8 @@ namespace Robust.Client.GameStates
                 }
 
                 var meta = query.GetComponent(entity);
-                meta.EntityLastModifiedTick = _timing.LastRealTick;
                 DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
+                meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
             system.Reset();

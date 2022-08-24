@@ -51,7 +51,7 @@ namespace Robust.Server.Maps
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
-        public void SaveBlueprint(EntityUid gridId, string yamlPath)
+        public void SaveGridBlueprint(EntityUid gridId, string yamlPath)
         {
             var grid = _mapManager.GetGrid(gridId);
 
@@ -73,7 +73,7 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path)
         {
-            return LoadBlueprint(mapId, path, DefaultLoadOptions);
+            return LoadGridBlueprint(mapId, path, DefaultLoadOptions);
         }
 
         private ResourcePath Rooted(string path)
@@ -81,8 +81,12 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGridBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            if (!mapUid.IsValid())
+                return (Array.Empty<EntityUid>(), null);
+
             var resPath = Rooted(path);
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
@@ -104,6 +108,7 @@ namespace Robust.Server.Maps
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
+                context.TargetMapUid = mapUid;
                 context.Deserialize();
                 grid = context.Grids.FirstOrDefault();
                 entities = context.Entities;
@@ -221,6 +226,9 @@ namespace Robust.Server.Maps
 
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
+                if (_mapManager.MapExists(mapId))
+                    _mapManager.DeleteMap(mapId);
+
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
@@ -270,7 +278,7 @@ namespace Robust.Server.Maps
 
             private readonly MappingDataNode RootNode;
             public readonly MapId TargetMap;
-            private EntityUid? TargetMapUid;
+            public EntityUid? TargetMapUid;
 
             private Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
 
@@ -770,8 +778,18 @@ namespace Robust.Server.Maps
 
                     if (mapQuery.HasComponent(entity))
                     {
-                        DebugTools.Assert(TargetMapUid == null);
-                        TargetMapUid = entity;
+                        if (TargetMapUid == null)
+                        {
+                            TargetMapUid = entity;
+                        }
+                        else
+                        {
+                            Logger.ErrorS("map", "Found an additional map entity while loading a map/grid. Either you are using loadgrid to load a map file, or your map file contains more than one map entity.");
+
+                            // For the sake of exception handling, you could store these entities, and then inside of AttachMapEntities() add a:
+                            // _mapManager.SetMapEntity(_mapManager.CreateMap(), extraErrorMapEntityId);
+                            // That adds some exception tolerance, but given that a bad map file will probably contain bad entities anyways, its probably not worth it.
+                        }
                     }
                 }
             }

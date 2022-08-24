@@ -161,7 +161,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     object? copy;
                     if (sourceValue != null &&
                         targetValue != null &&
-                        TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
+                        !TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
                     {
                         copy = manager.Copy(sourceValue, context);
                     }

@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Prometheus;
-using Robust.Client.GameStates;
 using Robust.Client.Player;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -19,8 +18,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
@@ -47,6 +45,30 @@ namespace Robust.Client.GameObjects
             base.StartEntity(entity);
         }
 
+        /// <inheritdoc />
+        public override void Dirty(EntityUid uid)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(uid);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty(Component component)
+        {
+            //  Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(component);
+        }
+
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        {
+            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
+            else
+                return base.ToPrettyString(uid);
+        }
+
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
@@ -67,7 +89,7 @@ namespace Robust.Client.GameObjects
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameStateManager.CurServerTick)
+                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
                     var (_, msg) = _queue.Take();
                     // Logger.DebugS("net.ent", "Dispatching: {0}: {1}", seq, msg);
@@ -103,7 +125,7 @@ namespace Robust.Client.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            if (message.SourceTick <= _gameStateManager.CurServerTick)
+            if (message.SourceTick <= _gameTiming.LastRealTick)
             {
                 DispatchMsgEntity(message);
                 return;

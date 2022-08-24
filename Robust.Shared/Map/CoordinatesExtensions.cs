@@ -35,9 +35,14 @@ namespace Robust.Shared.Map
 
             var gridId = coords.GetGridUid(entityManager);
 
-            if (gridId != null || !mapManager.GridExists(gridId))
+            if (!mapManager.GridExists(gridId))
             {
                 var mapCoords = coords.ToMap(entityManager);
+
+                if (mapManager.TryFindGridAt(mapCoords, out var mapGrid))
+                {
+                    return new EntityCoordinates(mapGrid.GridEntityId, mapGrid.WorldToLocal(mapCoords.Position));
+                }
 
                 // create a box around the cursor
                 var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(mapCoords.Position);

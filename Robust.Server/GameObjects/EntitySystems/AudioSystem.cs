@@ -119,8 +119,11 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
         {
+            if (sound == null)
+                return null;
+
             var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
             return Play(sound, filter, source, audioParams);
         }

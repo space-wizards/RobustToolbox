@@ -137,6 +137,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">entity system to get</typeparam>
         /// <returns></returns>
+        [Obsolete]
         public static T Get<T>() where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
@@ -148,6 +149,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
+        [Obsolete]
         public static bool TryGet<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem(out entitySystem);

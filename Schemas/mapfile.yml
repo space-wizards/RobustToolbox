@@ -5,20 +5,22 @@ meta:
   author: str()
   postmapinit: bool()
 tilemap: map(str(), key=int())
-grids:
-- settings:
-    chunksize: int()
-    tilesize: int()
-  chunks: list(include('chunk'), min=1)
+grids: list(include('grid'), min=1)
 entities: list(include('entity'), min=1)
 ---
 chunk:
-  - ind: str() #todo regex
-    tiles: str()
+  ind: str() #todo regex
+  tiles: str()
 entity:
-  - uid: int()
-    type: str(required=False)
-    components: list(comp())
+  uid: int()
+  type: str(required=False)
+  components: list(comp())
+grid:
+  settings:
+    chunksize: int()
+    tilesize: int()
+    snapsize: int(required=False)
+  chunks: list(include('chunk'), min=1)
 
 # Example
 # meta:

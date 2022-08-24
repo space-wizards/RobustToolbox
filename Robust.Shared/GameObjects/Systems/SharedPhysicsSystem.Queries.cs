@@ -62,7 +62,7 @@ namespace Robust.Shared.GameObjects
             return state.found;
         }
 
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, bool approximate = true)
         {
             var broadphase = body.Broadphase;
             if (broadphase == null || !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager))
@@ -178,33 +178,45 @@ namespace Robust.Shared.GameObjects
             return bodies;
         }
 
-
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body)
+        public HashSet<PhysicsComponent> GetContactingEntities(PhysicsComponent body, bool approximate = false)
         {
+            // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.
+            var result = new HashSet<PhysicsComponent>();
             var node = body.Contacts.First;
 
             while (node != null)
             {
                 var contact = node.Value;
                 node = node.Next;
+
+                if (!approximate && !contact.IsTouching)
+                    continue;
+
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                var other = body == bodyA ? bodyB : bodyA;
-                yield return other;
+                result.Add(body == bodyA ? bodyB : bodyA);
             }
+
+            return result;
         }
 
-        // TODO: This will get every body but we don't need to do that
         /// <summary>
         ///     Checks whether a body is colliding
         /// </summary>
-        /// <param name="body"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public bool IsColliding(PhysicsComponent body, Vector2 offset, bool approximate)
+        public bool IsInContact(PhysicsComponent body, bool approximate = false)
         {
-            return GetCollidingEntities(body, offset, approximate).Any();
+            var node = body.Contacts.First;
+
+            while (node != null)
+            {
+                if (approximate || node.Value.IsTouching)
+                    return true;
+
+                node = node.Next;
+            }
+
+            return false;
         }
 
         #region RayCast

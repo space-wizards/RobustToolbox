@@ -633,7 +633,7 @@ namespace Robust.Server.Maps
                 foreach (var grid in Grids)
                 {
                     var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
-                    if (transform.ParentUid.IsValid())
+                    if (transform.MapUid?.IsValid() == true)
                         continue;
 
                     var mapOffset = transform.LocalPosition;
@@ -776,7 +776,7 @@ namespace Robust.Server.Maps
 
                     _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
 
-                    if (mapQuery.HasComponent(entity))
+                    if (_loadOptions?.LoadMap != false && mapQuery.HasComponent(entity))
                     {
                         if (TargetMapUid == null)
                         {
@@ -815,9 +815,25 @@ namespace Robust.Server.Maps
 
             private void FinishEntitiesInitialization()
             {
+                // Ideally MapLoader would just be topdown and I could just set the root to null instead
+                // then we'd have a nice clean init, but instead it's done per stage and we need to make sure it gets
+                // handled per stage.
                 var query = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
-                foreach (var entity in Entities)
+                var mapQuery = _serverEntityManager.GetEntityQuery<MapComponent>();
+
+                for (var i = 0; i < Entities.Count; i++)
                 {
+                    var entity = Entities[i];
+
+                    // If we're loading a map but not 'loading the map' then kill it
+                    if (TargetMapUid == null && mapQuery.HasComponent(entity))
+                    {
+                        _serverEntityManager.DeleteEntity(entity);
+                        Entities.RemoveSwap(i);
+                        i--;
+                        continue;
+                    }
+
                     _serverEntityManager.FinishEntityInitialization(entity, query.GetComponent(entity));
                 }
             }

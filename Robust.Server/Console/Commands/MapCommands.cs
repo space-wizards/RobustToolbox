@@ -104,7 +104,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            IoCManager.Resolve<IMapLoader>().SaveGridBlueprint(gridId, args[1]);
+            IoCManager.Resolve<IMapLoader>().SaveGrid(gridId, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -200,7 +200,7 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapLoader = IoCManager.Resolve<IMapLoader>();
-            mapLoader.LoadGridBlueprint(mapId, args[1], loadOptions);
+            mapLoader.LoadGrid(mapId, args[1], loadOptions);
         }
 
         public CompletionResult GetCompletion(IConsoleShell shell, string[] args)

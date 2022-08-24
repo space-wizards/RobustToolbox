@@ -51,7 +51,7 @@ namespace Robust.Server.Maps
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
-        public void SaveGridBlueprint(EntityUid gridId, string yamlPath)
+        public void SaveGrid(EntityUid gridId, string yamlPath)
         {
             var grid = _mapManager.GetGrid(gridId);
 
@@ -71,9 +71,9 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path)
         {
-            return LoadGridBlueprint(mapId, path, DefaultLoadOptions);
+            return LoadGrid(mapId, path, DefaultLoadOptions);
         }
 
         private ResourcePath Rooted(string path)
@@ -81,7 +81,7 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGridBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path, MapLoadOptions options)
         {
             DebugTools.Assert(_mapManager.MapExists(mapId));
 

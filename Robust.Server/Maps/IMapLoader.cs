@@ -8,9 +8,9 @@ namespace Robust.Server.Maps
 {
     public interface IMapLoader
     {
-        (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path);
-        (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGridBlueprint(MapId mapId, string path, MapLoadOptions options);
-        void SaveGridBlueprint(EntityUid gridId, string yamlPath);
+        (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path);
+        (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path, MapLoadOptions options);
+        void SaveGrid(EntityUid gridId, string yamlPath);
 
         (IReadOnlyList<EntityUid> entities, IReadOnlyList<EntityUid> gridIds) LoadMap(MapId mapId, string path);
         (IReadOnlyList<EntityUid> entities, IReadOnlyList<EntityUid> gridIds) LoadMap(MapId mapId, string path, MapLoadOptions options);

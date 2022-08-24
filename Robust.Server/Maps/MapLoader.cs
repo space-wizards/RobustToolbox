@@ -83,9 +83,8 @@ namespace Robust.Server.Maps
 
         public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGridBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            if (!mapUid.IsValid())
-                return (Array.Empty<EntityUid>(), null);
+            DebugTools.Assert(_mapManager.MapExists(mapId));
+            options.LoadMap = false;
 
             var resPath = Rooted(path);
 
@@ -108,7 +107,7 @@ namespace Robust.Server.Maps
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
-                context.TargetMapUid = mapUid;
+                context.LogErrorOnMap = true;
                 context.Deserialize();
                 grid = context.Grids.FirstOrDefault();
                 entities = context.Entities;
@@ -274,11 +273,16 @@ namespace Robust.Server.Maps
             private readonly List<(EntityUid, MappingDataNode)> _entitiesToDeserialize
                 = new();
 
+            /// <summary>
+            /// If true, this will log an error when encountering a map entity. E.g., when using the loadgrid command to load a map file.
+            /// </summary>
+            public bool LogErrorOnMap = false;
+
             private bool IsBlueprintMode => GridIDMap.Count == 1;
 
             private readonly MappingDataNode RootNode;
             public readonly MapId TargetMap;
-            public EntityUid? TargetMapUid;
+            private EntityUid? TargetMapUid;
 
             private Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
 
@@ -776,20 +780,18 @@ namespace Robust.Server.Maps
 
                     _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
 
-                    if (_loadOptions?.LoadMap != false && mapQuery.HasComponent(entity))
-                    {
-                        if (TargetMapUid == null)
-                        {
-                            TargetMapUid = entity;
-                        }
-                        else
-                        {
-                            Logger.ErrorS("map", "Found an additional map entity while loading a map/grid. Either you are using loadgrid to load a map file, or your map file contains more than one map entity.");
+                    if (!mapQuery.HasComponent(entity))
+                        continue;
 
-                            // For the sake of exception handling, you could store these entities, and then inside of AttachMapEntities() add a:
-                            // _mapManager.SetMapEntity(_mapManager.CreateMap(), extraErrorMapEntityId);
-                            // That adds some exception tolerance, but given that a bad map file will probably contain bad entities anyways, its probably not worth it.
-                        }
+                    if (LogErrorOnMap)
+                        Logger.ErrorS("map", "Found an additional map entity while loading a map/grid. Either you are using loadgrid to load a map file, or your map file contains more than one map entity.");
+
+                    if ((_loadOptions?.LoadMap ?? true) && TargetMapUid == null)
+                    {
+                        TargetMapUid = entity;
+
+                        // error on any additional map entities.
+                        LogErrorOnMap = true;
                     }
                 }
             }

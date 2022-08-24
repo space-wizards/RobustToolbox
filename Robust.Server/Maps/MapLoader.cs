@@ -225,9 +225,6 @@ namespace Robust.Server.Maps
 
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
-                if (_mapManager.MapExists(mapId))
-                    _mapManager.DeleteMap(mapId);
-
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();

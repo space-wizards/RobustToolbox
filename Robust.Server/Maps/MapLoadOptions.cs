@@ -44,5 +44,11 @@ namespace Robust.Server.Maps
         private Angle _rotation = Angle.Zero;
 
         public Matrix3 TransformMatrix { get; set; } = Matrix3.Identity;
+
+        /// <summary>
+        /// If there is a map entity serialized should we also load it.
+        /// This should be set to false if you want to load a map file onto an existing map.
+        /// </summary>
+        public bool LoadMap { get; set; } = true;
     }
 }

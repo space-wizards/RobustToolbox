@@ -222,7 +222,10 @@ namespace Robust.Shared.Containers
         {
             [DataField("entities")] public List<EntityUid> Entities = new ();
 
-            [DataField("type")] public string? Type;
+            [DataField("type")] public string? Type = null;
+
+            // explicit parameterless constructor is required.
+            public ContainerPrototypeData() { }
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {

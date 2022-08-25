@@ -93,17 +93,22 @@ namespace Robust.Server.Maps
             {
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
 
-                var data = new MapData(reader);
+                var (map, gridCount) = LoadBasicMapData(reader);
 
-                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
-
-                if (data.GridCount != 1)
-                {
+                if (gridCount != 1)
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
-                }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
-                    _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
+                var context = new MapContext(
+                    _mapManager,
+                    _tileDefinitionManager,
+                    _serverEntityManager,
+                    _prototypeManager,
+                    _serializationManager,
+                    _componentFactory,
+                    map,
+                    mapId,
+                    options);
+
                 context.Deserialize();
                 grid = context.Grids.FirstOrDefault();
                 entities = context.Entities;
@@ -217,12 +222,19 @@ namespace Robust.Server.Maps
             {
                 Logger.InfoS("map", $"Loading Map: {resPath}");
 
-                var data = new MapData(reader);
+                var (map, _) = LoadBasicMapData(reader);
 
-                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
+                var context = new MapContext(
+                    _mapManager,
+                    _tileDefinitionManager,
+                    _serverEntityManager,
+                    _prototypeManager,
+                    _serializationManager,
+                    _componentFactory,
+                    map,
+                    mapId,
+                    options);
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
-                    _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
                 grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
@@ -231,6 +243,24 @@ namespace Robust.Server.Maps
             }
 
             return (entities, grids);
+        }
+
+        private static (MappingDataNode, int gridCount) LoadBasicMapData(TextReader reader)
+        {
+            var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
+
+            if (documents.Length < 1)
+                throw new InvalidDataException("Stream has no YAML documents.");
+
+            // Kinda wanted to just make this print a warning and pick [0] but screw that.
+            // What is this, a hug box?
+            if (documents.Length > 1)
+                throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
+
+            var map = (MappingDataNode) documents[0].Root;
+            var gridCount = ((SequenceDataNode) map["grids"]).Count;
+
+            return (map, gridCount);
         }
 
         /// <summary>
@@ -1191,39 +1221,6 @@ namespace Robust.Server.Maps
                 ISerializationContext? context = null)
             {
                 return new((int) source);
-            }
-        }
-
-        /// <summary>
-        ///     Does basic pre-deserialization checks on map file load.
-        ///     For example, let's not try to use maps with multiple grids as blueprints, shall we?
-        /// </summary>
-        private sealed class MapData
-        {
-            public YamlStream Stream { get; }
-
-            public YamlNode RootNode => Stream.Documents[0].RootNode;
-            public int GridCount { get; }
-
-            public MapData(TextReader reader)
-            {
-                var stream = new YamlStream();
-                stream.Load(reader);
-
-                if (stream.Documents.Count < 1)
-                {
-                    throw new InvalidDataException("Stream has no YAML documents.");
-                }
-
-                // Kinda wanted to just make this print a warning and pick [0] but screw that.
-                // What is this, a hug box?
-                if (stream.Documents.Count > 1)
-                {
-                    throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
-                }
-
-                Stream = stream;
-                GridCount = ((YamlSequenceNode) RootNode["grids"]).Children.Count;
             }
         }
     }

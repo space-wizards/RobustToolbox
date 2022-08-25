@@ -51,7 +51,7 @@ namespace Robust.Server.Maps
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
-        public void SaveBlueprint(EntityUid gridId, string yamlPath)
+        public void SaveGrid(EntityUid gridId, string yamlPath)
         {
             var grid = _mapManager.GetGrid(gridId);
 
@@ -71,9 +71,9 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path)
         {
-            return LoadBlueprint(mapId, path, DefaultLoadOptions);
+            return LoadGrid(mapId, path, DefaultLoadOptions);
         }
 
         private ResourcePath Rooted(string path)
@@ -81,8 +81,13 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path, MapLoadOptions options)
         {
+            DebugTools.Assert(_mapManager.MapExists(mapId));
+
+            var oldLoadMapOpt = options.LoadMap; // lets not mutate the default options
+            options.LoadMap = false; 
+
             var resPath = Rooted(path);
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
@@ -104,11 +109,13 @@ namespace Robust.Server.Maps
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
+                context.LogErrorOnMap = true;
                 context.Deserialize();
                 grid = context.Grids.FirstOrDefault();
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
+                options.LoadMap = oldLoadMapOpt;
             }
 
             return (entities, grid?.GridEntityId);
@@ -265,6 +272,11 @@ namespace Robust.Server.Maps
 
             private readonly List<(EntityUid, MappingDataNode)> _entitiesToDeserialize
                 = new();
+
+            /// <summary>
+            /// If true, this will log an error when encountering a map entity. E.g., when using the loadgrid command to load a map file.
+            /// </summary>
+            public bool LogErrorOnMap = false;
 
             private bool IsBlueprintMode => GridIDMap.Count == 1;
 
@@ -768,10 +780,18 @@ namespace Robust.Server.Maps
 
                     _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
 
-                    if (_loadOptions?.LoadMap != false && mapQuery.HasComponent(entity))
+                    if (!mapQuery.HasComponent(entity))
+                        continue;
+
+                    if (LogErrorOnMap)
+                        Logger.ErrorS("map", "Found an additional map entity while loading a map/grid. Either you are using loadgrid to load a map file, or your map file contains more than one map entity.");
+
+                    if ((_loadOptions?.LoadMap ?? true) && TargetMapUid == null)
                     {
-                        DebugTools.Assert(TargetMapUid == null);
                         TargetMapUid = entity;
+
+                        // error on any additional map entities.
+                        LogErrorOnMap = true;
                     }
                 }
             }

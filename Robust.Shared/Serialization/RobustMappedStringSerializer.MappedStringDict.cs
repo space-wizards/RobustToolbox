@@ -394,6 +394,7 @@ namespace Robust.Shared.Serialization
                     }
 #endif
                     Primitives.WritePrimitive(stream, (uint) mapping + FirstMappedIndexStart);
+                    StringsHitMetric.Inc();
                     //Logger.DebugS("szr", $"Encoded mapped string: {value}");
                     return;
                 }
@@ -401,6 +402,8 @@ namespace Robust.Shared.Serialization
                 // indicate not mapped
                 Primitives.WritePrimitive(stream, UnmappedString);
                 Primitives.WritePrimitive(stream, value);
+                StringsMissMetric.Inc();
+                StringsMissCharsMetric.Inc(value.Length);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

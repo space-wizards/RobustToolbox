@@ -13,8 +13,20 @@ namespace Robust.Shared.Serialization.Markdown;
 // YDN has broken nullable annotations. Yeppers.
 #nullable disable
 
+/// <summary>
+/// Utilities for parsing <see cref="DataNode"/> and related types.
+/// </summary>
 public static class DataNodeParser
 {
+    // Parsing logic here is pretty straightforward.
+    // We take the "events" from YDN's parser and make our own nodes with them.
+    // This improves performance (no round tripping through YDN's RepresentationModel)
+    // And also fixes End marks for maps/sequences.
+    // If we encounter an anchor we don't have yet, we track the node containing it and fix it up later.
+
+    /// <summary>
+    /// Parse a <see cref="TextReader"/> of YAML straight into a <see cref="DataNode"/>.
+    /// </summary>
     public static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader)
     {
         return ParseYamlStream(new Parser(reader));

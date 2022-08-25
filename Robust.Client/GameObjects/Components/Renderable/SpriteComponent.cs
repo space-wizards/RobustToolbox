@@ -247,7 +247,7 @@ namespace Robust.Client.GameObjects
         ///     Whether or not to pass the screen texture to the <see cref="PostShader"/>.
         /// </summary>
         /// <remarks>
-        ///     Should be false unless you really need it. 
+        ///     Should be false unless you really need it.
         /// </remarks>
         [DataField("getScreenTexture")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1340,6 +1340,12 @@ namespace Robust.Client.GameObjects
 
         [DataField("noRot")] private bool _screenLock = false;
 
+        /// <summary>
+        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite), DataField("snapCardinals")]
+        public bool SnapCardinals = false;
+
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;
 
@@ -1373,33 +1379,27 @@ namespace Robust.Client.GameObjects
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             // Reduce the angles to fix math shenanigans
-            worldRotation = worldRotation.Reduced();
+            worldRotation = worldRotation.Reduced().FlipPositive();
 
-            if (worldRotation.Theta < 0)
-                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
+            var cardinal = Angle.Zero;
+
+            // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
+            if (!NoRotation && SnapCardinals)
+            {
+                cardinal = angle.GetCardinalDir().ToAngle();
+            }
 
             // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation);
+            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
             Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
 
-            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             foreach (var layer in Layers)
             {
                 layer.Render(drawingHandle, ref transform, angle, overrideDirection);
             }
-        }
-
-        public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
-        {
-            var theta = worldAngle.Theta;
-            var segSize = (Math.PI * 2) / (numDirections * 2);
-            var segments = (int)(theta / segSize);
-            var odd = segments % 2;
-            var result = theta - (segments * segSize) - (odd * segSize);
-
-            return result;
         }
 
         public int GetLayerDirectionCount(ISpriteLayer layer)

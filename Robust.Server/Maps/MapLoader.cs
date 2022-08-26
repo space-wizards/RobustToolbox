@@ -855,10 +855,10 @@ namespace Robust.Server.Maps
                     for (var i = 0; i < Entities.Count; i++)
                     {
                         _serverEntityManager.DeleteEntity(Entities[i]);
-                        Entities.RemoveSwap(i);
-                        _entitiesToDeserialize.RemoveSwap(i);
-                        i--;
                     }
+
+                    Entities.Clear();
+                    _entitiesToDeserialize.Clear();
 
                     throw new InvalidOperationException(
                         $"Failed to load map due to deleted entities, see log for info");

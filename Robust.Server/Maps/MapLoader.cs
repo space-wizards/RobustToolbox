@@ -850,7 +850,7 @@ namespace Robust.Server.Maps
 
                 if (failure)
                 {
-                    Logger.Warning($"Cleaning up failed map load");
+                    Logger.Fatal($"Cleaning up failed map load for {TargetMap}");
 
                     for (var i = 0; i < Entities.Count; i++)
                     {

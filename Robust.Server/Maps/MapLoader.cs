@@ -86,7 +86,7 @@ namespace Robust.Server.Maps
             DebugTools.Assert(_mapManager.MapExists(mapId));
 
             var oldLoadMapOpt = options.LoadMap; // lets not mutate the default options
-            options.LoadMap = false; 
+            options.LoadMap = false;
 
             var resPath = Rooted(path);
 
@@ -822,6 +822,7 @@ namespace Robust.Server.Maps
                 // handled per stage.
                 var query = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 var mapQuery = _serverEntityManager.GetEntityQuery<MapComponent>();
+                var failure = false;
 
                 for (var i = 0; i < Entities.Count; i++)
                 {
@@ -832,11 +833,35 @@ namespace Robust.Server.Maps
                     {
                         _serverEntityManager.DeleteEntity(entity);
                         Entities.RemoveSwap(i);
+                        _entitiesToDeserialize.RemoveAt(i);
                         i--;
                         continue;
                     }
 
-                    _serverEntityManager.FinishEntityInitialization(entity, query.GetComponent(entity));
+                    if (!query.TryGetComponent(entity, out var meta))
+                    {
+                        Logger.Error($"Found deleted entity {entity} (original uid {_entitiesToDeserialize[i].Item2[0].Value}) on maploader!");
+                        failure = true;
+                        continue;
+                    }
+
+                    _serverEntityManager.FinishEntityInitialization(entity, meta);
+                }
+
+                if (failure)
+                {
+                    Logger.Warning($"Cleaning up failed map load");
+
+                    for (var i = 0; i < Entities.Count; i++)
+                    {
+                        _serverEntityManager.DeleteEntity(Entities[i]);
+                        Entities.RemoveSwap(i);
+                        _entitiesToDeserialize.RemoveSwap(i);
+                        i--;
+                    }
+
+                    throw new InvalidOperationException(
+                        $"Failed to load map due to deleted entities, see log for info");
                 }
             }
 

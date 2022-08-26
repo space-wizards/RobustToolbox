@@ -117,7 +117,7 @@ namespace Robust.Client.GameStates
             if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
             {
                 if (Logging)
-                    Logger.InfoS("net", $"Received GameState that is older than the last full state: to={state.ToSequence}, Last full to={LastFullState.ToSequence}");
+                    Logger.InfoS("net", $"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
 
                 return false;
             }

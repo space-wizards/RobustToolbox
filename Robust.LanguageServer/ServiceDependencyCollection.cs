@@ -25,7 +25,7 @@ public sealed class ServiceDependencyCollection : IDependencyCollection
     {
         _deps.Register<TInterface, TImplementation>(overwrite);
 
-        _collection.AddSingleton<TInterface>(_ => Resolve<TImplementation>());
+        _collection.AddSingleton<TInterface>(_ => Resolve<TInterface>());
     }
 
     public void Register<TInterface, TImplementation>(
@@ -36,7 +36,7 @@ public sealed class ServiceDependencyCollection : IDependencyCollection
     {
         _deps.Register<TInterface, TImplementation>(factory, overwrite);
 
-        _collection.AddSingleton<TInterface>(_ => Resolve<TImplementation>());
+        _collection.AddSingleton<TInterface>(_ => Resolve<TInterface>());
     }
 
     public void Register(

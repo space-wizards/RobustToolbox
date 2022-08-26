@@ -850,8 +850,6 @@ namespace Robust.Server.Maps
 
                 if (failure)
                 {
-                    Logger.Fatal($"Cleaning up failed map load for {TargetMap}");
-
                     for (var i = 0; i < Entities.Count; i++)
                     {
                         _serverEntityManager.DeleteEntity(Entities[i]);
@@ -861,7 +859,7 @@ namespace Robust.Server.Maps
                     _entitiesToDeserialize.Clear();
 
                     throw new InvalidOperationException(
-                        $"Failed to load map due to deleted entities, see log for info");
+                        $"Failed to load map {TargetMap} due to deleted entities, see log for info");
                 }
             }
 

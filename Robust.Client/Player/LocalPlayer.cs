@@ -94,7 +94,8 @@ namespace Robust.Client.Player
                 entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
             }
 
-            ControlledEntity = default;
+            ControlledEntity = null;
+            InternalSession.AttachedEntity = null;
 
             if (previous != null)
             {

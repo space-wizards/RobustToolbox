@@ -126,8 +126,6 @@ namespace Robust.Client.GameStates
             return true;
         }
 
-        public bool A = false;
-
         /// <summary>
         ///     Attempts to get the current and next states to apply.
         /// </summary>

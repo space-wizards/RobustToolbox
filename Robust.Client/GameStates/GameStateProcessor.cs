@@ -114,12 +114,19 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null || state.ToSequence <= LastFullState.ToSequence)
+            if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
+            {
+                if (Logging)
+                    Logger.InfoS("net", $"Received GameState that is older than the last full state: to={state.ToSequence}, Last full to={LastFullState.ToSequence}");
+
                 return false;
+            }
 
             _stateBuffer.Add(state);
             return true;
         }
+
+        public bool A = false;
 
         /// <summary>
         ///     Attempts to get the current and next states to apply.

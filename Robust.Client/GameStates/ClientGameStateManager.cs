@@ -215,17 +215,17 @@ namespace Robust.Client.GameStates
             var targetBufSize = TargetBufferSize;
 
             var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
-            var targetProccessedTick = (bufferOverflow > 1)
+            var targetProcessedTick = (bufferOverflow > 1)
                 ? _timing.LastProcessedTick + (uint)bufferOverflow
                 : _timing.LastProcessedTick + 1;
 
             _prof.WriteValue($"State buffer size", curBufSize);
-            _prof.WriteValue($"State apply count", targetProccessedTick.Value - _timing.LastProcessedTick.Value);
+            _prof.WriteValue($"State apply count", targetProcessedTick.Value - _timing.LastProcessedTick.Value);
 
             bool processedAny = false;
 
             _timing.LastProcessedTick = _timing.LastRealTick;
-            while (_timing.LastProcessedTick < targetProccessedTick)
+            while (_timing.LastProcessedTick < targetProcessedTick)
             {
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -241,15 +241,13 @@ namespace Robust.Client.GameStates
                 // meta-data error. So while this can still be optimized, its probably not worth the headache.
 
                 if (!_processor.TryGetServerState(out var curState, out var nextState))
-                {
-                    // Might just me missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
                     break;
-                }
 
                 processedAny = true;
 
                 if (curState == null)
                 {
+                    // Might just be missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
                     _timing.LastProcessedTick += 1;
                     continue;
                 }
@@ -277,7 +275,7 @@ namespace Robust.Client.GameStates
                 IEnumerable<EntityUid> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
-                    if (_timing.LastProcessedTick < targetProccessedTick && nextState != null)
+                    if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)
                     {
                         // We are about to apply another state after this one anyways. So there is no need to pass in
                         // the next state for frame interpolation. Really, if we are applying 3 or more states, we

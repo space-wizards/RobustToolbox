@@ -188,7 +188,8 @@ public abstract partial class SharedTransformSystem
                 }
                 else
                 {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                    // We allow entities to be spawned directly into null-space.
+                    value = MapId.Nullspace;
                 }
             }
 
@@ -733,7 +734,7 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(!xform.Anchored);
     }
 
-    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
     {
         var oldParent = xform._parent;
 
@@ -762,7 +763,7 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
-        var oldConcrete = xformQuery.GetComponent(oldParent);
+        oldConcrete ??= xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
         xform._parent = EntityUid.Invalid;

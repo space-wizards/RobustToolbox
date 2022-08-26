@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
@@ -38,6 +39,8 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
         {
+            // Why TF is this even a list??????
+            DebugTools.Assert(!_containerList.Contains(toinsert));
             _containerList.Add(toinsert);
             base.InternalInsert(toinsert, oldParent, entMan);
         }

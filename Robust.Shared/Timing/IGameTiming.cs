@@ -102,6 +102,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         TimeSpan TickRemainder { get; set; }
 
+        TimeSpan CalcAdjustedTickPeriod();
+
         /// <summary>
         ///     Fraction of how far into the tick we are. <c>0</c> is 0% and <see cref="ushort.MaxValue"/> is 100%.
         /// </summary>
@@ -147,11 +149,6 @@ namespace Robust.Shared.Timing
         /// If true, the game is currently in the process of applying a game server-state.
         /// </summary>
         bool ApplyingState { get; }
-
-        /// <summary>
-        /// The last real non-predicted tick that was processed.
-        /// </summary>
-        GameTick LastRealTick { get; set; }
 
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 

@@ -22,6 +22,8 @@ namespace Robust.Shared.Physics.Broadphase
             return proxy.AABB;
         }
 
+        public int Count => _tree.NodeCount;
+
         public Box2 GetFatAabb(DynamicTree.Proxy proxy)
         {
             return _tree.GetFatAabb(proxy);

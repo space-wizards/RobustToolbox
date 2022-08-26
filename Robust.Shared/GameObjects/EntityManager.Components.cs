@@ -226,7 +226,7 @@ namespace Robust.Shared.GameObjects
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
 
@@ -252,6 +252,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            DebugTools.Assert(component is MetaDataComponent ||
+                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -542,15 +546,15 @@ namespace Robust.Shared.GameObjects
             var entityUid = component.Owner;
 
             // ReSharper disable once InvertIf
-            if (reg.NetID != null)
+            if (reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
-                var netSet = _netComponents[entityUid];
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                Dirty(entityUid);
+                if (component.NetSyncEnabled)
+                    Dirty(entityUid);
             }
 
             foreach (var refType in reg.References)
@@ -835,6 +839,13 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(comps!);
         }
 
+        public EntityQuery<Component> GetEntityQuery(Type type)
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
+            return new EntityQuery<Component>(comps!);
+        }
+
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
@@ -1112,6 +1123,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
         {
+            DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 

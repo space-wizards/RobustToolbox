@@ -12,6 +12,39 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Broadphase_Test
 {
     /// <summary>
+    /// If we change a grid's map does it still remain not on the general broadphase.
+    /// </summary>
+    /// <remarks>
+    /// Grids are stored on their own broadphase because moving them is costly.
+    /// </remarks>
+    [Test]
+    public void GridMapUpdate()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapManager = sim.Resolve<IMapManager>();
+
+        var mapId1 = mapManager.CreateMap();
+        var mapId2 = mapManager.CreateMap();
+        var grid = mapManager.CreateGrid(mapId1);
+        var xform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+
+        grid.SetTile(Vector2i.Zero, new Tile(1));
+        var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
+        var mapBroadphase2 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId2));
+        entManager.TickUpdate(0.016f, false);
+#pragma warning disable NUnit2046
+        Assert.That(mapBroadphase1.Tree.Count, Is.EqualTo(0));
+#pragma warning restore NUnit2046
+
+        xform.Coordinates = new EntityCoordinates(mapManager.GetMapEntityId(mapId2), Vector2.Zero);
+        entManager.TickUpdate(0.016f, false);
+#pragma warning disable NUnit2046
+        Assert.That(mapBroadphase2.Tree.Count, Is.EqualTo(0));
+#pragma warning restore NUnit2046
+    }
+
+    /// <summary>
     /// If an entity's broadphase is changed are its children's broadphases recursively changed.
     /// </summary>
     [Test]
@@ -26,7 +59,7 @@ public sealed class Broadphase_Test
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
-        var mapBroapdhase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
+        var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
@@ -53,8 +86,8 @@ public sealed class Broadphase_Test
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         grid.SetTile(Vector2i.Zero, Tile.Empty);
-        Assert.That(parentBody.Broadphase, Is.EqualTo(mapBroapdhase));
-        Assert.That(child1Body.Broadphase, Is.EqualTo(mapBroapdhase));
+        Assert.That(parentBody.Broadphase, Is.EqualTo(mapBroadphase));
+        Assert.That(child1Body.Broadphase, Is.EqualTo(mapBroadphase));
         Assert.That(child2Body.Broadphase, Is.EqualTo(null));
     }
 

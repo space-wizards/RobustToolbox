@@ -108,7 +108,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 target.Add(elementCopy);
             }
 
@@ -123,7 +123,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 builder.Add(elementCopy);
             }
 

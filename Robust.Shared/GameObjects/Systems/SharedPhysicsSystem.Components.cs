@@ -27,8 +27,6 @@ public partial class SharedPhysicsSystem
 
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
-            bool awake;
-            component._awake = false;
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
 
             if (component.BodyType != BodyType.Static &&
@@ -36,19 +34,8 @@ public partial class SharedPhysicsSystem
                  !component.LinearVelocity.Equals(Vector2.Zero) ||
                  !component.AngularVelocity.Equals(0f)))
             {
-                awake = true;
-            }
-            else
-            {
-                awake = false;
-            }
-
-            if (awake)
                 component.Awake = true;
-        }
-        else
-        {
-            component._awake = false;
+            }
         }
 
         // Gets added to broadphase via fixturessystem

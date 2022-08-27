@@ -150,15 +150,12 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    call = value.IsValueType switch
-                    {
-                        _ => call = Expression.Call(
-                            instanceConst,
-                            nameof(ReadSelfSerialize),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst, valueParam)
-                    };
+                    call = Expression.Call(
+                        instanceConst,
+                        nameof(ReadSelfSerialize),
+                        new[] { value },
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                        instantiatorConst, valueParam);
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
                 {
@@ -254,16 +251,11 @@ namespace Robust.Shared.Serialization.Manager
             return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
         }
 
-        private T[]? ReadArrayValue<T>(
+        private T[] ReadArrayValue<T>(
             ValueDataNode value,
             ISerializationContext? context = null,
             bool skipHook = false)
         {
-            if (value.Value == "null")
-            {
-                return null;
-            }
-
             var array = new T[1];
             array[0] = Read<T>(value, context, skipHook);
             return array;
@@ -314,17 +306,12 @@ namespace Robust.Shared.Serialization.Manager
             return Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
         }
 
-        private TValue? ReadSelfSerialize<TValue>(
+        private TValue ReadSelfSerialize<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             object? rawValue = null)
             where TValue : ISelfSerialize
         {
-            if (node.Value == "null")
-            {
-                return default; //todo paul this default should be null
-            }
-
             var value = (TValue) (rawValue ?? instantiator());
             value.Deserialize(node.Value);
 

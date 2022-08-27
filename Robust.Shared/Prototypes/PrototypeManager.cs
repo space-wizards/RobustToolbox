@@ -20,7 +20,6 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
@@ -28,43 +27,48 @@ namespace Robust.Shared.Prototypes
     /// <summary>
     /// Handle storage and loading of YAML prototypes.
     /// </summary>
+    /// <remarks>
+    /// Terminology:
+    /// "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.
+    /// "Prototypes" are simply filled-in prototypes from YAML.
+    /// </remarks>
     public interface IPrototypeManager
     {
         void Initialize();
 
         /// <summary>
-        /// Return an IEnumerable to iterate all prototypes of a certain type.
+        /// Return an <see cref="IEnumerable{T}"/> to iterate all prototypes of a certain kind.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if the type of prototype is not registered.
+        /// Thrown if the kind of prototype is not registered.
         /// </exception>
         IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype;
 
         /// <summary>
-        /// Return an IEnumerable to iterate all prototypes of a certain type.
+        /// Return an IEnumerable to iterate all prototypes of a certain kind.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if the type of prototype is not registered.
+        /// Thrown if the kind of prototype is not registered.
         /// </exception>
-        IEnumerable<IPrototype> EnumeratePrototypes(Type type);
+        IEnumerable<IPrototype> EnumeratePrototypes(Type kind);
 
         /// <summary>
-        /// Return an IEnumerable to iterate all prototypes of a certain variant.
+        /// Return an <see cref="IEnumerable{T}"/> to iterate all prototypes of a certain kind.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if the variant of prototype is not registered.
+        /// Thrown if the kind of prototype is not registered.
         /// </exception>
-        IEnumerable<IPrototype> EnumeratePrototypes(string variant);
+        IEnumerable<IPrototype> EnumeratePrototypes(string kind);
 
         /// <summary>
-        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain kind.
         /// </summary>
         IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false) where T : class, IPrototype, IInheritingPrototype;
 
         /// <summary>
-        /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
+        /// Returns an IEnumerable to iterate all parents of a prototype of a certain kind.
         /// </summary>
-        IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false);
+        IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
 
         /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
@@ -78,25 +82,26 @@ namespace Robust.Shared.Prototypes
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if the ID does not exist or the type of prototype is not registered.
+        /// Thrown if the ID does not exist or the kind of prototype is not registered.
         /// </exception>
-        IPrototype Index(Type type, string id);
+        IPrototype Index(Type kind, string id);
 
         /// <summary>
         ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
         /// </summary>
         bool HasIndex<T>(string id) where T : class, IPrototype;
         bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-        bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
+        bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
         bool HasMapping<T>(string id);
-        bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+        bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
         /// <summary>
         ///     Returns whether a prototype variant <param name="variant"/> exists.
         /// </summary>
         /// <param name="variant">Identifier for the prototype variant.</param>
         /// <returns>Whether the prototype variant exists.</returns>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         bool HasVariant(string variant);
 
         /// <summary>
@@ -107,6 +112,7 @@ namespace Robust.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         ///     Thrown when the specified prototype variant isn't registered or doesn't exist.
         /// </exception>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         Type GetVariantType(string variant);
 
         /// <summary>
@@ -115,6 +121,7 @@ namespace Robust.Shared.Prototypes
         /// <param name="variant">Identifier for the prototype variant.</param>
         /// <param name="prototype">The specified prototype Type, or null.</param>
         /// <returns>Whether the prototype type was found and <see cref="prototype"/> isn't null.</returns>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype);
 
         /// <summary>
@@ -123,6 +130,7 @@ namespace Robust.Shared.Prototypes
         /// <param name="type"></param>
         /// <param name="variant"></param>
         /// <returns></returns>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant);
 
         /// <summary>
@@ -131,6 +139,7 @@ namespace Robust.Shared.Prototypes
         /// <param name="prototype">The prototype in question.</param>
         /// <param name="variant">Identifier for the prototype variant, or null.</param>
         /// <returns>Whether the prototype variant was successfully retrieved.</returns>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant);
 
         /// <summary>
@@ -139,7 +148,58 @@ namespace Robust.Shared.Prototypes
         /// <param name="variant">Identifier for the prototype variant, or null.</param>
         /// <typeparam name="T">The prototype in question.</typeparam>
         /// <returns>Whether the prototype variant was successfully retrieved.</returns>
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype;
+
+        /// <summary>
+        ///     Returns whether a prototype kind <param name="kind"/> exists.
+        /// </summary>
+        /// <param name="kind">Identifier for the prototype kind.</param>
+        /// <returns>Whether the prototype kind exists.</returns>
+        bool HasKind(string kind);
+
+        /// <summary>
+        ///     Returns the Type for a prototype kind.
+        /// </summary>
+        /// <param name="kind">Identifier for the prototype kind.</param>
+        /// <returns>The specified prototype Type.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when the specified prototype kind isn't registered or doesn't exist.
+        /// </exception>
+        Type GetKindType(string kind);
+
+        /// <summary>
+        ///     Attempts to get the Type for a prototype kind.
+        /// </summary>
+        /// <param name="kind">Identifier for the prototype kind.</param>
+        /// <param name="prototype">The specified prototype Type, or null.</param>
+        /// <returns>Whether the prototype type was found and <see cref="prototype"/> isn't null.</returns>
+        bool TryGetKindType(string kind, [NotNullWhen(true)] out Type? prototype);
+
+        /// <summary>
+        ///     Attempts to get a prototype's kind.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="kind"></param>
+        /// <returns></returns>
+        bool TryGetKindFrom(Type type, [NotNullWhen(true)] out string? kind);
+
+        /// <summary>
+        ///     Attempts to get a prototype's kind.
+        /// </summary>
+        /// <param name="prototype">The prototype in question.</param>
+        /// <param name="kind">Identifier for the prototype kind, or null.</param>
+        /// <returns>Whether the prototype kind was successfully retrieved.</returns>
+        bool TryGetKindFrom(IPrototype prototype, [NotNullWhen(true)] out string? kind);
+
+        /// <summary>
+        ///     Attempts to get a prototype's kind.
+        /// </summary>
+        /// <param name="kind">Identifier for the prototype kind, or null.</param>
+        /// <typeparam name="T">The prototype in question.</typeparam>
+        /// <returns>Whether the prototype kind was successfully retrieved.</returns>
+        bool TryGetKindFrom<T>([NotNullWhen(true)] out string? kind) where T : class, IPrototype;
+
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -222,7 +282,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        private readonly Dictionary<string, Type> _prototypeTypes = new();
+        private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _prototypePriorities = new();
 
         private bool _initialized;
@@ -230,9 +290,7 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
 
-        private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
-        private readonly Dictionary<Type, Dictionary<string, MappingDataNode>> _prototypeResults = new();
-        private readonly Dictionary<Type, MultiRootInheritanceGraph<string>> _inheritanceTrees = new();
+        private readonly Dictionary<Type, KindData> _kinds = new();
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -244,7 +302,7 @@ namespace Robust.Shared.Prototypes
             }
 
             _initialized = true;
-            ReloadPrototypeTypes();
+            ReloadPrototypeKinds();
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -254,27 +312,27 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            var protos = _prototypes[typeof(T)];
+            var data = _kinds[typeof(T)];
 
-            foreach (var (_, proto) in protos)
+            foreach (var proto in data.Instances.Values)
             {
                 yield return (T) proto;
             }
         }
 
-        public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
+        public IEnumerable<IPrototype> EnumeratePrototypes(Type kind)
         {
             if (!_hasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _prototypes[type].Values;
+            return _kinds[kind].Instances.Values;
         }
 
-        public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
+        public IEnumerable<IPrototype> EnumeratePrototypes(string kind)
         {
-            return EnumeratePrototypes(GetVariantType(variant));
+            return EnumeratePrototypes(GetKindType(kind));
         }
 
         public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)  where T : class, IPrototype, IInheritingPrototype
@@ -304,19 +362,19 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public IEnumerable<IPrototype> EnumerateParents(Type type, string id, bool includeSelf = false)
+        public IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false)
         {
             if (!_hasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
+            if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
             {
-                throw new InvalidOperationException("The provided prototype type is not an inheriting prototype");
+                throw new InvalidOperationException("The provided prototype kind is not an inheriting prototype");
             }
 
-            if(!TryIndex(type, id, out var prototype))
+            if(!TryIndex(kind, id, out var prototype))
                 yield break;
             if (includeSelf) yield return prototype;
             var iPrototype = (IInheritingPrototype)prototype;
@@ -325,7 +383,7 @@ namespace Robust.Shared.Prototypes
             var queue = new Queue<string>(iPrototype.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                if (!TryIndex(type, id, out var parent))
+                if (!TryIndex(kind, id, out var parent))
                     continue;
                 yield return parent;
                 iPrototype = (IInheritingPrototype)parent;
@@ -347,7 +405,7 @@ namespace Robust.Shared.Prototypes
 
             try
             {
-                return (T) _prototypes[typeof(T)][id];
+                return (T) _kinds[typeof(T)].Instances[id];
             }
             catch (KeyNotFoundException)
             {
@@ -355,22 +413,20 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public IPrototype Index(Type type, string id)
+        public IPrototype Index(Type kind, string id)
         {
             if (!_hasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _prototypes[type][id];
+            return _kinds[kind].Instances[id];
         }
 
         public void Clear()
         {
-            _prototypeTypes.Clear();
-            _prototypes.Clear();
-            _prototypeResults.Clear();
-            _inheritanceTrees.Clear();
+            _kindNames.Clear();
+            _kinds.Clear();
         }
 
         private int SortPrototypesByPriority(Type a, Type b)
@@ -400,16 +456,18 @@ namespace Robust.Shared.Prototypes
 
             foreach (var type in prototypeTypeOrder)
             {
+                var typeData = _kinds[type];
                 if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
                     foreach (var id in prototypes[type])
                     {
-                        _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, _prototypeResults[type][id])!;
+                        var prototype = (IPrototype)_serializationManager.Read(type, typeData.Results[id])!;
+                        typeData.Instances[id] = prototype;
                     }
                     continue;
                 }
 
-                var tree = _inheritanceTrees[type];
+                var tree = typeData.Inheritance!;
                 var processQueue = new Queue<string>();
                 foreach (var id in prototypes[type])
                 {
@@ -442,7 +500,7 @@ namespace Robust.Shared.Prototypes
                         }
                     }
 
-                    TryReadPrototype(type, id, _prototypeResults[type][id]);
+                    TryReadPrototype(type, id, typeData.Results[id]);
 
                     pushedSet.Add(id);
                 }
@@ -455,7 +513,7 @@ namespace Robust.Shared.Prototypes
                         .ToDictionary(
                             g => g.Key,
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.Where(x => _prototypes[g.Key].ContainsKey(x)).ToDictionary(a => a, a => _prototypes[g.Key][a])))));
+                                g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x)).ToDictionary(a => a, a => _kinds[g.Key].Instances[a])))));
 #endif
         }
 
@@ -464,11 +522,12 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         public void ResolveResults()
         {
-            var types = _prototypeResults.Keys.ToList();
+            var types = _kinds.Keys.ToList();
             types.Sort(SortPrototypesByPriority);
             foreach (var type in types)
             {
-                if(_inheritanceTrees.TryGetValue(type, out var tree))
+                var typeData = _kinds[type];
+                if (typeData.Inheritance is { } tree)
                 {
                     var processed = new HashSet<string>();
                     var workList = new Queue<string>(tree.RootNodes);
@@ -496,7 +555,7 @@ namespace Robust.Shared.Prototypes
                     }
                 }
 
-                foreach (var (id, mapping) in _prototypeResults[type])
+                foreach (var (id, mapping) in typeData.Results)
                 {
                     TryReadPrototype(type, id, mapping);
                 }
@@ -509,7 +568,7 @@ namespace Robust.Shared.Prototypes
                 return;
             try
             {
-                _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, mapping)!;
+                _kinds[type].Instances[id] = (IPrototype) _serializationManager.Read(type, mapping)!;
             }
             catch (Exception e)
             {
@@ -519,8 +578,12 @@ namespace Robust.Shared.Prototypes
 
         private void PushInheritance(Type type, string id, string parent)
         {
-            _prototypeResults[type][id] = _serializationManager.PushCompositionWithGenericNode(type,
-                new[] { _prototypeResults[type][parent] }, _prototypeResults[type][id]);
+            var kindData = _kinds[type];
+
+            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                type,
+                new[] { kindData.Results[parent] },
+                kindData.Results[id]);
         }
 
         /// <inheritdoc />
@@ -561,7 +624,7 @@ namespace Robust.Shared.Prototypes
                     foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                     {
                         var type = node.GetNode("type").AsString();
-                        if (!_prototypeTypes.ContainsKey(type))
+                        if (!_kindNames.ContainsKey(type))
                         {
                             if (_ignoredPrototypeTypes.Contains(type))
                             {
@@ -573,7 +636,7 @@ namespace Robust.Shared.Prototypes
 
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
                         mapping.Remove("type");
-                        var errorNodes = _serializationManager.ValidateNode(_prototypeTypes[type], mapping).GetErrors()
+                        var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
                             .ToHashSet();
                         if (errorNodes.Count == 0) continue;
                         if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
@@ -660,7 +723,7 @@ namespace Robust.Shared.Prototypes
             Dictionary<Type, HashSet<string>>? changed = null)
         {
             var type = datanode.Get<ValueDataNode>("type").Value;
-            if (!_prototypeTypes.TryGetValue(type, out var prototypeType))
+            if (!_kindNames.TryGetValue(type, out var kind))
             {
                 if (_ignoredPrototypeTypes.Contains(type))
                     return;
@@ -671,28 +734,30 @@ namespace Robust.Shared.Prototypes
             if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
                 throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-            if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
+            var kindData = _kinds[kind];
+
+            if (!overwrite && kindData.Instances.ContainsKey(idNode.Value))
                 throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
 
-            _prototypeResults[prototypeType][idNode.Value] = datanode;
-            if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
+            kindData.Results[idNode.Value] = datanode;
+            if (kindData.Inheritance is { } inheritance)
             {
                 if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
                 {
                     var parents = _serializationManager.Read<string[]>(parentNode);
-                    _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
+                    inheritance.Add(idNode.Value, parents);
                 }
                 else
                 {
-                    _inheritanceTrees[prototypeType].Add(idNode.Value);
+                    inheritance.Add(idNode.Value);
                 }
             }
 
             if (changed == null)
                 return;
 
-            if (!changed.TryGetValue(prototypeType, out var set))
-                changed[prototypeType] = set = new HashSet<string>();
+            if (!changed.TryGetValue(kind, out var set))
+                changed[kind] = set = new HashSet<string>();
 
             set.Add(idNode.Value);
         }
@@ -736,30 +801,25 @@ namespace Robust.Shared.Prototypes
                 foreach (var node in root.Cast<YamlMappingNode>())
                 {
                     var typeString = node.GetNode("type").AsString();
-                    if (!_prototypeTypes.TryGetValue(typeString, out var type))
-                    {
+                    if (!_kindNames.TryGetValue(typeString, out var kind))
                         continue;
-                    }
+
+                    var kindData = _kinds[kind];
 
                     var id = node.GetNode("id").AsString();
 
-                    if (_inheritanceTrees.TryGetValue(type, out var tree))
-                    {
+                    if (kindData.Inheritance is { } tree)
                         tree.Remove(id, true);
-                    }
 
-                    if (_prototypes.TryGetValue(type, out var prototypeIds))
-                    {
-                        prototypeIds.Remove(id);
-                        _prototypeResults[type].Remove(id);
-                    }
+                    kindData.Instances.Remove(id);
+                    kindData.Results.Remove(id);
                 }
             }
         }
 
         #endregion IPrototypeManager members
 
-        private void ReloadPrototypeTypes()
+        private void ReloadPrototypeKinds()
         {
             Clear();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
@@ -781,12 +841,12 @@ namespace Robust.Shared.Prototypes
 
         public bool HasIndex<T>(string id) where T : class, IPrototype
         {
-            if (!_prototypes.TryGetValue(typeof(T), out var index))
+            if (!_kinds.TryGetValue(typeof(T), out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
 
-            return index.ContainsKey(id);
+            return index.Instances.ContainsKey(id);
         }
 
         public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
@@ -796,50 +856,54 @@ namespace Robust.Shared.Prototypes
             return returned;
         }
 
-        public bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype)
+        public bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype)
         {
-            if (!_prototypes.TryGetValue(type, out var index))
+            if (!_kinds.TryGetValue(kind, out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
 
-            return index.TryGetValue(id, out prototype);
+            return index.Instances.TryGetValue(id, out prototype);
         }
 
         public bool HasMapping<T>(string id)
         {
-            if (!_prototypeResults.TryGetValue(typeof(T), out var index))
+            if (!_kinds.TryGetValue(typeof(T), out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
 
-            return index.ContainsKey(id);
+            return index.Results.ContainsKey(id);
         }
 
-        public bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
+        public bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            return _prototypeResults[type].TryGetValue(id, out mappings);
+            return _kinds[kind].Results.TryGetValue(id, out mappings);
         }
 
         /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         public bool HasVariant(string variant)
         {
-            return _prototypeTypes.ContainsKey(variant);
+            return _kindNames.ContainsKey(variant);
         }
 
         /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         public Type GetVariantType(string variant)
         {
-            return _prototypeTypes[variant];
+            return _kindNames[variant];
         }
 
         /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         public bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype)
         {
-            return _prototypeTypes.TryGetValue(variant, out prototype);
+            return _kindNames.TryGetValue(variant, out prototype);
         }
 
         /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         public bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant)
         {
             variant = null;
@@ -863,15 +927,64 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
+        public bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant)
+        {
+            return TryGetVariantFrom(prototype.GetType(), out variant);
+        }
+
+        /// <inheritdoc />
+        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
         public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype
         {
             return TryGetVariantFrom(typeof(T), out variant);
         }
 
-        /// <inheritdoc />
-        public bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant)
+        public bool HasKind(string kind)
         {
-            return TryGetVariantFrom(prototype.GetType(), out variant);
+            return _kindNames.ContainsKey(kind);
+        }
+
+        public Type GetKindType(string kind)
+        {
+            return _kindNames[kind];
+        }
+
+        public bool TryGetKindType(string kind, [NotNullWhen(true)] out Type? prototype)
+        {
+            return _kindNames.TryGetValue(kind, out prototype);
+        }
+
+        public bool TryGetKindFrom(Type type, [NotNullWhen(true)] out string? kind)
+        {
+            kind = null;
+
+            // If the type doesn't implement IPrototype, this fails.
+            if (!type.IsAssignableTo(typeof(IPrototype)))
+                return false;
+
+            var attribute = (PrototypeAttribute?) Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+
+            // If the prototype type doesn't have the attribute, this fails.
+            if (attribute == null)
+                return false;
+
+            // If the variant isn't registered, this fails.
+            if (!HasKind(attribute.Type))
+                return false;
+
+            kind = attribute.Type;
+            return true;
+        }
+
+        public bool TryGetKindFrom(IPrototype prototype, [NotNullWhen(true)] out string? kind)
+        {
+            return TryGetKindFrom(prototype.GetType(), out kind);
+        }
+
+        public bool TryGetKindFrom<T>([NotNullWhen(true)] out string? kind) where T : class, IPrototype
+        {
+            return TryGetKindFrom(typeof(T), out kind);
         }
 
         public void RegisterIgnore(string name)
@@ -894,11 +1007,11 @@ namespace Robust.Shared.Prototypes
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
 
-            if (_prototypeTypes.ContainsKey(attribute.Type))
+            if (_kindNames.ContainsKey(attribute.Type))
             {
                 throw new InvalidImplementationException(type,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {_prototypeTypes[attribute.Type]}");
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {_kindNames[attribute.Type]}");
             }
 
             var foundIdAttribute = false;
@@ -954,20 +1067,26 @@ namespace Robust.Shared.Prototypes
                     typeof(IInheritingPrototype),
                     $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
 
-            _prototypeTypes[attribute.Type] = type;
+            _kindNames[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;
 
-            if (typeof(IPrototype).IsAssignableFrom(type))
-            {
-                _prototypes[type] = new Dictionary<string, IPrototype>();
-                _prototypeResults[type] = new Dictionary<string, MappingDataNode>();
-                if (typeof(IInheritingPrototype).IsAssignableFrom(type))
-                    _inheritanceTrees[type] = new MultiRootInheritanceGraph<string>();
-            }
+            var kindData = new KindData();
+            _kinds[type] = kindData;
+            if (type.IsAssignableTo(typeof(IInheritingPrototype)))
+                kindData.Inheritance = new MultiRootInheritanceGraph<string>();
         }
 
         public event Action<YamlStream, string>? LoadedData;
         public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
+
+        private sealed class KindData
+        {
+            public readonly Dictionary<string, IPrototype> Instances = new();
+            public readonly Dictionary<string, MappingDataNode> Results = new();
+
+            // Only initialized if prototype is inheriting.
+            public MultiRootInheritanceGraph<string>? Inheritance;
+        }
     }
 
     [Serializable]

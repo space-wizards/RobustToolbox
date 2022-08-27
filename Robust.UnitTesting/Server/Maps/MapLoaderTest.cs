@@ -99,7 +99,7 @@ entities:
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
             var mapLoad = IoCManager.Resolve<IMapLoader>();
-            var geid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml").gridId;
+            var geid = mapLoad.LoadGrid(mapId, "/TestMap.yml").gridId;
 
             Assert.That(geid, NUnit.Framework.Is.Not.Null);
 

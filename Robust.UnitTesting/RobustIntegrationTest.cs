@@ -25,6 +25,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -709,6 +710,18 @@ namespace Robust.UnitTesting
                 }
 
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
+            }
+
+            public async Task CheckSandboxed(Assembly assembly)
+            {
+                await WaitIdleAsync();
+                await WaitAssertion(() =>
+                {
+                    var modLoader = new ModLoader();
+                    IoCManager.InjectDependencies(modLoader);
+                    modLoader.SetEnableSandboxing(true);
+                    modLoader.LoadGameAssembly(assembly.Location);
+                });
             }
 
             private void ThreadMain()

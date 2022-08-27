@@ -114,8 +114,13 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null || state.ToSequence <= LastFullState.ToSequence)
+            if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
+            {
+                if (Logging)
+                    Logger.InfoS("net", $"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
+
                 return false;
+            }
 
             _stateBuffer.Add(state);
             return true;

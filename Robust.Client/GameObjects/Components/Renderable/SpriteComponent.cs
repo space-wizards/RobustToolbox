@@ -1344,7 +1344,20 @@ namespace Robust.Client.GameObjects
         /// If the sprite only has 1 direction should it snap at cardinals if rotated.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite), DataField("snapCardinals")]
-        public bool SnapCardinals = false;
+        public bool SnapCardinals
+        {
+            get => _snapCardinals;
+            set
+            {
+                if (value == _snapCardinals)
+                    return;
+
+                _snapCardinals = true;
+                RebuildBounds();
+            }
+        }
+
+        private bool _snapCardinals = false;
 
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;
@@ -2027,35 +2040,41 @@ namespace Robust.Client.GameObjects
             public Box2 CalculateBoundingBox()
             {
                 var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
-
-                // If the parent has locked rotation and we don't have any rotation,
-                // we can take the quick path of just making a box the size of the texture.
-                if (_parent.NoRotation && _rotation != 0)
-                {
-                    return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
-                }
-
                 var longestSide = MathF.Max(textureSize.X, textureSize.Y);
                 var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
 
-                // Build the bounding box based on how many directions the sprite has
-                var box = (_rotation != 0, _actualState) switch
-                {
-                    // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
-                    // any possible rotation.
-                    (true, _) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+                Vector2 size;
 
-                    // Otherwise...
-                    // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
-                    (_, {Directions: RSI.State.DirectionType.Dir1} or null) => Box2.CenteredAround(Offset, textureSize),
-                    // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
-                    // This accounts for all possible rotations.
-                    (_, {Directions: RSI.State.DirectionType.Dir4}) => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
-                    // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
-                    // our bounding box.
-                    (_, {Directions: RSI.State.DirectionType.Dir8}) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
-                };
-                return _scale == Vector2.One ? box : box.Scale(_scale);
+                // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
+                // any possible rotation.
+                if (_rotation != 0 ||
+                    _parent.NoRotation) // no-rot effectively means _rotation = - eyeRotation, so we still have to assume the worst-case BB
+                {
+                    size = new Vector2(longestRotatedSide, longestRotatedSide);
+                }
+                else if (_parent.SnapCardinals)
+                {
+                    DebugTools.Assert(_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1);
+                    size = new Vector2(longestSide, longestSide);
+                }
+                else
+                {
+                    // Build the bounding box based on how many directions the sprite has
+                    size = (_actualState?.Directions) switch
+                    {
+                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
+                        // This accounts for all possible rotations.
+                        RSI.State.DirectionType.Dir4 => new Vector2(longestSide, longestSide),
+
+                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
+                        RSI.State.DirectionType.Dir8 => new Vector2(longestRotatedSide, longestRotatedSide),
+
+                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
+                        _ => textureSize
+                    };
+                }
+                
+                return Box2.CenteredAround(Offset, size * _scale);
             }
 
             /// <summary>

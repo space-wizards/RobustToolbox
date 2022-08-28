@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
@@ -171,13 +172,24 @@ internal sealed partial class PVSSystem : EntitySystem
         ShutdownDirty();
     }
 
-    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked)
+    // TODO rate limit this?
+    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked, EntityUid? missingEntity)
     {
         if (!_playerVisibleSets.TryGetValue(session, out var sessionData))
             return;
 
-        // TODO rate limit this?
-        _sawmill.Warning($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. They probably encountered a PVS / missing meta-data exception.");
+        var sb = new StringBuilder();
+        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}.");
+
+        if (missingEntity != null)
+        {
+            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(missingEntity.Value)}.");
+
+            if (sessionData.LastSeenAt.TryGetValue(missingEntity.Value, out var lastSeenTick))
+                sb.Append($" Entity last sent: {lastSeenTick.Value}");
+        }
+
+        _sawmill.Warning(sb.ToString());
 
         sessionData.LastSeenAt.Clear();
 

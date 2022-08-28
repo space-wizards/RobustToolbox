@@ -79,7 +79,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Requests a full state from the server. This should override even implicit entity data.
         /// </summary>
-        public void RequestFullState();
+        public void RequestFullState(EntityUid? missingEntity = null);
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
     }

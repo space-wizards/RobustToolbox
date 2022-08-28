@@ -294,10 +294,10 @@ namespace Robust.Client.GameStates
                     createdEntities = ApplyGameState(curState, nextState);
 #if EXCEPTION_TOLERANCE
                     }
-                    catch (MissingMetadataException)
+                    catch (MissingMetadataException e)
                     {
                         // Something has gone wrong. Probably a missing meta-data component. Perhaps a full server state will fix it.
-                        RequestFullState();
+                        RequestFullState(e.Uid);
                         throw;
                     }
 #endif
@@ -366,10 +366,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public void RequestFullState()
+        public void RequestFullState(EntityUid? missingEntity = null)
         {
             Logger.Info("Requesting full server state");
-            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick });
+            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
 
@@ -1080,9 +1080,12 @@ namespace Robust.Client.GameStates
 
     public sealed class MissingMetadataException : Exception
     {
+        public readonly EntityUid Uid;
+
         public MissingMetadataException(EntityUid uid)
             : base($"Server state is missing the metadata component for a new entity: {uid}.")
         {
+            Uid = uid;
         }
     }
 }

@@ -574,6 +574,7 @@ namespace Robust.UnitTesting
                     var server = Init();
                     GameLoop.Run();
                     server.FinishMainLoop();
+                    IoCManager.Clear();
                 }
                 catch (Exception e)
                 {

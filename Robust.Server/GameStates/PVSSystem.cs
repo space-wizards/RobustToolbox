@@ -200,7 +200,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAcked.Value > TickBuffer)
+        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAcked))
             _visSetPool.Return(sessionData.LastAcked);
 
         sessionData.LastAcked = null;
@@ -234,7 +234,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
     {
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAckedTick.Value > TickBuffer)
+        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAckedTick))
             _visSetPool.Return(sessionData.LastAcked);
 
         sessionData.LastAcked = ackedData;

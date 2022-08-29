@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -119,19 +120,46 @@ namespace Robust.Shared.Serialization.Manager
                 DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
-            var error = new StringBuilder();
+            var duplicateErrors = new StringBuilder();
+            var invalidIncludes = new StringBuilder();
 
+            //check for duplicates
+            var dataDefs = DataDefinitions.Select(x => x.Key).ToHashSet();
+            var includeTree = new MultiRootInheritanceGraph<Type>();
             foreach (var (type, definition) in DataDefinitions)
             {
+                var invalidTypes = new List<string>();
+                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
+                         {
+                             CustomTypeSerializer: null
+                         }))
+                {
+                    if (!dataDefs.Contains(includedField.FieldType))
+                    {
+                        invalidTypes.Add(includedField.ToString());
+                        continue;
+                    }
+
+                    includeTree.Add(includedField.FieldType, type);
+                }
+
+                if (invalidTypes.Count > 0)
+                    invalidIncludes.Append($"{type}: [{string.Join(", ", invalidTypes)}]");
+
                 if (definition.TryGetDuplicates(out var definitionDuplicates))
                 {
-                    error.Append($"{type}: [{string.Join(", ", definitionDuplicates)}]\n");
+                    duplicateErrors.Append($"{type}: [{string.Join(", ", definitionDuplicates)}]\n");
                 }
             }
 
-            if (error.Length > 0)
+            if (duplicateErrors.Length > 0)
             {
-                throw new ArgumentException($"Duplicate data field tags found in:\n{error}");
+                throw new ArgumentException($"Duplicate data field tags found in:\n{duplicateErrors}");
+            }
+
+            if (invalidIncludes.Length > 0)
+            {
+                throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
             _copyByRefRegistrations.Add(typeof(Type));
@@ -394,7 +422,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var newMapping = dataDef.Serialize(value, this, context, alwaysWrite);
-            mapping = mapping.Merge(newMapping);
+            mapping.Insert(newMapping);
 
             return mapping;
         }

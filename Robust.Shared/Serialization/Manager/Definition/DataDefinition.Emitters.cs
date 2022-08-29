@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -36,17 +37,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
-                    var mapped = mappingDataNode.Has(fieldDefinition.Attribute.Tag);
-
-                    if (!mapped)
+                    if (fieldDefinition.Attribute is DataFieldAttribute dfa && !mappingDataNode.Has(dfa.Tag))
                     {
-                        if (fieldDefinition.Attribute.Required)
-                            throw new InvalidOperationException($"Required field {fieldDefinition.Attribute.Tag} of type {target.GetType()} wasn't mapped.");
+                        if (dfa.Required)
+                            throw new InvalidOperationException($"Required field {dfa.Tag} of type {target.GetType()} wasn't mapped.");
                         continue;
                     }
 
                     var type = fieldDefinition.FieldType;
-                    var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
+                    var node = fieldDefinition.Attribute is DataFieldAttribute dfa2 ? mappingDataNode.Get(dfa2.Tag) : mappingDataNode;
                     object? result;
                     if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
                         {
@@ -100,6 +99,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
+                    if (fieldDefinition.Attribute is DataFieldAttribute dfa1 && mapping.Has(dfa1.Tag))
+                    {
+                        continue; //this node was already written by a type higher up the includetree
+                    }
+
                     if (fieldDefinition.Attribute.ServerOnly &&
                         !collection.Resolve<INetManager>().IsServer)
                     {
@@ -113,12 +117,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
-                    if (!fieldDefinition.Attribute.Required &&
+                    if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true } &&
                         !alwaysWrite &&
                         Equals(value, defaultValues[i]))
                     {
                         continue;
                     }
+
 
                     var type = fieldDefinition.FieldType;
 
@@ -133,7 +138,20 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         node = manager.WriteValue(type, value, alwaysWrite, context);
                     }
 
-                    mapping[fieldDefinition.Attribute.Tag] = node;
+                    if (fieldDefinition.Attribute is not DataFieldAttribute dfa)
+                    {
+                        if (node is not MappingDataNode nodeMapping)
+                        {
+                            throw new InvalidOperationException(
+                                $"Writing field {fieldDefinition} for type {Type} did not return a {nameof(MappingDataNode)} but was annotated to be included.");
+                        }
+
+                        mapping.Insert(nodeMapping, skipDuplicates: true);
+                    }
+                    else
+                    {
+                        mapping[dfa.Tag] = node;
+                    }
                 }
 
                 return mapping;

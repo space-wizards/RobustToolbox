@@ -688,8 +688,10 @@ internal sealed partial class PVSSystem : EntitySystem
         var lastAcked = sessionData.LastAcked;
         var lastSeen = sessionData.LastSeenAt;
         var visibleEnts = _visSetPool.Get();
-        DebugTools.Assert(visibleEnts.Count == 0);
 
+        if (visibleEnts.Count != 0)
+            throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
+        
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         foreach (var i in chunkIndices)

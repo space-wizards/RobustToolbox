@@ -915,6 +915,14 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, bool entered)
     {
+        // This check shouldn't be required, but temporarily adding it to try debug PVS errors.
+        if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
+            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: {rep}");
+            return;
+        }
+
         if (entered)
         {
             toSend.Add(uid, PVSEntityVisiblity.Entered);

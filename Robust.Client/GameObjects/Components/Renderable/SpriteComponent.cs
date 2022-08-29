@@ -1343,7 +1343,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         /// If the sprite only has 1 direction should it snap at cardinals if rotated.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("snapCardinals")]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool SnapCardinals
         {
             get => _snapCardinals;
@@ -1352,11 +1352,12 @@ namespace Robust.Client.GameObjects
                 if (value == _snapCardinals)
                     return;
 
-                _snapCardinals = true;
+                _snapCardinals = value;
                 RebuildBounds();
             }
         }
 
+        [DataField("snapCardinals")]
         private bool _snapCardinals = false;
 
         [DataField("overrideDir")]

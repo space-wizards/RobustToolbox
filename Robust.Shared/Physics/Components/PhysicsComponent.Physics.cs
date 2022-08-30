@@ -24,19 +24,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
@@ -808,85 +809,10 @@ namespace Robust.Shared.GameObjects
 
         }
 
-        /// <summary>
-        ///     Used to prevent bodies from colliding; may lie depending on joints.
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        internal bool ShouldCollide(PhysicsComponent other)
-        {
-            if ((_bodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
-                (other._bodyType & (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return false;
-            }
-
-            // Does a joint prevent collision?
-            // if one of them doesn't have jointcomp then they can't share a common joint.
-            // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-            if (_entMan.TryGetComponent(Owner, out JointComponent? jointComponentA) &&
-                _entMan.TryGetComponent(other.Owner, out JointComponent? jointComponentB))
-            {
-                var aUid = jointComponentA.Owner;
-                var bUid = jointComponentB.Owner;
-
-                foreach (var (_, joint) in jointComponentA.Joints)
-                {
-                    // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                    if (!joint.CollideConnected &&
-                        ((aUid == joint.BodyAUid &&
-                         bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid &&
-                         aUid == joint.BodyBUid))) return false;
-                }
-            }
-
-            var preventCollideMessage = new PreventCollideEvent(this, other);
-            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
-
-            if (preventCollideMessage.Cancelled) return false;
-
-            preventCollideMessage = new PreventCollideEvent(other, this);
-            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
-
-            if (preventCollideMessage.Cancelled) return false;
-
-            return true;
-        }
-
         // View variables conveniences properties.
         [ViewVariables]
         private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
         [ViewVariables]
         private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
-    }
-
-    /// <summary>
-    ///     Directed event raised when an entity's physics BodyType changes.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct PhysicsBodyTypeChangedEvent
-    {
-        public readonly EntityUid Entity;
-
-        /// <summary>
-        ///     New BodyType of the entity.
-        /// </summary>
-        public readonly BodyType New;
-
-        /// <summary>
-        ///     Old BodyType of the entity.
-        /// </summary>
-        public readonly BodyType Old;
-
-        public readonly PhysicsComponent Component;
-
-        public PhysicsBodyTypeChangedEvent(EntityUid entity, BodyType newType, BodyType oldType, PhysicsComponent component)
-        {
-            Entity = entity;
-            New = newType;
-            Old = oldType;
-            Component = component;
-        }
     }
 }

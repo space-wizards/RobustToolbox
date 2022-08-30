@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 
-namespace Robust.Shared.Physics.Broadphase
+namespace Robust.Shared.Physics.BroadPhase
 {
     public sealed class DynamicTreeBroadPhase : IBroadPhase
     {

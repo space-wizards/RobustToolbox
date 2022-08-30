@@ -15,7 +15,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
-    internal sealed class MapGrid : IMapGridInternal
+    internal sealed class MapGrid : IMapGrid
     {
         /// <summary>
         ///     Last game tick that the map was modified.
@@ -403,18 +403,28 @@ namespace Robust.Shared.Map
         #endregion TileAccess
 
         #region ChunkAccess
+
         /// <summary>
-        ///     The total number of allocated chunks in the grid.
+        ///     The total number of chunks contained on this grid.
         /// </summary>
         public int ChunkCount => _chunks.Count;
 
-        /// <inheritdoc />
+
+        /// <summary>
+        ///     Returns the chunk at the given indices. If the chunk does not exist,
+        ///     then a new one is generated that is filled with empty space.
+        /// </summary>
+        /// <param name="xIndex">The X index of the chunk in this grid.</param>
+        /// <param name="yIndex">The Y index of the chunk in this grid.</param>
+        /// <returns>The existing or new chunk.</returns>
         public MapChunk GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new Vector2i(xIndex, yIndex));
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Removes the chunk with the specified origin.
+        /// </summary>
         public void RemoveChunk(Vector2i origin)
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
@@ -430,12 +440,22 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <summary>
+        ///     Tries to return a chunk at the given indices.
+        /// </summary>
+        /// <param name="chunk"></param>
+        /// <returns></returns>
         public bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
         {
             return _chunks.TryGetValue(chunkIndices, out chunk);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns the chunk at the given indices. If the chunk does not exist,
+        ///     then a new one is generated that is filled with empty space.
+        /// </summary>
+        /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
+        /// <returns>The existing or new chunk.</returns>
         public MapChunk GetChunk(Vector2i chunkIndices)
         {
             if (_chunks.TryGetValue(chunkIndices, out var output))
@@ -447,13 +467,18 @@ namespace Robust.Shared.Map
             return _chunks[chunkIndices] = newChunk;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns whether a chunk exists with the specified indices.
+        /// </summary>
         public bool HasChunk(Vector2i chunkIndices)
         {
             return _chunks.ContainsKey(chunkIndices);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns all chunks in this grid. This will not generate new chunks.
+        /// </summary>
+        /// <returns>All chunks in the grid.</returns>
         public IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
         {
             return _chunks;
@@ -506,14 +531,18 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns all the <see cref="MapChunk"/> intersecting the worldAABB.
+        /// </summary>
         public ChunkEnumerator GetMapChunks(Box2 worldAABB)
         {
             var localAABB = InvWorldMatrix.TransformBox(worldAABB);
             return new ChunkEnumerator(_chunks, localAABB, ChunkSize);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns all the <see cref="MapChunk"/> intersecting the rotated world box.
+        /// </summary>
         public ChunkEnumerator GetMapChunks(Box2Rotated worldArea)
         {
             var matrix = InvWorldMatrix;

@@ -931,10 +931,8 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                var grid = (IMapGridInternal) mapGrid.Grid;
-
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = grid.GetMapChunks(aabb);
+                var chunkEnumerator = ((MapGrid) mapGrid.Grid).GetMapChunks(aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {

@@ -492,7 +492,6 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
@@ -509,7 +508,7 @@ namespace Robust.Server.Maps
                     {
                         var found = false;
 
-                        foreach (var (_, chunk) in gridInternal.GetMapChunks())
+                        foreach (var (_, chunk) in grid.GetMapChunks())
                         {
                             foreach (var cFixture in chunk.Fixtures)
                             {

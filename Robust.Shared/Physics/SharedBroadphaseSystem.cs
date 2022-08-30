@@ -163,27 +163,19 @@ namespace Robust.Shared.Physics
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            var contactManager = Comp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityIdOrThrow(mapId)).ContactManager;
+            var contactManager = component.ContactManager;
 
             // Handle grids first as they're not stored on map broadphase at all.
             HandleGridCollisions(mapId, contactManager, movedGrids, physicsQuery, xformQuery);
 
             DebugTools.Assert(moveBuffer.Count > 0 || pairBuffer.Count == 0);
 
-            // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
                 var proxyBody = proxy.Fixture.Body;
-                if (proxyBody.Deleted)
-                {
-                    // TODO: This happens in some grid deletion scenarios which does have an issue on github.
-                    _logger.Error($"Deleted body {ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
-                    DebugTools.Assert(false);
-                    continue;
-                }
+                DebugTools.Assert(!proxyBody.Deleted);
 
                 // Get every broadphase we may be intersecting.
-                // Also TODO: Don't put grids on movebuffer so you get peak shuttle driving performance.
                 foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), gridsPool, xformQuery, physicsQuery))
                 {
                     FindPairs(proxy, worldAABB, grid.GridEntityId, pairBuffer, xformQuery, broadphaseQuery);
@@ -197,15 +189,9 @@ namespace Robust.Shared.Physics
             {
                 var proxyABody = proxyA.Fixture.Body;
 
-                // TODO Why are we checking deleted what
-                if (proxyABody.Deleted) continue;
-
                 foreach (var other in proxies)
                 {
                     var otherBody = other.Fixture.Body;
-
-                    if (otherBody.Deleted) continue;
-
                     // Because we may be colliding with something asleep (due to the way grid movement works) need
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't

@@ -189,6 +189,7 @@ namespace Robust.Shared.Physics
                     FindPairs(proxy, worldAABB, grid.GridEntityId, pairBuffer, xformQuery, broadphaseQuery);
                 }
 
+                gridsPool.Clear();
                 FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), pairBuffer, xformQuery, broadphaseQuery);
             }
 
@@ -220,8 +221,6 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            movedGrids.Clear();
-            pairBuffer.Clear();
             moveBuffer.Clear();
             _mapManager.ClearMovedGrids(mapId);
         }
@@ -463,7 +462,7 @@ namespace Robust.Shared.Physics
                 return;
 
             if (TryComp<TransformComponent>(body.Owner, out var xform) &&
-                TryComp<SharedPhysicsMapComponent>(body.Owner, out var map))
+                TryComp<SharedPhysicsMapComponent>(xform.MapUid, out var map))
             {
                 DestroyProxies(body, manager, map.MoveBuffer);
             }
@@ -801,23 +800,15 @@ namespace Robust.Shared.Physics
             DebugTools.Assert(Transform(broadphase.Owner).MapID == map);
 
             var proxyCount = fixture.ProxyCount;
-
-            if (TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(map), out var physicsMap))
-            {
-                var moveBuffer = physicsMap.MoveBuffer;
-
-                for (var i = 0; i < proxyCount; i++)
-                {
-                    var proxy = fixture.Proxies[i];
-                    moveBuffer.Remove(proxy);
-                }
-            }
+            TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(map), out var physicsMap);
+            var moveBuffer = physicsMap?.MoveBuffer;
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
                 broadphase.Tree.RemoveProxy(proxy.ProxyId);
                 proxy.ProxyId = DynamicTree.Proxy.Free;
+                moveBuffer?.Remove(proxy);
             }
 
             fixture.ProxyCount = 0;

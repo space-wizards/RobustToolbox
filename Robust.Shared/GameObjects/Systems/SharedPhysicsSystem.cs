@@ -192,7 +192,12 @@ namespace Robust.Shared.GameObjects
             TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
             TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
 
-            _broadphase.TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer = null;
+
+            if (oldMap != null)
+            {
+                oldMoveBuffer = oldMap.MoveBuffer;
+            }
 
             var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
 

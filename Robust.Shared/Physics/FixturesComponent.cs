@@ -3,6 +3,7 @@ using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;

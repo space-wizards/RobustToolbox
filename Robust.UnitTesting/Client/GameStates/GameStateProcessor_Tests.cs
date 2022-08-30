@@ -4,6 +4,7 @@ using Robust.Client.GameStates;
 using Robust.Client.Timing;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
+#pragma warning disable CS8602
 
 namespace Robust.UnitTesting.Client.GameStates
 {

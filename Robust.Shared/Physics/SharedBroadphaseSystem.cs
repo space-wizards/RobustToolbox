@@ -235,6 +235,7 @@ namespace Robust.Shared.Physics
                 // (nothing in SS14 does this yet).
 
                 var transform = bodyQuery.GetComponent(grid.GridEntityId).GetTransform(xform);
+                gridsPool.Clear();
 
                 foreach (var colliding in _mapManager.FindGridsIntersecting(mapId, aabb, gridsPool, xformQuery, bodyQuery, true))
                 {

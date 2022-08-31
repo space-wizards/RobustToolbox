@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -24,8 +25,20 @@ public sealed class DataRecordTest : SerializationTest
     [DataRecord]
     public record OneULongRecord(ulong A);
 
-    [DataRecord]
+    [PrototypeRecord("emptyTestPrototypeRecord")]
     public record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
+
+    /// <summary>
+    ///     Describes information for a single antag.
+    /// </summary>
+    [PrototypeRecord("antag")]
+    public sealed record AntagPrototype(
+        [field: IdDataField] string ID,
+        string Name,
+        bool Antagonist,
+        bool SetPreference,
+        string Objective = ""
+    ) : IPrototype;
 
     [Test]
     public void TwoIntRecordTest()
@@ -112,5 +125,13 @@ public sealed class DataRecordTest : SerializationTest
         var val = Serialization.Read<PrototypeRecord>(mapping);
 
         Assert.That(val.ID, Is.EqualTo("ABC"));
+    }
+
+    [Test]
+    public void RegisterPrototypeTest()
+    {
+        var prototypes = IoCManager.Resolve<IPrototypeManager>();
+        prototypes.Initialize();
+        Assert.That(prototypes.HasVariant("emptyTestPrototypeRecord"), Is.True);
     }
 }

@@ -147,7 +147,8 @@ namespace Robust.Shared.Serialization.Manager
                             $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
-                    var instantiator = instance.GetOrCreateInstantiator(value);
+                    var definition = instance.GetDefinition(value);
+                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
                     var instantiatorConst = Expression.Constant(instantiator);
 
                     call = Expression.Call(
@@ -181,7 +182,7 @@ namespace Robust.Shared.Serialization.Manager
                     var definition = instance.GetDefinition(value);
                     var definitionConst = Expression.Constant(definition, typeof(DataDefinition));
 
-                    var instantiator = instance.GetOrCreateInstantiator(value);
+                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
                     var instantiatorConst = Expression.Constant(instantiator);
 
                     var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));

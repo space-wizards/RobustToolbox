@@ -58,9 +58,11 @@ namespace Robust.Shared.Serialization.Manager
             var constantsTypes = new ConcurrentBag<Type>();
             var typeSerializers = new ConcurrentBag<Type>();
             var meansDataDef = new ConcurrentBag<Type>();
-            var implicitDataDefForInheritors = new ConcurrentBag<Type>();
+            var meansDataRecord = new ConcurrentBag<Type>();
+            var implicitDataDef = new ConcurrentBag<Type>();
+            var implicitDataRecord = new ConcurrentBag<Type>();
 
-            CollectAttributedTypes(flagsTypes, constantsTypes, typeSerializers, meansDataDef, implicitDataDefForInheritors);
+            CollectAttributedTypes(flagsTypes, constantsTypes, typeSerializers, meansDataDef, meansDataRecord, implicitDataDef, implicitDataRecord);
 
             InitializeFlagsAndConstants(flagsTypes, constantsTypes);
             InitializeTypeSerializers(typeSerializers);
@@ -68,32 +70,50 @@ namespace Robust.Shared.Serialization.Manager
             // This is a bag, not a hash set.
             // Duplicates are fine since the CWT<,> won't re-run the constructor if it's already in there.
             var registrations = new ConcurrentBag<Type>();
+            var records = new ConcurrentDictionary<Type, byte>();
 
-            foreach (var baseType in implicitDataDefForInheritors)
+            IEnumerable<Type> GetImplicitTypes(Type type)
             {
                 // Inherited attributes don't work with interfaces.
-                if (baseType.IsInterface)
+                if (type.IsInterface)
                 {
-                    foreach (var child in _reflectionManager.GetAllChildren(baseType))
+                    foreach (var child in _reflectionManager.GetAllChildren(type))
                     {
                         if (child.IsAbstract || child.IsGenericTypeDefinition)
                             continue;
 
-                        registrations.Add(child);
+                        yield return child;
                     }
                 }
-                else if (!baseType.IsAbstract && !baseType.IsGenericTypeDefinition)
+                else if (!type.IsAbstract && !type.IsGenericTypeDefinition)
                 {
-                    registrations.Add(baseType);
+                    yield return type;
+                }
+            }
+
+            foreach (var baseType in implicitDataDef)
+            {
+                foreach (var type in GetImplicitTypes(baseType))
+                {
+                    registrations.Add(type);
+                }
+            }
+
+            foreach (var baseType in implicitDataRecord)
+            {
+                foreach (var type in GetImplicitTypes(baseType))
+                {
+                    records.TryAdd(type, 0);
                 }
             }
 
             Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
             {
                 if (meansDataDef.Any(type.IsDefined))
-                {
                     registrations.Add(type);
-                }
+
+                if (type.IsDefined(typeof(DataRecordAttribute)) || meansDataRecord.Any(type.IsDefined))
+                    records[type] = 0;
             });
 
             var sawmill = Logger.GetSawmill(LogCategory);
@@ -107,14 +127,15 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                if (!type.IsValueType && !type.HasCustomAttribute<DataRecordAttribute>() && !type.HasParameterlessConstructor())
+                var isRecord = records.ContainsKey(type);
+                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor())
                 {
                     sawmill.Debug(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     return;
                 }
 
-                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
+                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection, isRecord));
             });
 
             var duplicateErrors = new StringBuilder();
@@ -170,7 +191,9 @@ namespace Robust.Shared.Serialization.Manager
             ConcurrentBag<Type> constantsTypes,
             ConcurrentBag<Type> typeSerializers,
             ConcurrentBag<Type> meansDataDef,
-            ConcurrentBag<Type> implicitDataDefForInheritors)
+            ConcurrentBag<Type> meansDataRecord,
+            ConcurrentBag<Type> implicitDataDef,
+            ConcurrentBag<Type> implicitDataRecord)
         {
             // IsDefined is extremely slow. Great.
             Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
@@ -187,17 +210,23 @@ namespace Robust.Shared.Serialization.Manager
                 if (type.IsDefined(typeof(MeansDataDefinitionAttribute)))
                     meansDataDef.Add(type);
 
+                if (type.IsDefined(typeof(MeansDataRecordAttribute)))
+                    meansDataRecord.Add(type);
+
                 if (type.IsDefined(typeof(ImplicitDataDefinitionForInheritorsAttribute), true))
-                    implicitDataDefForInheritors.Add(type);
+                    implicitDataDef.Add(type);
+
+                if (type.IsDefined(typeof(ImplicitDataRecordAttribute), true))
+                    implicitDataRecord.Add(type);
 
                 if (type.IsDefined(typeof(CopyByRefAttribute)))
                     _copyByRefRegistrations.Add(type);
             });
         }
 
-        private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
+        private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection, bool isRecord)
         {
-            return new(t, collection, GetOrCreateInstantiator(t));
+            return new(t, collection, GetOrCreateInstantiator(t, isRecord), isRecord);
         }
 
         public void Shutdown()

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection.Emit;
-using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager;
 
@@ -26,7 +24,7 @@ public partial class SerializationManager
     {
         var constructor = type.GetConstructor(Type.EmptyTypes);
         if (constructor == null)
-            throw new ArgumentException($"Could not find an empty constructor for class {type}");
+            throw new ArgumentException($"Could not find an empty constructor for non-record class {type}");
 
         generator.Emit(OpCodes.Newobj, constructor);
         generator.Emit(OpCodes.Ret);
@@ -36,7 +34,7 @@ public partial class SerializationManager
     {
         var constructors = type.GetConstructors();
         if (constructors.Length == 0)
-            throw new ArgumentException($"Could not find a constructor for record {type}");
+            throw new ArgumentException($"Could not find a constructor for record class {type}");
 
         var constructor = constructors[0];
         foreach (var parameter in constructor.GetParameters())
@@ -65,9 +63,9 @@ public partial class SerializationManager
         generator.Emit(OpCodes.Ret);
     }
 
-    private InstantiationDelegate<object> GetOrCreateInstantiator(Type type)
+    private InstantiationDelegate<object> GetOrCreateInstantiator(Type type, bool isRecord)
     {
-        return _instantiators.GetOrAdd(type, static type =>
+        return _instantiators.GetOrAdd(type, static (type, isRecord) =>
         {
             var method = new DynamicMethod(
                 "Instantiator",
@@ -81,7 +79,7 @@ public partial class SerializationManager
             {
                 CreateValueTypeInstantiator(generator, type);
             }
-            else if (type.HasCustomAttribute<DataRecordAttribute>())
+            else if (isRecord)
             {
                 CreateRecordInstantiator(generator, type);
             }
@@ -91,6 +89,6 @@ public partial class SerializationManager
             }
 
             return method.CreateDelegate<InstantiationDelegate<object>>();
-        });
+        }, isRecord);
     }
 }

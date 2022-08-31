@@ -1,10 +1,14 @@
 ﻿### Localization for engine console commands
 
-## generic
+## generic command errors
+
+cmd-invalid-arg-number-error = Invalid number of arguments.
 
 cmd-parse-failure-integer = {$arg} is not a valid integer.
 cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
+cmd-parse-failure-uid = {$arg} is not a valid entity UID.
+cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
 
 ## 'help' command
@@ -30,6 +34,7 @@ cmd-cvar-not-registered = CVar '{ $cvar }' is not registered. Use 'cvar ?' to ge
 cmd-cvar-parse-error = Input value is in incorrect format for type { $type }
 cmd-cvar-compl-list = List available CVars
 cmd-cvar-arg-name = <name | ?>
+cmd-cvar-value-hidden = <value hidden>
 
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter
@@ -145,6 +150,8 @@ cmd-hint-loadmap-x-position = [x-position]
 cmd-hint-loadmap-y-position = [y-position]
 cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
+
+cmd-hint-savebp-id = <Grid EntityID>
 
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.

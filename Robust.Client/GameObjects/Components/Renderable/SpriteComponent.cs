@@ -247,7 +247,7 @@ namespace Robust.Client.GameObjects
         ///     Whether or not to pass the screen texture to the <see cref="PostShader"/>.
         /// </summary>
         /// <remarks>
-        ///     Should be false unless you really need it. 
+        ///     Should be false unless you really need it.
         /// </remarks>
         [DataField("getScreenTexture")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1340,6 +1340,26 @@ namespace Robust.Client.GameObjects
 
         [DataField("noRot")] private bool _screenLock = false;
 
+        /// <summary>
+        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool SnapCardinals
+        {
+            get => _snapCardinals;
+            set
+            {
+                if (value == _snapCardinals)
+                    return;
+
+                _snapCardinals = value;
+                RebuildBounds();
+            }
+        }
+
+        [DataField("snapCardinals")]
+        private bool _snapCardinals = false;
+
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;
 
@@ -1373,33 +1393,27 @@ namespace Robust.Client.GameObjects
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             // Reduce the angles to fix math shenanigans
-            worldRotation = worldRotation.Reduced();
+            worldRotation = worldRotation.Reduced().FlipPositive();
 
-            if (worldRotation.Theta < 0)
-                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
+            var cardinal = Angle.Zero;
+
+            // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
+            if (!NoRotation && SnapCardinals)
+            {
+                cardinal = angle.GetCardinalDir().ToAngle();
+            }
 
             // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation);
+            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
             Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
 
-            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             foreach (var layer in Layers)
             {
                 layer.Render(drawingHandle, ref transform, angle, overrideDirection);
             }
-        }
-
-        public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
-        {
-            var theta = worldAngle.Theta;
-            var segSize = (Math.PI * 2) / (numDirections * 2);
-            var segments = (int)(theta / segSize);
-            var odd = segments % 2;
-            var result = theta - (segments * segSize) - (odd * segSize);
-
-            return result;
         }
 
         public int GetLayerDirectionCount(ISpriteLayer layer)
@@ -1470,10 +1484,8 @@ namespace Robust.Client.GameObjects
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not SpriteComponentState thestate)
                 return;
-
-            var thestate = (SpriteComponentState)curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;
@@ -2029,35 +2041,41 @@ namespace Robust.Client.GameObjects
             public Box2 CalculateBoundingBox()
             {
                 var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
-
-                // If the parent has locked rotation and we don't have any rotation,
-                // we can take the quick path of just making a box the size of the texture.
-                if (_parent.NoRotation && _rotation != 0)
-                {
-                    return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
-                }
-
                 var longestSide = MathF.Max(textureSize.X, textureSize.Y);
                 var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
 
-                // Build the bounding box based on how many directions the sprite has
-                var box = (_rotation != 0, _actualState) switch
-                {
-                    // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
-                    // any possible rotation.
-                    (true, _) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+                Vector2 size;
 
-                    // Otherwise...
-                    // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
-                    (_, {Directions: RSI.State.DirectionType.Dir1} or null) => Box2.CenteredAround(Offset, textureSize),
-                    // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
-                    // This accounts for all possible rotations.
-                    (_, {Directions: RSI.State.DirectionType.Dir4}) => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
-                    // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
-                    // our bounding box.
-                    (_, {Directions: RSI.State.DirectionType.Dir8}) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
-                };
-                return _scale == Vector2.One ? box : box.Scale(_scale);
+                // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
+                // any possible rotation.
+                if (_rotation != 0 ||
+                    _parent.NoRotation) // no-rot effectively means _rotation = - eyeRotation, so we still have to assume the worst-case BB
+                {
+                    size = new Vector2(longestRotatedSide, longestRotatedSide);
+                }
+                else if (_parent.SnapCardinals)
+                {
+                    DebugTools.Assert(_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1);
+                    size = new Vector2(longestSide, longestSide);
+                }
+                else
+                {
+                    // Build the bounding box based on how many directions the sprite has
+                    size = (_actualState?.Directions) switch
+                    {
+                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
+                        // This accounts for all possible rotations.
+                        RSI.State.DirectionType.Dir4 => new Vector2(longestSide, longestSide),
+
+                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
+                        RSI.State.DirectionType.Dir8 => new Vector2(longestRotatedSide, longestRotatedSide),
+
+                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
+                        _ => textureSize
+                    };
+                }
+                
+                return Box2.CenteredAround(Offset, size * _scale);
             }
 
             /// <summary>

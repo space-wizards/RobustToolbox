@@ -8,7 +8,7 @@ using Serilog.Events;
 
 namespace Robust.UnitTesting
 {
-    public sealed class TestLogHandler : ILogHandler, IDisposable
+    public sealed class TestLogHandler : ILogHandler
     {
         private readonly string? _prefix;
         private readonly TextWriter _writer;
@@ -24,11 +24,6 @@ namespace Robust.UnitTesting
         }
 
         private LogLevel? FailureLevel { get; set; }
-
-        public void Dispose()
-        {
-            _writer.Dispose();
-        }
 
         public void Log(string sawmillName, LogEvent message)
         {

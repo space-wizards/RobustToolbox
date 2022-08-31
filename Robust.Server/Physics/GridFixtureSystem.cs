@@ -45,12 +45,16 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Shared.Log.Logger.GetSawmill("gsplit");
+            _logger = Logger.GetSawmill("gsplit");
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
             var configManager = IoCManager.Resolve<IConfigurationManager>();
+#if !FULL_RELEASE
+            // It makes mapping painful
+            configManager.OverrideDefault(CVars.GridSplitting, false);
+#endif
             configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 

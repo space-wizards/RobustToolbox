@@ -157,7 +157,9 @@ public sealed class TileSpawningUIController : UIController
         foreach (var entry in _shownTiles)
         {
             Texture? texture = null;
-            if (!string.IsNullOrEmpty(entry.SpriteName))
+
+            var path = entry.Sprite?.ToString();
+            if (path != null)
             {
                 texture = _resources.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
             }

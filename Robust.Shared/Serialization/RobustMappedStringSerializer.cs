@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetSerializer;
+using Prometheus;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -39,6 +40,18 @@ namespace Robust.Shared.Serialization
     /// </remarks>
     internal sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
     {
+        private static readonly Counter StringsHitMetric = Metrics.CreateCounter(
+            "robust_net_string_hit",
+            "Amount of strings sent that hit the mapped string dictionary.");
+
+        private static readonly Counter StringsMissMetric = Metrics.CreateCounter(
+            "robust_net_string_miss",
+            "Amount of strings sent that missed the mapped string dictionary.");
+
+        private static readonly Counter StringsMissCharsMetric = Metrics.CreateCounter(
+            "robust_net_string_miss_chars",
+            "Amount of extra chars (UTF-16, not bytes!!!) that have to be sent due to mapped string misses.");
+
         private delegate void WriteStringDelegate(Stream stream, string? value);
 
         private delegate void ReadStringDelegate(Stream stream, out string? value);

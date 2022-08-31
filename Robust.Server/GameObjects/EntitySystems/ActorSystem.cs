@@ -50,8 +50,8 @@ namespace Robust.Server.GameObjects
             // Null by default.
             forceKicked = null;
 
-            // Cannot attach to a deleted/nonexisting entity.
-            if (EntityManager.Deleted(uid))
+            // Cannot attach to a deleted, nonexisting or terminating entity.
+            if (!TryComp(uid, out MetaDataComponent? meta) || meta.EntityLifeStage > EntityLifeStage.MapInitialized)
             {
                 return false;
             }

@@ -12,6 +12,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
+using YamlDotNet.Serialization.NamingConventions;
 using static Robust.Shared.Serialization.Manager.SerializationManager;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -36,16 +37,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
 
-        public DataDefinition(Type type, IDependencyCollection collection)
+        internal DataDefinition(Type type, IDependencyCollection collection, InstantiationDelegate<object> instantiator, bool isRecord)
         {
             Type = type;
+            IsRecord = isRecord;
 
-            var fieldDefs = GetFieldDefinitions();
+            var fieldDefs = GetFieldDefinitions(instantiator, isRecord);
 
-            Duplicates = fieldDefs
+            var dataFields = fieldDefs
+                .Select(f => f.Attribute)
+                .OfType<DataFieldAttribute>().ToArray();
+
+            Duplicates = dataFields
                 .Where(f =>
-                    fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
-                .Select(f => f.Attribute.Tag)
+                    dataFields.Count(df => df.Tag == f.Tag) > 1)
+                .Select(f => f.Tag)
                 .Distinct()
                 .ToArray();
 
@@ -115,7 +121,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
                     {
                         throw new InvalidOperationException(
-                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition.Attribute.Tag}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
                     interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
@@ -137,6 +143,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
         private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
+
+        internal bool IsRecord { get; }
 
         public object Populate(
             object target,
@@ -181,7 +189,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute is DataFieldAttribute dataFieldAttribute && dataFieldAttribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
                     var error = new ErrorNode(
@@ -213,66 +221,95 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return duplicates.Length > 0;
         }
 
-        private List<FieldDefinition> GetFieldDefinitions()
+        private bool GatherFieldData(AbstractFieldInfo fieldInfo, out DataFieldBaseAttribute? dataFieldBaseAttribute,
+            [NotNullWhen(true)]out AbstractFieldInfo? backingField, out InheritanceBehavior inheritanceBehavior)
         {
-            var dummyObject = Activator.CreateInstance(Type) ?? throw new NullReferenceException();
+            dataFieldBaseAttribute = null;
+            backingField = fieldInfo;
+            inheritanceBehavior = InheritanceBehavior.Default;
+
+            if (fieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
+            {
+                inheritanceBehavior = InheritanceBehavior.Always;
+            }
+            else if (fieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
+            {
+                inheritanceBehavior = InheritanceBehavior.Never;
+            }
+
+            if (fieldInfo is SpecificPropertyInfo propertyInfo)
+            {
+                // We only want the most overriden instance of a property for the type we are working with
+                if (!propertyInfo.IsMostOverridden(Type))
+                {
+                    return false;
+                }
+
+                if (propertyInfo.PropertyInfo.GetMethod == null)
+                {
+                    Logger.ErrorS(LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                    return false;
+                }
+            }
+
+            if (!fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+            {
+                if (!fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
+                {
+                    return true;
+                }
+                dataFieldBaseAttribute = includeDataFieldAttribute;
+            }
+            else
+            {
+                dataFieldBaseAttribute = dataFieldAttribute;
+
+                if (fieldInfo is SpecificPropertyInfo property && !dataFieldAttribute.ReadOnly && property.PropertyInfo.SetMethod == null)
+                {
+                    if (!property.TryGetBackingField(out var backingFieldInfo))
+                    {
+                        Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                        return false;
+                    }
+
+                    backingField = backingFieldInfo;
+                }
+            }
+
+            return true;
+        }
+
+        private List<FieldDefinition> GetFieldDefinitions(InstantiationDelegate<object> instantiator, bool isRecord)
+        {
+            var dummyObject = instantiator();
             var fieldDefinitions = new List<FieldDefinition>();
 
             foreach (var abstractFieldInfo in Type.GetAllPropertiesAndFields())
             {
                 if (abstractFieldInfo.IsBackingField())
-                {
                     continue;
-                }
 
-                if (!abstractFieldInfo.TryGetAttribute(out DataFieldAttribute? dataField, true))
-                {
+                if (isRecord && abstractFieldInfo.IsAutogeneratedRecordMember())
                     continue;
-                }
 
-                var backingField = abstractFieldInfo;
+                if (!GatherFieldData(abstractFieldInfo, out var dataFieldBaseAttribute, out var backingField,
+                        out var inheritanceBehavior))
+                    continue;
 
-                if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
+                if (dataFieldBaseAttribute == null)
                 {
-                    // We only want the most overriden instance of a property for the type we are working with
-                    if (!propertyInfo.IsMostOverridden(Type))
-                    {
+                    if (!isRecord)
                         continue;
-                    }
 
-                    if (propertyInfo.PropertyInfo.GetMethod == null)
-                    {
-                        Logger.ErrorS(LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
-                        continue;
-                    }
-                    else if (propertyInfo.PropertyInfo.SetMethod == null)
-                    {
-                        if (!propertyInfo.TryGetBackingField(out var backingFieldInfo))
-                        {
-                            Logger.ErrorS(LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
-                            continue;
-                        }
-
-                        backingField = backingFieldInfo;
-                    }
-                }
-
-                var inheritanceBehaviour = InheritanceBehavior.Default;
-                if (abstractFieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
-                {
-                    inheritanceBehaviour = InheritanceBehavior.Always;
-                }
-                else if (abstractFieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
-                {
-                    inheritanceBehaviour = InheritanceBehavior.Never;
+                    dataFieldBaseAttribute = new DataFieldAttribute(CamelCaseNamingConvention.Instance.Apply(abstractFieldInfo.Name));
                 }
 
                 var fieldDefinition = new FieldDefinition(
-                    dataField,
+                    dataFieldBaseAttribute,
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,
-                    inheritanceBehaviour);
+                    inheritanceBehavior);
 
                 fieldDefinitions.Add(fieldDefinition);
             }

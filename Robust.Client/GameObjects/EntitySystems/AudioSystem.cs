@@ -475,9 +475,9 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+        public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
         {
-            if (_timing.IsFirstTimePredicted)
+            if (_timing.IsFirstTimePredicted || sound == null)
                 return Play(sound, Filter.Local(), source, audioParams);
             else
                 return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....

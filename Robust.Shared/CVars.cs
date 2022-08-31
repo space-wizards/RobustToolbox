@@ -70,13 +70,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// The target number of game states to keep buffered up to smooth out against network inconsistency.
+        /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
-        public static readonly CVarDef<int> NetInterpRatio =
-            CVarDef.Create("net.interp_ratio", 0, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetBufferSize =
+            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -136,6 +136,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+
+        /// <summary>
+        /// The amount of pvs-exiting entities that a client will process in a single tick.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSEntityExitBudget =
+            CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// ZSTD compression level to use when compressing game states.
@@ -469,7 +475,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.

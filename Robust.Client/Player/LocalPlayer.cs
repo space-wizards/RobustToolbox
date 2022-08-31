@@ -97,7 +97,8 @@ namespace Robust.Client.Player
                 entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
             }
 
-            ControlledEntity = default;
+            ControlledEntity = null;
+            InternalSession.AttachedEntity = null;
 
             if (previous != null)
             {

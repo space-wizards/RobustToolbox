@@ -10,7 +10,7 @@ namespace Robust.Shared.Map
     ///     This is a collection of tiles in a grid format.
     /// </summary>
     [PublicAPI]
-    public interface IMapGrid
+    public interface IMapGrid : IMapGridComponent
     {
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.

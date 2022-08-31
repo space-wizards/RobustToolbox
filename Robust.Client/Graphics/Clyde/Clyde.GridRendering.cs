@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                var grid = (MapGrid) mapGrid;
+                var grid = (MapGridComponent) mapGrid;
 
                 if (!_mapChunkData.ContainsKey(grid.Index))
                 {

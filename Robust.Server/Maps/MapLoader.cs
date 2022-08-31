@@ -262,7 +262,7 @@ namespace Robust.Server.Maps
             /// </summary>
             internal MapId? MapId { get; set; }
             private readonly Dictionary<GridId, int> GridIDMap = new();
-            public readonly List<MapGrid> Grids = new();
+            public readonly List<MapGridComponent> Grids = new();
             private readonly List<GridId> _readGridIndices = new();
             private EntityQuery<TransformComponent>? _xformQuery = null;
 
@@ -596,7 +596,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+            private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
             {
                 // sane defaults
                 ushort csz = 16;
@@ -888,7 +888,7 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add((MapGrid) grid);
+                Grids.Add((MapGridComponent) grid);
                 GridIDMap.Add(grid.Index, GridIDMap.Count);
             }
 

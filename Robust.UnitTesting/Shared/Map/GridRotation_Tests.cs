@@ -69,7 +69,7 @@ namespace Robust.UnitTesting.Shared.Map
                 var mapId = mapMan.CreateMap();
                 var grid = mapMan.CreateGrid(mapId);
                 var gridEnt = grid.GridEntityId;
-                var gridInternal = (MapGrid) grid;
+                var gridInternal = (MapGridComponent) grid;
 
                 /* Test for map chunk rotations */
                 var tile = new Tile(1);

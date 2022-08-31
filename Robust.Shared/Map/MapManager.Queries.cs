@@ -25,7 +25,7 @@ internal partial class MapManager
 
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        var grids = new List<MapGrid>();
+        var grids = new List<MapGridComponent>();
 
         return FindGridsIntersecting(mapId, worldAabb, grids, xformQuery, physicsQuery, approx);
     }
@@ -34,7 +34,7 @@ internal partial class MapManager
     public IEnumerable<IMapGrid> FindGridsIntersecting(
         MapId mapId,
         Box2 aabb,
-        List<MapGrid> grids,
+        List<MapGridComponent> grids,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<PhysicsComponent> physicsQuery,
         bool approx = false)
@@ -45,7 +45,7 @@ internal partial class MapManager
         var state = (gridTree, grids);
 
         gridTree.Query(ref state,
-            static (ref (B2DynamicTree<MapGrid> gridTree, List<MapGrid> grids) tuple, DynamicTree.Proxy proxy) =>
+            static (ref (B2DynamicTree<MapGridComponent> gridTree, List<MapGridComponent> grids) tuple, DynamicTree.Proxy proxy) =>
             {
                 // Paul's gonna seethe over nullable suppression but if the user data is null here you're gonna have bigger problems.
                 tuple.grids.Add(tuple.gridTree.GetUserData(proxy)!);
@@ -102,7 +102,7 @@ internal partial class MapManager
     public bool TryFindGridAt(
         MapId mapId,
         Vector2 worldPos,
-        List<MapGrid> grids,
+        List<MapGridComponent> grids,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<PhysicsComponent> bodyQuery,
         [NotNullWhen(true)] out IMapGrid? grid)
@@ -113,7 +113,7 @@ internal partial class MapManager
 
         foreach (var gridInter in intersectingGrids)
         {
-            var mapGrid = (MapGrid) gridInter;
+            var mapGrid = (MapGridComponent) gridInter;
 
             // Turn the worldPos into a localPos and work out the relevant chunk we need to check
             // This is much faster than iterating over every chunk individually.
@@ -151,7 +151,7 @@ internal partial class MapManager
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var bodyQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        var grids = new List<MapGrid>();
+        var grids = new List<MapGridComponent>();
 
         return TryFindGridAt(mapId, worldPos, grids, xformQuery, bodyQuery, out grid);
     }

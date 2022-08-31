@@ -135,7 +135,7 @@ namespace Robust.Server.Maps
 
     //todo paul make this be used
     [TypeSerializer]
-    internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
+    internal sealed class GridSerializer : ITypeSerializer<MapGridComponent, MappingDataNode>
     {
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -144,8 +144,8 @@ namespace Robust.Server.Maps
             throw new NotImplementedException();
         }
 
-        public MapGrid Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGrid? grid = null)
+        public MapGridComponent Read(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGridComponent? grid = null)
         {
             var info = node.Get<MappingDataNode>("settings");
             var chunks = node.Get<SequenceDataNode>("chunks");
@@ -186,7 +186,7 @@ namespace Robust.Server.Maps
             return grid;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, MapGrid value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, MapGridComponent value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var gridn = new MappingDataNode();
@@ -209,7 +209,7 @@ namespace Robust.Server.Maps
             return gridn;
         }
 
-        public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target, bool skipHook,
+        public MapGridComponent Copy(ISerializationManager serializationManager, MapGridComponent source, MapGridComponent target, bool skipHook,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();

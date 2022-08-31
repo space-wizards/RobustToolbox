@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
         public Stack<MoveEvent> QueuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
 
-        private List<MapGrid> _gridBuffer = new();
+        private List<MapGridComponent> _gridBuffer = new();
 
         public override void Initialize()
         {

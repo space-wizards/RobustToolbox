@@ -115,7 +115,7 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid)
+    public void OnGridAllocated(MapGridComponent gridComponent, MapGridComponent mapGrid)
     {
         _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
         Logger.InfoS("map", $"Binding grid {mapGrid.Index} to entity {gridComponent.Owner}");
@@ -228,7 +228,7 @@ internal partial class MapManager
 
     public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
     {
-        enumerator = new FindGridsEnumerator(EntityManager, GetAllGrids().Cast<MapGrid>().GetEnumerator(), mapId, worldAabb, approx);
+        enumerator = new FindGridsEnumerator(EntityManager, GetAllGrids().Cast<MapGridComponent>().GetEnumerator(), mapId, worldAabb, approx);
     }
 
     [Obsolete("Delete the grid's entity instead")]
@@ -245,7 +245,7 @@ internal partial class MapManager
             return; // Silently fail on release
         }
 
-        var grid = (MapGrid)iGrid;
+        var grid = (MapGridComponent)iGrid;
         if (grid.Deleting)
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} multiple times for grid {gridId}.");
@@ -265,7 +265,7 @@ internal partial class MapManager
             EntityManager.DeleteEntity(entityId);
     }
 
-    public void TrueGridDelete(MapGrid grid)
+    public void TrueGridDelete(MapGridComponent grid)
     {
         grid.Deleting = true;
 
@@ -327,18 +327,18 @@ internal partial class MapManager
         EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile), true);
     }
 
-    protected MapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId, ushort chunkSize, EntityUid forcedGridEuid)
+    protected MapGridComponent CreateGrid(MapId currentMapId, GridId? forcedGridId, ushort chunkSize, EntityUid forcedGridEuid)
     {
         var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
 
         //TODO: Also known as Component.OnAdd ;)
-        MapGrid grid;
+        MapGridComponent grid;
         using (var preInit = EntityManager.AddComponentUninitialized<MapGridComponent>(gridEnt))
         {
             var actualId = GenerateGridId(forcedGridId);
             preInit.Comp.GridIndex = actualId; // Required because of MapGrid needing it in ctor
             preInit.Comp.AllocMapGrid(chunkSize, 1);
-            grid = (MapGrid) preInit.Comp.Grid;
+            grid = (MapGridComponent) preInit.Comp.Grid;
         }
 
         Logger.DebugS("map", $"Binding new grid {grid.Index} to entity {grid.GridEntityId}");

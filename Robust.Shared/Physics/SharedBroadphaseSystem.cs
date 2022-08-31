@@ -48,7 +48,7 @@ namespace Robust.Shared.Physics
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
 
-        private List<MapGrid> _gridsPool = new(8);
+        private List<MapGridComponent> _gridsPool = new(8);
 
         /// <summary>
         /// How much to expand bounds by to check cross-broadphase collisions.
@@ -261,7 +261,7 @@ namespace Robust.Shared.Physics
             {
                 DebugTools.Assert(grid.ParentMapId == mapId);
 
-                var mapGrid = (MapGrid)grid;
+                var mapGrid = (MapGridComponent)grid;
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);
@@ -278,7 +278,7 @@ namespace Robust.Shared.Physics
                 {
                     if (grid == colliding) continue;
 
-                    var otherGrid = (MapGrid)colliding;
+                    var otherGrid = (MapGridComponent)colliding;
                     var otherGridBounds = colliding.WorldAABB;
                     var otherGridInvMatrix = colliding.InvWorldMatrix;
                     var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
@@ -932,7 +932,7 @@ namespace Robust.Shared.Physics
                 }
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = ((MapGrid) mapGrid.Grid).GetMapChunks(aabb);
+                var chunkEnumerator = ((MapGridComponent) mapGrid.Grid).GetMapChunks(aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {

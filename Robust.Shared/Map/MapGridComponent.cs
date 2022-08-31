@@ -26,10 +26,11 @@ namespace Robust.Shared.Map
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
     [NetworkedComponent]
-    internal sealed class MapGridComponent : Component, IMapGridComponent
+    internal sealed partial class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
@@ -105,7 +106,7 @@ namespace Robust.Shared.Map
         protected override void OnRemove()
         {
             if (_mapGrid != null)
-                _mapManager.TrueGridDelete((MapGrid)_mapGrid);
+                _mapManager.TrueGridDelete((MapGridComponent)_mapGrid);
 
             base.OnRemove();
         }
@@ -128,15 +129,16 @@ namespace Robust.Shared.Map
             _chunkSize = state.ChunkSize;
         }
 
-        public MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
+        public MapGridComponent AllocMapGrid(ushort chunkSize, ushort tileSize)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
 #pragma warning disable CS0618
-            var grid = new MapGrid(_mapManager, _entMan, Owner);
+            var grid = this;
 #pragma warning restore CS0618
             _chunkSize = chunkSize;
             TileSize = tileSize;
+            LastTileModifiedTick = _gameTiming.CurTick;
 
             Grid = grid;
 
@@ -151,7 +153,7 @@ namespace Robust.Shared.Map
 
         public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {
-            var grid = (MapGrid)gridComp.Grid;
+            var grid = (MapGridComponent)gridComp.Grid;
             networkedMapManager.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
             foreach (var chunkData in chunkUpdates)

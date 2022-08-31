@@ -5,7 +5,6 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -14,59 +13,24 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
-    /// <inheritdoc />
-    internal sealed class MapGrid : IMapGrid
+    internal sealed partial class MapGridComponent : IMapGrid
     {
-        private readonly IMapManagerInternal _mapManager;
-        private readonly IEntityManager _entityManager;
-        private readonly EntityUid _gridEntityId;
-        private readonly IGameTiming _gameTiming;
+        [ViewVariables] public EntityUid GridEntityId => Owner;
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="MapGrid"/> class.
-        /// </summary>
-        /// <param name="mapManager">Reference to the <see cref="MapManager"/> that will manage this grid.</param>
-        /// <param name="entityManager"></param>
-        /// <param name="gridEntityId"></param>
-        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, EntityUid gridEntityId)
-        {
-            _mapManager = mapManager;
-            _entityManager = entityManager;
-            _gridEntityId = gridEntityId;
-
-            _gameTiming = _mapManager.GameTiming;
-            LastTileModifiedTick = _gameTiming.CurTick;
-        }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public EntityUid GridEntityId => _gridEntityId;
-
-        /// <inheritdoc />
         [ViewVariables]
         [Obsolete("Use EntityUids instead")]
-        public GridId Index => GetGridComponent().GridIndex;
+        public GridId Index => GridIndex;
 
-        /// <summary>
-        ///     Last game tick that the map was modified.
-        /// </summary>
-        public GameTick LastTileModifiedTick
-        {
-            get => GetGridComponent().LastTileModifiedTick;
-            private set => GetGridComponent().LastTileModifiedTick = value;
-        }
-
-        /// <inheritdoc />
         public MapId ParentMapId
         {
-            get => _entityManager.GetComponent<TransformComponent>(GridEntityId).MapID;
+            get => _entMan.GetComponent<TransformComponent>(GridEntityId).MapID;
             set
             {
                 var mapEnt = _mapManager.GetMapEntityId(value);
                 var worldPos = WorldPosition;
 
                 // this should teleport the grid to the map
-                _entityManager.GetComponent<TransformComponent>(GridEntityId).Coordinates =
+                _entMan.GetComponent<TransformComponent>(GridEntityId).Coordinates =
                     new EntityCoordinates(mapEnt, worldPos);
 
                 LastTileModifiedTick = _gameTiming.CurTick;
@@ -74,26 +38,16 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        /// Map DynamicTree proxy to lookup for grid intersection.
-        /// </summary>
-        internal DynamicTree.Proxy MapProxy
-        {
-            get => GetGridComponent().MapProxy;
-            set => GetGridComponent().MapProxy = value;
-        }
-
-        /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        private Dictionary<Vector2i, MapChunk> Chunks => GetGridComponent()._chunks;
+        private Dictionary<Vector2i, MapChunk> Chunks => _chunks;
 
         internal bool Deleting
         {
-            get => GetGridComponent().GridClassDeleting;
-            set => GetGridComponent().GridClassDeleting = value;
+            get => this.GridClassDeleting;
+            set => this.GridClassDeleting = value;
         }
 
-        /// <inheritdoc />
         [ViewVariables]
         public Box2Rotated WorldBounds
         {
@@ -104,82 +58,56 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         [ViewVariables]
         public Box2 WorldAABB =>
             new Box2Rotated(LocalAABB, WorldRotation, Vector2.Zero)
                 .CalcBoundingBox()
                 .Translated(WorldPosition);
 
-        /// <inheritdoc />
-        public Box2 LocalAABB
-        {
-            get => GetGridComponent().LocalAABB;
-            private set => GetGridComponent().LocalAABB = value;
-        }
-
-        /// <inheritdoc />
-        public ushort ChunkSize => GetGridComponent().ChunkSize;
-
-        /// <summary>
-        ///     The length of the side of a square tile in world units.
-        /// </summary>
-        [ViewVariables]
-        public ushort TileSize => GetGridComponent().TileSize;
-
-        public MapGridComponent GetGridComponent() => _entityManager.GetComponent<MapGridComponent>(GridEntityId);
-
-        /// <inheritdoc />
         [ViewVariables]
         [Obsolete("Use Transform System + GridEntityId")]
         public Vector2 WorldPosition
         {
-            get => _entityManager.GetComponent<TransformComponent>(GridEntityId).WorldPosition;
+            get => _entMan.GetComponent<TransformComponent>(GridEntityId).WorldPosition;
             set
             {
-                _entityManager.GetComponent<TransformComponent>(GridEntityId).WorldPosition = value;
+                _entMan.GetComponent<TransformComponent>(GridEntityId).WorldPosition = value;
                 LastTileModifiedTick = _gameTiming.CurTick;
             }
         }
 
-        /// <inheritdoc />
         [ViewVariables]
         [Obsolete("Use Transform System + GridEntityId")]
         public Angle WorldRotation
         {
-            get => _entityManager.GetComponent<TransformComponent>(GridEntityId).WorldRotation;
+            get => _entMan.GetComponent<TransformComponent>(GridEntityId).WorldRotation;
             set
             {
-                _entityManager.GetComponent<TransformComponent>(GridEntityId).WorldRotation = value;
+                _entMan.GetComponent<TransformComponent>(GridEntityId).WorldRotation = value;
                 LastTileModifiedTick = _gameTiming.CurTick;
             }
         }
 
-        /// <inheritdoc />
         [ViewVariables]
         [Obsolete("Use Transform System + GridEntityId")]
-        public Matrix3 WorldMatrix => _entityManager.GetComponent<TransformComponent>(GridEntityId).WorldMatrix;
+        public Matrix3 WorldMatrix => _entMan.GetComponent<TransformComponent>(GridEntityId).WorldMatrix;
 
-        /// <inheritdoc />
         [ViewVariables]
         [Obsolete("Use Transform System + GridEntityId")]
-        public Matrix3 InvWorldMatrix => _entityManager.GetComponent<TransformComponent>(GridEntityId).InvWorldMatrix;
+        public Matrix3 InvWorldMatrix => _entMan.GetComponent<TransformComponent>(GridEntityId).InvWorldMatrix;
 
         #region TileAccess
 
-        /// <inheritdoc />
         public TileRef GetTileRef(MapCoordinates coords)
         {
             return GetTileRef(CoordinatesToTile(coords));
         }
 
-        /// <inheritdoc />
         public TileRef GetTileRef(EntityCoordinates coords)
         {
             return GetTileRef(CoordinatesToTile(coords));
         }
 
-        /// <inheritdoc />
         public TileRef GetTileRef(Vector2i tileCoordinates)
         {
             var chunkIndices = GridTileToChunkIndices(tileCoordinates);
@@ -213,7 +141,6 @@ namespace Robust.Shared.Map
             return new TileRef(Index, GridEntityId, indices, mapChunk.GetTile(xIndex, yIndex));
         }
 
-        /// <inheritdoc />
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             foreach (var kvChunk in Chunks)
@@ -235,27 +162,23 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
         {
             return new GridTileEnumerator(Index, GridEntityId, Chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
         }
 
-        /// <inheritdoc />
         public void SetTile(EntityCoordinates coords, Tile tile)
         {
             var localTile = CoordinatesToTile(coords);
             SetTile(new Vector2i(localTile.X, localTile.Y), tile);
         }
 
-        /// <inheritdoc />
         public void SetTile(Vector2i gridIndices, Tile tile)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
             chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
         }
 
-        /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
             if (tiles.Count == 0) return;
@@ -285,7 +208,6 @@ namespace Robust.Shared.Map
             return GetLocalTilesIntersecting(localAABB, ignoreEmpty, predicate);
         }
 
-        /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -298,7 +220,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -348,7 +269,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -360,7 +280,7 @@ namespace Robust.Shared.Map
             {
                 var local = GridTileToLocal(tile.GridIndices);
 
-                if (!local.TryDistance(_entityManager, circleGridPos, out var distance))
+                if (!local.TryDistance(_entMan, circleGridPos, out var distance))
                 {
                     continue;
                 }
@@ -410,7 +330,7 @@ namespace Robust.Shared.Map
 
             if (Chunks.Count == 0)
             {
-                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent { GridId = Index }, true);
+                _entMan.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent { GridId = Index }, true);
             }
         }
 
@@ -535,7 +455,6 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
-        /// <inheritdoc />
         public int AnchoredEntityCount(Vector2i pos)
         {
             var gridChunkPos = GridTileToChunkIndices(pos);
@@ -546,19 +465,16 @@ namespace Robust.Shared.Map
             return chunk.GetSnapGrid((ushort)x, (ushort)y)?.Count ?? 0; // ?
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
         {
             return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
         {
             return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
@@ -596,7 +512,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {
             foreach (var tile in GetTilesIntersecting(worldAABB))
@@ -608,7 +523,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
         {
             foreach (var tile in GetTilesIntersecting(worldBounds))
@@ -620,15 +534,13 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
-            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entMan));
 
             return SnapGridLocalCellFor(LocalToGrid(coords));
         }
 
-        /// <inheritdoc />
         public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
             DebugTools.Assert(ParentMapId == worldPos.MapId);
@@ -652,7 +564,6 @@ namespace Robust.Shared.Map
             return snapgrid?.Contains(euid) == true;
         }
 
-        /// <inheritdoc />
         public bool AddToSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
@@ -664,20 +575,17 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        /// <inheritdoc />
         public bool AddToSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
             return AddToSnapGridCell(TileIndicesFor(coords), euid);
         }
 
-        /// <inheritdoc />
         public void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
             chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
         }
 
-        /// <inheritdoc />
         public void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
             RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
@@ -716,33 +624,28 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
             var pos = SnapGridPosAt(TileIndicesFor(position), dir);
             return GetAnchoredEntities(pos);
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset)
         {
             var pos = TileIndicesFor(coords) + offset;
             return GetAnchoredEntities(pos);
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
         {
             return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
-        /// <inheritdoc />
         public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
         {
             return GridTileToLocal(SnapGridPosAt(TileIndicesFor(coords), direction));
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
         {
             var position = TileIndicesFor(coords);
@@ -758,7 +661,6 @@ namespace Robust.Shared.Map
                 yield return cell;
         }
 
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
         {
             var position = TileIndicesFor(coords);
@@ -779,13 +681,11 @@ namespace Robust.Shared.Map
 
         #region Transforms
 
-        /// <inheritdoc />
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
             return InvWorldMatrix.Transform(posWorld);
         }
 
-        /// <inheritdoc />
         public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
             if (posWorld.MapId != ParentMapId)
@@ -800,7 +700,6 @@ namespace Robust.Shared.Map
             return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));
         }
 
-        /// <inheritdoc />
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
             return WorldMatrix.Transform(posLocal);
@@ -814,7 +713,6 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <inheritdoc />
         public Vector2i CoordinatesToTile(MapCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.MapId);
@@ -826,10 +724,9 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <inheritdoc />
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
-            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entMan));
             var local = LocalToGrid(coords);
 
             var x = (int)Math.Floor(local.X / TileSize);
@@ -837,7 +734,6 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <inheritdoc />
         public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
         {
             var local = LocalToGrid(gridPos);
@@ -851,7 +747,7 @@ namespace Robust.Shared.Map
         {
             return position.EntityId == GridEntityId
                 ? position.Position
-                : WorldToLocal(position.ToMapPos(_entityManager));
+                : WorldToLocal(position.ToMapPos(_entMan));
         }
 
         public bool CollidesWithGrid(Vector2i indices)
@@ -864,7 +760,6 @@ namespace Robust.Shared.Map
             return chunk.GetTile((ushort)cTileIndices.X, (ushort)cTileIndices.Y).TypeId != Tile.Empty.TypeId;
         }
 
-        /// <inheritdoc />
         public Vector2i GridTileToChunkIndices(Vector2i gridTile)
         {
             var x = (int)Math.Floor(gridTile.X / (float)ChunkSize);
@@ -873,7 +768,6 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <inheritdoc />
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
             return new(GridEntityId,
@@ -893,7 +787,6 @@ namespace Robust.Shared.Map
             return new(GridTileToWorldPos(gridTile), ParentMapId);
         }
 
-        /// <inheritdoc />
         public bool TryGetTileRef(Vector2i indices, out TileRef tile)
         {
             var chunkIndices = GridTileToChunkIndices(indices);
@@ -908,13 +801,11 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        /// <inheritdoc />
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return TryGetTileRef(CoordinatesToTile(coords), out tile);
         }
 
-        /// <inheritdoc />
         public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
         {
             return TryGetTileRef(WorldToTile(worldPos), out tile);
@@ -930,7 +821,7 @@ namespace Robust.Shared.Map
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
             var removedChunks = new List<MapChunk>();
             var fixtureSystem = EntitySystem.Get<FixtureSystem>();
-            _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system);
+            _entMan.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system);
 
             foreach (var mapChunk in chunks)
             {
@@ -976,7 +867,7 @@ namespace Robust.Shared.Map
 
             _mapManager.OnGridBoundsChange(GridEntityId, this);
             // May have been deleted from the bulk update above!
-            if (!_entityManager.Deleted(GridEntityId))
+            if (!_entMan.Deleted(GridEntityId))
                 system?.RegenerateCollision(GridEntityId, chunkRectangles, removedChunks);
         }
 
@@ -1021,8 +912,8 @@ namespace Robust.Shared.Map
                 }
             }
 
-            if (!_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) ||
-                _entityManager.Deleted(GridEntityId)) return;
+            if (!_entMan.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) ||
+                _entMan.Deleted(GridEntityId)) return;
 
             // TODO: Move this to the component when we combine.
             _mapManager.OnGridBoundsChange(GridEntityId, this);

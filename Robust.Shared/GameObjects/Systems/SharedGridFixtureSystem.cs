@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
 
         private void SetConvexHulls(bool value) => _convexHulls = value;
 
-        internal void ProcessGrid(MapGrid gridInternal)
+        internal void ProcessGrid(MapGridComponent gridInternal)
         {
             // Just in case there's any deleted we'll ToArray
             foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())

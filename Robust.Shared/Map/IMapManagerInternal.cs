@@ -22,7 +22,7 @@ namespace Robust.Shared.Map
         bool TryFindGridAt(
             MapId mapId,
             Vector2 worldPos,
-            List<MapGrid> grids,
+            List<MapGridComponent> grids,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> bodyQuery,
             [NotNullWhen(true)] out IMapGrid? grid);
@@ -33,7 +33,7 @@ namespace Robust.Shared.Map
         IEnumerable<IMapGrid> FindGridsIntersecting(
             MapId mapId,
             Box2 worldAabb,
-            List<MapGrid> grids,
+            List<MapGridComponent> grids,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> physicsQuery,
             bool approx = false);
@@ -47,10 +47,10 @@ namespace Robust.Shared.Map
 
         bool TryGetGridComp(GridId id, [NotNullWhen(true)] out IMapGridComponent? comp);
         bool TryGetGridEuid(GridId id, [NotNullWhen(true)] out EntityUid? euid);
-        void TrueGridDelete(MapGrid grid);
+        void TrueGridDelete(MapGridComponent grid);
         void TrueDeleteMap(MapId mapId);
         GridId GenerateGridId(GridId? forcedGridId);
-        void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid);
-        void OnGridBoundsChange(EntityUid uid, MapGrid grid);
+        void OnGridAllocated(MapGridComponent gridComponent, MapGridComponent mapGrid);
+        void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

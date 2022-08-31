@@ -51,7 +51,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
         while (enumerator.MoveNext(out var iGrid))
         {
-            var grid = (MapGrid)iGrid;
+            var grid = (MapGridComponent)iGrid;
 
             if (grid.LastTileModifiedTick < fromTick)
                 continue;

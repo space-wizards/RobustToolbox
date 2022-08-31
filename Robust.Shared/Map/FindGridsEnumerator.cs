@@ -12,13 +12,13 @@ namespace Robust.Shared.Map
         private readonly IEntityManager _entityManager;
 
         // ReSharper disable once FieldCanBeMadeReadOnly.Local
-        private IEnumerator<MapGrid> _enumerator;
+        private IEnumerator<MapGridComponent> _enumerator;
 
         private MapId _mapId;
         private Box2 _worldAABB;
         private bool _approx;
 
-        internal FindGridsEnumerator(IEntityManager entityManager, IEnumerator<MapGrid> enumerator, MapId mapId, Box2 worldAABB, bool approx)
+        internal FindGridsEnumerator(IEntityManager entityManager, IEnumerator<MapGridComponent> enumerator, MapId mapId, Box2 worldAABB, bool approx)
         {
             _entityManager = entityManager;
             _enumerator = enumerator;

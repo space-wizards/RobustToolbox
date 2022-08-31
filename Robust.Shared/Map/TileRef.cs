@@ -16,7 +16,7 @@ namespace Robust.Shared.Map
         public static TileRef Zero => new(GridId.Invalid, EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
 
         /// <summary>
-        ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
+        ///     Identifier of the <see cref="MapGridComponent"/> this Tile belongs to.
         /// </summary>
         [Obsolete("Use EntityUids instead")]
         public readonly GridId GridIndex;

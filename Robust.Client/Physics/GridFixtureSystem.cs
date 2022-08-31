@@ -91,7 +91,7 @@ namespace Robust.Client.Physics
 
                     var gridXform = xformQuery.GetComponent(iGrid.GridEntityId);
                     worldHandle.SetTransform(gridXform.WorldMatrix);
-                    var grid = (MapGrid)iGrid;
+                    var grid = (MapGridComponent)iGrid;
                     var chunkEnumerator = grid.GetMapChunks(args.WorldBounds);
 
                     while (chunkEnumerator.MoveNext(out var chunk))

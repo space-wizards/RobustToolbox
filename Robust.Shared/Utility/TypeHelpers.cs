@@ -205,7 +205,7 @@ namespace Robust.Shared.Utility
             if (info.DeclaringType == null)
                 return false;
 
-            if (!info.DeclaringType.HasCustomAttribute<DataRecord>())
+            if (!info.DeclaringType.HasCustomAttribute<DataRecordAttribute>())
                 return false;
 
             if (info.Name == "EqualityContract" && info.FieldType == typeof(Type))

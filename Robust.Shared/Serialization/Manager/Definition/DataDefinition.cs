@@ -42,7 +42,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         {
             Type = type;
 
-            var fieldDefs = GetFieldDefinitions(instantiator, type.IsDefined(typeof(DataRecord)));
+            var fieldDefs = GetFieldDefinitions(instantiator, type.IsDefined(typeof(DataRecordAttribute)));
 
             var dataFields = fieldDefs
                 .Select(f => f.Attribute)

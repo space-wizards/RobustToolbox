@@ -81,7 +81,7 @@ public partial class SerializationManager
             {
                 CreateValueTypeInstantiator(generator, type);
             }
-            else if (type.HasCustomAttribute<DataRecord>())
+            else if (type.HasCustomAttribute<DataRecordAttribute>())
             {
                 CreateRecordInstantiator(generator, type);
             }

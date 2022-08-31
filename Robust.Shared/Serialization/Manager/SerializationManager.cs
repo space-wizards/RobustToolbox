@@ -108,7 +108,7 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                if (!type.IsValueType && !type.HasCustomAttribute<DataRecord>() && !type.HasParameterlessConstructor())
+                if (!type.IsValueType && !type.HasCustomAttribute<DataRecordAttribute>() && !type.HasParameterlessConstructor())
                 {
                     sawmill.Debug(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");

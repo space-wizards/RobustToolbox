@@ -316,7 +316,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField.GetBackingField() ?? fieldDefinition.BackingField);
+                EmitSetField(generator, backingField.GetBackingField() ?? backingField);
 
                 generator.Emit(OpCodes.Ret);
             }

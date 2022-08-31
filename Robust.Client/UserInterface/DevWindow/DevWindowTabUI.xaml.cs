@@ -34,8 +34,6 @@ namespace Robust.Client.UserInterface
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
 
-            _clyde.MouseMove += OnMouseMove;
-            _input.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             ControlTreeRoot.OnKeyBindDown += ControlTreeRootOnKeyBindDown;
             RefreshPropertiesButton.OnPressed += _ => Refresh();
         }
@@ -84,6 +82,9 @@ namespace Robust.Client.UserInterface
 
         private bool OnUIKeyBindStateChanged(BoundKeyEventArgs arg)
         {
+            if (arg.Function != EngineKeyFunctions.UIClick)
+                return false;
+
             if (!ControlPicker.Pressed)
                 return false;
 
@@ -117,6 +118,8 @@ namespace Robust.Client.UserInterface
             }
 
             UserInterfaceManager.OnPostDrawUIRoot += OnPostDrawUIRoot;
+            _clyde.MouseMove += OnMouseMove;
+            _input.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
         }
 
         protected override void ExitedTree()
@@ -125,7 +128,10 @@ namespace Robust.Client.UserInterface
 
             // Clear tree children.
             ControlTreeRoot.RemoveAllChildren();
+
             UserInterfaceManager.OnPostDrawUIRoot -= OnPostDrawUIRoot;
+            _clyde.MouseMove -= OnMouseMove;
+            _input.UIKeyBindStateChanged -= OnUIKeyBindStateChanged;
         }
 
         private void OnPostDrawUIRoot(PostDrawUIRootEventArgs eventArgs)

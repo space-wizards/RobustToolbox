@@ -14,7 +14,6 @@ using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-// TODO hud refactor BEFORE MERGE fix incorrect ui
 public sealed class TileSpawningUIController : UIController
 {
     [Dependency] private readonly IPlacementManager _placement = default!;
@@ -30,26 +29,28 @@ public sealed class TileSpawningUIController : UIController
     {
         if (_window == null)
         {
-            _window = new TileSpawnWindow();
-            _window.OpenToLeft();
+            CreateWindow();
         }
-        else if (_window.IsOpen)
+
+        if (_window!.IsOpen)
         {
             CloseWindow();
             return;
         }
+        _window.Open();
+    }
 
+    private void CreateWindow()
+    {
+        _window = UIManager.CreateWindow<TileSpawnWindow>();
+        LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
-
         _window.SearchBar.GrabKeyboardFocus();
-
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
-
         _placement.PlacementChanged += ClearTileSelection;
-
         BuildTileList();
     }
 
@@ -60,20 +61,6 @@ public sealed class TileSpawningUIController : UIController
 
     private void WindowClosed()
     {
-        if (_window == null)
-            return;
-
-        _window.TileList.ClearSelected();
-        _placement.Clear();
-
-        _window.OnClose -= WindowClosed;
-        _window.ClearButton.OnPressed -= OnTileClearPressed;
-        _window.SearchBar.OnTextChanged -= OnTileSearchChanged;
-        _window.TileList.OnItemSelected -= OnTileItemSelected;
-
-        _placement.PlacementChanged -= ClearTileSelection;
-
-        _window = null;
     }
 
     private void ClearTileSelection(object? sender, EventArgs e)
@@ -157,13 +144,12 @@ public sealed class TileSpawningUIController : UIController
         foreach (var entry in _shownTiles)
         {
             Texture? texture = null;
-
             var path = entry.Sprite?.ToString();
+
             if (path != null)
             {
-                texture = _resources.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
+                texture = _resources.GetResource<TextureResource>(path);
             }
-
             _window.TileList.AddItem(entry.Name, texture);
         }
     }

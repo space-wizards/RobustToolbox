@@ -87,6 +87,7 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Startup()
         {
+            DebugTools.Assert(LocalPlayer == null);
             LocalPlayer = new LocalPlayer();
 
             var msgList = new MsgPlayerListReq();
@@ -97,6 +98,7 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Shutdown()
         {
+            LocalPlayer?.DetachEntity();
             LocalPlayer = null;
             _sessions.Clear();
         }

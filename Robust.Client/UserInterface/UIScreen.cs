@@ -99,7 +99,7 @@ public abstract class UIScreen : LayoutContainer
 
     public void AddWidget(UIWidget widget)
     {
-
+        AddChild(widget);
     }
 
     public T? GetWidget<T>() where T : UIWidget, new()
@@ -130,16 +130,53 @@ public abstract class UIScreen : LayoutContainer
     protected override void ChildAdded(Control newChild)
     {
         base.ChildAdded(newChild);
+
+        RegisterChildren(newChild);
+
         if (newChild is not UIWidget widget) return;
         if (!_widgets.TryAdd(widget.GetType(), widget))
             throw new Exception("Tried to add duplicate widget to screen!");
     }
 
+    private void RegisterChildren(Control control)
+    {
+        foreach (var child in control.Children)
+        {
+            RegisterChildren(child);
+
+            if (child is not UIWidget widget)
+            {
+                continue;
+            }
+
+            if (!_widgets.TryAdd(widget.GetType(), widget))
+            {
+                throw new Exception("Tried to add duplicate widget to screen!");
+            }
+        }
+    }
+
     protected override void ChildRemoved(Control child)
     {
         base.ChildRemoved(child);
+        RemoveChildren(child);
         if (child is not UIWidget widget) return;
         _widgets.Remove(child.GetType());
+    }
+
+    private void RemoveChildren(Control control)
+    {
+        foreach (var child in control.Children)
+        {
+            RemoveChildren(child);
+
+            if (child is not UIWidget widget)
+            {
+                continue;
+            }
+
+            _widgets.Remove(widget.GetType());
+        }
     }
 
     protected void OnLoaded()

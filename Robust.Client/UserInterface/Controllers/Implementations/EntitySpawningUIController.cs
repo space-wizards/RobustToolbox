@@ -47,21 +47,24 @@ public sealed class EntitySpawningUIController : UIController
     {
         if (_window == null)
         {
-            _window = new EntitySpawnWindow();
-            _window.OpenToLeft();
+            CreateWindow();
         }
         else if (_window.IsOpen)
         {
             CloseWindow();
             return;
         }
+        _window!.Open();
+        UpdateEntityDirectionLabel();
+        _window.SearchBar.GrabKeyboardFocus();
+    }
 
-        _window.Open();
-
+    private void CreateWindow()
+    {
+        _window = UIManager.CreateWindow<EntitySpawnWindow>();
+        LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
-
         _window.EraseButton.Pressed = _placement.Eraser;
-
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;
         _window.SearchBar.OnTextChanged += OnEntitySearchChanged;
@@ -71,10 +74,7 @@ public sealed class EntitySpawningUIController : UIController
 
         _placement.DirectionChanged += OnDirectionChanged;
         _placement.PlacementChanged += ClearSelection;
-
         BuildEntityList();
-        UpdateEntityDirectionLabel();
-        _window.SearchBar.GrabKeyboardFocus();
     }
 
     public void CloseWindow()
@@ -86,20 +86,16 @@ public sealed class EntitySpawningUIController : UIController
     {
         if (_window == null)
             return;
-
-        _window.OnClose -= WindowClosed;
-
+        //_window.OnClose -= WindowClosed;
         if (_window.SelectedButton != null)
         {
             _window.SelectedButton.ActualButton.Pressed = false;
             _window.SelectedButton = null;
         }
 
-        _placement.DirectionChanged -= OnDirectionChanged;
-        _placement.PlacementChanged -= ClearSelection;
+        //_placement.DirectionChanged -= OnDirectionChanged;
+        //_placement.PlacementChanged -= ClearSelection;
         _placement.Clear();
-
-        _window = null;
     }
 
     private void ClearSelection(object? sender, EventArgs e)

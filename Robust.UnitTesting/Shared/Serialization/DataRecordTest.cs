@@ -28,18 +28,6 @@ public sealed class DataRecordTest : SerializationTest
     [PrototypeRecord("emptyTestPrototypeRecord")]
     public record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
 
-    /// <summary>
-    ///     Describes information for a single antag.
-    /// </summary>
-    [PrototypeRecord("antag")]
-    public sealed record AntagPrototype(
-        [field: IdDataField] string ID,
-        string Name,
-        bool Antagonist,
-        bool SetPreference,
-        string Objective = ""
-    ) : IPrototype;
-
     [Test]
     public void TwoIntRecordTest()
     {

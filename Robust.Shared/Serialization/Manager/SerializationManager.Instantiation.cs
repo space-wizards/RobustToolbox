@@ -12,10 +12,20 @@ public partial class SerializationManager
 
     private static void CreateValueTypeInstantiator(ILGenerator generator, Type type)
     {
-        generator.DeclareLocal(type);
-        generator.Emit(OpCodes.Ldloca_S, 0);
-        generator.Emit(OpCodes.Initobj, type);
-        generator.Emit(OpCodes.Ldloc_0);
+        var constructor = type.GetConstructor(Type.EmptyTypes);
+
+        if (constructor == null)
+        {
+            generator.DeclareLocal(type);
+            generator.Emit(OpCodes.Ldloca_S, 0);
+            generator.Emit(OpCodes.Initobj, type);
+            generator.Emit(OpCodes.Ldloc_0);
+        }
+        else
+        {
+            generator.Emit(OpCodes.Newobj, constructor);
+        }
+
         generator.Emit(OpCodes.Box, type);
         generator.Emit(OpCodes.Ret);
     }

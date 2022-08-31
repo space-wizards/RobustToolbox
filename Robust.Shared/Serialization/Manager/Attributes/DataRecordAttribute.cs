@@ -9,6 +9,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes;
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
 [MeansDataDefinition]
+[MeansDataRecord]
 [MeansImplicitUse]
 public sealed class DataRecordAttribute : Attribute
 {

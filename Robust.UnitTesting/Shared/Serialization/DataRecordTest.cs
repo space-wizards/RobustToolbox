@@ -9,13 +9,22 @@ namespace Robust.UnitTesting.Shared.Serialization;
 public sealed class DataRecordTest : SerializationTest
 {
     [DataRecord]
-    public record TwoIntRecord(ulong aTest, int AnotherTest);
+    public record TwoIntRecord(int aTest, int AnotherTest);
 
     [DataRecord]
-    public record TwoIntOneDefaultRecord(byte A, int B = 5);
+    public record OneByteOneDefaultIntRecord(byte A, int B = 5);
+
+    [DataRecord]
+    public record OneLongRecord(long A);
+
+    [DataRecord]
+    public record OneLongDefaultRecord(long A = 5);
+
+    [DataRecord]
+    public record OneULongRecord(ulong A);
 
     [Test]
-    public void ReadWrite()
+    public void TwoIntRecordTest()
     {
         var mapping = new MappingDataNode
         {
@@ -38,13 +47,63 @@ public sealed class DataRecordTest : SerializationTest
     }
 
     [Test]
-    public void DefaultValues()
+    public void OneByteOneDefaultIntRecordTest()
     {
         var mapping = new MappingDataNode {{"a", "1"}};
 
-        var val = Serialization.Read<TwoIntOneDefaultRecord>(mapping);
+        var val = Serialization.Read<OneByteOneDefaultIntRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(1));
         Assert.That(val.B, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void OneLongRecordTest()
+    {
+        var mapping = new MappingDataNode {{"a", "1"}};
+
+        var val = Serialization.Read<OneLongRecord>(mapping);
+
+        Assert.That(val.A, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void OneLongMinValueRecordTest()
+    {
+        var mapping = new MappingDataNode {{"a", long.MinValue.ToString()}};
+
+        var val = Serialization.Read<OneLongRecord>(mapping);
+
+        Assert.That(val.A, Is.EqualTo(long.MinValue));
+    }
+
+    [Test]
+    public void OneLongMaxValueRecordTest()
+    {
+        var mapping = new MappingDataNode {{"a", long.MaxValue.ToString()}};
+
+        var val = Serialization.Read<OneLongRecord>(mapping);
+
+        Assert.That(val.A, Is.EqualTo(long.MaxValue));
+    }
+
+    [Test]
+    public void OneLongDefaultRecordTest()
+    {
+        var mapping = new MappingDataNode();
+
+        var val = Serialization.Read<OneLongDefaultRecord>(mapping);
+
+        Assert.That(val.A, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void OneULongRecordMaxValueTest()
+    {
+        var mapping = new MappingDataNode {{"a", ulong.MaxValue.ToString()}};
+
+        var val = Serialization.Read<OneULongRecord>(mapping);
+
+        Assert.That(val.A, Is.EqualTo(ulong.MaxValue));
     }
 }

@@ -20,6 +20,9 @@ namespace Robust.Shared.Map
         /// <summary>
         /// The entity this grid is represented by in the ECS system.
         /// </summary>
+        /// <remarks>
+        /// This is guaranteed to be a valid Uid.
+        /// </remarks>
         EntityUid GridEntityId { get; }
 
         /// <summary>

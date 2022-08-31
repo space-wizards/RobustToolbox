@@ -4,8 +4,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -58,6 +60,36 @@ namespace Robust.Shared.Map
             private set => _mapGrid = value;
         }
 
+        /// <summary>
+        ///     The length of a side of the square chunk in number of tiles.
+        /// </summary>
+        [ViewVariables]
+        public ushort ChunkSize => _chunkSize;
+
+        /// <summary>
+        ///     The bounding box of the grid in local coordinates.
+        /// </summary>
+        [ViewVariables]
+        public Box2 LocalAABB { get; internal set; }
+
+        /// <summary>
+        ///     Last game tick that the map was modified.
+        /// </summary>
+        [ViewVariables]
+        internal GameTick LastTileModifiedTick { get; set; }
+
+        internal bool GridClassDeleting { get; set; }
+
+        /// <summary>
+        ///     Grid chunks than make up this grid.
+        /// </summary>
+        internal readonly Dictionary<Vector2i, MapChunk> _chunks = new();
+
+        /// <summary>
+        /// Map DynamicTree proxy to lookup for grid intersection.
+        /// </summary>
+        internal DynamicTree.Proxy MapProxy = DynamicTree.Proxy.Free;
+
         protected override void Initialize()
         {
             base.Initialize();
@@ -101,16 +133,21 @@ namespace Robust.Shared.Map
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
 #pragma warning disable CS0618
-            var grid = new MapGrid(_mapManager, _entMan, GridIndex, chunkSize);
+            var grid = new MapGrid(_mapManager, _entMan, Owner);
 #pragma warning restore CS0618
-            grid.TileSize = tileSize;
+            _chunkSize = chunkSize;
+            TileSize = tileSize;
 
             Grid = grid;
-            grid.GridEntityId = Owner;
 
             _mapManager.OnGridAllocated(this, grid);
             return grid;
         }
+
+        /// <summary>
+        ///     The length of the side of a square tile in world units.
+        /// </summary>
+        public ushort TileSize { get; set; } = 1;
 
         public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {

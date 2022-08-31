@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -38,7 +37,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initialized;
 
         // Using CWT<,> here in case we ever want assembly unloading.
-        private readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
+        private readonly ConditionalWeakTable<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -109,24 +108,23 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                if (!type.IsValueType && type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
-                    .FirstOrDefault(m => m.GetParameters().Length == 0) == null)
+                if (!type.IsValueType && !type.HasCustomAttribute<DataRecord>() && !type.HasParameterlessConstructor())
                 {
                     sawmill.Debug(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     return;
                 }
 
-                DataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
+                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection));
             });
 
             var duplicateErrors = new StringBuilder();
             var invalidIncludes = new StringBuilder();
 
             //check for duplicates
-            var dataDefs = DataDefinitions.Select(x => x.Key).ToHashSet();
+            var dataDefs = _dataDefinitions.Select(x => x.Key).ToHashSet();
             var includeTree = new MultiRootInheritanceGraph<Type>();
-            foreach (var (type, definition) in DataDefinitions)
+            foreach (var (type, definition) in _dataDefinitions)
             {
                 var invalidTypes = new List<string>();
                 foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
@@ -198,9 +196,9 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private static DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
+        private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection)
         {
-            return new(t, collection);
+            return new(t, collection, GetOrCreateInstantiator(t));
         }
 
         public void Shutdown()
@@ -220,7 +218,7 @@ namespace Robust.Shared.Serialization.Manager
             _typeCopiers.Clear();
             _typeValidators.Clear();
 
-            DataDefinitions.Clear();
+            _dataDefinitions.Clear();
 
             _copyByRefRegistrations.Clear();
 
@@ -234,7 +232,7 @@ namespace Robust.Shared.Serialization.Manager
         public bool HasDataDefinition(Type type)
         {
             if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
-            return DataDefinitions.TryGetValue(type, out _);
+            return _dataDefinitions.TryGetValue(type, out _);
         }
 
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
@@ -343,7 +341,7 @@ namespace Robust.Shared.Serialization.Manager
 
         internal DataDefinition? GetDefinition(Type type)
         {
-            return DataDefinitions.TryGetValue(type, out var dataDefinition)
+            return _dataDefinitions.TryGetValue(type, out var dataDefinition)
                 ? dataDefinition
                 : null;
         }

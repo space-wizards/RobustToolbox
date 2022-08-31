@@ -1,12 +1,15 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Serialization.Manager.Attributes;
 
+/// <summary>
+///     Makes all properties in a record data fields with camel case naming.
+///     <seealso cref="DataFieldAttribute"/>
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
 [MeansDataDefinition]
 [MeansImplicitUse]
-[Virtual]
-public sealed class DataDefinitionAttribute : Attribute
+public sealed class DataRecord : Attribute
 {
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
@@ -9,7 +8,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -318,7 +316,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField);
+                EmitSetField(generator, fieldDefinition.BackingField.GetBackingField() ?? fieldDefinition.BackingField);
 
                 generator.Emit(OpCodes.Ret);
             }

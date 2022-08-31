@@ -147,7 +147,7 @@ namespace Robust.Shared.Serialization.Manager
                             $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
-                    var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
+                    var instantiator = instance.GetOrCreateInstantiator(value);
                     var instantiatorConst = Expression.Constant(instantiator);
 
                     call = Expression.Call(

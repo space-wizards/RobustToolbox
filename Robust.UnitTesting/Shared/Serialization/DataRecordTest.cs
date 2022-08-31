@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -22,6 +23,9 @@ public sealed class DataRecordTest : SerializationTest
 
     [DataRecord]
     public record OneULongRecord(ulong A);
+
+    [DataRecord]
+    public record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
 
     [Test]
     public void TwoIntRecordTest()
@@ -50,7 +54,6 @@ public sealed class DataRecordTest : SerializationTest
     public void OneByteOneDefaultIntRecordTest()
     {
         var mapping = new MappingDataNode {{"a", "1"}};
-
         var val = Serialization.Read<OneByteOneDefaultIntRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(1));
@@ -61,7 +64,6 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongRecordTest()
     {
         var mapping = new MappingDataNode {{"a", "1"}};
-
         var val = Serialization.Read<OneLongRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(1));
@@ -71,7 +73,6 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongMinValueRecordTest()
     {
         var mapping = new MappingDataNode {{"a", long.MinValue.ToString()}};
-
         var val = Serialization.Read<OneLongRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(long.MinValue));
@@ -81,7 +82,6 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongMaxValueRecordTest()
     {
         var mapping = new MappingDataNode {{"a", long.MaxValue.ToString()}};
-
         var val = Serialization.Read<OneLongRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(long.MaxValue));
@@ -91,7 +91,6 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongDefaultRecordTest()
     {
         var mapping = new MappingDataNode();
-
         var val = Serialization.Read<OneLongDefaultRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(5));
@@ -101,9 +100,17 @@ public sealed class DataRecordTest : SerializationTest
     public void OneULongRecordMaxValueTest()
     {
         var mapping = new MappingDataNode {{"a", ulong.MaxValue.ToString()}};
-
         var val = Serialization.Read<OneULongRecord>(mapping);
 
         Assert.That(val.A, Is.EqualTo(ulong.MaxValue));
+    }
+
+    [Test]
+    public void PrototypeTest()
+    {
+        var mapping = new MappingDataNode {{"id", "ABC"}};
+        var val = Serialization.Read<PrototypeRecord>(mapping);
+
+        Assert.That(val.ID, Is.EqualTo("ABC"));
     }
 }

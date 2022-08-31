@@ -90,10 +90,9 @@ namespace Robust.Shared.Serialization.Manager
 
             Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
             {
-                foreach (var meansDataDefAttr in meansDataDef)
+                if (meansDataDef.Any(type.IsDefined))
                 {
-                    if (type.IsDefined(meansDataDefAttr))
-                        registrations.Add(type);
+                    registrations.Add(type);
                 }
             });
 

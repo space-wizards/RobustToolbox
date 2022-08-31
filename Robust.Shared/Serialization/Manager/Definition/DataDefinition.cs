@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -12,6 +13,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
+using YamlDotNet.Serialization.NamingConventions;
 using static Robust.Shared.Serialization.Manager.SerializationManager;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -40,7 +42,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         {
             Type = type;
 
-            var fieldDefs = GetFieldDefinitions();
+            var fieldDefs = GetFieldDefinitions(type.IsDefined(typeof(DataRecord)));
 
             var dataFields = fieldDefs
                 .Select(f => f.Attribute)
@@ -217,7 +219,65 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return duplicates.Length > 0;
         }
 
-        private List<FieldDefinition> GetFieldDefinitions()
+        private bool GatherFieldData(AbstractFieldInfo fieldInfo, out DataFieldBaseAttribute? dataFieldBaseAttribute,
+            [NotNullWhen(true)]out AbstractFieldInfo? backingField, out InheritanceBehavior inheritanceBehavior)
+        {
+            dataFieldBaseAttribute = null;
+            backingField = fieldInfo;
+            inheritanceBehavior = InheritanceBehavior.Default;
+
+            if (fieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
+            {
+                inheritanceBehavior = InheritanceBehavior.Always;
+            }
+            else if (fieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
+            {
+                inheritanceBehavior = InheritanceBehavior.Never;
+            }
+
+            if (fieldInfo is SpecificPropertyInfo propertyInfo)
+            {
+                // We only want the most overriden instance of a property for the type we are working with
+                if (!propertyInfo.IsMostOverridden(Type))
+                {
+                    return false;
+                }
+
+                if (propertyInfo.PropertyInfo.GetMethod == null)
+                {
+                    Logger.ErrorS(LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                    return false;
+                }
+            }
+
+            if (!fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+            {
+                if (!fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
+                {
+                    return true;
+                }
+                dataFieldBaseAttribute = includeDataFieldAttribute;
+            }
+            else
+            {
+                dataFieldBaseAttribute = dataFieldAttribute;
+
+                if (fieldInfo is SpecificPropertyInfo property && !dataFieldAttribute.ReadOnly && property.PropertyInfo.SetMethod == null)
+                {
+                    if (!property.TryGetBackingField(out var backingFieldInfo))
+                    {
+                        Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                        return false;
+                    }
+
+                    backingField = backingFieldInfo;
+                }
+            }
+
+            return true;
+        }
+
+        private List<FieldDefinition> GetFieldDefinitions(bool isRecord)
         {
             var dummyObject = Activator.CreateInstance(Type) ?? throw new NullReferenceException();
             var fieldDefinitions = new List<FieldDefinition>();
@@ -229,55 +289,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                DataFieldBaseAttribute? dataFieldBaseAttribute;
-                if (!abstractFieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
-                {
-                    if (!abstractFieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
-                    {
-                        continue;
-                    }
-                    dataFieldBaseAttribute = includeDataFieldAttribute;
-                }
-                else
-                {
-                    dataFieldBaseAttribute = dataFieldAttribute;
-                }
+                if (!GatherFieldData(abstractFieldInfo, out var dataFieldBaseAttribute, out var backingField,
+                        out var inheritanceBehavior))
+                    continue;
 
-                var backingField = abstractFieldInfo;
-
-                if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
+                if (dataFieldBaseAttribute == null)
                 {
-                    // We only want the most overriden instance of a property for the type we are working with
-                    if (!propertyInfo.IsMostOverridden(Type))
-                    {
-                        continue;
-                    }
-
-                    if (propertyInfo.PropertyInfo.GetMethod == null)
-                    {
-                        Logger.ErrorS(LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
-                        continue;
-                    }
-                    else if (propertyInfo.PropertyInfo.SetMethod == null)
-                    {
-                        if (!propertyInfo.TryGetBackingField(out var backingFieldInfo))
-                        {
-                            Logger.ErrorS(LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
-                            continue;
-                        }
-
-                        backingField = backingFieldInfo;
-                    }
-                }
-
-                var inheritanceBehaviour = InheritanceBehavior.Default;
-                if (abstractFieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
-                {
-                    inheritanceBehaviour = InheritanceBehavior.Always;
-                }
-                else if (abstractFieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
-                {
-                    inheritanceBehaviour = InheritanceBehavior.Never;
+                    if(!isRecord) continue;
+                    dataFieldBaseAttribute = new DataFieldAttribute(CamelCaseNamingConvention.Instance.Apply(abstractFieldInfo.Name));
                 }
 
                 var fieldDefinition = new FieldDefinition(
@@ -285,7 +304,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,
-                    inheritanceBehaviour);
+                    inheritanceBehavior);
 
                 fieldDefinitions.Add(fieldDefinition);
             }

@@ -26,7 +26,7 @@ namespace Robust.Shared.Map
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
     [NetworkedComponent]
-    internal sealed partial class MapGridComponent : Component, IMapGridComponent
+    public sealed partial class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -151,7 +151,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public ushort TileSize { get; set; } = 1;
 
-        public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
+        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {
             var grid = (MapGridComponent)gridComp.Grid;
             networkedMapManager.SuppressOnTileChanged = true;

@@ -24,7 +24,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapManager = server.ResolveDependency<IMapManager>();
         PhysicsComponent physics = default!;
-        IMapGrid grid = default!;
+        MapGridComponent grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>

@@ -28,7 +28,7 @@ namespace Robust.Server.GameObjects
             // If we have any existing empty ones then cull them on setting the cvar
             if (_deleteEmptyGrids)
             {
-                var toDelete = new List<IMapGrid>();
+                var toDelete = new List<MapGridComponent>();
 
                 foreach (var grid in MapManager.GetAllGrids())
                 {
@@ -43,7 +43,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private bool GridEmpty(IMapGrid grid)
+        private bool GridEmpty(MapGridComponent grid)
         {
             return !(grid.GetAllTiles().Any());
         }

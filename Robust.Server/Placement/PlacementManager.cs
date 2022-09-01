@@ -133,7 +133,7 @@ namespace Robust.Server.Placement
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
-            IMapGrid? grid;
+            MapGridComponent? grid = null;
 
             _mapManager.TryGetGrid(coordinates.EntityId, out grid);
 

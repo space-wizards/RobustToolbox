@@ -20,7 +20,7 @@ namespace Robust.Shared.Map
     {
         [Obsolete("Use EntityUids instead")]
         GridId GridIndex { get; }
-        IMapGrid Grid { get; }
+        MapGridComponent Grid { get; }
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -55,11 +55,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public IMapGrid Grid
-        {
-            get => _mapGrid ?? throw new InvalidOperationException();
-            private set => _mapGrid = value;
-        }
+        public MapGridComponent Grid => this;
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -133,17 +129,12 @@ namespace Robust.Shared.Map
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
-#pragma warning disable CS0618
-            var grid = this;
-#pragma warning restore CS0618
             _chunkSize = chunkSize;
             TileSize = tileSize;
             LastTileModifiedTick = _gameTiming.CurTick;
 
-            Grid = grid;
-
-            _mapManager.OnGridAllocated(this, grid);
-            return grid;
+            _mapManager.OnGridAllocated(this, this);
+            return this;
         }
 
         /// <summary>

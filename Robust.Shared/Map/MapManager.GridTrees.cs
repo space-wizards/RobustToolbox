@@ -11,14 +11,14 @@ internal partial class MapManager
     // TODO: Move IMapManager stuff to the system
     private Dictionary<MapId, B2DynamicTree<MapGridComponent>> _gridTrees = new();
 
-    private Dictionary<MapId, HashSet<IMapGrid>> _movedGrids = new();
+    private Dictionary<MapId, HashSet<MapGridComponent>> _movedGrids = new();
 
     /// <summary>
     /// Gets the grids that have moved this tick until broadphase has run.
     /// </summary>
     /// <param name="mapId"></param>
     /// <returns></returns>
-    public HashSet<IMapGrid> GetMovedGrids(MapId mapId)
+    public HashSet<MapGridComponent> GetMovedGrids(MapId mapId)
     {
         return _movedGrids[mapId];
     }
@@ -56,7 +56,7 @@ internal partial class MapManager
         if (e.Map == MapId.Nullspace) return;
 
         _gridTrees.Add(e.Map, new B2DynamicTree<MapGridComponent>());
-        _movedGrids.Add(e.Map, new HashSet<IMapGrid>());
+        _movedGrids.Add(e.Map, new HashSet<MapGridComponent>());
     }
 
     private void OnMapDestroyedGridTree(MapEventArgs e)
@@ -158,13 +158,13 @@ internal partial class MapManager
 
         if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
-            oldMovedGrids.Remove(component.Grid);
+            oldMovedGrids.Remove(component);
             RemoveGrid(aGrid, args.OldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
-            newMovedGrids.Add(component.Grid);
+            newMovedGrids.Add(component);
             AddGrid(aGrid, mapId);
         }
     }

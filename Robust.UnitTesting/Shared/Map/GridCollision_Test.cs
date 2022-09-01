@@ -21,8 +21,8 @@ namespace Robust.UnitTesting.Shared.Map
             var entManager = server.ResolveDependency<IEntityManager>();
 
             MapId mapId;
-            IMapGrid? gridId1 = null;
-            IMapGrid? gridId2 = null;
+            MapGridComponent? gridId1 = null;
+            MapGridComponent? gridId2 = null;
             PhysicsComponent? physics1 = null;
             PhysicsComponent? physics2 = null;
             EntityUid? gridEnt1;

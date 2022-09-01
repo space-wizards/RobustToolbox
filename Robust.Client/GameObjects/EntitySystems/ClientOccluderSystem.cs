@@ -74,7 +74,7 @@ namespace Robust.Client.GameObjects
         private void OnOccluderDirty(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            IMapGrid? grid;
+            MapGridComponent? grid;
             var occluderQuery = GetEntityQuery<ClientOccluderComponent>();
 
             if (EntityManager.EntityExists(sender) &&

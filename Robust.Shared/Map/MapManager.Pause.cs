@@ -159,7 +159,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool IsGridPaused(IMapGrid grid)
+        public bool IsGridPaused(MapGridComponent grid)
         {
             return IsMapPaused(grid.ParentMapId);
         }

@@ -12,16 +12,16 @@ namespace Robust.Shared.Map;
 
 internal partial class MapManager
 {
-    public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false)
     {
         var aabb = bounds.CalcBoundingBox();
         // TODO: We can do slower GJK checks to check if 2 bounds actually intersect, but WYCI.
         return FindGridsIntersecting(mapId, aabb, approx);
     }
 
-    public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
     {
-        if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<IMapGrid>();
+        if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<MapGridComponent>();
 
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
@@ -31,15 +31,14 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public IEnumerable<IMapGrid> FindGridsIntersecting(
-        MapId mapId,
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId,
         Box2 aabb,
         List<MapGridComponent> grids,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<PhysicsComponent> physicsQuery,
         bool approx = false)
     {
-        if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<IMapGrid>();
+        if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<MapGridComponent>();
 
         DebugTools.Assert(grids.Count == 0);
         var state = (gridTree, grids);
@@ -99,13 +98,12 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public bool TryFindGridAt(
-        MapId mapId,
+    public bool TryFindGridAt(MapId mapId,
         Vector2 worldPos,
         List<MapGridComponent> grids,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<PhysicsComponent> bodyQuery,
-        [NotNullWhen(true)] out IMapGrid? grid)
+        [MaybeNullWhen(false)] out MapGridComponent grid)
     {
         // Need to enlarge the AABB by at least the grid shrinkage size.
         var aabb = new Box2(worldPos - 0.5f, worldPos + 0.5f);
@@ -147,7 +145,7 @@ internal partial class MapManager
     /// <summary>
     /// Attempts to find the map grid under the map location.
     /// </summary>
-    public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
+    public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [MaybeNullWhen(false)] out MapGridComponent grid)
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var bodyQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
@@ -159,7 +157,7 @@ internal partial class MapManager
     /// <summary>
     /// Attempts to find the map grid under the map location.
     /// </summary>
-    public bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid)
+    public bool TryFindGridAt(MapCoordinates mapCoordinates, [MaybeNullWhen(false)] out MapGridComponent grid)
     {
         return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
     }

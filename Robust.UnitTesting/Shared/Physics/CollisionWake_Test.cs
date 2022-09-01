@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
 
-            IMapGrid grid = default!;
+            MapGridComponent grid = default!;
             MapId mapId = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;

@@ -27,7 +27,7 @@ namespace Robust.Shared.Map
             _approx = approx;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out IMapGrid? grid)
+        public bool MoveNext([NotNullWhen(true)] out MapGridComponent? grid)
         {
             while (true)
             {

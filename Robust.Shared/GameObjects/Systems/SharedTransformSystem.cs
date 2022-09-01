@@ -135,7 +135,7 @@ namespace Robust.Shared.GameObjects
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
         {
             // GridID isn't ready during EntityInit so YAY
-            IMapGrid? grid = null;
+            MapGridComponent? grid = null;
             var ent = coordinates.EntityId;
 
             while (ent.IsValid())

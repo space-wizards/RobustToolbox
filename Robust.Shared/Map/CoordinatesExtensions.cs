@@ -51,7 +51,7 @@ namespace Robust.Shared.Map
                 var gridsInArea = mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox);
 
                 // find closest grid intersecting our search box.
-                IMapGrid? closest = null;
+                MapGridComponent? closest = null;
                 var distance = float.PositiveInfinity;
                 var intersect = new Box2();
                 foreach (var grid in gridsInArea)

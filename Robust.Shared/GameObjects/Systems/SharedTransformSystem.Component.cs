@@ -56,7 +56,7 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(xform.Owner, ref ev);
     }
 
-    public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
+    public bool AnchorEntity(TransformComponent xform, MapGridComponent grid, Vector2i tileIndices)
     {
         var result = grid.AddToSnapGridCell(tileIndices, xform.Owner);
 
@@ -75,12 +75,7 @@ public abstract partial class SharedTransformSystem
         return result;
     }
 
-    public bool AnchorEntity(TransformComponent xform, IMapGridComponent component)
-    {
-        return AnchorEntity(xform, component.Grid);
-    }
-
-    public bool AnchorEntity(TransformComponent xform, IMapGrid grid)
+    public bool AnchorEntity(TransformComponent xform, MapGridComponent grid)
     {
         var tileIndices = grid.TileIndicesFor(xform.Coordinates);
         return AnchorEntity(xform, grid, tileIndices);
@@ -454,7 +449,7 @@ public abstract partial class SharedTransformSystem
             {
                 DebugTools.Assert(component.GridUid != null);
                 var iGrid = Comp<MapGridComponent>(component.GridUid!.Value);
-                AnchorEntity(component, (IMapGrid)iGrid);
+                AnchorEntity(component, iGrid);
                 DebugTools.Assert(component.Anchored);
             }
             else

@@ -75,7 +75,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
+        private void _updateChunkMesh(MapGridComponent grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
 
@@ -135,7 +135,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(MapGridComponent grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -167,13 +167,13 @@ namespace Robust.Client.Graphics.Clyde
             return datum;
         }
 
-        private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
+        private bool _isChunkDirty(MapGridComponent grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
-        public void _setChunkDirty(IMapGrid grid, Vector2i chunk)
+        public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
         {
             var data = _mapChunkData[grid.Index];
             if (data.TryGetValue(chunk, out var datum))

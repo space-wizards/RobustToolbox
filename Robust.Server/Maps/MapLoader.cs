@@ -92,7 +92,7 @@ namespace Robust.Server.Maps
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            IMapGrid? grid;
+            MapGridComponent? grid;
             IReadOnlyList<EntityUid> entities;
             using (reader)
             {
@@ -881,14 +881,14 @@ namespace Robust.Server.Maps
             }
 
             // Serialization
-            public void RegisterGrid(IMapGrid grid)
+            public void RegisterGrid(MapGridComponent grid)
             {
                 if (GridIDMap.ContainsKey(grid.Index))
                 {
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add((MapGridComponent) grid);
+                Grids.Add(grid);
                 GridIDMap.Add(grid.Index, GridIDMap.Count);
             }
 

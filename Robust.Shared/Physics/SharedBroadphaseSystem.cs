@@ -114,9 +114,8 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
-        private void FindGridContacts(
-            MapId mapId,
-            HashSet<IMapGrid> movedGrids,
+        private void FindGridContacts(MapId mapId,
+            HashSet<MapGridComponent> movedGrids,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<BroadphaseComponent> broadQuery)
         {
@@ -250,10 +249,9 @@ namespace Robust.Shared.Physics
             _mapManager.ClearMovedGrids(mapId);
         }
 
-        private void HandleGridCollisions(
-            MapId mapId,
+        private void HandleGridCollisions(MapId mapId,
             ContactManager contactManager,
-            HashSet<IMapGrid> movedGrids,
+            HashSet<MapGridComponent> movedGrids,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery)
         {
@@ -261,7 +259,7 @@ namespace Robust.Shared.Physics
             {
                 DebugTools.Assert(grid.ParentMapId == mapId);
 
-                var mapGrid = (MapGridComponent)grid;
+                var mapGrid = grid;
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);

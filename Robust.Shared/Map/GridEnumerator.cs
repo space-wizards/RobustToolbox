@@ -17,7 +17,7 @@ public struct GridEnumerator
         _query = query;
     }
 
-    public bool MoveNext([NotNullWhen(true)] out IMapGrid? grid)
+    public bool MoveNext([NotNullWhen(true)] out MapGridComponent? grid)
     {
         if (!_enumerator.MoveNext())
         {
@@ -27,7 +27,7 @@ public struct GridEnumerator
 
         var (_, uid) = _enumerator.Current;
 
-        grid = _query.GetComponent(uid).Grid;
+        grid = _query.GetComponent(uid);
         return true;
     }
 }

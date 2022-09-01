@@ -19,19 +19,17 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.
         /// </summary>
-        bool TryFindGridAt(
-            MapId mapId,
+        bool TryFindGridAt(MapId mapId,
             Vector2 worldPos,
             List<MapGridComponent> grids,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> bodyQuery,
-            [NotNullWhen(true)] out IMapGrid? grid);
+            [MaybeNullWhen(false)] out MapGridComponent grid);
 
         /// <summary>
         /// Specific version of FindGridsIntersecting that allows re-usable data structures to be passed in for optimisation reasons.
         /// </summary>
-        IEnumerable<IMapGrid> FindGridsIntersecting(
-            MapId mapId,
+        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId,
             Box2 worldAabb,
             List<MapGridComponent> grids,
             EntityQuery<TransformComponent> xformQuery,
@@ -45,7 +43,7 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
-        bool TryGetGridComp(GridId id, [NotNullWhen(true)] out IMapGridComponent? comp);
+        bool TryGetGridComp(GridId id, [NotNullWhen(true)] out MapGridComponent? comp);
         bool TryGetGridEuid(GridId id, [NotNullWhen(true)] out EntityUid? euid);
         void TrueGridDelete(MapGridComponent grid);
         void TrueDeleteMap(MapId mapId);

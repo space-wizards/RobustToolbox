@@ -44,12 +44,11 @@ internal sealed class ClientDirtySystem : EntitySystem
         if (args.BaseArgs.Component.CreationTick > _timing.LastRealTick)
             return;
 
-        // TODO if ever entity deletion gets predicted... add an arg to comp removal that specifies whether removal is
-        // occurring because of entity deletion, to speed this function up, as it will get called once for each
-        // component the entity had.
-        // aka: I don't want to have to fetch the meta-data component 10+ times for each entity that gets deleted.
-        //
-        // If we have predicted deletions: check here that the entity is not terminating.
+        // TODO if entity deletion ever gets predicted, then to speed this function up the component removal event
+        // should probably get an arg that specifies whether removal is occurring because of entity deletion. AKA: I
+        // don't want to have to fetch the meta-data component 10+ times for each entity that gets deleted. Currently
+        // server-induced deletions should get ignored, as _timing.InPrediction will be false while applying game
+        // states.
 
         var netId = _compFact.GetRegistration(args.BaseArgs.Component).NetID;
         if (netId == null)

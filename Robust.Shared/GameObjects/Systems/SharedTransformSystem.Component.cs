@@ -27,8 +27,8 @@ public abstract partial class SharedTransformSystem
         EntityQuery<TransformComponent> xformQuery)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
-        oldGrid.Grid.RemoveFromSnapGridCell(tilePos, xform.Owner);
-        newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
+        oldGrid.RemoveFromSnapGridCell(tilePos, xform.Owner);
+        newGrid.AddToSnapGridCell(tilePos, xform.Owner);
         // TODO: Could do this re-parent way better.
         // Unfortunately we don't want any anchoring events to go out hence... this.
         xform._anchored = false;
@@ -104,8 +104,8 @@ public abstract partial class SharedTransformSystem
 
     public void UnanchorEntity(TransformComponent xform, IMapGridComponent grid)
     {
-        var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-        grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+        var tileIndices = ((MapGridComponent) grid).TileIndicesFor(xform.Coordinates);
+        ((MapGridComponent) grid).RemoveFromSnapGridCell(tileIndices, xform.Owner);
         if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
         {
             physicsComponent.BodyType = BodyType.Dynamic;
@@ -748,8 +748,8 @@ public abstract partial class SharedTransformSystem
         if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
             var grid = Comp<IMapGridComponent>(xform.GridUid.Value);
-            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+            var tileIndices = ((MapGridComponent) grid).TileIndicesFor(xform.Coordinates);
+            ((MapGridComponent) grid).RemoveFromSnapGridCell(tileIndices, xform.Owner);
 
             // intentionally not updating physics body type to non-static, there is no need to add it to the current map.
 

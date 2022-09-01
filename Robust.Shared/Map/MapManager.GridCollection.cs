@@ -222,7 +222,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId);
+            .Where(c => xformQuery.GetComponent(c.GridEntityId).MapID == mapId);
     }
 
     public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
@@ -238,20 +238,13 @@ internal partial class MapManager
 #endif
 
         // Possible the grid was already deleted / is invalid
-        if (!TryGetGrid(gridId, out var iGrid))
+        if (!TryGetGrid(gridId, out var gridComp))
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} with unknown id {gridId}.");
             return; // Silently fail on release
         }
 
-        var grid = (MapGridComponent)iGrid;
-        if (grid.Deleting)
-        {
-            DebugTools.Assert($"Calling {nameof(DeleteGrid)} multiple times for grid {gridId}.");
-            return; // Silently fail on release
-        }
-
-        var entityId = grid.GridEntityId;
+        var entityId = gridComp.GridEntityId;
         if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} with {gridId}, but there was no allocated entity.");
@@ -266,8 +259,6 @@ internal partial class MapManager
 
     public void TrueGridDelete(MapGridComponent grid)
     {
-        grid.Deleting = true;
-
         var mapId = grid.ParentMapId;
         var gridId = grid.Index;
 
@@ -337,7 +328,7 @@ internal partial class MapManager
             var actualId = GenerateGridId(forcedGridId);
             preInit.Comp.GridIndex = actualId; // Required because of MapGrid needing it in ctor
             preInit.Comp.AllocMapGrid(chunkSize, 1);
-            grid = (MapGridComponent) preInit.Comp.Grid;
+            grid = (MapGridComponent) preInit.Comp;
         }
 
         Logger.DebugS("map", $"Binding new grid {grid.Index} to entity {grid.GridEntityId}");

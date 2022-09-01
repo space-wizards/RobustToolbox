@@ -13,7 +13,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
-    public sealed partial class MapGridComponent : IMapGrid
+    /// <summary>
+    ///     This is a collection of tiles in a grid format.
+    /// </summary>
+    public sealed partial class MapGridComponent
     {
         /// <summary>
         /// The entity this grid is represented by in the ECS system.
@@ -53,12 +56,6 @@ namespace Robust.Shared.Map
         ///     Grid chunks than make up this grid.
         /// </summary>
         private Dictionary<Vector2i, MapChunk> Chunks => _chunks;
-
-        internal bool Deleting
-        {
-            get => this.GridClassDeleting;
-            set => this.GridClassDeleting = value;
-        }
 
         [ViewVariables]
         public Box2Rotated WorldBounds

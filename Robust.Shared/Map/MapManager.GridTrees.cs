@@ -117,7 +117,7 @@ internal partial class MapManager
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        var grid = (MapGridComponent) component.Grid;
+        var grid = (MapGridComponent) component;
 
         // Just maploader / test things
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
@@ -130,7 +130,7 @@ internal partial class MapManager
 
     private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
     {
-        var grid = (MapGridComponent) component.Grid;
+        var grid = (MapGridComponent) component;
 
         // Just maploader / test things
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
@@ -143,7 +143,7 @@ internal partial class MapManager
 
     private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)
     {
-        var aGrid = (MapGridComponent)component.Grid;
+        var aGrid = (MapGridComponent)component;
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy

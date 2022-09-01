@@ -20,7 +20,6 @@ namespace Robust.Shared.Map
     {
         [Obsolete("Use EntityUids instead")]
         GridId GridIndex { get; }
-        MapGridComponent Grid { get; }
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -40,8 +39,6 @@ namespace Robust.Shared.Map
         private GridId _gridIndex = GridId.Invalid;
 #pragma warning restore CS0618
 
-        private IMapGrid? _mapGrid;
-
         /// <inheritdoc />
         [Obsolete("Use EntityUid instead")]
         public GridId GridIndex
@@ -52,10 +49,6 @@ namespace Robust.Shared.Map
 
         [DataField("chunkSize")]
         private ushort _chunkSize = 16;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public MapGridComponent Grid => this;
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -74,8 +67,6 @@ namespace Robust.Shared.Map
         /// </summary>
         [ViewVariables]
         internal GameTick LastTileModifiedTick { get; set; }
-
-        internal bool GridClassDeleting { get; set; }
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -101,8 +92,7 @@ namespace Robust.Shared.Map
 
         protected override void OnRemove()
         {
-            if (_mapGrid != null)
-                _mapManager.TrueGridDelete((MapGridComponent)_mapGrid);
+            _mapManager.TrueGridDelete(this);
 
             base.OnRemove();
         }
@@ -144,7 +134,7 @@ namespace Robust.Shared.Map
 
         internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {
-            var grid = (MapGridComponent)gridComp.Grid;
+            var grid = (MapGridComponent)gridComp;
             networkedMapManager.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
             foreach (var chunkData in chunkUpdates)

@@ -385,7 +385,7 @@ namespace Robust.Server.Console.Commands
             IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);
 
             if (mapManager.MapExists(mapId))
-                shell.WriteLine(Loc.GetString("cmd-loadmap-successt", ("mapId", mapId), ("path", args[1])));
+                shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));
             else
                 shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", args[1])));
         }

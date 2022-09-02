@@ -171,7 +171,7 @@ internal partial class MapManager
 
     public bool IsGrid(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(uid);
+        return EntityManager.HasComponent<MapGridComponent>(uid);
     }
 
     public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
@@ -214,7 +214,7 @@ internal partial class MapManager
 
     public bool GridExists([NotNullWhen(true)] EntityUid? euid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(euid);
+        return EntityManager.HasComponent<MapGridComponent>(euid);
     }
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)

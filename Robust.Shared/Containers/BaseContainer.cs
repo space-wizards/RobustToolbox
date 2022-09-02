@@ -117,7 +117,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
 
             // no, you can't put maps or grids into containers
-            if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<IMapGridComponent>(toinsert))
+            if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<MapGridComponent>(toinsert))
                 return false;
 
             var xformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();

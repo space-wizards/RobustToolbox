@@ -99,10 +99,10 @@ public abstract partial class SharedTransformSystem
         if(xform.GridUid == null)
             return;
 
-        UnanchorEntity(xform, Comp<IMapGridComponent>(xform.GridUid.Value));
+        UnanchorEntity(xform, Comp<MapGridComponent>(xform.GridUid.Value));
     }
 
-    public void UnanchorEntity(TransformComponent xform, IMapGridComponent grid)
+    public void UnanchorEntity(TransformComponent xform, MapGridComponent grid)
     {
         var tileIndices = ((MapGridComponent) grid).TileIndicesFor(xform.Coordinates);
         ((MapGridComponent) grid).RemoveFromSnapGridCell(tileIndices, xform.Owner);
@@ -747,7 +747,7 @@ public abstract partial class SharedTransformSystem
 
         if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
-            var grid = Comp<IMapGridComponent>(xform.GridUid.Value);
+            var grid = Comp<MapGridComponent>(xform.GridUid.Value);
             var tileIndices = ((MapGridComponent) grid).TileIndicesFor(xform.Coordinates);
             ((MapGridComponent) grid).RemoveFromSnapGridCell(tileIndices, xform.Owner);
 

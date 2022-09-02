@@ -16,16 +16,8 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Represents a map grid inside the ECS system.
     /// </summary>
-    public interface IMapGridComponent : IComponent
-    {
-        [Obsolete("Use EntityUids instead")]
-        GridId GridIndex { get; }
-    }
-
-    /// <inheritdoc cref="IMapGridComponent"/>
-    [ComponentReference(typeof(IMapGridComponent))]
     [NetworkedComponent]
-    public sealed partial class MapGridComponent : Component, IMapGridComponent
+    public sealed partial class MapGridComponent : Component
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -132,9 +124,9 @@ namespace Robust.Shared.Map
         /// </summary>
         public ushort TileSize { get; set; } = 1;
 
-        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
+        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, MapGridComponent gridComp,
+            GameStateMapData.ChunkDatum[] chunkUpdates)
         {
-            var grid = (MapGridComponent)gridComp;
             networkedMapManager.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
             foreach (var chunkData in chunkUpdates)
@@ -142,41 +134,41 @@ namespace Robust.Shared.Map
                 if (chunkData.IsDeleted())
                     continue;
 
-                var chunk = grid.GetChunk(chunkData.Index);
+                var chunk = gridComp.GetChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
+                DebugTools.Assert(chunkData.TileData.Length == gridComp.ChunkSize * gridComp.ChunkSize);
 
                 var counter = 0;
-                for (ushort x = 0; x < grid.ChunkSize; x++)
+                for (ushort x = 0; x < gridComp.ChunkSize; x++)
                 {
-                    for (ushort y = 0; y < grid.ChunkSize; y++)
+                    for (ushort y = 0; y < gridComp.ChunkSize; y++)
                     {
                         var tile = chunkData.TileData[counter++];
                         if (chunk.GetTile(x, y) == tile)
                             continue;
 
                         chunk.SetTile(x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y), tile));
                     }
                 }
             }
 
             if (modified.Count != 0)
             {
-                MapManager.InvokeGridChanged(networkedMapManager, grid, modified);
+                MapManager.InvokeGridChanged(networkedMapManager, gridComp, modified);
             }
 
             foreach (var chunkData in chunkUpdates)
             {
                 if (chunkData.IsDeleted())
                 {
-                    grid.RemoveChunk(chunkData.Index);
+                    gridComp.RemoveChunk(chunkData.Index);
                     continue;
                 }
 
-                var chunk = grid.GetChunk(chunkData.Index);
+                var chunk = gridComp.GetChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = false;
-                grid.RegenerateCollision(chunk);
+                gridComp.RegenerateCollision(chunk);
             }
 
             networkedMapManager.SuppressOnTileChanged = false;

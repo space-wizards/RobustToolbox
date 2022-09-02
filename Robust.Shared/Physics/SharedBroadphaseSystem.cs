@@ -923,14 +923,14 @@ namespace Robust.Shared.Physics
             {
                 if (xform.MapID != mapId) continue;
 
-                if (!EntityManager.TryGetComponent(broadphase.Owner, out IMapGridComponent? mapGrid))
+                if (!EntityManager.TryGetComponent(broadphase.Owner, out MapGridComponent? mapGrid))
                 {
                     yield return broadphase;
                     continue;
                 }
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = ((MapGridComponent) mapGrid).GetMapChunks(aabb);
+                var chunkEnumerator = mapGrid.GetMapChunks(aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {

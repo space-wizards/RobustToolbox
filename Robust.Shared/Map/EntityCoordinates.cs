@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -221,7 +221,7 @@ namespace Robust.Shared.Map
             if (uid == null)
                 return GridId.Invalid;
 
-            return entityManager.GetComponent<IMapGridComponent>(uid.Value).GridIndex;
+            return entityManager.GetComponent<MapGridComponent>(uid.Value).GridIndex;
         }
 
         /// <summary>

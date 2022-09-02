@@ -523,7 +523,7 @@ namespace Robust.Shared.GameObjects
                 return null;
             }
 
-            if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
+            if (_entMan.TryGetComponent(Owner, out MapGridComponent? gridComponent))
             {
                 return Owner;
             }

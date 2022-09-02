@@ -98,6 +98,11 @@ namespace Robust.Shared.Physics.Dynamics
         private List<PhysicsComponent> _awakeBodyList = new();
 
         /// <summary>
+        ///     1st substep xform cache for lerping fixes
+        /// </summary>
+        private HashSet<TransformComponent> _xformCache = new();
+
+        /// <summary>
         /// Temporary joint storage during solving
         /// </summary>
         private List<Joint> _joints = new();
@@ -153,7 +158,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         /// <param name="frameTime"></param>
         /// <param name="prediction"></param>
-        public void Step(float frameTime, bool prediction)
+        public void Step(float frameTime, bool prediction, int substep = -1)
         {
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
@@ -189,18 +194,24 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue()
+        public void ProcessQueue(int substep = -1)
         {
-            // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in _deferredUpdates)
+            if (substep > 0)
             {
-                xform.RunDeferred();
-            }
+                if (_xformCache.SetEquals(_deferredUpdates))
+                {
+                    // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
+                    foreach (var xform in _deferredUpdates)
+                    {
+                        xform.RunDeferred();
+                    }
 
-            _deferredUpdates.Clear();
+                    _deferredUpdates.Clear();
+                }
+            }
         }
 
-        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, int substep = -1)
         {
             _islandManager.InitializePools();
 
@@ -370,7 +381,7 @@ namespace Robust.Shared.Physics.Dynamics
             _joints.Clear();
         }
 
-        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction, int substep = -1)
         {
             var islands = _islandManager.GetActive;
             // Islands are already pre-sorted
@@ -391,8 +402,21 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                island.UpdateBodies(_deferredUpdates);
-                island.SleepBodies(prediction, frameTime);
+                //Check if it's the first substep, if so put those xforms in a cache
+                //Used to compare against the defferedUpdates and such to help fix lerping issues
+                if (substep == 0)
+                {
+                    island.UpdateBodies(_xformCache, substep);
+                }
+
+                //Otherwise proceed as normal
+                else
+                {
+                    //TODO: After the bodies are updated here, iterate all the bodies and then compare their coords to the cache?
+                    //Then update them individiually if they differ.
+                    island.UpdateBodies(_deferredUpdates, substep);
+                    island.SleepBodies(prediction, frameTime);
+                }
             }
         }
 

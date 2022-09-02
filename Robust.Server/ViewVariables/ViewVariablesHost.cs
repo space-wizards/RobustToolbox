@@ -17,7 +17,7 @@ using static Robust.Shared.Network.Messages.MsgViewVariablesDenySession;
 
 namespace Robust.Server.ViewVariables
 {
-    internal sealed class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
+    internal sealed partial class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
     {
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -31,8 +31,10 @@ namespace Robust.Server.ViewVariables
 
         private uint _nextSessionId = 1;
 
-        public void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+            InitializeDomains();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(_msgReqSession);
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>(_msgReqData);
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(_msgModifyRemote);
@@ -204,6 +206,17 @@ namespace Robust.Server.ViewVariables
                     }
 
                     theObject = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type);
+                    break;
+                }
+                case ViewVariablesPathSelector paSelector:
+                {
+                    if (ResolveFullPath(paSelector.Path) is not {} obj)
+                    {
+                        Deny(DenyReason.NoObject);
+                        return;
+                    }
+
+                    theObject = obj;
                     break;
                 }
                 default:

@@ -349,6 +349,11 @@ namespace Robust.Shared.GameObjects
             _extraLoadedTypes.Add(typeof(T));
         }
 
+        public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
+        {
+            return _systemDependencyCollection.TryResolveType(sysType, out system);
+        }
+
         public object GetEntitySystem(Type sysType)
         {
             return _systemDependencyCollection.ResolveType(sysType);

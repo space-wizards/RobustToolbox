@@ -41,8 +41,9 @@ namespace Robust.Client.ViewVariables
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
             = new();
 
-        public void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
             _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);

@@ -127,6 +127,8 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         void LoadExtraSystemType<T>() where T : IEntitySystem, new();
 
+
+        bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system);
         object GetEntitySystem(Type sysType);
     }
 }

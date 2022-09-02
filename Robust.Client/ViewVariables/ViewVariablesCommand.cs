@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 using Robust.Shared.Console;
@@ -30,7 +31,15 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
-            var valArg = args[0];
+            var valArg = string.Join(' ', args);
+
+            if (valArg.StartsWith("/"))
+            {
+                var selector = new ViewVariablesPathSelector(valArg);
+                vvm.OpenVV(selector);
+                return;
+            }
+
             if (valArg.StartsWith("SI"))
             {
                 if (valArg.StartsWith("SIoC"))

@@ -1,18 +1,19 @@
 using System;
 using Robust.Shared.Network;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables;
 
-internal sealed partial class ViewVariablesHost
+internal sealed partial class ServerViewVariablesManager
 {
     private void InitializeDomains()
     {
         RegisterDomain("player", ResolvePlayerObject);
     }
 
-    private (object? obj, string[] segments) ResolvePlayerObject(string path)
+    private (ViewVariablesPath? Path, string[] Segments) ResolvePlayerObject(string path)
     {
-        var empty = (_playerManager, Array.Empty<string>());
+        var empty = (new ViewVariablesInstancePath(_playerManager), Array.Empty<string>());
 
         if (string.IsNullOrEmpty(path))
             return empty;
@@ -25,10 +26,10 @@ internal sealed partial class ViewVariablesHost
         var identifier = segments[0];
 
         if (_playerManager.TryGetSessionByUsername(identifier, out var session))
-            return (session, segments[1..]);
+            return (new ViewVariablesInstancePath(session), segments[1..]);
 
         if (_playerManager.TryGetPlayerDataByUsername(identifier, out var data))
-            return (data, segments[1..]);
+            return (new ViewVariablesInstancePath(data), segments[1..]);
 
         if (!Guid.TryParse(identifier, out var guid))
             return EmptyResolve;
@@ -36,10 +37,10 @@ internal sealed partial class ViewVariablesHost
         var netId = new NetUserId(guid);
 
         if (_playerManager.TryGetSessionById(netId, out session))
-            return (session, segments[1..]);
+            return (new ViewVariablesInstancePath(session), segments[1..]);
 
         if (_playerManager.TryGetPlayerData(netId, out data))
-            return (data, segments[1..]);
+            return (new ViewVariablesInstancePath(data), segments[1..]);
 
         return EmptyResolve;
     }

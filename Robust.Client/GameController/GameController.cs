@@ -57,7 +57,7 @@ namespace Robust.Client
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager = default!;
+        [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;

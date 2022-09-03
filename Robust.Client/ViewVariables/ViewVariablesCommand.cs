@@ -22,7 +22,7 @@ namespace Robust.Client.ViewVariables
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var vvm = IoCManager.Resolve<IViewVariablesManager>();
+            var vvm = IoCManager.Resolve<IClientViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.
             // Spooky huh.
             if (args.Length == 0)
@@ -31,34 +31,32 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
-            var valArg = string.Join(' ', args);
-
-            if (valArg.StartsWith("/"))
+            if (argStr.StartsWith("/"))
             {
-                var selector = new ViewVariablesPathSelector(valArg);
+                var selector = new ViewVariablesPathSelector(argStr);
                 vvm.OpenVV(selector);
                 return;
             }
 
-            if (valArg.StartsWith("SI"))
+            if (argStr.StartsWith("SI"))
             {
-                if (valArg.StartsWith("SIoC"))
-                    valArg = valArg.Substring(4);
+                if (argStr.StartsWith("SIoC"))
+                    argStr = argStr.Substring(4);
 
                 // Server-side IoC selector.
-                var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
+                var selector = new ViewVariablesIoCSelector(argStr.Substring(1));
                 vvm.OpenVV(selector);
                 return;
             }
 
-            if (valArg.StartsWith("I"))
+            if (argStr.StartsWith("I"))
             {
-                if (valArg.StartsWith("IoC"))
-                    valArg = valArg.Substring(3);
+                if (argStr.StartsWith("IoC"))
+                    argStr = argStr.Substring(3);
 
                 // Client-side IoC selector.
                 var reflection = IoCManager.Resolve<IReflectionManager>();
-                if (!reflection.TryLooseGetType(valArg, out var type))
+                if (!reflection.TryLooseGetType(argStr, out var type))
                 {
                     shell.WriteLine("Unable to find that type.");
                     return;
@@ -79,12 +77,12 @@ namespace Robust.Client.ViewVariables
             }
 
             // Client side entity system.
-            if (valArg.StartsWith("CE"))
+            if (argStr.StartsWith("CE"))
             {
-                valArg = valArg.Substring(2);
+                argStr = argStr.Substring(2);
                 var reflection = IoCManager.Resolve<IReflectionManager>();
 
-                if (!reflection.TryLooseGetType(valArg, out var type))
+                if (!reflection.TryLooseGetType(argStr, out var type))
                 {
                     shell.WriteLine("Unable to find that type.");
                     return;
@@ -93,15 +91,15 @@ namespace Robust.Client.ViewVariables
                 vvm.OpenVV(IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type));
             }
 
-            if (valArg.StartsWith("SE"))
+            if (argStr.StartsWith("SE"))
             {
                 // Server-side Entity system selector.
-                var selector = new ViewVariablesEntitySystemSelector(valArg.Substring(2));
+                var selector = new ViewVariablesEntitySystemSelector(argStr.Substring(2));
                 vvm.OpenVV(selector);
                 return;
             }
 
-            if (valArg.StartsWith("guihover"))
+            if (argStr.StartsWith("guihover"))
             {
                 // UI element.
                 var obj = IoCManager.Resolve<IUserInterfaceManager>().CurrentlyHovered;

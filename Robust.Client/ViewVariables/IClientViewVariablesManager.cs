@@ -2,7 +2,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables
 {
-    public interface IViewVariablesManager
+    public interface IClientViewVariablesManager : IViewVariablesManager
     {
         /// <summary>
         ///     Open a VV window for a locally existing object.

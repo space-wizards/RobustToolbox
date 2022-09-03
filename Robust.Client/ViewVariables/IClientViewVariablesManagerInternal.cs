@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables
 {
-    internal interface IViewVariablesManagerInternal : IViewVariablesManager
+    internal interface IClientViewVariablesManagerInternal : IClientViewVariablesManager
     {
         void Initialize();
 
@@ -66,7 +66,7 @@ namespace Robust.Client.ViewVariables
         ///     Gets a collection of trait IDs that are agreed upon so <see cref="ViewVariablesInstanceObject"/> knows which traits to instantiate.
         /// </summary>
         /// <seealso cref="ViewVariablesBlobMetadata.Traits" />
-        /// <seealso cref="ViewVariablesManagerShared.TraitIdsFor"/>
+        /// <seealso cref="Shared.ViewVariables.ViewVariablesManager.TraitIdsFor"/>
         ICollection<object> TraitIdsFor(Type type);
     }
 }

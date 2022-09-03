@@ -20,7 +20,7 @@ using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
-    internal sealed class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
+    internal sealed class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;

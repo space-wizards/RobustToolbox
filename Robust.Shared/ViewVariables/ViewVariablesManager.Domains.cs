@@ -8,14 +8,14 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Shared.ViewVariables;
 
-internal abstract partial class ViewVariablesManagerShared
+internal abstract partial class ViewVariablesManager
 {
     [Dependency] private readonly IEntityManager _entMan = default!;
     [Dependency] private readonly IComponentFactory _compFact = default!;
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] private readonly IReflectionManager _reflectionMan = default!;
 
-    protected static readonly (object?, string[]) EmptyResolve = (null, Array.Empty<string>());
+    protected static readonly (ViewVariablesPath? Path, string[] Segments) EmptyResolve = (null, Array.Empty<string>());
 
     protected readonly Dictionary<Guid, WeakReference<object>> _vvObjectStorage = new();
 
@@ -28,9 +28,9 @@ internal abstract partial class ViewVariablesManagerShared
         RegisterDomain("object", ResolveStoredObject);
     }
 
-    public (object? obj, string[] segments) ResolveIoCObject(string path)
+    public (ViewVariablesPath? Path, string[] Segments) ResolveIoCObject(string path)
     {
-        var empty = (IoCManager.Instance, Array.Empty<string>());
+        var empty = (new ViewVariablesInstancePath(IoCManager.Instance), Array.Empty<string>());
 
         if (string.IsNullOrEmpty(path) || IoCManager.Instance == null)
             return empty;
@@ -46,11 +46,11 @@ internal abstract partial class ViewVariablesManagerShared
             return EmptyResolve;
 
         return IoCManager.Instance.TryResolveType(type, out var obj)
-            ? (obj, segments[1..])
+            ? (new ViewVariablesInstancePath(obj), segments[1..])
             : EmptyResolve;
     }
 
-    public (object? obj, string[] segments) ResolveEntityObject(string path)
+    public (ViewVariablesPath? Path, string[] Segments) ResolveEntityObject(string path)
     {
         if (string.IsNullOrEmpty(path))
             return EmptyResolve;
@@ -65,23 +65,13 @@ internal abstract partial class ViewVariablesManagerShared
 
         var uid = new EntityUid(num);
 
-        if (segments.Length == 1)
-            return (uid, Array.Empty<string>());
-
-        var componentName = segments[1];
-
-        if (!_entMan.EntityExists(uid)
-            || !_compFact.TryGetRegistration(componentName, out var registration, true)
-            || !_entMan.TryGetComponent(uid, registration.Idx, out var component))
-            return (null, Array.Empty<string>());
-
-        return (component, segments[2..]);
+        return (new ViewVariablesInstancePath(uid), segments[1..]);
     }
 
-    public (object? obj, string[] segments) ResolveEntitySystemObject(string path)
+    public (ViewVariablesPath? Path, string[] Segments) ResolveEntitySystemObject(string path)
     {
         var entSysMan = _entMan.EntitySysManager;
-        var empty = (entSysMan, Array.Empty<string>());
+        var empty = (new ViewVariablesInstancePath(entSysMan), Array.Empty<string>());
 
         if (string.IsNullOrEmpty(path))
             return empty;
@@ -97,13 +87,13 @@ internal abstract partial class ViewVariablesManagerShared
             return EmptyResolve;
 
         return entSysMan.TryGetEntitySystem(type, out var obj)
-            ? (obj, segments[1..])
+            ? (new ViewVariablesInstancePath(obj), segments[1..])
             : EmptyResolve;
     }
 
-    private (object? obj, string[] segments) ResolvePrototypeObject(string path)
+    private (ViewVariablesPath? Path, string[] Segments) ResolvePrototypeObject(string path)
     {
-        var empty = (_protoMan, Array.Empty<string>());
+        var empty = (new ViewVariablesInstancePath(_protoMan), Array.Empty<string>());
 
         if (string.IsNullOrEmpty(path) || IoCManager.Instance == null)
             return empty;
@@ -120,10 +110,10 @@ internal abstract partial class ViewVariablesManagerShared
             || !_protoMan.TryIndex(kindType, id, out var prototype))
             return EmptyResolve;
 
-        return (prototype, segments[2..]);
+        return (new ViewVariablesInstancePath(prototype), segments[2..]);
     }
 
-    private (object? obj, string[] segments) ResolveStoredObject(string path)
+    private (ViewVariablesPath? Path, string[] Segments) ResolveStoredObject(string path)
     {
         if (string.IsNullOrEmpty(path))
             return EmptyResolve;
@@ -136,6 +126,6 @@ internal abstract partial class ViewVariablesManagerShared
             || !weakRef.TryGetTarget(out var obj))
             return EmptyResolve;
 
-        return (obj, segments[1..]);
+        return (new ViewVariablesInstancePath(obj), segments[1..]);
     }
 }

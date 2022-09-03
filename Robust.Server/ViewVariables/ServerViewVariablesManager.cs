@@ -17,7 +17,7 @@ using static Robust.Shared.Network.Messages.MsgViewVariablesDenySession;
 
 namespace Robust.Server.ViewVariables
 {
-    internal sealed partial class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
+    internal sealed partial class ServerViewVariablesManager : ViewVariablesManager, IServerViewVariablesInternal
     {
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -210,7 +210,7 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesPathSelector paSelector:
                 {
-                    if (ResolveFullPath(paSelector.Path) is not {} obj)
+                    if (ResolvePath(paSelector.Path)?.Get() is not {} obj)
                     {
                         Deny(DenyReason.NoObject);
                         return;

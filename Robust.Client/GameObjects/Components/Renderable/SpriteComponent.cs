@@ -48,7 +48,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -78,6 +78,7 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
             }
@@ -222,7 +223,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -582,7 +583,6 @@ namespace Robust.Client.GameObjects
             }
 
             RebuildBounds();
-            QueueUpdateIsInert();
             return index;
         }
 
@@ -610,7 +610,6 @@ namespace Robust.Client.GameObjects
             }
 
             RebuildBounds();
-            QueueUpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -634,6 +633,8 @@ namespace Robust.Client.GameObjects
 
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
+            _bounds = _bounds.Scale(Scale);
+            entities?.EventBus?.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>
@@ -1521,7 +1522,7 @@ namespace Robust.Client.GameObjects
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
             if ((Owner != default ? entities : null)?.EventBus != null)
-                UpdateBounds();
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
 
             if (_inertUpdateQueued)
                 return;
@@ -1612,17 +1613,9 @@ namespace Robust.Client.GameObjects
 
             eye ??= eyeManager.CurrentEye;
 
-            // we need to calculate bounding box taking into account all nested layers
-            // because layers can have offsets, scale or rotation, we need to calculate a new BB
-            // based on lowest bottomLeft and highest topRight points from all layers
-            var box = Bounds;
-
             // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
             // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
             // transform our box by the combination of these matrices:
-
-            if (Scale != Vector2.One)
-                box = box.Scale(Scale);
 
             var adjustedOffset = NoRotation
                 ? (-eye.Rotation).RotateVec(Offset)
@@ -1633,12 +1626,7 @@ namespace Robust.Client.GameObjects
                 ? Rotation - eye.Rotation
                 : Rotation + worldRotation;
 
-            return new Box2Rotated(box.Translated(position), finalRotation, position);
-        }
-
-        internal void UpdateBounds()
-        {
-            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+            return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
         }
 
         /// <summary>
@@ -1722,7 +1710,7 @@ namespace Robust.Client.GameObjects
 
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1737,7 +1725,7 @@ namespace Robust.Client.GameObjects
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Angle _rotation = Angle.Zero;
@@ -1764,7 +1752,7 @@ namespace Robust.Client.GameObjects
 
                     _offset = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
 
@@ -1942,7 +1930,6 @@ namespace Robust.Client.GameObjects
             {
                 Visible = value;
 
-                _parent.QueueUpdateIsInert();
                 _parent.RebuildBounds();
             }
 
@@ -2048,8 +2035,7 @@ namespace Robust.Client.GameObjects
 
                 // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
                 // any possible rotation.
-                if (_rotation != 0 ||
-                    _parent.NoRotation) // no-rot effectively means _rotation = - eyeRotation, so we still have to assume the worst-case BB
+                if (_rotation != 0)
                 {
                     size = new Vector2(longestRotatedSide, longestRotatedSide);
                 }

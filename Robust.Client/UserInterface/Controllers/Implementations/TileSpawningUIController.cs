@@ -21,59 +21,64 @@ public sealed class TileSpawningUIController : UIController
     [Dependency] private readonly ITileDefinitionManager _tiles = default!;
 
     private TileSpawnWindow? _window;
+    private bool _init;
 
     private readonly List<ITileDefinition> _shownTiles = new();
     private bool _clearingTileSelections;
 
+    public override void Initialize()
+    {
+        DebugTools.Assert(_init == false);
+        _init = true;
+        _placement.PlacementChanged += ClearTileSelection;
+    }
+
     public void ToggleWindow()
     {
-        if (_window == null)
-        {
-            CreateWindow();
-        }
+        EnsureWindow();
 
         if (_window!.IsOpen)
         {
-            CloseWindow();
-            return;
+            _window.Close();
         }
-        _window.Open();
+        else
+        {
+            _window.Open();
+        }
     }
 
-    private void CreateWindow()
+    private void EnsureWindow()
     {
+        if (_window is { Disposed: false })
+            return;
         _window = UIManager.CreateWindow<TileSpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
-        _window.OnClose += WindowClosed;
         _window.SearchBar.GrabKeyboardFocus();
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
-        _placement.PlacementChanged += ClearTileSelection;
         BuildTileList();
     }
 
     public void CloseWindow()
     {
-        _window?.Close();
-    }
+        if (_window == null || _window.Disposed) return;
 
-    private void WindowClosed()
-    {
+        _window?.Close();
     }
 
     private void ClearTileSelection(object? sender, EventArgs e)
     {
+        if (_window == null || _window.Disposed) return;
         _clearingTileSelections = true;
-        _window?.TileList.ClearSelected();
+        _window.TileList.ClearSelected();
         _clearingTileSelections = false;
     }
 
     private void OnTileClearPressed(ButtonEventArgs args)
     {
-        if (_window == null)
-            return;
+        if (_window == null || _window.Disposed) return;
 
         _window.TileList.ClearSelected();
         _placement.Clear();
@@ -84,8 +89,7 @@ public sealed class TileSpawningUIController : UIController
 
     private void OnTileSearchChanged(LineEdit.LineEditEventArgs args)
     {
-        if (_window == null)
-            return;
+        if (_window == null || _window.Disposed) return;
 
         _window.TileList.ClearSelected();
         _placement.Clear();
@@ -120,10 +124,7 @@ public sealed class TileSpawningUIController : UIController
 
     private void BuildTileList(string? searchStr = null)
     {
-        if (_window == null)
-        {
-            return;
-        }
+        if (_window == null || _window.Disposed) return;
 
         _window.TileList.Clear();
 

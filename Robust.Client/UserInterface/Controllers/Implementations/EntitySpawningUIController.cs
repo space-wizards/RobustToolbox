@@ -15,7 +15,6 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-// TODO hud refactor BEFORE MERGE fix only showing one entity on first open
 public sealed class EntitySpawningUIController : UIController
 {
     [Dependency] private readonly IPlacementManager _placement = default!;
@@ -24,6 +23,16 @@ public sealed class EntitySpawningUIController : UIController
 
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();
+    private bool _init;
+
+    public override void Initialize()
+    {
+        DebugTools.Assert(_init == false);
+        _init = true;
+
+        _placement.DirectionChanged += OnDirectionChanged;
+        _placement.PlacementChanged += ClearSelection;
+    }
 
     // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
     // This is inclusive, so end is the index of the last prototype, not right after it.
@@ -31,7 +40,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void OnEntityEraseToggled(ButtonToggledEventArgs args)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _placement.Clear();
@@ -45,22 +54,25 @@ public sealed class EntitySpawningUIController : UIController
 
     public void ToggleWindow()
     {
-        if (_window == null)
+        EnsureWindow();
+
+        if (_window!.IsOpen)
         {
-            CreateWindow();
+            _window.Close();
         }
-        else if (_window.IsOpen)
+        else
         {
-            CloseWindow();
-            return;
+            _window.Open();
+            UpdateEntityDirectionLabel();
+            _window.SearchBar.GrabKeyboardFocus();
         }
-        _window!.Open();
-        UpdateEntityDirectionLabel();
-        _window.SearchBar.GrabKeyboardFocus();
     }
 
-    private void CreateWindow()
+    private void EnsureWindow()
     {
+        if (_window is { Disposed: false })
+            return;
+
         _window = UIManager.CreateWindow<EntitySpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
@@ -71,36 +83,34 @@ public sealed class EntitySpawningUIController : UIController
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
         _window.OnResized += UpdateVisiblePrototypes;
-
-        _placement.DirectionChanged += OnDirectionChanged;
-        _placement.PlacementChanged += ClearSelection;
         BuildEntityList();
     }
 
     public void CloseWindow()
     {
+        if (_window == null || _window.Disposed)
+            return;
+
         _window?.Close();
     }
 
     private void WindowClosed()
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
-        //_window.OnClose -= WindowClosed;
+
         if (_window.SelectedButton != null)
         {
             _window.SelectedButton.ActualButton.Pressed = false;
             _window.SelectedButton = null;
         }
 
-        //_placement.DirectionChanged -= OnDirectionChanged;
-        //_placement.PlacementChanged -= ClearSelection;
         _placement.Clear();
     }
 
     private void ClearSelection(object? sender, EventArgs e)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         if (_window.SelectedButton != null)
@@ -115,7 +125,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void OnEntityOverrideSelected(OptionButton.ItemSelectedEventArgs args)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _window.OverrideMenu.SelectId(args.Id);
@@ -137,7 +147,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void OnEntitySearchChanged(LineEditEventArgs args)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _placement.Clear();
@@ -147,7 +157,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void OnEntityClearPressed(ButtonEventArgs args)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _placement.Clear();
@@ -157,7 +167,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void BuildEntityList(string? searchStr = null)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _shownEntities.Clear();
@@ -191,33 +201,28 @@ public sealed class EntitySpawningUIController : UIController
 
     private static bool DoesEntityMatchSearch(EntityPrototype prototype, string searchStr)
     {
-        if (prototype.ID.ToLowerInvariant().Contains(searchStr))
-        {
+        if (string.IsNullOrEmpty(searchStr))
             return true;
-        }
+
+        if (prototype.ID.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+            return true;
 
         if (prototype.EditorSuffix != null &&
-            prototype.EditorSuffix.Contains(searchStr, StringComparison.CurrentCultureIgnoreCase))
-        {
+            prototype.EditorSuffix.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
             return true;
-        }
 
         if (string.IsNullOrEmpty(prototype.Name))
-        {
             return false;
-        }
 
-        if (prototype.Name.ToLowerInvariant().Contains(searchStr))
-        {
+        if (prototype.Name.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
             return true;
-        }
 
         return false;
     }
 
     private void UpdateEntityDirectionLabel()
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         _window.RotationLabel.Text = _placement.Direction.ToString();
@@ -231,7 +236,7 @@ public sealed class EntitySpawningUIController : UIController
     // Update visible buttons in the prototype list.
     private void UpdateVisiblePrototypes()
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         // Calculate index of first prototype to render based on current scroll.
@@ -293,7 +298,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void InsertEntityButton(EntityPrototype prototype, bool insertFirst, int index)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         var textures = SpriteComponent.GetPrototypeTextures(prototype, _resources).Select(o => o.Default).ToList();
@@ -304,7 +309,7 @@ public sealed class EntitySpawningUIController : UIController
 
     private void OnEntityButtonToggled(ButtonToggledEventArgs args)
     {
-        if (_window == null)
+        if (_window == null || _window.Disposed)
             return;
 
         var item = (EntitySpawnButton) args.Button.Parent!;
@@ -315,7 +320,8 @@ public sealed class EntitySpawningUIController : UIController
             _placement.Clear();
             return;
         }
-        else if (_window.SelectedButton != null)
+
+        if (_window.SelectedButton != null)
         {
             _window.SelectedButton.ActualButton.Pressed = false;
         }

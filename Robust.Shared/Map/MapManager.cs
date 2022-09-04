@@ -39,8 +39,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         StartupGridTrees();
         EnsureNullspaceExistsAndClear();
-
-        DebugTools.Assert(_grids.Count == 0);
     }
 
     /// <inheritdoc />
@@ -58,7 +56,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         ShutdownGridTrees();
 
 #if DEBUG
-        DebugTools.Assert(_grids.Count == 0);
         _dbgGuardRunning = false;
 #endif
     }

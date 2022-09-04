@@ -12,12 +12,6 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager
     {
-        /// <summary>
-        /// A faster version of <see cref="GetAllGrids"/>
-        /// </summary>
-        [Obsolete("EntityQuery for MapGridComponent instead")]
-        GridEnumerator GetAllGridsEnumerator();
-
         IEnumerable<MapGridComponent> GetAllGrids();
 
         /// <summary>
@@ -142,20 +136,11 @@ namespace Robust.Shared.Map
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
-        [Obsolete("Delete the grid's entity instead")]
-        void DeleteGrid(EntityUid gridId);
-
         /// <summary>
         ///     A tile is being modified.
         /// </summary>
         [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
         event EventHandler<TileChangedEventArgs> TileChanged;
-
-        [Obsolete("Subscribe to GridStartupEvent on the event bus.")]
-        event GridEventHandler OnGridCreated;
-
-        [Obsolete("Subscribe to GridRemovalEvent on the event bus.")]
-        event GridEventHandler OnGridRemoved;
 
         /// <summary>
         ///     A Grid was modified.

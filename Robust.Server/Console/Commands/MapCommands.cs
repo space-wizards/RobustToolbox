@@ -458,15 +458,15 @@ namespace Robust.Server.Console.Commands
             }
 
             var gridId = EntityUid.Parse(args[0]);
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            if (!mapManager.GridExists(gridId))
+            if (!entityManager.HasComponent<MapGridComponent>(gridId))
             {
                 shell.WriteError($"Grid {gridId} does not exist.");
                 return;
             }
 
-            mapManager.DeleteGrid(gridId);
+            entityManager.DeleteEntity(gridId);
             shell.WriteLine($"Grid {gridId} was removed.");
         }
     }
@@ -524,7 +524,7 @@ namespace Robust.Server.Console.Commands
                     mapId, mapManager.IsMapInitialized(mapId),
                     mapManager.IsMapPaused(mapId),
                     mapManager.GetMapEntityId(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)));
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
             }
 
             shell.WriteLine(msg.ToString());

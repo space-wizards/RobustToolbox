@@ -143,11 +143,11 @@ namespace Robust.Client.Graphics.Clyde
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                vboSize, $"Grid {grid.Index} chunk {chunk.Indices} VBO");
+                vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} VBO");
             var ebo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                eboSize, $"Grid {grid.Index} chunk {chunk.Indices} EBO");
+                eboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EBO");
 
-            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Index} chunk {chunk.Indices} VAO");
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} VAO");
             SetupVAOLayout();
             CheckGlError();
 

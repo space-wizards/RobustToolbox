@@ -960,7 +960,16 @@ namespace Robust.Server.Maps
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
                     var currentTransform = transformCompQuery.GetComponent(entity);
-                    if ((MapId != null && currentTransform.MapID != MapId) || (MapId == null && !GridIDMap.ContainsKey(currentTransform.GridID))) continue;
+
+                    // Transform is not part of this map tree
+                    if (MapId != null && currentTransform.MapID != MapId) continue;
+
+                    // Transform is part of th grid trees to be serialized.
+                    var xformGridId = _serverEntityManager.TryGetComponent(currentTransform.GridUid, out MapGridComponent? grid)
+                        ? grid.GridIndex
+                        : GridId.Invalid;
+
+                    if (MapId == null && !GridIDMap.ContainsKey(xformGridId)) continue;
 
                     var currentEntity = entity;
 

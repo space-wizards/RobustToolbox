@@ -82,13 +82,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        protected override void OnRemove()
-        {
-            _mapManager.TrueGridDelete(this);
-
-            base.OnRemove();
-        }
-
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
@@ -115,7 +108,6 @@ namespace Robust.Shared.Map
             TileSize = tileSize;
             LastTileModifiedTick = _gameTiming.CurTick;
 
-            _mapManager.OnGridAllocated(this, this);
             return this;
         }
 

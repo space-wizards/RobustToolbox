@@ -2,16 +2,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
     internal interface IMapManagerInternal : IMapManager
     {
-        IGameTiming GameTiming { get; }
-        IEntityManager EntityManager { get; }
-
         void OnComponentRemoved(MapGridComponent comp);
 
         void ChunkRemoved(EntityUid gridId, MapChunk chunk);
@@ -43,11 +39,8 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
-        bool TryGetGridEuid(GridId id, [NotNullWhen(true)] out EntityUid? euid);
-        void TrueGridDelete(MapGridComponent grid);
         void TrueDeleteMap(MapId mapId);
         GridId GenerateGridId(GridId? forcedGridId);
-        void OnGridAllocated(MapGridComponent gridComponent, MapGridComponent mapGrid);
         void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

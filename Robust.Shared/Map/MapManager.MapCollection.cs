@@ -60,7 +60,18 @@ internal partial class MapManager
 
         foreach (var grid in grids)
         {
-            DeleteGrid(grid.Index);
+            var entityId = grid.Owner;
+            if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
+            {
+                DebugTools.Assert( $"Calling {nameof(TrueDeleteMap)} with {grid.Owner}, but there was no allocated entity.");
+            }
+            else
+            {
+                // DeleteGrid may be triggered by the entity being deleted,
+                // so make sure that's not the case.
+                if (metaComp.EntityLifeStage < EntityLifeStage.Terminating)
+                    EntityManager.DeleteEntity(entityId);
+            }
         }
 
         if (mapId != MapId.Nullspace)

@@ -25,11 +25,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
     private readonly Dictionary<EntityUid, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
 
-    public override void DeleteGrid(EntityUid gridId)
+    public override void OnComponentRemoved(MapGridComponent comp)
     {
-        base.DeleteGrid(gridId);
-        // No point syncing chunk removals anymore!
-        _chunkDeletionHistory.Remove(gridId);
+        _chunkDeletionHistory.Remove(comp.Owner);
     }
 
     public override void ChunkRemoved(EntityUid gridId, MapChunk chunk)
@@ -47,18 +45,15 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<EntityUid, GameStateMapData.GridDatum>();
-        var enumerator = GetAllGridsEnumerator();
 
-        while (enumerator.MoveNext(out var iGrid))
+        foreach (var grid in EntityManager.EntityQuery<MapGridComponent>())
         {
-            var grid = (MapGridComponent)iGrid;
-
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
 
             var chunkData = new List<GameStateMapData.ChunkDatum>();
 
-            if (_chunkDeletionHistory.TryGetValue(grid.Index, out var chunks))
+            if (_chunkDeletionHistory.TryGetValue(grid.Owner, out var chunks))
             {
                 foreach (var (tick, indices) in chunks)
                 {

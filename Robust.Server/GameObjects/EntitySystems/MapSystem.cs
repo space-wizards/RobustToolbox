@@ -38,7 +38,7 @@ namespace Robust.Server.GameObjects
 
                 foreach (var grid in toDelete)
                 {
-                    MapManager.DeleteGrid(grid.Index);
+                    EntityManager.DeleteEntity(grid.Owner);
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace Robust.Server.GameObjects
             if (!EntityManager.EntityExists(uid)) return;
             if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            MapManager.DeleteGrid(args.GridId);
+            EntityManager.DeleteEntity(args.GridId);
         }
     }
 }

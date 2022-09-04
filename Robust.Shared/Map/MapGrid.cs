@@ -27,13 +27,6 @@ namespace Robust.Shared.Map
         [ViewVariables] public EntityUid GridEntityId => Owner;
 
         /// <summary>
-        ///     The identifier of this grid.
-        /// </summary>
-        [ViewVariables]
-        [Obsolete("Use EntityUids instead")]
-        public EntityUid Index => Owner;
-
-        /// <summary>
         ///     The integer ID of the map this grid is currently located within.
         /// </summary>
         public MapId ParentMapId
@@ -387,11 +380,11 @@ namespace Robust.Shared.Map
             chunk.Fixtures.Clear();
             Chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved(Index, chunk);
+            _mapManager.ChunkRemoved(Owner, chunk);
 
             if (Chunks.Count == 0)
             {
-                _entMan.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent { GridId = Index }, true);
+                _entMan.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent { GridId = Owner }, true);
             }
         }
 
@@ -762,9 +755,9 @@ namespace Robust.Shared.Map
         {
             if (posWorld.MapId != ParentMapId)
                 throw new ArgumentException(
-                    $"Grid {Index} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
+                    $"Grid {Owner} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
 
-            if (!_mapManager.TryGetGrid(Index, out var grid))
+            if (!_mapManager.TryGetGrid(Owner, out var grid))
             {
                 return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
             }

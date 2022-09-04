@@ -185,6 +185,11 @@ public sealed class EntitySpawningUIController : UIController
                 continue;
             }
 
+            if (prototype.NoSpawn)
+            {
+                continue;
+            }
+
             if (searchStr != null && !DoesEntityMatchSearch(prototype, searchStr))
             {
                 continue;

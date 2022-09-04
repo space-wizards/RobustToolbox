@@ -32,16 +32,17 @@ internal sealed class ClientDirtySystem : EntitySystem
         base.Shutdown();
         EntityManager.EntityDirtied -= OnEntityDirty;
         EntityManager.ComponentRemoved -= OnCompRemoved;
-        DirtyEntities.Clear();
+        Reset();
     }
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
     {
-        if (args.BaseArgs.Owner.IsClientSide() || !args.BaseArgs.Component.NetSyncEnabled || !_timing.InPrediction)
+        var comp = args.BaseArgs.Component;
+        if (!_timing.InPrediction || comp.Owner.IsClientSide() || !comp.NetSyncEnabled)
             return;
 
         // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.
-        if (args.BaseArgs.Component.CreationTick > _timing.LastRealTick)
+        if (comp.CreationTick > _timing.LastRealTick)
             return;
 
         // TODO if entity deletion ever gets predicted, then to speed this function up the component removal event
@@ -50,11 +51,9 @@ internal sealed class ClientDirtySystem : EntitySystem
         // server-induced deletions should get ignored, as _timing.InPrediction will be false while applying game
         // states.
 
-        var netId = _compFact.GetRegistration(args.BaseArgs.Component).NetID;
-        if (netId == null)
-            return;
-
-        RemovedComponents.GetOrNew(args.BaseArgs.Owner).Add(netId.Value);
+        var netId = _compFact.GetRegistration(comp).NetID;
+        if (netId != null)
+            RemovedComponents.GetOrNew(comp.Owner).Add(netId.Value);
     }
 
     internal void Reset()
@@ -65,7 +64,7 @@ internal sealed class ClientDirtySystem : EntitySystem
 
     private void OnEntityDirty(EntityUid e)
     {
-        if (!e.IsClientSide() && _timing.InPrediction)
+        if (_timing.InPrediction && !e.IsClientSide())
             DirtyEntities.Add(e);
     }
 }

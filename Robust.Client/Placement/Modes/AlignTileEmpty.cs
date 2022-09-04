@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -17,11 +17,11 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var tileSize = 1f;
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
 
             if (gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
+                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridEuid(pManager.EntityManager));
                 CurrentTile = mapGrid.GetTileRef(MouseCoords);
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }

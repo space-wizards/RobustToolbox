@@ -71,7 +71,6 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
             Assert.That(entMan.Deleted(oldEntity), Is.True);
 
         }

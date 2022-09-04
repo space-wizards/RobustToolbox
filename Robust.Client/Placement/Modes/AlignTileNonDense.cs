@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Map;
+using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -15,7 +15,7 @@ namespace Robust.Client.Placement.Modes
 
             var tileSize = 1f;
 
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
             if (gridId.IsValid())
             {
                 var mapGrid = pManager.MapManager.GetGrid(gridId);

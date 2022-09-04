@@ -133,11 +133,11 @@ public sealed class GridSplit_Tests
             // Assertions baby
             Assert.That(anchoredXform.Anchored);
             Assert.That(anchoredXform.ParentUid, Is.EqualTo(newGrid.GridEntityId));
-            Assert.That(anchoredXform.GridID, Is.EqualTo(newGrid.Index));
+            Assert.That(anchoredXform.GridEuid, Is.EqualTo(newGrid.Index));
             Assert.That(newGridXform._children, Does.Contain(anchored));
 
             Assert.That(dummyXform.ParentUid, Is.EqualTo(newGrid.GridEntityId));
-            Assert.That(dummyXform.GridID, Is.EqualTo(newGrid.Index));
+            Assert.That(dummyXform.GridEuid, Is.EqualTo(newGrid.Index));
             Assert.That(newGridXform._children, Does.Contain(dummy));
         });
         mapManager.DeleteMap(mapId);

@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
@@ -92,20 +91,12 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
-        [Obsolete("Use overload without GridId parameter instead")]
-        // ReSharper disable once MethodOverloadWithOptionalParameter
-        MapGridComponent CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
         MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
+        MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize);
         MapGridComponent CreateGrid(MapId currentMapId);
-        [Obsolete("Use EntityUids instead")]
-        MapGridComponent GetGrid(GridId gridId);
         MapGridComponent GetGrid(EntityUid gridId);
-        [Obsolete("Use EntityUids instead")]
-        bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out MapGridComponent? grid);
 
         bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid);
-        [Obsolete("Use EntityUids instead")]
-        bool GridExists(GridId gridId);
         bool GridExists([NotNullWhen(true)] EntityUid? euid);
         IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
 
@@ -152,7 +143,7 @@ namespace Robust.Shared.Map
         IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
         [Obsolete("Delete the grid's entity instead")]
-        void DeleteGrid(GridId gridId);
+        void DeleteGrid(EntityUid gridId);
 
         /// <summary>
         ///     A tile is being modified.
@@ -191,10 +182,7 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        [Obsolete("Use EntityUids instead")]
-        EntityUid GetGridEuid(GridId id);
-        [Obsolete("Use EntityUids instead")]
-        MapGridComponent GetGridComp(GridId id);
+
         MapGridComponent GetGridComp(EntityUid euid);
 
         //
@@ -212,10 +200,6 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsGridPaused(MapGridComponent grid);
-
-        [Pure]
-        [Obsolete("Use EntityUids instead")]
-        bool IsGridPaused(GridId gridId);
 
         [Pure]
         bool IsGridPaused(EntityUid gridId);

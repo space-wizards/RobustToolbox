@@ -187,7 +187,7 @@ namespace Robust.Server.Bql
             var map = IoCManager.Resolve<IMapManager>();
             if (tileTy.TileId == 0)
             {
-                return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.GridID == GridId.Invalid) ^ isInverted);
+                return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.GridEuid == EntityUid.Invalid) ^ isInverted);
             }
             else
             {
@@ -195,7 +195,7 @@ namespace Robust.Server.Bql
                 {
                     if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform)) return isInverted;
 
-                    var gridId = transform.GridID;
+                    var gridId = transform.GridEuid;
                     if (!map.TryGetGrid(gridId, out var grid))
                         return isInverted;
 
@@ -217,8 +217,8 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             // TODO: Probably easier and significantly faster to just iterate the grid's children.
-            var grid = new GridId((int) arguments[0]);
-            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.GridID == grid) ^ isInverted);
+            var gridId = new EntityUid((int) arguments[0]);
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.GridEuid == gridId) ^ isInverted);
         }
     }
 

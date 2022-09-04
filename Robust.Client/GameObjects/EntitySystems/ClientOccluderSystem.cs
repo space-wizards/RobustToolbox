@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
                 occluderQuery.HasComponent(sender))
             {
                 var xform = EntityManager.GetComponent<TransformComponent>(sender);
-                if (!_mapManager.TryGetGrid(xform.GridID, out grid))
+                if (!_mapManager.TryGetGrid(xform.GridEuid, out grid))
                     return;
 
                 var coords = xform.Coordinates;
@@ -95,9 +95,9 @@ namespace Robust.Client.GameObjects
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out grid))
+            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.Item1, out grid))
             {
-                var pos = ev.LastPosition.Value.pos;
+                var pos = ev.LastPosition.Value.Item2;
 
                 AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, 1)), occluderQuery);
                 AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, -1)), occluderQuery);
@@ -122,13 +122,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(EntityUid sender, (GridId grid, Vector2i pos)? lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (EntityUid, Vector2i) lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
-        public (GridId grid, Vector2i pos)? LastPosition { get; }
+        public (EntityUid, Vector2i)? LastPosition { get; }
         public EntityUid Sender { get; }
     }
 }

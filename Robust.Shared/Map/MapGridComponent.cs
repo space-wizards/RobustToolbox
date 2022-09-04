@@ -33,10 +33,10 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [Obsolete("Use EntityUid instead")]
-        public GridId GridIndex
+        internal GridId GridIndex
         {
             get => _gridIndex;
-            internal set => _gridIndex = value;
+            set => _gridIndex = value;
         }
 
         [DataField("chunkSize")]

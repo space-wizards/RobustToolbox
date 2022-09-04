@@ -150,11 +150,11 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridId = GetGridUid(entityManager);
+            var gridId = GetGridEuid(entityManager);
 
-            if (gridId != null)
+            if (gridId.IsValid())
             {
-                return mapManager.GetGrid(gridId.Value).GetTileRef(this).GridIndices;
+                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);
@@ -205,34 +205,26 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Returns the Grid Id these coordinates are on.
-        ///     If none of the ancestors are a grid, returns <see cref="GridId.Invalid"/> grid instead.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
-        [Obsolete("Use GetGridUid")]
-        public GridId GetGridId(IEntityManager entityManager)
-        {
-            if (!IsValid(entityManager))
-                return GridId.Invalid;
-
-            var uid = entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
-
-            if (uid == null)
-                return GridId.Invalid;
-
-            return entityManager.GetComponent<MapGridComponent>(uid.Value).GridIndex;
-        }
-
-        /// <summary>
         ///     Returns the Grid EntityUid these coordinates are on.
         ///     If none of the ancestors are a grid, returns null instead.
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Grid EntityUid this entity is on or null</returns>
+        [Obsolete("Use GetGridEuid")]
         public EntityUid? GetGridUid(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
+        }
+
+        /// <summary>
+        ///     Returns the Grid EntityUid these coordinates are on.
+        ///     If none of the ancestors are a grid, returns <see cref="EntityUid.Invalid"/> instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Grid EntityUid this entity is on or null</returns>
+        public EntityUid GetGridEuid(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? EntityUid.Invalid : entityManager.GetComponent<TransformComponent>(EntityId).GridUid.GetValueOrDefault();
         }
 
         /// <summary>

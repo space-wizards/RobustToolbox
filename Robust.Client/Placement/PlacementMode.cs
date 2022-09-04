@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.GameObjects;
@@ -170,11 +170,9 @@ namespace Robust.Client.Placement
         /// </summary>
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridId(pManager.EntityManager);
-            var gridUid = coordinates.GetGridUid(pManager.EntityManager);
+            var gridId = coordinates.GetGridEuid(pManager.EntityManager);
             return gridId.IsValid() ? pManager.MapManager.GetGrid(gridId).GetTileRef(MouseCoords)
-                : new TileRef(gridId, gridUid.GetValueOrDefault(),
-                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
+                : new TileRef(gridId, MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
         }
 
         public TextureResource GetSprite(string key)

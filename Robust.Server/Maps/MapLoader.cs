@@ -883,13 +883,13 @@ namespace Robust.Server.Maps
             // Serialization
             public void RegisterGrid(MapGridComponent grid)
             {
-                if (GridIDMap.ContainsKey(grid.Index))
+                if (GridIDMap.ContainsKey(grid.GridIndex))
                 {
                     throw new InvalidOperationException();
                 }
 
                 Grids.Add(grid);
-                GridIDMap.Add(grid.Index, GridIDMap.Count);
+                GridIDMap.Add(grid.GridIndex, GridIDMap.Count);
             }
 
             public YamlNode Serialize()

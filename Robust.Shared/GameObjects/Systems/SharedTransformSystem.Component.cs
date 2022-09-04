@@ -252,7 +252,7 @@ public abstract partial class SharedTransformSystem
     #region GridId
 
     /// <summary>
-    /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
+    /// Sets the grid <see cref="EntityUid"/> for the <see cref="TransformComponent"/>. Does not <see cref="TransformComponent.Dirty"/> it.
     /// </summary>
     public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {

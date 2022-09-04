@@ -31,7 +31,7 @@ namespace Robust.Shared.Map
         /// </summary>
         [ViewVariables]
         [Obsolete("Use EntityUids instead")]
-        public GridId Index => GridIndex;
+        public EntityUid Index => Owner;
 
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.
@@ -148,7 +148,7 @@ namespace Robust.Shared.Map
             if (!Chunks.TryGetValue(chunkIndices, out var output))
             {
                 // Chunk doesn't exist, return a tileRef to an empty (space) tile.
-                return new TileRef(Index, GridEntityId, tileCoordinates.X, tileCoordinates.Y, default);
+                return new TileRef(GridEntityId, tileCoordinates.X, tileCoordinates.Y, default);
             }
 
             var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
@@ -171,7 +171,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
             var indices = mapChunk.ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
-            return new TileRef(Index, GridEntityId, indices, mapChunk.GetTile(xIndex, yIndex));
+            return new TileRef(GridEntityId, indices, mapChunk.GetTile(xIndex, yIndex));
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace Robust.Shared.Map
                             continue;
 
                         var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * ChunkSize;
-                        yield return new TileRef(Index, GridEntityId, gridX, gridY, tile);
+                        yield return new TileRef(GridEntityId, gridX, gridY, tile);
                     }
                 }
             }
@@ -204,7 +204,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
         {
-            return new GridTileEnumerator(Index, GridEntityId, Chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
+            return new GridTileEnumerator(GridEntityId, Chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace Robust.Shared.Map
                     }
                     else if (!ignoreEmpty)
                     {
-                        var tile = new TileRef(Index, GridEntityId, x, y, new Tile());
+                        var tile = new TileRef(GridEntityId, x, y, new Tile());
 
                         if (predicate == null || predicate(tile))
                             yield return tile;
@@ -1076,7 +1076,7 @@ namespace Robust.Shared.Map
             // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
             if (!_mapManager.SuppressOnTileChanged)
             {
-                var newTileRef = new TileRef(Index, GridEntityId, gridTile, newTile);
+                var newTileRef = new TileRef(GridEntityId, gridTile, newTile);
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
             }
 
@@ -1092,7 +1092,7 @@ namespace Robust.Shared.Map
     /// </summary>
     public sealed class EmptyGridEvent : EntityEventArgs
     {
-        public GridId GridId { get; init; }
+        public EntityUid GridId { get; init; }
     }
 
     /// <summary>
@@ -1100,17 +1100,15 @@ namespace Robust.Shared.Map
     /// </summary>
     public struct GridTileEnumerator
     {
-        private GridId _gridId;
         private EntityUid _gridUid;
         private Dictionary<Vector2i, MapChunk>.Enumerator _chunkEnumerator;
         private readonly ushort _chunkSize;
         private int _index;
         private bool _ignoreEmpty;
 
-        internal GridTileEnumerator(GridId gridId, EntityUid gridUid,
+        internal GridTileEnumerator(EntityUid gridUid,
             Dictionary<Vector2i, MapChunk>.Enumerator chunkEnumerator, ushort chunkSize, bool ignoreEmpty)
         {
-            _gridId = gridId;
             _gridUid = gridUid;
             _chunkEnumerator = chunkEnumerator;
             _chunkSize = chunkSize;
@@ -1145,7 +1143,7 @@ namespace Robust.Shared.Map
 
             var gridX = x + chunkOrigin.X * _chunkSize;
             var gridY = y + chunkOrigin.Y * _chunkSize;
-            tileRef = new TileRef(_gridId, _gridUid, gridX, gridY, tile);
+            tileRef = new TileRef(_gridUid, gridX, gridY, tile);
             return true;
         }
     }

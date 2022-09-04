@@ -314,20 +314,20 @@ namespace Robust.Client.Console.Commands
 
             var mapMan = IoCManager.Resolve<IMapManager>();
 
-            if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
-            {
-                foreach (var entity in
-                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetAnchoredEntities(
-                        new Vector2i(
-                            int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
-                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
-                {
-                    shell.WriteLine(entity.ToString());
-                }
-            }
-            else
+            var gridEuid = EntityUid.Parse(gridId);
+
+            if (!mapMan.TryGetGrid(gridEuid, out var grid))
             {
                 shell.WriteError("grid does not exist");
+                return;
+            }
+
+            foreach (var entity in grid.GetAnchoredEntities(
+                         new Vector2i(
+                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
+                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
+            {
+                shell.WriteLine(entity.ToString());
             }
         }
     }
@@ -443,12 +443,12 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                shell.WriteLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
+                shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }
             else
             {

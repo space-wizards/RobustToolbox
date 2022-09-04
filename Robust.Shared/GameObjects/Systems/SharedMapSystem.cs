@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -47,20 +46,20 @@ namespace Robust.Shared.GameObjects
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
 #pragma warning disable CS0618
-            var msg = new GridInitializeEvent(uid, component.GridIndex);
+            var msg = new GridInitializeEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
 #pragma warning disable CS0618
-            var msg = new GridStartupEvent(uid, component.GridIndex);
+            var msg = new GridStartupEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
+            RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
             MapManager.OnComponentRemoved(component);
         }
     }
@@ -99,26 +98,20 @@ namespace Robust.Shared.GameObjects
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridStartupEvent(EntityUid uid, GridId gridId)
+        public GridStartupEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 
     public sealed class GridRemovalEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridRemovalEvent(EntityUid uid, GridId gridId)
+        public GridRemovalEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 
@@ -128,13 +121,10 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridInitializeEvent(EntityUid uid, GridId gridId)
+        public GridInitializeEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 #pragma warning restore CS0618

@@ -408,7 +408,7 @@ namespace Robust.Server.Console.Commands
             var pos = pt.Coordinates;
 
             shell.WriteLine(
-                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
+                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridEuid(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
@@ -425,7 +425,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Wrong number of args.");
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
             var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
@@ -457,17 +457,17 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (!mapManager.GridExists(gridId))
             {
-                shell.WriteError($"Grid {gridId.Value} does not exist.");
+                shell.WriteError($"Grid {gridId} does not exist.");
                 return;
             }
 
             mapManager.DeleteGrid(gridId);
-            shell.WriteLine($"Grid {gridId.Value} was removed.");
+            shell.WriteLine($"Grid {gridId} was removed.");
         }
     }
 
@@ -545,13 +545,13 @@ namespace Robust.Server.Console.Commands
             var msg = new StringBuilder();
             var xformQuery = entManager.GetEntityQuery<TransformComponent>();
 
-            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Owner))
             {
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
                 var worldPos = xform.WorldPosition;
 
-                msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
-                    grid.Index, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
+                msg.AppendFormat("{0}: map: {1},  pos: {2:0.0},{3:0.0} \n",
+                    grid.Owner, xform.MapID, worldPos.X, worldPos.Y);
             }
 
             shell.WriteLine(msg.ToString());

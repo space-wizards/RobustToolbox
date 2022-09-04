@@ -1,13 +1,11 @@
 using System;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
     [Serializable, NetSerializable]
     [Obsolete("Use EntityUids instead.")]
-    public struct GridId : IEquatable<GridId>
+    internal struct GridId : IEquatable<GridId>
     {
         /// <summary>
         /// An invalid grid ID.

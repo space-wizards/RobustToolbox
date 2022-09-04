@@ -30,7 +30,7 @@ namespace Robust.Client.ViewVariables.Editors
                 HorizontalExpand = true,
                 PlaceHolder = "Grid ID",
                 ToolTip = "Grid ID",
-                Text = coords.GetGridId(entityManager).ToString()
+                Text = coords.GetGridEuid(entityManager).ToString()
             };
 
             hBoxContainer.AddChild(gridId);
@@ -61,12 +61,12 @@ namespace Robust.Client.ViewVariables.Editors
 
             void OnEntered(LineEdit.LineEditEventArgs e)
             {
-                var gridVal = int.Parse(gridId.Text, CultureInfo.InvariantCulture);
+                var gridVal = EntityUid.Parse(gridId.Text);
                 var mapManager = IoCManager.Resolve<IMapManager>();
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
 
-                if (!mapManager.TryGetGrid(new GridId(gridVal), out var grid))
+                if (!mapManager.TryGetGrid(gridVal, out var grid))
                 {
                     ValueChanged(new EntityCoordinates(EntityUid.Invalid, (xVal, yVal)));
                     return;

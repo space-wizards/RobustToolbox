@@ -41,10 +41,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         EnsureNullspaceExistsAndClear();
 
         DebugTools.Assert(_grids.Count == 0);
-#pragma warning disable CS0618
-        // Not really sure what to do with this. Can't hurt to leave it in.
-        DebugTools.Assert(!GridExists(GridId.Invalid));
-#pragma warning restore CS0618
     }
 
     /// <inheritdoc />
@@ -63,9 +59,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
 #if DEBUG
         DebugTools.Assert(_grids.Count == 0);
-#pragma warning disable CS0618
-        DebugTools.Assert(!GridExists(GridId.Invalid));
-#pragma warning restore CS0618
         _dbgGuardRunning = false;
 #endif
     }

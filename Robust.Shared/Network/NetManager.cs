@@ -882,7 +882,7 @@ namespace Robust.Shared.Network
 
             try
             {
-                instance.ReadFromBuffer(msg);
+                instance.ReadFromBuffer(msg, _serializer);
             }
             catch (InvalidCastException ice)
             {
@@ -967,7 +967,7 @@ namespace Robust.Shared.Network
                     $"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
             packet.Write((byte) msgId);
-            message.WriteToBuffer(packet);
+            message.WriteToBuffer(packet, _serializer);
             return packet;
         }
 

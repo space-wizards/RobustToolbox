@@ -48,7 +48,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+                QueueUpdateRenderTree();
             }
         }
 
@@ -157,6 +157,8 @@ namespace Robust.Client.GameObjects
                 }
 
                 _layerMapShared = true;
+
+                QueueUpdateRenderTree();
                 QueueUpdateIsInert();
             }
         }
@@ -223,7 +225,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+                QueueUpdateRenderTree();
             }
         }
 
@@ -583,6 +585,7 @@ namespace Robust.Client.GameObjects
             }
 
             RebuildBounds();
+            QueueUpdateIsInert();
             return index;
         }
 
@@ -610,6 +613,7 @@ namespace Robust.Client.GameObjects
             }
 
             RebuildBounds();
+            QueueUpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -634,7 +638,7 @@ namespace Robust.Client.GameObjects
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
             _bounds = _bounds.Scale(Scale);
-            entities?.EventBus?.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
+            QueueUpdateRenderTree();
         }
 
         /// <summary>
@@ -1517,20 +1521,24 @@ namespace Robust.Client.GameObjects
             LayerDatums = thestate.Layers;
         }
 
-        private void QueueUpdateIsInert()
+        private void QueueUpdateRenderTree()
         {
-            // Look this was an easy way to get bounds checks for layer updates.
-            // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            if ((Owner != default ? entities : null)?.EventBus != null)
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
-
-            if (_inertUpdateQueued)
+            if (TreeUpdateQueued || Owner == default || entities?.EventBus == null)
                 return;
 
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+            TreeUpdateQueued = true;
+            entities.EventBus.RaiseLocalEvent(Owner, new UpdateSpriteTreeEvent());
+        }
+
+        private void QueueUpdateIsInert()
+        {
+            if (_inertUpdateQueued || Owner == default || entities?.EventBus == null)
+                return;
+
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             _inertUpdateQueued = true;
-            // Yes that null check is valid because of that stupid fucking dummy IEntity.
-            // Who thought that was a good idea.
-            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            entities.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1930,6 +1938,7 @@ namespace Robust.Client.GameObjects
             {
                 Visible = value;
 
+                _parent.QueueUpdateIsInert();
                 _parent.RebuildBounds();
             }
 
@@ -1962,6 +1971,7 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2002,6 +2012,7 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2289,7 +2300,8 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+    internal sealed class UpdateSpriteTreeEvent : EntityEventArgs
     {
 
     }

@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var fieldDefinition = BaseFieldDefinitions[i];
 
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
-                fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
+                fieldAssigners[i] = EmitFieldAssigner<object>(Type, fieldDefinition.FieldType, fieldDefinition.BackingField);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {

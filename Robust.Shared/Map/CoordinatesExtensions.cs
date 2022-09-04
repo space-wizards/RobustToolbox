@@ -13,7 +13,7 @@ namespace Robust.Shared.Map
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 
-            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
+            return new EntityCoordinates(grid.Owner, (vector.X * tile, vector.Y * tile));
         }
 
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coordinates, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
@@ -29,7 +29,7 @@ namespace Robust.Shared.Map
 
                 if (mapManager.TryFindGridAt(mapCoords, out var mapGrid))
                 {
-                    return new EntityCoordinates(mapGrid.GridEntityId, mapGrid.WorldToLocal(mapCoords.Position));
+                    return new EntityCoordinates(mapGrid.Owner, mapGrid.WorldToLocal(mapCoords.Position));
                 }
 
                 // create a box around the cursor
@@ -47,7 +47,7 @@ namespace Robust.Shared.Map
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
+                    var gridIntersect = gridSearchBox.Intersect(TransformComponent.CalcWorldAabb(entityManager.GetComponent<TransformComponent>(grid.Owner), grid.LocalAABB));
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)
@@ -70,7 +70,7 @@ namespace Robust.Shared.Map
                     // move mouse one tile out along normal
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;
 
-                    coords = new EntityCoordinates(closest.GridEntityId, closest.WorldToLocal(newTilePos));
+                    coords = new EntityCoordinates(closest.Owner, closest.WorldToLocal(newTilePos));
                 }
                 //else free place
             }

@@ -69,7 +69,7 @@ internal partial class MapManager
 
     private Box2 GetWorldAABB(MapGridComponent grid)
     {
-        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        var xform = EntityManager.GetComponent<TransformComponent>(grid.Owner);
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
@@ -125,7 +125,7 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[grid.ParentMapId].Add(grid);
+        _movedGrids[EntityManager.GetComponent<TransformComponent>(grid.Owner).MapID].Add(grid);
     }
 
     private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
@@ -138,12 +138,12 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[grid.ParentMapId].Add(grid);
+        _movedGrids[EntityManager.GetComponent<TransformComponent>(grid.Owner).MapID].Add(grid);
     }
 
     private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)
     {
-        var aGrid = (MapGridComponent)component;
+        var aGrid = component;
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy

@@ -115,9 +115,9 @@ public sealed class GridSplit_Tests
 
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
 
-        var dummy = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(3.5f, 0.5f)));
+        var dummy = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(3.5f, 0.5f)));
         var dummyXform = entManager.GetComponent<TransformComponent>(dummy);
-        var anchored = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(3.5f, 0.5f)));
+        var anchored = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(3.5f, 0.5f)));
         var anchoredXform = entManager.GetComponent<TransformComponent>(anchored);
         anchoredXform.Anchored = true;
         Assert.That(anchoredXform.Anchored);
@@ -126,17 +126,17 @@ public sealed class GridSplit_Tests
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
 
         var newGrid = mapManager.GetAllMapGrids(mapId).Last();
-        var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.GridEntityId);
+        var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.Owner);
 
         Assert.Multiple(() =>
         {
             // Assertions baby
             Assert.That(anchoredXform.Anchored);
-            Assert.That(anchoredXform.ParentUid, Is.EqualTo(newGrid.GridEntityId));
+            Assert.That(anchoredXform.ParentUid, Is.EqualTo(newGrid.Owner));
             Assert.That(anchoredXform.GridEuid, Is.EqualTo(newGrid.Owner));
             Assert.That(newGridXform._children, Does.Contain(anchored));
 
-            Assert.That(dummyXform.ParentUid, Is.EqualTo(newGrid.GridEntityId));
+            Assert.That(dummyXform.ParentUid, Is.EqualTo(newGrid.Owner));
             Assert.That(dummyXform.GridEuid, Is.EqualTo(newGrid.Owner));
             Assert.That(newGridXform._children, Does.Contain(dummy));
         });

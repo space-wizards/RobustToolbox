@@ -39,26 +39,26 @@ namespace Robust.Shared.Map
 
                 var nextGrid = _enumerator.Current;
 
-                if (nextGrid.ParentMapId != _mapId)
+                var nextXform = _entityManager.GetComponent<TransformComponent>(nextGrid.Owner);
+                if (nextXform.MapID != _mapId)
                 {
                     continue;
                 }
 
-                var xformComp = _entityManager.GetComponent<TransformComponent>(nextGrid.GridEntityId);
-                var invMatrix3 = xformComp.InvWorldMatrix;
+                var invMatrix3 = nextXform.InvWorldMatrix;
                 var localAABB = invMatrix3.TransformBox(_worldAABB);
 
                 if (!localAABB.Intersects(nextGrid.LocalAABB)) continue;
 
                 var intersects = false;
 
-                if (_entityManager.HasComponent<PhysicsComponent>(nextGrid.GridEntityId))
+                if (_entityManager.HasComponent<PhysicsComponent>(nextGrid.Owner))
                 {
                     var enumerator = nextGrid.GetLocalMapChunks(localAABB);
 
                     if (!_approx)
                     {
-                        var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
+                        var (worldPos, worldRot) = nextXform.GetWorldPositionRotation();
 
                         var transform = new Transform(worldPos, worldRot);
 
@@ -84,7 +84,7 @@ namespace Robust.Shared.Map
                     }
                 }
 
-                if (!intersects && nextGrid.ChunkCount == 0 && !_worldAABB.Contains(xformComp.WorldPosition))
+                if (!intersects && nextGrid.ChunkCount == 0 && !_worldAABB.Contains(nextXform.WorldPosition))
                 {
                     continue;
                 }

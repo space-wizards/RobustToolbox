@@ -106,7 +106,9 @@ Mouse Pos:
                 var playerCoordinates = entityTransform.Coordinates;
                 var playerRotation = entityTransform.WorldRotation;
 
-                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridEuid, out var grid) ? grid.WorldRotation : Angle.Zero;
+                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridEuid, out var grid)
+                    ? _entityManager.GetComponent<TransformComponent>(grid.Owner).WorldRotation
+                    : Angle.Zero;
 
                 _textBuilder.Append($@"    Screen: {playerScreen}
     {playerWorldOffset}

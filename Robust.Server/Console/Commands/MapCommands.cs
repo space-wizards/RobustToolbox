@@ -430,13 +430,21 @@ namespace Robust.Server.Console.Commands
             var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var entMan = IoCManager.Resolve<IEntityManager>();
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : grid.ParentMapId;
+                var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
+                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
-                grid.ParentMapId = mapId;
-                grid.WorldPosition = new Vector2(xpos, ypos);
+                var mapEnt = mapManager.GetMapEntityId(mapId);
+                var worldPos = gridXform.WorldPosition;
+
+                gridXform.Coordinates =
+                    new EntityCoordinates(mapEnt, worldPos);
+
+                Vector2 val = new Vector2(xpos, ypos);
+                gridXform.WorldPosition = val;
 
                 shell.WriteLine("Grid was teleported.");
             }
@@ -547,7 +555,7 @@ namespace Robust.Server.Console.Commands
 
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Owner))
             {
-                var xform = xformQuery.GetComponent(grid.GridEntityId);
+                var xform = xformQuery.GetComponent(grid.Owner);
                 var worldPos = xform.WorldPosition;
 
                 msg.AppendFormat("{0}: map: {1},  pos: {2:0.0},{3:0.0} \n",

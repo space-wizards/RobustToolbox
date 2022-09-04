@@ -86,7 +86,7 @@ namespace Robust.Shared.Map
         ///     The bounding box of the grid in local coordinates.
         /// </summary>
         [ViewVariables]
-        public Box2 LocalAABB { get; internal set; }
+        public Box2 LocalAABB { get; private set; }
 
         /// <summary>
         ///     Last game tick that the map was modified.

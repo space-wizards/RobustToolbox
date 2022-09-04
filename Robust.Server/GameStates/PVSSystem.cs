@@ -521,7 +521,7 @@ internal sealed partial class PVSSystem : EntitySystem
                              physicsQuery,
                              true))
                 {
-                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+                    var localPos = transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(viewPos);
 
                     var gridChunkEnumerator =
                         new ChunkIndicesEnumerator(localPos, range, ChunkSize);

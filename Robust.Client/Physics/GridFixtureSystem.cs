@@ -87,9 +87,9 @@ namespace Robust.Client.Physics
                 foreach (var iGrid in _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds))
                 {
                     // May not have received nodes yet.
-                    if (!_system._nodes.TryGetValue(iGrid.GridEntityId, out var nodes)) continue;
+                    if (!_system._nodes.TryGetValue(iGrid.Owner, out var nodes)) continue;
 
-                    var gridXform = xformQuery.GetComponent(iGrid.GridEntityId);
+                    var gridXform = xformQuery.GetComponent(iGrid.Owner);
                     worldHandle.SetTransform(gridXform.WorldMatrix);
                     var grid = (MapGridComponent)iGrid;
                     var chunkEnumerator = grid.GetMapChunks(args.WorldBounds);
@@ -111,7 +111,7 @@ namespace Robust.Client.Physics
                         }
                     }
 
-                    var connections = _system._connections[iGrid.GridEntityId];
+                    var connections = _system._connections[iGrid.Owner];
 
                     foreach (var (start, end) in connections)
                     {

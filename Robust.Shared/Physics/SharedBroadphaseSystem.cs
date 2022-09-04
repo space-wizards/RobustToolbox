@@ -130,11 +130,12 @@ namespace Robust.Shared.Physics
 
             foreach (var grid in movedGrids)
             {
-                DebugTools.Assert(grid.ParentMapId == mapId);
-                var worldAABB = grid.WorldAABB;
+                var gridXform = Transform(grid.Owner);
+                DebugTools.Assert(gridXform.MapID == mapId);
+                var worldAABB = TransformComponent.CalcWorldAabb(gridXform, grid.LocalAABB);
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
 
-                var gridBody = bodyQuery.GetComponent(grid.GridEntityId);
+                var gridBody = bodyQuery.GetComponent(grid.Owner);
 
                 // TODO: Use the callback for this you ape.
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
@@ -208,7 +209,7 @@ namespace Robust.Shared.Physics
                 // Also TODO: Don't put grids on movebuffer so you get peak shuttle driving performance.
                 foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), _gridsPool, xformQuery, physicsQuery))
                 {
-                    FindPairs(proxy, worldAABB, grid.GridEntityId, xformQuery, broadphaseQuery);
+                    FindPairs(proxy, worldAABB, grid.Owner, xformQuery, broadphaseQuery);
                 }
 
                 FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), xformQuery, broadphaseQuery);
@@ -257,10 +258,11 @@ namespace Robust.Shared.Physics
         {
             foreach (var grid in movedGrids)
             {
-                DebugTools.Assert(grid.ParentMapId == mapId);
 
                 var mapGrid = grid;
-                var xform = xformQuery.GetComponent(grid.GridEntityId);
+                var xform = xformQuery.GetComponent(grid.Owner);
+
+                DebugTools.Assert(xform.MapID == mapId);
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);
 
@@ -269,17 +271,18 @@ namespace Robust.Shared.Physics
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
 
-                var transform = bodyQuery.GetComponent(grid.GridEntityId).GetTransform(xform);
+                var transform = bodyQuery.GetComponent(grid.Owner).GetTransform(xform);
                 _gridsPool.Clear();
 
                 foreach (var colliding in _mapManager.FindGridsIntersecting(mapId, aabb, _gridsPool, xformQuery, bodyQuery, true))
                 {
                     if (grid == colliding) continue;
 
-                    var otherGrid = (MapGridComponent)colliding;
-                    var otherGridBounds = colliding.WorldAABB;
-                    var otherGridInvMatrix = colliding.InvWorldMatrix;
-                    var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
+                    var otherGrid = colliding;
+                    var collidingXform = EntityManager.GetComponent<TransformComponent>(colliding.Owner);
+                    var otherGridBounds = TransformComponent.CalcWorldAabb(collidingXform, colliding.LocalAABB);
+                    var otherGridInvMatrix = collidingXform.InvWorldMatrix;
+                    var otherTransform = bodyQuery.GetComponent(colliding.Owner).GetTransform(xformQuery.GetComponent(colliding.Owner));
 
                     // Get Grid2 AABB in grid1 ref
                     var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));

@@ -145,9 +145,9 @@ internal sealed class MapPauseTests
 
         // assert
         Assert.That(mapMan.IsMapPaused(mapId), Is.True);
-        Assert.That(mapMan.IsGridPaused(newGrid.GridEntityId), Is.True);
+        Assert.That(mapMan.IsGridPaused(newGrid.Owner), Is.True);
 
-        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.GridEntityId);
+        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.Owner);
         Assert.That(metaData.EntityPaused, Is.True);
     }
 

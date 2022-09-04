@@ -123,7 +123,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.GridEntityId).MapID == mapId);
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId);
     }
 
     public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
@@ -146,7 +146,7 @@ internal partial class MapManager
 
     public virtual void OnComponentRemoved(MapGridComponent comp)
     {
-        var entityId = comp.GridEntityId;
+        var entityId = comp.Owner;
         if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
         {
             DebugTools.Assert($"Calling {nameof(OnComponentRemoved)} with {comp.Owner}, but there was no allocated entity.");
@@ -192,7 +192,7 @@ internal partial class MapManager
             grid = preInit.Comp;
         }
 
-        Logger.DebugS("map", $"Binding new grid {grid.GridIndex} to entity {grid.GridEntityId}");
+        Logger.DebugS("map", $"Binding new grid {grid.GridIndex} to entity {grid.Owner}");
 
         //TODO: This is a hack to get TransformComponent.MapId working before entity states
         //are applied. After they are applied the parent may be different, but the MapId will
@@ -201,8 +201,8 @@ internal partial class MapManager
         var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
         EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
 
-        EntityManager.InitializeComponents(grid.GridEntityId);
-        EntityManager.StartComponents(grid.GridEntityId);
+        EntityManager.InitializeComponents(grid.Owner);
+        EntityManager.StartComponents(grid.Owner);
         return grid;
     }
 
@@ -210,7 +210,7 @@ internal partial class MapManager
         IReadOnlyCollection<(Vector2i position, Tile tile)> changedTiles)
     {
         mapManager.GridChanged?.Invoke(mapManager, new GridChangedEventArgs(mapGrid, changedTiles));
-        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.GridEntityId, new GridModifiedEvent(mapGrid, changedTiles), true);
+        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.Owner, new GridModifiedEvent(mapGrid, changedTiles), true);
     }
 
     public GridId GenerateGridId(GridId? forcedGridId)

@@ -45,7 +45,7 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.GridEntityId);
+                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
                 var enumerator = mapGrid.GetMapChunks(worldBounds);
 

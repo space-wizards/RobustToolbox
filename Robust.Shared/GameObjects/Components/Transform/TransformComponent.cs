@@ -531,7 +531,7 @@ namespace Robust.Shared.GameObjects
                 return xformQuery.GetComponent(_parent).GridUid;
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
         }
 
         /// <summary>
@@ -581,9 +581,9 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
             {
-                newMapEntity = mapGrid.GridEntityId;
+                newMapEntity = mapGrid.Owner;
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId)
                      && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
@@ -827,6 +827,13 @@ namespace Robust.Shared.GameObjects
                 var anchorStateChangedEvent = new AnchorStateChangedEvent(this, false);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent, true);
             }
+        }
+
+        public static Box2 CalcWorldAabb(TransformComponent xform, Box2 localAabb)
+        {
+            return new Box2Rotated(localAabb, xform.WorldRotation, Vector2.Zero)
+                .CalcBoundingBox()
+                .Translated(xform.WorldPosition);
         }
     }
 

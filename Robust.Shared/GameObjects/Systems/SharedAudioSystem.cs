@@ -125,7 +125,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))
             {
-                return new EntityCoordinates(mapGrid.GridEntityId,
+                return new EntityCoordinates(mapGrid.Owner,
                     mapGrid.WorldToLocal(mapCoordinates.Position));
             }
 

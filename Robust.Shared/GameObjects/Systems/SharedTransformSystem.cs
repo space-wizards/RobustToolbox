@@ -55,8 +55,8 @@ namespace Robust.Shared.GameObjects
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
             var grid = _mapManager.GetGrid(gridId);
-            var gridUid = grid.GridEntityId;
-            var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
+            var gridUid = grid.Owner;
+            var mapTransform = Transform(_mapManager.GetMapEntityId(Transform(grid.Owner).MapID));
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
             foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices, LookupFlags.Anchored).ToList())
@@ -124,12 +124,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // Parented directly to the grid
-            if (grid.GridEntityId == xform.ParentUid)
+            if (grid.Owner == xform.ParentUid)
                 return xform.Coordinates;
 
             // Parented to grid so convert their pos back to the grid.
-            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
-            return new EntityCoordinates(grid.GridEntityId, gridPos);
+            var gridPos = Transform(grid.Owner).InvWorldMatrix.Transform(xform.WorldPosition);
+            return new EntityCoordinates(grid.Owner, gridPos);
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -160,12 +160,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // Parented directly to the grid
-            if (grid.GridEntityId == coordinates.EntityId)
+            if (grid.Owner == coordinates.EntityId)
                 return coordinates;
 
             // Parented to grid so convert their pos back to the grid.
-            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
-            return new EntityCoordinates(grid.GridEntityId, gridPos);
+            var gridPos = Transform(grid.Owner).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
+            return new EntityCoordinates(grid.Owner, gridPos);
         }
 
         /// <summary>

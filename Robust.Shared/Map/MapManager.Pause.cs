@@ -161,7 +161,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool IsGridPaused(MapGridComponent grid)
         {
-            return IsMapPaused(grid.ParentMapId);
+            return IsMapPaused(EntityManager.GetComponent<TransformComponent>(grid.Owner).MapID);
         }
 
         public bool IsGridPaused(EntityUid gridId)

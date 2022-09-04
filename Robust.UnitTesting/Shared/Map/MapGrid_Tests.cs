@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
@@ -33,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(grid.GridEntityId, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         /// <summary>
@@ -44,14 +45,17 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
             var mapId = mapMan.CreateMap();
             var grid = mapMan.CreateGrid(mapId, 8);
-            grid.WorldPosition = new Vector2(3, 5);
+            Vector2 val = new Vector2(3, 5);
+            var xform = entMan.GetComponent<TransformComponent>(grid.Owner);
+            xform.WorldPosition = val;
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            var bounds = grid.WorldAABB;
+            var bounds = TransformComponent.CalcWorldAabb(xform, grid.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -68,16 +72,18 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
             var mapId = mapMan.CreateMap();
             var grid = mapMan.CreateGrid(mapId, 8);
-            grid.WorldPosition = new Vector2(3, 5);
+            Vector2 val = new Vector2(3, 5);
+            entMan.GetComponent<TransformComponent>(grid.Owner).WorldPosition = val;
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
             grid.SetTile(new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = grid.WorldAABB;
+            var bounds = TransformComponent.CalcWorldAabb(entMan.GetComponent<TransformComponent>(grid.Owner), grid.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -146,7 +152,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(foundTile, Is.True);
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.GridEntityId, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         [Test]

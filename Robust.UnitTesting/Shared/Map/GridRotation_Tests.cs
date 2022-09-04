@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapMan.CreateMap();
                 var grid = mapMan.CreateGrid(mapId);
-                var gridEnt = grid.GridEntityId;
+                var gridEnt = grid.Owner;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
 
                 // if no rotation and 0,0 position should just be the same coordinate.
@@ -68,7 +68,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapMan.CreateMap();
                 var grid = mapMan.CreateGrid(mapId);
-                var gridEnt = grid.GridEntityId;
+                var gridEnt = grid.Owner;
                 var gridInternal = (MapGridComponent) grid;
 
                 /* Test for map chunk rotations */

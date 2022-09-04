@@ -33,11 +33,11 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
             grid.SetTile(Vector2i.Zero, new Tile(1));
-            var physics = entManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
-            var fixtures = entManager.GetComponent<FixturesComponent>(grid.GridEntityId);
+            var physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
+            var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             onGridBody.BodyType = BodyType.Dynamic;
             var shapeA = new PolygonShape();
@@ -45,7 +45,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
             fixtureA.CollisionMask = 1;
             Assert.That(onGridBody.FixtureCount, Is.EqualTo(1));
-            Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.GridEntityId));
+            Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.Owner));
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
@@ -55,7 +55,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
             fixtureB.CollisionLayer = 1;
             Assert.That(offGridBody.FixtureCount, Is.EqualTo(1));
-            Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.GridEntityId)));
+            Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo(grid.Owner));
 
             // Alright just a quick validation then we start the actual damn test.
 
@@ -65,7 +65,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));
 
             // Alright now move the grid on top of the off grid body, run physics for a frame and see if they contact
-            entManager.GetComponent<TransformComponent>(grid.GridEntityId).LocalPosition = new Vector2(10f, 10f);
+            entManager.GetComponent<TransformComponent>(grid.Owner).LocalPosition = new Vector2(10f, 10f);
             physicsMap.Step(0.001f, false);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));

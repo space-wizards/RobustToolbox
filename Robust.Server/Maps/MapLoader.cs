@@ -118,7 +118,7 @@ namespace Robust.Server.Maps
                 options.LoadMap = oldLoadMapOpt;
             }
 
-            return (entities, grid?.GridEntityId);
+            return (entities, GridEntityId: (grid != null ? grid.Owner : null));
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -231,7 +231,7 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
+                grids = context.Grids.Select(x => x.Owner).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
@@ -492,10 +492,10 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
+                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.Owner);
+                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.Owner);
                     // Regenerate grid collision.
-                    gridFixtures.EnsureGrid(grid.GridEntityId);
+                    gridFixtures.EnsureGrid(grid.Owner);
                     gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
                     fixtures.SerializedFixtures.Clear();
@@ -635,7 +635,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
+                    var transform = _xformQuery!.Value.GetComponent(grid.Owner);
                     if (transform.MapUid?.IsValid() == true)
                         continue;
 
@@ -651,12 +651,12 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    pvs?.EntityPVSCollection.UpdateIndex(grid.GridEntityId);
+                    pvs?.EntityPVSCollection.UpdateIndex(grid.Owner);
                     // The problem here is that the grid is initialising at the same time as everything else which
                     // is bad for slothcoin because a bunch of components are only added
                     // to the grid during its initialisation hence you get exceptions
                     // hence this 1 snowflake thing.
-                    _serverEntityManager.EnsureComponent<EntityLookupComponent>(grid.GridEntityId);
+                    _serverEntityManager.EnsureComponent<EntityLookupComponent>(grid.Owner);
                 }
             }
 
@@ -875,8 +875,8 @@ namespace Robust.Server.Maps
                 var gridFixtures = _serverEntityManager.EntitySysManager.GetEntitySystem<GridFixtureSystem>();
                 foreach (var grid in Grids)
                 {
-                    if (_serverEntityManager.Deleted(grid.GridEntityId)) continue;
-                    gridFixtures.CheckSplits(grid.GridEntityId);
+                    if (_serverEntityManager.Deleted(grid.Owner)) continue;
+                    gridFixtures.CheckSplits(grid.Owner);
                 }
             }
 
@@ -919,7 +919,7 @@ namespace Robust.Server.Maps
                 //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
-                    if (_mapManager.IsMapInitialized(grid.ParentMapId))
+                    if (_mapManager.IsMapInitialized(_serverEntityManager.GetComponent<TransformComponent>(grid.Owner).MapID))
                     {
                         isPostInit = true;
                         break;

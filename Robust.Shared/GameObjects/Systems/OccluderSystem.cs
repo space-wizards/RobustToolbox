@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                yield return EntityManager.GetComponent<OccluderTreeComponent>(grid.GridEntityId);
+                yield return EntityManager.GetComponent<OccluderTreeComponent>(grid.Owner);
             }
 
             yield return EntityManager.GetComponent<OccluderTreeComponent>(_mapManager.GetMapEntityId(mapId));

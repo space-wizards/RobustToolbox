@@ -68,7 +68,7 @@ public abstract partial class SharedTransformSystem
 
             // anchor snapping
             // Internally it will do the parent update; doing it separately just triggers a redundant move.
-            xform.Coordinates = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
+            xform.Coordinates = new EntityCoordinates(grid.Owner, grid.GridTileToLocal(tileIndices).Position);
             xform.SetAnchored(result);
         }
 

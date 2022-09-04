@@ -57,7 +57,7 @@ namespace Robust.Server.Console.Commands
             {
                 var gridPos = grid.WorldToLocal(position);
 
-                transform.Coordinates = new EntityCoordinates(grid.GridEntityId, gridPos);
+                transform.Coordinates = new EntityCoordinates(grid.Owner, gridPos);
             }
             else
             {

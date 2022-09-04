@@ -46,7 +46,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            var gridId = mapMan.CreateGrid(mapID).GridEntityId;
+            MapGridComponent tempQualifier = mapMan.CreateGrid(mapID);
+            var gridId = tempQualifier.Owner;
 
             mapMan.Restart();
 

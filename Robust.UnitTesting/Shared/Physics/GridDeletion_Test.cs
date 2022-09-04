@@ -32,7 +32,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
             mapId = mapManager.CreateMap();
             grid = mapManager.CreateGrid(mapId);
 
-            physics = entManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+            physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
             physics.BodyType = BodyType.Dynamic;
             physics.LinearVelocity = new Vector2(50f, 0f);
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
@@ -43,7 +43,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
-            entManager.DeleteEntity(grid.GridEntityId);
+            entManager.DeleteEntity(grid.Owner);
 
             // So if gridtree is fucky then this SHOULD throw.
             foreach (var _ in mapManager.FindGridsIntersecting(mapId,

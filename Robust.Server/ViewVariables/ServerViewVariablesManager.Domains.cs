@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 
@@ -8,7 +9,7 @@ internal sealed partial class ServerViewVariablesManager
 {
     private void InitializeDomains()
     {
-        RegisterDomain("player", ResolvePlayerObject);
+        RegisterDomain("player", ResolvePlayerObject, ListPlayerPaths);
     }
 
     private (ViewVariablesPath? Path, string[] Segments) ResolvePlayerObject(string path)
@@ -43,5 +44,25 @@ internal sealed partial class ServerViewVariablesManager
             return (new ViewVariablesInstancePath(data), segments[1..]);
 
         return EmptyResolve;
+    }
+
+    private string[] ListPlayerPaths(string[] segments)
+    {
+        if (segments.Length > 1)
+            return Array.Empty<string>();
+
+        if (segments.Length == 1
+            && _playerManager.TryGetSessionByUsername(segments[0], out _)
+            || Guid.TryParse(segments[0], out var guid)
+            && _playerManager.TryGetSessionById(new NetUserId(guid), out _))
+        {
+            return Array.Empty<string>();
+        }
+
+        return _playerManager.Sessions
+            .Select(s => s.Name)
+            .Concat(_playerManager.Sessions
+                .Select(s => s.UserId.UserId.ToString()))
+            .ToArray();
     }
 }

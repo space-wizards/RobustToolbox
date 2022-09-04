@@ -52,6 +52,14 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
+        public IEnumerable<Type> GetRegisteredTypes()
+        {
+            return _parentCollection != null
+                ? _services.Keys.Concat(_parentCollection.GetRegisteredTypes())
+                : _services.Keys;
+        }
+
+        /// <inheritdoc />
         public bool TryResolveType<T>([NotNullWhen(true)] out T? instance)
         {
             if (TryResolveType(typeof(T), out object? rawInstance))

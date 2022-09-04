@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
@@ -21,14 +22,14 @@ internal abstract partial class ViewVariablesManager
 
     private void InitializeDomains()
     {
-        RegisterDomain("ioc", ResolveIoCObject);
-        RegisterDomain("entity", ResolveEntityObject);
-        RegisterDomain("system", ResolveEntitySystemObject);
-        RegisterDomain("prototype", ResolvePrototypeObject);
-        RegisterDomain("object", ResolveStoredObject);
+        RegisterDomain("ioc", ResolveIoCObject, ListIoCPaths);
+        RegisterDomain("entity", ResolveEntityObject, ListEntityPaths);
+        RegisterDomain("system", ResolveEntitySystemObject, ListEntitySystemPaths);
+        RegisterDomain("prototype", ResolvePrototypeObject, ListPrototypePaths);
+        RegisterDomain("object", ResolveStoredObject, ListStoredObjectPaths);
     }
 
-    public (ViewVariablesPath? Path, string[] Segments) ResolveIoCObject(string path)
+    private (ViewVariablesPath? Path, string[] Segments) ResolveIoCObject(string path)
     {
         var empty = (new ViewVariablesInstancePath(IoCManager.Instance), Array.Empty<string>());
 
@@ -50,7 +51,24 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
-    public (ViewVariablesPath? Path, string[] Segments) ResolveEntityObject(string path)
+    private string[] ListIoCPaths(string[] segments)
+    {
+        if (segments.Length > 1 || IoCManager.Instance is not {} deps)
+            return Array.Empty<string>();
+
+        if (segments.Length == 1
+            && _reflectionMan.TryLooseGetType(segments[0], out var type)
+            && deps.TryResolveType(type, out _))
+        {
+            return Array.Empty<string>();
+        }
+
+        return deps.GetRegisteredTypes()
+            .Select(t => t.Name)
+            .ToArray();
+    }
+
+    private (ViewVariablesPath? Path, string[] Segments) ResolveEntityObject(string path)
     {
         if (string.IsNullOrEmpty(path))
             return EmptyResolve;
@@ -67,6 +85,24 @@ internal abstract partial class ViewVariablesManager
 
         return (new ViewVariablesInstancePath(uid), segments[1..]);
     }
+
+    private string[] ListEntityPaths(string[] segments)
+    {
+        if (segments.Length > 1)
+            return Array.Empty<string>();
+
+        if (segments.Length == 1
+            && EntityUid.TryParse(segments[0], out var u)
+            && _entMan.EntityExists(u))
+        {
+            return Array.Empty<string>();
+        }
+
+        return _entMan.GetEntities()
+            .Select(uid => uid.ToString())
+            .ToArray();
+    }
+
 
     public (ViewVariablesPath? Path, string[] Segments) ResolveEntitySystemObject(string path)
     {
@@ -91,6 +127,26 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
+    private string[] ListEntitySystemPaths(string[] segments)
+    {
+        if (segments.Length > 1)
+            return Array.Empty<string>();
+
+        var entSysMan = _entMan.EntitySysManager;
+
+        if (segments.Length == 1
+            && _reflectionMan.TryLooseGetType(segments[0], out var type)
+            && entSysMan.TryGetEntitySystem(type, out _))
+        {
+            return Array.Empty<string>();
+        }
+
+        return _entMan.EntitySysManager
+            .GetEntitySystemTypes()
+            .Select(t => t.Name)
+            .ToArray();
+    }
+
     private (ViewVariablesPath? Path, string[] Segments) ResolvePrototypeObject(string path)
     {
         var empty = (new ViewVariablesInstancePath(_protoMan), Array.Empty<string>());
@@ -113,6 +169,38 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(prototype), segments[2..]);
     }
 
+    private string[] ListPrototypePaths(string[] segments)
+    {
+        switch (segments.Length)
+        {
+            case 1 or 2:
+            {
+                var kind = segments[0];
+                var prototype = segments.Length == 1 ? string.Empty : segments[1];
+
+                if(!_protoMan.HasVariant(kind))
+                    goto case 0;
+
+                if (_protoMan.TryIndex(_protoMan.GetVariantType(kind), prototype, out _))
+                    goto case default;
+
+                return _protoMan.EnumeratePrototypes(kind)
+                    .Select(p => $"{kind}/{p.ID}")
+                    .ToArray();
+            }
+            case 0:
+            {
+                return _protoMan
+                    .GetPrototypeKinds()
+                    .ToArray();
+            }
+            default:
+            {
+                return Array.Empty<string>();
+            }
+        }
+    }
+
     private (ViewVariablesPath? Path, string[] Segments) ResolveStoredObject(string path)
     {
         if (string.IsNullOrEmpty(path))
@@ -127,5 +215,22 @@ internal abstract partial class ViewVariablesManager
             return EmptyResolve;
 
         return (new ViewVariablesInstancePath(obj), segments[1..]);
+    }
+
+    private string[] ListStoredObjectPaths(string[] segments)
+    {
+        if (segments.Length > 1)
+            return Array.Empty<string>();
+
+        if (segments.Length == 1
+            && Guid.TryParse(segments[0], out var guid)
+            && _vvObjectStorage.ContainsKey(guid))
+        {
+            return Array.Empty<string>();
+        }
+
+        return _vvObjectStorage.Keys
+            .Select(g => g.ToString())
+            .ToArray();
     }
 }

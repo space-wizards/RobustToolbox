@@ -4,7 +4,7 @@ namespace Robust.Shared.ViewVariables;
 
 public interface IViewVariablesManager
 {
-    void RegisterDomain(string domain, DomainResolveObject resolveObject);
+    void RegisterDomain(string domain, DomainResolveObject resolveObject, DomainListPaths list);
     bool UnregisterDomain(string domain);
     void RegisterTypeHandler<T>(HandleTypePath<T> handler, ListTypeCustomPaths<T> list);
     void RegisterTypeHandler(Type type, HandleTypePath handler, ListTypeCustomPaths list);
@@ -15,5 +15,5 @@ public interface IViewVariablesManager
     object? ReadPath(string path);
     void WritePath(string path, string value);
     object? InvokePath(string path, string arguments);
-    string[] ListPath(string path);
+    string[] ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly);
 }

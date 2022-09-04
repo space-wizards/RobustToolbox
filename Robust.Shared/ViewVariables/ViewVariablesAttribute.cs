@@ -31,6 +31,6 @@ namespace Robust.Shared.ViewVariables
         /// <summary>
         ///     This property is read and writable.
         /// </summary>
-        ReadWrite,
+        ReadWrite = 1,
     }
 }

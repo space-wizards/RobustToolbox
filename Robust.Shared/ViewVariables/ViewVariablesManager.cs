@@ -16,6 +16,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Shared.ViewVariables
 {
     public delegate (ViewVariablesPath? path, string[] segments) DomainResolveObject(string path);
+    public delegate string[] DomainListPaths(string[] segments);
     public delegate ViewVariablesPath? HandleTypePath(object? obj, string relativePath);
     public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
     public delegate string[] ListTypeCustomPaths(object? obj);
@@ -41,9 +42,9 @@ namespace Robust.Shared.ViewVariables
             InitializeTypeHandlers();
         }
 
-        public void RegisterDomain(string domain, DomainResolveObject resolveObject)
+        public void RegisterDomain(string domain, DomainResolveObject resolveObject, DomainListPaths list)
         {
-            _registeredDomains.Add(domain, new DomainData(resolveObject));
+            _registeredDomains.Add(domain, new DomainData(resolveObject, list));
         }
 
         public bool UnregisterDomain(string domain)
@@ -88,6 +89,9 @@ namespace Robust.Shared.ViewVariables
             if (path.StartsWith('/'))
                 path = path[1..];
 
+            if (path.EndsWith('/'))
+                path = path[..^1];
+
             var segments = path.Split('/');
 
             if (segments.Length == 0)
@@ -129,9 +133,90 @@ namespace Robust.Shared.ViewVariables
             return resPath.Invoke(desArgs);
         }
 
-        public string[] ListPath(string path)
+        public string[] ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly)
         {
-            throw new NotImplementedException();
+            string[] Domains()
+                => _registeredDomains.Keys.Select(d => $"/{d}")
+                    .ToArray();
+
+            string[] Full(string fullPath, string[] relativePaths)
+                => relativePaths
+                    .Select(p =>
+                    {
+                        if (!fullPath.StartsWith('/'))
+                            fullPath = $"/{fullPath}";
+                        if (fullPath.EndsWith('/'))
+                            fullPath = fullPath[..^1];
+                        return string.Join('/', fullPath, p);
+                    })
+                    .ToArray();
+
+            if (path.StartsWith('/'))
+                path = path[1..];
+
+            if (string.IsNullOrEmpty(path))
+                return Domains();
+
+            var segments = path.Split('/');
+
+            if (segments.Length == 0)
+                return Domains();
+
+            var domain = segments[0];
+
+            if (!_registeredDomains.TryGetValue(domain, out var data))
+                return Domains();
+
+            var domainList = data.List(segments[1..]);
+
+            if (domainList.Length != 0)
+                return Full($"/{domain}", domainList);
+
+            // Expensive :(
+            var resolved = ResolvePath(path);
+
+            if (resolved?.Get() is not {} obj)
+            {
+                // Okay maybe the last segment is not full? Resolve the prior path
+                segments = segments[..^1];
+                path = string.Join('/', segments);
+                resolved = ResolvePath(path);
+
+                if(resolved?.Get() is not {} priorObj)
+                    return Array.Empty<string>();
+
+                obj = priorObj;
+            }
+
+            var paths = new List<string>();
+
+            var type = obj.GetType();
+
+            if (_registeredTypeHandlers.TryGetValue(type, out var typeData))
+            {
+                paths.AddRange(typeData.List(obj));
+            }
+
+            // Starts with all custom paths, so the user knows whether to use a specifier or not for hidden native members.
+            var uniqueMemberNames = new HashSet<string>(paths);
+
+            foreach (var memberInfo in type.GetMembers(MembersBindings).OrderBy(m => m.DeclaringType == type))
+            {
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out var memberAccess))
+                    continue;
+
+                if (memberAccess < minimumAccess)
+                    continue;
+
+                var name = memberInfo.Name;
+
+                if (!uniqueMemberNames.Add(name))
+                    name = @$"{name}{{{memberInfo.DeclaringType?.FullName ?? typeof(void).FullName}}}";
+
+                paths.Add(name);
+            }
+
+            return Full(path, paths.ToArray());
         }
 
         private ViewVariablesPath? ResolveRelativePath(ViewVariablesPath? path, string[] segments)
@@ -368,10 +453,12 @@ namespace Robust.Shared.ViewVariables
         internal sealed class DomainData
         {
             public readonly DomainResolveObject ResolveObject;
+            public readonly DomainListPaths List;
 
-            public DomainData(DomainResolveObject resolveObject)
+            public DomainData(DomainResolveObject resolveObject, DomainListPaths list)
             {
                 ResolveObject = resolveObject;
+                List = list;
             }
         }
 

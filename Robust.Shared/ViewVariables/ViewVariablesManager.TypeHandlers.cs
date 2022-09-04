@@ -8,7 +8,7 @@ internal abstract partial class ViewVariablesManager
 {
     private void InitializeTypeHandlers()
     {
-        RegisterTypeHandler<EntityUid>(HandleEntityPath, ListEntityPaths);
+        RegisterTypeHandler<EntityUid>(HandleEntityPath, ListEntityTypeHandlerPaths);
     }
 
     private ViewVariablesPath? HandleEntityPath(EntityUid uid, string relativePath)
@@ -21,7 +21,7 @@ internal abstract partial class ViewVariablesManager
         return new ViewVariablesInstancePath(component);
     }
 
-    private string[] ListEntityPaths(EntityUid uid)
+    private string[] ListEntityTypeHandlerPaths(EntityUid uid)
     {
         return _entMan.GetComponents(uid)
             .Select(component => _compFact.GetComponentName(component.GetType()))

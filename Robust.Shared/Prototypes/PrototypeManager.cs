@@ -33,6 +33,11 @@ namespace Robust.Shared.Prototypes
         void Initialize();
 
         /// <summary>
+        /// Returns an IEnumerable to iterate all registered prototype kind by their ID.
+        /// </summary>
+        IEnumerable<string> GetPrototypeKinds();
+
+        /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -258,6 +263,11 @@ namespace Robust.Shared.Prototypes
 
             _initialized = true;
             ReloadPrototypeTypes();
+        }
+
+        public IEnumerable<string> GetPrototypeKinds()
+        {
+            return _prototypeTypes.Keys;
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype

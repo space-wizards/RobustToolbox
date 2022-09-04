@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
@@ -29,6 +30,11 @@ namespace Robust.Shared.IoC
     /// <seealso cref="IReflectionManager"/>
     public interface IDependencyCollection
     {
+        /// <summary>
+        /// Enumerates over all registered types.
+        /// </summary>
+        IEnumerable<Type> GetRegisteredTypes();
+
         /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>
         /// <see cref="IDependencyCollection.BuildGraph"/> MUST be called after this method to make the new interface available.

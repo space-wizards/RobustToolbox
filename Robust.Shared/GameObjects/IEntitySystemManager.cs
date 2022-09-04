@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC.Exceptions;
 
@@ -127,7 +128,7 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         void LoadExtraSystemType<T>() where T : IEntitySystem, new();
 
-
+        IEnumerable<Type> GetEntitySystemTypes();
         bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system);
         object GetEntitySystem(Type sysType);
     }

@@ -75,11 +75,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveBp : IConsoleCommand
+    public sealed class SaveGridCommand : IConsoleCommand
     {
-        public string Command => "savebp";
+        public string Command => "savegrid";
         public string Description => "Serializes a grid to disk.";
-        public string Help => "savebp <gridID> <Path>";
+        public string Help => "savegrid <gridID> <Path>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -104,7 +104,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, args[1]);
+            IoCManager.Resolve<IMapLoader>().SaveGrid(gridId, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -123,11 +123,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadBp : IConsoleCommand
+    public sealed class LoadGridCommand : IConsoleCommand
     {
-        public string Command => "loadbp";
-        public string Description => "Loads a blueprint from disk into the game.";
-        public string Help => "loadbp <MapID> <Path> [x y] [rotation] [storeUids]";
+        public string Command => "loadgrid";
+        public string Description => "Loads a grid from a file into an existing map.";
+        public string Help => "loadgrid <MapID> <Path> [x y] [rotation] [storeUids]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -162,15 +162,15 @@ namespace Robust.Server.Console.Commands
             var loadOptions = new MapLoadOptions();
             if (args.Length >= 4)
             {
-                if (!int.TryParse(args[2], out var x))
+                if (!float.TryParse(args[2], out var x))
                 {
-                    shell.WriteError($"{args[2]} is not a valid integer.");
+                    shell.WriteError($"{args[2]} is not a valid float.");
                     return;
                 }
 
-                if (!int.TryParse(args[3], out var y))
+                if (!float.TryParse(args[3], out var y))
                 {
-                    shell.WriteError($"{args[3]} is not a valid integer.");
+                    shell.WriteError($"{args[3]} is not a valid float.");
                     return;
                 }
 
@@ -181,7 +181,7 @@ namespace Robust.Server.Console.Commands
             {
                 if (!float.TryParse(args[4], out var rotation))
                 {
-                    shell.WriteError($"{args[4]} is not a valid integer.");
+                    shell.WriteError($"{args[4]} is not a valid float.");
                     return;
                 }
 
@@ -192,7 +192,7 @@ namespace Robust.Server.Console.Commands
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError($"{args[5]} is not a valid boolean..");
+                    shell.WriteError($"{args[5]} is not a valid boolean.");
                     return;
                 }
 
@@ -200,7 +200,7 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapLoader = IoCManager.Resolve<IMapLoader>();
-            mapLoader.LoadBlueprint(mapId, args[1], loadOptions);
+            mapLoader.LoadGrid(mapId, args[1], loadOptions);
         }
 
         public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -385,7 +385,7 @@ namespace Robust.Server.Console.Commands
             IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);
 
             if (mapManager.MapExists(mapId))
-                shell.WriteLine(Loc.GetString("cmd-loadmap-successt", ("mapId", mapId), ("path", args[1])));
+                shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));
             else
                 shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", args[1])));
         }

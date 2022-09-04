@@ -100,6 +100,8 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
+    private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
+
     private const float MaxDistanceForOcclusion = 1000;
 
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
@@ -227,7 +229,7 @@ internal sealed partial class MidiManager : IMidiManager
 
                     try
                     {
-                        renderer.LoadSoundfont(filepath, true);
+                        renderer.LoadSoundfont(filepath);
                     }
                     catch (Exception)
                     {
@@ -240,16 +242,16 @@ internal sealed partial class MidiManager : IMidiManager
             else if (OperatingSystem.IsMacOS())
             {
                 if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
-                    renderer.LoadSoundfont(OsxSoundfont, true);
+                    renderer.LoadSoundfont(OsxSoundfont);
             }
             else if (OperatingSystem.IsWindows())
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
-                    renderer.LoadSoundfont(WindowsSoundfont, true);
+                    renderer.LoadSoundfont(WindowsSoundfont);
             }
 
             // Load content-specific custom soundfonts, which could override the system/fallback soundfont.
-            foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
+            foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
                 if (file.Extension != "sf2" && file.Extension != "dls") continue;
                 renderer.LoadSoundfont(file.ToString());

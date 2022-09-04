@@ -35,15 +35,13 @@ namespace Robust.Shared.GameObjects
         public bool DrawFov { get; }
         public Vector2 Zoom { get; }
         public Vector2 Offset { get; }
-        public Angle Rotation { get; }
         public uint VisibilityMask { get; }
 
-        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, Angle rotation, uint visibilityMask)
+        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, uint visibilityMask)
         {
             DrawFov = drawFov;
             Zoom = zoom;
             Offset = offset;
-            Rotation = rotation;
             VisibilityMask = visibilityMask;
         }
     }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -22,6 +23,26 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+            SubscribeLocalEvent<MapGridComponent, ComponentGetState>(OnGridGetState);
+            SubscribeLocalEvent<MapGridComponent, ComponentHandleState>(OnGridHandleState);
+        }
+
+        private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
+        {
+            var chunkData = MapGridComponent.GetDeltaChunkData(component, args.FromTick);
+            args.State = new MapGridComponentState(component.GridIndex, component.ChunkSize, chunkData);
+        }
+
+        private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is not MapGridComponentState state)
+                return;
+
+            component.GridIndex = state.GridIndex;
+            component.ChunkSize = state.ChunkSize;
+
+            if(state.ChunkDatums is not null)
+                MapGridComponent.ApplyMapGridState(MapManager, component, state.ChunkDatums);
         }
 
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)

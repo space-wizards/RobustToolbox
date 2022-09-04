@@ -502,7 +502,7 @@ namespace Robust.Client.GameStates
         ///     Whenever a new entity is created, the server doesn't send full state data, given that much of the data
         ///     can simply be obtained from the entity prototype information. This function basically creates a fake
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
-        ///     cref="IEntityManager.GetComponentState(IEventBus, IComponent)"/>.
+        ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
         private void MergeImplicitData(IEnumerable<EntityUid> createdEntities)
         {
@@ -517,7 +517,7 @@ namespace Robust.Client.GameStates
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
                     if (component.NetSyncEnabled)
-                        compData.Add(netId, _entityManager.GetComponentState(bus, component));
+                        compData.Add(netId, _entityManager.GetComponentState(bus, component, GameTick.Zero));
                 }
             }
 
@@ -540,7 +540,7 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Map Pre"))
             {
-                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
+                _mapManager.ApplyGameStatePre(curState.EntityStates.Span);
             }
 
             (IEnumerable<EntityUid> Created, List<EntityUid> Detached) output;

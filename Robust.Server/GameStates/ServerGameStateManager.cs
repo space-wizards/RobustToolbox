@@ -168,7 +168,7 @@ namespace Robust.Server.GameStates
                 // Prevent deletions piling up if we have no clients.
                 _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
-                _mapManager.CullDeletionHistory(GameTick.MaxValue);
+                MapGridComponent.CullChunkDeletionHistory(_entityManager, GameTick.MaxValue);
                 _pvs.Cleanup(_playerManager.ServerSessions);
                 return;
             }
@@ -264,13 +264,12 @@ namespace Robust.Server.GameStates
                         playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
-                var mapData = _mapManager.GetStateData(lastAck);
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
                 var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
-                    entStates, playerStates, deletions, mapData);
+                    entStates, playerStates, deletions);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
@@ -312,7 +311,7 @@ namespace Robust.Server.GameStates
                 _lastOldestAck = oldestAck;
                 _entityManager.CullDeletionHistory(oldestAck);
                 _pvs.CullDeletionHistory(oldestAck);
-                _mapManager.CullDeletionHistory(oldestAck);
+                MapGridComponent.CullChunkDeletionHistory(_entityManager, oldestAck);
             }
         }
     }

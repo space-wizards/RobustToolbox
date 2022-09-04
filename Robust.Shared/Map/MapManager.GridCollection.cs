@@ -62,7 +62,7 @@ public sealed class TileChangedEventArgs : EventArgs
 internal partial class MapManager
 {
     private GridId _highestGridId = GridId.Invalid;
-    public virtual void ChunkRemoved(EntityUid gridId, MapChunk chunk) { }
+    public virtual void ChunkRemoved(EntityUid gridId, MapGridComponent gridComp, MapChunk chunk) { }
 
     public MapGridComponent GetGridComp(EntityUid euid)
     {

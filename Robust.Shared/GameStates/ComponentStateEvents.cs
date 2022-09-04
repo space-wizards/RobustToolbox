@@ -1,5 +1,6 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
@@ -22,10 +23,18 @@ namespace Robust.Shared.GameStates
     [ByRefEvent, ComponentEvent]
     public struct ComponentGetState
     {
+        public GameTick FromTick { get; }
+
         /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
+
+        public ComponentGetState(GameTick fromTick)
+        {
+            FromTick = fromTick;
+            State = null;
+        }
     }
 
     [ByRefEvent, ComponentEvent]

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -380,7 +382,9 @@ namespace Robust.Shared.Map
             chunk.Fixtures.Clear();
             Chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved(Owner, chunk);
+            _mapManager.ChunkRemoved(Owner, this, chunk);
+
+            _chunkDeletionHistory.Add((_gameTiming.CurTick, chunk.Indices));
 
             if (Chunks.Count == 0)
             {

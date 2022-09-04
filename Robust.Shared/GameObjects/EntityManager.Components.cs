@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Log;
 using System.Diagnostics;
+using Robust.Shared.Timing;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -1121,10 +1122,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, GameTick fromTick)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
-            var getState = new ComponentGetState();
+            var getState = new ComponentGetState(fromTick);
             eventBus.RaiseComponentEvent(component, ref getState);
 
             return getState.State ?? component.GetComponentState();

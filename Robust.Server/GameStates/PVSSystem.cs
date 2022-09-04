@@ -1084,7 +1084,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = changedState ? EntityManager.GetComponentState(bus, component) : null;
+            var state = changedState ? EntityManager.GetComponentState(bus, component, fromTick) : null;
             changed.Add(ComponentChange.Added(netId, state, component.LastModifiedTick));
         }
 
@@ -1116,7 +1116,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component), component.LastModifiedTick));
+            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component, GameTick.Zero), component.LastModifiedTick));
         }
 
         foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, GameTick.Zero))

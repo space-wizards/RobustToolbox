@@ -13,6 +13,38 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
+    [Serializable, NetSerializable]
+    public readonly struct ChunkDatum
+    {
+        public readonly Vector2i Index;
+
+        // Definitely wasteful to send EVERY tile.
+        // Optimize away future coder.
+        // Also it's stored row-major.
+        public readonly Tile[] TileData;
+
+        public bool IsDeleted()
+        {
+            return TileData == default;
+        }
+
+        private ChunkDatum(Vector2i index, Tile[] tileData)
+        {
+            Index = index;
+            TileData = tileData;
+        }
+
+        public static ChunkDatum CreateModified(Vector2i index, Tile[] tileData)
+        {
+            return new ChunkDatum(index, tileData);
+        }
+
+        public static ChunkDatum CreateDeleted(Vector2i index)
+        {
+            return new ChunkDatum(index, default!);
+        }
+    }
+
     /// <summary>
     ///     Represents a map grid inside the ECS system.
     /// </summary>
@@ -25,8 +57,7 @@ namespace Robust.Shared.Map
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
-        [ViewVariables(VVAccess.ReadOnly)]
-        [DataField("index")]
+        [ViewVariables(VVAccess.ReadOnly)] [DataField("index")]
 #pragma warning disable CS0618
         private GridId _gridIndex = GridId.Invalid;
 #pragma warning restore CS0618
@@ -39,14 +70,17 @@ namespace Robust.Shared.Map
             set => _gridIndex = value;
         }
 
-        [DataField("chunkSize")]
-        private ushort _chunkSize = 16;
+        [DataField("chunkSize")] private ushort _chunkSize = 16;
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
         /// </summary>
         [ViewVariables]
-        public ushort ChunkSize => _chunkSize;
+        public ushort ChunkSize
+        {
+            get => _chunkSize;
+            set => _chunkSize = value;
+        }
 
         /// <summary>
         ///     The bounding box of the grid in local coordinates.
@@ -59,6 +93,8 @@ namespace Robust.Shared.Map
         /// </summary>
         [ViewVariables]
         internal GameTick LastTileModifiedTick { get; set; }
+
+        internal List<(GameTick tick, Vector2i indices)> _chunkDeletionHistory = new();
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -80,12 +116,6 @@ namespace Robust.Shared.Map
             {
                 xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new MapGridComponentState(_gridIndex, _chunkSize);
         }
 
         /// <inheritdoc />
@@ -116,8 +146,8 @@ namespace Robust.Shared.Map
         /// </summary>
         public ushort TileSize { get; set; } = 1;
 
-        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, MapGridComponent gridComp,
-            GameStateMapData.ChunkDatum[] chunkUpdates)
+        internal static void ApplyMapGridState(IMapManagerInternal networkedMapManager, MapGridComponent gridComp,
+            List<ChunkDatum> chunkUpdates)
         {
             networkedMapManager.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
@@ -140,14 +170,15 @@ namespace Robust.Shared.Map
                             continue;
 
                         chunk.SetTile(x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y), tile));
+                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y),
+                            tile));
                     }
                 }
             }
 
-            if (modified.Count != 0)
+            if (modified.Count != 0 && gridComp.Running)
             {
-                MapManager.InvokeGridChanged(networkedMapManager, gridComp, modified);
+                MapManager.InvokeGridChanged((MapManager)networkedMapManager, gridComp, modified);
             }
 
             foreach (var chunkData in chunkUpdates)
@@ -164,6 +195,53 @@ namespace Robust.Shared.Map
             }
 
             networkedMapManager.SuppressOnTileChanged = false;
+        }
+
+        public static void CullChunkDeletionHistory(IEntityManager entityManager, GameTick upToTick)
+        {
+            foreach (var gridComp in entityManager.EntityQuery<MapGridComponent>())
+            {
+                gridComp._chunkDeletionHistory.RemoveAll(t => t.tick < upToTick);
+            }
+        }
+
+        public static List<ChunkDatum>? GetDeltaChunkData(MapGridComponent gridComp, GameTick fromTick)
+        {
+            if (gridComp.LastTileModifiedTick < fromTick)
+                return null;
+
+            var chunkData = new List<ChunkDatum>();
+
+            foreach (var (tick, indices) in gridComp._chunkDeletionHistory)
+            {
+                if (tick < fromTick)
+                    continue;
+
+                chunkData.Add(ChunkDatum.CreateDeleted(indices));
+            }
+
+            foreach (var (index, chunk) in gridComp.GetMapChunks())
+            {
+                if (chunk.LastTileModifiedTick < fromTick)
+                    continue;
+
+                var tileBuffer = new Tile[gridComp.ChunkSize * (uint)gridComp.ChunkSize];
+
+                // Flatten the tile array.
+                // NetSerializer doesn't do multi-dimensional arrays.
+                // This is probably really expensive.
+                for (var x = 0; x < gridComp.ChunkSize; x++)
+                {
+                    for (var y = 0; y < gridComp.ChunkSize; y++)
+                    {
+                        tileBuffer[x * gridComp.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
+                    }
+                }
+
+                chunkData.Add(ChunkDatum.CreateModified(index, tileBuffer));
+            }
+
+            return chunkData;
         }
     }
 
@@ -184,15 +262,19 @@ namespace Robust.Shared.Map
         /// </summary>
         public ushort ChunkSize { get; }
 
+        public List<ChunkDatum>? ChunkDatums { get; }
+
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         /// <param name="chunkSize">The size of the chunks in the map grid.</param>
-        public MapGridComponentState(GridId gridIndex, ushort chunkSize)
+        /// <param name="chunkDatums"></param>
+        public MapGridComponentState(GridId gridIndex, ushort chunkSize, List<ChunkDatum>? chunkDatums)
         {
             GridIndex = gridIndex;
             ChunkSize = chunkSize;
+            ChunkDatums = chunkDatums;
         }
     }
 #pragma warning restore CS0618

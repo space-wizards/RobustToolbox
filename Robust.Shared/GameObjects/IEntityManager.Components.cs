@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -348,9 +349,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="eventBus">A reference to the event bus instance.</param>
         /// <param name="component">Component to generate the state for.</param>
+        /// <param name="fromTick"></param>
         /// <returns>The component state of the component.</returns>
-        ///
-        ComponentState GetComponentState(IEventBus eventBus, IComponent component);
+        /// 
+        ComponentState GetComponentState(IEventBus eventBus, IComponent component, GameTick fromTick);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

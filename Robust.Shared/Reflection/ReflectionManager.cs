@@ -147,6 +147,10 @@ namespace Robust.Shared.Reflection
                     type = typeof(float);
                     _looseTypeCache[name] = type;
                     return true;
+                case "String":
+                    type = typeof(string);
+                    _looseTypeCache[name] = type;
+                    return true;
             }
 
             foreach (var assembly in assemblies)

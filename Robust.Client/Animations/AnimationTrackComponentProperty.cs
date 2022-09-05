@@ -20,7 +20,12 @@ namespace Robust.Client.Animations
             }
 
             var entity = (EntityUid) context;
-            var component = IoCManager.Resolve<IEntityManager>().GetComponent(entity, ComponentType);
+            var entManager = IoCManager.Resolve<IEntityManager>();
+
+            if (!entManager.TryGetComponent(entity, ComponentType, out var component))
+            {
+                return;
+            }
 
             if (component is IAnimationProperties properties)
             {

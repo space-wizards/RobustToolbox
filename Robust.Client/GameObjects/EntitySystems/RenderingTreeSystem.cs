@@ -82,7 +82,7 @@ namespace Robust.Client.GameObjects
 
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
-            SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
+            SubscribeLocalEvent<SpriteComponent, UpdateSpriteTreeEvent>(HandleSpriteUpdate);
 
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
@@ -107,10 +107,9 @@ namespace Robust.Client.GameObjects
             QueueLightUpdate(component);
         }
 
-        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, SpriteUpdateEvent args)
+        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, UpdateSpriteTreeEvent args)
         {
-            if (component.TreeUpdateQueued) return;
-            QueueSpriteUpdate(component);
+            _spriteQueue.Add(component);
         }
 
         private void AnythingMoved(ref MoveEvent args)

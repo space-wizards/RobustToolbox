@@ -43,11 +43,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             path = path.ToRootedPath();
 
+
             try
             {
-                return dependencies.Resolve<IResourceManager>().ContentFileExists(path)
-                    ? new ValidatedValueNode(node)
-                    : new ErrorNode(node, $"File not found. ({path})");
+                var resourceManager = dependencies.Resolve<IResourceManager>();
+                if(resourceManager.ContentFileExists(path))
+                {
+                    return new ValidatedValueNode(node);
+                }
+
+                if (node.Value.EndsWith(path.Separator) && resourceManager.ContentGetDirectoryEntries(path).Any())
+                {
+                    return new ValidatedValueNode(node);
+                }
+
+                return new ErrorNode(node, $"File not found. ({path})");
             }
             catch (Exception e)
             {

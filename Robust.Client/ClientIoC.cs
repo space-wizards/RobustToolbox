@@ -18,6 +18,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;

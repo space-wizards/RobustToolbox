@@ -448,11 +448,12 @@ namespace Robust.Client.GameStates
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var query = _entityManager.GetEntityQuery<MetaDataComponent>();
+            RemQueue<Component> toRemove = new();
 
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
-            foreach (var entity in system.GetDirtyEntities())
+            foreach (var entity in system.DirtyEntities)
             {
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
@@ -466,10 +467,29 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                // TODO: handle component deletions/creations.
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
+                    if (!comp.NetSyncEnabled)
+                        continue;
+
+                    // Was this component added during prediction?
+                    if (comp.CreationTick > _timing.LastRealTick)
+                    {
+                        if (last.ContainsKey(netId))
+                        {
+                            // Component was probably removed and then re-addedd during a single prediction run
+                            // Just reset state as normal.
+                            comp.ClearCreationTick();
+                        }
+                        else
+                        {
+                            toRemove.Add(comp);
+                            if (_sawmill.Level <= LogLevel.Debug)
+                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                            continue;
+                        }
+                    }
 
                     if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))
                     {
@@ -477,14 +497,44 @@ namespace Robust.Client.GameStates
                     }
 
                     if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                    // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = _timing.LastRealTick;
                 }
+
+                // Remove predicted component additions
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(comp.Owner, comp);
+                }
+
+                // Re-add predicted removals
+                if (system.RemovedComponents.TryGetValue(entity, out var netIds))
+                {
+                    foreach (var netId in netIds)
+                    {
+                        if (_entities.HasComponent(entity, netId))
+                            continue;
+
+                        if (!last.TryGetValue(netId, out var state))
+                            continue;
+
+                        var comp = _entityManager.AddComponent(entity, netId);
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was removed: {comp.GetType()}");
+
+                        var stateEv = new ComponentHandleState(state, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                        comp.HandleComponentState(state, null);
+                        comp.ClearCreationTick(); // don't undo the re-adding.
+                        comp.LastModifiedTick = _timing.LastRealTick;
+                    }
+                }
+
                 var meta = query.GetComponent(entity);
                 DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;

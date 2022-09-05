@@ -503,7 +503,7 @@ namespace Robust.Client.GameObjects
             source.IsLooping = audioParams.Value.Loop;
         }
 
-        private sealed class PlayingStream : IPlayingAudioStream
+        public sealed class PlayingStream : IPlayingAudioStream
         {
             public uint? NetIdentifier;
             public IClydeAudioSource Source = default!;

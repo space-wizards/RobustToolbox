@@ -100,7 +100,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     1st substep xform cache for lerping fixes
         /// </summary>
-        private HashSet<TransformComponent> _xformCache = new();
+        private Dictionary<TransformComponent, (Vector2, float)> _xformCache = new();
 
         /// <summary>
         /// Temporary joint storage during solving
@@ -194,21 +194,18 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue(int substep = -1)
+        public void ProcessQueue()
         {
-            if (substep > 0)
+            // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
+            foreach (var xform in _deferredUpdates)
             {
-                if (_xformCache.SetEquals(_deferredUpdates))
+                var angle = (float) xform.WorldRotation;
+                if (_xformCache.ContainsKey(xform) && _xformCache.ContainsValue((xform.WorldPosition, angle)))
                 {
-                    // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-                    foreach (var xform in _deferredUpdates)
-                    {
-                        xform.RunDeferred();
-                    }
-
-                    _deferredUpdates.Clear();
+                    xform.RunDeferred();
                 }
             }
+            _deferredUpdates.Clear();
         }
 
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, int substep = -1)
@@ -402,21 +399,10 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                //Check if it's the first substep, if so put those xforms in a cache
-                //Used to compare against the defferedUpdates and such to help fix lerping issues
-                if (substep == 0)
-                {
-                    island.UpdateBodies(_xformCache, substep);
-                }
-
-                //Otherwise proceed as normal
-                else
-                {
-                    //TODO: After the bodies are updated here, iterate all the bodies and then compare their coords to the cache?
-                    //Then update them individiually if they differ.
-                    island.UpdateBodies(_deferredUpdates, substep);
-                    island.SleepBodies(prediction, frameTime);
-                }
+                //TODO: After the bodies are updated here, iterate all the bodies and then compare their coords to the cache?
+                //Then update them individiually if they differ.
+                island.UpdateBodies(_deferredUpdates, _xformCache);
+                island.SleepBodies(prediction, frameTime);
             }
         }
 

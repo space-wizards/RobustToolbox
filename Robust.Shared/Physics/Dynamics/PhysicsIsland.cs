@@ -483,7 +483,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates, int substeps = -1)
+        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates, Dictionary<TransformComponent, (Vector2, float)> cachedUpdates)
         {
             foreach (var (joint, error) in _brokenJoints)
             {
@@ -525,29 +525,23 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
                     var transform = xforms.GetComponent(body.Owner);
 
-                    // If it's the first substep, add the transforms
-                    if (substeps == 0)
+                    if (!cachedUpdates.ContainsKey(transform))
                     {
-                        _transform.SetWorldPosition(transform, bodyPos, xforms);
-                        _transform.SetWorldRotation(transform, angle, xforms);
-                        deferredUpdates.Add(transform);
+                        cachedUpdates.Add(transform, (bodyPos, angle));
                     }
 
                     //Defer MoveEvents after the first substep
-                    else
-                    {
-                        // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
-                        transform.DeferUpdates = true;
-                        _transform.SetWorldPosition(transform, bodyPos, xforms);
-                        _transform.SetWorldRotation(transform, angle, xforms);
-                        transform.DeferUpdates = false;
+                    // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                    transform.DeferUpdates = true;
+                    _transform.SetWorldPosition(transform, bodyPos, xforms);
+                    _transform.SetWorldRotation(transform, angle, xforms);
+                    transform.DeferUpdates = false;
 
-                        // Unfortunately we can't cache the position and angle here because if our parent's position
-                        // changes then this is immediately invalidated.
-                        if (transform.UpdatesDeferred)
-                        {
-                            deferredUpdates.Add(transform);
-                        }
+                    // Unfortunately we can't cache the position and angle here because if our parent's position
+                    // changes then this is immediately invalidated.
+                    if (transform.UpdatesDeferred)
+                    {
+                        deferredUpdates.Add(transform);
                     }
                 }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -12,6 +13,8 @@ namespace Robust.Client.GameStates
     /// </summary>
     public interface IClientGameStateManager
     {
+        public IEnumerable<FullInputCmdMessage> PendingInputs { get; }
+
         /// <summary>
         ///     Minimum number of states needed in the buffer for everything to work.
         /// </summary>
@@ -44,6 +47,11 @@ namespace Robust.Client.GameStates
         /// </summary>
         /// <remarks>This is effectively an alias of <see cref="CVars.NetPredict"/>.</remarks>
         bool IsPredictionEnabled { get; }
+
+        /// <summary>
+        ///     The largest acknowledged input sequence.
+        /// </summary>
+        uint LastAckedInput { get; }
 
         /// <summary>
         ///     This is called after the game state has been applied for the current tick.

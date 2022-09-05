@@ -38,7 +38,9 @@ namespace Robust.Client.GameStates
         private GameStateProcessor _processor = default!;
 
         private uint _nextInputCmdSeq = 1;
+        private uint _nextEntityMsgSeq  = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
+        public IEnumerable<FullInputCmdMessage> PendingInputs => _pendingInputs;
 
         private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
@@ -82,7 +84,8 @@ namespace Robust.Client.GameStates
 
         public int StateBufferMergeThreshold { get; private set; }
 
-        private uint _lastProcessedInput;
+        private uint _lastProcessedEvent;
+        public uint LastAckedInput { get; private set; }
 
         /// <summary>
         ///     Maximum number of entities that are sent to null-space each tick due to leaving PVS.
@@ -147,7 +150,8 @@ namespace Robust.Client.GameStates
             _processor.Reset();
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
-            _lastProcessedInput = 0;
+            _lastProcessedEvent = 0;
+            LastAckedInput = 0;
         }
 
         private void RunLevelChanged(object? sender, RunLevelChangedEventArgs args)
@@ -161,11 +165,6 @@ namespace Robust.Client.GameStates
 
         public void InputCommandDispatched(FullInputCmdMessage message)
         {
-            if (!IsPredictionEnabled)
-            {
-                return;
-            }
-
             message.InputSequence = _nextInputCmdSeq;
             _pendingInputs.Enqueue(message);
 
@@ -185,10 +184,10 @@ namespace Robust.Client.GameStates
             DebugTools.AssertNotNull(_players.LocalPlayer);
 
             var evArgs = new EntitySessionEventArgs(_players.LocalPlayer!.Session);
-            _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
+            _pendingSystemMessages.Enqueue((_nextEntityMsgSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 
-            return _nextInputCmdSeq++;
+            return _nextEntityMsgSeq++;
         }
 
         private void HandleStateMessage(MsgState message)
@@ -197,7 +196,7 @@ namespace Robust.Client.GameStates
             // applied a state containing entity-creation information, which it would then no longer send to us when
             // we re-encounter this entity
             if (_processor.AddNewState(message.State))
-                AckGameState(message.State.ToSequence);
+                AckGameState(message.State);
         }
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -308,10 +307,10 @@ namespace Robust.Client.GameStates
                     MergeImplicitData(createdEntities);
                 }
 
-                if (_lastProcessedInput < curState.LastProcessedInput)
+                if (_lastProcessedEvent < curState.LastProcessedEvent)
                 {
-                    _sawmill.Debug($"SV> RCV  tick={_timing.CurTick}, last processed ={_lastProcessedInput}");
-                    _lastProcessedInput = curState.LastProcessedInput;
+                    _sawmill.Debug($"SV> RCV  event tick={curState.ToSequence}, last processed ={_lastProcessedEvent}");
+                    _lastProcessedEvent = curState.LastProcessedEvent;
                 }
             }
 
@@ -336,15 +335,20 @@ namespace Robust.Client.GameStates
             }
 
             // remove old pending inputs
-            while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedInput)
+            while (_pendingInputs.Count > 0)
             {
+                var next = _pendingInputs.Peek();
+
+                if (next.Tick > _timing.LastRealTick || next.InputSequence > LastAckedInput)
+                    break;
+
                 var inCmd = _pendingInputs.Dequeue();
 
                 _inputManager.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
                 _sawmill.Debug($"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
-            while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedInput)
+            while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedEvent)
             {
                 _pendingSystemMessages.Dequeue();
             }
@@ -574,9 +578,15 @@ namespace Robust.Client.GameStates
             _processor.MergeImplicitData(outputData);
         }
 
-        private void AckGameState(GameTick sequence)
+        private void AckGameState(GameState state)
         {
-            _network.ClientSendMessage(new MsgStateAck() { Sequence = sequence });
+            if (LastAckedInput < state.LastApplicableInputSeq)
+            {
+                _sawmill.Debug($"SV> RCV  acked input seq={state.LastApplicableInputSeq}, tick={state.ToSequence}, last acked input={LastAckedInput}");
+                LastAckedInput = state.LastApplicableInputSeq;
+            }
+
+            _network.ClientSendMessage(new MsgStateAck() { Sequence = state.ToSequence });
         }
 
         private IEnumerable<EntityUid> ApplyGameState(GameState curState, GameState? nextState)

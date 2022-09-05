@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -285,6 +285,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void TickUpdate(float frameTime, bool noPredictions)
         {
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new BeforeTickUpdateEvent(frameTime, noPredictions));
+
             foreach (var updReg in _updateOrder)
             {
                 if (noPredictions && !updReg.System.UpdatesOutsidePrediction)
@@ -401,6 +403,18 @@ namespace Robust.Shared.GameObjects
         public SystemChangedArgs(IEntitySystem system)
         {
             System = system;
+        }
+    }
+
+    public sealed class BeforeTickUpdateEvent : EventArgs
+    {
+        public readonly float FrameTime;
+        public readonly bool NoPredictions;
+
+        public BeforeTickUpdateEvent(float frameTime, bool noPredictions)
+        {
+            FrameTime = frameTime;
+            NoPredictions = noPredictions;
         }
     }
 }

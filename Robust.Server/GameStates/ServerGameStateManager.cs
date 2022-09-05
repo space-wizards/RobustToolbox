@@ -267,9 +267,9 @@ namespace Robust.Server.GameStates
                 var mapData = _mapManager.GetStateData(lastAck);
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var lastInputCommand = inputSystem.GetLastInputCommand(session);
+                var lastInputCommand = inputSystem.GetLastApplicableInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
+                var state = new GameState(fromTick, _gameTiming.CurTick, lastInputCommand, lastSystemMessage,
                     entStates, playerStates, deletions, mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);

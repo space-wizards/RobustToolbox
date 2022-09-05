@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Lidgren.Network;
 
 #nullable disable
@@ -39,6 +39,11 @@ namespace Robust.Shared.Network
         /// ECS Events between the server and the client.
         /// </summary>
         EntityEvent,
+
+        /// <summary>
+        /// client -> server input events.
+        /// </summary>
+        Input,
     }
 
     /// <summary>
@@ -97,6 +102,8 @@ namespace Robust.Shared.Network
                     case MsgGroups.String:
                     case MsgGroups.EntityEvent:
                         return NetDeliveryMethod.ReliableOrdered;
+                    case MsgGroups.Input:
+                        return NetDeliveryMethod.Unreliable;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

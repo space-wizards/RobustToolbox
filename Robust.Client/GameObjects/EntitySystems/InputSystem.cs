@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -11,6 +11,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -27,6 +29,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IClientNetManager _netMgr = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
 
@@ -81,7 +84,7 @@ namespace Robust.Client.GameObjects
             }
 
             // send it off to the server
-            DispatchInputCommand(message);
+            _stateManager.InputCommandDispatched(message);
             return false;
         }
 
@@ -105,15 +108,12 @@ namespace Robust.Client.GameObjects
 
         }
 
-        private void DispatchInputCommand(FullInputCmdMessage message)
-        {
-            _stateManager.InputCommandDispatched(message);
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, message.InputSequence);
-        }
-
         public override void Initialize()
         {
+            UpdatesOutsidePrediction = true;
             SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+
+            _netMgr.RegisterNetMessage<MsgInput>();
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
@@ -126,6 +126,31 @@ namespace Robust.Client.GameObjects
             base.Shutdown();
 
             _conHost.UnregisterCommand("incmd");
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            if (!_timing.IsFirstTimePredicted || _stateManager.PendingInputs.Count() == 0)
+                return;
+
+            // This update just re-sends unacknowledged pending inputs as rudimentary packet loss management.
+            var list = new List<FullInputCmdMessage>(_stateManager.PendingInputs.Count());
+            foreach (var input in _stateManager.PendingInputs)
+            {
+                if (input.InputSequence >= _stateManager.LastAckedInput)
+                    list.Add(input);
+            }
+
+            var msg = new MsgInput()
+            {
+                InputMessageList = new(list)
+            };
+
+            // TODO allow these messages to be sent reliably if they get too large?
+            // I'm pretty sure these will always be pretty small? So probably not worth it.
+            _netMgr.ClientSendMessage(msg);
         }
 
         private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)

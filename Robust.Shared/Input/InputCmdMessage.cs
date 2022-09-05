@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
@@ -10,7 +10,7 @@ namespace Robust.Shared.Input
     ///     Abstract class that all Input Commands derive from.
     /// </summary>
     [Serializable, NetSerializable]
-    public abstract class InputCmdMessage : EntityEventArgs, IComparable<InputCmdMessage>
+    public abstract class InputCmdMessage : IComparable<InputCmdMessage>
     {
         /// <summary>
         ///     Client tick this was created.
@@ -52,9 +52,7 @@ namespace Robust.Shared.Input
                 return 1;
             }
 
-            if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
-            return InputSequence.CompareTo(other.InputSequence);
+            return -InputSequence.CompareTo(other.InputSequence);
         }
 
         /// <inheritdoc />

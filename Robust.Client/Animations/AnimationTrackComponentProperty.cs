@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
 namespace Robust.Client.Animations
 {
@@ -24,6 +25,7 @@ namespace Robust.Client.Animations
 
             if (!entManager.TryGetComponent(entity, ComponentType, out var component))
             {
+                Logger.Error($"Couldn't find component {ComponentType} on {entManager.ToPrettyString(entity)} for animation playback!");
                 return;
             }
 

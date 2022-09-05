@@ -1036,6 +1036,56 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
 
+
+        /*
+         * User interface
+         */
+
+        /// <summary>
+        /// Change the UITheme
+        /// </summary>
+        public static readonly CVarDef<string> InterfaceTheme =
+            CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
+
+
+        /// <summary>
+        ///Minimum resolution to start clamping autoscale to 1
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleUpperX =
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX",1080 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Minimum resolution to start clamping autoscale to 1
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleUpperY =
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY",720 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Maximum resolution to start clamping autos scale to autoscale minimum
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleLowX =
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX",520 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Maximum resolution to start clamping autos scale to autoscale minimum
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleLowY =
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY",520 , CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum ui scale value that autoscale will scale to
+        /// </summary>
+        public static readonly CVarDef<float> ResAutoScaleMin =
+            CVarDef.Create("interface.resolutionAutoScaleMinimum",0.5f , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Enable the UI autoscale system on this control, this will scale down the UI for lower resolutions
+        /// </summary>
+        public static readonly CVarDef<bool> ResAutoScaleEnabled =
+            CVarDef.Create("interface.resolutionAutoScaleEnabled",true , CVar.CLIENTONLY | CVar.ARCHIVE);
+
+
+
         /*
          * DISCORD
          */

@@ -155,20 +155,6 @@ namespace Robust.Shared.GameObjects
                 HandleMapChange(xform, body, args.OldMapId, xform.MapID);
             }
 
-            if (body != null && (meta.Flags & MetaDataFlags.InContainer) != 0)
-            {
-                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
-                // changes. This also ensures that the server doesn't have to send the physics comp state to every
-                // player for any entity inside of a container during init.
-                SetLinearVelocity(body, Vector2.Zero, false);
-                SetAngularVelocity(body, 0, false);
-
-                // This needs to get called AFTER handle map change Otherwise this will set awake to false, but will
-                // fail to remove the body from the "current map" (which should really be the old map).
-                SetCanCollide(body, false, false);
-                _joints.ClearJoints(body);
-            }
-
             if (args.OldMapId != xform.MapID)
                 return;
 

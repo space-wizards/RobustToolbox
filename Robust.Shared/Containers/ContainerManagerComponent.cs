@@ -29,10 +29,14 @@ namespace Robust.Shared.Containers
 
         void ISerializationHooks.AfterDeserialization()
         {
-            foreach (var (_, container) in Containers)
+            // TODO remove ISerializationHooks I guess the IDs can be set by a custom serializer for the dictionary? But
+            // the component??? Maybe other systems need to stop assuming that containers have been initialized during
+            // their own init.
+            foreach (var (id, container) in Containers)
             {
                 var baseContainer = (BaseContainer) container;
                 baseContainer.Manager = this;
+                baseContainer.ID = id;
             }
         }
 
@@ -48,19 +52,6 @@ namespace Robust.Shared.Containers
             }
 
             Containers.Clear();
-        }
-
-        /// <inheritdoc />
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            foreach (var container in Containers)
-            {
-                var baseContainer = (BaseContainer)container.Value;
-                baseContainer.Manager = this;
-                baseContainer.ID = container.Key;
-            }
         }
 
         /// <inheritdoc />
@@ -231,7 +222,10 @@ namespace Robust.Shared.Containers
         {
             [DataField("entities")] public List<EntityUid> Entities = new ();
 
-            [DataField("type")] public string? Type;
+            [DataField("type")] public string? Type = null;
+
+            // explicit parameterless constructor is required.
+            public ContainerPrototypeData() { }
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {

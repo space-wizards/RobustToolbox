@@ -215,17 +215,17 @@ namespace Robust.Client.GameStates
             var targetBufSize = TargetBufferSize;
 
             var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
-            var targetProccessedTick = (bufferOverflow > 1)
+            var targetProcessedTick = (bufferOverflow > 1)
                 ? _timing.LastProcessedTick + (uint)bufferOverflow
                 : _timing.LastProcessedTick + 1;
 
             _prof.WriteValue($"State buffer size", curBufSize);
-            _prof.WriteValue($"State apply count", targetProccessedTick.Value - _timing.LastProcessedTick.Value);
+            _prof.WriteValue($"State apply count", targetProcessedTick.Value - _timing.LastProcessedTick.Value);
 
             bool processedAny = false;
 
             _timing.LastProcessedTick = _timing.LastRealTick;
-            while (_timing.LastProcessedTick < targetProccessedTick)
+            while (_timing.LastProcessedTick < targetProcessedTick)
             {
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -241,15 +241,13 @@ namespace Robust.Client.GameStates
                 // meta-data error. So while this can still be optimized, its probably not worth the headache.
 
                 if (!_processor.TryGetServerState(out var curState, out var nextState))
-                {
-                    // Might just me missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
                     break;
-                }
 
                 processedAny = true;
 
                 if (curState == null)
                 {
+                    // Might just be missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
                     _timing.LastProcessedTick += 1;
                     continue;
                 }
@@ -277,7 +275,7 @@ namespace Robust.Client.GameStates
                 IEnumerable<EntityUid> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
-                    if (_timing.LastProcessedTick < targetProccessedTick && nextState != null)
+                    if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)
                     {
                         // We are about to apply another state after this one anyways. So there is no need to pass in
                         // the next state for frame interpolation. Really, if we are applying 3 or more states, we
@@ -296,10 +294,10 @@ namespace Robust.Client.GameStates
                     createdEntities = ApplyGameState(curState, nextState);
 #if EXCEPTION_TOLERANCE
                     }
-                    catch (MissingMetadataException)
+                    catch (MissingMetadataException e)
                     {
                         // Something has gone wrong. Probably a missing meta-data component. Perhaps a full server state will fix it.
-                        RequestFullState();
+                        RequestFullState(e.Uid);
                         throw;
                     }
 #endif
@@ -368,10 +366,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public void RequestFullState()
+        public void RequestFullState(EntityUid? missingEntity = null)
         {
             Logger.Info("Requesting full server state");
-            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick });
+            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
 
@@ -450,11 +448,12 @@ namespace Robust.Client.GameStates
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var query = _entityManager.GetEntityQuery<MetaDataComponent>();
+            RemQueue<Component> toRemove = new();
 
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
-            foreach (var entity in system.GetDirtyEntities())
+            foreach (var entity in system.DirtyEntities)
             {
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
@@ -468,10 +467,29 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                // TODO: handle component deletions/creations.
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
+                    if (!comp.NetSyncEnabled)
+                        continue;
+
+                    // Was this component added during prediction?
+                    if (comp.CreationTick > _timing.LastRealTick)
+                    {
+                        if (last.ContainsKey(netId))
+                        {
+                            // Component was probably removed and then re-addedd during a single prediction run
+                            // Just reset state as normal.
+                            comp.ClearCreationTick();
+                        }
+                        else
+                        {
+                            toRemove.Add(comp);
+                            if (_sawmill.Level <= LogLevel.Debug)
+                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                            continue;
+                        }
+                    }
 
                     if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))
                     {
@@ -479,14 +497,44 @@ namespace Robust.Client.GameStates
                     }
 
                     if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                    // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = _timing.LastRealTick;
                 }
+
+                // Remove predicted component additions
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(comp.Owner, comp);
+                }
+
+                // Re-add predicted removals
+                if (system.RemovedComponents.TryGetValue(entity, out var netIds))
+                {
+                    foreach (var netId in netIds)
+                    {
+                        if (_entities.HasComponent(entity, netId))
+                            continue;
+
+                        if (!last.TryGetValue(netId, out var state))
+                            continue;
+
+                        var comp = _entityManager.AddComponent(entity, netId);
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was removed: {comp.GetType()}");
+
+                        var stateEv = new ComponentHandleState(state, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                        comp.HandleComponentState(state, null);
+                        comp.ClearCreationTick(); // don't undo the re-adding.
+                        comp.LastModifiedTick = _timing.LastRealTick;
+                    }
+                }
+
                 var meta = query.GetComponent(entity);
                 DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
@@ -1082,9 +1130,12 @@ namespace Robust.Client.GameStates
 
     public sealed class MissingMetadataException : Exception
     {
+        public readonly EntityUid Uid;
+
         public MissingMetadataException(EntityUid uid)
             : base($"Server state is missing the metadata component for a new entity: {uid}.")
         {
+            Uid = uid;
         }
     }
 }

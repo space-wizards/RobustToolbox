@@ -82,7 +82,7 @@ namespace Robust.Shared.Audio
         ///     If not null, this will randomly modify the pitch scale by adding a number drawn from a normal distribution with this deviation.
         /// </summary>
         [DataField("variation")]
-        public float? Variation { get; set; }
+        public float? Variation { get; set; } = null;
 
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
         // so that's divided by 32 (EyeManager.PIXELSPERMETER).
@@ -90,6 +90,9 @@ namespace Robust.Shared.Audio
         ///     The "default" audio configuration.
         /// </summary>
         public static readonly AudioParams Default = new(0, 1, "Master", SharedAudioSystem.DefaultSoundRange, 1, 1, false, 0f);
+
+        // explicit parameterless constructor required so that default values get set properly.
+        public AudioParams() { }
 
         public AudioParams(
             float volume,

@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.GameObjects
 {
@@ -11,6 +13,7 @@ namespace Robust.Shared.GameObjects
     internal abstract class SharedMapSystem : EntitySystem
     {
         [Dependency] protected readonly IMapManagerInternal MapManager = default!;
+        [Dependency] protected readonly INetManager NetManager = default!;
 
         public override void Initialize()
         {
@@ -67,13 +70,19 @@ namespace Robust.Shared.GameObjects
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
 #pragma warning disable CS0618
+            if (NetManager.IsServer)
+                component.GridIndex = MapManager.GenerateGridId(component.GridIndex == GridId.Invalid ? null : component.GridIndex);
+#pragma warning restore CS0618
+
+            var pos = Transform(uid).MapPosition;
+            Logger.InfoS(nameof(SharedMapSystem), $"Initializing new grid {uid} at {pos}.");
+
             var msg = new GridInitializeEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
-#pragma warning disable CS0618
             var msg = new GridStartupEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }

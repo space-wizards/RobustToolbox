@@ -184,5 +184,32 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(result, Is.False);
         }
+
+        /// <summary>
+        /// To create a grid, simply add it to any entity. You can modify any fields after it is added.
+        /// </summary>
+        [Test]
+        public void ExampleCreateGrid()
+        {
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapId = mapMan.CreateMap();
+
+            var gridEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var gridComp = entMan.AddComponent<MapGridComponent>(gridEnt);
+
+            gridComp.ChunkSize = 5;
+            //gridComp.TileSize = 3; //Broken
+
+            gridComp.SetTile(new Vector2i(0, 0), new Tile(1));
+            gridComp.SetTile(new Vector2i(5, 0), new Tile(1));
+
+            Assert.That(gridComp.GridIndex, Is.Not.EqualTo(GridId.Invalid));
+            Assert.That(gridComp.ChunkSize, Is.EqualTo(5));
+            Assert.That(gridComp.TileSize, Is.EqualTo(1));
+            Assert.That(gridComp.ChunkCount, Is.EqualTo(2));
+            Assert.That(gridComp.LocalAABB, Is.EqualTo(new Box2(0, 0, 6, 1)));
+        }
     }
 }

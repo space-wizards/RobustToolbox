@@ -889,6 +889,8 @@ namespace Robust.Shared.Map
                 }
             }
 
+            LocalAABB.Scale(TileSize);
+
             _mapManager.OnGridBoundsChange(Owner, this);
             // May have been deleted from the bulk update above!
             if (!_entMan.Deleted(Owner))

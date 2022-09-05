@@ -5,6 +5,7 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 // All the obsolete warnings about GridId are probably useless here.
@@ -76,12 +77,12 @@ internal partial class MapManager
 
     public MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options)
     {
-        return CreateGrid(currentMapId, null, options.ChunkSize, default);
+        return CreateGrid(currentMapId, options.ChunkSize, default);
     }
 
     public MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize)
     {
-        return CreateGrid(currentMapId, null, chunkSize, default);
+        return CreateGrid(currentMapId, chunkSize, default);
     }
 
     public MapGridComponent CreateGrid(MapId currentMapId)
@@ -178,32 +179,25 @@ internal partial class MapManager
         EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile), true);
     }
 
-    protected MapGridComponent CreateGrid(MapId currentMapId, GridId? forcedGridId, ushort chunkSize, EntityUid forcedGridEuid)
+    protected MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)
     {
-        var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
-
-        //TODO: Also known as Component.OnAdd ;)
-        MapGridComponent grid;
-        using (var preInit = EntityManager.AddComponentUninitialized<MapGridComponent>(gridEnt))
+        EntityUid gridEnt;
+        if (forcedGridEuid != EntityUid.Invalid)
         {
-            var actualId = GenerateGridId(forcedGridId);
-            preInit.Comp.GridIndex = actualId; // Required because of MapGrid needing it in ctor
-            preInit.Comp.AllocMapGrid(chunkSize, 1);
-            grid = preInit.Comp;
+            gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
+            EntityManager.GetComponent<TransformComponent>(gridEnt).Parent =
+                EntityManager.GetComponent<TransformComponent>(GetMapEntityIdOrThrow(currentMapId));
+            EntityManager.InitializeComponents(gridEnt);
+            EntityManager.StartComponents(gridEnt);
+        }
+        else
+        {
+            gridEnt = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, currentMapId));
         }
 
-        Logger.DebugS("map", $"Binding new grid {grid.GridIndex} to entity {grid.Owner}");
-
-        //TODO: This is a hack to get TransformComponent.MapId working before entity states
-        //are applied. After they are applied the parent may be different, but the MapId will
-        //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
-        //use in transform states anytime before the state parent is properly set.
-        var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
-        EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
-
-        EntityManager.InitializeComponents(grid.Owner);
-        EntityManager.StartComponents(grid.Owner);
-        return grid;
+        var gridComp = EntityManager.AddComponent<MapGridComponent>(gridEnt);
+        gridComp.ChunkSize = chunkSize;
+        return gridComp;
     }
 
     protected internal static void InvokeGridChanged(MapManager mapManager, MapGridComponent mapGrid,

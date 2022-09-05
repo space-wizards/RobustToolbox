@@ -12,6 +12,8 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager
     {
+        IEntityManager EntityManager { get; }
+
         IEnumerable<MapGridComponent> GetAllGrids();
 
         /// <summary>

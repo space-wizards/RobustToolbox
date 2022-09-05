@@ -71,9 +71,7 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
-
-            SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
             EntityManager.EntityInitialized += OnEntityInit;
             SubscribeLocalEvent<MapChangedEvent>(OnMapCreated);
@@ -149,7 +147,7 @@ namespace Robust.Shared.GameObjects
             component.Tree.Clear();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             EntityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }
@@ -209,12 +207,6 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         #region Entity events
-
-        private void OnTerminate(ref EntityTerminatingEvent args)
-        {
-            RemoveFromEntityTree(args.Owner, false);
-        }
-
         private void OnEntityInit(EntityUid uid)
         {
             if (_container.IsEntityInContainer(uid)) return;
@@ -280,9 +272,22 @@ namespace Robust.Shared.GameObjects
         {
             var meta = MetaData(args.Entity);
 
-            // Parent change gets raised after container insert so we'll just drop it and let OnContainerInsert handle.
+            // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
+            // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
+            // removal parent-change. So if it is set here, this must mean we are getting inserted.
+            //
+            // However, this means that this method will still get run in full on container removal. Additionally,
+            // because not all container removals are guaranteed to result in a parent change, container removal events
+            // also need to add the entity to a tree. So this generally results in:
+            // add-to-tree -> remove-from-tree -> add-to-tree.
+            // Though usually, `oldLookup == newLookup` for the last step. Its still shit though.
+            //
+            // TODO IMPROVE CONTAINER REMOVAL HANDLING
+
+            if (_container.IsEntityInContainer(args.Entity, meta))
+                return;
+
             if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
-                _container.IsEntityInContainer(args.Entity, meta) ||
                 _mapManager.IsGrid(args.Entity) ||
                 _mapManager.IsMap(args.Entity)) return;
 
@@ -308,7 +313,6 @@ namespace Robust.Shared.GameObjects
 
         private void OnContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            // This gets handled before parent change so that should just early out from lookups matching.
             var xformQuery = GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Entity);
             var lookup = GetLookup(ev.Entity, xform, xformQuery);
@@ -321,10 +325,13 @@ namespace Robust.Shared.GameObjects
         private void OnContainerInsert(EntInsertedIntoContainerMessage ev)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(ev.Entity);
-            var lookup = GetLookup(ev.Entity, xform, xformQuery);
 
-            RemoveFromEntityTree(lookup, xform, xformQuery);
+            if (ev.OldParent == EntityUid.Invalid || !xformQuery.TryGetComponent(ev.OldParent, out var oldXform))
+                return;
+
+            var lookup = GetLookup(ev.OldParent, oldXform, xformQuery);
+
+            RemoveFromEntityTree(lookup, xformQuery.GetComponent(ev.Entity), xformQuery);
         }
 
         private void AddToEntityTree(

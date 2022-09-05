@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,13 +20,15 @@ namespace Robust.Shared.Serialization.Manager
         /// </summary>
         void Shutdown();
 
+        IReflectionManager ReflectionManager { get; }
+
         /// <summary>
         ///     Checks if a type has a data definition defined for it.
         /// </summary>
         /// <param name="type">The type to check for.</param>
         /// <returns>True if it does, false otherwise.</returns>
         bool HasDataDefinition(Type type);
-        
+
         #region Validation
 
         /// <summary>
@@ -135,13 +138,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <returns>
-        ///     The object with the copied values.
-        ///     This object is not necessarily the same instance as the one passed
-        ///     as <see cref="target"/>.
-        /// </returns>
-        [MustUseReturnValue]
-        object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false);
+        void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Copies the values of one object into another.
@@ -153,21 +150,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        /// <returns>
-        ///     The object with the copied values.
-        ///     This object is not necessarily the same instance as the one passed
-        ///     as <see cref="target"/>.
-        /// </returns>
-        [MustUseReturnValue]
-        T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
-
-        [MustUseReturnValue]
-        object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
-            ISerializationContext? context = null, bool skipHook = false);
-
-        #endregion
-
-        #region CreateCopy
+        void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -176,7 +159,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A copy of the given object.</returns>
-        object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false);
+        [MustUseReturnValue]
+        object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -186,7 +170,12 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
-        T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false);
+        [MustUseReturnValue]
+        T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false);
+
+        [MustUseReturnValue]
+        object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
+            ISerializationContext? context = null, bool skipHook = false);
 
         #endregion
 

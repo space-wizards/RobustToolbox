@@ -72,10 +72,10 @@ namespace Robust.Client.Graphics.Clyde
                 name = Keyboard.GetSpecialKeyName(key, _loc);
                 if (name != null)
                 {
-                    return Loc.GetString(name);
+                    return _loc.GetString(name);
                 }
 
-                return Loc.GetString("<unknown key>");
+                return _loc.GetString("<unknown key>");
             }
 
             public static Button ConvertGlfwButton(GlfwButton button)

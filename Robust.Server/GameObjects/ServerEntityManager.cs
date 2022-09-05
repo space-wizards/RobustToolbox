@@ -52,6 +52,11 @@ namespace Robust.Server.GameObjects
             LoadEntity(entity, context);
         }
 
+        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context)
+        {
+            LoadEntity(entity, context, prototype);
+        }
+
         void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
         {
             InitializeEntity(entity, meta);

@@ -33,7 +33,11 @@ internal sealed partial class ClientConsoleHost
         {
             // Typing out command name, handle this ourselves.
             var cmdOptions = CompletionResult.FromOptions(
-                RegisteredCommands.Values.Select(c => new CompletionOption(c.Command, c.Description)));
+                RegisteredCommands.Values
+                    .Where(c => CanExecute(c.Command))
+                    .OrderBy(c => c.Command)
+                    .Select(c => new CompletionOption(c.Command, c.Description)));
+
             return Task.FromResult(cmdOptions);
         }
 

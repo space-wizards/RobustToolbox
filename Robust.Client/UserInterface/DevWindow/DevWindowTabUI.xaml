@@ -9,6 +9,7 @@
                     <Button Name="RefreshButton" Text="{Loc 'dev-window-ui-refresh'}" />
                 </BoxContainer>
                 -->
+                <Button Name="ControlPicker" ToggleMode="True" Text="Inspect" />
                 <ScrollContainer VerticalExpand="True">
                     <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop" />
                 </ScrollContainer>

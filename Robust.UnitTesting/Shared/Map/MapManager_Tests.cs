@@ -45,9 +45,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapMan = sim.Resolve<IMapManager>();
 
             var mapID = new MapId(11);
-            var gridId = new GridId(7);
             mapMan.CreateMap(mapID);
-            mapMan.CreateGrid(mapID, gridId);
+            var gridId = mapMan.CreateGrid(mapID).GridEntityId;
 
             mapMan.Restart();
 

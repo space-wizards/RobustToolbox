@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly Label _label;
 
         private readonly StringBuilder _textBuilder = new();
-        private readonly char[] _textBuffer = new char[256];
+        private readonly char[] _textBuffer = new char[512];
 
         public DebugClydePanel()
         {

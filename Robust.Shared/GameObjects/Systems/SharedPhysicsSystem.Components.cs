@@ -27,8 +27,6 @@ public partial class SharedPhysicsSystem
 
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
-            bool awake;
-            component._awake = false;
             var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
 
             if (component.BodyType != BodyType.Static &&
@@ -36,19 +34,8 @@ public partial class SharedPhysicsSystem
                  !component.LinearVelocity.Equals(Vector2.Zero) ||
                  !component.AngularVelocity.Equals(0f)))
             {
-                awake = true;
-            }
-            else
-            {
-                awake = false;
-            }
-
-            if (awake)
                 component.Awake = true;
-        }
-        else
-        {
-            component._awake = false;
+            }
         }
 
         // Gets added to broadphase via fixturessystem
@@ -185,36 +172,6 @@ public partial class SharedPhysicsSystem
         return bounds;
     }
 
-    public void RecursiveDestroyContacts(PhysicsComponent body, MapId? mapId = null)
-    {
-        var bodyQuery = GetEntityQuery<PhysicsComponent>();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-
-        DestroyContacts(body, mapId, xformQuery.GetComponent(body.Owner));
-        DoDestroy(xformQuery.GetComponent(body.Owner), bodyQuery, xformQuery, mapId);
-    }
-
-    private void DoDestroy(
-        TransformComponent xform,
-        EntityQuery<PhysicsComponent> bodyQuery,
-        EntityQuery<TransformComponent> xformQuery,
-        MapId? mapId = null)
-    {
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
-        {
-            var childXform = xformQuery.GetComponent(child.Value);
-
-            if (bodyQuery.TryGetComponent(child.Value, out var body))
-            {
-                DestroyContacts(body, mapId, childXform);
-            }
-
-            DoDestroy(childXform, bodyQuery, xformQuery, mapId);
-        }
-    }
-
     public void DestroyContacts(PhysicsComponent body, MapId? mapId = null, TransformComponent? xform = null)
     {
         if (body.Contacts.Count == 0) return;
@@ -224,9 +181,16 @@ public partial class SharedPhysicsSystem
 
         if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
         {
-            DebugTools.Assert(body.Contacts.Count == 0);
+            DebugTools.Assert("Attempted to destroy contacts, but entity has no physics map!");
             return;
         }
+
+        DestroyContacts(body, map);
+    }
+
+    public void DestroyContacts(PhysicsComponent body, SharedPhysicsMapComponent physMap)
+    {
+        if (body.Contacts.Count == 0) return;
 
         var node = body.Contacts.First;
 
@@ -235,7 +199,7 @@ public partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
             // Destroy last so the linked-list doesn't get touched.
-            map.ContactManager.Destroy(contact);
+            physMap.ContactManager.Destroy(contact);
         }
 
         DebugTools.Assert(body.Contacts.Count == 0);

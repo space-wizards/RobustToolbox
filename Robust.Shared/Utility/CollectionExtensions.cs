@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
-using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
 {
@@ -160,6 +159,19 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
+        ///     Just like <see cref="Enumerable.FirstOrDefault{TSource}(System.Collections.Generic.IEnumerable{TSource}, Func{TSource, bool})"/> but returns null for value types as well.
+        /// </summary>
+        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns>True if an element has been found.</returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> is <see langword="null" />.</exception>
+        public static bool TryFirstOrNull<TSource>(this IEnumerable<TSource> source, [NotNullWhen(true)] out TSource? element) where TSource : struct
+        {
+            return TryFirstOrNull(source, _ => true, out element);
+        }
+
+        /// <summary>
         ///     Wraps Linq's FirstOrDefault.
         /// </summary>
         /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
@@ -172,6 +184,19 @@ namespace Robust.Shared.Utility
         {
             element = source.FirstOrDefault(predicate);
             return element != null;
+        }
+
+        /// <summary>
+        ///     Wraps Linq's FirstOrDefault.
+        /// </summary>
+        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns>True if an element has been found.</returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> is <see langword="null" />.</exception>
+        public static bool TryFirstOrDefault<TSource>(this IEnumerable<TSource> source, [NotNullWhen(true)] out TSource? element) where TSource : class
+        {
+            return TryFirstOrDefault(source, _ => true, out element);
         }
 
         public static TValue GetOrNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()

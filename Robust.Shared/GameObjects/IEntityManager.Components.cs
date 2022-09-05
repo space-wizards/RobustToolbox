@@ -42,6 +42,11 @@ namespace Robust.Shared.GameObjects
         T AddComponent<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
+        ///     Adds a Component with a given network id to an entity.
+        /// </summary>
+        Component AddComponent(EntityUid uid, ushort netId);
+
+        /// <summary>
         ///     Adds an uninitialized Component type to an entity.
         /// </summary>
         /// <remarks>
@@ -316,6 +321,8 @@ namespace Robust.Shared.GameObjects
         /// Returns a cached struct enumerator with the specified component.
         /// </summary>
         EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+
+        EntityQuery<Component> GetEntityQuery(Type type);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

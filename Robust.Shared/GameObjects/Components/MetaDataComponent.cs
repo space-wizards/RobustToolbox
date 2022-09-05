@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
@@ -6,6 +7,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -58,6 +60,12 @@ namespace Robust.Shared.GameObjects
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
         public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
+
+        /// <summary>
+        ///     This is the tick at which the client last applied state data received from the server.
+        /// </summary>
+        [ViewVariables]
+        public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
         ///     The in-game name of this entity.
@@ -133,14 +141,34 @@ namespace Robust.Shared.GameObjects
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
         [ViewVariables]
-        public MetaDataFlags Flags { get; internal set; }
+        public MetaDataFlags Flags
+        {
+            get => _flags;
+            internal set
+            {
+                // In container and detached to null are mutually exclusive flags.
+                DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
+                _flags = value;
+            }
+        }
+
+        internal MetaDataFlags _flags;
 
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.
-        ///     Server-only.
         /// </summary>
-        [ViewVariables]
-        public int VisibilityMask { get; internal set; }
+        /// <remarks>
+        ///     Every entity will always have the first bit set to true.
+        /// </remarks>
+        [Access(typeof(MetaDataSystem))]
+        public int VisibilityMask = 1;
+
+        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
+        private int VVVisibilityMask
+        {
+            get => VisibilityMask;
+            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
+        }
 
         [ViewVariables]
         public bool EntityPaused
@@ -153,7 +181,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value), true);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 
@@ -175,13 +203,21 @@ namespace Robust.Shared.GameObjects
     public enum MetaDataFlags : byte
     {
         None = 0,
+
         /// <summary>
-        /// Whether the entity has states specific to a particular player.
+        /// Whether the entity has states specific to particular players. This will cause many state-attempt events to
+        /// be raised, and is generally somewhat expensive.
         /// </summary>
         EntitySpecific = 1 << 0,
+
         /// <summary>
         /// Whether the entity is currently inside of a container.
         /// </summary>
         InContainer = 1 << 1,
+
+        /// <summary>
+        /// Used by clients to indicate that an entity has left their visible set.
+        /// </summary>
+        Detached = 1 << 2,
     }
 }

@@ -25,6 +25,7 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
@@ -34,6 +35,10 @@ namespace Robust.Shared.Physics
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
+            var xform = Transform(uid);
+            if (xform.MapID == Map.MapId.Nullspace)
+                return;
+
             // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
             // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
             // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
@@ -44,8 +49,10 @@ namespace Robust.Shared.Physics
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body);
+            _physics.DestroyContacts(body, xform.MapID, xform);
             _broadphaseSystem.RemoveBody(body, component);
+
+            // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
             body.CanCollide = false;
         }
         #region Public
@@ -192,7 +199,10 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            if (TryComp<SharedPhysicsMapComponent>(Transform(body.Owner).MapUid, out var physicsMap))
+            var xform = Transform(body.Owner);
+            var map = xform.MapUid;
+
+            if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
             {
                 foreach (var (_, contact) in fixture.Contacts.ToArray())
                 {
@@ -200,12 +210,9 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            var broadphase = body.Broadphase;
-
-            if (broadphase != null)
+            if (body.Broadphase != null)
             {
-                var mapId = Transform(broadphase.Owner).MapID;
-                _broadphaseSystem.DestroyProxies(broadphase, fixture, mapId);
+                _broadphaseSystem.DestroyProxies(body.Broadphase, fixture, xform.MapID);
             }
 
             if (updates)
@@ -282,11 +289,11 @@ namespace Robust.Shared.Physics
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
-                DebugTools.Assert(false);
-                Logger.ErrorS("physics", $"Tried to apply fixture state for {uid} which has name {nameof(PhysicsComponent)}");
+                Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
 
+            component.SerializedFixtures.Clear();
             var toAddFixtures = new ValueList<Fixture>();
             var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;

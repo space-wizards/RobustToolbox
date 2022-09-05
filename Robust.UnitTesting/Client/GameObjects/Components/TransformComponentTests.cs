@@ -1,11 +1,8 @@
 using NUnit.Framework;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
@@ -15,10 +12,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     public sealed class TransformComponentTests
     {
         private static readonly MapId TestMapId = new(1);
-        private static readonly GridId TestGridAId = new(1);
-        private static readonly GridId TestGridBId = new(2);
 
-        private static ISimulation SimulationFactory()
+        private static (ISimulation, EntityUid gridA, EntityUid gridB)  SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
@@ -30,10 +25,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             mapManager.CreateMap(TestMapId);
 
             // Adds two grids to use in tests.
-            mapManager.CreateGrid(TestMapId, TestGridAId);
-            mapManager.CreateGrid(TestMapId, TestGridBId);
+            var gridA = mapManager.CreateGrid(TestMapId);
+            var gridB = mapManager.CreateGrid(TestMapId);
 
-            return sim;
+            return (sim, gridA.GridEntityId, gridB.GridEntityId);
         }
 
         /// <summary>
@@ -42,12 +37,12 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [Test]
         public void ComponentStatePositionTest()
         {
-            var sim = SimulationFactory();
+            var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var gridA = mapMan.GetGrid(TestGridAId);
-            var gridB = mapMan.GetGrid(TestGridBId);
+            var gridA = mapMan.GetGrid(gridIdA);
+            var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
             var initialPos = new EntityCoordinates(gridA.GridEntityId, (0, 0));
@@ -79,13 +74,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [Test]
         public void WorldRotationTest()
         {
-            var sim = SimulationFactory();
+            var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
 
-            var gridA = mapMan.GetGrid(TestGridAId);
-            var gridB = mapMan.GetGrid(TestGridBId);
+            var gridA = mapMan.GetGrid(gridIdA);
+            var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
             var initalPos = new EntityCoordinates(gridA.GridEntityId, (0, 0));

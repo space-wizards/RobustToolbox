@@ -14,6 +14,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -136,8 +137,8 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdSerializer<EntityPrototype>))]
-        public string? Parent { get; private set; }
+        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
+        public string[]? Parents { get; }
 
         [ViewVariables]
         [NeverPushInheritance]
@@ -247,7 +248,6 @@ namespace Robust.Shared.Prototypes
             EntityPrototype? prototype,
             EntityUid entity,
             IComponentFactory factory,
-            IPrototypeManager prototypeManager,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
@@ -260,8 +260,6 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                prototypeManager.TryGetMapping(typeof(EntityPrototype), prototype.ID, out var prototypeData);
-
                 foreach (var (name, entry) in prototype.Components)
                 {
                     var fullData = entry.Mapping;

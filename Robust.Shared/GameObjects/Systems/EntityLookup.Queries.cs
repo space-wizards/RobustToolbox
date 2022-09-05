@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -443,6 +444,8 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles
@@ -710,7 +713,7 @@ public sealed partial class EntityLookupSystem
 
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
     {
-        var grid = _mapManager.GetGrid(tileRef.GridIndex);
+        var grid = _mapManager.GetGrid(tileRef.GridUid);
 
         if (worldMatrix == null || angle == null)
         {

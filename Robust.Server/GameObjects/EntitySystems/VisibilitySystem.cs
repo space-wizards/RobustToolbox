@@ -1,9 +1,12 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
+        [Dependency] private readonly MetaDataSystem _metaSys = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -56,32 +59,24 @@ namespace Robust.Server.GameObjects
 
         public void RefreshVisibility(EntityUid uid, MetaDataComponent? metaDataComponent = null, VisibilityComponent? visibilityComponent = null)
         {
-            if (!Resolve(uid, ref metaDataComponent, false))
-            {
-                // This means it's deleting or some shit; I'd love to make it a GetComponent<T> in future.
-                return;
-            }
-
-            var visMask = 1;
-            metaDataComponent.VisibilityMask = GetVisibilityMask(uid, ref visMask, visibilityComponent);
+            if (Resolve(uid, ref metaDataComponent, false))
+                _metaSys.SetVisibilityMask(uid, GetVisibilityMask(uid, visibilityComponent), metaDataComponent);
         }
 
         public void RefreshVisibility(VisibilityComponent visibilityComponent)
         {
-            RefreshVisibility(visibilityComponent.Owner);
+            RefreshVisibility(visibilityComponent.Owner, null, visibilityComponent);
         }
 
-        private int GetVisibilityMask(EntityUid uid, ref int visMask, VisibilityComponent? visibilityComponent = null, TransformComponent? xform = null)
+        private int GetVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null, TransformComponent? xform = null)
         {
+            int visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
             if (Resolve(uid, ref visibilityComponent, false))
-            {
                 visMask |= visibilityComponent.Layer;
-            }
-
+            
+            // Include parent vis masks
             if (Resolve(uid, ref xform) && xform.ParentUid.IsValid())
-            {
-                GetVisibilityMask(xform.ParentUid, ref visMask);
-            }
+                visMask |= GetVisibilityMask(xform.ParentUid);
 
             return visMask;
         }

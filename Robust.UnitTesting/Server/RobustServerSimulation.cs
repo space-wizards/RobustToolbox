@@ -4,9 +4,12 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Debugging;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
+using Robust.Server.Player;
 using Robust.Server.Reflection;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -214,6 +217,14 @@ namespace Robust.UnitTesting.Server
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
 
+            // I just wanted to load pvs system
+            container.Register<IServerEntityManager, ServerEntityManager>();
+            container.Register<INetConfigurationManager, NetConfigurationManager>();
+            container.Register<IServerNetManager, NetManager>();
+            // god help you if you actually need to test pvs functions
+            container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
+            container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
+
             _diFactory?.Invoke(container);
             container.BuildGraph();
 
@@ -259,13 +270,15 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugRayDrawingSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<CollisionWakeSystem>();
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
-            entitySystemMan.LoadExtraSystemType<MetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<PVSSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

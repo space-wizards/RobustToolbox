@@ -6,6 +6,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Debugging;
 
 namespace Robust.Shared.GameObjects
 {
@@ -14,6 +15,8 @@ namespace Robust.Shared.GameObjects
      */
     public partial class SharedPhysicsSystem
     {
+        [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+
         /// <summary>
         ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
         /// </summary>
@@ -59,7 +62,7 @@ namespace Robust.Shared.GameObjects
             return state.found;
         }
 
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, bool approximate = true)
         {
             var broadphase = body.Broadphase;
             if (broadphase == null || !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager))
@@ -175,33 +178,45 @@ namespace Robust.Shared.GameObjects
             return bodies;
         }
 
-
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body)
+        public HashSet<PhysicsComponent> GetContactingEntities(PhysicsComponent body, bool approximate = false)
         {
+            // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.
+            var result = new HashSet<PhysicsComponent>();
             var node = body.Contacts.First;
 
             while (node != null)
             {
                 var contact = node.Value;
                 node = node.Next;
+
+                if (!approximate && !contact.IsTouching)
+                    continue;
+
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                var other = body == bodyA ? bodyB : bodyA;
-                yield return other;
+                result.Add(body == bodyA ? bodyB : bodyA);
             }
+
+            return result;
         }
 
-        // TODO: This will get every body but we don't need to do that
         /// <summary>
         ///     Checks whether a body is colliding
         /// </summary>
-        /// <param name="body"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public bool IsColliding(PhysicsComponent body, Vector2 offset, bool approximate)
+        public bool IsInContact(PhysicsComponent body, bool approximate = false)
         {
-            return GetCollidingEntities(body, offset, approximate).Any();
+            var node = body.Contacts.First;
+
+            while (node != null)
+            {
+                if (approximate || node.Value.IsTouching)
+                    return true;
+
+                node = node.Next;
+            }
+
+            return false;
         }
 
         #region RayCast
@@ -279,23 +294,15 @@ namespace Robust.Shared.GameObjects
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
                     results.Add(result);
-#if DEBUG
-                    EntityManager.EventBus.QueueEvent(EventSource.Local,
-                        new DebugDrawRayMessage(
-                            new DebugRayData(ray, maxLength, result)));
-#endif
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
                     return true;
                 }, gridRay);
             }
 
-#if DEBUG
             if (results.Count == 0)
             {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
+                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
             }
-#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -363,14 +370,8 @@ namespace Robust.Shared.GameObjects
                 }, gridRay);
             }
 
-#if DEBUG
-            if (penetration > 0f)
-            {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
-            }
-#endif
+            // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
 
             return penetration;
         }

@@ -16,11 +16,11 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Shared.ViewVariables
 {
     public delegate (ViewVariablesPath? path, string[] segments) DomainResolveObject(string path);
-    public delegate string[] DomainListPaths(string[] segments);
+    public delegate IEnumerable<string>? DomainListPaths(string[] segments);
     public delegate ViewVariablesPath? HandleTypePath(object? obj, string relativePath);
     public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
-    public delegate string[] ListTypeCustomPaths(object? obj);
-    public delegate string[] ListTypeCustomPaths<in T>(T? obj);
+    public delegate IEnumerable<string> ListTypeCustomPaths(object? obj);
+    public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T? obj);
 
     internal abstract partial class ViewVariablesManager : IViewVariablesManager
     {
@@ -57,7 +57,7 @@ namespace Robust.Shared.ViewVariables
             ViewVariablesPath? Handler(object? obj, string relPath)
                 => handler((T?) obj, relPath);
 
-            string[] ListHandler(object? obj)
+            IEnumerable<string> ListHandler(object? obj)
                 => list((T?) obj);
 
             RegisterTypeHandler(typeof(T), Handler, ListHandler);
@@ -133,13 +133,12 @@ namespace Robust.Shared.ViewVariables
             return resPath.Invoke(desArgs);
         }
 
-        public string[] ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly)
+        public IEnumerable<string> ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly)
         {
-            string[] Domains()
-                => _registeredDomains.Keys.Select(d => $"/{d}")
-                    .ToArray();
+            IEnumerable<string> Domains()
+                => _registeredDomains.Keys.Select(d => $"/{d}");
 
-            string[] Full(string fullPath, string[] relativePaths)
+            IEnumerable<string> Full(string fullPath, IEnumerable<string> relativePaths)
                 => relativePaths
                     .Select(p =>
                     {
@@ -148,8 +147,7 @@ namespace Robust.Shared.ViewVariables
                         if (fullPath.EndsWith('/'))
                             fullPath = fullPath[..^1];
                         return string.Join('/', fullPath, p);
-                    })
-                    .ToArray();
+                    });
 
             if (path.StartsWith('/'))
                 path = path[1..];
@@ -169,11 +167,13 @@ namespace Robust.Shared.ViewVariables
 
             var domainList = data.List(segments[1..]);
 
-            if (domainList.Length != 0)
+            if (domainList != null)
                 return Full($"/{domain}", domainList);
 
-            // Expensive :(
+            // Expensive :'(
             var resolved = ResolvePath(path);
+
+            var test = new int[1,1];
 
             if (resolved?.Get() is not {} obj)
             {
@@ -183,7 +183,7 @@ namespace Robust.Shared.ViewVariables
                 resolved = ResolvePath(path);
 
                 if(resolved?.Get() is not {} priorObj)
-                    return Array.Empty<string>();
+                    return Enumerable.Empty<string>();
 
                 obj = priorObj;
             }
@@ -214,9 +214,41 @@ namespace Robust.Shared.ViewVariables
                     name = @$"{name}{{{memberInfo.DeclaringType?.FullName ?? typeof(void).FullName}}}";
 
                 paths.Add(name);
+
+                var memberType = memberInfo.GetUnderlyingType();
+
+                if (memberType.IsAssignableTo(typeof(IDictionary)))
+                {
+                    if (memberInfo.GetValue(obj) is not IDictionary dict)
+                        continue;
+
+                    foreach (var key in dict.Keys)
+                    {
+                        try
+                        {
+                            // Forgive me, Paul...
+                            var value = _serMan.WriteValue(key.GetType(), key).ToYamlNode().ToString();
+                            paths.Add($"{name}[{value}]");
+                        }
+                        catch (Exception)
+                        {
+                            // Nada.
+                        }
+                    }
+                }
+                else if (memberType.IsAssignableTo(typeof(IList)))
+                {
+                    if (memberInfo.GetValue(obj) is not IList list)
+                        continue;
+
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        paths.Add($"{name}[{i}]");
+                    }
+                }
             }
 
-            return Full(path, paths.ToArray());
+            return Full(path, paths);
         }
 
         private ViewVariablesPath? ResolveRelativePath(ViewVariablesPath? path, string[] segments)
@@ -234,6 +266,13 @@ namespace Robust.Shared.ViewVariables
                     return null;
 
                 var nextSegment = segments[0];
+
+                if (string.IsNullOrEmpty(nextSegment))
+                {
+                    // Let's ignore that...
+                    segments = segments[1..];
+                    continue;
+                }
 
                 var specifiers = TypeSpecifierRegex.Matches(nextSegment);
                 var indexers = IndexerRegex.Matches(nextSegment);
@@ -327,8 +366,38 @@ namespace Robust.Shared.ViewVariables
             if (path?.Get() is not {} obj || arguments.Length == 0)
                 return null;
 
+            var type = obj.GetType();
+
+            // Multidimensional arrays... More like, painful arrays.
+            if (type.IsArray && type.GetArrayRank() > 1)
+            {
+                var getter = type.GetSingleMember("Get") as MethodInfo;
+                var setter = type.GetSingleMember("Set") as MethodInfo;
+
+                if (getter == null && setter == null)
+                    return null;
+
+                var p = DeserializeArguments(
+                    getter?.GetParameters().Select(p => p.ParameterType).ToArray()
+                    ?? setter!.GetParameters()[1..].Select(p => p.ParameterType).ToArray(),
+                    0, arguments);
+
+                object? Get()
+                {
+                    return getter?.Invoke(obj, p);
+                }
+
+                void Set(object? value)
+                {
+                    if(p != null)
+                        setter?.Invoke(obj, new[] {value}.Concat(p).ToArray());
+                }
+
+                return new ViewVariablesFakePath(Get, Set, null, getter?.ReturnType ?? setter!.GetParameters()[0].ParameterType);
+            }
+
             // No indexer.
-            if (obj.GetType().GetIndexer() is not {} indexer)
+            if (type.GetIndexer() is not { } indexer)
                 return null;
 
             var parametersInfo = indexer.GetIndexParameters();
@@ -337,6 +406,9 @@ namespace Robust.Shared.ViewVariables
                 parametersInfo.Select(p => p.ParameterType).ToArray(),
                 parametersInfo.Count(p => p.IsOptional),
                 arguments);
+
+            if (parameters == null)
+                return null;
 
             return new ViewVariablesIndexedPath(obj, indexer, parameters, access);
         }
@@ -373,13 +445,20 @@ namespace Robust.Shared.ViewVariables
             if (ResolvePath(value)?.Get() is {} resolved && resolved.GetType().IsAssignableTo(type))
                 return resolved;
 
-            // Here we go serialization moment
-            using TextReader stream = new StringReader(value);
-            var yamlStream = new YamlStream();
-            yamlStream.Load(stream);
-            var document = yamlStream.Documents[0];
-            var rootNode = document.RootNode;
-            return _serMan.Read(type, rootNode.ToDataNode());
+            try
+            {
+                // Here we go serialization moment
+                using TextReader stream = new StringReader(value);
+                var yamlStream = new YamlStream();
+                yamlStream.Load(stream);
+                var document = yamlStream.Documents[0];
+                var rootNode = document.RootNode;
+                return _serMan.Read(type, rootNode.ToDataNode());
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private ViewVariablesPath? ResolveTypeHandlers(object? obj, string relativePath)

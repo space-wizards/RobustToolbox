@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables
             // Spooky huh.
             if (args.Length == 0)
             {
-                _vvm.OpenVV(new VVTest());
+                _vvm.OpenVV(new ViewVariablesPathSelector("/vvtest"));
                 return;
             }
 
@@ -138,32 +138,6 @@ namespace Robust.Client.ViewVariables
             return CompletionResult.FromOptions(
                 _vvm.ListPath(string.Join(string.Empty, args))
                     .Select(p => new CompletionOption(p, null, CompletionOptionFlags.PartialCompletion)));
-        }
-
-        /// <summary>
-        ///     Test class to test local VV easily without connecting to the server.
-        /// </summary>
-        private sealed class VVTest : IEnumerable<object>
-        {
-            [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
-
-            [ViewVariables]
-            public Dictionary<object, object> Dict => new() {{"a", "b"}, {"c", "d"}};
-
-            [ViewVariables]
-            public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
-
-            [ViewVariables] private Vector2 Vector = (50, 50);
-
-            public IEnumerator<object> GetEnumerator()
-            {
-                return List.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
         }
     }
 }

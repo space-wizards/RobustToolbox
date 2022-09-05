@@ -1,9 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 
@@ -27,6 +28,7 @@ internal abstract partial class ViewVariablesManager
         RegisterDomain("system", ResolveEntitySystemObject, ListEntitySystemPaths);
         RegisterDomain("prototype", ResolvePrototypeObject, ListPrototypePaths);
         RegisterDomain("object", ResolveStoredObject, ListStoredObjectPaths);
+        RegisterDomain("vvtest", ResolveVvTestObject, ListVvTestObjectPaths);
     }
 
     private (ViewVariablesPath? Path, string[] Segments) ResolveIoCObject(string path)
@@ -51,21 +53,20 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
-    private string[] ListIoCPaths(string[] segments)
+    private IEnumerable<string>? ListIoCPaths(string[] segments)
     {
         if (segments.Length > 1 || IoCManager.Instance is not {} deps)
-            return Array.Empty<string>();
+            return null;
 
         if (segments.Length == 1
             && _reflectionMan.TryLooseGetType(segments[0], out var type)
             && deps.TryResolveType(type, out _))
         {
-            return Array.Empty<string>();
+            return null;
         }
 
         return deps.GetRegisteredTypes()
-            .Select(t => t.Name)
-            .ToArray();
+            .Select(t => t.Name);
     }
 
     private (ViewVariablesPath? Path, string[] Segments) ResolveEntityObject(string path)
@@ -86,21 +87,20 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(uid), segments[1..]);
     }
 
-    private string[] ListEntityPaths(string[] segments)
+    private IEnumerable<string>? ListEntityPaths(string[] segments)
     {
         if (segments.Length > 1)
-            return Array.Empty<string>();
+            return null;
 
         if (segments.Length == 1
             && EntityUid.TryParse(segments[0], out var u)
             && _entMan.EntityExists(u))
         {
-            return Array.Empty<string>();
+            return null;
         }
 
         return _entMan.GetEntities()
-            .Select(uid => uid.ToString())
-            .ToArray();
+            .Select(uid => uid.ToString());
     }
 
 
@@ -127,10 +127,10 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
-    private string[] ListEntitySystemPaths(string[] segments)
+    private IEnumerable<string>? ListEntitySystemPaths(string[] segments)
     {
         if (segments.Length > 1)
-            return Array.Empty<string>();
+            return null;
 
         var entSysMan = _entMan.EntitySysManager;
 
@@ -138,13 +138,12 @@ internal abstract partial class ViewVariablesManager
             && _reflectionMan.TryLooseGetType(segments[0], out var type)
             && entSysMan.TryGetEntitySystem(type, out _))
         {
-            return Array.Empty<string>();
+            return null;
         }
 
         return _entMan.EntitySysManager
             .GetEntitySystemTypes()
-            .Select(t => t.Name)
-            .ToArray();
+            .Select(t => t.Name);
     }
 
     private (ViewVariablesPath? Path, string[] Segments) ResolvePrototypeObject(string path)
@@ -169,7 +168,7 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(prototype), segments[2..]);
     }
 
-    private string[] ListPrototypePaths(string[] segments)
+    private IEnumerable<string>? ListPrototypePaths(string[] segments)
     {
         switch (segments.Length)
         {
@@ -185,18 +184,16 @@ internal abstract partial class ViewVariablesManager
                     goto case default;
 
                 return _protoMan.EnumeratePrototypes(kind)
-                    .Select(p => $"{kind}/{p.ID}")
-                    .ToArray();
+                    .Select(p => $"{kind}/{p.ID}");
             }
             case 0:
             {
                 return _protoMan
-                    .GetPrototypeKinds()
-                    .ToArray();
+                    .GetPrototypeKinds();
             }
             default:
             {
-                return Array.Empty<string>();
+                return null;
             }
         }
     }
@@ -217,20 +214,59 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(obj), segments[1..]);
     }
 
-    private string[] ListStoredObjectPaths(string[] segments)
+    private IEnumerable<string>? ListStoredObjectPaths(string[] segments)
     {
         if (segments.Length > 1)
-            return Array.Empty<string>();
+            return null;
 
         if (segments.Length == 1
             && Guid.TryParse(segments[0], out var guid)
             && _vvObjectStorage.ContainsKey(guid))
         {
-            return Array.Empty<string>();
+            return null;
         }
 
         return _vvObjectStorage.Keys
-            .Select(g => g.ToString())
-            .ToArray();
+            .Select(g => g.ToString());
+    }
+
+    private (ViewVariablesPath? path, string[] segments) ResolveVvTestObject(string path)
+    {
+        var segments = path.Split('/');
+
+        return (new ViewVariablesInstancePath(new VvTest()), segments);
+    }
+
+    private IEnumerable<string>? ListVvTestObjectPaths(string[] segments)
+    {
+        return null;
+    }
+
+    /// <summary>
+    ///     Test class to test local VV easily without connecting to the server.
+    /// </summary>
+    private sealed class VvTest : IEnumerable<object>
+    {
+        [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
+
+        [ViewVariables] public Dictionary<object, object> Dict => new() {{"a", "b"}, {"c", "d"}};
+
+        [ViewVariables] public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
+
+
+        [ViewVariables] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
+
+
+        [ViewVariables] private Vector2 Vector = (50, 50);
+
+        public IEnumerator<object> GetEnumerator()
+        {
+            return List.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

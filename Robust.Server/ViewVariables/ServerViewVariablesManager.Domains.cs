@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
@@ -46,23 +47,22 @@ internal sealed partial class ServerViewVariablesManager
         return EmptyResolve;
     }
 
-    private string[] ListPlayerPaths(string[] segments)
+    private IEnumerable<string>? ListPlayerPaths(string[] segments)
     {
         if (segments.Length > 1)
-            return Array.Empty<string>();
+            return null;
 
         if (segments.Length == 1
             && _playerManager.TryGetSessionByUsername(segments[0], out _)
             || Guid.TryParse(segments[0], out var guid)
             && _playerManager.TryGetSessionById(new NetUserId(guid), out _))
         {
-            return Array.Empty<string>();
+            return null;
         }
 
         return _playerManager.Sessions
             .Select(s => s.Name)
             .Concat(_playerManager.Sessions
-                .Select(s => s.UserId.UserId.ToString()))
-            .ToArray();
+                .Select(s => s.UserId.UserId.ToString()));
     }
 }

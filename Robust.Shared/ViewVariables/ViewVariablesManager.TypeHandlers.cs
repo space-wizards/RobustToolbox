@@ -21,10 +21,9 @@ internal abstract partial class ViewVariablesManager
         return new ViewVariablesInstancePath(component);
     }
 
-    private string[] ListEntityTypeHandlerPaths(EntityUid uid)
+    private IEnumerable<string> ListEntityTypeHandlerPaths(EntityUid uid)
     {
         return _entMan.GetComponents(uid)
-            .Select(component => _compFact.GetComponentName(component.GetType()))
-            .ToArray();
+            .Select(component => _compFact.GetComponentName(component.GetType()));
     }
 }

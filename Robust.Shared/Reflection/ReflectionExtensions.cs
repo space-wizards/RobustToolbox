@@ -50,7 +50,7 @@ namespace Robust.Shared.Reflection
         {
             var members = type
                 .GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(m => m.Name == member && ViewVariablesUtility.TryGetViewVariablesAccess(m, out _))
+                .Where(m => m.Name == member)
                 .ToArray();
 
             if (members.Length == 0)

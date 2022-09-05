@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -15,5 +16,5 @@ public interface IViewVariablesManager
     object? ReadPath(string path);
     void WritePath(string path, string value);
     object? InvokePath(string path, string arguments);
-    string[] ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly);
+    IEnumerable<string> ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly);
 }

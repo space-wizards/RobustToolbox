@@ -39,9 +39,16 @@ public sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
         if (Access == null)
             return null;
 
-        return Object != null
-            ? Member.GetValue(Object)
-            : null;
+        try
+        {
+            return Object != null
+                ? Member.GetValue(Object)
+                : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public override void Set(object? value)
@@ -99,7 +106,7 @@ public sealed class ViewVariablesMethodPath : ViewVariablesPath
 
 public sealed class ViewVariablesIndexedPath : ViewVariablesPath
 {
-    internal ViewVariablesIndexedPath(object? obj, PropertyInfo indexer, object?[]? index, VVAccess? parentAccess)
+    internal ViewVariablesIndexedPath(object? obj, PropertyInfo indexer, object?[] index, VVAccess? parentAccess)
     {
         if (indexer.GetIndexParameters().Length == 0)
             throw new ArgumentException("PropertyInfo is not an indexer!", nameof(indexer));
@@ -112,7 +119,7 @@ public sealed class ViewVariablesIndexedPath : ViewVariablesPath
 
     public readonly object? Object;
     public readonly PropertyInfo Indexer;
-    public readonly object?[]? Index;
+    public readonly object?[] Index;
     public readonly VVAccess? Access;
     public override Type Type => Indexer.GetUnderlyingType();
 
@@ -121,7 +128,16 @@ public sealed class ViewVariablesIndexedPath : ViewVariablesPath
         if (Access == null)
             return null;
 
-        return Object != null ? Indexer.GetValue(Object, Index) : null;
+        try
+        {
+            return Object != null
+                ? Indexer.GetValue(Object, Index)
+                : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public override void Set(object? value)

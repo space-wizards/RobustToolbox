@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -8,6 +10,8 @@ namespace Robust.Client.GameObjects
     public sealed class AnimationPlayerSystem : EntitySystem
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();
+
+        [Dependency] private readonly IComponentFactory _compFact = default!;
 
         public override void FrameUpdate(float frameTime)
         {
@@ -75,6 +79,39 @@ namespace Robust.Client.GameObjects
         {
             AddComponent(component);
             var playback = new AnimationPlaybackShared.AnimationPlayback(animation);
+
+#if DEBUG
+            // Component networking checks
+            foreach (var track in animation.AnimationTracks)
+            {
+                if (track is not AnimationTrackComponentProperty compTrack)
+                    continue;
+
+                if (compTrack.ComponentType == null)
+                {
+                    Logger.Error($"Attempted to play a component animation without any component specified.");
+                    return;
+                }
+
+                if (!EntityManager.TryGetComponent(component.Owner, compTrack.ComponentType, out var animatedComp))
+                {
+                    Logger.Error(
+                        $"Attempted to play a component animation, but the entity {ToPrettyString(component.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
+                    return;
+                }
+
+                if (component.Owner.IsClientSide() || !component.NetSyncEnabled)
+                    continue;
+
+                var reg = _compFact.GetRegistration(animatedComp);
+
+                // In principle there is nothing wrong with this, as long as the property of the component being
+                // animated is not part of the networked state and setting it does not dirty the component. Hence only a
+                // warning in debug mode.
+                if (reg.NetID != null)
+                    Logger.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+            }
+#endif
 
             component.PlayingAnimations.Add(key, playback);
         }

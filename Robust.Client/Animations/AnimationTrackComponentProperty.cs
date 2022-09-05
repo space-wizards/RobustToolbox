@@ -25,6 +25,7 @@ namespace Robust.Client.Animations
 
             if (!entManager.TryGetComponent(entity, ComponentType, out var component))
             {
+                // This gets checked when the animation is first played, but the component may also be removed while the animation plays
                 Logger.Error($"Couldn't find component {ComponentType} on {entManager.ToPrettyString(entity)} for animation playback!");
                 return;
             }

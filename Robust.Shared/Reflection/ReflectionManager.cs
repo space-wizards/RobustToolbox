@@ -299,7 +299,7 @@ namespace Robust.Shared.Reflection
                 TryLooseGetType(typeName, out found);
 
                 // If we may have gotten the type but it's still abstract then don't return it.
-                if (found is { IsAbstract: true })
+                if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
                     found = null;
             }
 

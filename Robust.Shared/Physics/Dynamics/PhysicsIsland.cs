@@ -483,7 +483,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates, Dictionary<TransformComponent, (Vector2, float)> cachedUpdates)
+        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates, Dictionary<TransformComponent, (Vector2, Angle)> cachedUpdates)
         {
             foreach (var (joint, error) in _brokenJoints)
             {
@@ -525,16 +525,17 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
                     var transform = xforms.GetComponent(body.Owner);
 
-                    if (!cachedUpdates.ContainsKey(transform))
-                    {
-                        cachedUpdates.Add(transform, (bodyPos, angle));
-                    }
-
                     //Defer MoveEvents after the first substep
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;
                     _transform.SetWorldPosition(transform, bodyPos, xforms);
                     _transform.SetWorldRotation(transform, angle, xforms);
+
+                    if (!cachedUpdates.ContainsKey(transform))
+                    {
+                        cachedUpdates.Add(transform, (transform.WorldPosition, transform.WorldRotation));
+                    }
+
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

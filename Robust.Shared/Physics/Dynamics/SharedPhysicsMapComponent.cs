@@ -100,7 +100,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     1st substep xform cache for lerping fixes
         /// </summary>
-        private Dictionary<TransformComponent, (Vector2, float)> _xformCache = new();
+        private Dictionary<TransformComponent, (Vector2, Angle)> _xformCache = new();
 
         /// <summary>
         /// Temporary joint storage during solving

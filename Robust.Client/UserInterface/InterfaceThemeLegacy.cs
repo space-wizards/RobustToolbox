@@ -2,13 +2,13 @@ using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface
 {
-    // DON'T USE THESE
-    // THEY'RE A BAD IDEA THAT NEEDS TO BE BURIED.
+    //THIS IS BEING DEPRECIATED BECAUSE IT'S ASS!
+    //UIThemes will be eventually fully replacing this functionality without giving you turbo space ass-cancer
 
     /// <summary>
     ///     Fallback theme system for GUI.
     /// </summary>
-    public abstract class UITheme
+    public abstract class InterfaceTheme
     {
         public abstract Font DefaultFont { get; }
         public abstract Font LabelFont { get; }
@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
         public abstract StyleBox LineEditBox { get; }
     }
 
-    public sealed class UIThemeDummy : UITheme
+    public sealed class InterfaceThemeDummy : InterfaceTheme
     {
         public override Font DefaultFont { get; } = new DummyFont();
         public override Font LabelFont { get; } = new DummyFont();

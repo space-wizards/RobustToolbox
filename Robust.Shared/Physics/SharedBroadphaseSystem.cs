@@ -38,9 +38,10 @@ namespace Robust.Shared.Physics
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
-        // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
+        /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        private readonly Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
@@ -283,7 +284,7 @@ namespace Robust.Shared.Physics
                     var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
 
                     // Get Grid2 AABB in grid1 ref
-                    var aabb1 = grid.LocalAABB.Union(invWorldMatrix.TransformBox(otherGridBounds));
+                    var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
                     var ourChunks = mapGrid.GetLocalMapChunks(aabb1);
@@ -868,7 +869,8 @@ namespace Robust.Shared.Physics
 
         private void OnGridAdd(GridAddEvent ev)
         {
-            EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
+            // Must be done before initialization as that's when broadphase data starts getting set.
+            EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
@@ -929,7 +931,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                var grid = (IMapGridInternal) _mapManager.GetGrid(mapGrid.GridIndex);
+                var grid = (IMapGridInternal) mapGrid.Grid;
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
                 var chunkEnumerator = grid.GetMapChunks(aabb);

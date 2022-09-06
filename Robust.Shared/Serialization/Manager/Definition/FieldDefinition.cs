@@ -7,7 +7,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
     internal sealed class FieldDefinition
     {
         public FieldDefinition(
-            DataFieldAttribute attr,
+            DataFieldBaseAttribute attr,
             object? defaultValue,
             AbstractFieldInfo fieldInfo,
             AbstractFieldInfo backingField,
@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             InheritanceBehavior = inheritanceBehavior;
         }
 
-        public DataFieldAttribute Attribute { get; }
+        public DataFieldBaseAttribute Attribute { get; }
 
         public object? DefaultValue { get; }
 
@@ -40,6 +40,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public void SetValue(object? obj, object? value)
         {
             BackingField.SetValue(obj, value);
+        }
+
+        public override string ToString()
+        {
+            return $"{FieldInfo.Name}({Attribute})";
         }
     }
 }

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
+using Robust.Client.Timing;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -20,6 +21,7 @@ namespace Robust.Client.Prototypes
     {
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IClientGameTiming _timing = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
@@ -61,6 +63,10 @@ namespace Robust.Client.Prototypes
             msg.Paths = _reloadQueue.ToArray();
             _netManager.ClientSendMessage(msg);
 
+            // Reloading prototypes modifies entities. This currently causes some state management debug asserts to
+            // fail. To avoid this, we set `IGameTiming.ApplyingState` to true, even though this isn't really applying a
+            // server state.
+            using var _ = _timing.StartStateApplicationArea();
             ReloadPrototypes(_reloadQueue);
 
             _reloadQueue.Clear();

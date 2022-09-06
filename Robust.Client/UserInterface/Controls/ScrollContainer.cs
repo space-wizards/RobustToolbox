@@ -7,6 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class ScrollContainer : Container
     {
+        private bool _queueScrolled = false;
         private bool _vScrollEnabled = true;
         private bool _hScrollEnabled = true;
 
@@ -22,6 +23,8 @@ namespace Robust.Client.UserInterface.Controls
         public int ScrollSpeedY { get; set; } = 50;
 
         public bool ReturnMeasure { get; set; } = false;
+
+        public event Action? OnScrolled;
 
         public ScrollContainer()
         {
@@ -204,6 +207,16 @@ namespace Robust.Client.UserInterface.Controls
             return finalSize;
         }
 
+        protected override void ArrangeCore(UIBox2 finalRect)
+        {
+            base.ArrangeCore(finalRect);
+
+            if (!_queueScrolled) return;
+
+            OnScrolled?.Invoke();
+            _queueScrolled = false;
+        }
+
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
@@ -261,6 +274,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             InvalidateArrange();
+            _queueScrolled = true;
         }
     }
 }

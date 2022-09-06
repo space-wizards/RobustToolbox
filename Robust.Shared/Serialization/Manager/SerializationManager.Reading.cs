@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -25,7 +26,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            return (T)Read(typeof(T), node, context, skipHook, value)!;
+            return (T)Read(typeof(T), node, context, skipHook, EqualityComparer<T>.Default.Equals(value, default) ? null : value)!;
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
@@ -146,18 +147,16 @@ namespace Robust.Shared.Serialization.Manager
                             $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
-                    var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
+                    var definition = instance.GetDefinition(value);
+                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    call = value.IsValueType switch
-                    {
-                        _ => call = Expression.Call(
-                            instanceConst,
-                            nameof(ReadSelfSerialize),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst, valueParam)
-                    };
+                    call = Expression.Call(
+                        instanceConst,
+                        nameof(ReadSelfSerialize),
+                        new[] { value },
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                        instantiatorConst, valueParam);
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
                 {
@@ -183,10 +182,9 @@ namespace Robust.Shared.Serialization.Manager
                     var definition = instance.GetDefinition(value);
                     var definitionConst = Expression.Constant(definition, typeof(DataDefinition));
 
-                    var instantiator = instance.GetOrCreateInstantiator(value);
+                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    var populateConst = Expression.Constant(value.IsAssignableTo(typeof(IPopulateDefaultValues)));
                     var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));
 
                     call = node switch
@@ -198,7 +196,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -210,7 +207,6 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(MappingDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            populateConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
@@ -256,16 +252,11 @@ namespace Robust.Shared.Serialization.Manager
             return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
         }
 
-        private T[]? ReadArrayValue<T>(
+        private T[] ReadArrayValue<T>(
             ValueDataNode value,
             ISerializationContext? context = null,
             bool skipHook = false)
         {
-            if (value.Value == "null")
-            {
-                return null;
-            }
-
             var array = new T[1];
             array[0] = Read<T>(value, context, skipHook);
             return array;
@@ -316,17 +307,12 @@ namespace Robust.Shared.Serialization.Manager
             return Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
         }
 
-        private TValue? ReadSelfSerialize<TValue>(
+        private TValue ReadSelfSerialize<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             object? rawValue = null)
             where TValue : ISelfSerialize
         {
-            if (node.Value == "null")
-            {
-                return default; //todo paul this default should be null
-            }
-
             var value = (TValue) (rawValue ?? instantiator());
             value.Deserialize(node.Value);
 
@@ -354,7 +340,6 @@ namespace Robust.Shared.Serialization.Manager
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -376,11 +361,6 @@ namespace Robust.Shared.Serialization.Manager
 
             instance ??= instantiator();
 
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
-            }
-
             if (node.Value != string.Empty)
             {
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
@@ -398,7 +378,6 @@ namespace Robust.Shared.Serialization.Manager
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false,
@@ -417,11 +396,6 @@ namespace Robust.Shared.Serialization.Manager
             if (definition == null)
             {
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
-            }
-
-            if (populate)
-            {
-                ((IPopulateDefaultValues) instance).PopulateDefaultValues();
             }
 
             var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;

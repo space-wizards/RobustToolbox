@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
         public ValueDataNode(YamlScalarNode node) : base(node.Start, node.End)
         {
             Value = node.Value ?? string.Empty;
-            Tag = node.Tag;
+            Tag = node.Tag.IsEmpty ? null : node.Tag.Value;
         }
 
         public string Value { get; set; }

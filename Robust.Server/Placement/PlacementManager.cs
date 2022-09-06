@@ -79,7 +79,7 @@ namespace Robust.Server.Placement
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
-            var plyEntity = session.AttachedEntityTransform;
+            var plyEntity = _entityManager.GetComponentOrNull<TransformComponent>(session.AttachedEntity);
 
             // Don't have an entity, don't get to place.
             if (plyEntity == null)
@@ -131,27 +131,24 @@ namespace Robust.Server.Placement
 
         private void PlaceNewTile(ushort tileType, EntityCoordinates coordinates)
         {
-            var mapCoordinates = coordinates.ToMap(_entityManager);
+            if (!coordinates.IsValid(_entityManager)) return;
 
-            if (mapCoordinates.MapId == MapId.Nullspace) return;
+            IMapGrid? grid;
 
-            var gridCoordinate = coordinates.AlignWithClosestGridTile(entityManager: _entityManager, mapManager: _mapManager);
+            _mapManager.TryGetGrid(coordinates.EntityId, out grid);
 
-            if (!gridCoordinate.IsValid(_entityManager)) return;
+            if (grid == null)
+                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out grid);
 
-            var closest = _mapManager.IsGrid(gridCoordinate.EntityId);
-
-            if (closest) // stick to existing grid
+            if (grid != null)  // stick to existing grid
             {
-                if (!_mapManager.TryGetGrid(gridCoordinate.EntityId, out var grid)) return;
-
-                grid.SetTile(gridCoordinate, new Tile(tileType));
+                grid.SetTile(coordinates, new Tile(tileType));
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(mapCoordinates.MapId);
-                newGrid.WorldPosition = mapCoordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
-                var tilePos = newGrid.WorldToTile(mapCoordinates.Position);
+                var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
+                newGrid.WorldPosition = coordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
+                var tilePos = newGrid.WorldToTile(coordinates.Position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }
         }

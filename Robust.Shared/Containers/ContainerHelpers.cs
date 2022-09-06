@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -69,115 +68,74 @@ namespace Robust.Shared.Containers
 
         /// <summary>
         /// Attempts to remove an entity from its container, if any.
+        /// <see cref="SharedContainerSystem.TryRemoveFromContainer"/>
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        [Obsolete("Use SharedContainerSystem.TryRemoveFromContainer() instead")]
         public static bool TryRemoveFromContainer(this EntityUid entity, bool force, out bool wasInContainer, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(entity));
-
-            if (TryGetContainer(entity, out var container, entMan))
-            {
-                wasInContainer = true;
-
-                if (!force)
-                    return container.Remove(entity, entMan);
-
-                container.ForceRemove(entity, entMan);
-                return true;
-            }
-
-            wasInContainer = false;
-            return false;
+            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .TryRemoveFromContainer(entity, force, out wasInContainer);
         }
 
         /// <summary>
         /// Attempts to remove an entity from its container, if any.
+        /// <see cref="SharedContainerSystem.TryRemoveFromContainer"/>
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        [Obsolete("Use SharedContainerSystem.TryRemoveFromContainer() instead")]
         public static bool TryRemoveFromContainer(this EntityUid entity, bool force = false, IEntityManager? entMan = null)
         {
-            return TryRemoveFromContainer(entity, force, out _, entMan);
+            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .TryRemoveFromContainer(entity, force);
         }
 
         /// <summary>
         /// Attempts to remove all entities in a container.
+        /// <see cref="SharedContainerSystem.EmptyContainer"/>
         /// </summary>
+        [Obsolete("Use SharedContainerSystem.EmptyContainer() instead")]
         public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null,
             bool attachToGridOrMap = false, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            foreach (var entity in container.ContainedEntities.ToArray())
-            {
-                if (entMan.Deleted(entity))
-                    continue;
-
-                if (force)
-                    container.ForceRemove(entity, entMan);
-                else
-                    container.Remove(entity, entMan);
-
-                if (moveTo.HasValue)
-                    entMan.GetComponent<TransformComponent>(entity).Coordinates = moveTo.Value;
-
-                if(attachToGridOrMap)
-                    entMan.GetComponent<TransformComponent>(entity).AttachToGridOrMap();
-            }
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .EmptyContainer(container, force, moveTo, attachToGridOrMap);
         }
 
         /// <summary>
         /// Attempts to remove and delete all entities in a container.
+        /// <see cref="SharedContainerSystem.CleanContainer"/>
         /// </summary>
+        [Obsolete("Use SharedContainerSystem.CleanContainer() instead")]
         public static void CleanContainer(this IContainer container, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            foreach (var ent in container.ContainedEntities.ToArray())
-            {
-                if (entMan.Deleted(ent)) continue;
-                container.ForceRemove(ent, entMan);
-                entMan.DeleteEntity(ent);
-            }
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .CleanContainer(container);
         }
 
+        /// <summary>
+        /// <see cref="SharedContainerSystem.AttachParentToContainerOrGrid"/>
+        /// </summary>
+        [Obsolete("Use SharedContainerSystem.AttachParentToContainerOrGrid() instead")]
         public static void AttachParentToContainerOrGrid(this TransformComponent transform, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            if (transform.Parent == null
-                || !TryGetContainer(transform.Parent.Owner, out var container, entMan)
-                || !TryInsertIntoContainer(transform, container, entMan))
-                transform.AttachToGridOrMap();
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .AttachParentToContainerOrGrid(transform);
         }
 
-        private static bool TryInsertIntoContainer(this TransformComponent transform, IContainer container, IEntityManager? entMan = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            if (container.Insert(transform.Owner, entMan)) return true;
-
-            if (entMan.GetComponent<TransformComponent>(container.Owner).Parent != null
-                && TryGetContainer(container.Owner, out var newContainer, entMan))
-                return TryInsertIntoContainer(transform, newContainer, entMan);
-
-            return false;
-        }
-
+        /// <summary>
+        /// <see cref="SharedContainerSystem.TryGetManagerComp"/>
+        /// </summary>
+        [Obsolete("Use SharedContainerSystem.TryGetManagerComp() instead")]
         private static bool TryGetManagerComp(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(entity));
-
-            if (entMan.TryGetComponent(entity, out manager))
-                return true;
-
-            // RECURSION ALERT
-            if (entMan.GetComponent<TransformComponent>(entity).Parent != null)
-                return TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).ParentUid, out manager, entMan);
-
-            return false;
+            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+                .TryGetManagerComp(entity, out manager);
         }
 
         /// <summary>

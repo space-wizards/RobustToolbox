@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+#pragma warning disable CS0618
 
 namespace Robust.Shared.Map
 {
@@ -17,6 +18,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
         /// </summary>
+        [Obsolete("Use EntityUids instead")]
         public readonly GridId GridIndex;
 
         /// <summary>

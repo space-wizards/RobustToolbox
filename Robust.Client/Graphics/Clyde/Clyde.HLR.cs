@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Clear screen to correct color.
-            ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
+            ClearFramebuffer(ConvertClearFromSrgb(_userInterfaceManager.GetMainClearColor()));
 
             using (DebugGroup("UI"))
             using (_prof.Group("UI"))
@@ -258,10 +258,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
 
-                for (var j = overlayIndex; j < worldOverlays.Count; j++)
+                for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
-                    overlayIndex = j;
-                    var overlay = worldOverlays[j];
+                    var overlay = worldOverlays[overlayIndex];
 
                     if (overlay.ZIndex > entry.sprite.DrawDepth)
                     {
@@ -326,7 +325,7 @@ namespace Robust.Client.Graphics.Clyde
                                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                                 name: nameof(entityPostRenderTarget));
                         }
-                        
+
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
                         _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
 
@@ -373,7 +372,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // draw remainder of overlays
-            for (var j = overlayIndex; j < worldOverlays.Count; j++)
+            for (; overlayIndex < worldOverlays.Count; overlayIndex++)
             {
                 if (!flushed)
                 {
@@ -381,7 +380,7 @@ namespace Robust.Client.Graphics.Clyde
                     flushed = true;
                 }
 
-                RenderSingleWorldOverlay(worldOverlays[j], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
             ArrayPool<int>.Shared.Return(indexList);
@@ -450,7 +449,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 BindRenderTargetFull(RtToLoaded(rt));
                 if (clearColor is not null)
-                    ClearFramebuffer(clearColor.Value);
+                    ClearFramebuffer(ConvertClearFromSrgb(clearColor.Value));
+
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);

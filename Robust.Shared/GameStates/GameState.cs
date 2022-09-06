@@ -7,17 +7,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
-    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence} ext={Extrapolated}")]
+    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence}")]
     [Serializable, NetSerializable]
     public sealed class GameState
     {
-        /// <summary>
-        ///     An extrapolated state that was created artificially by the client.
-        ///     It does not contain any real data from the server.
-        /// </summary>
-        [field:NonSerialized]
-        public bool Extrapolated { get; set; }
-
         /// <summary>
         ///     The serialized size in bytes of this game state.
         /// </summary>

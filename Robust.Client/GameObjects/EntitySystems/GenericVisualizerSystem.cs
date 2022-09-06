@@ -23,7 +23,7 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
                 continue;
 
             var valueString = appearanceValue.ToString();
-            if (valueString == null)
+            if (string.IsNullOrEmpty(valueString))
                 continue;
 
             foreach (var (layerKeyRaw, layerDataDict) in layerDict)

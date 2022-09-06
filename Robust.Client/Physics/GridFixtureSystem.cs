@@ -118,6 +118,8 @@ namespace Robust.Client.Physics
                         worldHandle.DrawLine(start, end, Color.Aquamarine);
                     }
                 }
+
+                worldHandle.SetTransform(Matrix3.Identity);
             }
 
             private Color GetColor(MapChunk chunk, int index)

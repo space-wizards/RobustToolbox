@@ -9,6 +9,9 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
+// GridId obsolete
+#pragma warning disable CS0618
+
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
@@ -109,6 +112,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Use EntityUids instead")]
         public GridId Index { get; }
 
         /// <summary>

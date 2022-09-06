@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared;
@@ -35,10 +36,14 @@ public sealed class GridSplit_Tests
             grid.SetTile(new Vector2i(x, 0), new Tile(1));
         }
 
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(2));
 
         mapManager.DeleteMap(mapId);
     }
@@ -59,16 +64,24 @@ public sealed class GridSplit_Tests
             }
         }
 
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         grid.SetTile(Vector2i.One, Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         grid.SetTile(new Vector2i(1, 2), Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(2));
 
         mapManager.DeleteMap(mapId);
     }
@@ -88,10 +101,14 @@ public sealed class GridSplit_Tests
 
         grid.SetTile(Vector2i.One, new Tile(1));
 
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(3));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(3));
 
         mapManager.DeleteMap(mapId);
     }
@@ -113,7 +130,9 @@ public sealed class GridSplit_Tests
             grid.SetTile(new Vector2i(x, 0), new Tile(1));
         }
 
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(1));
 
         var dummy = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(3.5f, 0.5f)));
         var dummyXform = entManager.GetComponent<TransformComponent>(dummy);
@@ -123,9 +142,13 @@ public sealed class GridSplit_Tests
         Assert.That(anchoredXform.Anchored);
 
         grid.SetTile(new Vector2i(2, 0), Tile.Empty);
-        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
+        Assert.That(mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Count(), Is.EqualTo(2));
 
-        var newGrid = mapManager.GetAllMapGrids(mapId).Last();
+        var newGrid = mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).Last();
         var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.Owner);
 
         Assert.Multiple(() =>

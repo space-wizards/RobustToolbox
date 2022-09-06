@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -14,13 +15,10 @@ namespace Robust.Shared.Map
     {
         IEntityManager EntityManager { get; }
 
-        IEnumerable<MapGridComponent> GetAllGrids();
-
-        /// <summary>
-        ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
-        ///     so that you don't spam an event for each of the million station tiles.
-        /// </summary>
-        bool SuppressOnTileChanged { get; set; }
+        IEnumerable<MapGridComponent> GetAllGrids()
+        {
+            return EntityManager.EntityQuery<MapGridComponent>();
+        }
 
         /// <summary>
         /// Get the set of grids that have moved on this map in this tick.
@@ -87,14 +85,41 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
-        MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
-        MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize);
-        MapGridComponent CreateGrid(MapId currentMapId);
-        MapGridComponent GetGrid(EntityUid gridId);
+        MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize)
+        {
+            var gridEnt = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, currentMapId));
+            var gridComp = EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = chunkSize;
+            return gridComp;
+        }
 
-        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid);
-        bool GridExists([NotNullWhen(true)] EntityUid? euid);
-        IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
+        MapGridComponent CreateGrid(MapId currentMapId)
+        {
+            var gridEnt = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, currentMapId));
+            return EntityManager.AddComponent<MapGridComponent>(gridEnt);
+        }
+
+        MapGridComponent GetGrid(EntityUid gridId)
+        {
+            return GetGridComp(gridId);
+        }
+
+        bool TryGetGrid(EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
+        {
+            return EntityManager.TryGetComponent(euid, out grid);
+        }
+
+        bool GridExists([NotNullWhen(true)] EntityUid? euid)
+        {
+            return EntityManager.HasComponent<MapGridComponent>(euid);
+        }
+
+        IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
+        {
+            return EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+                .Where(tuple => tuple.Item2.MapID == mapId)
+                .Select(tuple => tuple.Item1);
+        }
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
@@ -119,8 +144,6 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [MaybeNullWhen(false)] out MapGridComponent grid);
 
-        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
-
         /// <summary>
         /// Returns the grids intersecting this AABB.
         /// </summary>
@@ -139,18 +162,6 @@ namespace Robust.Shared.Map
         IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
         /// <summary>
-        ///     A tile is being modified.
-        /// </summary>
-        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
-        event EventHandler<TileChangedEventArgs> TileChanged;
-
-        /// <summary>
-        ///     A Grid was modified.
-        /// </summary>
-        [Obsolete("Subscribe to GridModifiedEvent on the event bus.")]
-        event EventHandler<GridChangedEventArgs> GridChanged;
-
-        /// <summary>
         ///     A new map has been created.
         /// </summary>
         [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Created is true.")]
@@ -164,13 +175,20 @@ namespace Robust.Shared.Map
 
         bool HasMapEntity(MapId mapId);
 
-        bool IsGrid(EntityUid uid);
+        bool IsGrid(EntityUid uid)
+        {
+            return EntityManager.HasComponent<MapGridComponent>(uid);
+        }
+
         bool IsMap(EntityUid uid);
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
 
-        MapGridComponent GetGridComp(EntityUid euid);
+        MapGridComponent GetGridComp(EntityUid euid)
+        {
+            return EntityManager.GetComponent<MapGridComponent>(euid);
+        }
 
         //
         // Pausing functions
@@ -193,15 +211,5 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapInitialized(MapId mapId);
-    }
-
-    public struct GridCreateOptions
-    {
-        public static readonly GridCreateOptions Default = new()
-        {
-            ChunkSize = 16
-        };
-
-        public ushort ChunkSize;
     }
 }

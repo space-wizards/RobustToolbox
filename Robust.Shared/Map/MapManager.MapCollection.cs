@@ -56,7 +56,9 @@ internal partial class MapManager
     public void TrueDeleteMap(MapId mapId)
     {
         // grids are cached because Delete modifies collection
-        var grids = GetAllMapGrids(mapId).ToList();
+        var grids = EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+            .Where(tuple => tuple.Item2.MapID == mapId)
+            .Select(tuple => tuple.Item1).ToList();
 
         foreach (var grid in grids)
         {

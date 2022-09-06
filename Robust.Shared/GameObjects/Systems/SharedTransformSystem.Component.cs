@@ -83,7 +83,7 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(TransformComponent xform)
     {
-        if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>(xform.GridUid, out var grid))
         {
             return false;
         }

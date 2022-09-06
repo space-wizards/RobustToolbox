@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
         public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
         {
             // If they're parented directly to the map or grid then just return the coordinates.
-            if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
+            if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>(xform.GridUid, out var grid))
             {
                 var mapUid = _mapManager.GetMapEntityId(xform.MapID);
                 var coordinates = xform.Coordinates;
@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
             while (ent.IsValid())
             {
-                if (_mapManager.TryGetGrid(ent, out grid))
+                if (_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) ent, out grid))
                     break;
 
                 ent = xformQuery.GetComponent(ent).ParentUid;

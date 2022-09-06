@@ -287,8 +287,6 @@ namespace Robust.Shared.Map
             chunk.Fixtures.Clear();
             _chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved(Owner, this, chunk);
-
             _chunkDeletionHistory.Add((_gameTiming.CurTick, chunk.Indices));
 
             if (_chunks.Count == 0)
@@ -320,7 +318,9 @@ namespace Robust.Shared.Map
 
             var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
             newChunk.LastTileModifiedTick = _gameTiming.CurTick;
-            newChunk.TileModified += OnTileModified;
+
+            var mapSystem = _entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
+            newChunk.TileModified += (mapChunk, tileIndices, newTile, oldTile, shapeChanged) => OnTileModified(mapSystem, mapChunk, tileIndices, newTile, oldTile, shapeChanged);
             return _chunks[chunkIndices] = newChunk;
         }
 
@@ -666,7 +666,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentException(
                     $"Grid {Owner} is on map {_entMan.GetComponent<TransformComponent>(Owner).MapID}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
 
-            if (!_mapManager.TryGetGrid(Owner, out var grid))
+            if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) Owner, out var grid))
             {
                 return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
             }
@@ -967,7 +967,8 @@ namespace Robust.Shared.Map
                 rotation, worldPos).CalcBoundingBox();
         }
 
-        private void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
+        private void OnTileModified(SharedMapSystem mapSystem, MapChunk mapChunk, Vector2i tileIndices, Tile newTile,
+            Tile oldTile,
             bool shapeChanged)
         {
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
@@ -978,10 +979,14 @@ namespace Robust.Shared.Map
             // The map serializer currently sets tiles of unbound grids as part of the deserialization process
             // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
             // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
-            if (!_mapManager.SuppressOnTileChanged)
+            if (!mapSystem.SuppressOnTileChanged)
             {
                 var newTileRef = new TileRef(Owner, gridTile, newTile);
-                _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
+                if (!mapSystem.SuppressOnTileChanged)
+                {
+                    var euid = newTileRef.GridUid;
+                    _entMan.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, newTileRef, oldTile), true);
+                }
             }
 
             if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)

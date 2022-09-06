@@ -146,55 +146,54 @@ namespace Robust.Shared.Map
         /// </summary>
         public ushort TileSize { get; set; } = 1;
 
-        internal static void ApplyMapGridState(IMapManagerInternal networkedMapManager, MapGridComponent gridComp,
-            List<ChunkDatum> chunkUpdates)
+        internal void ApplyMapGridState(SharedMapSystem mapSystem, List<ChunkDatum> chunkUpdates)
         {
-            networkedMapManager.SuppressOnTileChanged = true;
+            mapSystem.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
             foreach (var chunkData in chunkUpdates)
             {
                 if (chunkData.IsDeleted())
                     continue;
 
-                var chunk = gridComp.GetChunk(chunkData.Index);
+                var chunk = GetChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(chunkData.TileData.Length == gridComp.ChunkSize * gridComp.ChunkSize);
+                DebugTools.Assert(chunkData.TileData.Length == ChunkSize * ChunkSize);
 
                 var counter = 0;
-                for (ushort x = 0; x < gridComp.ChunkSize; x++)
+                for (ushort x = 0; x < ChunkSize; x++)
                 {
-                    for (ushort y = 0; y < gridComp.ChunkSize; y++)
+                    for (ushort y = 0; y < ChunkSize; y++)
                     {
                         var tile = chunkData.TileData[counter++];
                         if (chunk.GetTile(x, y) == tile)
                             continue;
 
                         chunk.SetTile(x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y),
+                        modified.Add((new Vector2i(chunk.X * ChunkSize + x, chunk.Y * ChunkSize + y),
                             tile));
                     }
                 }
             }
 
-            if (modified.Count != 0 && gridComp.Running)
+            if (modified.Count != 0 && Running)
             {
-                MapManager.InvokeGridChanged((MapManager)networkedMapManager, gridComp, modified);
+                _entMan.EventBus.RaiseLocalEvent(Owner, new GridModifiedEvent(this, modified), true);
             }
 
             foreach (var chunkData in chunkUpdates)
             {
                 if (chunkData.IsDeleted())
                 {
-                    gridComp.RemoveChunk(chunkData.Index);
+                    RemoveChunk(chunkData.Index);
                     continue;
                 }
 
-                var chunk = gridComp.GetChunk(chunkData.Index);
+                var chunk = GetChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = false;
-                gridComp.RegenerateCollision(chunk);
+                RegenerateCollision(chunk);
             }
 
-            networkedMapManager.SuppressOnTileChanged = false;
+            mapSystem.SuppressOnTileChanged = false;
         }
 
         public static void CullChunkDeletionHistory(IEntityManager entityManager, GameTick upToTick)

@@ -8,10 +8,6 @@ namespace Robust.Shared.Map
     /// <inheritdoc />
     internal interface IMapManagerInternal : IMapManager
     {
-        void OnComponentRemoved(MapGridComponent comp);
-
-        void ChunkRemoved(EntityUid gridId, MapGridComponent gridComp, MapChunk chunk);
-
         /// <summary>
         /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.
         /// </summary>
@@ -31,13 +27,6 @@ namespace Robust.Shared.Map
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PhysicsComponent> physicsQuery,
             bool approx = false);
-
-        /// <summary>
-        ///     Raises the OnTileChanged event.
-        /// </summary>
-        /// <param name="tileRef">A reference to the new tile.</param>
-        /// <param name="oldTile">The old tile that got replaced.</param>
-        void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
         void TrueDeleteMap(MapId mapId);
         GridId GenerateGridId(GridId? forcedGridId);

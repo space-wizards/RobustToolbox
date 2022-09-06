@@ -1,3 +1,4 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
@@ -18,7 +19,7 @@ namespace Robust.Client.Placement.Modes
 
             var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
 
-            if (!pManager.MapManager.TryGetGrid(gridId, out var mapGrid))
+            if (!pManager.MapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var mapGrid))
                 return;
 
             CurrentTile = mapGrid.GetTileRef(MouseCoords);

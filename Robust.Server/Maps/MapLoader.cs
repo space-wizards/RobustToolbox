@@ -161,7 +161,9 @@ namespace Robust.Server.Maps
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
             context.MapId = mapId;
 
-            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
+            foreach (var grid in _mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+                         .Where(tuple => tuple.Item2.MapID == mapId)
+                         .Select(tuple => tuple.Item1))
             {
                 context.RegisterGrid(grid);
             }

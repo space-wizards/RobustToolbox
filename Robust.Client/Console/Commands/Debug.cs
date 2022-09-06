@@ -316,7 +316,7 @@ namespace Robust.Client.Console.Commands
 
             var gridEuid = EntityUid.Parse(gridId);
 
-            if (!mapMan.TryGetGrid(gridEuid, out var grid))
+            if (!mapMan.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridEuid, out var grid))
             {
                 shell.WriteError("grid does not exist");
                 return;
@@ -446,7 +446,7 @@ namespace Robust.Client.Console.Commands
             var gridId = EntityUid.Parse(args[0]);
             var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (mapManager.TryGetGrid(gridId, out var grid))
+            if (mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
             {
                 shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }

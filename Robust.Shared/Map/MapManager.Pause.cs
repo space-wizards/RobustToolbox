@@ -166,7 +166,7 @@ namespace Robust.Shared.Map
 
         public bool IsGridPaused(EntityUid gridId)
         {
-            if (TryGetGrid(gridId, out var grid))
+            if (EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
             {
                 return IsGridPaused(grid);
             }

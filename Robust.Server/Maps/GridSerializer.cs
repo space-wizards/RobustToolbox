@@ -36,8 +36,8 @@ namespace Robust.Server.Maps
             using var stream = new MemoryStream(tileBytes);
             using var reader = new BinaryReader(stream);
 
-            var mapManager = dependencies.Resolve<IMapManager>();
-            mapManager.SuppressOnTileChanged = true;
+            var mapSystem = dependencies.Resolve<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>();
+            mapSystem.SuppressOnTileChanged = true;
 
             if (chunk == null)
             {
@@ -80,7 +80,7 @@ namespace Robust.Server.Maps
             }
 
             chunk.SuppressCollisionRegeneration = false;
-            mapManager.SuppressOnTileChanged = false;
+            mapSystem.SuppressOnTileChanged = false;
 
             return chunk;
         }

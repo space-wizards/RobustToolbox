@@ -69,7 +69,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        if (!_mapManager.TryGetGrid(lookupUid, out var grid)) return false;
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) lookupUid, out var grid)) return false;
 
         // TODO: Need a method that takes in local AABB.
 
@@ -105,7 +105,7 @@ public sealed partial class EntityLookupSystem
         if (found)
             return true;
 
-        if (_mapManager.TryGetGrid(lookupUid, out var grid))
+        if (_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) lookupUid, out var grid))
         {
             // TODO: Need a method that takes in local AABB.
             if ((flags & LookupFlags.Anchored) != 0x0)
@@ -465,7 +465,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookup = Comp<EntityLookupComponent>(grid.Owner);
         var intersecting = new HashSet<EntityUid>();
@@ -499,7 +499,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookup = Comp<EntityLookupComponent>(grid.Owner);
         var tileSize = grid.TileSize;
@@ -528,7 +528,7 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -550,7 +550,7 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -592,7 +592,7 @@ public sealed partial class EntityLookupSystem
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) component.Owner, out var grid))
         {
             foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {
@@ -614,7 +614,7 @@ public sealed partial class EntityLookupSystem
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) component.Owner, out var grid))
         {
             foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
             {

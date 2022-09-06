@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
                 occluderQuery.HasComponent(sender))
             {
                 var xform = EntityManager.GetComponent<TransformComponent>(sender);
-                if (!_mapManager.TryGetGrid(xform.GridEuid, out grid))
+                if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) xform.GridEuid, out grid))
                     return;
 
                 var coords = xform.Coordinates;
@@ -95,7 +95,7 @@ namespace Robust.Client.GameObjects
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.Item1, out grid))
+            else if (ev.LastPosition.HasValue && _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) ev.LastPosition.Value.Item1, out grid))
             {
                 var pos = ev.LastPosition.Value.Item2;
 

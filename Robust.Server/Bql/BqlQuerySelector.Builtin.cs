@@ -196,7 +196,7 @@ namespace Robust.Server.Bql
                     if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform)) return isInverted;
 
                     var gridId = transform.GridEuid;
-                    if (!map.TryGetGrid(gridId, out var grid))
+                    if (!map.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
                         return isInverted;
 
                     return (grid.GetTileRef(transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;

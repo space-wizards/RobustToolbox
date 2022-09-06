@@ -15,6 +15,12 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IMapManagerInternal MapManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
 
+        /// <summary>
+        ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
+        ///     so that you don't spam an event for each of the million station tiles.
+        /// </summary>
+        internal bool SuppressOnTileChanged { get; set; }
+
         public override void Initialize()
         {
             base.Initialize();
@@ -45,7 +51,7 @@ namespace Robust.Shared.GameObjects
             component.ChunkSize = state.ChunkSize;
 
             if(state.ChunkDatums is not null)
-                MapGridComponent.ApplyMapGridState(MapManager, component, state.ChunkDatums);
+                component.ApplyMapGridState(this, state.ChunkDatums);
         }
 
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
@@ -90,7 +96,6 @@ namespace Robust.Shared.GameObjects
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
             RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
-            MapManager.OnComponentRemoved(component);
         }
     }
 

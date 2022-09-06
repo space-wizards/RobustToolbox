@@ -106,7 +106,7 @@ Mouse Pos:
                 var playerCoordinates = entityTransform.Coordinates;
                 var playerRotation = entityTransform.WorldRotation;
 
-                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridEuid, out var grid)
+                Angle gridRotation = _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) entityTransform.GridEuid, out var grid)
                     ? _entityManager.GetComponent<TransformComponent>(grid.Owner).WorldRotation
                     : Angle.Zero;
 

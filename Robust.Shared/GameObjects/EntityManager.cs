@@ -203,7 +203,7 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace &&
                 mapXform == null) 
             {
-                transform._parent = EntityUid.Invalid;
+                transform._parent = new(0);
                 transform.Anchored = false;
                 return newEntity;
             }
@@ -353,7 +353,7 @@ namespace Robust.Shared.GameObjects
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
+            if (transform.ParentUid != (EntityUid) new(0))
                 xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
 
             foreach (var child in transform._children)

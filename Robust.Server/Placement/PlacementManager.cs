@@ -135,7 +135,7 @@ namespace Robust.Server.Placement
 
             MapGridComponent? grid = null;
 
-            _mapManager.TryGetGrid(coordinates.EntityId, out grid);
+            _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) coordinates.EntityId, out grid);
 
             if (grid == null)
                 _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out grid);

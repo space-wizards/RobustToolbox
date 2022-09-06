@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -78,7 +79,7 @@ internal partial class MapManager
 
     private void OnGridInit(GridInitializeEvent args)
     {
-        var grid = (MapGridComponent) GetGrid(args.EntityUid);
+        var grid = EntityManager.GetComponent<MapGridComponent>(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
         var mapId = xform.MapID;
 
@@ -99,7 +100,7 @@ internal partial class MapManager
 
     private void OnGridRemove(GridRemovalEvent args)
     {
-        var grid = (MapGridComponent) GetGrid(args.EntityUid);
+        var grid = EntityManager.GetComponent<MapGridComponent>(args.EntityUid);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
         // Can't check for free proxy because DetachParentToNull gets called first woo!

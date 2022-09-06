@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -98,7 +99,7 @@ namespace Robust.Server.Console.Commands
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             // no saving default grid
-            if (!mapManager.TryGetGrid(gridId, out var grid))
+            if (!mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
             {
                 shell.WriteError("That grid does not exist.");
                 return;
@@ -432,7 +433,7 @@ namespace Robust.Server.Console.Commands
             var mapManager = IoCManager.Resolve<IMapManager>();
             var entMan = IoCManager.Resolve<IEntityManager>();
 
-            if (mapManager.TryGetGrid(gridId, out var grid))
+            if (mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
             {
                 var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
                 var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
@@ -532,7 +533,9 @@ namespace Robust.Server.Console.Commands
                     mapId, mapManager.IsMapInitialized(mapId),
                     mapManager.IsMapPaused(mapId),
                     mapManager.GetMapEntityId(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
+                    string.Join(",", mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
+                        .Where(tuple => tuple.Item2.MapID == mapId)
+                        .Select(tuple => tuple.Item1).Select(grid => grid.Owner)));
             }
 
             shell.WriteLine(msg.ToString());

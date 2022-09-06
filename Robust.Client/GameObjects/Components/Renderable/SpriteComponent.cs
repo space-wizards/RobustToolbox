@@ -6,6 +6,7 @@ using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -37,16 +38,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager eyeManager = default!;
 
         /// <summary>
-        ///     This biases diagonally oriented 4-directional sprites to avoid flickering between directions. A positive
-        ///     value biases towards facing N/S, while a negative value will bias towards E/W.
+        ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
         /// </summary>
-        /// <remarks>
-        ///     The bias needs to be large enough to prevent sprites on rotating grids from flickering, but should be
-        ///     small enough that it is generally unnoticeable. Currently it is somewhat large to combat issues with
-        ///     eye-lerping & grid rotations. 
-        /// </remarks>
-        public const double DirectionBias = 0.05;
-        // TODO make this a cvar?
+        public static double DirectionBias = -0.05;
 
         [DataField("visible")]
         private bool _visible = true;

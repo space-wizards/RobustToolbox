@@ -2,18 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedAppearanceSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _timing = default!;
+
     public virtual void MarkDirty(AppearanceComponent component) {}
 
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
+        // If appearance data is changing due to server state application, the server's comp state is getting applied
+        // anyways, so we can skip this.
+        if (_timing.ApplyingState)
+            return; 
+
         if (!Resolve(uid, ref component, false))
             return;
 

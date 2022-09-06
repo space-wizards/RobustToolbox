@@ -349,7 +349,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
+        if(_mapManager.EntityManager.HasComponent<MapGridComponent>(uid) || _mapManager.IsMap(uid)) return;
 
         var children = xform.ChildEnumerator;
 

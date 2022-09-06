@@ -15,11 +15,6 @@ namespace Robust.Shared.Map
     {
         IEntityManager EntityManager { get; }
 
-        IEnumerable<MapGridComponent> GetAllGrids()
-        {
-            return EntityManager.EntityQuery<MapGridComponent>();
-        }
-
         /// <summary>
         /// Get the set of grids that have moved on this map in this tick.
         /// </summary>
@@ -85,42 +80,6 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
-        MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize)
-        {
-            var gridEnt = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, currentMapId));
-            var gridComp = EntityManager.AddComponent<MapGridComponent>(gridEnt);
-            gridComp.ChunkSize = chunkSize;
-            return gridComp;
-        }
-
-        MapGridComponent CreateGrid(MapId currentMapId)
-        {
-            var gridEnt = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, currentMapId));
-            return EntityManager.AddComponent<MapGridComponent>(gridEnt);
-        }
-
-        MapGridComponent GetGrid(EntityUid gridId)
-        {
-            return GetGridComp(gridId);
-        }
-
-        bool TryGetGrid(EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
-        {
-            return EntityManager.TryGetComponent(euid, out grid);
-        }
-
-        bool GridExists([NotNullWhen(true)] EntityUid? euid)
-        {
-            return EntityManager.HasComponent<MapGridComponent>(euid);
-        }
-
-        IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
-        {
-            return EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
-                .Where(tuple => tuple.Item2.MapID == mapId)
-                .Select(tuple => tuple.Item1);
-        }
-
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
@@ -175,24 +134,12 @@ namespace Robust.Shared.Map
 
         bool HasMapEntity(MapId mapId);
 
-        bool IsGrid(EntityUid uid)
-        {
-            return EntityManager.HasComponent<MapGridComponent>(uid);
-        }
-
         bool IsMap(EntityUid uid);
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
 
-        MapGridComponent GetGridComp(EntityUid euid)
-        {
-            return EntityManager.GetComponent<MapGridComponent>(euid);
-        }
-
-        //
-        // Pausing functions
-        //
+        #region Paused
 
         void SetMapPaused(MapId mapId, bool paused);
 
@@ -211,5 +158,7 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapInitialized(MapId mapId);
+
+        #endregion
     }
 }

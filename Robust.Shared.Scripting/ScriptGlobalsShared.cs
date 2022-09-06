@@ -41,7 +41,7 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            if (!map.TryGetGrid(gridId, out var grid))
+            if (!map.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var grid))
             {
                 return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
             }
@@ -61,12 +61,12 @@ namespace Robust.Shared.Scripting
 
         public MapGridComponent getgrid(int i)
         {
-            return map.GetGrid(new EntityUid(i));
+            return map.EntityManager.GetComponent<MapGridComponent>(new EntityUid(i));
         }
 
         public MapGridComponent getgrid(EntityUid mapId)
         {
-            return map.GetGrid(mapId);
+            return map.EntityManager.GetComponent<MapGridComponent>(mapId);
         }
 
         public EntityUid spawn(string prototype, EntityCoordinates position)

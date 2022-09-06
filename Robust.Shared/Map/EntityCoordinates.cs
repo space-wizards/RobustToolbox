@@ -154,7 +154,7 @@ namespace Robust.Shared.Map
 
             if (gridId.IsValid())
             {
-                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
+                return mapManager.EntityManager.GetComponent<MapGridComponent>(gridId).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);

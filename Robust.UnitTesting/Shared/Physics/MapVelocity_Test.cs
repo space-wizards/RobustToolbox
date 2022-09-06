@@ -34,8 +34,10 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
-                var grid2 = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+                var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid2 = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.Owner, out var gridPhysics));
                 gridPhysics!.BodyType = BodyType.Dynamic;
@@ -100,7 +102,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.Owner, out var gridPhysics));
                 gridPhysics!.BodyType = BodyType.Dynamic;

@@ -26,15 +26,17 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            gridComp.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
 
-            var result = grid.GetTileRef(new Vector2i(-9, -1));
+            var result = gridComp.GetTileRef(new Vector2i(-9, -1));
 
-            Assert.That(grid.ChunkCount, Is.EqualTo(1));
-            Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(gridComp.ChunkCount, Is.EqualTo(1));
+            Assert.That(gridComp.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
+            Assert.That(result, Is.EqualTo(new TileRef(gridComp.Owner, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         /// <summary>
@@ -47,15 +49,17 @@ namespace Robust.UnitTesting.Shared.Map
             var mapMan = sim.Resolve<IMapManager>();
             var entMan = sim.Resolve<IEntityManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
             Vector2 val = new Vector2(3, 5);
-            var xform = entMan.GetComponent<TransformComponent>(grid.Owner);
+            var xform = entMan.GetComponent<TransformComponent>(gridComp.Owner);
             xform.WorldPosition = val;
 
-            grid.SetTile(new Vector2i(-1, -2), new Tile(1));
-            grid.SetTile(new Vector2i(1, 2), new Tile(1));
+            gridComp.SetTile(new Vector2i(-1, -2), new Tile(1));
+            gridComp.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            var bounds = TransformComponent.CalcWorldAabb(xform, grid.LocalAABB);
+            var bounds = TransformComponent.CalcWorldAabb(xform, gridComp.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -74,16 +78,18 @@ namespace Robust.UnitTesting.Shared.Map
             var mapMan = sim.Resolve<IMapManager>();
             var entMan = sim.Resolve<IEntityManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
             Vector2 val = new Vector2(3, 5);
-            entMan.GetComponent<TransformComponent>(grid.Owner).WorldPosition = val;
+            entMan.GetComponent<TransformComponent>(gridComp.Owner).WorldPosition = val;
 
-            grid.SetTile(new Vector2i(-1, -2), new Tile(1));
-            grid.SetTile(new Vector2i(1, 2), new Tile(1));
+            gridComp.SetTile(new Vector2i(-1, -2), new Tile(1));
+            gridComp.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            grid.SetTile(new Vector2i(1, 2), Tile.Empty);
+            gridComp.SetTile(new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = TransformComponent.CalcWorldAabb(entMan.GetComponent<TransformComponent>(grid.Owner), grid.LocalAABB);
+            var bounds = TransformComponent.CalcWorldAabb(entMan.GetComponent<TransformComponent>(gridComp.Owner), gridComp.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -98,9 +104,11 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
 
-            var result = grid.GridTileToChunkIndices(new Vector2i(-9, -1));
+            var result = gridComp.GridTileToChunkIndices(new Vector2i(-9, -1));
 
             Assert.That(result, Is.EqualTo(new Vector2i(-2, -1)));
         }
@@ -114,9 +122,11 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
 
-            var result = grid.GridTileToLocal(new Vector2i(0, 0)).Position;
+            var result = gridComp.GridTileToLocal(new Vector2i(0, 0)).Position;
 
             Assert.That(result.X, Is.EqualTo(0.5f));
             Assert.That(result.Y, Is.EqualTo(0.5f));
@@ -128,13 +138,15 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
 
-            var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
+            var foundTile = gridComp.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
 
             Assert.That(foundTile, Is.False);
             Assert.That(tileRef, Is.EqualTo(new TileRef()));
-            Assert.That(grid.ChunkCount, Is.EqualTo(0));
+            Assert.That(gridComp.ChunkCount, Is.EqualTo(0));
         }
 
         [Test]
@@ -143,16 +155,18 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            gridComp.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
 
-            var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
+            var foundTile = gridComp.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
 
             Assert.That(foundTile, Is.True);
-            Assert.That(grid.ChunkCount, Is.EqualTo(1));
-            Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(gridComp.ChunkCount, Is.EqualTo(1));
+            Assert.That(gridComp.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(gridComp.Owner, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         [Test]
@@ -161,7 +175,10 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
+            var grid = gridComp;
 
             grid.SetTile(new Vector2i(19, 23), new Tile(1));
 
@@ -176,7 +193,10 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+            var gridComp = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            gridComp.ChunkSize = 8;
+            var grid = gridComp;
 
             grid.SetTile(new Vector2i(19, 23), new Tile(1));
 

@@ -21,7 +21,7 @@ namespace Robust.Client.Placement.Modes
 
             if (gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridEuid(pManager.EntityManager));
+                var mapGrid = pManager.MapManager.EntityManager.GetComponent<MapGridComponent>(MouseCoords.GetGridEuid(pManager.EntityManager));
                 CurrentTile = mapGrid.GetTileRef(MouseCoords);
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }

@@ -30,7 +30,7 @@ namespace Robust.Server.GameObjects
             {
                 var toDelete = new List<MapGridComponent>();
 
-                foreach (var grid in MapManager.GetAllGrids())
+                foreach (var grid in MapManager.EntityManager.EntityQuery<MapGridComponent>())
                 {
                     if (!GridEmpty(grid)) continue;
                     toDelete.Add(grid);

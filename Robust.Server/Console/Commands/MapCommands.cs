@@ -556,7 +556,7 @@ namespace Robust.Server.Console.Commands
             var msg = new StringBuilder();
             var xformQuery = entManager.GetEntityQuery<TransformComponent>();
 
-            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Owner))
+            foreach (var grid in mapManager.EntityManager.EntityQuery<MapGridComponent>().OrderBy(grid => grid.Owner))
             {
                 var xform = xformQuery.GetComponent(grid.Owner);
                 var worldPos = xform.WorldPosition;

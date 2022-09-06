@@ -62,7 +62,6 @@ namespace Robust.Shared.Map
         private GridId _gridIndex = GridId.Invalid;
 #pragma warning restore CS0618
 
-        /// <inheritdoc />
         [Obsolete("Use EntityUid instead")]
         internal GridId GridIndex
         {
@@ -92,14 +91,14 @@ namespace Robust.Shared.Map
         ///     Last game tick that the map was modified.
         /// </summary>
         [ViewVariables]
-        internal GameTick LastTileModifiedTick { get; set; }
+        private GameTick LastTileModifiedTick { get; set; }
 
-        internal List<(GameTick tick, Vector2i indices)> _chunkDeletionHistory = new();
+        private readonly List<(GameTick tick, Vector2i indices)> _chunkDeletionHistory = new();
 
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        internal readonly Dictionary<Vector2i, MapChunk> _chunks = new();
+        private readonly Dictionary<Vector2i, MapChunk> _chunks = new();
 
         /// <summary>
         /// Map DynamicTree proxy to lookup for grid intersection.

@@ -242,7 +242,7 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            MapGridComponent tempQualifier = _mapManager.GetGrid(ev.EntityUid);
+            MapGridComponent tempQualifier = _mapManager.EntityManager.GetComponent<MapGridComponent>(ev.EntityUid);
             EntityManager.EnsureComponent<RenderingTreeComponent>(tempQualifier.Owner);
         }
 

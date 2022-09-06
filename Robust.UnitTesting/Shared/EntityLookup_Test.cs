@@ -26,7 +26,8 @@ namespace Robust.UnitTesting.Shared
             var mapManager = server.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
             grid.SetTile(new Vector2i(), new Tile(1));
@@ -62,7 +63,8 @@ namespace Robust.UnitTesting.Shared
             var mapManager = server.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
             grid.SetTile(new Vector2i(), new Tile(1));

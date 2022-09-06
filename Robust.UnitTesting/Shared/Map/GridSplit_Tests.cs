@@ -29,7 +29,8 @@ public sealed class GridSplit_Tests
         var sim =GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         for (var x = 0; x < 3; x++)
         {
@@ -54,7 +55,8 @@ public sealed class GridSplit_Tests
         var sim =GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         for (var x = 0; x < 3; x++)
         {
@@ -92,7 +94,8 @@ public sealed class GridSplit_Tests
         var sim =GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         for (var x = 0; x < 3; x++)
         {
@@ -123,7 +126,8 @@ public sealed class GridSplit_Tests
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         for (var x = 0; x < 4; x++)
         {

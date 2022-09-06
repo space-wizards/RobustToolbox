@@ -22,7 +22,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
                 var gridEntity = grid.Owner;
 
                 for (var i = 0; i < 10; i++)
@@ -60,7 +61,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
                 for (var i = 0; i < 10; i++)
                 {

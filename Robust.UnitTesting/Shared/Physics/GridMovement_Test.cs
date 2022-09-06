@@ -29,7 +29,8 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
             grid.SetTile(Vector2i.Zero, new Tile(1));

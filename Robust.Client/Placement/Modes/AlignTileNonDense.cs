@@ -1,3 +1,4 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
@@ -18,7 +19,7 @@ namespace Robust.Client.Placement.Modes
             var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
             if (gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(gridId);
+                var mapGrid = pManager.MapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }
 

@@ -26,7 +26,8 @@ public sealed class Broadphase_Test
 
         var mapId1 = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId1);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId1);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
         var xform = entManager.GetComponent<TransformComponent>(grid.Owner);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
@@ -55,7 +56,8 @@ public sealed class Broadphase_Test
         var mapManager = sim.Resolve<IMapManager>();
 
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+        var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);

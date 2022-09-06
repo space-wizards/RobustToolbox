@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -22,7 +23,7 @@ namespace Robust.Client.Placement.Modes
             SnapSize = 1f;
             if (gridId.IsValid())
             {
-                Grid = pManager.MapManager.GetGrid(gridId);
+                Grid = pManager.MapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
                 SnapSize = Grid.TileSize; //Find snap size for the grid.
             }
             else

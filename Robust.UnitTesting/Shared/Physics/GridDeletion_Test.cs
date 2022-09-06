@@ -30,7 +30,8 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             mapId = mapManager.CreateMap();
-            grid = mapManager.CreateGrid(mapId);
+            var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+            grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
             physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
             physics.BodyType = BodyType.Dynamic;

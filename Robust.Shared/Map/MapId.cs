@@ -53,5 +53,7 @@ namespace Robust.Shared.Map
         {
             return Value.ToString();
         }
+
+        public static implicit operator MapCoordinates(MapId mapId) => new(mapId);
     }
 }

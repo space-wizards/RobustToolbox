@@ -31,8 +31,10 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                gridId1 = mapManager.CreateGrid(mapId);
-                gridId2 = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                gridId1 = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+                var gridEnt3 = mapManager.EntityManager.SpawnEntity(null, mapId);
+                gridId2 = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt3);
                 gridEnt1 = gridId1.Owner;
                 gridEnt2 = gridId2.Owner;
                 physics1 = entManager.GetComponent<PhysicsComponent>(gridEnt1.Value);

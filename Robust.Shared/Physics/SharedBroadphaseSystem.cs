@@ -531,7 +531,7 @@ namespace Robust.Shared.Physics
             // Can probably just bypass this by doing stuff in Update / FrameUpdate again but future problem
             // Also grids are special-cased due to their high fixture count.
             if (body.Broadphase != null ||
-                _mapManager.IsGrid(body.Owner)) return;
+                _mapManager.EntityManager.HasComponent<MapGridComponent>(body.Owner)) return;
 
             if (!Resolve(body.Owner, ref manager))
             {
@@ -613,7 +613,7 @@ namespace Robust.Shared.Physics
         {
             if (!component.CanCollide ||
                 !TryComp<FixturesComponent>(uid, out var manager) ||
-                _mapManager.IsGrid(uid)) return;
+                _mapManager.EntityManager.HasComponent<MapGridComponent>(uid)) return;
 
             var worldRot = Transform(uid).WorldRotation;
 
@@ -623,7 +623,7 @@ namespace Robust.Shared.Physics
         private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
             if (!component.CanCollide ||
-                _mapManager.IsGrid(uid)) return;
+                _mapManager.EntityManager.HasComponent<MapGridComponent>(uid)) return;
 
             var xform = Transform(uid);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();

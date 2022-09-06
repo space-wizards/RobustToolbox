@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            var grid = _mapManager.GetGrid(gridId);
+            var grid = _mapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
             var gridUid = grid.Owner;
             var mapTransform = Transform(_mapManager.GetMapEntityId(Transform(grid.Owner).MapID));
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
@@ -181,7 +181,7 @@ namespace Robust.Shared.GameObjects
                 return (Vector2i) xform.WorldPosition;
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
+            return _mapManager.EntityManager.GetComponent<MapGridComponent>(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
         }
     }
 

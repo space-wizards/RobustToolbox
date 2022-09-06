@@ -25,8 +25,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             mapManager.CreateMap(TestMapId);
 
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGrid(TestMapId);
-            var gridB = mapManager.CreateGrid(TestMapId);
+            var gridEnt = mapManager.EntityManager.SpawnEntity(null, TestMapId);
+            var gridA = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, TestMapId);
+            var gridB = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
 
             return (sim, gridA.Owner, GridEntityId: gridB.Owner);
         }
@@ -41,8 +43,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridA = mapMan.EntityManager.GetComponent<MapGridComponent>(gridIdA);
+            var gridB = mapMan.EntityManager.GetComponent<MapGridComponent>(gridIdB);
 
             // Arrange
             var initialPos = new EntityCoordinates(gridA.Owner, (0, 0));
@@ -79,8 +81,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
 
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridA = mapMan.EntityManager.GetComponent<MapGridComponent>(gridIdA);
+            var gridB = mapMan.EntityManager.GetComponent<MapGridComponent>(gridIdB);
 
             // Arrange
             var initalPos = new EntityCoordinates(gridA.Owner, (0, 0));

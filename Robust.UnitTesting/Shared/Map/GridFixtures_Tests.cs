@@ -26,7 +26,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
                 // Should be nothing if grid empty
                 Assert.That(entManager.TryGetComponent(grid.Owner, out PhysicsComponent? gridBody));

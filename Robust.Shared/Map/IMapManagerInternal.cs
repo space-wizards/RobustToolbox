@@ -29,7 +29,9 @@ namespace Robust.Shared.Map
             bool approx = false);
 
         void TrueDeleteMap(MapId mapId);
+#pragma warning disable CS0618
         GridId GenerateGridId(GridId? forcedGridId);
+#pragma warning restore CS0618
         void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

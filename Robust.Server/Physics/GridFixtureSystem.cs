@@ -223,7 +223,7 @@ namespace Robust.Server.Physics
                 grids.Add(foundSplits);
             }
 
-            var mapGrid = _mapManager.GetGrid(uid);
+            var mapGrid = _mapManager.EntityManager.GetComponent<MapGridComponent>(uid);
 
             // Split time
             if (grids.Count > 1)
@@ -250,7 +250,9 @@ namespace Robust.Server.Physics
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var splitGrid = _mapManager.CreateGrid(xformQuery.GetComponent(mapGrid.Owner).MapID);
+                    MapId currentMapId = xformQuery.GetComponent(mapGrid.Owner).MapID;
+                    var gridEnt = _mapManager.EntityManager.SpawnEntity(null, currentMapId);
+                    var splitGrid = _mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
                     newGrids[i] = splitGrid.Owner;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
@@ -277,7 +279,7 @@ namespace Robust.Server.Physics
                     }
 
                     splitGrid.SetTiles(tileData);
-                    DebugTools.Assert(_mapManager.IsGrid(splitGrid.Owner), "A split grid had no tiles?");
+                    DebugTools.Assert(_mapManager.EntityManager.HasComponent<MapGridComponent>(splitGrid.Owner), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
@@ -584,7 +586,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = (MapGridComponent) _mapManager.GetGrid(gridEuid);
+            var grid = (MapGridComponent) _mapManager.EntityManager.GetComponent<MapGridComponent>(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

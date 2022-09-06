@@ -45,7 +45,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                grid = mapManager.CreateGrid(mapId);
+                var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
+                grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
                 grid.SetTile(Vector2i.Zero, new Tile(1));
 
                 var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));

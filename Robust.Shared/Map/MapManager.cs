@@ -2,7 +2,6 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -11,7 +10,6 @@ namespace Robust.Shared.Map;
 [Virtual]
 internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
-    [field: Dependency] public IGameTiming GameTiming { get; } = default!;
     [field: Dependency] public IEntityManager EntityManager { get; } = default!;
 
     [Dependency] private readonly IConsoleHost _conhost = default!;

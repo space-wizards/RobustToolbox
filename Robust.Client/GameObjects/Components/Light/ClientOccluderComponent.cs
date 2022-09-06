@@ -46,7 +46,7 @@ namespace Robust.Client.GameObjects
             if(!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridEuid);
+            var grid = _mapManager.EntityManager.GetComponent<MapGridComponent>(xform.GridEuid);
             _lastPosition = (xform.GridEuid, grid.TileIndicesFor(xform.Coordinates));
         }
 
@@ -92,7 +92,7 @@ namespace Robust.Client.GameObjects
             if (!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridEuid);
+            var grid = _mapManager.EntityManager.GetComponent<MapGridComponent>(xform.GridEuid);
             var position = xform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {

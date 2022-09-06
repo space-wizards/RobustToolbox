@@ -55,6 +55,14 @@ namespace Robust.Shared.Map
         public MapCoordinates(float x, float y, MapId mapId)
             : this(new Vector2(x, y), mapId) { }
 
+        /// <summary>
+        /// Constructs a new instance of <see cref="MapCoordinates"/>. The constructed
+        /// coordinates will be at 0,0 on the designated map.
+        /// </summary>
+        /// <param name="mapId">Map identifier relevant to this position.</param>
+        public MapCoordinates(MapId mapId)
+            : this(Vector2.Zero, mapId) { }
+
         /// <inheritdoc />
         public override string ToString()
         {

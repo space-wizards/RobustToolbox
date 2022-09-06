@@ -197,7 +197,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            MapGridComponent tempQualifier = sim.Resolve<IMapManager>().CreateGrid(new MapId(1));
+            IMapManager tempQualifier1 = sim.Resolve<IMapManager>();
+            MapId currentMapId = new MapId(1);
+            var gridEnt = tempQualifier1.EntityManager.SpawnEntity(null, currentMapId);
+            MapGridComponent tempQualifier = tempQualifier1.EntityManager.AddComponent<MapGridComponent>(gridEnt);
             var grid = tempQualifier.Owner;
             var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");

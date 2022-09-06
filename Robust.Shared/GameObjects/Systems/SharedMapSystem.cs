@@ -39,7 +39,9 @@ namespace Robust.Shared.GameObjects
         private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
         {
             var chunkData = MapGridComponent.GetDeltaChunkData(component, args.FromTick);
+#pragma warning disable CS0618
             args.State = new MapGridComponentState(component.GridIndex, component.ChunkSize, chunkData);
+#pragma warning restore CS0618
         }
 
         private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
@@ -47,7 +49,9 @@ namespace Robust.Shared.GameObjects
             if (args.Current is not MapGridComponentState state)
                 return;
 
+#pragma warning disable CS0618
             component.GridIndex = state.GridIndex;
+#pragma warning restore CS0618
             component.ChunkSize = state.ChunkSize;
 
             if(state.ChunkDatums is not null)

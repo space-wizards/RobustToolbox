@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-#pragma warning disable CS0618
 
 namespace Robust.Shared.Map
 {

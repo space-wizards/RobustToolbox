@@ -29,7 +29,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var mapId = mapMan.CreateMap();
-                var grid = mapMan.CreateGrid(mapId);
+                var gridEnt1 = mapMan.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
                 var gridEnt = grid.Owner;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
 
@@ -67,7 +68,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var mapId = mapMan.CreateMap();
-                var grid = mapMan.CreateGrid(mapId);
+                var gridEnt1 = mapMan.EntityManager.SpawnEntity(null, mapId);
+                var grid = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
                 var gridEnt = grid.Owner;
                 var gridInternal = (MapGridComponent) grid;
 

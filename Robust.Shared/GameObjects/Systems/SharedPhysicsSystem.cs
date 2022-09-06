@@ -238,7 +238,7 @@ namespace Robust.Shared.GameObjects
                 DebugTools.Assert(body.Contacts.Count == 0);
 
                 // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
-                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
+                if (!MapManager.EntityManager.HasComponent<MapGridComponent>(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
                 {
                     // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
                     _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);

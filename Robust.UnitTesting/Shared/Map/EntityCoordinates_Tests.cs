@@ -149,7 +149,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(gridEnt, Vector2.Zero));
 
@@ -180,7 +181,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(gridEnt, Vector2.Zero));
 
@@ -195,7 +197,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.Owner, Vector2.Zero));
@@ -217,7 +220,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.Owner, Vector2.Zero));
@@ -268,7 +272,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.Owner, entPos));
 
@@ -287,7 +292,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapId = mapManager.CreateMap();
             var mapEnt = mapManager.GetMapEntityId(mapId);
-            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt1 = mapManager.EntityManager.SpawnEntity(null, mapId);
+            var grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.Owner, Vector2.Zero));
 

@@ -217,7 +217,7 @@ namespace Robust.Shared.GameObjects
                 xform.Anchored) return;
 
             if (_mapManager.IsMap(uid) ||
-                _mapManager.IsGrid(uid)) return;
+                _mapManager.EntityManager.HasComponent<MapGridComponent>(uid)) return;
 
             var lookup = GetLookup(uid, xform, xformQuery);
 
@@ -264,7 +264,7 @@ namespace Robust.Shared.GameObjects
         private bool CanMoveUpdate(EntityUid uid)
         {
             return !_mapManager.IsMap(uid) &&
-                     !_mapManager.IsGrid(uid) &&
+                     !_mapManager.EntityManager.HasComponent<MapGridComponent>(uid) &&
                      !_container.IsEntityInContainer(uid);
         }
 
@@ -288,7 +288,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
-                _mapManager.IsGrid(args.Entity) ||
+                _mapManager.EntityManager.HasComponent<MapGridComponent>(args.Entity) ||
                 _mapManager.IsMap(args.Entity)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();

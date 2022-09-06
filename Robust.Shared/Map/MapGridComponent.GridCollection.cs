@@ -280,7 +280,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Removes the chunk with the specified origin.
         /// </summary>
-        public void RemoveChunk(Vector2i origin)
+        internal void RemoveChunk(Vector2i origin)
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
 
@@ -298,8 +298,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Tries to return a chunk at the given indices.
         /// </summary>
-        /// <param name="chunk"></param>
-        /// <returns></returns>
+        /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
+        /// <param name="chunk">The existing chunk.</param>
+        /// <returns>If the chunk exists.</returns>
         internal bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
         {
             return _chunks.TryGetValue(chunkIndices, out chunk);
@@ -316,8 +317,10 @@ namespace Robust.Shared.Map
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
-            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
-            newChunk.LastTileModifiedTick = _gameTiming.CurTick;
+            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize)
+            {
+                LastTileModifiedTick = _gameTiming.CurTick
+            };
 
             var mapSystem = _entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
             newChunk.TileModified += (mapChunk, tileIndices, newTile, oldTile, shapeChanged) => OnTileModified(mapSystem, mapChunk, tileIndices, newTile, oldTile, shapeChanged);
@@ -343,9 +346,9 @@ namespace Robust.Shared.Map
 
         internal struct ChunkEnumerator
         {
-            private Dictionary<Vector2i, MapChunk> _chunks;
-            private Vector2i _chunkLB;
-            private Vector2i _chunkRT;
+            private readonly Dictionary<Vector2i, MapChunk> _chunks;
+            private readonly Vector2i _chunkLB;
+            private readonly Vector2i _chunkRT;
 
             private int _xIndex;
             private int _yIndex;
@@ -457,11 +460,11 @@ namespace Robust.Shared.Map
             if (!_chunks.TryGetValue(gridChunkPos, out var chunk)) return AnchoredEntitiesEnumerator.Empty;
 
             var chunkTile = chunk.GridTileToChunkTile(pos);
-            var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
+            var snapGrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
 
-            return snapgrid == null
+            return snapGrid == null
                 ? AnchoredEntitiesEnumerator.Empty
-                : new AnchoredEntitiesEnumerator(snapgrid.GetEnumerator());
+                : new AnchoredEntitiesEnumerator(snapGrid.GetEnumerator());
         }
 
         public IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB)
@@ -523,8 +526,8 @@ namespace Robust.Shared.Map
         {
             var tilePos = TileIndicesFor(coords);
             var (chunk, chunkTile) = ChunkAndOffsetForTile(tilePos);
-            var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
-            return snapgrid?.Contains(euid) == true;
+            var snapGrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
+            return snapGrid?.Contains(euid) == true;
         }
 
         public bool AddToSnapGridCell(Vector2i pos, EntityUid euid)
@@ -583,7 +586,7 @@ namespace Robust.Shared.Map
                 case Direction.NorthEast:
                     return position + new Vector2i(dist, dist);
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException(nameof(dir), dir, null);
             }
         }
 
@@ -615,6 +618,7 @@ namespace Robust.Shared.Map
         public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
         {
             var position = TileIndicesFor(coords);
+            // ReSharper disable EnforceForeachStatementBraces
             foreach (var cell in GetAnchoredEntities(position))
                 yield return cell;
             foreach (var cell in GetAnchoredEntities(position + new Vector2i(0, 1)))
@@ -625,6 +629,7 @@ namespace Robust.Shared.Map
                 yield return cell;
             foreach (var cell in GetAnchoredEntities(position + new Vector2i(-1, 0)))
                 yield return cell;
+            // ReSharper restore EnforceForeachStatementBraces
         }
 
         public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
@@ -663,8 +668,9 @@ namespace Robust.Shared.Map
         public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
             if (posWorld.MapId != _entMan.GetComponent<TransformComponent>(Owner).MapID)
-                throw new ArgumentException(
-                    $"Grid {Owner} is on map {_entMan.GetComponent<TransformComponent>(Owner).MapID}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
+            {
+                throw new ArgumentException($"Grid {Owner} is on map {_entMan.GetComponent<TransformComponent>(Owner).MapID}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
+            }
 
             if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) Owner, out var grid))
             {
@@ -844,7 +850,7 @@ namespace Robust.Shared.Map
         {
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
             var removedChunks = new List<MapChunk>();
-            var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+            var fixtureSystem = _entMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
             _entMan.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system);
 
             foreach (var mapChunk in chunks)
@@ -905,7 +911,7 @@ namespace Robust.Shared.Map
             // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
             if (mapChunk.FilledTiles == 0)
             {
-                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+                var fixtureSystem = _entMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
                 foreach (var fixture in mapChunk.Fixtures)
                 {
                     fixtureSystem.DestroyFixture(fixture);
@@ -1009,11 +1015,11 @@ namespace Robust.Shared.Map
     /// </summary>
     public struct GridTileEnumerator
     {
-        private EntityUid _gridUid;
+        private readonly EntityUid _gridUid;
         private Dictionary<Vector2i, MapChunk>.Enumerator _chunkEnumerator;
         private readonly ushort _chunkSize;
         private int _index;
-        private bool _ignoreEmpty;
+        private readonly bool _ignoreEmpty;
 
         internal GridTileEnumerator(EntityUid gridUid,
             Dictionary<Vector2i, MapChunk>.Enumerator chunkEnumerator, ushort chunkSize, bool ignoreEmpty)

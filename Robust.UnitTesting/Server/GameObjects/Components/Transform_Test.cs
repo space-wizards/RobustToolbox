@@ -68,10 +68,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             // build the net dream
             MapA = MapManager.CreateMap();
-            GridA = MapManager.CreateGrid(MapA);
+            var gridEnt = MapManager.EntityManager.SpawnEntity(null, MapA);
+            GridA = MapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
             MapB = MapManager.CreateMap();
-            GridB = MapManager.CreateGrid(MapB);
+            var gridEnt1 = MapManager.EntityManager.SpawnEntity(null, MapB);
+            GridB = MapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }

@@ -46,12 +46,13 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            MapGridComponent tempQualifier = mapMan.CreateGrid(mapID);
+            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapID);
+            MapGridComponent tempQualifier = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
             var gridId = tempQualifier.Owner;
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(gridId), Is.False);
+            Assert.That(mapMan.EntityManager.HasComponent<MapGridComponent>((EntityUid?) gridId), Is.False);
         }
 
         /// <summary>

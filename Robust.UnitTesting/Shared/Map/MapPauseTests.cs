@@ -141,7 +141,8 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(mapId, true);
 
         // act
-        var newGrid = mapMan.CreateGrid(mapId);
+        var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
+        var newGrid = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
         // assert
         Assert.That(mapMan.IsMapPaused(mapId), Is.True);

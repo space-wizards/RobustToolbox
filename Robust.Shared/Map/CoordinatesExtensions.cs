@@ -10,7 +10,7 @@ namespace Robust.Shared.Map
         {
             IoCManager.Resolve(ref mapManager);
 
-            var grid = mapManager.GetGrid(gridId);
+            var grid = mapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
             var tile = grid.TileSize;
 
             return new EntityCoordinates(grid.Owner, (vector.X * tile, vector.Y * tile));
@@ -23,7 +23,7 @@ namespace Robust.Shared.Map
 
             var gridId = coords.GetGridEuid(entityManager);
 
-            if (!mapManager.GridExists(gridId))
+            if (!mapManager.EntityManager.HasComponent<MapGridComponent>((EntityUid?) gridId))
             {
                 var mapCoords = coords.ToMap(entityManager);
 

@@ -146,7 +146,9 @@ namespace Robust.Server.Placement
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
+                MapId currentMapId = coordinates.GetMapId(_entityManager);
+                var gridEnt = _mapManager.EntityManager.SpawnEntity(null, currentMapId);
+                var newGrid = _mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
                 Vector2 val = coordinates.Position + (newGrid.TileSize / 2f);
                 _entityManager.GetComponent<TransformComponent>(newGrid.Owner).WorldPosition = val; // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(coordinates.Position);

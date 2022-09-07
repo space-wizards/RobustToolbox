@@ -969,6 +969,7 @@ namespace Robust.Shared.Map
                 }
             }
 
+            // TODO: Move this to the component when we combine.
             _mapManager.OnGridBoundsChange(GridEntityId, this);
             // May have been deleted from the bulk update above!
             if (!_entityManager.Deleted(GridEntityId))

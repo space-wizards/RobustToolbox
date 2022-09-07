@@ -969,11 +969,13 @@ namespace Robust.Shared.Map
                 }
             }
 
+            // May have been deleted from the bulk update above!
+            if (_entityManager.Deleted(GridEntityId))
+                return;
+
             // TODO: Move this to the component when we combine.
             _mapManager.OnGridBoundsChange(GridEntityId, this);
-            // May have been deleted from the bulk update above!
-            if (!_entityManager.Deleted(GridEntityId))
-                system?.RegenerateCollision(GridEntityId, chunkRectangles, removedChunks);
+            system?.RegenerateCollision(GridEntityId, chunkRectangles, removedChunks);
         }
 
         /// <summary>

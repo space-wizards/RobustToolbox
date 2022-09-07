@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -15,6 +18,7 @@ namespace Robust.Client.GameObjects
     public sealed partial class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
@@ -26,12 +30,19 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
+            _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
             _proto.PrototypesReloaded -= OnPrototypesReloaded;
+            _cfg.UnsubValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged);
+        }
+
+        private void OnBiasChanged(double value)
+        {
+            SpriteComponent.DirectionBias = value;
         }
 
         private void QueueUpdateInert(SpriteUpdateInertEvent ev)

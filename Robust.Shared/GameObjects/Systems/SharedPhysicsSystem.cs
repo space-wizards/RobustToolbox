@@ -349,7 +349,7 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
-                    comp.Step(frameTime, prediction, i);
+                    comp.Step(frameTime, prediction);
 
                     var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                     RaiseLocalEvent(ref updateAfterSolve);
@@ -358,10 +358,10 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
-                comp.ProcessQueue(CachedEntityData); //This runs the deferred move events
+                comp.ProcessQueue(CachedEntityData);
             }
 
-            _traversal.ProcessMovement(); //This runs the current move events?
+            _traversal.ProcessMovement();
 
             CachedEntityData.Clear();
             _physicsManager.ClearTransforms();

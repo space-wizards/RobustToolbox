@@ -154,7 +154,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         /// <param name="frameTime"></param>
         /// <param name="prediction"></param>
-        public void Step(float frameTime, bool prediction, int substep = -1)
+        public void Step(float frameTime, bool prediction)
         {
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
@@ -212,7 +212,7 @@ namespace Robust.Shared.Physics.Dynamics
             _deferredUpdates.Clear();
         }
 
-        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, int substep = -1)
+        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             _islandManager.InitializePools();
 
@@ -382,7 +382,7 @@ namespace Robust.Shared.Physics.Dynamics
             _joints.Clear();
         }
 
-        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction, int substep = -1)
+        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             var islands = _islandManager.GetActive;
             // Islands are already pre-sorted

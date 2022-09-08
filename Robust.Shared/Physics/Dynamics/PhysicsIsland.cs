@@ -525,8 +525,8 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
                     var transform = xforms.GetComponent(body.Owner);
 
-                    //Defer MoveEvents after the first substep
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                    // Don't lerp for this so Substepping can lerp properly
                     transform.DeferUpdates = true;
                     _transform.SetWorldPositionCacheNoLerp(transform, bodyPos, xforms);
                     _transform.SetWorldRotationCacheNoLerp(transform, angle, xforms);

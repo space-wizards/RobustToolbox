@@ -21,6 +21,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -96,11 +97,6 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Temporary body storage during solving.
         /// </summary>
         private List<PhysicsComponent> _awakeBodyList = new();
-
-        /// <summary>
-        ///     1st substep xform cache for lerping fixes
-        /// </summary>
-        private Dictionary<TransformComponent, (Vector2, Angle)> _xformCache = new();
 
         /// <summary>
         /// Temporary joint storage during solving
@@ -194,17 +190,25 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue()
+        public void ProcessQueue(Dictionary<EntityUid, (Vector2, Angle)> cachedInfo)
         {
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var xform in _deferredUpdates)
             {
-                var angle = (float) xform.WorldRotation;
-                if (_xformCache.ContainsKey(xform) && _xformCache.ContainsValue((xform.WorldPosition, angle)))
-                {
-                    xform.RunDeferred();
-                }
+                //Set the previous position and rotation to the pre-physics cached data
+                //Then set the next position and rotation to the current xform data
+                //This fixes lerping issues with substepping
+                var cache = cachedInfo.FirstOrDefault(k => k.Key == xform.Owner).Value;
+
+                xform._prevPosition = cache.Item1;
+                xform._prevRotation = cache.Item2;
+                xform._nextPosition = xform._localPosition;
+                xform._nextRotation = xform._localRotation;
+                xform.RebuildMatrices();
+
+                xform.RunDeferred();
             }
+
             _deferredUpdates.Clear();
         }
 
@@ -401,7 +405,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 //TODO: After the bodies are updated here, iterate all the bodies and then compare their coords to the cache?
                 //Then update them individiually if they differ.
-                island.UpdateBodies(_deferredUpdates, _xformCache);
+                island.UpdateBodies(_deferredUpdates);
                 island.SleepBodies(prediction, frameTime);
             }
         }

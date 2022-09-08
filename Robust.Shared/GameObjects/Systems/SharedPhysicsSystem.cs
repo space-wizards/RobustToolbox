@@ -52,6 +52,12 @@ namespace Robust.Shared.GameObjects
 
         public bool MetricsEnabled { get; protected set; }
 
+        /// <summary>
+        /// Used to cache an entity, their local position and local rotation from their <see cref="TransformComponent"/>
+        /// Information is cached before the world is simulated to prevent lerping issues with substepping
+        /// </summary>
+        private Dictionary<EntityUid, (Vector2, Angle)> CachedEntityData = new();
+
         private ISawmill _sawmill = default!;
 
         public override void Initialize()
@@ -328,6 +334,12 @@ namespace Robust.Shared.GameObjects
             var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
             var substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
 
+            //Grab the transforms and cache the entity, their local position and local rotation to use after the physics step
+            foreach (var xformComp in EntityManager.EntityQuery<TransformComponent>(true))
+            {
+                CachedEntityData.Add(xformComp.Owner, (xformComp.LocalPosition, xformComp.LocalRotation));
+            }
+
             for (int i = 0; i < substeps; i++)
             {
                 var frameTime = deltaTime / substeps;
@@ -337,18 +349,22 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
-                    comp.Step(frameTime, prediction);
+                    comp.Step(frameTime, prediction, i);
 
                     var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                     RaiseLocalEvent(ref updateAfterSolve);
-
-                    comp.ProcessQueue(); //This runs the deferred move events
-
-                    _traversal.ProcessMovement(); //This runs the current move events?
-
-                    _physicsManager.ClearTransforms();
                 }
             }
+
+            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            {
+                comp.ProcessQueue(CachedEntityData); //This runs the deferred move events
+            }
+
+            _traversal.ProcessMovement(); //This runs the current move events?
+
+            CachedEntityData.Clear();
+            _physicsManager.ClearTransforms();
         }
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)

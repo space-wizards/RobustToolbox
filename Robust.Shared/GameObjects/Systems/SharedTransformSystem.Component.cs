@@ -302,6 +302,7 @@ public abstract partial class SharedTransformSystem
         SetLocalPositionNoLerp(xform, value);
     }
 
+    //Also useful for substepping
     public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
     {
         xform.LocalPosition = value;
@@ -318,6 +319,12 @@ public abstract partial class SharedTransformSystem
     }
 
     public virtual void SetLocalRotation(TransformComponent xform, Angle value)
+    {
+        xform.LocalRotation = value;
+    }
+
+    //For Substepping
+    public virtual void SetLocalRotationCacheNoLerp(TransformComponent xform, Angle value)
     {
         xform.LocalRotation = value;
     }
@@ -615,6 +622,21 @@ public abstract partial class SharedTransformSystem
         SetLocalPosition(component, newPos);
     }
 
+    //For Substepping
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPositionCacheNoLerp(TransformComponent component, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (!component._parent.IsValid())
+        {
+            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
+            return;
+        }
+
+        // world coords to parent coords
+        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
+        SetLocalPositionNoLerp(component, newPos);
+    }
+
     #endregion
 
     #region World Rotation
@@ -675,6 +697,15 @@ public abstract partial class SharedTransformSystem
         var current = GetWorldRotation(component, xformQuery);
         var diff = angle - current;
         SetLocalRotation(component, component.LocalRotation + diff);
+    }
+
+    //For Substepping
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldRotationCacheNoLerp(TransformComponent component, Angle angle, EntityQuery<TransformComponent> xformQuery)
+    {
+        var current = GetWorldRotation(component, xformQuery);
+        var diff = angle - current;
+        SetLocalRotationCacheNoLerp(component, component.LocalRotation + diff);
     }
 
     #endregion

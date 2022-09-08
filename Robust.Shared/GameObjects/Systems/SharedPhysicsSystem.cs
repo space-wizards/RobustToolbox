@@ -356,6 +356,8 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            // Go through and run all of the deferred events now
+            // Also compares the position pre physics and post physics to fix substep lerping issues
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.ProcessQueue(CachedEntityData);

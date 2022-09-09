@@ -232,10 +232,12 @@ namespace Robust.Shared.ViewVariables
 
                 var memberObj = memberInfo.GetValue(obj);
 
-                ListIndexers(memberObj, name, paths);
+                if(options.ListIndexers)
+                    ListIndexers(memberObj, name, paths);
             }
 
-            ListIndexers(obj, string.Empty, paths);
+            if(options.ListIndexers)
+                ListIndexers(obj, string.Empty, paths);
 
             return Full(path, paths);
         }

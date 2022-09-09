@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Players;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -16,5 +18,19 @@ public interface IViewVariablesManager
     object? ReadPath(string path);
     void WritePath(string path, string value);
     object? InvokePath(string path, string arguments);
-    IEnumerable<string> ListPath(string path, VVAccess minimumAccess = VVAccess.ReadOnly);
+    IEnumerable<string> ListPath(string path, VVListPathOptions options);
+}
+
+// ReSharper disable once InconsistentNaming
+[Serializable, NetSerializable]
+public readonly struct VVListPathOptions
+{
+    public VVAccess MinimumAccess { get; init; }
+    public bool ListIndexers { get; init; }
+
+    public VVListPathOptions()
+    {
+        MinimumAccess = VVAccess.ReadWrite;
+        ListIndexers = true;
+    }
 }

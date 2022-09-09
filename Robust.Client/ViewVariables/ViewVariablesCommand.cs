@@ -136,7 +136,7 @@ namespace Robust.Client.ViewVariables
         public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             return CompletionResult.FromOptions(
-                _vvm.ListPath(string.Join(string.Empty, args))
+                _vvm.ListPath(string.Join(string.Empty, args), new())
                     .Select(p => new CompletionOption(p, null, CompletionOptionFlags.PartialCompletion)));
         }
     }

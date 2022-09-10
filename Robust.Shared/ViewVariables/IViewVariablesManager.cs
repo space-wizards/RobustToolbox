@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.ViewVariables;

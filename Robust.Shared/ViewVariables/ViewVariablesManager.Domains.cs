@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -19,7 +20,18 @@ internal abstract partial class ViewVariablesManager
 
     protected static readonly (ViewVariablesPath? Path, string[] Segments) EmptyResolve = (null, Array.Empty<string>());
 
+    private readonly Dictionary<string, DomainData> _registeredDomains = new();
     protected readonly Dictionary<Guid, WeakReference<object>> _vvObjectStorage = new();
+
+    public void RegisterDomain(string domain, DomainResolveObject resolveObject, DomainListPaths list)
+    {
+        _registeredDomains.Add(domain, new DomainData(resolveObject, list));
+    }
+
+    public bool UnregisterDomain(string domain)
+    {
+        return _registeredDomains.Remove(domain);
+    }
 
     private void InitializeDomains()
     {
@@ -245,6 +257,8 @@ internal abstract partial class ViewVariablesManager
     /// <summary>
     ///     Test class to test local VV easily without connecting to the server.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     private sealed class VvTest : IEnumerable<object>
     {
         [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
@@ -267,6 +281,18 @@ internal abstract partial class ViewVariablesManager
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+    }
+
+    internal sealed class DomainData
+    {
+        public readonly DomainResolveObject ResolveObject;
+        public readonly DomainListPaths List;
+
+        public DomainData(DomainResolveObject resolveObject, DomainListPaths list)
+        {
+            ResolveObject = resolveObject;
+            List = list;
         }
     }
 }

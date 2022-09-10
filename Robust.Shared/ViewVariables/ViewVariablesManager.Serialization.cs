@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.ViewVariables;
@@ -92,5 +94,27 @@ internal abstract partial class ViewVariablesManager
         {
             return null;
         }
+    }
+
+    private string? SerializeValue(Type type, object? value, string? nodeTag = null)
+    {
+        if (value == null)
+            return null;
+
+        var objType = type;
+
+        var node = _serMan.WriteValue(type, value);
+
+        // Don't replace an existing tag if it's null.
+        if(!string.IsNullOrEmpty(nodeTag))
+            node.Tag = nodeTag;
+
+        var document = new YamlDocument(node.ToYamlNode());
+        var stream = new YamlStream {document};
+
+        using var writer = new StringWriter(new StringBuilder());
+
+        stream.Save(new YamlNoDocEndDotsFix(new YamlMappingFix(new Emitter(writer))), false);
+        return writer.ToString();
     }
 }

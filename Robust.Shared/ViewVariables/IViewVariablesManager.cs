@@ -29,7 +29,7 @@ public readonly struct VVListPathOptions
 
     public VVListPathOptions()
     {
-        MinimumAccess = VVAccess.ReadWrite;
+        MinimumAccess = VVAccess.ReadOnly;
         ListIndexers = true;
     }
 }

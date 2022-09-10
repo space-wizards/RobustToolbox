@@ -6,18 +6,11 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Reflection;
 
 namespace Robust.Shared.ViewVariables;
 
 internal abstract partial class ViewVariablesManager
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IComponentFactory _compFact = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly IReflectionManager _reflectionMan = default!;
-
     protected static readonly (ViewVariablesPath? Path, string[] Segments) EmptyResolve = (null, Array.Empty<string>());
 
     private readonly Dictionary<string, DomainData> _registeredDomains = new();

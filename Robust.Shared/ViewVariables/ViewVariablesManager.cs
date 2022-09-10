@@ -1,17 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.ViewVariables
 {
@@ -25,6 +20,10 @@ namespace Robust.Shared.ViewVariables
     internal abstract partial class ViewVariablesManager : IViewVariablesManager
     {
         [Dependency] private readonly ISerializationManager _serMan = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IComponentFactory _compFact = default!;
+        [Dependency] private readonly IPrototypeManager _protoMan = default!;
+        [Dependency] private readonly IReflectionManager _reflectionMan = default!;
 
         private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 

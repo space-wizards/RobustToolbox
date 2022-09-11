@@ -40,6 +40,7 @@ Template for new versions:
 ### Bugfixes
 
 * Fixes erroneous literal "\\n" inside the Clyde debug panel.
+* Fixed Lidgren connection status changes potentially getting mislogged.
 
 ### Other
 

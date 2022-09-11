@@ -680,11 +680,11 @@ namespace Robust.Shared.Network
         private void HandleStatusChanged(NetPeerData peer, NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
-            msg.ReadByte();
+            var newStatus = (NetConnectionStatus) msg.ReadByte();
             var reason = msg.ReadString();
             Logger.DebugS("net",
                 "{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
-                sender.RemoteEndPoint, sender.Status, reason);
+                sender.RemoteEndPoint, newStatus, reason);
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
@@ -694,7 +694,7 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            switch (sender.Status)
+            switch (newStatus)
             {
                 case NetConnectionStatus.Connected:
                     if (IsServer)

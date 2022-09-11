@@ -55,18 +55,12 @@ namespace Robust.Client.GameObjects
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                // TODO: This is usually O(n^2) to the amount of containers.
-                foreach (var stateContainer in cast.ContainerSet)
-                {
-                    if (stateContainer.Id == id)
-                        goto skip;
-                }
+                if (cast.Containers.ContainsKey(id))
+                    continue;
 
                 EmptyContainer(container, true);
                 container.Shutdown();
                 toDelete.Add(id);
-
-                skip: ;
             }
 
             foreach (var dead in toDelete)
@@ -76,7 +70,7 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
+            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.Containers.Values)
             {
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
@@ -197,11 +191,13 @@ namespace Robust.Client.GameObjects
 
             if (!ExpectedEntities.TryAdd(uid, container))
             {
-                DebugTools.Assert(ExpectedEntities[uid] == container,
-                    $"Expecting entity {ToPrettyString(uid)} to be present in two containers. New: {container.ID} in {ToPrettyString(container.Owner)}. Old: {ExpectedEntities[uid].ID} in {ToPrettyString(ExpectedEntities[uid].Owner)}");
-                DebugTools.Assert(ExpectedEntities[uid].ExpectedEntities.Contains(uid),
-                    $"Entity {ToPrettyString(uid)} is expected, but not expected in the given container? Container: {ExpectedEntities[uid].ID} in {ToPrettyString(ExpectedEntities[uid].Owner)}");
-                return;
+                // It is possible that we were expecting this entity in one container, but it has now moved to another
+                // container, and this entity's state is just being applied before the old container is getting updated.
+                var oldContainer = ExpectedEntities[uid];
+                ExpectedEntities[uid] = container;
+                DebugTools.Assert(oldContainer.ExpectedEntities.Contains(uid),
+                    $"Entity {ToPrettyString(uid)} is expected, but not expected in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
+                oldContainer.ExpectedEntities.Remove(uid);
             }
 
             DebugTools.Assert(!container.ExpectedEntities.Contains(uid),

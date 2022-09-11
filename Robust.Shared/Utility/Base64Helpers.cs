@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Robust.Shared.Utility
 {
-    internal static class Base64Helpers
+    public static class Base64Helpers
     {
         /// <summary>
         /// Converts a byte array such as a hash to a Base64 representation that is URL safe.

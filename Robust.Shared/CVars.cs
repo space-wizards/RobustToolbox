@@ -91,10 +91,7 @@ namespace Robust.Shared
         /// If off, simulation input commands will not fire and most entity methods will not run update.
         /// </remarks>
         public static readonly CVarDef<bool> NetPredict =
-            CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
-        // TODO this cvar cannot be client-only, as the server needs to know about this. Currently the server doesn't send
-        // audio events to clients if that client should have predicted the sound. So either the server needs to know whether
-        // the client is even willing to do that, or the audio system just needs to be less trash.
+            CVarDef.Create("net.predict", true, CVar.REPLICATED);
 
         /// <summary>
         /// Extra amount of ticks to run-ahead for prediction on the client.

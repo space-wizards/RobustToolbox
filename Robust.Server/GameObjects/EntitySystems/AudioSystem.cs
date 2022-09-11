@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -13,6 +16,8 @@ namespace Robust.Server.GameObjects
     public sealed class AudioSystem : SharedAudioSystem
     {
         private uint _streamIndex;
+
+        [Dependency] private readonly INetConfigurationManager _confMan = default!;
 
         private sealed class AudioSourceServer : IPlayingAudioStream
         {
@@ -124,7 +129,10 @@ namespace Robust.Server.GameObjects
             if (sound == null)
                 return null;
 
-            var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
+            var filter = Filter.Pvs(source, entityManager: EntityManager);
+            if (TryComp(user, out ActorComponent? actor) && _confMan.GetClientCVar(actor.PlayerSession.ConnectedClient, CVars.NetPredict))
+                filter = filter.RemovePlayer(actor.PlayerSession);
+
             return Play(sound, filter, source, audioParams);
         }
     }

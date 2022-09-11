@@ -23,7 +23,7 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IServerNetManager _netMgr = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly INetConfigurationManager _configurationManager = default!;
 
         private bool _logLateMsgs;
         private ISawmill _sawmill = default!;
@@ -78,7 +78,7 @@ namespace Robust.Server.GameObjects
 
                 data.Queue.Add(inputMsg);
 
-                if (inputMsg.Tick < _gameTiming.CurTick && _logLateMsgs)
+                if (inputMsg.Tick < _gameTiming.CurTick && _logLateMsgs && _configurationManager.GetClientCVar(message.MsgChannel, CVars.NetPredict))
                 {
                     _sawmill.Warning("Got late input message! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
                         (int)inputMsg.Tick.Value - (int)_gameTiming.CurTick.Value, message.MsgChannel.UserName, inputMsg.Tick, _gameTiming.CurTick);

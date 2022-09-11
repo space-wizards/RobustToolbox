@@ -30,7 +30,7 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly INetConfigurationManager _configurationManager = default!;
 
         protected override int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
 
@@ -239,7 +239,7 @@ namespace Robust.Server.GameObjects
 
             if (msgT <= cT)
             {
-                if (msgT < cT && _logLateMsgs)
+                if (msgT < cT && _logLateMsgs && _configurationManager.GetClientCVar(message.MsgChannel, CVars.NetPredict))
                 {
                     Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
                         (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserName, msgT, cT);

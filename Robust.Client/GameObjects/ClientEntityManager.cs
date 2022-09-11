@@ -82,6 +82,8 @@ namespace Robust.Client.GameObjects
             if (!_stateMan.IsPredictionEnabled)
                 return;
 
+            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted);
+
             var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));

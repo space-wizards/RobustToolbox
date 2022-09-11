@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
@@ -7,7 +5,6 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.ViewVariables;
 
@@ -20,7 +17,7 @@ namespace Robust.Client.ViewVariables
 
         public string Command => "vv";
         public string Description => "Opens View Variables.";
-        public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
+        public string Help => "Usage: vv <path|entity ID>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {

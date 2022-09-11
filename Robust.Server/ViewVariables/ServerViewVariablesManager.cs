@@ -101,7 +101,7 @@ namespace Robust.Server.ViewVariables
 
         private void _msgReqSession(MsgViewVariablesReqSession message)
         {
-            void Deny(DenyReason reason)
+            void Deny(ViewVariablesResponseCode reason)
             {
                 var denyMsg = new MsgViewVariablesDenySession();
                 denyMsg.RequestId = message.RequestId;
@@ -112,7 +112,7 @@ namespace Robust.Server.ViewVariables
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
             if (!_groupController.CanViewVar(player))
             {
-                Deny(DenyReason.NoAccess);
+                Deny(ViewVariablesResponseCode.NoAccess);
                 return;
             }
 
@@ -126,7 +126,7 @@ namespace Robust.Server.ViewVariables
                     if (compType == null ||
                         !_entityManager.TryGetComponent(componentSelector.Entity, compType, out var component))
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
@@ -137,7 +137,7 @@ namespace Robust.Server.ViewVariables
                 {
                     if (!_entityManager.EntityExists(entitySelector.Entity))
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
@@ -150,7 +150,7 @@ namespace Robust.Server.ViewVariables
                         || relSession.PlayerUser != message.MsgChannel.UserId)
                     {
                         // TODO: logging?
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
@@ -159,25 +159,25 @@ namespace Robust.Server.ViewVariables
                     {
                         if (!relSession.TryGetRelativeObject(sessionRelativeSelector.PropertyIndex, out value))
                         {
-                            Deny(DenyReason.InvalidRequest);
+                            Deny(ViewVariablesResponseCode.InvalidRequest);
                             return;
                         }
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
                     catch (Exception e)
                     {
                         Logger.ErrorS("vv", "Exception while retrieving value for session. {0}", e);
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
                     if (value == null || value.GetType().IsValueType)
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
@@ -189,7 +189,7 @@ namespace Robust.Server.ViewVariables
                     var reflectionManager = IoCManager.Resolve<IReflectionManager>();
                     if (!reflectionManager.TryLooseGetType(ioCSelector.TypeName, out var type))
                     {
-                        Deny(DenyReason.InvalidRequest);
+                        Deny(ViewVariablesResponseCode.InvalidRequest);
                         return;
                     }
 
@@ -201,7 +201,7 @@ namespace Robust.Server.ViewVariables
                     var reflectionManager = IoCManager.Resolve<IReflectionManager>();
                     if (!reflectionManager.TryLooseGetType(esSelector.TypeName, out var type))
                     {
-                        Deny(DenyReason.InvalidRequest);
+                        Deny(ViewVariablesResponseCode.InvalidRequest);
                         return;
                     }
 
@@ -212,7 +212,7 @@ namespace Robust.Server.ViewVariables
                 {
                     if (ResolvePath(paSelector.Path)?.Get() is not {} obj)
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
@@ -220,7 +220,7 @@ namespace Robust.Server.ViewVariables
                     break;
                 }
                 default:
-                    Deny(DenyReason.InvalidRequest);
+                    Deny(ViewVariablesResponseCode.InvalidRequest);
                     return;
             }
 
@@ -284,6 +284,11 @@ namespace Robust.Server.ViewVariables
                 default:
                     return false;
             }
+        }
+
+        protected override bool CheckPermissions(INetChannel channel)
+        {
+            return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanViewVar(session);
         }
     }
 }

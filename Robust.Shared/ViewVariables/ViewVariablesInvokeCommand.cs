@@ -1,8 +1,7 @@
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.ViewVariables;
+namespace Robust.Shared.ViewVariables;
 
 public sealed class ViewVariablesInvokeCommand : IConsoleCommand
 {

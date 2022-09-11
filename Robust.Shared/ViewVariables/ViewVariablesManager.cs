@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
@@ -24,6 +27,7 @@ namespace Robust.Shared.ViewVariables
         [Dependency] private readonly IComponentFactory _compFact = default!;
         [Dependency] private readonly IPrototypeManager _protoMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionMan = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 
@@ -34,6 +38,7 @@ namespace Robust.Shared.ViewVariables
         {
             InitializeDomains();
             InitializeTypeHandlers();
+            InitializeRemote();
         }
 
         public object? ReadPath(string path)

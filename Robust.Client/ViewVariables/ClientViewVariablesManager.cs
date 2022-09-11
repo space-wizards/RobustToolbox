@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
@@ -20,8 +21,9 @@ using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
-    internal sealed class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
+    internal sealed partial class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
     {
+        [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -44,6 +46,7 @@ namespace Robust.Client.ViewVariables
         public override void Initialize()
         {
             base.Initialize();
+            InitializeDomains();
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
             _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);
@@ -407,16 +410,22 @@ namespace Robust.Client.ViewVariables
             _requestedSessions.Remove(message.RequestId);
             tcs.SetException(new SessionDenyException(message.Reason));
         }
+
+        protected override bool CheckPermissions(INetChannel channel)
+        {
+            // Acquiesce, client!! Do what the server tells you.
+            return true;
+        }
     }
 
     [Virtual]
     public class SessionDenyException : Exception
     {
-        public SessionDenyException(MsgViewVariablesDenySession.DenyReason reason)
+        public SessionDenyException(ViewVariablesResponseCode reason)
         {
             Reason = reason;
         }
 
-        public MsgViewVariablesDenySession.DenyReason Reason { get; }
+        public ViewVariablesResponseCode Reason { get; }
     }
 }

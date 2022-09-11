@@ -98,7 +98,7 @@ internal abstract partial class ViewVariablesManager
 
     private string? SerializeValue(Type type, object? value, string? nodeTag = null)
     {
-        if (value == null)
+        if (value == null || type == typeof(void))
             return null;
 
         var objType = type;

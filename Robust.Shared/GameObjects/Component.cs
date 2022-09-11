@@ -23,8 +23,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [DataField("netsync")]
-        public bool NetSyncEnabled { get; } = true;
-        //readonly. If you want to make it writable, you need to add the component to the entity's net-components
+        public bool NetSyncEnabled { get; set;  } = true;
 
         /// <inheritdoc />
         [ViewVariables]

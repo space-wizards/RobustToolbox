@@ -39,7 +39,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Fixes erroneous literal "\\n" inside the Clyde debug panel.
 
 ### Other
 

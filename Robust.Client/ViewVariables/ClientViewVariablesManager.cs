@@ -14,6 +14,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -415,6 +416,12 @@ namespace Robust.Client.ViewVariables
         {
             // Acquiesce, client!! Do what the server tells you.
             return true;
+        }
+
+        protected override bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            session = null;
+            return false;
         }
     }
 

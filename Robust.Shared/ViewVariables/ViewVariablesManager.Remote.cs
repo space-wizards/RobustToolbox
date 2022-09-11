@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Lidgren.Network;
-using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -118,13 +114,23 @@ internal abstract partial class ViewVariablesManager
         return tsc.Task;
     }
 
-    private void ReadRemotePathRequest(MsgViewVariablesReadPathReq req)
+    private async void ReadRemotePathRequest(MsgViewVariablesReadPathReq req)
     {
         if (!CheckPermissions(req.MsgChannel))
         {
             SendMessage(new MsgViewVariablesReadPathRes(req)
             {
                 ResponseCode = ViewVariablesResponseCode.NoAccess,
+            }, req.MsgChannel);
+            return;
+        }
+
+        if (_netMan.IsServer && TryGetSession(req.Session, out var session))
+        {
+            var value = await ReadRemotePath(req.Path, session);
+            SendMessage(new MsgViewVariablesReadPathRes(req)
+            {
+                Response = new []{value ?? "null"}
             }, req.MsgChannel);
             return;
         }
@@ -146,7 +152,7 @@ internal abstract partial class ViewVariablesManager
         }, req.MsgChannel);
     }
 
-    private void WriteRemotePathRequest(MsgViewVariablesWritePathReq req)
+    private async void WriteRemotePathRequest(MsgViewVariablesWritePathReq req)
     {
         if (!CheckPermissions(req.MsgChannel))
         {
@@ -154,6 +160,13 @@ internal abstract partial class ViewVariablesManager
             {
                 ResponseCode = ViewVariablesResponseCode.NoAccess,
             }, req.MsgChannel);
+            return;
+        }
+
+        if (_netMan.IsServer && TryGetSession(req.Session, out var session))
+        {
+            await WriteRemotePath(req.Path, req.Value, session);
+            SendMessage(new MsgViewVariablesWritePathRes(req), req.MsgChannel);
             return;
         }
 
@@ -186,13 +199,23 @@ internal abstract partial class ViewVariablesManager
         SendMessage(new MsgViewVariablesWritePathRes(req), req.MsgChannel);
     }
 
-    private void InvokeRemotePathRequest(MsgViewVariablesInvokePathReq req)
+    private async void InvokeRemotePathRequest(MsgViewVariablesInvokePathReq req)
     {
         if (!CheckPermissions(req.MsgChannel))
         {
             _netMan.ServerSendMessage(new MsgViewVariablesInvokePathRes(req)
             {
                 Path = req.Path, ResponseCode = ViewVariablesResponseCode.NoAccess,
+            }, req.MsgChannel);
+            return;
+        }
+
+        if (_netMan.IsServer && TryGetSession(req.Session, out var session))
+        {
+            var retVal = await InvokeRemotePath(req.Path, req.Value ?? string.Empty, session);
+            SendMessage(new MsgViewVariablesInvokePathRes(req)
+            {
+                Response = new []{retVal ?? "null"}
             }, req.MsgChannel);
             return;
         }
@@ -231,7 +254,7 @@ internal abstract partial class ViewVariablesManager
         }, req.MsgChannel);
     }
 
-    private void ListRemotePathRequest(MsgViewVariablesListPathReq req)
+    private async void ListRemotePathRequest(MsgViewVariablesListPathReq req)
     {
         if (!CheckPermissions(req.MsgChannel))
         {
@@ -242,6 +265,16 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
+        if (_netMan.IsServer && TryGetSession(req.Session, out var session))
+        {
+            var response = await ListRemotePath(req.Path, req.Options, session);
+            SendMessage(new MsgViewVariablesListPathRes(req)
+            {
+                Response = response.ToArray(),
+            }, req.MsgChannel);
+            return;
+        }
+        
         var enumerable = ListPath(req.Path, req.Options)
             .OrderBy(p => p.StartsWith(req.Path))
             .Take(Math.Min(MaxListPathResponseLength, req.Options.RemoteListLength))
@@ -311,180 +344,5 @@ internal abstract partial class ViewVariablesManager
     }
 
     protected abstract bool CheckPermissions(INetChannel channel);
-}
-
-internal abstract class MsgViewVariablesPath : NetMessage
-{
-    public override MsgGroups MsgGroup => MsgGroups.Command;
-
-    public uint RequestId { get; set; } = 0;
-    public string Path { get; set; } = string.Empty;
-
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
-    {
-        RequestId = buffer.ReadUInt32();
-        Path = buffer.ReadString();
-    }
-
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
-    {
-        buffer.Write(RequestId);
-        buffer.Write(Path);
-    }
-}
-
-internal abstract class MsgViewVariablesPathReq : MsgViewVariablesPath
-{
-    public Guid Session { get; set; } = Guid.Empty;
-
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
-    {
-        base.ReadFromBuffer(buffer);
-        Session = buffer.ReadGuid();
-    }
-
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
-    {
-        base.WriteToBuffer(buffer);
-        buffer.Write(Session);
-    }
-}
-
-internal abstract class MsgViewVariablesPathReqVal : MsgViewVariablesPathReq
-{
-    public string? Value { get; set; } = null;
-
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
-    {
-        base.ReadFromBuffer(buffer);
-        Value = buffer.ReadString();
-    }
-
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
-    {
-        base.WriteToBuffer(buffer);
-        buffer.Write(Value);
-    }
-}
-
-internal abstract class MsgViewVariablesPathRes : MsgViewVariablesPath
-{
-    public string[] Response { get; set; } = Array.Empty<string>();
-    public ViewVariablesResponseCode ResponseCode { get; set; } = ViewVariablesResponseCode.Ok;
-
-    internal MsgViewVariablesPathRes()
-    {
-    }
-
-    internal MsgViewVariablesPathRes(MsgViewVariablesPathReq req)
-    {
-        Path = req.Path;
-        RequestId = req.RequestId;
-    }
-
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
-    {
-        base.ReadFromBuffer(buffer);
-        ResponseCode = (ViewVariablesResponseCode) buffer.ReadUInt16();
-        var length = buffer.ReadInt32();
-        Response = new string[length];
-
-        for (var i = 0; i < length; i++)
-        {
-            Response[i] = buffer.ReadString();
-        }
-    }
-
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
-    {
-        base.WriteToBuffer(buffer);
-        buffer.Write((ushort)ResponseCode);
-        buffer.Write(Response.Length);
-
-        foreach (var value in Response)
-        {
-            buffer.Write(value);
-        }
-    }
-}
-
-internal sealed class MsgViewVariablesReadPathReq : MsgViewVariablesPathReq
-{
-}
-
-internal sealed class MsgViewVariablesReadPathRes : MsgViewVariablesPathRes
-{
-    public MsgViewVariablesReadPathRes()
-    {
-    }
-
-    public MsgViewVariablesReadPathRes(MsgViewVariablesReadPathReq req) : base(req)
-    {
-    }
-}
-
-internal sealed class MsgViewVariablesWritePathReq : MsgViewVariablesPathReqVal
-{
-}
-
-internal sealed class MsgViewVariablesWritePathRes : MsgViewVariablesPathRes
-{
-    public MsgViewVariablesWritePathRes()
-    {
-    }
-
-    public MsgViewVariablesWritePathRes(MsgViewVariablesWritePathReq req) : base(req)
-    {
-    }
-}
-
-internal sealed class MsgViewVariablesInvokePathReq : MsgViewVariablesPathReqVal
-{
-}
-
-internal sealed class MsgViewVariablesInvokePathRes : MsgViewVariablesPathRes
-{
-    public MsgViewVariablesInvokePathRes()
-    {
-    }
-
-    public MsgViewVariablesInvokePathRes(MsgViewVariablesInvokePathReq req) : base(req)
-    {
-    }
-}
-
-internal sealed class MsgViewVariablesListPathReq : MsgViewVariablesPathReq
-{
-    public VVListPathOptions Options { get; set; }
-
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
-    {
-        base.ReadFromBuffer(buffer);
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
-        var length = buffer.ReadInt32();
-        using var stream = buffer.ReadAlignedMemory(length);
-        Options = serializer.Deserialize<VVListPathOptions>(stream);
-    }
-
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
-    {
-        base.WriteToBuffer(buffer);
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
-        var stream = new MemoryStream();
-        serializer.Serialize(stream, Options);
-
-        buffer.Write((int)stream.Length);
-        buffer.Write(stream.AsSpan());
-    }
-}
-
-internal sealed class MsgViewVariablesListPathRes : MsgViewVariablesPathRes
-{
-    public MsgViewVariablesListPathRes()
-    {
-    }
-
-    public MsgViewVariablesListPathRes(MsgViewVariablesListPathReq req) : base(req)
-    {
-    }
+    protected abstract bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session);
 }

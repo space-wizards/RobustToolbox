@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -289,6 +290,18 @@ namespace Robust.Server.ViewVariables
         protected override bool CheckPermissions(INetChannel channel)
         {
             return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanViewVar(session);
+        }
+
+        protected override bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            if (guid != Guid.Empty && _playerManager.TryGetSessionById(new NetUserId(guid), out var player))
+            {
+                session = player;
+                return true;
+            }
+
+            session = null;
+            return false;
         }
     }
 }

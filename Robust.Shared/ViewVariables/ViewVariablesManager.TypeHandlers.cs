@@ -5,6 +5,11 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.ViewVariables;
 
+public delegate ViewVariablesPath? HandleTypePath(object? obj, string relativePath);
+public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
+public delegate IEnumerable<string> ListTypeCustomPaths(object? obj);
+public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T? obj);
+
 internal abstract partial class ViewVariablesManager
 {
     private readonly Dictionary<Type,  TypeHandlerData> _registeredTypeHandlers = new();

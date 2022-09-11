@@ -9,6 +9,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.ViewVariables;
 
+public delegate (ViewVariablesPath? path, string[] segments) DomainResolveObject(string path);
+public delegate IEnumerable<string>? DomainListPaths(string[] segments);
+
 internal abstract partial class ViewVariablesManager
 {
     protected static readonly (ViewVariablesPath? Path, string[] Segments) EmptyResolve = (null, Array.Empty<string>());

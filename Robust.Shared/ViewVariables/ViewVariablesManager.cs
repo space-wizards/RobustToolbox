@@ -1,99 +1,89 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 
-namespace Robust.Shared.ViewVariables
+namespace Robust.Shared.ViewVariables;
+
+internal abstract partial class ViewVariablesManager : IViewVariablesManager
 {
-    public delegate (ViewVariablesPath? path, string[] segments) DomainResolveObject(string path);
-    public delegate IEnumerable<string>? DomainListPaths(string[] segments);
-    public delegate ViewVariablesPath? HandleTypePath(object? obj, string relativePath);
-    public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
-    public delegate IEnumerable<string> ListTypeCustomPaths(object? obj);
-    public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T? obj);
+    [Dependency] private readonly ISerializationManager _serMan = default!;
+    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private readonly IComponentFactory _compFact = default!;
+    [Dependency] private readonly IPrototypeManager _protoMan = default!;
+    [Dependency] private readonly IReflectionManager _reflectionMan = default!;
+    [Dependency] private readonly INetManager _netMan = default!;
 
-    internal abstract partial class ViewVariablesManager : IViewVariablesManager
+    private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
+
+    private const BindingFlags MembersBindings =
+        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+    public virtual void Initialize()
     {
-        [Dependency] private readonly ISerializationManager _serMan = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IComponentFactory _compFact = default!;
-        [Dependency] private readonly IPrototypeManager _protoMan = default!;
-        [Dependency] private readonly IReflectionManager _reflectionMan = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
+        InitializeDomains();
+        InitializeTypeHandlers();
+        InitializeRemote();
+    }
 
-        private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
+    public object? ReadPath(string path)
+    {
+        return ResolvePath(path)?.Get();
+    }
 
-        private const BindingFlags MembersBindings =
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+    public void WritePath(string path, string value)
+    {
+        var resPath = ResolvePath(path);
+        resPath?.Set(DeserializeValue(resPath.Type, value));
+    }
 
-        public virtual void Initialize()
+    public object? InvokePath(string path, string arguments)
+    {
+        var resPath = ResolvePath(path);
+
+        if (resPath == null)
+            return null;
+
+        var args = ParseArguments(arguments);
+
+        var desArgs =
+            DeserializeArguments(resPath.InvokeParameterTypes, (int)resPath.InvokeOptionalParameters, args);
+
+        return resPath.Invoke(desArgs);
+    }
+
+    /// <summary>
+    ///     Figures out which VV traits an object type has. This method is in shared so the client and server agree on this mess.
+    /// </summary>
+    /// <seealso cref="ViewVariablesBlobMetadata.Traits"/>
+    public ICollection<object> TraitIdsFor(Type type)
+    {
+        if (!_cachedTraits.TryGetValue(type, out var traits))
         {
-            InitializeDomains();
-            InitializeTypeHandlers();
-            InitializeRemote();
-        }
-
-        public object? ReadPath(string path)
-        {
-            return ResolvePath(path)?.Get();
-        }
-
-        public void WritePath(string path, string value)
-        {
-            var resPath = ResolvePath(path);
-            resPath?.Set(DeserializeValue(resPath.Type, value));
-        }
-
-        public object? InvokePath(string path, string arguments)
-        {
-            var resPath = ResolvePath(path);
-
-            if (resPath == null)
-                return null;
-
-            var args = ParseArguments(arguments);
-
-            var desArgs =
-                DeserializeArguments(resPath.InvokeParameterTypes, (int)resPath.InvokeOptionalParameters, args);
-
-            return resPath.Invoke(desArgs);
-        }
-
-        /// <summary>
-        ///     Figures out which VV traits an object type has. This method is in shared so the client and server agree on this mess.
-        /// </summary>
-        /// <seealso cref="ViewVariablesBlobMetadata.Traits"/>
-        public ICollection<object> TraitIdsFor(Type type)
-        {
-            if (!_cachedTraits.TryGetValue(type, out var traits))
+            traits = new HashSet<object>();
+            _cachedTraits.Add(type, traits);
+            if (ViewVariablesUtility.TypeHasVisibleMembers(type))
             {
-                traits = new HashSet<object>();
-                _cachedTraits.Add(type, traits);
-                if (ViewVariablesUtility.TypeHasVisibleMembers(type))
-                {
-                    traits.Add(ViewVariablesTraits.Members);
-                }
-
-                if (typeof(IEnumerable).IsAssignableFrom(type))
-                {
-                    traits.Add(ViewVariablesTraits.Enumerable);
-                }
-
-                if (typeof(EntityUid).IsAssignableFrom(type))
-                {
-                    traits.Add(ViewVariablesTraits.Entity);
-                }
+                traits.Add(ViewVariablesTraits.Members);
             }
 
-            return traits;
+            if (typeof(IEnumerable).IsAssignableFrom(type))
+            {
+                traits.Add(ViewVariablesTraits.Enumerable);
+            }
+
+            if (typeof(EntityUid).IsAssignableFrom(type))
+            {
+                traits.Add(ViewVariablesTraits.Entity);
+            }
         }
+
+        return traits;
     }
 }

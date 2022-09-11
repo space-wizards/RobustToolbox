@@ -94,7 +94,12 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null);
+        bool Insert(EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.

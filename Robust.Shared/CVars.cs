@@ -643,6 +643,22 @@ namespace Robust.Shared
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
+         * RENDERING
+         */
+
+        /// <summary>
+        ///     This biases the RSI-direction used to draw diagonally oriented 4-directional sprites to avoid flickering between directions. A positive
+        ///     value biases towards facing N/S, while a negative value will bias towards E/W.
+        /// </summary>
+        /// <remarks>
+        ///     The bias needs to be large enough to prevent sprites on rotating grids from flickering, but should be
+        ///     small enough that it is generally unnoticeable. Currently it is somewhat large to combat issues with
+        ///     eye-lerping & grid rotations. 
+        /// </remarks>
+        public static readonly CVarDef<double> RenderSpriteDirectionBias =
+            CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /*
          * DISPLAY
          */
 

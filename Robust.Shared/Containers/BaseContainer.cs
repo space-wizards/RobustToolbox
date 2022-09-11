@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -55,12 +56,19 @@ namespace Robust.Shared.Containers
         protected BaseContainer() { }
 
         /// <inheritdoc />
-        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null)
+        public bool Insert(
+            EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
-            DebugTools.Assert(meta == null || meta.Owner == toinsert);
+            DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
+            DebugTools.Assert(physics == null || physics.Owner == toinsert);
             DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
 
@@ -68,7 +76,15 @@ namespace Robust.Shared.Containers
             if (!CanInsert(toinsert, entMan))
                 return false;
 
-            transform ??= entMan.GetComponent<TransformComponent>(toinsert);
+            var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
+            var transformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var jointQuery = entMan.GetEntityQuery<JointComponent>();
+
+            // ECS containers when
+            var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+            var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
+
+            transform ??= transformQuery.GetComponent(toinsert);
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
 
             // remove from any old containers.
@@ -84,7 +100,15 @@ namespace Robust.Shared.Containers
             // Update metadata first, so that parent change events can check IsInContainer.
             meta.Flags |= MetaDataFlags.InContainer;
 
-            ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
+            // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
+            // because the insertion may not result in a parent change. This could alternatively be done via a
+            // got-inserted event, but really that event should run after the entity was actually inserted (so that
+            // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
+            if (physics == null)
+                physicsQuery.TryGetComponent(toinsert, out physics);
+            RecursivelyUpdatePhysics(transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+
+            ownerTransform ??= transformQuery.GetComponent(Owner);
             var oldParent = transform.ParentUid;
             transform.AttachParent(ownerTransform);
             InternalInsert(toinsert, oldParent, entMan);
@@ -101,7 +125,37 @@ namespace Robust.Shared.Containers
             transform.LocalPosition = Vector2.Zero;
             transform.LocalRotation = Angle.Zero;
 
+            DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || !phys.Awake);
             return true;
+        }
+
+        private void RecursivelyUpdatePhysics(TransformComponent xform,
+            PhysicsComponent? physics,
+            SharedPhysicsSystem physicsSys,
+            SharedJointSystem jointSys,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<TransformComponent> transformQuery,
+            EntityQuery<JointComponent> jointQuery)
+        {
+            if (physics != null)
+            {
+                // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                physicsSys.SetLinearVelocity(physics, Vector2.Zero, false);
+                physicsSys.SetAngularVelocity(physics, 0, false);
+                physicsSys.SetCanCollide(physics, false, false);
+
+                if (jointQuery.TryGetComponent(xform.Owner, out var joint))
+                    jointSys.ClearJoints(joint);
+            }
+
+            foreach (var child in xform.ChildEntities)
+            {
+                var childXform = transformQuery.GetComponent(child);
+                physicsQuery.TryGetComponent(child, out var childPhysics);
+                RecursivelyUpdatePhysics(childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+            }
         }
 
         /// <inheritdoc />

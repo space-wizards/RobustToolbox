@@ -6,6 +6,7 @@ using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -35,6 +36,11 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
         [Dependency] private readonly IEyeManager eyeManager = default!;
+
+        /// <summary>
+        ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
+        /// </summary>
+        public static double DirectionBias = -0.05;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -1397,11 +1403,11 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            // Reduce the angles to fix math shenanigans
-            worldRotation = worldRotation.Reduced().FlipPositive();
-
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             var cardinal = Angle.Zero;
+
+            // Reduce the angles to fix math shenanigans
+            angle = angle.Reduced().FlipPositive();
 
             // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
             if (!NoRotation && SnapCardinals)
@@ -2121,14 +2127,43 @@ namespace Robust.Client.GameObjects
                 Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
             };
 
+            /// <summary>
+            ///     Converts an angle (between 0 and 2pi) to an RSI direction. This will slightly bias the angle to avoid flickering for
+            ///     4-directional sprites.
+            /// </summary>
+            public static RSIDirection GetDirection(RSI.State.DirectionType dirType, Angle angle)
+            {
+                if (dirType == RSI.State.DirectionType.Dir1)
+                    return RSIDirection.South;
+                else if (dirType == RSI.State.DirectionType.Dir8)
+                    return angle.GetDir().Convert(dirType);
+
+                // For 4-directional sprites, as entities are often moving & facing diagonally, we will slightly bias the
+                // angle to avoid the sprite flickering.
+
+                // mod is -0.5 for angles between 0-90 and 180-270, and +0.5 for 90-180 and 270-360
+                var mod = (Math.Floor(angle.Theta / MathHelper.PiOver2) % 2) - 0.5;
+
+                var modTheta = angle.Theta + mod * DirectionBias;
+
+                return ((int)Math.Round(modTheta / MathHelper.PiOver2) % 4) switch
+                {
+                    0 => RSIDirection.South,
+                    1 => RSIDirection.East,
+                    2 => RSIDirection.North,
+                    _ => RSIDirection.West,
+                };
+            }
+
+            /// <summary>
+            ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
+            /// </summary>
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
                 if (!Visible || Blank)
                     return;
 
-                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
-                    ? RSIDirection.South
-                    : angle.ToRsiDirection(_actualState.Directions);
+                var dir = _actualState == null ? RSIDirection.South : GetDirection(_actualState.Directions, angle);
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);

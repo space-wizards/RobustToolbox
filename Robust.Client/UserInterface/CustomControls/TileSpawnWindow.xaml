@@ -1,7 +1,7 @@
-﻿<TileSpawnWindow
+<TileSpawnWindow
     xmlns="https://spacestation14.io"
     Title="Place Tiles"
-    Size="300 300"
+    SetSize="300 300"
     MinSize="300 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">

@@ -159,3 +159,11 @@ cmd-hint-savebp-id = <Grid EntityID>
 cmd-flushcookies-desc = Flush CEF cookie storage to disk
 cmd-flushcookies-help = This ensure cookies are properly saved to disk in the event of unclean shutdowns.
     Note that the actual operation is asynchronous.
+
+## 'uitest2' command
+cmd-uitest2-desc = Opens a UI control testing OS window
+cmd-uitest2-help = Usage: uitest2 <tab>
+cmd-uitest2-arg-tab = <tab>
+cmd-uitest2-error-args = Expected at most one argument
+cmd-uitest2-error-tab = Invalid tab: '{$value}'
+cmd-uitest2-title = UITest2

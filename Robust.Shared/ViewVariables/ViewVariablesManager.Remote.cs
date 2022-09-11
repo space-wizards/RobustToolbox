@@ -54,7 +54,7 @@ internal abstract partial class ViewVariablesManager
         return tsc.Task;
     }
 
-    public Task WriteRemotePath(string path, string? value, ICommonSession? session = null)
+    public Task WriteRemotePath(string path, string value, ICommonSession? session = null)
     {
         if (!_netMan.IsConnected || (_netMan.IsServer && session == null))
             return Task.CompletedTask;
@@ -165,7 +165,7 @@ internal abstract partial class ViewVariablesManager
 
         if (_netMan.IsServer && TryGetSession(req.Session, out var session))
         {
-            await WriteRemotePath(req.Path, req.Value, session);
+            await WriteRemotePath(req.Path, req.Value ?? string.Empty, session);
             SendMessage(new MsgViewVariablesWritePathRes(req), req.MsgChannel);
             return;
         }
@@ -274,7 +274,7 @@ internal abstract partial class ViewVariablesManager
             }, req.MsgChannel);
             return;
         }
-        
+
         var enumerable = ListPath(req.Path, req.Options)
             .OrderBy(p => p.StartsWith(req.Path))
             .Take(Math.Min(MaxListPathResponseLength, req.Options.RemoteListLength))

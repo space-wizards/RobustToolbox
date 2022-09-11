@@ -235,6 +235,12 @@ namespace Robust.Client.ViewVariables
             window.Open();
         }
 
+        public void OpenVV(string path)
+        {
+            if (ReadPath(path) is {} obj)
+                OpenVV(obj);
+        }
+
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
             var window = new DefaultWindow

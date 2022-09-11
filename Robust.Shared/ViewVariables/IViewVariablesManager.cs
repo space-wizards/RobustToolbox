@@ -23,7 +23,7 @@ public interface IViewVariablesManager
     IEnumerable<string> ListPath(string path, VVListPathOptions options);
 
     Task<string?> ReadRemotePath(string path, ICommonSession? session = null);
-    Task WriteRemotePath(string path, string? value, ICommonSession? session = null);
+    Task WriteRemotePath(string path, string value, ICommonSession? session = null);
     Task<string?> InvokeRemotePath(string path, string arguments, ICommonSession? session = null);
     Task<IEnumerable<string>> ListRemotePath(string path, VVListPathOptions options, ICommonSession? session = null);
 }

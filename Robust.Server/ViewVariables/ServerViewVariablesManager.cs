@@ -14,7 +14,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using static Robust.Shared.Network.Messages.MsgViewVariablesDenySession;
 
 namespace Robust.Server.ViewVariables
 {
@@ -294,7 +293,9 @@ namespace Robust.Server.ViewVariables
 
         protected override bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session)
         {
-            if (guid != Guid.Empty && _playerManager.TryGetSessionById(new NetUserId(guid), out var player))
+            if (guid != Guid.Empty
+                && _playerManager.TryGetSessionById(new NetUserId(guid), out var player)
+                && !_groupController.CanViewVar(player)) // Can't VV other admins.
             {
                 session = player;
                 return true;

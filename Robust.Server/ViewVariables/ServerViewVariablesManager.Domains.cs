@@ -53,9 +53,9 @@ internal sealed partial class ServerViewVariablesManager
             return null;
 
         if (segments.Length == 1
-            && _playerManager.TryGetSessionByUsername(segments[0], out _)
+            && (_playerManager.TryGetSessionByUsername(segments[0], out _)
             || Guid.TryParse(segments[0], out var guid)
-            && _playerManager.TryGetSessionById(new NetUserId(guid), out _))
+            && _playerManager.TryGetSessionById(new NetUserId(guid), out _)))
         {
             return null;
         }

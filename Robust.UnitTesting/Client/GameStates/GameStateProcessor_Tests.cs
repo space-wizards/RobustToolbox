@@ -161,7 +161,7 @@ namespace Robust.UnitTesting.Client.GameStates
         /// </summary>
         private static GameState GameStateFactory(uint from, uint to)
         {
-            return new(new GameTick(@from), new GameTick(to), 0, default, default, default, null);
+            return new(new GameTick(@from), new GameTick(to), 0, 0, default, default, default, null);
         }
 
         /// <summary>

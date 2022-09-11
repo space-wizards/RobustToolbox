@@ -78,7 +78,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
-            deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
+
+            var entMock = new Mock<IEntityManager>();
+            entMock.SetupGet(x => x.EventBus).Returns(new Mock<IEventBus>().Object);
+            deps.RegisterInstance<IEntityManager>(entMock.Object);
 
             var reflectionMock = new Mock<IReflectionManager>();
             reflectionMock.Setup(p => p.GetAllChildren<IEntitySystem>(false))

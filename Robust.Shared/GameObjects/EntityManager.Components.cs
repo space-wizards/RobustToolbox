@@ -307,7 +307,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                component.NetSyncEnabled = false;
+                component.Networked = false;
             }
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);

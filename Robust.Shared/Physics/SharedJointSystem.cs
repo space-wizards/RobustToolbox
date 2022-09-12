@@ -49,12 +49,12 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
-        [Dependency] private readonly SharedContainerSystem Container = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
 
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
-        private HashSet<JointComponent> _dirtyJoints = new();
-        protected HashSet<Joint> AddedJoints = new();
+        private readonly HashSet<JointComponent> _dirtyJoints = new();
+        protected readonly HashSet<Joint> AddedJoints = new();
 
         private ISawmill _sawmill = default!;
 
@@ -466,7 +466,7 @@ namespace Robust.Shared.Physics
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
                 MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
-                !Container.IsEntityInContainer(bodyAUid))
+                !_container.IsEntityInContainer(bodyAUid))
             {
                 bodyA.CanCollide = true;
                 bodyA.Awake = true;
@@ -474,7 +474,7 @@ namespace Robust.Shared.Physics
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
                 MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
-                !Container.IsEntityInContainer(bodyBUid))
+                !_container.IsEntityInContainer(bodyBUid))
             {
                 bodyB.CanCollide = true;
                 bodyB.Awake = true;

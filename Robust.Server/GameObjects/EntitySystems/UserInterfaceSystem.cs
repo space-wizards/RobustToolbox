@@ -121,7 +121,7 @@ namespace Robust.Server.GameObjects
         public override void Update(float frameTime)
         {
             var query = GetEntityQuery<TransformComponent>();
-            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>())
+            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>(true))
             {
                 foreach (var ui in activeUis.Interfaces)
                 {

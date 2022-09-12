@@ -176,6 +176,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        public Component AddComponent(EntityUid uid, ushort netId)
+        {
+            var newComponent = (Component)_componentFactory.GetComponent(netId);
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
+        }
+
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
@@ -546,15 +554,15 @@ namespace Robust.Shared.GameObjects
             var entityUid = component.Owner;
 
             // ReSharper disable once InvertIf
-            if (reg.NetID != null)
+            if (reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
-                var netSet = _netComponents[entityUid];
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                Dirty(entityUid);
+                if (component.NetSyncEnabled)
+                    Dirty(entityUid);
             }
 
             foreach (var refType in reg.References)

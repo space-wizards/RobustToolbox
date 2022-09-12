@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -36,17 +35,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
-                    var mapped = mappingDataNode.Has(fieldDefinition.Attribute.Tag);
-
-                    if (!mapped)
+                    if (fieldDefinition.Attribute is DataFieldAttribute dfa && !mappingDataNode.Has(dfa.Tag))
                     {
-                        if (fieldDefinition.Attribute.Required)
-                            throw new InvalidOperationException($"Required field {fieldDefinition.Attribute.Tag} of type {target.GetType()} wasn't mapped.");
+                        if (dfa.Required)
+                            throw new InvalidOperationException($"Required field {dfa.Tag} of type {target.GetType()} wasn't mapped.");
                         continue;
                     }
 
                     var type = fieldDefinition.FieldType;
-                    var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
+                    var node = fieldDefinition.Attribute is DataFieldAttribute dfa2 ? mappingDataNode.Get(dfa2.Tag) : mappingDataNode;
                     object? result;
                     if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
                         {
@@ -100,6 +97,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
+                    if (fieldDefinition.Attribute is DataFieldAttribute dfa1 && mapping.Has(dfa1.Tag))
+                    {
+                        continue; //this node was already written by a type higher up the includetree
+                    }
+
                     if (fieldDefinition.Attribute.ServerOnly &&
                         !collection.Resolve<INetManager>().IsServer)
                     {
@@ -113,12 +115,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue;
                     }
 
-                    if (!fieldDefinition.Attribute.Required &&
+                    if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true } &&
                         !alwaysWrite &&
                         Equals(value, defaultValues[i]))
                     {
                         continue;
                     }
+
 
                     var type = fieldDefinition.FieldType;
 
@@ -133,7 +136,20 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         node = manager.WriteValue(type, value, alwaysWrite, context);
                     }
 
-                    mapping[fieldDefinition.Attribute.Tag] = node;
+                    if (fieldDefinition.Attribute is not DataFieldAttribute dfa)
+                    {
+                        if (node is not MappingDataNode nodeMapping)
+                        {
+                            throw new InvalidOperationException(
+                                $"Writing field {fieldDefinition} for type {Type} did not return a {nameof(MappingDataNode)} but was annotated to be included.");
+                        }
+
+                        mapping.Insert(nodeMapping, skipDuplicates: true);
+                    }
+                    else
+                    {
+                        mapping[dfa.Tag] = node;
+                    }
                 }
 
                 return mapping;
@@ -189,7 +205,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return CopyDelegate;
         }
 
-        private void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
+        private static void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
         {
             switch (info)
             {
@@ -259,12 +275,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return method.CreateDelegate<AccessField<object, object?>>();
         }
 
-        private AssignField<object, object?> EmitFieldAssigner(FieldDefinition fieldDefinition)
+        internal static AssignField<T, object?> EmitFieldAssigner<T>(Type type, Type fieldType, AbstractFieldInfo backingField)
         {
             var method = new DynamicMethod(
                 "AssignField",
                 typeof(void),
-                new[] {typeof(object).MakeByRefType(), typeof(object)},
+                new[] {typeof(T).MakeByRefType(), typeof(object)},
                 true);
 
             method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -272,22 +288,22 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var generator = method.GetRobustGen();
 
-            if (Type.IsValueType)
+            if (type.IsValueType)
             {
-                generator.DeclareLocal(Type);
+                generator.DeclareLocal(type);
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Unbox_Any, Type);
+                generator.Emit(OpCodes.Unbox_Any, type);
                 generator.Emit(OpCodes.Stloc_0);
                 generator.Emit(OpCodes.Ldloca, 0);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField);
+                EmitSetField(generator, backingField);
 
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Box, Type);
+                generator.Emit(OpCodes.Box, type);
                 generator.Emit(OpCodes.Stind_Ref);
 
                 generator.Emit(OpCodes.Ret);
@@ -296,16 +312,16 @@ namespace Robust.Shared.Serialization.Manager.Definition
             {
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Castclass, Type);
+                generator.Emit(OpCodes.Castclass, type);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField);
+                EmitSetField(generator, backingField.GetBackingField() ?? backingField);
 
                 generator.Emit(OpCodes.Ret);
             }
 
-            return method.CreateDelegate<AssignField<object, object?>>();
+            return method.CreateDelegate<AssignField<T, object?>>();
         }
     }
 }

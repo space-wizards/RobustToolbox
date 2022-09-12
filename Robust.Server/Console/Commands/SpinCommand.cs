@@ -32,7 +32,7 @@ public sealed class SpinCommand : IConsoleCommand
         EntityUid target;
         if (args.Length == 3)
         {
-            if (!EntityUid.TryParse(args[1], out target))
+            if (!EntityUid.TryParse(args[2], out target))
             {
                 shell.WriteError($"Unable to find entity {args[1]}");
                 return;

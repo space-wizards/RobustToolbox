@@ -109,7 +109,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures {
             set {
-                PreparePlacementTexList(value, value != null, null);
+                PreparePlacementTexList(value, !Hijack?.CanRotate ?? value != null, null);
             }
         }
 
@@ -717,7 +717,7 @@ namespace Robust.Client.Placement
             }
             sc.NoRotation = noRot;
 
-            if (prototype?.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp) == true)
+            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
             {
                 sc.Scale = spriteComp.Scale;
             }

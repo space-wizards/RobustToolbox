@@ -32,6 +32,7 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
+            var timing = IoCManager.Resolve<IGameTiming>();
             foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
@@ -48,10 +49,9 @@ namespace Robust.Client.GameStates
                 var aabb = boundingBox.GetWorldAABB();
 
                 // if not on screen, or too small, continue
-                if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())
+                if (!aabb.Intersects(viewport) || aabb.IsEmpty())
                     continue;
 
-                var timing = IoCManager.Resolve<IGameTiming>();
                 timing.InSimulation = true;
 
                 var boxOffset = transform.LerpDestination.Value - transform.LocalPosition;
@@ -60,40 +60,26 @@ namespace Robust.Client.GameStates
                 timing.InSimulation = false;
 
                 worldHandle.DrawLine(transform.WorldPosition, boxPosWorld, Color.Yellow);
-                worldHandle.DrawRect(aabb.Translated(boxPosWorld), Color.Yellow.WithAlpha(0.5f), false);
-
+                worldHandle.DrawRect(aabb.Translated(boxOffset), Color.Yellow.WithAlpha(0.5f), false);
             }
         }
 
         private sealed class NetShowInterpCommand : IConsoleCommand
         {
             public string Command => "net_draw_interp";
-            public string Help => "net_draw_interp <0|1>";
+            public string Help => "net_draw_interp";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                if (args.Length != 1)
-                {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
-                    return;
-                }
-
-                if (!byte.TryParse(args[0], out var iValue))
-                {
-                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
-                    return;
-                }
-
-                var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (bValue && !overlayMan.HasOverlay<NetInterpOverlay>())
+                if (!overlayMan.HasOverlay<NetInterpOverlay>())
                 {
                     overlayMan.AddOverlay(new NetInterpOverlay());
                     shell.WriteLine("Enabled network interp overlay.");
                 }
-                else if (overlayMan.HasOverlay<NetInterpOverlay>())
+                else
                 {
                     overlayMan.RemoveOverlay<NetInterpOverlay>();
                     shell.WriteLine("Disabled network interp overlay.");

@@ -29,10 +29,14 @@ namespace Robust.Shared.Containers
 
         void ISerializationHooks.AfterDeserialization()
         {
-            foreach (var (_, container) in Containers)
+            // TODO remove ISerializationHooks I guess the IDs can be set by a custom serializer for the dictionary? But
+            // the component??? Maybe other systems need to stop assuming that containers have been initialized during
+            // their own init.
+            foreach (var (id, container) in Containers)
             {
                 var baseContainer = (BaseContainer) container;
                 baseContainer.Manager = this;
+                baseContainer.ID = id;
             }
         }
 
@@ -51,23 +55,10 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            foreach (var container in Containers)
-            {
-                var baseContainer = (BaseContainer)container.Value;
-                baseContainer.Manager = this;
-                baseContainer.ID = container.Key;
-            }
-        }
-
-        /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
             // naive implementation that just sends the full state of the component
-            List<ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
+            Dictionary<string, ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
 
             foreach (var container in Containers.Values)
             {
@@ -79,7 +70,7 @@ namespace Robust.Shared.Containers
                 }
 
                 var sContainer = new ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
-                containerSet.Add(sContainer);
+                containerSet.Add(container.ID, sContainer);
             }
 
             return new ContainerManagerComponentState(containerSet);
@@ -144,7 +135,11 @@ namespace Robust.Shared.Containers
         {
             foreach (var container in Containers.Values)
             {
-                if (container.Contains(entity)) container.ForceRemove(entity);
+                if (container.Contains(entity))
+                {
+                    container.ForceRemove(entity);
+                    return;
+                }
             }
         }
 
@@ -186,11 +181,11 @@ namespace Robust.Shared.Containers
         [Serializable, NetSerializable]
         internal sealed class ContainerManagerComponentState : ComponentState
         {
-            public List<ContainerData> ContainerSet;
+            public Dictionary<string, ContainerData> Containers;
 
-            public ContainerManagerComponentState(List<ContainerData> containers)
+            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers)
             {
-                ContainerSet = containers;
+                Containers = containers;
             }
 
             [Serializable, NetSerializable]
@@ -227,7 +222,10 @@ namespace Robust.Shared.Containers
         {
             [DataField("entities")] public List<EntityUid> Entities = new ();
 
-            [DataField("type")] public string? Type;
+            [DataField("type")] public string? Type = null;
+
+            // explicit parameterless constructor is required.
+            public ContainerPrototypeData() { }
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {

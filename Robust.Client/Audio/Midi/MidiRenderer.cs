@@ -354,7 +354,7 @@ internal sealed class MidiRenderer : IMidiRenderer
         }
     }
 
-    public void LoadSoundfont(string filename, bool resetPresets = false)
+    public void LoadSoundfont(string filename, bool resetPresets = true)
     {
         lock (_playerStateLock)
         {
@@ -521,7 +521,10 @@ internal sealed class MidiRenderer : IMidiRenderer
                             return;
 
                         _rendererState.Controllers.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Control] = midiEvent.Value;
-                        _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                        if(midiEvent.Control != 0x0)
+                            _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                        else // Fluidsynth doesn't seem to respect CC0 as bank selection, so we have to do it manually.
+                            _synth.BankSelect(midiEvent.Channel, midiEvent.Value);
                         break;
 
                     case RobustMidiCommand.ProgramChange:

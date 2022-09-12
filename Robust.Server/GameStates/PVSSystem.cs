@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
@@ -171,13 +172,24 @@ internal sealed partial class PVSSystem : EntitySystem
         ShutdownDirty();
     }
 
-    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked)
+    // TODO rate limit this?
+    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked, EntityUid? missingEntity)
     {
         if (!_playerVisibleSets.TryGetValue(session, out var sessionData))
             return;
 
-        // TODO rate limit this?
-        _sawmill.Warning($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. They probably encountered a PVS / missing meta-data exception.");
+        var sb = new StringBuilder();
+        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}.");
+
+        if (missingEntity != null)
+        {
+            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(missingEntity.Value)}.");
+
+            if (sessionData.LastSeenAt.TryGetValue(missingEntity.Value, out var lastSeenTick))
+                sb.Append($" Entity last sent: {lastSeenTick.Value}");
+        }
+
+        _sawmill.Warning(sb.ToString());
 
         sessionData.LastSeenAt.Clear();
 
@@ -187,10 +199,11 @@ internal sealed partial class PVSSystem : EntitySystem
             sessionData.Overflow = null;
         }
 
-        // return last acked to pool, but only if it is not still in the overflow dictionary.
-        if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAcked.Value > TickBuffer)
+        // return last acked to pool, but only if it is not still in the OverflowDictionary.
+        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAcked))
             _visSetPool.Return(sessionData.LastAcked);
 
+        sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
     }
 
@@ -220,8 +233,8 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
     {
-        // return last acked to pool, but only if it is not still in the overflow dictionary.
-        if (sessionData.LastAcked != null && _gameTiming.CurTick.Value - lastAckedTick.Value > TickBuffer)
+        // return last acked to pool, but only if it is not still in the OverflowDictionary.
+        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAckedTick))
             _visSetPool.Return(sessionData.LastAcked);
 
         sessionData.LastAcked = ackedData;
@@ -371,6 +384,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);
+        data.Overflow = null;
 
         if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
@@ -380,6 +394,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
         }
+
+        data.LastAcked = null;
     }
 
     private void OnGridRemoved(GridRemovalEvent ev)
@@ -672,8 +688,10 @@ internal sealed partial class PVSSystem : EntitySystem
         var lastAcked = sessionData.LastAcked;
         var lastSeen = sessionData.LastSeenAt;
         var visibleEnts = _visSetPool.Get();
-        DebugTools.Assert(visibleEnts.Count == 0);
 
+        if (visibleEnts.Count != 0)
+            throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
+        
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         foreach (var i in chunkIndices)
@@ -759,7 +777,12 @@ internal sealed partial class PVSSystem : EntitySystem
 
                 // This is pretty shit and there is probably a better way of doing this.
                 sessionData.Overflow = oldEntry.Value;
+
+#if !FULL_RELEASE
+                // This happens relatively frequently for the current TickBuffer value, and doesn't really provide any
+                // useful info when not debugging/testing locally. Hence disabled on FULL_RELEASE.
                 _sawmill.Warning($"Client {session} exceeded tick buffer.");
+#endif
             }
             else if (oldEntry.Value.Value != lastAcked)
                 _visSetPool.Return(oldEntry.Value.Value);
@@ -894,6 +917,14 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, bool entered)
     {
+        // This check shouldn't be required, but temporarily adding it to try debug PVS errors.
+        if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
+            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: {rep}");
+            return;
+        }
+
         if (entered)
         {
             toSend.Add(uid, PVSEntityVisiblity.Entered);

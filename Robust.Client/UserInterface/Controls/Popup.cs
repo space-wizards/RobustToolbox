@@ -15,6 +15,10 @@ namespace Robust.Client.UserInterface.Controls
 
         private Vector2 _desiredSize;
 
+        public bool CloseOnClick { get; set; } = true;
+
+        public bool CloseOnEscape { get; set; } = true;
+
         public void Open(UIBox2? box = null, Vector2? altPos = null)
         {
             if (Visible)

@@ -1,4 +1,5 @@
 using System;
+using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -8,7 +9,7 @@ namespace Robust.Client.State
     internal sealed class StateManager : IStateManager
     {
         [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
-
+        [Dependency] private readonly IUserInterfaceManager _interfaceManager = default!;
         public event Action<StateChangedEventArgs>? OnStateChanged;
         public State CurrentState { get; private set; }
 
@@ -42,10 +43,10 @@ namespace Robust.Client.State
             var newState = _typeFactory.CreateInstance<State>(type);
 
             var old = CurrentState;
-            CurrentState?.Shutdown();
+            CurrentState?.ShutdownInternal(_interfaceManager);
 
             CurrentState = newState;
-            CurrentState.Startup();
+            CurrentState.StartupInternal(_interfaceManager);
 
             OnStateChanged?.Invoke(new StateChangedEventArgs(old, CurrentState));
 

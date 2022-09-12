@@ -39,7 +39,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
         /// </summary>
-        private readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        internal readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />
@@ -114,8 +114,13 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null || state.ToSequence <= LastFullState.ToSequence)
+            if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
+            {
+                if (Logging)
+                    Logger.InfoS("net", $"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
+
                 return false;
+            }
 
             _stateBuffer.Add(state);
             return true;
@@ -215,7 +220,7 @@ namespace Robust.Client.GameStates
             }
 
             // we let the buffer fill up before starting to tick
-            if (_stateBuffer.Count >= TargetBufferSize && (!Interpolation || nextState != null))
+            if (_stateBuffer.Count >= TargetBufferSize)
             {
                 if (Logging)
                     Logger.DebugS("net", $"Resync CurTick to: {LastFullState.ToSequence}");

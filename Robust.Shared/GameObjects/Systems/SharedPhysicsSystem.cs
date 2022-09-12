@@ -141,13 +141,15 @@ namespace Robust.Shared.GameObjects
         {
             // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
             var uid = args.Entity;
-
-            var meta = MetaData(uid);
-
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized)
-                return;
-
             var xform = args.Transform;
+
+            // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
+            // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
+            // which case they still need to handle map changes. This frequently happens when clients receives a server
+            // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
+            // uninitialized but have an initialized child.
+            if (xform.ChildCount == 0 && LifeStage(uid) < EntityLifeStage.Initialized)
+                return;
 
             // Is this entity getting recursively detached after it's parent was already detached to null?
             if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
@@ -160,20 +162,6 @@ namespace Robust.Shared.GameObjects
             {
                 // This will also handle broadphase updating & joint clearing.
                 HandleMapChange(xform, body, args.OldMapId, xform.MapID);
-            }
-
-            if (body != null && (meta.Flags & MetaDataFlags.InContainer) != 0)
-            {
-                // Here we intentionally dont dirty the physics comp. Client-side state handling will apply these same
-                // changes. This also ensures that the server doesn't have to send the physics comp state to every
-                // player for any entity inside of a container during init.
-                SetLinearVelocity(body, Vector2.Zero, false);
-                SetAngularVelocity(body, 0, false);
-
-                // This needs to get called AFTER handle map change Otherwise this will set awake to false, but will
-                // fail to remove the body from the "current map" (which should really be the old map).
-                SetCanCollide(body, false, false);
-                _joints.ClearJoints(body);
             }
 
             if (args.OldMapId != xform.MapID)
@@ -199,7 +187,12 @@ namespace Robust.Shared.GameObjects
             TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
             TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
 
-            _broadphase.TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer = null;
+
+            if (oldMap != null)
+            {
+                oldMoveBuffer = oldMap.MoveBuffer;
+            }
 
             var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
 
@@ -244,7 +237,8 @@ namespace Robust.Shared.GameObjects
                     DestroyContacts(body, oldMap); // This can modify body.Awake
                 DebugTools.Assert(body.Contacts.Count == 0);
 
-                if (fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
+                // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
+                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
                 {
                     // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
                     _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);

@@ -7,6 +7,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -140,7 +141,18 @@ namespace Robust.Shared.GameObjects
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
         [ViewVariables]
-        public MetaDataFlags Flags { get; internal set; }
+        public MetaDataFlags Flags
+        {
+            get => _flags;
+            internal set
+            {
+                // In container and detached to null are mutually exclusive flags.
+                DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
+                _flags = value;
+            }
+        }
+
+        internal MetaDataFlags _flags;
 
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.

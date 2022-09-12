@@ -1,5 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -36,6 +38,35 @@ namespace Robust.Client.UserInterface.Controls
                     InvalidateMeasure();
                 }
             }
+        }
+
+        private string? _texturePath;
+
+        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
+        public string TextureThemePath
+        {
+            set
+            {
+                Texture = Theme.ResolveTexture(value);
+                _texturePath = value;
+            }
+        }
+
+        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
+        public string TexturePath
+        {
+            set
+            {
+                Texture = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
+                _texturePath = value;
+            }
+
+        }
+
+        protected override void OnThemeUpdated()
+        {
+            if (_texturePath != null) Texture = Theme.ResolveTexture(_texturePath);
+            base.OnThemeUpdated();
         }
 
         /// <summary>

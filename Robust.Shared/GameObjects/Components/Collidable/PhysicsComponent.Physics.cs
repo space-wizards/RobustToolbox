@@ -44,7 +44,6 @@ namespace Robust.Shared.GameObjects
     public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
 
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
@@ -56,6 +55,35 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables]
         internal BroadphaseComponent? Broadphase { get; set; }
+
+        /// <summary>
+        /// Debugging VV
+        /// </summary>
+        [ViewVariables]
+        private Box2? _broadphaseAABB
+        {
+            get
+            {
+                Box2? aabb = null;
+
+                if (Broadphase == null)
+                {
+                    return aabb;
+                }
+
+                var tree = Broadphase.Tree;
+
+                foreach (var (_, fixture) in IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        aabb = aabb?.Union(tree.GetProxy(proxy.ProxyId)!.AABB) ?? tree.GetProxy(proxy.ProxyId)!.AABB;
+                    }
+                }
+
+                return aabb;
+            }
+        }
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
@@ -71,11 +99,6 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
-        // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
-        // on physics bodies for massive shuttle perf savings.
-        [Obsolete("Use FixturesComponent instead.")]
-        public IReadOnlyList<Fixture> Fixtures => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values.ToList();
-
         public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
         [ViewVariables] public int ContactCount => Contacts.Count;
@@ -83,7 +106,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal LinkedList<Contact> Contacts = new();
+        internal readonly LinkedList<Contact> Contacts = new();
 
         [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
@@ -118,7 +141,7 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
+                _entMan.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
@@ -633,14 +656,6 @@ namespace Robust.Shared.GameObjects
 
         private bool _predict;
 
-        public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
-        {
-            foreach (var entity in _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(_entMan.GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
-            {
-                yield return entity;
-            }
-        }
-
         /// <summary>
         /// Gets a local point relative to the body's origin given a world point.
         /// Note that the vector only takes the rotation into account, not the position.
@@ -819,10 +834,10 @@ namespace Robust.Shared.GameObjects
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
                     if (!joint.CollideConnected &&
-                        (aUid == joint.BodyAUid &&
+                        ((aUid == joint.BodyAUid &&
                          bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid ||
-                         aUid == joint.BodyBUid)) return false;
+                        (bUid == joint.BodyAUid &&
+                         aUid == joint.BodyBUid))) return false;
                 }
             }
 
@@ -841,9 +856,9 @@ namespace Robust.Shared.GameObjects
 
         // View variables conveniences properties.
         [ViewVariables]
-        private Vector2 _mapLinearVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
+        private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
         [ViewVariables]
-        private float _mapAngularVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
+        private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 
     /// <summary>

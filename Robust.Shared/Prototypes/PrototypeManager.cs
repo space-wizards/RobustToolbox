@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
 using JetBrains.Annotations;
-using Prometheus;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -202,7 +201,7 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
-    public sealed class PrototypeAttribute : Attribute
+    public class PrototypeAttribute : Attribute
     {
         private readonly string type;
         public string Type => type;
@@ -212,6 +211,18 @@ namespace Robust.Shared.Prototypes
         {
             this.type = type;
             LoadPriority = loadPriority;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [BaseTypeRequired(typeof(IPrototype))]
+    [MeansImplicitUse]
+    [MeansDataDefinition]
+    [MeansDataRecord]
+    public sealed class PrototypeRecordAttribute : PrototypeAttribute
+    {
+        public PrototypeRecordAttribute(string type, int loadPriority = 1) : base(type, loadPriority)
+        {
         }
     }
 

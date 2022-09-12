@@ -53,7 +53,7 @@ namespace Robust.Server.GameStates
         public ushort TransformNetId { get; set; }
 
         public Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
-        public Action<ICommonSession, GameTick, GameTick>? ClientRequestFull { get; set; }
+        public Action<ICommonSession, GameTick, GameTick, EntityUid?>? ClientRequestFull { get; set; }
 
         public void PostInject()
         {
@@ -138,10 +138,11 @@ namespace Robust.Server.GameStates
                 !_ackedStates.TryGetValue(msg.MsgChannel.ConnectionId, out var lastAcked))
                 return;
 
-            ClientRequestFull?.Invoke(session, msg.Tick, lastAcked);
+            EntityUid? ent = msg.MissingEntity.IsValid() ? msg.MissingEntity : null;
+            ClientRequestFull?.Invoke(session, msg.Tick, lastAcked, ent);
 
             // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
-            _ackedStates[msg.MsgChannel.ConnectionId] = msg.Tick;
+            _ackedStates[msg.MsgChannel.ConnectionId] = _gameTiming.CurTick;
         }
 
         private void HandleStateAck(MsgStateAck msg)

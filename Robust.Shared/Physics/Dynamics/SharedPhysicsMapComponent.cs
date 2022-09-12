@@ -46,6 +46,11 @@ namespace Robust.Shared.Physics.Dynamics
         public bool AutoClearForces;
 
         /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
+
+        /// <summary>
         ///     Change the global gravity vector.
         /// </summary>
         public Vector2 Gravity
@@ -159,7 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            BroadphaseSystem.FindNewContacts(MapId);
+            BroadphaseSystem.FindNewContacts(this, MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;

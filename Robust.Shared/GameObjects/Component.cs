@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool _netSync { get; set; } = true;
 
-        internal bool Networked;
+        internal bool Networked = true;
 
         public bool NetSyncEnabled
         {

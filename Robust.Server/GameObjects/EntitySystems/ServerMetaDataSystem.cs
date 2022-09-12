@@ -26,6 +26,9 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         EntityManager.ComponentRemoved -= OnComponentRemoved;
     }
 
+    /// <summary>
+    ///     If a session-specific component gets added, make sure the meta-data flag is set.
+    /// </summary>
     private void OnComponentAdded(AddedComponentEventArgs obj)
     {
         var comp = obj.BaseArgs.Component;
@@ -33,6 +36,9 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
             MetaData(obj.BaseArgs.Owner).Flags |= MetaDataFlags.SessionSpecific;
     }
 
+    /// <summary>
+    ///     If a session-specific component gets removed, this will update the meta-data flag.
+    /// </summary>
     private void OnComponentRemoved(RemovedComponentEventArgs obj)
     {
         var removed = obj.BaseArgs.Component;
@@ -56,13 +62,14 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         meta.Flags &= ~MetaDataFlags.SessionSpecific;
     }
 
+    /// <summary>
+    ///     If a new player gets attached to an entity, this will ensure that the player receives session-restricted
+    ///     component states by dirtying any restricted components. 
+    /// </summary>
     private void OnActorPlayerAttach(EntityUid uid, MetaDataComponent meta, PlayerAttachedEvent args)
     {
         if ((meta.Flags & MetaDataFlags.SessionSpecific) == 0)
             return;
-
-        // A new player has been attached. In order to ensure that this player receives session-restricted entity
-        // states, we will dirty any restricted components.
 
         foreach (var (_, comp) in EntityManager.GetNetComponents(uid))
         {

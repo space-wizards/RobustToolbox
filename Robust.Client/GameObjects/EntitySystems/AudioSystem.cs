@@ -277,6 +277,15 @@ public sealed class AudioSystem : SharedAudioSystem
         stream.Done = true;
     }
 
+    private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
+    {
+        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out audio))
+            return true;
+
+        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+        return false;
+    }
+
     /// <summary>
     ///     Play an audio file globally, without position.
     /// </summary>
@@ -284,11 +293,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-            return Play(audio, audioParams);
-
-        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
-        return default;
+        return TryGetAudio(filename, out var audio) ? Play(audio, audioParams) : default;
     }
 
     /// <summary>
@@ -316,11 +321,7 @@ public sealed class AudioSystem : SharedAudioSystem
     private IPlayingAudioStream? Play(string filename, EntityUid entity, EntityCoordinates fallbackCoordinates,
         AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-            return Play(audio, entity, fallbackCoordinates, audioParams);
-
-        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
-        return default;
+        return TryGetAudio(filename, out var audio) ? Play(audio, entity, fallbackCoordinates, audioParams) : default;
     }
 
     /// <summary>
@@ -360,11 +361,7 @@ public sealed class AudioSystem : SharedAudioSystem
     private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates,
         EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-            return Play(audio, coordinates, fallbackCoordinates, audioParams);
-
-        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
-        return default;
+        return TryGetAudio(filename, out var audio) ? Play(audio, coordinates, fallbackCoordinates, audioParams) : default;
     }
 
     /// <summary>

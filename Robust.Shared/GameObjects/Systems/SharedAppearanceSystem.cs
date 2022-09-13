@@ -28,13 +28,14 @@ public abstract class SharedAppearanceSystem : EntitySystem
 
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
-        // If appearance data is changing due to server state application, the server's comp state is getting applied
-        // anyways, so we can skip this.
-        if (_timing.ApplyingState && component.NetSyncEnabled)
-            return; 
-
         if (!Resolve(uid, ref component, false))
             return;
+
+        // If appearance data is changing due to server state application, the server's comp state is getting applied
+        // anyways, so we can skip this.
+        if (_timing.ApplyingState
+            && component.NetSyncEnabled) // TODO consider removing this and avoiding the component resolve altogether.
+            return; 
 
         if (component.AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;

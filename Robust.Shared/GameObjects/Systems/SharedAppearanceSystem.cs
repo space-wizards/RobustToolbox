@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -11,6 +12,17 @@ namespace Robust.Shared.GameObjects;
 public abstract class SharedAppearanceSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<AppearanceComponent, ComponentGetState>(OnAppearanceGetState);
+    }
+
+    private static void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
+    {
+        args.State = new AppearanceComponentState(component.AppearanceData);
+    }
 
     public virtual void MarkDirty(AppearanceComponent component) {}
 

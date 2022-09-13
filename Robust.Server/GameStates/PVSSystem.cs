@@ -226,7 +226,7 @@ internal sealed partial class PVSSystem : EntitySystem
             // we just discard it.
             _visSetPool.Return(overflowEnts);
         }
-        
+
         if (sessionData.SentEntities.TryGetValue(ackedTick, out var ackedData))
             ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);
     }
@@ -402,20 +402,23 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         foreach (var pvsCollection in _pvsCollections)
         {
-            pvsCollection.RemoveGrid(ev.GridId);
+            pvsCollection.RemoveGrid(ev.EntityUid);
         }
     }
 
     private void OnGridCreated(GridInitializeEvent ev)
     {
-        var gridId = ev.GridId;
+        // Already have the map chunks stored so no point doubling.
+        if (ev.IsMap)
+            return;
+
+        var gridId = ev.EntityUid;
         foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
         }
 
-        var euid = _mapManager.GetGridEuid(gridId);
-        _entityPvsCollection.UpdateIndex(euid);
+        _entityPvsCollection.UpdateIndex(ev.EntityUid);
     }
 
     private void OnMapDestroyed(MapChangedEvent e)
@@ -529,7 +532,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value);
+                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
                         var entry = (visMask, chunkLocation);
 
                         if (gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -611,7 +614,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var chunk = chunkLocation switch
         {
-            GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridId,
+            GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridUid,
                 gridChunkLocation.ChunkIndices, out var gridChunk)
                 ? gridChunk
                 : null,
@@ -691,7 +694,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (visibleEnts.Count != 0)
             throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
-        
+
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         foreach (var i in chunkIndices)
@@ -754,7 +757,7 @@ internal sealed partial class PVSSystem : EntitySystem
             var entFromTick = entered ? lastSeen.GetValueOrDefault(uid) : fromTick;
             var state = GetEntityState(session, uid, entFromTick, mQuery.GetComponent(uid));
 
-            if (entered || !state.Empty) 
+            if (entered || !state.Empty)
                 entityStates.Add(state);
         }
 
@@ -808,7 +811,7 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var uid in lastSent.Keys)
         {
             if (!visibleEnts.ContainsKey(uid))
-                leftView.Add(uid); 
+                leftView.Add(uid);
         }
 
         return leftView.Count > 0 ? leftView : null;
@@ -901,7 +904,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
         // their requested budget. However this can cause issues if a packet gets dropped, because a player may create
         // 2x or more times the normal entity creation budget.
-        // 
+        //
         // The fix for that would be to just also give the PVS budget a client-side aspect that controls entity creation
         // rate.
         if (enteredSinceLastSent)

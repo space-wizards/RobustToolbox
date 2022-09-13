@@ -29,6 +29,10 @@ namespace Robust.Server.GameObjects
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
+            // If the map is also a grid then it doesn't have physics.
+            if (ev.IsMap)
+                return;
+
             var guid = ev.EntityUid;
 
             if (!EntityManager.EntityExists(guid)) return;

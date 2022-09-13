@@ -107,6 +107,14 @@ internal partial class MapManager
         EntityQuery<PhysicsComponent> bodyQuery,
         [NotNullWhen(true)] out IMapGrid? grid)
     {
+        var mapUid = _mapEntities[mapId];
+
+        if (EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var mapgrid))
+        {
+            grid = mapgrid.Grid;
+            return true;
+        }
+
         // Need to enlarge the AABB by at least the grid shrinkage size.
         var aabb = new Box2(worldPos - 0.5f, worldPos + 0.5f);
         var intersectingGrids = FindGridsIntersecting(mapId, aabb, grids, xformQuery, bodyQuery, true);

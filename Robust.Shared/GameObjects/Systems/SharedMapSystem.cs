@@ -47,20 +47,20 @@ namespace Robust.Shared.GameObjects
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
 #pragma warning disable CS0618
-            var msg = new GridInitializeEvent(uid, component.GridIndex);
+            var msg = new GridInitializeEvent(MapManager.IsMap(uid), uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
 #pragma warning disable CS0618
-            var msg = new GridStartupEvent(uid, component.GridIndex);
+            var msg = new GridStartupEvent(MapManager.IsMap(uid), uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
+            RaiseLocalEvent(uid, new GridRemovalEvent(MapManager.IsMap(uid), uid, component.GridIndex), true);
             MapManager.OnComponentRemoved(component);
         }
     }
@@ -98,25 +98,32 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618
     public sealed class GridStartupEvent : EntityEventArgs
     {
+        /// <summary>
+        /// Is this grid also a map.
+        /// </summary>
+        public readonly bool IsMap;
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridStartupEvent(EntityUid uid, GridId gridId)
+        public GridStartupEvent(bool isMap, EntityUid uid)
         {
+            IsMap = isMap;
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 
     public sealed class GridRemovalEvent : EntityEventArgs
     {
+        /// <summary>
+        /// Is this grid also a map.
+        /// </summary>
+        public readonly bool IsMap;
         public EntityUid EntityUid { get; }
         [Obsolete("Use EntityUids")]
         public GridId GridId { get; }
 
-        public GridRemovalEvent(EntityUid uid, GridId gridId)
+        public GridRemovalEvent(bool isMap, EntityUid uid, GridId gridId)
         {
+            IsMap = isMap;
             EntityUid = uid;
             GridId = gridId;
         }
@@ -127,14 +134,16 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class GridInitializeEvent : EntityEventArgs
     {
+        /// <summary>
+        /// Is this grid also a map.
+        /// </summary>
+        public readonly bool IsMap;
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridInitializeEvent(EntityUid uid, GridId gridId)
+        public GridInitializeEvent(bool isMap, EntityUid uid)
         {
+            IsMap = isMap;
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 #pragma warning restore CS0618

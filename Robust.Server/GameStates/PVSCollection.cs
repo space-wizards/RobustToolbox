@@ -19,12 +19,12 @@ public interface IPVSCollection
     /// </summary>
     public void Process();
     public void AddPlayer(ICommonSession session);
-    public void AddGrid(GridId gridId);
+    public void AddGrid(EntityUid gridId);
     public void AddMap(MapId mapId);
 
     public void RemovePlayer(ICommonSession session);
 
-    public void RemoveGrid(GridId gridId);
+    public void RemoveGrid(EntityUid gridUid);
 
     public void RemoveMap(MapId mapId);
 
@@ -60,7 +60,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which gridchunk, indexed by <see cref="Vector2i"/>.
     /// </summary>
-    private readonly Dictionary<GridId, Dictionary<Vector2i, HashSet<TIndex>>> _gridChunkContents = new();
+    private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<TIndex>>> _gridChunkContents = new();
 
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent.
@@ -146,7 +146,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             switch (chunkLocation)
             {
                 case GridChunkLocation gridChunkLocation:
-                    if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunks)) continue;
+                    if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridUid, out var gridChunks)) continue;
                     if(!gridChunks.TryGetValue(gridChunkLocation.ChunkIndices, out var chunk)) continue;
                     if(chunk.Count == 0)
                         gridChunks.Remove(gridChunkLocation.ChunkIndices);
@@ -183,8 +183,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);
 
-    public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
-        _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
+    public bool TryGetChunk(EntityUid gridUid, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
+        _gridChunkContents[gridUid].TryGetValue(chunkIndices, out indices);
 
     public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
 
@@ -197,7 +197,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 break;
             case GridChunkLocation gridChunkLocation:
                 // might be gone due to grid-deletions
-                if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunk)) return;
+                if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridUid, out var gridChunk)) return;
                 var gridLoc = gridChunk.GetOrNew(gridChunkLocation.ChunkIndices);
                 gridLoc.Add(index);
                 dirtyChunks.Add(gridChunkLocation);
@@ -232,7 +232,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 _globalOverrides.Remove(index);
                 break;
             case GridChunkLocation gridChunkLocation:
-                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Remove(index);
+                _gridChunkContents[gridChunkLocation.GridUid][gridChunkLocation.ChunkIndices].Remove(index);
                 break;
             case LocalOverride localOverride:
                 _localOverrides[localOverride.Session].Remove(index);
@@ -256,7 +256,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     }
 
     /// <inheritdoc />
-    public void AddGrid(GridId gridId) => _gridChunkContents[gridId] = new();
+    public void AddGrid(EntityUid gridId) => _gridChunkContents[gridId] = new();
 
     /// <inheritdoc />
     public void AddMap(MapId mapId) => _mapChunkContents[mapId] = new();
@@ -277,16 +277,16 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     }
 
     /// <inheritdoc />
-    public void RemoveGrid(GridId gridId)
+    public void RemoveGrid(EntityUid gridUid)
     {
-        foreach (var (_, indices) in _gridChunkContents[gridId])
+        foreach (var (_, indices) in _gridChunkContents[gridUid])
         {
             foreach (var index in indices)
             {
                 _indexLocations.Remove(index);
             }
         }
-        _gridChunkContents.Remove(gridId);
+        _gridChunkContents.Remove(gridUid);
     }
 
     /// <inheritdoc />
@@ -390,11 +390,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
-        var gridId = coordinates.GetGridId(_entityManager);
-        if (gridId != GridId.Invalid)
+        var gridUid = coordinates.GetGridUid(_entityManager);
+        if (gridUid != null)
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
-            UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+            UpdateIndex(index, gridUid.Value, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
             return;
         }
 
@@ -405,11 +405,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
     {
-        var gridId = coordinates.GetGridId(_entityManager);
-        if (gridId != GridId.Invalid)
+        var gridUid = coordinates.GetGridUid(_entityManager);
+        if (gridUid != null)
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
-            return new GridChunkLocation(gridId, gridIndices);
+            return new GridChunkLocation(gridUid.Value, gridIndices);
         }
 
         var mapCoordinates = coordinates.ToMap(_entityManager);
@@ -421,10 +421,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// Updates an <see cref="TIndex"/> using the provided <see cref="gridId"/> and <see cref="chunkIndices"/>.
     /// </summary>
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
-    /// <param name="gridId">The id of the grid.</param>
+    /// <param name="gridUid">The id of the grid.</param>
     /// <param name="chunkIndices">The indices of the chunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices, bool removeFromOverride = false)
+    public void UpdateIndex(TIndex index, EntityUid gridUid, Vector2i chunkIndices, bool removeFromOverride = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -432,9 +432,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if (_indexLocations.TryGetValue(index, out var oldLocation) &&
             oldLocation is GridChunkLocation oldGrid &&
             oldGrid.ChunkIndices == chunkIndices &&
-            oldGrid.GridId == gridId) return;
+            oldGrid.GridUid == gridUid) return;
 
-        RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
+        RegisterUpdate(index, new GridChunkLocation(gridUid, chunkIndices));
     }
 
     /// <summary>
@@ -500,18 +500,18 @@ public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable
 
 public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable<GridChunkLocation>
 {
-    public GridChunkLocation(GridId gridId, Vector2i chunkIndices)
+    public GridChunkLocation(EntityUid gridUid, Vector2i chunkIndices)
     {
-        GridId = gridId;
+        GridUid = gridUid;
         ChunkIndices = chunkIndices;
     }
 
-    public GridId GridId { get; init; }
+    public EntityUid GridUid { get; init; }
     public Vector2i ChunkIndices { get; init; }
 
     public bool Equals(GridChunkLocation other)
     {
-        return GridId.Equals(other.GridId) && ChunkIndices.Equals(other.ChunkIndices);
+        return GridUid.Equals(other.GridUid) && ChunkIndices.Equals(other.ChunkIndices);
     }
 
     public override bool Equals(object? obj)
@@ -521,7 +521,7 @@ public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatabl
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(GridId, ChunkIndices);
+        return HashCode.Combine(GridUid, ChunkIndices);
     }
 }
 

@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
+        private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
@@ -42,7 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var grid = (IMapGridInternal) mapGrid;
 
-                if (!_mapChunkData.ContainsKey(grid.Index))
+                if (!_mapChunkData.ContainsKey(grid.GridEntityId))
                 {
                     continue;
                 }
@@ -58,7 +58,7 @@ namespace Robust.Client.Graphics.Clyde
                         _updateChunkMesh(grid, chunk);
                     }
 
-                    var datum = _mapChunkData[grid.Index][chunk.Indices];
+                    var datum = _mapChunkData[grid.GridEntityId][chunk.Indices];
 
                     if (datum.TileCount == 0)
                     {
@@ -77,7 +77,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
 
             if (!data.TryGetValue(chunk.Indices, out var datum))
             {
@@ -163,19 +163,19 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.Index].Add(chunk.Indices, datum);
+            _mapChunkData[grid.GridEntityId].Add(chunk.Indices, datum);
             return datum;
         }
 
         private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
         public void _setChunkDirty(IMapGrid grid, Vector2i chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
             if (data.TryGetValue(chunk, out var datum))
             {
                 datum.Dirty = true;
@@ -195,22 +195,22 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
+            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
         {
-            var gridId = ev.GridId;
+            var gridId = ev.EntityUid;
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
-            var gridId = ev.GridId;
+            var gridUid = ev.EntityUid;
 
-            var data = _mapChunkData[gridId];
+            var data = _mapChunkData[gridUid];
             foreach (var chunkDatum in data.Values)
             {
                 DeleteVertexArray(chunkDatum.VAO);
@@ -219,7 +219,7 @@ namespace Robust.Client.Graphics.Clyde
                 chunkDatum.EBO.Delete();
             }
 
-            _mapChunkData.Remove(gridId);
+            _mapChunkData.Remove(gridUid);
         }
 
         private sealed class MapChunkData

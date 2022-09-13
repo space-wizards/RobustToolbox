@@ -42,14 +42,22 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
     }
 
-    private void StopAudioMessageHandler(StopAudioMessageClient ev)
+    #region Event Handlers
+    private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
-        var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
-        if (stream == null)
-            return;
+        var stream = EntityManager.EntityExists(ev.EntityUid)
+            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
+            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
 
-        StreamDone(stream);
-        _playingClydeStreams.Remove(stream);
+        if (stream != null)
+            stream.NetIdentifier = ev.Identifier;
+    }
+
+    private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
+    {
+        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams);
+        if (stream != null)
+            stream.NetIdentifier = ev.Identifier;
     }
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
@@ -67,22 +75,16 @@ public sealed class AudioSystem : SharedAudioSystem
             stream.NetIdentifier = ev.Identifier;
     }
 
-    private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
+    private void StopAudioMessageHandler(StopAudioMessageClient ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams);
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
-    }
+        var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
+        if (stream == null)
+            return;
 
-    private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
-    {
-        var stream = EntityManager.EntityExists(ev.EntityUid)
-            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
-            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
-
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
+        StreamDone(stream);
+        _playingClydeStreams.Remove(stream);
     }
+    #endregion
 
     public override void FrameUpdate(float frameTime)
     {

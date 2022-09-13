@@ -277,6 +277,7 @@ public sealed class AudioSystem : SharedAudioSystem
         stream.Done = true;
     }
 
+    #region Play AudioStream
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
         if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out audio))
@@ -284,6 +285,29 @@ public sealed class AudioSystem : SharedAudioSystem
 
         Logger.Error($"Server tried to play audio file {filename} which does not exist.");
         return false;
+    }
+
+    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
+    {
+        source = _clyde.CreateAudioSource(stream);
+        return source != null;
+    }
+
+    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams)
+    {
+        ApplyAudioParams(audioParams, source);
+        source.StartPlaying();
+        var playing = new PlayingStream
+        {
+            Source = source,
+            Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
+            MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
+            ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
+            RolloffFactor = audioParams?.RolloffFactor ?? 1f,
+            Volume = audioParams?.Volume ?? 0
+        };
+        _playingClydeStreams.Add(playing);
+        return playing;
     }
 
     /// <summary>
@@ -392,29 +416,7 @@ public sealed class AudioSystem : SharedAudioSystem
         playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
         return playing;
     }
-
-    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
-    {
-        source = _clyde.CreateAudioSource(stream);
-        return source != null;
-    }
-
-    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams)
-    {
-        ApplyAudioParams(audioParams, source);
-        source.StartPlaying();
-        var playing = new PlayingStream
-        {
-            Source = source,
-            Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
-            MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
-            ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
-            RolloffFactor = audioParams?.RolloffFactor ?? 1f,
-            Volume = audioParams?.Volume ?? 0
-        };
-        _playingClydeStreams.Add(playing);
-        return playing;
-    }
+    #endregion
 
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,

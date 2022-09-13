@@ -30,7 +30,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
     {
         // If appearance data is changing due to server state application, the server's comp state is getting applied
         // anyways, so we can skip this.
-        if (_timing.ApplyingState)
+        if (_timing.ApplyingState && component.NetSyncEnabled)
             return; 
 
         if (!Resolve(uid, ref component, false))

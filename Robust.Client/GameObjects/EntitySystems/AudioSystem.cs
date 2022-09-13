@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -305,19 +306,7 @@ public sealed class AudioSystem : SharedAudioSystem
         ApplyAudioParams(audioParams, source);
 
         source.SetGlobal();
-        source.StartPlaying();
-        // These defaults differ from AudioParams.Default
-        var playing = new PlayingStream
-        {
-            Source = source,
-            Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
-            MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
-            ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
-            RolloffFactor = audioParams?.RolloffFactor ?? 1f,
-            Volume = audioParams?.Volume ?? 0
-        };
-        _playingClydeStreams.Add(playing);
-        return playing;
+        return CreateAndStartPlayingStream(source, audioParams);
     }
 
     /// <summary>
@@ -362,19 +351,9 @@ public sealed class AudioSystem : SharedAudioSystem
 
         ApplyAudioParams(audioParams, source);
 
-        source.StartPlaying();
-        var playing = new PlayingStream
-        {
-            Source = source,
-            TrackingEntity = entity,
-            TrackingFallbackCoordinates = fallback != EntityCoordinates.Invalid ? fallback : null,
-            Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
-            MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
-            ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
-            RolloffFactor = audioParams?.RolloffFactor ?? 1f,
-            Volume = audioParams?.Volume ?? 0
-        };
-        _playingClydeStreams.Add(playing);
+        var playing = CreateAndStartPlayingStream(source, audioParams);
+        playing.TrackingEntity = entity;
+        playing.TrackingFallbackCoordinates = fallback != EntityCoordinates.Invalid ? fallback : null;
         return playing;
     }
 
@@ -422,12 +401,24 @@ public sealed class AudioSystem : SharedAudioSystem
 
         ApplyAudioParams(audioParams, source);
 
+        var playing = CreateAndStartPlayingStream(source, audioParams);
+        playing.TrackingCoordinates = coordinates;
+        playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
+        return playing;
+    }
+
+    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
+    {
+        source = _clyde.CreateAudioSource(stream);
+        return source != null;
+    }
+
+    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams)
+    {
         source.StartPlaying();
         var playing = new PlayingStream
         {
             Source = source,
-            TrackingCoordinates = coordinates,
-            TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
             Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
             MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
             ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,

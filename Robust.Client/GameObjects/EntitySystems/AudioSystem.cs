@@ -1,6 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
@@ -16,19 +16,18 @@ using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Threading;
 
 namespace Robust.Client.GameObjects;
 
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
@@ -47,9 +46,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
         if (stream == null)
-        {
             return;
-        }
 
         StreamDone(stream);
         _playingClydeStreams.Remove(stream);
@@ -61,38 +58,30 @@ public sealed class AudioSystem : SharedAudioSystem
 
         if (!_mapManager.MapExists(mapId))
         {
-            Logger.Error(
-                $"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
+            Logger.Error($"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
             return;
         }
 
-        var stream = (PlayingStream?)Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+        var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
         if (stream != null)
-        {
             stream.NetIdentifier = ev.Identifier;
-        }
     }
 
     private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
     {
-        var stream = (PlayingStream?)Play(ev.FileName, ev.AudioParams);
+        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams);
         if (stream != null)
-        {
             stream.NetIdentifier = ev.Identifier;
-        }
     }
 
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
-        var stream = EntityManager.EntityExists(ev.EntityUid) ?
-            (PlayingStream?)Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
-            : (PlayingStream?)Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+        var stream = EntityManager.EntityExists(ev.EntityUid)
+            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
+            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
 
         if (stream != null)
-        {
             stream.NetIdentifier = ev.Identifier;
-        }
-
     }
 
     public override void FrameUpdate(float frameTime)
@@ -100,7 +89,7 @@ public sealed class AudioSystem : SharedAudioSystem
         // Update positions of streams every frame.
         // Start with an initial pass to cull streams that need to be removed, and sort stuff out.
         Span<int> validIndices = stackalloc int[_playingClydeStreams.Count];
-        int validCount = 0;
+        var validCount = 0;
 
         // Initial clearing pass
         try
@@ -180,32 +169,25 @@ public sealed class AudioSystem : SharedAudioSystem
 
         // Occlusion calculation pass
 
-        Parallel.For(
-            0, _playingClydeStreams.Count,
-            (i) =>
+        Parallel.For(0, _playingClydeStreams.Count, i =>
+        {
+            var stream = _playingClydeStreams[i];
+            // As set earlier.
+            if (stream.OcclusionValidTemporary)
             {
-                var stream = _playingClydeStreams[i];
-                // As set earlier.
-                if (stream.OcclusionValidTemporary)
+                var pos = stream.MapCoordinatesTemporary;
+                var sourceRelative = ourPos - pos.Position;
+                var occlusion = 0f;
+                if (sourceRelative.Length > 0)
                 {
-                    var pos = stream.MapCoordinatesTemporary;
-                    var sourceRelative = ourPos - pos.Position;
-                    var occlusion = 0f;
-                    if (sourceRelative.Length > 0)
-                    {
-                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                            pos.MapId,
-                            new CollisionRay(
-                                pos.Position,
-                                sourceRelative.Normalized,
-                                OcclusionCollisionMask),
-                            sourceRelative.Length,
-                            stream.TrackingEntity);
-                    }
-                    stream.OcclusionTemporary = occlusion;
+                    occlusion = _broadPhaseSystem.IntersectRayPenetration(pos.MapId,
+                        new CollisionRay(pos.Position, sourceRelative.Normalized, OcclusionCollisionMask),
+                        sourceRelative.Length, stream.TrackingEntity);
                 }
+
+                stream.OcclusionTemporary = occlusion;
             }
-        );
+        });
 
         // Occlusion apply / Attenuation / position / velocity pass
         // Note that for streams for which MapCoordinatesTemporary isn't updated, they don't get here
@@ -215,14 +197,10 @@ public sealed class AudioSystem : SharedAudioSystem
             var pos = stream.MapCoordinatesTemporary;
 
             if (stream.OcclusionValidTemporary)
-            {
                 stream.Source.SetOcclusion(stream.OcclusionTemporary);
-            }
 
             if (pos.MapId != _eyeManager.CurrentMap)
-            {
                 stream.Source.SetVolume(-10000000);
-            }
             else
             {
                 var sourceRelative = ourPos - pos.Position;
@@ -231,9 +209,7 @@ public sealed class AudioSystem : SharedAudioSystem
                 // this is what all current code that uses MaxDistance expects and because
                 // we don't need the OpenAL behaviour.
                 if (sourceRelative.Length > stream.MaxDistance)
-                {
                     stream.Source.SetVolume(-10000000);
-                }
                 else
                 {
                     // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
@@ -251,21 +227,22 @@ public sealed class AudioSystem : SharedAudioSystem
                         // I didn't even wanna implement this much for linear but figured it'd be cleaner.
                         case Attenuation.InverseDistanceClamped:
                         case Attenuation.InverseDistance:
-                            gain = stream.ReferenceDistance /
-                                   (stream.ReferenceDistance + stream.RolloffFactor *
-                                       (distance - stream.ReferenceDistance));
+                            gain = stream.ReferenceDistance
+                                   / (stream.ReferenceDistance
+                                      + stream.RolloffFactor * (distance - stream.ReferenceDistance));
 
                             break;
                         case Attenuation.LinearDistanceClamped:
                         case Attenuation.LinearDistance:
-                            gain = 1f - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
-                                (stream.MaxDistance - stream.ReferenceDistance);
+                            gain = 1f
+                                   - stream.RolloffFactor
+                                   * (distance - stream.ReferenceDistance)
+                                   / (stream.MaxDistance - stream.ReferenceDistance);
 
                             break;
                         case Attenuation.ExponentDistanceClamped:
                         case Attenuation.ExponentDistance:
-                            gain = MathF.Pow((distance / stream.ReferenceDistance),
-                                (-stream.RolloffFactor));
+                            gain = MathF.Pow(distance / stream.ReferenceDistance, -stream.RolloffFactor);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
@@ -280,14 +257,12 @@ public sealed class AudioSystem : SharedAudioSystem
 
                     if (!stream.Source.SetPosition(audioPos))
                     {
-                        Logger.Warning($"Interrupting positional audio, can't set position.");
+                        Logger.Warning("Interrupting positional audio, can't set position.");
                         stream.Source.StopPlaying();
                     }
 
                     if (stream.TrackingEntity != default)
-                    {
                         stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
-                    }
                 }
             }
         }
@@ -307,9 +282,7 @@ public sealed class AudioSystem : SharedAudioSystem
     private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null)
     {
         if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
             return Play(audio, audioParams);
-        }
 
         Logger.Error($"Server tried to play audio file {filename} which does not exist.");
         return default;
@@ -325,9 +298,7 @@ public sealed class AudioSystem : SharedAudioSystem
         var source = _clyde.CreateAudioSource(stream);
 
         if (source == null)
-        {
             return null;
-        }
 
         ApplyAudioParams(audioParams, source);
 
@@ -358,9 +329,7 @@ public sealed class AudioSystem : SharedAudioSystem
         AudioParams? audioParams = null)
     {
         if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
             return Play(audio, entity, fallbackCoordinates, audioParams);
-        }
 
         Logger.Error($"Server tried to play audio file {filename} which does not exist.");
         return default;
@@ -379,19 +348,15 @@ public sealed class AudioSystem : SharedAudioSystem
         var source = _clyde.CreateAudioSource(stream);
 
         if (source == null)
-        {
             return null;
-        }
 
         var query = GetEntityQuery<TransformComponent>();
         var xform = query.GetComponent(entity);
         var worldPos = _xformSys.GetWorldPosition(xform, query);
-        fallback ??= GetFallbackCoordinates(new(worldPos, xform.MapID));
+        fallback ??= GetFallbackCoordinates(new MapCoordinates(worldPos, xform.MapID));
 
         if (!source.SetPosition(worldPos))
-        {
             return Play(stream, fallback.Value, fallback.Value, audioParams);
-        }
 
         ApplyAudioParams(audioParams, source);
 
@@ -418,13 +383,11 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, EntityCoordinates fallbackCoordinates,
-        AudioParams? audioParams = null)
+    private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates,
+        EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
     {
         if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
             return Play(audio, coordinates, fallbackCoordinates, audioParams);
-        }
 
         Logger.Error($"Server tried to play audio file {filename} which does not exist.");
         return default;
@@ -443,9 +406,7 @@ public sealed class AudioSystem : SharedAudioSystem
         var source = _clyde.CreateAudioSource(stream);
 
         if (source == null)
-        {
             return null;
-        }
 
         if (!source.SetPosition(fallbackCoordinates.Position))
         {
@@ -455,9 +416,7 @@ public sealed class AudioSystem : SharedAudioSystem
         }
 
         if (!coordinates.IsValid(EntityManager))
-        {
             coordinates = fallbackCoordinates;
-        }
 
         ApplyAudioParams(audioParams, source);
 
@@ -478,23 +437,22 @@ public sealed class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,
+        AudioParams? audioParams = null)
     {
         if (_timing.IsFirstTimePredicted || sound == null)
             return Play(sound, Filter.Local(), source, audioParams);
-        else
-            return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
+        return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
     private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
     {
         if (!audioParams.HasValue)
-        {
             return;
-        }
 
         if (audioParams.Value.Variation.HasValue)
-            source.SetPitch(audioParams.Value.PitchScale * (float)RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
+            source.SetPitch(audioParams.Value.PitchScale
+                            * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
         else
             source.SetPitch(audioParams.Value.PitchScale);
 

@@ -301,9 +301,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!TryCreateAudioSource(stream, out var source))
             return null;
 
-        ApplyAudioParams(audioParams, source);
-
         source.SetGlobal();
+
         return CreateAndStartPlayingStream(source, audioParams);
     }
 
@@ -331,7 +330,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallback = null,
+    private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
         AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
@@ -340,16 +339,14 @@ public sealed class AudioSystem : SharedAudioSystem
         var query = GetEntityQuery<TransformComponent>();
         var xform = query.GetComponent(entity);
         var worldPos = _xformSys.GetWorldPosition(xform, query);
-        fallback ??= GetFallbackCoordinates(new MapCoordinates(worldPos, xform.MapID));
+        fallbackCoordinates ??= GetFallbackCoordinates(new MapCoordinates(worldPos, xform.MapID));
 
         if (!source.SetPosition(worldPos))
-            return Play(stream, fallback.Value, fallback.Value, audioParams);
-
-        ApplyAudioParams(audioParams, source);
+            return Play(stream, fallbackCoordinates.Value, fallbackCoordinates.Value, audioParams);
 
         var playing = CreateAndStartPlayingStream(source, audioParams);
         playing.TrackingEntity = entity;
-        playing.TrackingFallbackCoordinates = fallback != EntityCoordinates.Invalid ? fallback : null;
+        playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
         return playing;
     }
 
@@ -393,8 +390,6 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             coordinates = fallbackCoordinates;
 
-        ApplyAudioParams(audioParams, source);
-
         var playing = CreateAndStartPlayingStream(source, audioParams);
         playing.TrackingCoordinates = coordinates;
         playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
@@ -409,6 +404,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams)
     {
+        ApplyAudioParams(audioParams, source);
         source.StartPlaying();
         var playing = new PlayingStream
         {

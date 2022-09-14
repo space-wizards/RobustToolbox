@@ -6,6 +6,7 @@ using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -36,6 +37,11 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IReflectionManager reflection = default!;
         [Dependency] private readonly IEyeManager eyeManager = default!;
 
+        /// <summary>
+        ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
+        /// </summary>
+        public static double DirectionBias = -0.05;
+
         [DataField("visible")]
         private bool _visible = true;
 
@@ -48,7 +54,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                QueueUpdateRenderTree();
             }
         }
 
@@ -78,6 +84,7 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
             }
@@ -156,6 +163,8 @@ namespace Robust.Client.GameObjects
                 }
 
                 _layerMapShared = true;
+
+                QueueUpdateRenderTree();
                 QueueUpdateIsInert();
             }
         }
@@ -222,7 +231,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                QueueUpdateRenderTree();
             }
         }
 
@@ -634,6 +643,8 @@ namespace Robust.Client.GameObjects
 
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
+            _bounds = _bounds.Scale(Scale);
+            QueueUpdateRenderTree();
         }
 
         /// <summary>
@@ -1392,11 +1403,11 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            // Reduce the angles to fix math shenanigans
-            worldRotation = worldRotation.Reduced().FlipPositive();
-
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             var cardinal = Angle.Zero;
+
+            // Reduce the angles to fix math shenanigans
+            angle = angle.Reduced().FlipPositive();
 
             // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
             if (!NoRotation && SnapCardinals)
@@ -1516,20 +1527,24 @@ namespace Robust.Client.GameObjects
             LayerDatums = thestate.Layers;
         }
 
-        private void QueueUpdateIsInert()
+        private void QueueUpdateRenderTree()
         {
-            // Look this was an easy way to get bounds checks for layer updates.
-            // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            if ((Owner != default ? entities : null)?.EventBus != null)
-                UpdateBounds();
-
-            if (_inertUpdateQueued)
+            if (TreeUpdateQueued || Owner == default || entities?.EventBus == null)
                 return;
 
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+            TreeUpdateQueued = true;
+            entities.EventBus.RaiseLocalEvent(Owner, new UpdateSpriteTreeEvent());
+        }
+
+        private void QueueUpdateIsInert()
+        {
+            if (_inertUpdateQueued || Owner == default || entities?.EventBus == null)
+                return;
+
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             _inertUpdateQueued = true;
-            // Yes that null check is valid because of that stupid fucking dummy IEntity.
-            // Who thought that was a good idea.
-            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            entities.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1612,17 +1627,9 @@ namespace Robust.Client.GameObjects
 
             eye ??= eyeManager.CurrentEye;
 
-            // we need to calculate bounding box taking into account all nested layers
-            // because layers can have offsets, scale or rotation, we need to calculate a new BB
-            // based on lowest bottomLeft and highest topRight points from all layers
-            var box = Bounds;
-
             // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
             // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
             // transform our box by the combination of these matrices:
-
-            if (Scale != Vector2.One)
-                box = box.Scale(Scale);
 
             var adjustedOffset = NoRotation
                 ? (-eye.Rotation).RotateVec(Offset)
@@ -1633,12 +1640,7 @@ namespace Robust.Client.GameObjects
                 ? Rotation - eye.Rotation
                 : Rotation + worldRotation;
 
-            return new Box2Rotated(box.Translated(position), finalRotation, position);
-        }
-
-        internal void UpdateBounds()
-        {
-            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+            return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
         }
 
         /// <summary>
@@ -1722,7 +1724,7 @@ namespace Robust.Client.GameObjects
 
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1737,7 +1739,7 @@ namespace Robust.Client.GameObjects
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Angle _rotation = Angle.Zero;
@@ -1764,7 +1766,7 @@ namespace Robust.Client.GameObjects
 
                     _offset = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
 
@@ -1975,6 +1977,7 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2015,6 +2018,7 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2048,8 +2052,7 @@ namespace Robust.Client.GameObjects
 
                 // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
                 // any possible rotation.
-                if (_rotation != 0 ||
-                    _parent.NoRotation) // no-rot effectively means _rotation = - eyeRotation, so we still have to assume the worst-case BB
+                if (_rotation != 0)
                 {
                     size = new Vector2(longestRotatedSide, longestRotatedSide);
                 }
@@ -2124,14 +2127,43 @@ namespace Robust.Client.GameObjects
                 Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
             };
 
+            /// <summary>
+            ///     Converts an angle (between 0 and 2pi) to an RSI direction. This will slightly bias the angle to avoid flickering for
+            ///     4-directional sprites.
+            /// </summary>
+            public static RSIDirection GetDirection(RSI.State.DirectionType dirType, Angle angle)
+            {
+                if (dirType == RSI.State.DirectionType.Dir1)
+                    return RSIDirection.South;
+                else if (dirType == RSI.State.DirectionType.Dir8)
+                    return angle.GetDir().Convert(dirType);
+
+                // For 4-directional sprites, as entities are often moving & facing diagonally, we will slightly bias the
+                // angle to avoid the sprite flickering.
+
+                // mod is -0.5 for angles between 0-90 and 180-270, and +0.5 for 90-180 and 270-360
+                var mod = (Math.Floor(angle.Theta / MathHelper.PiOver2) % 2) - 0.5;
+
+                var modTheta = angle.Theta + mod * DirectionBias;
+
+                return ((int)Math.Round(modTheta / MathHelper.PiOver2) % 4) switch
+                {
+                    0 => RSIDirection.South,
+                    1 => RSIDirection.East,
+                    2 => RSIDirection.North,
+                    _ => RSIDirection.West,
+                };
+            }
+
+            /// <summary>
+            ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
+            /// </summary>
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
                 if (!Visible || Blank)
                     return;
 
-                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
-                    ? RSIDirection.South
-                    : angle.ToRsiDirection(_actualState.Directions);
+                var dir = _actualState == null ? RSIDirection.South : GetDirection(_actualState.Directions, angle);
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
@@ -2303,7 +2335,8 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+    internal sealed class UpdateSpriteTreeEvent : EntityEventArgs
     {
 
     }

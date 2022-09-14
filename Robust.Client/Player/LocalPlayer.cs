@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -91,10 +92,6 @@ namespace Robust.Client.Player
                 !metaData.EntityDeleted)
             {
                 entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
-
-                // notify ECS Systems
-                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
-                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
             }
 
             ControlledEntity = null;
@@ -102,6 +99,8 @@ namespace Robust.Client.Player
 
             if (previous != null)
             {
+                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
+                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
                 EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
             }
         }

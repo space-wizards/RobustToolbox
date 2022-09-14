@@ -34,12 +34,27 @@ namespace Robust.Shared.GameObjects
         void StartComponents(EntityUid uid);
 
         /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        public int Count<T>() where T : Component;
+
+        /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        int Count(Type component);
+
+        /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
         T AddComponent<T>(EntityUid uid) where T : Component, new();
+
+        /// <summary>
+        ///     Adds a Component with a given network id to an entity.
+        /// </summary>
+        Component AddComponent(EntityUid uid, ushort netId);
 
         /// <summary>
         ///     Adds an uninitialized Component type to an entity.

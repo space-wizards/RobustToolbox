@@ -89,12 +89,26 @@ namespace Robust.Shared.GameObjects
             AddComponentRefType(obj.Idx);
         }
 
+        #region Component Management
+
         private void OnComponentReferenceAdded(ComponentRegistration reg, CompIdx type)
         {
             AddComponentRefType(type);
         }
 
-        #region Component Management
+        /// <inheritdoc />
+        public int Count<T>() where T : Component
+        {
+            var dict = _entTraitDict[typeof(T)];
+            return dict.Count;
+        }
+
+        /// <inheritdoc />
+        public int Count(Type component)
+        {
+            var dict = _entTraitDict[component];
+            return dict.Count;
+        }
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
@@ -175,6 +189,14 @@ namespace Robust.Shared.GameObjects
                 if (comp is { LifeStage: ComponentLifeStage.Initialized })
                     comp.LifeStartup(this);
             }
+        }
+
+        public Component AddComponent(EntityUid uid, ushort netId)
+        {
+            var newComponent = (Component)_componentFactory.GetComponent(netId);
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
         }
 
         public T AddComponent<T>(EntityUid uid) where T : Component, new()

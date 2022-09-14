@@ -71,7 +71,7 @@ namespace Robust.Client.GameObjects
                 return base.ToPrettyString(uid);
         }
 
-        public void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+        public override void RaisePredictiveEvent<T>(T msg)
         {
             var localPlayer = _playerManager.LocalPlayer;
             DebugTools.AssertNotNull(localPlayer);

@@ -678,4 +678,17 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region Networked Events
+
+    /// <summary>
+    ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+    {
+        EntityManager.RaisePredictiveEvent(msg);
+    }
+
+    #endregion
 }

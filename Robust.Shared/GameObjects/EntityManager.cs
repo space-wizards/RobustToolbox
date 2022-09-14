@@ -563,9 +563,16 @@ namespace Robust.Shared.GameObjects
             return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
-#endregion Entity Management
+        #endregion Entity Management
 
-/// <summary>
+        public virtual void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+        {
+            // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
+            // server should never be calling this.
+            DebugTools.Assert("Why are you raising predictive events on the server?");
+        }
+
+        /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         /// <inheritdoc />

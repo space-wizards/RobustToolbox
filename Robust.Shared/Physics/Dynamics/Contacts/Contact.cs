@@ -34,6 +34,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {

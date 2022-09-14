@@ -37,9 +37,8 @@ namespace Robust.Shared.Network.Messages
         /// </summary>
         public object Value { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             SessionId = buffer.ReadUInt32();
             {
                 var length = buffer.ReadInt32();
@@ -54,9 +53,8 @@ namespace Robust.Shared.Network.Messages
             ReinterpretValue = buffer.ReadBoolean();
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             buffer.Write(SessionId);
 
             var stream = new MemoryStream();

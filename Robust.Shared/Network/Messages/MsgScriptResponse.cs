@@ -19,15 +19,13 @@ namespace Robust.Shared.Network.Messages
         public FormattedMessage Echo;
         public FormattedMessage Response;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             ScriptSession = buffer.ReadInt32();
             WasComplete = buffer.ReadBoolean();
 
             if (WasComplete)
             {
-                var serializer = IoCManager.Resolve<IRobustSerializer>();
-
                 buffer.ReadPadBits();
                 var length = buffer.ReadVariableInt32();
                 using var stream = buffer.ReadAlignedMemory(length);
@@ -36,7 +34,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(ScriptSession);
             buffer.Write(WasComplete);
@@ -44,7 +42,6 @@ namespace Robust.Shared.Network.Messages
             if (WasComplete)
             {
                 buffer.WritePadBits();
-                var serializer = IoCManager.Resolve<IRobustSerializer>();
 
                 var memoryStream = new MemoryStream();
                 serializer.SerializeDirect(memoryStream, Echo);

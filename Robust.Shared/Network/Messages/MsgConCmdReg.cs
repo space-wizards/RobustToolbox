@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -18,7 +19,7 @@ namespace Robust.Shared.Network.Messages
             public string Help { get; set; }
         }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var cmdCount = buffer.ReadUInt16();
             Commands = new Command[cmdCount];
@@ -33,7 +34,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             if(Commands == null) // client leaves comands as null to request from server
                 Commands = new Command[0];

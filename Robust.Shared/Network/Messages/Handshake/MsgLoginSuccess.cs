@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -14,7 +15,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public NetUserData UserData;
         public LoginType Type;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var name = buffer.ReadString();
             var id = buffer.ReadGuid();
@@ -26,7 +27,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             Type = (LoginType) buffer.ReadByte();
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(UserData.UserName);
             buffer.Write(UserData.UserId);

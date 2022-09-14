@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -14,7 +15,7 @@ namespace Robust.Shared.Network.Messages
         public byte PlyCount { get; set; }
         public List<PlayerState> Plyrs { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             Plyrs = new List<PlayerState>();
             PlyCount = buffer.ReadByte();
@@ -31,7 +32,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(PlyCount);
 

@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
-using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Systems
 {
     // These exist as a means to defer joint additions / removals so we can use HandleComponentState gracefully without
     // exploding for modifying components.

@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.UnitTesting.Shared.Map
 {

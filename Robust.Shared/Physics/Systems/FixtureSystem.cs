@@ -7,11 +7,12 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Systems
 {
     /// <summary>
     /// Manages physics fixtures.

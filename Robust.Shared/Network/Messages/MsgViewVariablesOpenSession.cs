@@ -1,4 +1,5 @@
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -22,13 +23,13 @@ namespace Robust.Shared.Network.Messages
         /// </summary>
         public uint SessionId { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             RequestId = buffer.ReadUInt32();
             SessionId = buffer.ReadUInt32();
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(RequestId);
             buffer.Write(SessionId);

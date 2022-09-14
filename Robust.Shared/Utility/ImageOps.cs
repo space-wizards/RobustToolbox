@@ -56,9 +56,9 @@ internal static class ImageOps
     /// <exception cref="ArgumentException">Thrown if the image is not a single contiguous buffer.</exception>
     public static Span<T> GetPixelSpan<T>(Image<T> image) where T : unmanaged, IPixel<T>
     {
-        if (!image.TryGetSinglePixelSpan(out var span))
+        if (!image.DangerousTryGetSinglePixelMemory(out var memory))
             throw new ArgumentException("Image is not backed by a single buffer, cannot fetch span.");
 
-        return span;
+        return memory.Span;
     }
 }

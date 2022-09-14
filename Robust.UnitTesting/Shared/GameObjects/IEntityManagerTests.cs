@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -44,6 +45,22 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entMan = sim.Resolve<IEntityManager>();
             var newEnt = entMan.SpawnEntity("dummy", new MapCoordinates(0, 0, TestMapId));
             Assert.That(newEnt, Is.Not.EqualTo(EntityUid.Invalid));
+        }
+
+        [Test]
+        public void ComponentCount_Works()
+        {
+            var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+
+            var entManager = sim.Resolve<IEntityManager>();
+            var mapManager = sim.Resolve<IMapManager>();
+
+            Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
+
+            var mapId = mapManager.CreateMap();
+            Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(1));
+            mapManager.DeleteMap(mapId);
+            Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
         }
     }
 }

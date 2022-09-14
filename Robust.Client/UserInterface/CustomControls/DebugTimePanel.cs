@@ -1,6 +1,7 @@
 using System;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -10,13 +11,13 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class DebugTimePanel : PanelContainer
     {
-        private readonly IGameTiming _gameTiming;
+        private readonly IClientGameTiming _gameTiming;
         private readonly IClientGameStateManager _gameState;
 
         private readonly char[] _textBuffer = new char[256];
         private readonly Label _contents;
 
-        public DebugTimePanel(IGameTiming gameTiming, IClientGameStateManager gameState)
+        public DebugTimePanel(IClientGameTiming gameTiming, IClientGameStateManager gameState)
         {
             _gameTiming = gameTiming;
             _gameState = gameState;
@@ -53,7 +54,7 @@ namespace Robust.Client.UserInterface.CustomControls
             // This is why there's a -1 on Pred:.
 
             _contents.TextMemory = FormatHelpers.FormatIntoMem(_textBuffer,
-                $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}/{_gameTiming.CurTick - 1}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value - 1}
+                $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}, LastProcessed: {_gameTiming.LastProcessedTick}, LastRealTick: {_gameTiming.LastRealTick}, Pred: {_gameTiming.CurTick.Value - _gameTiming.LastRealTick.Value - 1}
 CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
 ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}");
         }

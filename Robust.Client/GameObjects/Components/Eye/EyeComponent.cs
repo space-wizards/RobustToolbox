@@ -136,15 +136,15 @@ namespace Robust.Client.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is EyeComponentState state))
+            if (curState is not EyeComponentState state)
             {
                 return;
             }
 
             DrawFov = state.DrawFov;
+            // TODO: Should be a way for content to override lerping and lerp the zoom
             Zoom = state.Zoom;
             Offset = state.Offset;
-            Rotation = state.Rotation;
             VisibilityMask = state.VisibilityMask;
         }
 

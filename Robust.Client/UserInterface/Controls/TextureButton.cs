@@ -1,5 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -15,6 +17,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
         public const string StylePseudoClassPressed = "pressed";
+        private string? _texturePath;
+
 
         public TextureButton()
         {
@@ -29,6 +33,29 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _textureNormal = value;
                 InvalidateMeasure();
+            }
+        }
+
+        public string TextureThemePath
+        {
+            set {
+                TextureNormal = Theme.ResolveTexture(value);
+                _texturePath = value;
+            }
+        }
+
+
+        protected override void OnThemeUpdated()
+        {
+            if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
+            base.OnThemeUpdated();
+        }
+        public string TexturePath
+        {
+            set
+            {
+                TextureNormal = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
+                _texturePath = value;
             }
         }
 

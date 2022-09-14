@@ -107,6 +107,7 @@ namespace Robust.Server.Console.Commands
                 }
 
                 playerTransform.Coordinates = targetCoords;
+                playerTransform.AttachToGridOrMap();
             }
             else
             {
@@ -119,6 +120,7 @@ namespace Robust.Server.Console.Commands
                         return;
 
                     victimTransform.Coordinates = targetCoords;
+                    victimTransform.AttachToGridOrMap();
                 }
             }
         }

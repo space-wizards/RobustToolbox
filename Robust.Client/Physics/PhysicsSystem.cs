@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics
@@ -16,11 +17,10 @@ namespace Robust.Client.Physics
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
-        protected override void HandleMapCreated(MapChangedEvent eventArgs)
+        protected override void OnMapAdded(ref MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            var mapUid = MapManager.GetMapEntityId(eventArgs.Map);
-            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
+            EnsureComp<PhysicsMapComponent>(MapManager.GetMapEntityId(eventArgs.Map));
         }
     }
 }

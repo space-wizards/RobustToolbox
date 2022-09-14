@@ -44,6 +44,7 @@ namespace Robust.Server.ServerStatus
         private ISawmill _aczPackagingSawmill = default!;
 
         private string? _serverNameCache;
+        private string[]? _serverTagsCache;
 
         public async Task ProcessRequestAsync(HttpListenerContext context)
         {
@@ -103,9 +104,20 @@ namespace Robust.Server.ServerStatus
 
             RegisterCVars();
 
-            // Cache this in a field to avoid thread safety shenanigans.
+            // Cache these in fields to avoid thread safety shenanigans.
             // Writes/reads of references are atomic in C# so no further synchronization necessary.
             _cfg.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
+            _cfg.OnValueChanged(CVars.HubTags, t =>
+                {
+                    var tags = t.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    for (var i = 0; i < tags.Length; i++)
+                    {
+                        tags[i] = tags[i].Trim();
+                    }
+                    _serverTagsCache = tags;
+                },
+                true
+            );
 
             if (!_cfg.GetCVar(CVars.StatusEnabled))
             {

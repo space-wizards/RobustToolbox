@@ -177,7 +177,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var (id, component) in source)
             {
-                target.Add(id, serializationManager.CreateCopy(component, context)!);
+                target.Add(id, serializationManager.Copy(component, context)!);
             }
 
             return target;

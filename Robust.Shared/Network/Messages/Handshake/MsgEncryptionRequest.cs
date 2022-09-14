@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -13,7 +14,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public byte[] VerifyToken;
         public byte[] PublicKey;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var tokenLength = buffer.ReadVariableInt32();
             VerifyToken = buffer.ReadBytes(tokenLength);
@@ -21,7 +22,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             PublicKey = buffer.ReadBytes(keyLength);
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.WriteVariableInt32(VerifyToken.Length);
             buffer.Write(VerifyToken);

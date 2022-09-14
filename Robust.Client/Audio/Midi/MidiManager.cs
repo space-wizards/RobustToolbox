@@ -16,6 +16,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -99,6 +100,8 @@ internal sealed partial class MidiManager : IMidiManager
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
+
+    private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
 
     private const float MaxDistanceForOcclusion = 1000;
 
@@ -227,7 +230,7 @@ internal sealed partial class MidiManager : IMidiManager
 
                     try
                     {
-                        renderer.LoadSoundfont(filepath, true);
+                        renderer.LoadSoundfont(filepath);
                     }
                     catch (Exception)
                     {
@@ -240,16 +243,16 @@ internal sealed partial class MidiManager : IMidiManager
             else if (OperatingSystem.IsMacOS())
             {
                 if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
-                    renderer.LoadSoundfont(OsxSoundfont, true);
+                    renderer.LoadSoundfont(OsxSoundfont);
             }
             else if (OperatingSystem.IsWindows())
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
-                    renderer.LoadSoundfont(WindowsSoundfont, true);
+                    renderer.LoadSoundfont(WindowsSoundfont);
             }
 
             // Load content-specific custom soundfonts, which could override the system/fallback soundfont.
-            foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
+            foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
                 if (file.Extension != "sf2" && file.Extension != "dls") continue;
                 renderer.LoadSoundfont(file.ToString());
@@ -287,65 +290,68 @@ internal sealed partial class MidiManager : IMidiManager
         }
 
         // Update positions of streams every frame.
-        foreach (var renderer in _renderers)
+        lock (_renderers)
         {
-            if (renderer.Disposed)
-                continue;
-
-            if(_volumeDirty)
-                renderer.Source.SetVolume(Volume);
-
-            if (!renderer.Mono)
+            foreach (var renderer in _renderers)
             {
-                renderer.Source.SetGlobal();
-                continue;
-            }
+                if (renderer.Disposed)
+                    continue;
 
-            MapCoordinates? mapPos = null;
-            var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-            if (trackingEntity)
-            {
-                renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
-            }
+                if(_volumeDirty)
+                    renderer.Source.SetVolume(Volume);
 
-            if (renderer.TrackingCoordinates != null)
-            {
-                mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-            }
-
-            if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
-            {
-                var pos = mapPos.Value;
-
-                var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                var occlusion = 0f;
-                if (sourceRelative.Length > 0)
+                if (!renderer.Mono)
                 {
-                    occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                        pos.MapId,
-                        new CollisionRay(
-                            pos.Position,
-                            sourceRelative.Normalized,
-                            OcclusionCollisionMask),
-                        MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
-                        renderer.TrackingEntity);
+                    renderer.Source.SetGlobal();
+                    continue;
                 }
 
-                renderer.Source.SetOcclusion(occlusion);
-
-                if (!renderer.Source.SetPosition(pos.Position))
-                {
-                    return;
-                }
-
+                MapCoordinates? mapPos = null;
+                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
                 if (trackingEntity)
                 {
-                    renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
+                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
                 }
-            }
-            else
-            {
-                renderer.Source.SetOcclusion(float.MaxValue);
+
+                if (renderer.TrackingCoordinates != null)
+                {
+                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+                }
+
+                if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
+                {
+                    var pos = mapPos.Value;
+
+                    var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                    var occlusion = 0f;
+                    if (sourceRelative.Length > 0)
+                    {
+                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                            pos.MapId,
+                            new CollisionRay(
+                                pos.Position,
+                                sourceRelative.Normalized,
+                                OcclusionCollisionMask),
+                            MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
+                            renderer.TrackingEntity);
+                    }
+
+                    renderer.Source.SetOcclusion(occlusion);
+
+                    if (!renderer.Source.SetPosition(pos.Position))
+                    {
+                        return;
+                    }
+
+                    if (trackingEntity)
+                    {
+                        renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
+                    }
+                }
+                else
+                {
+                    renderer.Source.SetOcclusion(float.MaxValue);
+                }
             }
         }
 

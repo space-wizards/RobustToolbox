@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -28,6 +29,7 @@ namespace Robust.Server.Physics
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
         private ISawmill _logger = default!;
+        // TODO: This should really be on a component sloth.
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
         /// <summary>
@@ -45,16 +47,56 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Shared.Log.Logger.GetSawmill("gsplit");
+            _logger = Logger.GetSawmill("gsplit");
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
             var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
+#if !FULL_RELEASE
+            // It makes mapping painful
+            configManager.OverrideDefault(CVars.GridSplitting, false);
+#endif
+            // Don't invoke immediately as maploader will handle this.
+            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
-        private void SetSplitAllowed(bool value) => SplitAllowed = value;
+        private void SetSplitAllowed(bool value)
+        {
+            if (SplitAllowed.Equals(value)) return;
+            SplitAllowed = value;
+
+            if (SplitAllowed)
+            {
+                foreach (var grid in _mapManager.GetAllGrids())
+                {
+                    EnsureGrid(grid.GridEntityId);
+                    GenerateSplitNodes((IMapGridInternal) grid);
+                }
+
+                foreach (var (uid, _) in _nodes)
+                {
+                    SendNodeDebug(uid);
+                }
+            }
+            else
+            {
+                foreach (var (uid, _) in _nodes)
+                {
+                    var msg = new ChunkSplitDebugMessage
+                    {
+                        Grid = uid,
+                    };
+
+                    foreach (var session in _subscribedSessions)
+                    {
+                        RaiseNetworkEvent(msg, session.ConnectedClient);
+                    }
+                }
+
+                _nodes.Clear();
+            }
+        }
 
         public override void Shutdown()
         {
@@ -69,7 +111,7 @@ namespace Robust.Server.Physics
         /// </summary>
         internal void EnsureGrid(EntityUid uid)
         {
-            if (!_nodes.ContainsKey(uid))
+            if (SplitAllowed && !_nodes.ContainsKey(uid))
                 _nodes[uid] = new Dictionary<Vector2i, ChunkNodeGroup>();
         }
 
@@ -166,6 +208,8 @@ namespace Robust.Server.Physics
         /// </summary>
         internal void CheckSplits(EntityUid uid)
         {
+            if (!SplitAllowed) return;
+
             var nodes = _nodes[uid];
             var dirtyNodes = new HashSet<ChunkSplitNode>(nodes.Count);
 
@@ -363,6 +407,8 @@ namespace Robust.Server.Physics
 
         private void GenerateSplitNodes(IMapGridInternal grid)
         {
+            if (!SplitAllowed) return;
+
             foreach (var (_, chunk) in grid.GetMapChunks())
             {
                 var group = CreateNodes(grid.GridEntityId, grid, chunk);
@@ -505,6 +551,8 @@ namespace Robust.Server.Physics
         /// </summary>
         internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
         {
+            if (!SplitAllowed) return;
+
             HashSet<ChunkSplitNode> nodes;
 
             if (chunk.FilledTiles == 0)
@@ -524,6 +572,8 @@ namespace Robust.Server.Physics
         /// </summary>
         internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks)
         {
+            if (!SplitAllowed) return;
+
             var nodes = new HashSet<ChunkSplitNode>();
 
             foreach (var chunk in removedChunks)

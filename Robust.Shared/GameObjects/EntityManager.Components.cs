@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Log;
 using System.Diagnostics;
+using Robust.Shared.Physics.Components;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -88,12 +89,26 @@ namespace Robust.Shared.GameObjects
             AddComponentRefType(obj.Idx);
         }
 
+        #region Component Management
+
         private void OnComponentReferenceAdded(ComponentRegistration reg, CompIdx type)
         {
             AddComponentRefType(type);
         }
 
-        #region Component Management
+        /// <inheritdoc />
+        public int Count<T>() where T : Component
+        {
+            var dict = _entTraitDict[typeof(T)];
+            return dict.Count;
+        }
+
+        /// <inheritdoc />
+        public int Count(Type component)
+        {
+            var dict = _entTraitDict[component];
+            return dict.Count;
+        }
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
@@ -176,6 +191,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        public Component AddComponent(EntityUid uid, ushort netId)
+        {
+            var newComponent = (Component)_componentFactory.GetComponent(netId);
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
+        }
+
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
@@ -226,7 +249,7 @@ namespace Robust.Shared.GameObjects
             newComponent.Owner = uid;
 
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
 
@@ -252,6 +275,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            DebugTools.Assert(component is MetaDataComponent ||
+                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -463,20 +490,12 @@ namespace Robust.Shared.GameObjects
 
             if (component.Running)
                 component.LifeShutdown(this);
-
-            if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity(this);
-
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
-            ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
-
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
             {
                 _runtimeLog.LogException(e,
-                    $"RemoveComponentDeferred, owner={component.Owner}, type={component.GetType()}");
+                    $"RemoveComponentDeferred, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
             }
 #endif
         }
@@ -517,7 +536,7 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _runtimeLog.LogException(e,
-                    $"RemoveComponentImmediate, owner={component.Owner}, type={component.GetType()}");
+                    $"RemoveComponentImmediate, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
             }
 #endif
 
@@ -529,6 +548,37 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var component in InSafeOrder(_deleteSet))
             {
+                if (component.Deleted)
+                    continue;
+
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
+                // The component may have been restarted sometime after removal was deferred.
+                if (component.Running)
+                {
+                    // TODO add options to cancel deferred deletion?
+                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                    component.LifeShutdown(this);
+                }
+
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity(this);
+
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner));
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
+
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                _runtimeLog.LogException(e,
+                    $"CullRemovedComponents, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+            }
+#endif
+
                 DeleteComponent(component);
             }
 
@@ -542,15 +592,15 @@ namespace Robust.Shared.GameObjects
             var entityUid = component.Owner;
 
             // ReSharper disable once InvertIf
-            if (reg.NetID != null)
+            if (reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
-                var netSet = _netComponents[entityUid];
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                Dirty(entityUid);
+                if (component.NetSyncEnabled)
+                    Dirty(entityUid);
             }
 
             foreach (var refType in reg.References)
@@ -566,7 +616,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return _entTraitArray[CompIdx.ArrayIndex<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
+            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            return dict!.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -647,7 +699,8 @@ namespace Robust.Shared.GameObjects
         public T GetComponent<T>(EntityUid uid)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            if (dict.TryGetValue(uid, out var comp))
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            if (dict!.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -697,7 +750,8 @@ namespace Robust.Shared.GameObjects
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            if (dict.TryGetValue(uid, out var comp))
+            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
+            if (dict!.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -826,7 +880,16 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
         {
-            return new EntityQuery<TComp1>(_entTraitArray[CompIdx.ArrayIndex<TComp1>()]);
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
+            return new EntityQuery<TComp1>(comps!);
+        }
+
+        public EntityQuery<Component> GetEntityQuery(Type type)
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
+            return new EntityQuery<Component>(comps!);
         }
 
         /// <inheritdoc />
@@ -884,10 +947,11 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<T>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(T).Name}");
 
             if (includePaused)
             {
-                foreach (var t1Comp in comps.Values)
+                foreach (var t1Comp in comps!.Values)
                 {
                     if (t1Comp.Deleted) continue;
 
@@ -898,7 +962,7 @@ namespace Robust.Shared.GameObjects
             {
                 var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
 
-                foreach (var t1Comp in comps.Values)
+                foreach (var t1Comp in comps!.Values)
                 {
                     if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
 
@@ -1105,6 +1169,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
         {
+            DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 

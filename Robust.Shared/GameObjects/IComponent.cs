@@ -32,7 +32,7 @@ namespace Robust.Shared.GameObjects
         ///     This flag has no effect if <see cref="NetworkedComponentAttribute" /> is not defined on the component.
         ///     This is enabled by default.
         /// </summary>
-        bool NetSyncEnabled { get; }
+        bool NetSyncEnabled { get; set; }
 
         /// <summary>
         ///     Entity that this component is attached to.

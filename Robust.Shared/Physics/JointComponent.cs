@@ -18,8 +18,7 @@ namespace Robust.Shared.Physics
         [ViewVariables]
         public int JointCount => Joints.Count;
 
-        [ViewVariables]
-        public IEnumerable<Joint> GetJoints => Joints.Values;
+        public IReadOnlyDictionary<string, Joint> GetJoints => Joints;
 
         [DataField("joints")]
         internal Dictionary<string, Joint> Joints = new();

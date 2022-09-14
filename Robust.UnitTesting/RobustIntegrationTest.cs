@@ -25,6 +25,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -573,6 +574,7 @@ namespace Robust.UnitTesting
                     var server = Init();
                     GameLoop.Run();
                     server.FinishMainLoop();
+                    IoCManager.Clear();
                 }
                 catch (Exception e)
                 {
@@ -609,7 +611,10 @@ namespace Robust.UnitTesting
                     LoadContentResources = false,
                 };
 
-                // Autoregister components if options are null or we're NOT starting from content.
+                // Autoregister components if options are null or we're NOT starting from content, as in that case
+                // components will get auto-registered later. But either way, we will still invoke
+                // BeforeRegisterComponents here.
+                Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -711,6 +716,18 @@ namespace Robust.UnitTesting
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
             }
 
+            public async Task CheckSandboxed(Assembly assembly)
+            {
+                await WaitIdleAsync();
+                await WaitAssertion(() =>
+                {
+                    var modLoader = new ModLoader();
+                    IoCManager.InjectDependencies(modLoader);
+                    modLoader.SetEnableSandboxing(true);
+                    modLoader.LoadGameAssembly(assembly.Location);
+                });
+            }
+
             private void ThreadMain()
             {
                 try
@@ -753,7 +770,10 @@ namespace Robust.UnitTesting
                     LoadConfigAndUserData = false,
                 };
 
-                // Autoregister components if options are null or we're NOT starting from content.
+                // Autoregister components if options are null or we're NOT starting from content, as in that case
+                // components will get auto-registered later. But either way, we will still invoke
+                // BeforeRegisterComponents here.
+                Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -936,6 +956,7 @@ namespace Robust.UnitTesting
         public abstract class IntegrationOptions
         {
             public Action? InitIoC { get; set; }
+            public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }

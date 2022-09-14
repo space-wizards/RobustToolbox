@@ -22,9 +22,8 @@ namespace Robust.Shared.GameObjects
         public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />
-        [ViewVariables]
         [DataField("netsync")]
-        public bool NetSyncEnabled { get; set; } = true;
+        public bool NetSyncEnabled { get; set;  } = true;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -33,6 +32,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public ComponentLifeStage LifeStage { get; private set; } = ComponentLifeStage.PreAdd;
+
+        /// <summary>
+        ///     If true, and if this is a networked component, then component data will only be sent to players if their
+        ///     controlled entity is the owner of this component. This is a faster alternative to <see
+        ///     cref="MetaDataFlags.EntitySpecific"/>.
+        /// </summary>
+        public virtual bool SendOnlyToOwner => false;
 
         /// <summary>
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,

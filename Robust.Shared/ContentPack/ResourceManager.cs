@@ -176,7 +176,7 @@ namespace Robust.Shared.ContentPack
 
             if (!path.IsRooted)
             {
-                throw new ArgumentException("Path must be rooted", nameof(path));
+                throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
             if (!IsPathValid(path))

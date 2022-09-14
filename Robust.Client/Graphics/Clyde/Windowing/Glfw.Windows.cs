@@ -19,7 +19,6 @@ namespace Robust.Client.Graphics.Clyde
         private sealed unsafe partial class GlfwWindowingImpl
         {
             private int _nextWindowId = 1;
-            private static bool _eglLoaded;
 
             public void WindowSetTitle(WindowReg window, string title)
             {
@@ -261,8 +260,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Block the main thread (to avoid stuff like texture uploads being problematic).
                 WaitWindowCreate(task);
-
+#pragma warning disable RA0004
                 var (reg, errorResult) = task.Result;
+#pragma warning restore RA0004
 
                 if (reg != null)
                 {
@@ -424,21 +424,8 @@ namespace Robust.Client.Graphics.Clyde
                             ? ContextApi.EglContextApi
                             : ContextApi.NativeContextApi);
 
-#if !FULL_RELEASE
-                    if (s.CreationApi == GLContextCreationApi.Egl && !_eglLoaded && OperatingSystem.IsWindows())
-                    {
-                        // On non-published builds (so, development), GLFW can't find libEGL.dll
-                        // because it'll be in runtimes/<rid>/native/ instead of next to the actual executable.
-                        // We manually preload the library here so that GLFW will find it when it does its thing.
-                        NativeLibrary.TryLoad(
-                            "libEGL.dll",
-                            typeof(Clyde).Assembly,
-                            DllImportSearchPath.SafeDirectories,
-                            out _);
-
-                        _eglLoaded = true;
-                    }
-#endif
+                    if (s.CreationApi == GLContextCreationApi.Egl)
+                        WsiShared.EnsureEglAvailable();
                 }
 
                 Monitor* monitor = null;
@@ -532,6 +519,9 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
+                if (OperatingSystem.IsWindows())
+                    WsiShared.WindowsSharedWindowCreate((HWND) GLFW.GetWin32Window(window), _cfg);
+
                 if (parameters.Visible)
                 {
                     GLFW.ShowWindow(window);
@@ -577,7 +567,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.GetWindowPos(window, out var x, out var y);
                 reg.PrevWindowPos = (x, y);
 
-                reg.PixelRatio = reg.FramebufferSize / reg.WindowSize;
+                reg.PixelRatio = reg.FramebufferSize / (Vector2) reg.WindowSize;
 
                 return reg;
             }
@@ -668,7 +658,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void GLSwapInterval(int interval)
+            public void GLSwapInterval(WindowReg reg, int interval)
             {
                 GLFW.SwapInterval(interval);
             }

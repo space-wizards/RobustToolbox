@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -6,6 +7,7 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
+        [Obsolete("Use EntityUid overload instead.")]
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, GridId gridId, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref mapManager);
@@ -19,23 +21,31 @@ namespace Robust.Shared.Map
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref mapManager);
-            
+
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 
             return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
         }
 
-        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coordinates, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
-            var coords = coordinates;
             IoCManager.Resolve(ref entityManager, ref mapManager);
 
-            var gridId = coords.GetGridId(entityManager);
+            var gridId = coords.GetGridUid(entityManager);
 
-            if (!gridId.IsValid() || !mapManager.GridExists(gridId))
+            if (mapManager.TryGetGrid(gridId, out var mapGrid))
+            {
+                return mapGrid.GridTileToLocal(mapGrid.CoordinatesToTile(coords));
+            }
+            else
             {
                 var mapCoords = coords.ToMap(entityManager);
+
+                if (mapManager.TryFindGridAt(mapCoords, out mapGrid))
+                {
+                    return mapGrid.GridTileToLocal(mapGrid.CoordinatesToTile(coords));
+                }
 
                 // create a box around the cursor
                 var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(mapCoords.Position);

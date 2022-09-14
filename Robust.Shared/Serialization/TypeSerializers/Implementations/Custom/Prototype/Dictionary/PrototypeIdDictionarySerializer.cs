@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 {
 
     public sealed class AbstractPrototypeIdDictionarySerializer<TValue, TPrototype> : PrototypeIdDictionarySerializer<TValue,
-            TPrototype> where TPrototype : class, IPrototype
+            TPrototype> where TPrototype : class, IPrototype, IInheritingPrototype
     {
         protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
             new AbstractPrototypeIdSerializer<TPrototype>();

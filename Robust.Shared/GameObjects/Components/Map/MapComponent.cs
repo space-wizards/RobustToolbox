@@ -41,6 +41,7 @@ namespace Robust.Shared.GameObjects
             internal set => _mapIndex = value;
         }
 
+        [ViewVariables(VVAccess.ReadOnly)]
         internal bool MapPaused { get; set; } = false;
 
         /// <inheritdoc />
@@ -50,6 +51,7 @@ namespace Robust.Shared.GameObjects
             set => this.MapPaused = value;
         }
 
+        [ViewVariables(VVAccess.ReadOnly)]
         internal bool MapPreInit { get; set; } = false;
 
         /// <inheritdoc />

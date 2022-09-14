@@ -17,7 +17,7 @@ public abstract class ViewVariablesPath
     public virtual Type InvokeReturnType { get; } = typeof(void);
 }
 
-public sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
+internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 {
     internal ViewVariablesFieldOrPropertyPath(object? obj, MemberInfo member)
     {
@@ -63,7 +63,7 @@ public sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
     public override object? Invoke(object?[]? parameters) => null;
 }
 
-public sealed class ViewVariablesMethodPath : ViewVariablesPath
+internal sealed class ViewVariablesMethodPath : ViewVariablesPath
 {
     internal ViewVariablesMethodPath(object? obj, MethodInfo method)
     {
@@ -104,7 +104,7 @@ public sealed class ViewVariablesMethodPath : ViewVariablesPath
             : 0;
 }
 
-public sealed class ViewVariablesIndexedPath : ViewVariablesPath
+internal sealed class ViewVariablesIndexedPath : ViewVariablesPath
 {
     internal ViewVariablesIndexedPath(object? obj, PropertyInfo indexer, object?[] index, VVAccess? parentAccess)
     {

@@ -489,20 +489,12 @@ namespace Robust.Shared.GameObjects
 
             if (component.Running)
                 component.LifeShutdown(this);
-
-            if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity(this);
-
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
-            ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
-
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
             {
                 _runtimeLog.LogException(e,
-                    $"RemoveComponentDeferred, owner={component.Owner}, type={component.GetType()}");
+                    $"RemoveComponentDeferred, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
             }
 #endif
         }
@@ -543,7 +535,7 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _runtimeLog.LogException(e,
-                    $"RemoveComponentImmediate, owner={component.Owner}, type={component.GetType()}");
+                    $"RemoveComponentImmediate, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
             }
 #endif
 
@@ -555,6 +547,37 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var component in InSafeOrder(_deleteSet))
             {
+                if (component.Deleted)
+                    continue;
+
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
+                // The component may have been restarted sometime after removal was deferred.
+                if (component.Running)
+                {
+                    // TODO add options to cancel deferred deletion?
+                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                    component.LifeShutdown(this);
+                }
+
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity(this);
+
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner));
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
+
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                _runtimeLog.LogException(e,
+                    $"CullRemovedComponents, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+            }
+#endif
+
                 DeleteComponent(component);
             }
 

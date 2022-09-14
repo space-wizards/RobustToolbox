@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Client.GameObjects
 {

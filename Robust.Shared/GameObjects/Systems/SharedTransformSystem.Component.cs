@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

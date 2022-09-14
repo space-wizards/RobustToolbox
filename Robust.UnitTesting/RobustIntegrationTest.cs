@@ -611,7 +611,10 @@ namespace Robust.UnitTesting
                     LoadContentResources = false,
                 };
 
-                // Autoregister components if options are null or we're NOT starting from content.
+                // Autoregister components if options are null or we're NOT starting from content, as in that case
+                // components will get auto-registered later. But either way, we will still invoke
+                // BeforeRegisterComponents here.
+                Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -767,7 +770,10 @@ namespace Robust.UnitTesting
                     LoadConfigAndUserData = false,
                 };
 
-                // Autoregister components if options are null or we're NOT starting from content.
+                // Autoregister components if options are null or we're NOT starting from content, as in that case
+                // components will get auto-registered later. But either way, we will still invoke
+                // BeforeRegisterComponents here.
+                Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -950,6 +956,7 @@ namespace Robust.UnitTesting
         public abstract class IntegrationOptions
         {
             public Action? InitIoC { get; set; }
+            public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }

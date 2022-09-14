@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Systems
 {
     public abstract partial class SharedPhysicsSystem : EntitySystem
     {
@@ -134,13 +136,15 @@ namespace Robust.Shared.GameObjects
         {
             // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
             var uid = args.Entity;
-
-            var meta = MetaData(uid);
-
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized)
-                return;
-
             var xform = args.Transform;
+
+            // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
+            // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
+            // which case they still need to handle map changes. This frequently happens when clients receives a server
+            // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
+            // uninitialized but have an initialized child.
+            if (xform.ChildCount == 0 && LifeStage(uid) < EntityLifeStage.Initialized)
+                return;
 
             // Is this entity getting recursively detached after it's parent was already detached to null?
             if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
@@ -178,7 +182,12 @@ namespace Robust.Shared.GameObjects
             TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
             TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
 
-            _broadphase.TryGetMoveBuffer(oldMapId, out var oldMoveBuffer);
+            Dictionary<FixtureProxy, Box2>? oldMoveBuffer = null;
+
+            if (oldMap != null)
+            {
+                oldMoveBuffer = oldMap.MoveBuffer;
+            }
 
             var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
 

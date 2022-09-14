@@ -280,12 +280,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
 
-            Assert.That(state.ContainerSet.Count, Is.EqualTo(1));
-            Assert.That(state.ContainerSet[0].Id, Is.EqualTo("dummy"));
-            Assert.That(state.ContainerSet[0].OccludesLight, Is.True);
-            Assert.That(state.ContainerSet[0].ShowContents, Is.True);
-            Assert.That(state.ContainerSet[0].ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(state.Containers.Count, Is.EqualTo(1));
+            var cont = state.Containers.Values.First();
+            Assert.That(cont.Id, Is.EqualTo("dummy"));
+            Assert.That(cont.OccludesLight, Is.True);
+            Assert.That(cont.ShowContents, Is.True);
+            Assert.That(cont.ContainedEntities.Length, Is.EqualTo(1));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
         }
 
         private sealed class ContainerOnlyContainer : BaseContainer

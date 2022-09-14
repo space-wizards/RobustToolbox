@@ -81,13 +81,14 @@ namespace Robust.Client.GameObjects
 
         public override void MarkDirty(AppearanceComponent component, bool updateDetached = false)
         {
+            var clientComp = (ClientAppearanceComponent)component;
+            clientComp.UpdateDetached |= updateDetached;
+
             if (component.AppearanceDirty)
                 return;
 
-            var clientComp = (ClientAppearanceComponent)component;
             _queuedUpdates.Enqueue(clientComp);
             component.AppearanceDirty = true;
-            clientComp.UpdateDetached |= updateDetached;
         }
 
         public override void FrameUpdate(float frameTime)

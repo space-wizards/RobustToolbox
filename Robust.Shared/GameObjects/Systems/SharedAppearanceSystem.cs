@@ -12,7 +12,12 @@ public abstract class SharedAppearanceSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
 
-    public virtual void MarkDirty(AppearanceComponent component) {}
+    /// <summary>
+    ///     Mark an appearance component as dirty, so that the appearance will get updated in the next frame update.
+    /// </summary>
+    /// <param name="component"></param>
+    /// <param name="updateDetached">If true, the appearance will update even if the entity is currently outside of PVS range.</param>
+    public virtual void MarkDirty(AppearanceComponent component, bool updateDetached = false) {}
 
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {

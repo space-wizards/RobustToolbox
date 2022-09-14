@@ -1,3 +1,5 @@
+using Robust.Shared.Physics.Components;
+
 namespace Robust.Shared.GameObjects
 {
     public sealed class CollideOnAnchorSystem : EntitySystem

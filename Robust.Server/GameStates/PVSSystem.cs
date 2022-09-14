@@ -17,6 +17,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -226,7 +227,7 @@ internal sealed partial class PVSSystem : EntitySystem
             // we just discard it.
             _visSetPool.Return(overflowEnts);
         }
-        
+
         if (sessionData.SentEntities.TryGetValue(ackedTick, out var ackedData))
             ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);
     }
@@ -691,7 +692,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (visibleEnts.Count != 0)
             throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
-        
+
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         foreach (var i in chunkIndices)
@@ -754,7 +755,7 @@ internal sealed partial class PVSSystem : EntitySystem
             var entFromTick = entered ? lastSeen.GetValueOrDefault(uid) : fromTick;
             var state = GetEntityState(session, uid, entFromTick, mQuery.GetComponent(uid));
 
-            if (entered || !state.Empty) 
+            if (entered || !state.Empty)
                 entityStates.Add(state);
         }
 
@@ -808,7 +809,7 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var uid in lastSent.Keys)
         {
             if (!visibleEnts.ContainsKey(uid))
-                leftView.Add(uid); 
+                leftView.Add(uid);
         }
 
         return leftView.Count > 0 ? leftView : null;
@@ -901,7 +902,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
         // their requested budget. However this can cause issues if a packet gets dropped, because a player may create
         // 2x or more times the normal entity creation budget.
-        // 
+        //
         // The fix for that would be to just also give the PVS budget a client-side aspect that controls entity creation
         // rate.
         if (enteredSinceLastSent)

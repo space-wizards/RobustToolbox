@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Log;
 using System.Diagnostics;
+using Robust.Shared.Physics.Components;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif

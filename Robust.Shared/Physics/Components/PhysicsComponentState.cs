@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Components
 {
     [Serializable, NetSerializable]
     public sealed class PhysicsComponentState : ComponentState

@@ -320,6 +320,10 @@ namespace Robust.Shared.GameObjects
                 // mark the component as dirty for networking
                 Dirty(component);
             }
+            else
+            {
+                component.Networked = false;
+            }
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
             ComponentAdded?.Invoke(eventArgs);
@@ -1167,10 +1171,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
-            var getState = new ComponentGetState();
+            var getState = new ComponentGetState(session);
             eventBus.RaiseComponentEvent(component, ref getState);
 
             return getState.State ?? component.GetComponentState();

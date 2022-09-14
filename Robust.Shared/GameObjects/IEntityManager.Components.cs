@@ -365,7 +365,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component to generate the state for.</param>
         /// <returns>The component state of the component.</returns>
         ///
-        ComponentState GetComponentState(IEventBus eventBus, IComponent component);
+        ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

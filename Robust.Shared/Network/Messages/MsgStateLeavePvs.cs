@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 #nullable disable
@@ -21,7 +22,7 @@ public sealed class MsgStateLeavePvs : NetMessage
     public List<EntityUid> Entities;
     public GameTick Tick;
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         Tick = buffer.ReadGameTick();
         var length = buffer.ReadInt32();
@@ -33,7 +34,7 @@ public sealed class MsgStateLeavePvs : NetMessage
         }
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
         buffer.Write(Tick);
         buffer.Write(Entities.Count);

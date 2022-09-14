@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics

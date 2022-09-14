@@ -79,18 +79,16 @@ namespace Robust.Client.GameObjects
             return newDict;
         }
 
-        public override void MarkDirty(AppearanceComponent component)
+        public override void MarkDirty(AppearanceComponent component, bool updateDetached = false)
         {
+            var clientComp = (ClientAppearanceComponent)component;
+            clientComp.UpdateDetached |= updateDetached;
+
             if (component.AppearanceDirty)
                 return;
 
-            _queuedUpdates.Enqueue((ClientAppearanceComponent) component);
+            _queuedUpdates.Enqueue(clientComp);
             component.AppearanceDirty = true;
-        }
-
-        internal void UnmarkDirty(ClientAppearanceComponent component)
-        {
-            component.AppearanceDirty = false;
         }
 
         public override void FrameUpdate(float frameTime)
@@ -102,11 +100,13 @@ namespace Robust.Client.GameObjects
                 if (appearance.Deleted)
                     continue;
 
-                UnmarkDirty(appearance);
+                appearance.AppearanceDirty = false;
 
                 // If the entity is no longer within the clients PVS, don't bother updating.
-                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0)
+                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0 && !appearance.UpdateDetached)
                     continue;
+
+                appearance.UpdateDetached = false;
 
                 // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
                 spriteQuery.TryGetComponent(appearance.Owner, out var sprite);

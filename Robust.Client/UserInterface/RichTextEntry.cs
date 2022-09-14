@@ -4,7 +4,6 @@ using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -54,22 +53,13 @@ namespace Robust.Client.UserInterface
             // This method is gonna suck due to complexity.
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
+
             Height = font.GetHeight(uiScale);
             LineBreaks.Clear();
 
-            var maxUsedWidth = 0f;
-            // Index we put into the LineBreaks list when a line break should occur.
-            var breakIndexCounter = 0;
-            // If the CURRENT processing word ends up too long, this is the index to put a line break.
-            (int index, float lineSize)? wordStartBreakIndex = null;
-            // Word size in pixels.
-            var wordSizePixels = 0;
-            // The horizontal position of the text cursor.
-            var posX = 0;
-            var lastRune = new Rune('A');
-            // If a word is larger than maxSizeX, we split it.
-            // We need to keep track of some data to split it into two words.
-            (int breakIndex, int wordSizePixels)? forceSplitData = null;
+            int? breakLine;
+            var wordWrap = new WordWrap(maxSizeX);
+
             // Go over every text tag.
             // We treat multiple text tags as one continuous one.
             // So changing color inside a single word doesn't create a word break boundary.
@@ -86,126 +76,33 @@ namespace Robust.Client.UserInterface
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
                 {
-                    breakIndexCounter += 1;
-
-                    if (IsWordBoundary(lastRune, rune) || rune == new Rune('\n'))
-                    {
-                        // Word boundary means we know where the word ends.
-                        if (posX > maxSizeX && lastRune != new Rune(' '))
-                        {
-                            DebugTools.Assert(wordStartBreakIndex.HasValue,
-                                "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
-                            // We ran into a word boundary and the word is too big to fit the previous line.
-                            // So we insert the line break BEFORE the last word.
-                            LineBreaks.Add(wordStartBreakIndex!.Value.index);
-                            Height += font.GetLineHeight(uiScale);
-                            maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
-                            posX = wordSizePixels;
-                        }
-
-                        // Start a new word since we hit a word boundary.
-                        //wordSize = 0;
-                        wordSizePixels = 0;
-                        wordStartBreakIndex = (breakIndexCounter, posX);
-                        forceSplitData = null;
-
-                        // Just manually handle newlines.
-                        if (rune == new Rune('\n'))
-                        {
-                            LineBreaks.Add(breakIndexCounter);
-                            Height += font.GetLineHeight(uiScale);
-                            maxUsedWidth = Math.Max(maxUsedWidth, posX);
-                            posX = 0;
-                            lastRune = rune;
-                            wordStartBreakIndex = null;
-                            continue;
-                        }
-                    }
+                    wordWrap.NextRune(rune, out breakLine, out var skip);
+                    CheckLineBreak(ref this, breakLine);
+                    if (skip)
+                        continue;
 
                     // Uh just skip unknown characters I guess.
                     if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
-                    {
-                        lastRune = rune;
                         continue;
-                    }
 
-                    // Increase word size and such with the current character.
-                    var oldWordSizePixels = wordSizePixels;
-                    wordSizePixels += metrics.Advance;
-                    // TODO: Theoretically, does it make sense to break after the glyph's width instead of its advance?
-                    //   It might result in some more tight packing but I doubt it'd be noticeable.
-                    //   Also definitely even more complex to implement.
-                    posX += metrics.Advance;
-
-                    if (posX > maxSizeX)
-                    {
-                        if (!forceSplitData.HasValue)
-                        {
-                            forceSplitData = (breakIndexCounter, oldWordSizePixels);
-                        }
-
-                        // Oh hey we get to break a word that doesn't fit on a single line.
-                        if (wordSizePixels > maxSizeX)
-                        {
-                            var (breakIndex, splitWordSize) = forceSplitData.Value;
-                            if (splitWordSize == 0)
-                            {
-                                // Happens if there's literally not enough space for a single character so uh...
-                                // Yeah just don't.
-                                return;
-                            }
-
-                            // Reset forceSplitData so that we can split again if necessary.
-                            forceSplitData = null;
-                            LineBreaks.Add(breakIndex);
-                            Height += font.GetLineHeight(uiScale);
-                            wordSizePixels -= splitWordSize;
-                            wordStartBreakIndex = null;
-                            maxUsedWidth = Math.Max(maxUsedWidth, maxSizeX);
-                            posX = wordSizePixels;
-                        }
-                    }
-
-                    lastRune = rune;
+                    wordWrap.NextMetrics(metrics, out breakLine, out var abort);
+                    CheckLineBreak(ref this, breakLine);
+                    if (abort)
+                        return;
                 }
             }
 
-            // This needs to happen because word wrapping doesn't get checked for the last word.
-            if (posX > maxSizeX)
+            Width = wordWrap.FinalizeText(out breakLine);
+            CheckLineBreak(ref this, breakLine);
+
+            void CheckLineBreak(ref RichTextEntry src, int? line)
             {
-                if (!wordStartBreakIndex.HasValue)
+                if (line is { } l)
                 {
-                    Logger.Error(
-                        "Assert fail inside RichTextEntry.Update, " +
-                        "wordStartBreakIndex is null on method end w/ word wrap required. " +
-                        "Dumping relevant stuff. Send this to PJB.");
-                    Logger.Error($"Message: {Message}");
-                    Logger.Error($"maxSizeX: {maxSizeX}");
-                    Logger.Error($"maxUsedWidth: {maxUsedWidth}");
-                    Logger.Error($"breakIndexCounter: {breakIndexCounter}");
-                    Logger.Error("wordStartBreakIndex: null (duh)");
-                    Logger.Error($"wordSizePixels: {wordSizePixels}");
-                    Logger.Error($"posX: {posX}");
-                    Logger.Error($"lastChar: {lastRune}");
-                    Logger.Error($"forceSplitData: {forceSplitData}");
-                    Logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
-
-                    throw new Exception(
-                        "wordStartBreakIndex can only be null if the word begins at a new line," +
-                        "in which case this branch shouldn't be reached as" +
-                        "the word would be split due to being longer than a single line.");
+                    src.LineBreaks.Add(l);
+                    src.Height += font.GetLineHeight(uiScale);
                 }
-
-                LineBreaks.Add(wordStartBreakIndex!.Value.index);
-                Height += font.GetLineHeight(uiScale);
-                maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
             }
-            else
-            {
-                maxUsedWidth = Math.Max(maxUsedWidth, posX);
-            }
-
-            Width = (int) maxUsedWidth;
         }
 
         public void Draw(

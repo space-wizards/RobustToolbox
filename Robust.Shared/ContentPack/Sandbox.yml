@@ -465,6 +465,7 @@ Types:
     AsyncVoidMethodBuilder: { All: True }
     CallerArgumentExpressionAttribute: { All: True }
     CompilationRelaxationsAttribute: { All: True }
+    CompilerFeatureRequiredAttribute: { All: True }
     CompilerGeneratedAttribute: { All: True }
     DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }

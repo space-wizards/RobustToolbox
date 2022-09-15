@@ -71,6 +71,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
+            if (component.LifeStage < ComponentLifeStage.Initialized)
+                return;
+
             UpdateCanCollide(uid, component, xform: args.Transform);
         }
 

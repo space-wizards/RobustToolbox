@@ -370,14 +370,6 @@ public partial class SharedPhysicsSystem
         if (value && body.BodyType == BodyType.Static)
             return;
 
-        // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
-        if (value && !body._canCollide)
-        {
-            SetCanCollide(body, true);
-            if (!body._canCollide)
-                return;
-        }
-
         body._awake = value;
 
         if (value)
@@ -428,17 +420,21 @@ public partial class SharedPhysicsSystem
         RaiseLocalEvent(body.Owner, ref ev, true);
     }
 
-    public void SetCanCollide(PhysicsComponent body, bool value, bool dirty = true)
+    /// <summary>
+    /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
+    /// </summary>
+    /// <returns>CanCollide</returns>
+    public bool SetCanCollide(PhysicsComponent body, bool value, bool dirty = true)
     {
         if (body._canCollide == value)
-            return;
+            return value;
 
         // If we're recursively in a container then never set this.
         if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
-            return;
+            return false;
 
         if (!value)
-            body.Awake = false;
+            SetAwake(body, false);
 
         body._canCollide = value;
         var ev = new CollisionChangeEvent(body, value);
@@ -446,6 +442,8 @@ public partial class SharedPhysicsSystem
 
         if (dirty)
             Dirty(body);
+
+        return value;
     }
 
     public void SetFixedRotation(PhysicsComponent body, bool value, bool dirty = true)
@@ -530,9 +528,8 @@ public partial class SharedPhysicsSystem
     /// <returns>true if the body is collidable and awake</returns>
     public bool WakeBody(PhysicsComponent body)
     {
-        SetCanCollide(body, true);
-
-        if (!body._canCollide) return false;
+        if (!SetCanCollide(body, true))
+            return false;
 
         SetAwake(body, true);
         return body._awake;

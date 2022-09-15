@@ -253,11 +253,7 @@ namespace Robust.Shared.Physics.Collision
             }
         }
 
-        internal void WriteCache(
-            #if !RIDER && NET7_0
-            scoped
-#endif
-        ref SimplexCache cache)
+        internal void WriteCache(ref SimplexCache cache)
         {
             cache.Metric = GetMetric();
             cache.Count = (UInt16)Count;

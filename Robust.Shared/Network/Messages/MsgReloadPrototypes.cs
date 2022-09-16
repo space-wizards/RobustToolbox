@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
@@ -9,7 +10,7 @@ namespace Robust.Shared.Network.Messages
 
         public ResourcePath[] Paths = default!;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var count = buffer.ReadInt32();
             Paths = new ResourcePath[count];
@@ -20,7 +21,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(Paths.Length);
 

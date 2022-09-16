@@ -4,7 +4,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Systems
 {
     public partial class FixtureSystem
     {

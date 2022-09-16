@@ -1,4 +1,5 @@
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages;
 
@@ -11,7 +12,7 @@ public sealed class MsgConCompletion : NetMessage
     public int Seq { get; set; }
     public string[] Args { get; set; }
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         Seq = buffer.ReadInt32();
 
@@ -23,7 +24,7 @@ public sealed class MsgConCompletion : NetMessage
         }
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
         buffer.Write(Seq);
 

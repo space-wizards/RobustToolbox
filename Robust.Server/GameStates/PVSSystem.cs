@@ -17,6 +17,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -1053,9 +1054,6 @@ internal sealed partial class PVSSystem : EntitySystem
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
 
-        // Whether this entity has any component states that should only be sent to specific sessions.
-        var entitySpecific = (meta.Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
-
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
             if (!component.NetSyncEnabled)
@@ -1085,10 +1083,10 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
 
-            if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
+            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = changedState ? EntityManager.GetComponentState(bus, component) : null;
+            var state = changedState ? EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null) : null;
             changed.Add(ComponentChange.Added(netId, state, component.LastModifiedTick));
         }
 
@@ -1107,7 +1105,6 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
-        var entitySpecific = (meta.Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -1117,10 +1114,10 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
 
-            if (entitySpecific && !EntityManager.CanGetComponentState(bus, component, player))
+            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component), component.LastModifiedTick));
+            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
         }
 
         foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, GameTick.Zero))

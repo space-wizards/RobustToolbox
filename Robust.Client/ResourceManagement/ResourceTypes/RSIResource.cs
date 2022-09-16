@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -20,27 +18,19 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     public sealed class RSIResource : BaseResource
     {
-        private static readonly float[] OneArray = {1};
-
         public override ResourcePath? Fallback => new("/Textures/error.rsi");
-
-        private static readonly JsonSerializerOptions SerializerOptions =
-            new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                AllowTrailingCommas = true
-            };
 
         public RSI RSI { get; private set; } = default!;
 
         /// <summary>
         ///     The minimum version of RSI we can load.
         /// </summary>
-        public const uint MINIMUM_RSI_VERSION = 1;
+        public const uint MINIMUM_RSI_VERSION = RsiLoading.MINIMUM_RSI_VERSION;
 
         /// <summary>
         ///     The maximum version of RSI we can load.
         /// </summary>
-        public const uint MAXIMUM_RSI_VERSION = 1;
+        public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
@@ -67,7 +57,12 @@ namespace Robust.Client.ResourceManagement
 
         internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
         {
-            var metadata = LoadRsiMetadata(cache, data.Path);
+            var manifestPath = data.Path / "meta.json";
+            RsiLoading.RsiMetadata metadata;
+            using (var manifestFile = cache.ContentFileRead(manifestPath))
+            {
+                metadata = RsiLoading.LoadRsiMetadata(manifestFile);
+            }
 
             var stateCount = metadata.States.Length;
             var toAtlas = new StateReg[stateCount];
@@ -127,7 +122,15 @@ namespace Robust.Client.ResourceManagement
                 reg.Indices = foldedIndices;
                 reg.Offsets = callbackOffset;
 
-                var state = new RSI.State(frameSize, rsi, stateObject.StateId, stateObject.DirType, foldedDelays,
+                var dirType = stateObject.DirCount switch
+                {
+                    1 => RSI.State.DirectionType.Dir1,
+                    4 => RSI.State.DirectionType.Dir4,
+                    8 => RSI.State.DirectionType.Dir8,
+                    _ => throw new InvalidOperationException()
+                };
+
+                var state = new RSI.State(frameSize, rsi, stateObject.StateId, dirType, foldedDelays,
                     textures);
                 rsi.AddState(state);
 
@@ -223,104 +226,6 @@ namespace Robust.Client.ResourceManagement
             {
                 cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
             }
-        }
-
-        private static RsiMetadata LoadRsiMetadata(IResourceCache cache, ResourcePath path)
-        {
-            var manifestPath = path / "meta.json";
-            RsiJsonMetadata? manifestJson;
-
-            using (var manifestFile = cache.ContentFileRead(manifestPath))
-            {
-                if (manifestFile.CanSeek && manifestFile.Length <= 4096)
-                {
-                    // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
-                    // Avoids a ton of allocations with stream reader etc
-                    // because System.Text.Json can process it directly.
-                    Span<byte> buf = stackalloc byte[4096];
-                    var totalRead = manifestFile.ReadToEnd(buf);
-                    buf = buf[..totalRead];
-                    buf = BomUtil.SkipBom(buf);
-
-                    manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(buf, SerializerOptions);
-                }
-                else
-                {
-                    using var reader = new StreamReader(manifestFile);
-
-                    string manifestContents = reader.ReadToEnd();
-                    manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
-                }
-            }
-
-            if (manifestJson == null)
-                throw new RSILoadException($"Manifest JSON failed to deserialize!");
-
-            var size = manifestJson.Size;
-            var states = new StateMetadata[manifestJson.States.Length];
-
-            for (var stateI = 0; stateI < manifestJson.States.Length; stateI++)
-            {
-                var stateObject = manifestJson.States[stateI];
-                var stateName = stateObject.Name;
-                RSI.State.DirectionType directions;
-                int dirValue;
-
-                if (stateObject.Directions is { } dirVal)
-                {
-                    dirValue = dirVal;
-                    directions = dirVal switch
-                    {
-                        1 => RSI.State.DirectionType.Dir1,
-                        4 => RSI.State.DirectionType.Dir4,
-                        8 => RSI.State.DirectionType.Dir8,
-                        _ => throw new RSILoadException($"Invalid direction for state '{stateName}': {dirValue}. Expected 1, 4 or 8")
-                    };
-                }
-                else
-                {
-                    dirValue = 1;
-                    directions = RSI.State.DirectionType.Dir1;
-                }
-
-                // We can ignore selectors and flags for now,
-                // because they're not used yet!
-
-                // Get the lists of delays.
-                float[][] delays;
-                if (stateObject.Delays != null)
-                {
-                    delays = stateObject.Delays;
-
-                    if (delays.Length != dirValue)
-                    {
-                        throw new RSILoadException(
-                            $"Direction frames list count ({dirValue}) does not match amount of delays specified ({delays.Length}) for state '{stateName}'.");
-                    }
-
-                    for (var i = 0; i < delays.Length; i++)
-                    {
-                        var delayList = delays[i];
-                        if (delayList.Length == 0)
-                        {
-                            delays[i] = OneArray;
-                        }
-                    }
-                }
-                else
-                {
-                    delays = new float[dirValue][];
-                    // No delays specified, default to 1 frame per dir.
-                    for (var i = 0; i < dirValue; i++)
-                    {
-                        delays[i] = OneArray;
-                    }
-                }
-
-                states[stateI] = new StateMetadata(new RSI.StateId(stateName), directions, delays);
-            }
-
-            return new RsiMetadata(size, states);
         }
 
         /// <summary>
@@ -491,78 +396,6 @@ namespace Robust.Client.ResourceManagement
             public int[][] Indices;
             public Vector2i[][] Offsets;
             public int TotalFrameCount;
-        }
-
-        internal sealed class RsiMetadata
-        {
-            public RsiMetadata(Vector2i size, StateMetadata[] states)
-            {
-                Size = size;
-                States = states;
-            }
-
-            public Vector2i Size { get; }
-            public StateMetadata[] States { get; }
-        }
-
-        internal sealed class StateMetadata
-        {
-            public StateMetadata(RSI.StateId stateId, RSI.State.DirectionType dirType, float[][] delays)
-            {
-                StateId = stateId;
-                DirType = dirType;
-                Delays = delays;
-
-                DebugTools.Assert(delays.Length == DirCount);
-                DebugTools.Assert(StateId.IsValid);
-            }
-
-            public RSI.StateId StateId { get; }
-            public RSI.State.DirectionType DirType { get; }
-
-            public int DirCount => DirType switch
-            {
-                RSI.State.DirectionType.Dir1 => 1,
-                RSI.State.DirectionType.Dir4 => 4,
-                RSI.State.DirectionType.Dir8 => 8,
-                _ => 1
-            };
-
-            public float[][] Delays { get; }
-        }
-
-        // To be directly deserialized.
-        [UsedImplicitly]
-        private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States)
-        {
-        }
-
-        [UsedImplicitly]
-        private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays)
-        {
-        }
-    }
-
-    [Serializable]
-    [Virtual]
-    public class RSILoadException : Exception
-    {
-        public RSILoadException()
-        {
-        }
-
-        public RSILoadException(string message) : base(message)
-        {
-        }
-
-        public RSILoadException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected RSILoadException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context)
-        {
         }
     }
 }

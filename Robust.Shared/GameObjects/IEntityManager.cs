@@ -128,5 +128,10 @@ namespace Robust.Shared.GameObjects
         EntityStringRepresentation ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
+
+        /// <summary>
+        ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
+        /// </summary>
+        void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs;
     }
 }

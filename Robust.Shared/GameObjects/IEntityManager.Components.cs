@@ -34,12 +34,27 @@ namespace Robust.Shared.GameObjects
         void StartComponents(EntityUid uid);
 
         /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        public int Count<T>() where T : Component;
+
+        /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        int Count(Type component);
+
+        /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
         T AddComponent<T>(EntityUid uid) where T : Component, new();
+
+        /// <summary>
+        ///     Adds a Component with a given network id to an entity.
+        /// </summary>
+        Component AddComponent(EntityUid uid, ushort netId);
 
         /// <summary>
         ///     Adds an uninitialized Component type to an entity.
@@ -94,7 +109,7 @@ namespace Robust.Shared.GameObjects
         void RemoveComponent(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes the specified component at a later time.
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
         ///     Without needing to have the component itself.
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
@@ -102,7 +117,7 @@ namespace Robust.Shared.GameObjects
         bool RemoveComponentDeferred<T>(EntityUid uid);
 
         /// <summary>
-        ///     Removes the specified component with a specified type at a later time.
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="type">A trait or component type to check for.</param>
@@ -110,7 +125,7 @@ namespace Robust.Shared.GameObjects
         bool RemoveComponentDeferred(EntityUid uid, Type type);
 
         /// <summary>
-        ///     Removes the component with a specified network ID at a later time.
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="netID">Network ID of the component to remove.</param>
@@ -118,7 +133,7 @@ namespace Robust.Shared.GameObjects
         bool RemoveComponentDeferred(EntityUid uid, ushort netID);
 
         /// <summary>
-        ///     Removes the specified component at a later time.
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
         ///     Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
@@ -126,7 +141,7 @@ namespace Robust.Shared.GameObjects
         void RemoveComponentDeferred(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes the specified component at a later time.
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
         ///     Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
@@ -317,6 +332,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
 
+        EntityQuery<Component> GetEntityQuery(Type type);
+
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.
@@ -348,7 +365,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component to generate the state for.</param>
         /// <returns>The component state of the component.</returns>
         ///
-        ComponentState GetComponentState(IEventBus eventBus, IComponent component);
+        ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

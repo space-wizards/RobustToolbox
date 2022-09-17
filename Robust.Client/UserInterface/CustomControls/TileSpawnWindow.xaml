@@ -1,0 +1,13 @@
+<TileSpawnWindow
+    xmlns="https://spacestation14.io"
+    Title="Place Tiles"
+    SetSize="300 300"
+    MinSize="300 200">
+    <BoxContainer Orientation="Vertical">
+        <BoxContainer Orientation="Horizontal">
+            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="Search"/>
+            <Button Name="ClearButton" Access="Public" Text="Clear"/>
+        </BoxContainer>
+        <ItemList Name="TileList" Access="Public" VerticalExpand="True"/>
+    </BoxContainer>
+</TileSpawnWindow>

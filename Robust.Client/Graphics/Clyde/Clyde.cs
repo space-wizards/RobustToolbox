@@ -14,9 +14,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
+using SixLabors.ImageSharp;
+using Color = Robust.Shared.Maths.Color;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -75,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _currentBoundRenderTarget = default!;
             _currentRenderTarget = default!;
+            Configuration.Default.PreferContiguousImageBuffers = true;
         }
 
         public bool InitializePreWindowing()

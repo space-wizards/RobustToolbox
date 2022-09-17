@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Serialization;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Containers
@@ -94,7 +94,12 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null);
+        bool Insert(EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
@@ -109,8 +114,9 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toremove">The entity to attempt to remove.</param>
         /// <param name="entMan"></param>
+        /// <param name="reparent">If true, will attempt to re-parent the entity to the container's parent, or the grid/map. If false, will not update the transform.</param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null);
+        bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true);
 
         /// <summary>
         /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,

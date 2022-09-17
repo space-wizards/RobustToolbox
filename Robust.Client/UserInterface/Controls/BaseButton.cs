@@ -256,15 +256,16 @@ namespace Robust.Client.UserInterface.Controls
             if (Mode == ActionMode.Release && _attemptingPress > 0 && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
             {
                 // Can't un press a radio button directly.
-                if (Group == null || !Pressed)
+                // Only trigger toggle on UIClick. Do not un-press a toggle button if it's in a group.
+                if (args.Function != EngineKeyFunctions.UIClick || Group == null || !Pressed)
                 {
-                    if (ToggleMode)
+                    if (args.Function == EngineKeyFunctions.UIClick && ToggleMode && _attemptingPress == 1)
                     {
                         Pressed = !Pressed;
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
-                    if (ToggleMode && args.CanFocus)
+                    if (args.Function == EngineKeyFunctions.UIClick && ToggleMode)
                     {
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
@@ -333,6 +334,13 @@ namespace Robust.Client.UserInterface.Controls
             {
                 DrawModeChanged();
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            Group = null;
         }
 
         public enum DrawModeEnum : byte

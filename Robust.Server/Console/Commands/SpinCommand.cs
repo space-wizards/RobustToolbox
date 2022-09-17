@@ -2,6 +2,7 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Server.Console.Commands;
 
@@ -32,7 +33,7 @@ public sealed class SpinCommand : IConsoleCommand
         EntityUid target;
         if (args.Length == 3)
         {
-            if (!EntityUid.TryParse(args[1], out target))
+            if (!EntityUid.TryParse(args[2], out target))
             {
                 shell.WriteError($"Unable to find entity {args[1]}");
                 return;

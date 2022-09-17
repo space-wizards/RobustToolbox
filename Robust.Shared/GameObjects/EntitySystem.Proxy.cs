@@ -558,6 +558,23 @@ public partial class EntitySystem
     }
     #endregion
 
+    #region Component count
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count<T>() where T : Component
+    {
+        return EntityManager.Count<T>();
+    }
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count(Type type)
+    {
+        return EntityManager.Count(type);
+    }
+
+    #endregion
 
     #region Component Remove
 
@@ -675,6 +692,19 @@ public partial class EntitySystem
         where TComp4 : Component
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
+    }
+
+    #endregion
+
+    #region Networked Events
+
+    /// <summary>
+    ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+    {
+        EntityManager.RaisePredictiveEvent(msg);
     }
 
     #endregion

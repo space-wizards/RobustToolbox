@@ -73,7 +73,8 @@ namespace Robust.Shared.GameObjects
 
         protected override void OnRemove()
         {
-            _mapManager.TrueGridDelete((MapGrid)_mapGrid!);
+            if (_mapGrid != null)
+                _mapManager.TrueGridDelete((MapGrid)_mapGrid);
 
             base.OnRemove();
         }

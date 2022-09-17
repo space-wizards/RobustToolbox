@@ -1,7 +1,6 @@
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -10,7 +9,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class SpriteView : Control
     {
-        private readonly SpriteSystem _spriteSystem;
+        private SpriteSystem? _spriteSystem;
 
         private Vector2 _scale = (1, 1);
 
@@ -36,21 +35,8 @@ namespace Robust.Client.UserInterface.Controls
         /// </remarks>
         public Direction? OverrideDirection { get; set; }
 
-        public SpriteView(IEntitySystemManager sysMan)
-        {
-            _spriteSystem = sysMan.GetEntitySystem<SpriteSystem>();
-            RectClipContent = true;
-        }
-
         public SpriteView()
         {
-            _spriteSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-            RectClipContent = true;
-        }
-
-        public SpriteView(SpriteSystem spriteSys)
-        {
-            _spriteSystem = spriteSys;
             RectClipContent = true;
         }
 
@@ -68,7 +54,9 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _spriteSystem.ForceUpdate(Sprite);
+            _spriteSystem ??= EntitySystem.Get<SpriteSystem>();
+            _spriteSystem?.ForceUpdate(Sprite);
+
             renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2, Scale * UIScale, OverrideDirection);
         }
     }

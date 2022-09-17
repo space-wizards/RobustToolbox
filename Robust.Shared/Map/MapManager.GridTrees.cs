@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -20,12 +21,25 @@ internal partial class MapManager
     /// <returns></returns>
     public HashSet<IMapGrid> GetMovedGrids(MapId mapId)
     {
-        return _movedGrids[mapId];
+        // Temporary until this is moved to SharedPhysicsMapComponent
+        if (!_movedGrids.TryGetValue(mapId, out var moved))
+        {
+            Logger.ErrorS("map", $"Unable to get moved grids for {mapId}");
+            moved = new HashSet<IMapGrid>();
+        }
+
+        return moved;
     }
 
     public void ClearMovedGrids(MapId mapId)
     {
-        _movedGrids[mapId].Clear();
+        if (!_movedGrids.TryGetValue(mapId, out var moved))
+        {
+            Logger.ErrorS("map", $"Unable to clear moved grids for {mapId}");
+            return;
+        }
+
+        moved.Clear();
     }
 
     private void StartupGridTrees()

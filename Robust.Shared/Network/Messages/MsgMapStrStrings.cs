@@ -22,13 +22,13 @@ namespace Robust.Shared.Network.Messages
         /// </value>
         public byte[]? Package { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var size = buffer.ReadVariableInt32();
             buffer.ReadBytes(Package = new byte[size]);
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             if (Package == null)
             {

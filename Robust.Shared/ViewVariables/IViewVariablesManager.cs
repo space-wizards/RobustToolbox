@@ -48,12 +48,15 @@ public interface IViewVariablesManager
     /// <param name="handler">The handler for resolving custom paths under the type.</param>
     /// <param name="list">The handler for listing all custom paths under the type.</param>
     /// <seealso cref="RegisterDomain"/>
-    /// <seealso cref="RegisterTypeHandler"/>
     void RegisterTypeHandler<T>(HandleTypePath<T> handler, ListTypeCustomPaths<T> list);
 
-    /// <inheritdoc cref="RegisterTypeHandler{T}"/>
+    /// <inheritdoc cref="RegisterTypeHandler{T}(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})" path="/summary"/>
+    /// <param name="helper">The type handler helper to register.</param>
+    void RegisterTypeHandler<T>(TypeHandlerHelper<T> helper)
+        => RegisterTypeHandler<T>(helper.HandlePath, helper.ListPath);
+
+    /// <inheritdoc cref="RegisterTypeHandler{T}(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
     /// <param name="type">The type to register the handlers for.</param>
-    /// <seealso cref="RegisterTypeHandler{T}"/>
     // ReSharper disable twice InvalidXmlDocComment
     void RegisterTypeHandler(Type type, HandleTypePath handler, ListTypeCustomPaths list);
 

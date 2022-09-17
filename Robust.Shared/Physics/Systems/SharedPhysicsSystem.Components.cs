@@ -1,14 +1,16 @@
 using System;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects;
+namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {

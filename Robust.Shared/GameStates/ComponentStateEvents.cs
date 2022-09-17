@@ -26,6 +26,17 @@ namespace Robust.Shared.GameStates
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
+
+        /// <summary>
+        ///     Input parameter. The player the state is being sent to.
+        /// </summary>
+        public readonly ICommonSession? Player;
+
+        public ComponentGetState(ICommonSession? player)
+        {
+            Player = player;
+            State = null;
+        }
     }
 
     [ByRefEvent, ComponentEvent]

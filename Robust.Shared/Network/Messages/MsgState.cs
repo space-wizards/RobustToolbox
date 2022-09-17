@@ -29,7 +29,7 @@ namespace Robust.Shared.Network.Messages
 
         internal bool _hasWritten;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             MsgSize = buffer.LengthBytes;
             var uncompressedLength = buffer.ReadVariableInt32();
@@ -53,16 +53,14 @@ namespace Robust.Shared.Network.Messages
                 finalStream = stream;
             }
 
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             serializer.DeserializeDirect(finalStream, out State);
             finalStream.Dispose();
 
             State.PayloadSize = uncompressedLength;
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             var stateStream = new MemoryStream();
             serializer.SerializeDirect(stateStream, State);
             buffer.WriteVariableInt32((int)stateStream.Length);

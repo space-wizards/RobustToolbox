@@ -4,6 +4,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -27,7 +28,7 @@ namespace Robust.Shared.Network.Messages
         public string AlignOption { get; set; }
         public Vector2 RectSize { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             PlaceType = (PlacementManagerMessage) buffer.ReadByte();
             switch (PlaceType)
@@ -61,7 +62,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write((byte)PlaceType);
             switch (PlaceType)

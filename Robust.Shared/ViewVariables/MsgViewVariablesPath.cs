@@ -15,13 +15,13 @@ internal abstract class MsgViewVariablesPath : NetMessage
     public uint RequestId { get; set; } = 0;
     public string Path { get; set; } = string.Empty;
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         RequestId = buffer.ReadUInt32();
         Path = buffer.ReadString();
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer , IRobustSerializer serializer)
     {
         buffer.Write(RequestId);
         buffer.Write(Path);
@@ -32,15 +32,15 @@ internal abstract class MsgViewVariablesPathReq : MsgViewVariablesPath
 {
     public Guid Session { get; set; } = Guid.Empty;
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        base.ReadFromBuffer(buffer);
+        base.ReadFromBuffer(buffer, serializer);
         Session = buffer.ReadGuid();
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
-        base.WriteToBuffer(buffer);
+        base.WriteToBuffer(buffer, serializer);
         buffer.Write(Session);
     }
 }
@@ -49,15 +49,15 @@ internal abstract class MsgViewVariablesPathReqVal : MsgViewVariablesPathReq
 {
     public string? Value { get; set; } = null;
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        base.ReadFromBuffer(buffer);
+        base.ReadFromBuffer(buffer, serializer);
         Value = buffer.ReadString();
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
-        base.WriteToBuffer(buffer);
+        base.WriteToBuffer(buffer, serializer);
         buffer.Write(Value);
     }
 }
@@ -77,9 +77,9 @@ internal abstract class MsgViewVariablesPathRes : MsgViewVariablesPath
         RequestId = req.RequestId;
     }
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        base.ReadFromBuffer(buffer);
+        base.ReadFromBuffer(buffer, serializer);
         ResponseCode = (ViewVariablesResponseCode) buffer.ReadUInt16();
         var length = buffer.ReadInt32();
         Response = new string[length];
@@ -90,9 +90,9 @@ internal abstract class MsgViewVariablesPathRes : MsgViewVariablesPath
         }
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
-        base.WriteToBuffer(buffer);
+        base.WriteToBuffer(buffer, serializer);
         buffer.Write((ushort)ResponseCode);
         buffer.Write(Response.Length);
 
@@ -152,19 +152,17 @@ internal sealed class MsgViewVariablesListPathReq : MsgViewVariablesPathReq
 {
     public VVListPathOptions Options { get; set; }
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        base.ReadFromBuffer(buffer);
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
+        base.ReadFromBuffer(buffer, serializer);
         var length = buffer.ReadInt32();
         using var stream = buffer.ReadAlignedMemory(length);
         Options = serializer.Deserialize<VVListPathOptions>(stream);
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
-        base.WriteToBuffer(buffer);
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
+        base.WriteToBuffer(buffer, serializer);
         var stream = new MemoryStream();
         serializer.Serialize(stream, Options);
 

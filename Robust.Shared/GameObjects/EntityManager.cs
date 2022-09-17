@@ -349,6 +349,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
         {
+
             var transform = xformQuery.GetComponent(metadata.Owner);
 
             // Detach the base entity to null before iterating over children
@@ -362,7 +363,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (transform._children.Count != 0)
-                Logger.Error($"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}"));
+                Logger.Error($"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
 
             // Shut down all components.
             foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))

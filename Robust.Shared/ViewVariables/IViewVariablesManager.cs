@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
@@ -35,46 +34,23 @@ public interface IViewVariablesManager
     bool UnregisterDomain(string domain);
 
     /// <summary>
-    ///     Allows you to register custom handlers for a type.
+    ///     Retrieves the type handler for a given type.
+    ///     Creates it if it didn't exist already. Allows you to register custom handlers for a type.
     ///     Type handlers expand the paths available under a certain type on VV.
     ///
     ///     <code>/entity/12345/Custom</code>
     ///
-    ///     In the example above, "Custom" could be a path that a type handler for <see cref="EntityUid"/> provided.
+    ///     In the example above, "Custom" could be a path that the type handler for <see cref="EntityUid"/> provided.
     ///     It does not exist on the <see cref="EntityUid"/> declaration, but that does not matter:
     ///     VV treats it the same as a "real" member under that type.
     ///
     /// </summary>
-    /// <param name="handler">The handler for resolving custom paths under the type.</param>
-    /// <param name="list">The handler for listing all custom paths under the type.</param>
+    /// <returns>The type handler object, which allows you register handlers and paths for the type.</returns>
     /// <seealso cref="RegisterDomain"/>
-    void RegisterTypeHandler<T>(HandleTypePath<T> handler, ListTypeCustomPaths<T> list);
+    ViewVariablesTypeHandler<T> GetTypeHandler<T>();
 
-    /// <inheritdoc cref="RegisterTypeHandler{T}(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})" path="/summary"/>
-    /// <param name="helper">The type handler helper to register.</param>
-    void RegisterTypeHandler<T>(TypeHandlerHelper<T> helper)
-        => RegisterTypeHandler<T>(helper.HandlePath, helper.ListPath);
-
-    /// <inheritdoc cref="RegisterTypeHandler{T}(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
-    /// <param name="type">The type to register the handlers for.</param>
-    // ReSharper disable twice InvalidXmlDocComment
-    void RegisterTypeHandler(Type type, HandleTypePath handler, ListTypeCustomPaths list);
-
-    /// <summary>
-    ///     Unregisters the handlers for a given type.
-    /// </summary>
-    /// <returns>Whether the type handler existed and was able to be removed.</returns>
-    bool UnregisterTypeHandler<T>();
-
-    /// <inheritdoc cref="UnregisterTypeHandler{T}"/>
-    /// <param name="type">The type to unregister the handlers for.</param>
-    bool UnregisterTypeHandler(Type type);
-
-    /// <summary>
-    ///     Resolves a ViewVariables path,
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
+    /// <param name="path">The path to be resolved.</param>
+    /// <returns>An object representing the path, or null if the path couldn't be resolved.</returns>
     ViewVariablesPath? ResolvePath(string path);
     object? ReadPath(string path);
     void WritePath(string path, string value);

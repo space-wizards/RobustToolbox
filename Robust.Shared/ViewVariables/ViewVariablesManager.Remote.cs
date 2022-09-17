@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -146,9 +147,20 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
+        string val;
+
+        try
+        {
+            val = SerializeValue(obj.GetType(), obj) ?? obj.ToString() ?? "null";
+        }
+        catch (Exception)
+        {
+            val = obj.ToString() ?? "null";
+        }
+
         SendMessage(new MsgViewVariablesReadPathRes(req)
         {
-            Response = new []{ SerializeValue(obj.GetType(), obj) ?? "null" }
+            Response = new []{ val }
         }, req.MsgChannel);
     }
 
@@ -248,9 +260,20 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
+        string val;
+
+        try
+        {
+            val = SerializeValue(path.InvokeReturnType, value) ?? value?.ToString() ?? "null";
+        }
+        catch (Exception)
+        {
+            val = value?.ToString() ?? "null";
+        }
+
         SendMessage(new MsgViewVariablesInvokePathRes(req)
         {
-            Response = new []{SerializeValue(path.InvokeReturnType, value) ?? "null"},
+            Response = new []{val},
         }, req.MsgChannel);
     }
 
@@ -292,7 +315,16 @@ internal abstract partial class ViewVariablesManager
             return;
 
         if (res.ResponseCode != ViewVariablesResponseCode.Ok)
+        {
             tsc.TrySetResult(null); // TODO: Use exceptions
+            return;
+        }
+
+        if (res.Response.Length == 0)
+        {
+            tsc.TrySetResult(null);
+            return;
+        }
 
         tsc.TrySetResult(res.Response[0]);
     }
@@ -312,7 +344,16 @@ internal abstract partial class ViewVariablesManager
             return;
 
         if (res.ResponseCode != ViewVariablesResponseCode.Ok)
+        {
             tsc.TrySetResult(null); // TODO: Use exceptions
+            return;
+        }
+
+        if (res.Response.Length == 0)
+        {
+            tsc.TrySetResult(null);
+            return;
+        }
 
         tsc.TrySetResult(res.Response[0]);
     }
@@ -323,13 +364,17 @@ internal abstract partial class ViewVariablesManager
             return;
 
         if (res.ResponseCode != ViewVariablesResponseCode.Ok)
+        {
             tsc.TrySetResult(Enumerable.Empty<string>()); // TODO: Use exceptions
+            return;
+        }
 
         tsc.TrySetResult(res.Response);
     }
 
     private void SendMessage(NetMessage msg, INetChannel? channel = null)
     {
+        // I'm surprised this isn't a method in INetManager already...
         if (_netMan.IsServer)
         {
             if (channel == null)

@@ -5,50 +5,31 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.ViewVariables;
 
-public delegate ViewVariablesPath? HandleTypePath(object? obj, string relativePath);
-public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
-public delegate IEnumerable<string> ListTypeCustomPaths(object? obj);
-public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T? obj);
-
 internal abstract partial class ViewVariablesManager
 {
-    private readonly Dictionary<Type,  TypeHandlerData> _registeredTypeHandlers = new();
+    private readonly Dictionary<Type,  ViewVariablesTypeHandler> _typeHandlers = new();
 
-    public void RegisterTypeHandler<T>(HandleTypePath<T> handler, ListTypeCustomPaths<T> list)
+    public ViewVariablesTypeHandler<T> GetTypeHandler<T>()
     {
-        ViewVariablesPath? Handler(object? obj, string relPath)
-            => handler((T?) obj, relPath);
+        if (_typeHandlers.TryGetValue(typeof(T), out var h))
+            return (ViewVariablesTypeHandler<T>)h;
 
-        IEnumerable<string> ListHandler(object? obj)
-            => list((T?) obj);
-
-        RegisterTypeHandler(typeof(T), Handler, ListHandler);
-    }
-
-    public void RegisterTypeHandler(Type type, HandleTypePath handler, ListTypeCustomPaths list)
-    {
-        if (_registeredTypeHandlers.ContainsKey(type))
-            throw new Exception("Duplicated registration!");
-
-        _registeredTypeHandlers[type] = new TypeHandlerData(handler, list);
-    }
-
-    public bool UnregisterTypeHandler<T>()
-    {
-        return UnregisterTypeHandler(typeof(T));
-    }
-
-    public bool UnregisterTypeHandler(Type type)
-    {
-        return _registeredTypeHandlers.Remove(type);
+        var handler = new ViewVariablesTypeHandler<T>();
+        _typeHandlers.Add(typeof(T), handler);
+        return handler;
     }
 
     private void InitializeTypeHandlers()
     {
-        RegisterTypeHandler<EntityUid>(HandleEntityPath, ListEntityTypeHandlerPaths);
+        GetTypeHandler<EntityUid>()
+            .AddHandler(EntityComponentHandler, EntityComponentList)
+            .AddPath("Delete",
+                uid => new ViewVariablesFakePath(null, null, _ => _entMan.DeleteEntity(uid)))
+            .AddPath("QueueDelete",
+                uid => new ViewVariablesFakePath(null, null, _ => _entMan.QueueDeleteEntity(uid)));
     }
 
-    private ViewVariablesPath? HandleEntityPath(EntityUid uid, string relativePath)
+    private ViewVariablesPath? EntityComponentHandler(EntityUid uid, string relativePath)
     {
         if (!_entMan.EntityExists(uid)
             || !_compFact.TryGetRegistration(relativePath, out var registration, true)
@@ -58,21 +39,9 @@ internal abstract partial class ViewVariablesManager
         return new ViewVariablesInstancePath(component);
     }
 
-    private IEnumerable<string> ListEntityTypeHandlerPaths(EntityUid uid)
+    private IEnumerable<string> EntityComponentList(EntityUid uid)
     {
         return _entMan.GetComponents(uid)
             .Select(component => _compFact.GetComponentName(component.GetType()));
-    }
-
-    internal sealed class TypeHandlerData
-    {
-        public readonly HandleTypePath Handle;
-        public readonly ListTypeCustomPaths List;
-
-        public TypeHandlerData(HandleTypePath handle, ListTypeCustomPaths list)
-        {
-            Handle = handle;
-            List = list;
-        }
     }
 }

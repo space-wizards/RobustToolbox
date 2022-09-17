@@ -139,7 +139,7 @@ internal abstract partial class ViewVariablesManager
 
             void Set(object? value)
             {
-                if(p != null)
+                if(p != null && access == VVAccess.ReadWrite)
                     setter?.Invoke(obj, new[] {value}.Concat(p).ToArray());
             }
 
@@ -175,10 +175,10 @@ internal abstract partial class ViewVariablesManager
         // First go through the inheritance chain, from current type to base types...
         while (type != null)
         {
-            if (_registeredTypeHandlers.TryGetValue(type, out var data))
+            if (_typeHandlers.TryGetValue(type, out var data))
             {
 
-                var path = data.Handle(obj, relativePath);
+                var path = data.HandlePath(obj, relativePath);
 
                 if (path != null)
                     return path;
@@ -190,9 +190,9 @@ internal abstract partial class ViewVariablesManager
         // Then go through all the implemented interfaces, if any.
         foreach (var interfaceType in obj.GetType().GetInterfaces())
         {
-            if (_registeredTypeHandlers.TryGetValue(interfaceType, out var data))
+            if (_typeHandlers.TryGetValue(interfaceType, out var data))
             {
-                var path = data.Handle(obj, relativePath);
+                var path = data.HandlePath(obj, relativePath);
 
                 if (path != null)
                     return path;

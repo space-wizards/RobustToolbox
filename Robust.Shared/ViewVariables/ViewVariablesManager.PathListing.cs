@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -77,9 +76,9 @@ internal abstract partial class ViewVariablesManager
 
         var type = obj.GetType();
 
-        if (_registeredTypeHandlers.TryGetValue(type, out var typeData))
+        if (_typeHandlers.TryGetValue(type, out var typeData))
         {
-            paths.AddRange(typeData.List(obj));
+            paths.AddRange(typeData.ListPath(obj));
         }
 
         // We also use a set here for unique names as we need to handle member hiding properly...

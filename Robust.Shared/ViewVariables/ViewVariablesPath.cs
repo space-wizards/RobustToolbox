@@ -5,15 +5,51 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Shared.ViewVariables;
 
+/// <summary>
+///     Represents a ViewVariables path. Allows you to "Get", "Set" or "Invoke" the path.
+/// </summary>
 [Virtual]
 public abstract class ViewVariablesPath
 {
+    /// <summary>
+    ///     The type that is both returned by the <see cref="Get"/> method and used by the <see cref="Set"/> method.
+    /// </summary>
     public abstract Type Type { get; }
+
+    /// <summary>
+    ///     Gets the value of the path, if possible.
+    /// </summary>
+    /// <returns>The value of the path, or null. Same type as <see cref="Type"/>.</returns>
     public abstract object? Get();
+
+    /// <summary>
+    ///     Sets the value of the path, if possible.
+    /// </summary>
+    /// <param name="value">The new value to set the path to. Must be of the same type as <see cref="Type"/>.</param>
     public abstract void Set(object? value);
+
+    /// <summary>
+    ///     Invokes the path, if possible.
+    /// </summary>
+    /// <param name="parameters">The parameters that the function takes.</param>
+    /// <returns>The object returned by invoking the function, or null.</returns>
     public abstract object? Invoke(object?[]? parameters);
+
+    /// <summary>
+    ///     The types of all parameters in the <see cref="Invoke"/> method.
+    /// </summary>
+    /// <seealso cref="InvokeOptionalParameters"/>
     public virtual Type[] InvokeParameterTypes { get; } = Array.Empty<Type>();
+
+    /// <summary>
+    ///     The number of optional parameters in the <see cref="Invoke"/> method, starting from the end of the array.
+    /// </summary>
+    /// <seealso cref="InvokeParameterTypes"/>
     public virtual uint InvokeOptionalParameters { get; } = 0;
+
+    /// <summary>
+    ///     The type of the object returned by the <see cref="Invoke"/> method, or <see cref="Void"/> if none.
+    /// </summary>
     public virtual Type InvokeReturnType { get; } = typeof(void);
 }
 
@@ -24,25 +60,25 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
         if (member is not (FieldInfo or PropertyInfo))
             throw new ArgumentException("Member must be either a field or a property!", nameof(member));
 
-        Object = obj;
-        Member = member;
-        ViewVariablesUtility.TryGetViewVariablesAccess(member, out Access);
+        _object = obj;
+        _member = member;
+        ViewVariablesUtility.TryGetViewVariablesAccess(member, out _access);
     }
 
-    public readonly object? Object;
-    public readonly MemberInfo Member;
-    public readonly VVAccess? Access;
-    public override Type Type => Member.GetUnderlyingType();
+    private readonly object? _object;
+    private readonly MemberInfo _member;
+    private readonly VVAccess? _access;
+    public override Type Type => _member.GetUnderlyingType();
 
     public override object? Get()
     {
-        if (Access == null)
+        if (_access == null)
             return null;
 
         try
         {
-            return Object != null
-                ? Member.GetValue(Object)
+            return _object != null
+                ? _member.GetValue(_object)
                 : null;
         }
         catch (Exception)
@@ -53,11 +89,11 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 
     public override void Set(object? value)
     {
-        if (Access != VVAccess.ReadWrite)
+        if (_access != VVAccess.ReadWrite)
             return;
 
-        if (Object != null)
-            Member.SetValue(Object, value);
+        if (_object != null)
+            _member.SetValue(_object, value);
     }
 
     public override object? Invoke(object?[]? parameters) => null;
@@ -67,16 +103,16 @@ internal sealed class ViewVariablesMethodPath : ViewVariablesPath
 {
     internal ViewVariablesMethodPath(object? obj, MethodInfo method)
     {
-        Object = obj;
-        Method = method;
-        ViewVariablesUtility.TryGetViewVariablesAccess(method, out Access);
+        _object = obj;
+        _method = method;
+        ViewVariablesUtility.TryGetViewVariablesAccess(method, out _access);
     }
 
-    public readonly object? Object;
-    public readonly MethodInfo Method;
-    public readonly VVAccess? Access;
+    private readonly object? _object;
+    private readonly MethodInfo _method;
+    private readonly VVAccess? _access;
     public override Type Type => typeof(void);
-    public override Type InvokeReturnType => Method.ReturnType;
+    public override Type InvokeReturnType => _method.ReturnType;
 
     public override object? Get() => null;
 
@@ -86,21 +122,21 @@ internal sealed class ViewVariablesMethodPath : ViewVariablesPath
 
     public override object? Invoke(object?[]? parameters)
     {
-        if (Access != VVAccess.ReadWrite)
+        if (_access != VVAccess.ReadWrite)
             return null;
 
-        return Object != null
-            ? Method.Invoke(Object, parameters)
+        return _object != null
+            ? _method.Invoke(_object, parameters)
             : null;
     }
 
     public override Type[] InvokeParameterTypes
-        => Access == VVAccess.ReadWrite
-            ? Method.GetParameters().Select(info => info.ParameterType).ToArray()
+        => _access == VVAccess.ReadWrite
+            ? _method.GetParameters().Select(info => info.ParameterType).ToArray()
             : Array.Empty<Type>();
     public override uint InvokeOptionalParameters
-        => Access == VVAccess.ReadWrite
-            ? (uint) Method.GetParameters().Count(info => info.IsOptional)
+        => _access == VVAccess.ReadWrite
+            ? (uint) _method.GetParameters().Count(info => info.IsOptional)
             : 0;
 }
 
@@ -111,27 +147,27 @@ internal sealed class ViewVariablesIndexedPath : ViewVariablesPath
         if (indexer.GetIndexParameters().Length == 0)
             throw new ArgumentException("PropertyInfo is not an indexer!", nameof(indexer));
 
-        Object = obj;
-        Indexer = indexer;
-        Index = index;
-        Access = parentAccess;
+        _object = obj;
+        _indexer = indexer;
+        _index = index;
+        _access = parentAccess;
     }
 
-    public readonly object? Object;
-    public readonly PropertyInfo Indexer;
-    public readonly object?[] Index;
-    public readonly VVAccess? Access;
-    public override Type Type => Indexer.GetUnderlyingType();
+    private readonly object? _object;
+    private readonly PropertyInfo _indexer;
+    private readonly object?[] _index;
+    private readonly VVAccess? _access;
+    public override Type Type => _indexer.GetUnderlyingType();
 
     public override object? Get()
     {
-        if (Access == null)
+        if (_access == null)
             return null;
 
         try
         {
-            return Object != null
-                ? Indexer.GetValue(Object, Index)
+            return _object != null
+                ? _indexer.GetValue(_object, _index)
                 : null;
         }
         catch (Exception)
@@ -142,8 +178,8 @@ internal sealed class ViewVariablesIndexedPath : ViewVariablesPath
 
     public override void Set(object? value)
     {
-        if(Access == VVAccess.ReadWrite && Object != null)
-            Indexer.SetValue(Object, value, Index);
+        if(_access == VVAccess.ReadWrite && _object != null)
+            _indexer.SetValue(_object, value, _index);
     }
 
     public override object? Invoke(object?[]? parameters) => null;
@@ -153,14 +189,14 @@ public sealed class ViewVariablesInstancePath : ViewVariablesPath
 {
     public ViewVariablesInstancePath(object? obj)
     {
-        Object = obj;
+        _object = obj;
     }
 
-    public readonly object? Object;
+    private readonly object? _object;
 
-    public override Type Type => Object?.GetType() ?? typeof(void);
+    public override Type Type => _object?.GetType() ?? typeof(void);
 
-    public override object? Get() => Object;
+    public override object? Get() => _object;
 
     public override void Set(object? value)
     {
@@ -172,35 +208,46 @@ public sealed class ViewVariablesInstancePath : ViewVariablesPath
 public sealed class ViewVariablesFakePath : ViewVariablesPath
 {
     public ViewVariablesFakePath(Func<object?>? getter, Action<object?>? setter, Func<object?, object?>? invoker,
-        Type type, Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
+        Type? type = null, Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
     {
-        Getter = getter;
-        Setter = setter;
-        Invoker = invoker;
-        Type = type;
+        _getter = getter;
+        _setter = setter;
+        _invoker = invoker;
+        Type = type ?? typeof(void);
         InvokeParameterTypes = invokeParameterTypes ?? Array.Empty<Type>();
         InvokeOptionalParameters = invokeOptionalParameters;
         InvokeReturnType = invokeReturnType ?? typeof(void);
     }
 
-    public readonly Func<object?>? Getter;
-    public readonly Action<object?>? Setter;
-    public readonly Func<object?, object?>? Invoker;
+    public ViewVariablesFakePath(Func<object?>? getter, Action<object?>? setter, Action<object?> invoker,
+        Type? type = null, Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
+        : this(getter, setter, null, type, invokeParameterTypes, invokeOptionalParameters, invokeReturnType)
+    {
+        _invoker = p =>
+        {
+            invoker(p);
+            return null;
+        };
+    }
+
+    private readonly Func<object?>? _getter;
+    private readonly Action<object?>? _setter;
+    private readonly Func<object?, object?>? _invoker;
     public override Type Type { get; }
 
     public override object? Get()
     {
-        return Getter?.Invoke();
+        return _getter?.Invoke();
     }
 
     public override void Set(object? value)
     {
-        Setter?.Invoke(value);
+        _setter?.Invoke(value);
     }
 
     public override object? Invoke(object?[]? parameters)
     {
-        return Invoker?.Invoke(parameters);
+        return _invoker?.Invoke(parameters);
     }
 
     public override Type[] InvokeParameterTypes { get; }

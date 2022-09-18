@@ -344,6 +344,8 @@ namespace Robust.Shared.GameObjects
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
                     comp.Step(frameTime, prediction);
+
+                    _physicsManager.ClearTransforms();
                 }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
@@ -358,9 +360,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _traversal.ProcessMovement();
-
             CachedEntityData.Clear();
-            _physicsManager.ClearTransforms();
         }
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)

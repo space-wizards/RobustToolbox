@@ -308,6 +308,11 @@ public abstract partial class SharedTransformSystem
         xform.LocalPosition = value;
     }
 
+    public virtual void SetLocalPositionCacheNoLerp(TransformComponent xform, Vector2 value)
+    {
+        xform.LocalPosition = value;
+    }
+
     #endregion
 
     #region Local Rotation
@@ -634,7 +639,7 @@ public abstract partial class SharedTransformSystem
 
         // world coords to parent coords
         var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
-        SetLocalPositionNoLerp(component, newPos);
+        SetLocalPositionCacheNoLerp(component, newPos);
     }
 
     #endregion

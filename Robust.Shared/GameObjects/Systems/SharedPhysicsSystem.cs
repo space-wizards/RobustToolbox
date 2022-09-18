@@ -344,10 +344,10 @@ namespace Robust.Shared.GameObjects
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
                     comp.Step(frameTime, prediction);
-
-                    var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
-                    RaiseLocalEvent(ref updateAfterSolve);
                 }
+
+                var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateAfterSolve);
             }
 
             // Go through and run all of the deferred events now

@@ -29,8 +29,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
-using PhysicsComponent = Robust.Shared.GameObjects.PhysicsComponent;
+using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -356,8 +357,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             SolveIslands(frameTime, dtRatio, invDt, prediction);
             Cleanup(frameTime);
-
-            ContactManager.PostSolve();
         }
 
         protected virtual void Cleanup(float frameTime)

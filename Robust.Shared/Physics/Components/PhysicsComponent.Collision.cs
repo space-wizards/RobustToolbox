@@ -1,10 +1,9 @@
 using System;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Components
 {
+    // TODO: Move to content
     [Serializable, NetSerializable]
     public enum BodyStatus: byte
     {

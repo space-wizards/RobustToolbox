@@ -27,19 +27,17 @@ namespace Robust.Shared.Network.Messages
         /// </summary>
         public ViewVariablesBlob Blob { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             RequestId = buffer.ReadUInt32();
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
             using var stream = buffer.ReadAlignedMemory(length);
             Blob = serializer.Deserialize<ViewVariablesBlob>(stream);
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(RequestId);
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
 
             var stream = new MemoryStream();
             serializer.Serialize(stream, Blob);

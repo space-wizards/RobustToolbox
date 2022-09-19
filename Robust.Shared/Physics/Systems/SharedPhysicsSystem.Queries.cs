@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Robust.Shared.Debugging;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Debugging;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Systems
 {
     /*
      * Handles all of the public query methods for physics.
@@ -84,7 +84,7 @@ namespace Robust.Shared.GameObjects
                         {
                             if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
                             if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-                            if (!body.ShouldCollide(other.Fixture.Body)) return true;
+                            if (!ShouldCollide(body, other.Fixture.Body)) return true;
 
                             state.entities.Add(other.Fixture.Body);
                             return true;

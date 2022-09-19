@@ -498,8 +498,8 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                _runtimeLog.LogException(e,
-                    $"RemoveComponentDeferred, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                Logger.Error($"Error while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(RemoveComponentDeferred));
             }
 #endif
         }
@@ -539,8 +539,8 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                _runtimeLog.LogException(e,
-                    $"RemoveComponentImmediate, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                Logger.Error($"Error while processing immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
 
@@ -578,8 +578,8 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                _runtimeLog.LogException(e,
-                    $"CullRemovedComponents, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                Logger.Error($"Error while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
 

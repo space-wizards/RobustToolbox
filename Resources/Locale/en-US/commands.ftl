@@ -167,3 +167,13 @@ cmd-uitest2-arg-tab = <tab>
 cmd-uitest2-error-args = Expected at most one argument
 cmd-uitest2-error-tab = Invalid tab: '{$value}'
 cmd-uitest2-title = UITest2
+
+## 'bind' command
+cmd-bind-desc = Binds an input key combination to an input command.
+cmd-bind-help = Usage: bind { cmd-bind-arg-key } { cmd-bind-arg-mode } { cmd-bind-arg-command }
+    Note that this DOES NOT automatically save bindings.
+    Use the 'svbind' command to save binding configuration.
+
+cmd-bind-arg-key = <KeyName>
+cmd-bind-arg-mode = <BindMode>
+cmd-bind-arg-command = <InputCommand>

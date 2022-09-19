@@ -295,7 +295,7 @@ namespace Robust.Server.GameObjects
 #if EXCEPTION_TOLERANCE
             catch (Exception e)
             {
-                _runtimeLog.LogException(e, $"{nameof(DispatchEntityNetworkMessage)} {message.Type}");
+                _runtimeLog.LogException(e, $"{nameof(DispatchEntityNetworkMessage)}({message.Type})");
             }
 #endif
         }

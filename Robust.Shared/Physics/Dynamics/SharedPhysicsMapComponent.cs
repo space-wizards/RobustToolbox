@@ -407,8 +407,6 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                //TODO: After the bodies are updated here, iterate all the bodies and then compare their coords to the cache?
-                //Then update them individiually if they differ.
                 island.UpdateBodies(_deferredUpdates);
                 island.SleepBodies(prediction, frameTime);
             }

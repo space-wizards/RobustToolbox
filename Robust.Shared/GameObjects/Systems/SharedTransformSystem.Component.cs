@@ -303,12 +303,12 @@ public abstract partial class SharedTransformSystem
         SetLocalPositionNoLerp(xform, value);
     }
 
-    //Also useful for substepping
     public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
     {
         xform.LocalPosition = value;
     }
 
+    //For Substepping
     public virtual void SetLocalPositionCacheNoLerp(TransformComponent xform, Vector2 value)
     {
         xform.LocalPosition = value;

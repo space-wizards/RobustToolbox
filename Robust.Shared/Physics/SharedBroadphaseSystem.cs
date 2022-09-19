@@ -381,6 +381,18 @@ namespace Robust.Shared.Physics
             RecursiveBroadphaseUpdate(xform, bodyQuery, fixturesQuery, xformQuery, broadQuery, newBroadphase, oldMoveBuffer);
         }
 
+        /// <summary>
+        /// Update broadphase for substepping. Prevents clipping through objects like thin windows.
+        /// </summary>
+        /// <param name="body">The body used</param>
+        /// <param name="worldPos">The world position of the body</param>
+        /// <param name="worldRot">The world rotation of the body</param>
+        /// <param name="manager">The fixture component of the body</param>
+        internal void UpdateBroadphase(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
+        {
+            SynchronizeFixtures(body, worldPos, worldRot, manager);
+        }
+
         private void RecursiveBroadphaseUpdate(
             TransformComponent xform,
             EntityQuery<PhysicsComponent> bodyQuery,

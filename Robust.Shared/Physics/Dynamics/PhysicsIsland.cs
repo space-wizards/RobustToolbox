@@ -532,7 +532,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                     _transform.SetWorldRotationCacheNoLerp(transform, angle, xforms);
                     transform.RebuildMatrices();
                     var broadphase = _entityManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
-                    broadphase.UpdateBroadphase(transform.Owner, transform.MapID, transform);
+                    if (!_entityManager.TryGetComponent<FixturesComponent>(transform.Owner, out var manager))
+                    {
+                        return;
+                    }
+                    broadphase.UpdateBroadphase(body, transform.WorldPosition, (float)transform.WorldRotation.Theta, manager);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

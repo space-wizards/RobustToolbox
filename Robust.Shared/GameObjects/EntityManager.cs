@@ -349,7 +349,6 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
         {
-
             var transform = xformQuery.GetComponent(metadata.Owner);
 
             // Detach the base entity to null before iterating over children

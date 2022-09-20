@@ -18,11 +18,18 @@ public interface IPVSCollection
     /// Processes all previous additions, removals and updates of indices.
     /// </summary>
     public void Process();
-    public void AddPlayer(ICommonSession session);
+
+    /// <summary>
+    ///     Adds a player session to the collection. Returns false if the player was already present.
+    /// </summary>
+    public bool AddPlayer(ICommonSession session);
     public void AddGrid(GridId gridId);
     public void AddMap(MapId mapId);
 
-    public void RemovePlayer(ICommonSession session);
+    /// <summary>
+    ///     Removes a player session from the collection. Returns false if the player was not present in the collection.
+    /// </summary>
+    public bool RemovePlayer(ICommonSession session);
 
     public void RemoveGrid(GridId gridId);
 
@@ -249,10 +256,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     #region Init Functions
 
     /// <inheritdoc />
-    public void AddPlayer(ICommonSession session)
+    public bool AddPlayer(ICommonSession session)
     {
-        _localOverrides[session] = new();
-        _lastSeen[session] = new();
+        return _localOverrides.TryAdd(session, new()) & _lastSeen.TryAdd(session, new());
     }
 
     /// <inheritdoc />
@@ -266,14 +272,17 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     #region ShutdownFunctions
 
     /// <inheritdoc />
-    public void RemovePlayer(ICommonSession session)
+    public bool RemovePlayer(ICommonSession session)
     {
-        foreach (var index in _localOverrides[session])
+        if (_localOverrides.Remove(session, out var indices))
         {
-            _indexLocations.Remove(index);
+            foreach (var index in indices)
+            {
+                _indexLocations.Remove(index);
+            }
         }
-        _localOverrides.Remove(session);
-        _lastSeen.Remove(session);
+
+        return _lastSeen.Remove(session) && indices != null;
     }
 
     /// <inheritdoc />

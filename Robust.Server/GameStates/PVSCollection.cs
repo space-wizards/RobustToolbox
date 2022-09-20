@@ -18,10 +18,17 @@ public interface IPVSCollection
     /// Processes all previous additions, removals and updates of indices.
     /// </summary>
     public void Process();
+
+    /// <summary>
+    ///     Adds a player session to the collection. Returns false if the player was already present.
+    /// </summary>
     public bool AddPlayer(ICommonSession session);
     public void AddGrid(GridId gridId);
     public void AddMap(MapId mapId);
 
+    /// <summary>
+    ///     Removes a player session from the collection. Returns false if the player was not present in the collection.
+    /// </summary>
     public bool RemovePlayer(ICommonSession session);
 
     public void RemoveGrid(GridId gridId);

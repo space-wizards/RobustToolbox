@@ -46,7 +46,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     Matrix equivalent of <see cref="LocalToWorld(Vector2)"/>.
         /// </summary>
-        Matrix3 WorldToLocalMatrix { get; }
+        Matrix3 GetWorldToLocalMatrix();
 
         /// <summary>
         ///     Converts a point in world-space to the viewport's screen coordinates.

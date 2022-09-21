@@ -77,11 +77,6 @@ namespace Robust.Shared.GameObjects
             UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
-        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
-        {
-            UpdateCanCollide(uid, component, checkTerminating: false, dirty: false);
-        }
-
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
             UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);

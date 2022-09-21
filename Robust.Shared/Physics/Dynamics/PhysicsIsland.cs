@@ -520,10 +520,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                     var q = new Quaternion2D(angle);
 
                     bodyPos -= Transform.Mul(q, body.LocalCenter);
-                    // body.Sweep.Center = bodyPos;
-                    // body.Sweep.Angle = angle;
-
-                    // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
                     var transform = xforms.GetComponent(body.Owner);
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.

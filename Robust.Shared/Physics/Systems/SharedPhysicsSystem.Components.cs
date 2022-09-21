@@ -125,7 +125,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyAngularImpulse(PhysicsComponent body, float impulse)
     {
-        if (IsMoveable(body) || !WakeBody(body))
+        if (!IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -135,7 +135,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyForce(PhysicsComponent body, Vector2 force)
     {
-        if (IsMoveable(body) || !WakeBody(body))
+        if (!IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -145,7 +145,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(PhysicsComponent body, Vector2 impulse)
     {
-        if (IsMoveable(body) || !WakeBody(body))
+        if (!IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -155,7 +155,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(PhysicsComponent body, Vector2 impulse, Vector2 point)
     {
-        if (IsMoveable(body) || !WakeBody(body))
+        if (!IsMoveable(body) || !WakeBody(body))
         {
             return;
         }

@@ -126,12 +126,16 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
+    private bool IsMoveable(PhysicsComponent body)
+    {
+        return (body._bodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0x0;
+    }
+
     #region Impulses
 
     public void ApplyAngularImpulse(PhysicsComponent body, float impulse)
     {
-        if ((body._bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0 ||
-            !WakeBody(body))
+        if (IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -141,8 +145,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyForce(PhysicsComponent body, Vector2 force)
     {
-        if (body._bodyType != BodyType.Dynamic ||
-            !WakeBody(body))
+        if (IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -152,8 +155,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(PhysicsComponent body, Vector2 impulse)
     {
-        if ((body._bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0 ||
-            !WakeBody(body))
+        if (IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -163,8 +165,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(PhysicsComponent body, Vector2 impulse, Vector2 point)
     {
-        if ((body._bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0 ||
-            !WakeBody(body))
+        if (IsMoveable(body) || !WakeBody(body))
         {
             return;
         }
@@ -258,6 +259,7 @@ public partial class SharedPhysicsSystem
         // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
         if (((int) body._bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
+            Dirty(body);
             return;
         }
 

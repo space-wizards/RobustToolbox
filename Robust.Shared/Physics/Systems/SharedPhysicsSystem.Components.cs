@@ -38,7 +38,6 @@ namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly CollisionWakeSystem _collisionWakeSystem = default!;
     [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
@@ -55,12 +54,7 @@ public partial class SharedPhysicsSystem
 
         if (component._canCollide && xform.MapID != MapId.Nullspace)
         {
-            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(xform.MapID));
-
-            if (component.BodyType != BodyType.Static &&
-                (physicsMap.Gravity != Vector2.Zero ||
-                 !component.LinearVelocity.Equals(Vector2.Zero) ||
-                 !component.AngularVelocity.Equals(0f)))
+            if (component.BodyType != BodyType.Static)
             {
                 component.Awake = true;
             }
@@ -79,10 +73,6 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsInitialized(EntityUid uid)
     {
-        if (EntityManager.TryGetComponent(uid, out CollisionWakeComponent? wakeComp))
-        {
-            _collisionWakeSystem.OnPhysicsInit(uid, wakeComp);
-        }
         _fixtureSystem.OnPhysicsInit(uid);
     }
 

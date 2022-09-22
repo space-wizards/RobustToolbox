@@ -30,6 +30,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -143,6 +144,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         private SharedTransformSystem _transform = default!;
+        private SharedPhysicsSystem _physics = default!;
 #if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
@@ -219,7 +221,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         }
 
         internal void LoadConfig(in IslandCfg cfg)
@@ -540,14 +543,14 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
                 {
-                    body.LinearVelocity = linVelocity;
+                    _physics.SetLinearVelocity(body, linVelocity);
                 }
 
                 var angVelocity = _angularVelocities[i];
 
                 if (!float.IsNaN(angVelocity))
                 {
-                    body.AngularVelocity = angVelocity;
+                    _physics.SetAngularVelocity(body, angVelocity);
                 }
             }
         }
@@ -568,16 +571,16 @@ stored in a single array since multiple arrays lead to multiple misses.
                             body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
                             Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
                         {
-                            body.SleepTime = 0.0f;
+                            _physics.SetSleepTime(body, 0f);
                         }
                         else
                         {
-                            body.SleepTime += frameTime;
+                            _physics.SetSleepTime(body, body.SleepTime + frameTime);
                         }
 
                         if (body.SleepTime >= _timeToSleep && _positionSolved)
                         {
-                            body.Awake = false;
+                            _physics.SetAwake(body, false);
                         }
                     }
                 }
@@ -599,12 +602,12 @@ stored in a single array since multiple arrays lead to multiple misses.
                             body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
                             Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
                         {
-                            body.SleepTime = 0.0f;
+                            _physics.SetSleepTime(body, 0f);
                             minSleepTime = 0.0f;
                         }
                         else
                         {
-                            body.SleepTime += frameTime;
+                            _physics.SetSleepTime(body, body.SleepTime + frameTime);
                             minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
                         }
                     }
@@ -614,7 +617,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                         for (var i = 0; i < BodyCount; i++)
                         {
                             var body = Bodies[i];
-                            body.Awake = false;
+                            _physics.SetAwake(body, false);
                         }
                     }
                 }

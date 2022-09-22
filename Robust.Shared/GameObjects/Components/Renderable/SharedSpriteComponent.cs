@@ -58,30 +58,16 @@ namespace Robust.Shared.GameObjects
         [DataDefinition]
         public sealed class PrototypeLayerData
         {
-            [DataField("shader")]
-            public string? Shader;
-            [DataField("texture")]
-            public string? TexturePath;
-            [DataField("sprite")]
-            public string? RsiPath;
-            [DataField("state")]
-            public string? State;
-            [DataField("scale")]
-            public Vector2? Scale;
-            [DataField("rotation")]
-            public Angle? Rotation;
-            [DataField("offset")]
-            public Vector2? Offset;
-            [DataField("visible")]
-            public bool? Visible;
-            [DataField("color")]
-            public Color? Color;
-            [DataField("map")]
-            public HashSet<string>? MapKeys;
-
-            // TODO delete this.
-            // requires content PR and I cbf the current PR to a content one.
-            public static PrototypeLayerData New() => new();
+            [DataField("shader")] public string? Shader;
+            [DataField("texture")] public string? TexturePath;
+            [DataField("sprite")] public string? RsiPath;
+            [DataField("state")] public string? State;
+            [DataField("scale")] public Vector2? Scale;
+            [DataField("rotation")] public Angle? Rotation;
+            [DataField("offset")] public Vector2? Offset;
+            [DataField("visible")] public bool? Visible;
+            [DataField("color")] public Color? Color;
+            [DataField("map")] public HashSet<string>? MapKeys;
         }
     }
 }

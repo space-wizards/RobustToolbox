@@ -47,6 +47,7 @@ namespace Robust.Shared.Physics.Systems
     public abstract class SharedJointSystem : EntitySystem
     {
         [Dependency] private readonly SharedContainerSystem _container = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
@@ -66,6 +67,8 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
             SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
         }
+
+        #region Lifetime
 
         private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
         {
@@ -89,8 +92,8 @@ namespace Robust.Shared.Physics.Systems
                     continue;
                 }
 
-                bodyA.WakeBody();
-                bodyB.WakeBody();
+                _physics.WakeBody(bodyA);
+                _physics.WakeBody(bodyB);
 
                 // Raise broadcast last so we can do both sides of directed first.
                 var vera = new JointAddedEvent(joint, bodyA, bodyB);
@@ -101,17 +104,6 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private IEnumerable<Joint> GetAllJoints()
-        {
-            foreach (var jointComp in EntityManager.EntityQuery<JointComponent>(true))
-            {
-                foreach (var (_, joint) in jointComp.Joints)
-                {
-                    yield return joint;
-                }
-            }
-        }
-
         private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
         {
             foreach (var joint in component.Joints.Values)
@@ -119,6 +111,8 @@ namespace Robust.Shared.Physics.Systems
                 RemoveJoint(joint);
             }
         }
+
+        #endregion
 
         public override void Update(float frameTime)
         {
@@ -206,10 +200,8 @@ namespace Robust.Shared.Physics.Systems
                 FilterContactsForJoint(joint, bodyA, bodyB);
             }
 
-            bodyA.CanCollide = true;
-            bodyB.CanCollide = true;
-            bodyA.WakeBody();
-            bodyB.WakeBody();
+            _physics.WakeBody(bodyA);
+            _physics.WakeBody(bodyB);
             Dirty(bodyA);
             Dirty(bodyB);
             Dirty(jointComponentA);
@@ -413,22 +405,25 @@ namespace Robust.Shared.Physics.Systems
             AddedJoints.Add(joint);
         }
 
-        public void ClearJoints(PhysicsComponent body)
+        public void ClearJoints(EntityUid uid, JointComponent? component = null)
         {
-            if (TryComp<JointComponent>(body.Owner, out var joint))
-                ClearJoints(joint);
-        }
+            if (!Resolve(uid, ref component, false))
+                return;
 
-        public void ClearJoints(JointComponent joint)
-        {
             // TODO PERFORMANCE
             // This will re-fetch the joint & body component for this entity ( & ever connected
             // entity), for each and every joint. at the very least, we could pass in the joint & physics comp. As long
             // as most entities only have a single joint, fetching connected components probably isn't worth it.
-            foreach (var a in joint.Joints.Values.ToArray())
+            foreach (var a in component.Joints.Values.ToArray())
             {
                 RemoveJoint(a);
             }
+        }
+
+        [Obsolete("Use the other ClearJoints overload")]
+        public void ClearJoints(JointComponent joint)
+        {
+            ClearJoints(joint.Owner, joint);
         }
 
         public void RemoveJoint(Joint joint)

@@ -17,6 +17,10 @@ namespace Robust.Shared.Physics.Components
         public readonly float AngularVelocity;
         public readonly BodyType BodyType;
 
+        public float Friction;
+        public float LinearDamping;
+        public float AngularDamping;
+
         /// <summary>
         ///
         /// </summary>
@@ -34,7 +38,10 @@ namespace Robust.Shared.Physics.Components
             BodyStatus status,
             Vector2 linearVelocity,
             float angularVelocity,
-            BodyType bodyType)
+            BodyType bodyType,
+            float friction,
+            float linearDamping,
+            float angularDamping)
         {
             CanCollide = canCollide;
             SleepingAllowed = sleepingAllowed;
@@ -44,6 +51,10 @@ namespace Robust.Shared.Physics.Components
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
             BodyType = bodyType;
+
+            Friction = friction;
+            LinearDamping = linearDamping;
+            AngularDamping = angularDamping;
         }
     }
 }

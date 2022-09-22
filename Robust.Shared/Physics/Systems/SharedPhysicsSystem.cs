@@ -315,8 +315,7 @@ namespace Robust.Shared.Physics.Systems
             if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
                 return;
 
-            SetCanCollide(physics, true, false);
-            physics.Awake = true;
+            WakeBody(physics);
         }
 
         /// <summary>

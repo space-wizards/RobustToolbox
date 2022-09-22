@@ -522,10 +522,9 @@ stored in a single array since multiple arrays lead to multiple misses.
                     bodyPos -= Transform.Mul(q, body.LocalCenter);
                     var transform = xforms.GetComponent(body.Owner);
 
-                    // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                    // Defer MoveEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;
-                    _transform.SetWorldPosition(transform, bodyPos, xforms);
-                    _transform.SetWorldRotation(transform, angle, xforms);
+                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

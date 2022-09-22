@@ -49,7 +49,6 @@ internal partial class MapManager
         EntityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
         EntityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
-        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>(OnGridParentChange);
     }
 
@@ -58,7 +57,6 @@ internal partial class MapManager
         EntityManager.EventBus.UnsubscribeEvent<GridInitializeEvent>(EventSource.Local, this);
         EntityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
-        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
         EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntParentChangedMessage>();
 
         DebugTools.Assert(_gridTrees.Count == 0);
@@ -81,9 +79,9 @@ internal partial class MapManager
         _movedGrids.Remove(e.Map);
     }
 
-    private Box2 GetWorldAABB(MapGrid grid)
+    private Box2 GetWorldAABB(MapGrid grid, TransformComponent? xform = null)
     {
-        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        xform ??= EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
@@ -136,21 +134,8 @@ internal partial class MapManager
         // Just maploader / test things
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var aabb = GetWorldAABB(grid);
-        _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[grid.ParentMapId].Add(grid);
-    }
-
-    private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
-    {
-        var grid = (MapGrid) component.Grid;
-
-        // Just maploader / test things
-        if (grid.MapProxy == DynamicTree.Proxy.Free) return;
-
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var aabb = GetWorldAABB(grid);
+        var xform = args.Component;
+        var aabb = GetWorldAABB(grid, xform);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
         _movedGrids[grid.ParentMapId].Add(grid);
     }
@@ -189,7 +174,7 @@ internal partial class MapManager
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var aabb = GetWorldAABB(grid);
+        var aabb = GetWorldAABB(grid, xform);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
         _movedGrids[xform.MapID].Add(grid);
     }

@@ -119,7 +119,14 @@ namespace Robust.Client.Prototypes
                     });
                 };
 
-                watcher.EnableRaisingEvents = true;
+                try
+                {
+                    watcher.EnableRaisingEvents = true;
+                }
+                catch (IOException ex)
+                {
+                    Logger.Error($"Watching resources in path {path} threw an exception:\n{ex}");
+                }
                 _watchers.Add(watcher);
             }
 #endif

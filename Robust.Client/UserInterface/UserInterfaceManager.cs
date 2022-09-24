@@ -250,7 +250,10 @@ namespace Robust.Client.UserInterface
                 _prof.WriteValue("Total", ProfData.Int32(total));
             }
 
-            UpdateControllers(args);
+            using (_prof.Group("Controllers"))
+            {
+                UpdateControllers(args);
+            }
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it

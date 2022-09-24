@@ -1079,7 +1079,15 @@ internal sealed partial class PVSSystem : EntitySystem
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
         }
 
-        return new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
+
+        if (meta.LastComponentRemoved > fromTick)
+        {
+            // TODO: should this respect NetSyncEnabled, SendOnlyToOwner & CanGetComponentState?
+            entState.NetComponents = new(EntityManager.GetNetComponentIds(entityUid));
+        }
+
+        return entState;
     }
 
     /// <summary>
@@ -1104,7 +1112,12 @@ internal sealed partial class PVSSystem : EntitySystem
             changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
         }
 
-        return new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
+
+        // TODO: should this respect NetSyncEnabled, SendOnlyToOwner & CanGetComponentState?
+        entState.NetComponents = new(EntityManager.GetNetComponentIds(entityUid));
+
+        return entState;
     }
 
     private EntityUid[] GetSessionViewers(ICommonSession session)

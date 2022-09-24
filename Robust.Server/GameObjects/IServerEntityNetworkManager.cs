@@ -8,7 +8,5 @@ namespace Robust.Server.GameObjects
     public interface IServerEntityNetworkManager : IEntityNetworkManager
     {
         uint GetLastMessageSequence(IPlayerSession session);
-        Dictionary<EntityUid, List<ushort>> GetDeletedComponents(GameTick fromTick);
-        void CullDeletionHistory(GameTick oldestAck);
     }
 }

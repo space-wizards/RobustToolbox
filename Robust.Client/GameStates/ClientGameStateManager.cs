@@ -692,22 +692,6 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            // Apply networked component removal data:
-            int compCount = 0;
-            using (_prof.Group("Removing Components"))
-            {
-                foreach (var (uid, comps) in curState.ComponentDeletions)
-                {
-                    compCount += comps.Count;
-                    foreach (var netId in comps)
-                    {
-                        _entities.RemoveComponent(uid, netId);
-                    }
-                }
-                _prof.WriteValue("Count (ents)", ProfData.Int32(curState.ComponentDeletions.Count));
-                _prof.WriteValue("Count (comps)", ProfData.Int32(compCount));
-            }
-
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
@@ -895,6 +879,22 @@ namespace Robust.Client.GameStates
         {
             var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
+
+            // First remove any deleted components
+            if (curState?.NetComponents is { } netCompIds)
+            {
+                RemQueue<Component> toRemove = new();
+                foreach (var (id, comp) in _entities.GetNetComponents(uid))
+                {
+                    if (comp.NetSyncEnabled && !netCompIds.Contains(id))
+                        toRemove.Add(comp);
+                }
+
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(uid, comp);
+                }
+            }
 
             if (enteringPvs)
             {

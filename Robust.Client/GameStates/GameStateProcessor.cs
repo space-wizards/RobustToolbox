@@ -169,17 +169,6 @@ namespace Robust.Client.GameStates
                 {
                     _lastStateFullRep.Remove(deletion);
                 }
-
-                foreach (var (uid, deletedComps) in state.ComponentDeletions)
-                {
-                    if (!_lastStateFullRep.TryGetValue(uid, out var compData))
-                        continue;
-
-                    foreach (var netId in deletedComps)
-                    {
-                        compData.Remove(netId);
-                    }
-                }
             }
 
             foreach (var entityState in state.EntityStates.Span)
@@ -188,6 +177,15 @@ namespace Robust.Client.GameStates
                 {
                     compData = new Dictionary<ushort, ComponentState>();
                     _lastStateFullRep.Add(entityState.Uid, compData);
+                }
+
+                if (entityState.NetComponents != null)
+                {
+                    foreach (var key in compData.Keys)
+                    {
+                        if (!entityState.NetComponents.Contains(key))
+                            compData.Remove(key);
+                    }
                 }
 
                 foreach (var change in entityState.ComponentChanges.Span)

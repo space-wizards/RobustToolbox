@@ -122,15 +122,12 @@ namespace Robust.Server.GameObjects
             _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
 
             // For syncing component deletions.
-            EntityDeleted += OnEntityRemoved;
             ComponentRemoved += OnComponentRemoved;
-            ComponentAdded += OnComponentAdded;
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
-
 
         /// <inheritdoc />
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
@@ -153,85 +150,13 @@ namespace Robust.Server.GameObjects
             return _lastProcessedSequencesCmd[session];
         }
 
-        private void OnEntityRemoved(EntityUid e)
-        {
-            if (_componentDeletionHistory.ContainsKey(e))
-                _componentDeletionHistory.Remove(e);
-        }
-
         private void OnComponentRemoved(RemovedComponentEventArgs e)
         {
             if (e.Terminating || !e.BaseArgs.Component.NetSyncEnabled)
                 return;
 
-            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
-
-            // We only keep track of networked components being removed.
-            if (reg.NetID is not {} netId)
-                return;
-
-            var uid = e.BaseArgs.Owner;
-
-            if (!_componentDeletionHistory.TryGetValue(uid, out var dict))
-            {
-                dict = new();
-                _componentDeletionHistory[uid] = dict;
-            }
-
-            dict.Add(netId, _gameTiming.CurTick);
-        }
-
-        private void OnComponentAdded(AddedComponentEventArgs e)
-        {
-            // if a component was removed and then gets re-added before removal history gets culled, this ensures that we
-            // don't accidentally instruct clients to remove those components:
-
-            if (!e.BaseArgs.Component.NetSyncEnabled)
-                return;
-
-            if (!_componentDeletionHistory.TryGetValue(e.BaseArgs.Owner, out var history))
-                return;
-
-            var reg = ComponentFactory.GetRegistration(e.BaseArgs.Component.GetType());
-
-            if (reg.NetID != null)
-                history.Remove(reg.NetID.Value);
-        }
-
-        public Dictionary<EntityUid, List<ushort>> GetDeletedComponents(GameTick fromTick)
-        {
-            // TODO maybe it would just be better to just send the whole deletion history, instead of constructing this data for each client?
-
-            var result = new Dictionary<EntityUid, List<ushort>>(_componentDeletionHistory.Count);
-            foreach (var (uid, history) in _componentDeletionHistory)
-            {
-                var list = new List<ushort>(history.Count);
-
-                foreach (var (id, tick) in history)
-                {
-                    if (tick >= fromTick) list.Add(id);
-                }
-
-                result.Add(uid, list);
-            }
-
-            return result;
-        }
-
-        public void CullDeletionHistory(GameTick oldestAck)
-        {
-            foreach (var (uid, deletions) in _componentDeletionHistory)
-            {
-                foreach (var (netId, tick) in deletions)
-                {
-                    if (tick <= oldestAck)
-                        deletions.Remove(netId);
-                }
-
-                if (deletions.Count == 0)
-                    _componentDeletionHistory.Remove(uid);
-            }
-            
+            if (TryGetComponent(e.BaseArgs.Owner, out MetaDataComponent? meta))
+                meta.LastComponentRemoved = _gameTiming.CurTick;
         }
 
         /// <inheritdoc />

@@ -359,6 +359,11 @@ namespace Robust.Shared.GameObjects
         NetComponentEnumerable GetNetComponents(EntityUid uid);
 
         /// <summary>
+        ///     Returns ALL networked components Ids on an entity.
+        /// </summary>
+        IReadOnlyCollection<ushort> GetNetComponentIds(EntityUid uid);
+
+        /// <summary>
         ///     Gets a component state.
         /// </summary>
         /// <param name="eventBus">A reference to the event bus instance.</param>

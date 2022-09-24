@@ -2,6 +2,7 @@ using Robust.Shared.Serialization;
 using System;
 using NetSerializer;
 using Robust.Shared.Timing;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -15,6 +16,12 @@ namespace Robust.Shared.GameObjects
         public bool Empty => ComponentChanges.Value is null or { Count: 0 };
 
         public readonly GameTick EntityLastModified;
+
+        /// <summary>
+        ///     Set of all networked component ids. Only sent to clients if a component has been removed sometime since the
+        ///     entity was last sent to a player.
+        /// </summary>
+        public HashSet<ushort>? NetComponents = null;
 
         public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified)
         {

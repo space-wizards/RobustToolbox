@@ -28,7 +28,6 @@ namespace Robust.Shared.GameStates
             NetListAsArray<EntityState> entities,
             NetListAsArray<PlayerState> players,
             NetListAsArray<EntityUid> deletions,
-            Dictionary<EntityUid, List<ushort>> componentDeletions,
             GameStateMapData? mapData)
         {
             FromSequence = fromSequence;
@@ -37,7 +36,6 @@ namespace Robust.Shared.GameStates
             EntityStates = entities;
             PlayerStates = players;
             EntityDeletions = deletions;
-            ComponentDeletions = componentDeletions;
             MapData = mapData;
         }
 
@@ -49,7 +47,6 @@ namespace Robust.Shared.GameStates
         public readonly NetListAsArray<EntityState> EntityStates;
         public readonly NetListAsArray<PlayerState> PlayerStates;
         public readonly NetListAsArray<EntityUid> EntityDeletions;
-        public readonly Dictionary<EntityUid, List<ushort>> ComponentDeletions;
         public readonly GameStateMapData? MapData;
     }
 }

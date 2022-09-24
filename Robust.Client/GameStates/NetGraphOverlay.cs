@@ -23,6 +23,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -80,7 +81,6 @@ namespace Robust.Client.GameStates
             string? entDelString = null;
             var conShell = IoCManager.Resolve<IConsoleHost>().LocalShell;
 
-            bool found = false;
             var entStates = args.AppliedState.EntityStates;
             if (entStates.HasContents)
             {
@@ -89,8 +89,6 @@ namespace Robust.Client.GameStates
                 {
                     if (entState.Uid != WatchEntId)
                         continue;
-
-                    found = true;
 
                     if (!entState.ComponentChanges.HasContents)
                     {
@@ -109,16 +107,6 @@ namespace Robust.Client.GameStates
                     }
 
                     break;
-                }
-
-                if (args.AppliedState.ComponentDeletions.TryGetValue(WatchEntId, out var deletions))
-                {
-                    sb.Append($"\n  Component Deletions:");
-                    foreach (var netId in deletions)
-                    {
-                        var registration = _componentFactory.GetRegistration(netId);
-                        sb.Append($"\n    [{netId}:{registration.Name}");
-                    }
                 }
 
                 entStateString = sb.ToString();

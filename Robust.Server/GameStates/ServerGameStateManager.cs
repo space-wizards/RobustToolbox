@@ -166,7 +166,6 @@ namespace Robust.Server.GameStates
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
-                _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.Cleanup(_playerManager.ServerSessions);
@@ -270,12 +269,6 @@ namespace Robust.Server.GameStates
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
 
-                // Get list of deleted components. Just like entity deletions, these are currently sent to all players
-                // regardless of PVS (otherwise history culling has to be redone). This does leak data about events
-                // going on out of a player's view (e.g., a slipping component being removed implies that a player is
-                // still alive). so maybe: consider re-using something like PVS's `LastSeenAt` tick data.
-                var componentDeletions = _entityNetworkManager.GetDeletedComponents(fromTick);
-
                 var state = new GameState(
                     fromTick,
                     _gameTiming.CurTick,
@@ -283,7 +276,6 @@ namespace Robust.Server.GameStates
                     entStates,
                     playerStates,
                     deletions,
-                    componentDeletions,
                     mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
@@ -324,7 +316,6 @@ namespace Robust.Server.GameStates
             if (oldestAck > _lastOldestAck)
             {
                 _lastOldestAck = oldestAck;
-                _entityManager.CullDeletionHistory(oldestAck);
                 _pvs.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }

@@ -106,9 +106,11 @@ namespace Robust.Client.GameStates
                             sb.Append($"\n      STATE:{compChange.State.GetType().Name}");
                     }
 
+                    // Note that component deletion is now implicit via the list of network comp ids. So it currently
+                    // doesn't get logged here.
+
                     break;
                 }
-
                 entStateString = sb.ToString();
             }
 

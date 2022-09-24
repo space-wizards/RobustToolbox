@@ -1127,10 +1127,7 @@ namespace Robust.Client.GameStates
             RemQueue<Component> toRemove = new();
             foreach (var (id, comp) in _entities.GetNetComponents(uid))
             {
-                if (!comp.NetSyncEnabled)
-                    continue;
-
-                if (!lastState.ContainsKey(id))
+                if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
                     toRemove.Add(comp);
             }
 

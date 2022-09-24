@@ -112,8 +112,6 @@ namespace Robust.Server.GameObjects
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
             new();
 
-        private readonly Dictionary<EntityUid, Dictionary<ushort, GameTick>> _componentDeletionHistory = new();
-
         private bool _logLateMsgs;
 
         /// <inheritdoc />

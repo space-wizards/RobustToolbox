@@ -76,8 +76,9 @@ namespace Robust.Client.UserInterface
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
                 {
-                    wordWrap.NextRune(rune, out breakLine, out var skip);
+                    wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
                     CheckLineBreak(ref this, breakLine);
+                    CheckLineBreak(ref this, breakNewLine);
                     if (skip)
                         continue;
 

@@ -35,11 +35,12 @@ internal struct WordWrap
         LastRune = new Rune('A');
     }
 
-    public void NextRune(Rune rune, out int? breakLine, out bool skip)
+    public void NextRune(Rune rune, out int? breakLine, out int? breakNewLine, out bool skip)
     {
         BreakIndexCounter += 1;
 
         breakLine = null;
+        breakNewLine = null;
         skip = false;
 
         if (IsWordBoundary(LastRune, rune) || rune == new Rune('\n'))
@@ -69,7 +70,7 @@ internal struct WordWrap
                 PosX = 0;
                 WordStartBreakIndex = null;
                 skip = true;
-                breakLine = BreakIndexCounter;
+                breakNewLine = BreakIndexCounter;
             }
         }
 

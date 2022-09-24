@@ -269,8 +269,22 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
-                    entStates, playerStates, deletions, mapData);
+
+                // Get list of deleted components. Just like entity deletions, these are currently sent to all players
+                // regardless of PVS (otherwise history culling has to be redone). This does leak data about events
+                // going on out of a player's view (e.g., a slipping component being removed implies that a player is
+                // still alive). so maybe: consider re-using something like PVS's `LastSeenAt` tick data.
+                var componentDeletions = _entityNetworkManager.GetDeletedComponents(fromTick);
+
+                var state = new GameState(
+                    fromTick,
+                    _gameTiming.CurTick,
+                    Math.Max(lastInputCommand, lastSystemMessage),
+                    entStates,
+                    playerStates,
+                    deletions,
+                    componentDeletions,
+                    mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 

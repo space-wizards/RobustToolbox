@@ -80,6 +80,7 @@ namespace Robust.Client.GameStates
             string? entDelString = null;
             var conShell = IoCManager.Resolve<IConsoleHost>().LocalShell;
 
+            bool found = false;
             var entStates = args.AppliedState.EntityStates;
             if (entStates.HasContents)
             {
@@ -88,6 +89,8 @@ namespace Robust.Client.GameStates
                 {
                     if (entState.Uid != WatchEntId)
                         continue;
+
+                    found = true;
 
                     if (!entState.ComponentChanges.HasContents)
                     {
@@ -99,15 +102,25 @@ namespace Robust.Client.GameStates
                     foreach (var compChange in entState.ComponentChanges.Span)
                     {
                         var registration = _componentFactory.GetRegistration(compChange.NetID);
-                        var create = compChange.Created ? 'C' : '\0';
-                        var mod = !(compChange.Created || compChange.Created) ? 'M' : '\0';
-                        var del = compChange.Deleted ? 'D' : '\0';
-                        sb.Append($"\n    [{create}{mod}{del}]{compChange.NetID}:{registration.Name}");
+                        sb.Append($"\n    [{compChange.NetID}:{registration.Name}");
 
                         if (compChange.State is not null)
                             sb.Append($"\n      STATE:{compChange.State.GetType().Name}");
                     }
+
+                    break;
                 }
+
+                if (args.AppliedState.ComponentDeletions.TryGetValue(WatchEntId, out var deletions))
+                {
+                    sb.Append($"\n  Component Deletions:");
+                    foreach (var netId in deletions)
+                    {
+                        var registration = _componentFactory.GetRegistration(netId);
+                        sb.Append($"\n    [{netId}:{registration.Name}");
+                    }
+                }
+
                 entStateString = sb.ToString();
             }
 

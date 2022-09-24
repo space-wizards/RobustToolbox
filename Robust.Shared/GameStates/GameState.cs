@@ -1,9 +1,10 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics;
 using NetSerializer;
 using Robust.Shared.Timing;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameStates
 {
@@ -20,7 +21,15 @@ namespace Robust.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, NetListAsArray<EntityState> entities, NetListAsArray<PlayerState> players, NetListAsArray<EntityUid> deletions, GameStateMapData? mapData)
+        public GameState(
+            GameTick fromSequence,
+            GameTick toSequence,
+            uint lastInput,
+            NetListAsArray<EntityState> entities,
+            NetListAsArray<PlayerState> players,
+            NetListAsArray<EntityUid> deletions,
+            Dictionary<EntityUid, List<ushort>> componentDeletions,
+            GameStateMapData? mapData)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -28,6 +37,7 @@ namespace Robust.Shared.GameStates
             EntityStates = entities;
             PlayerStates = players;
             EntityDeletions = deletions;
+            ComponentDeletions = componentDeletions;
             MapData = mapData;
         }
 
@@ -39,6 +49,7 @@ namespace Robust.Shared.GameStates
         public readonly NetListAsArray<EntityState> EntityStates;
         public readonly NetListAsArray<PlayerState> PlayerStates;
         public readonly NetListAsArray<EntityUid> EntityDeletions;
+        public readonly Dictionary<EntityUid, List<ushort>> ComponentDeletions;
         public readonly GameStateMapData? MapData;
     }
 }

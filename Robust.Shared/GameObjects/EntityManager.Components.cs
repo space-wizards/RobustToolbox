@@ -466,7 +466,7 @@ namespace Robust.Shared.GameObjects
             _entCompIndex.Remove(uid);
         }
 
-        private void RemoveComponentDeferred(Component component, EntityUid uid, bool removeProtected)
+        private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
@@ -480,7 +480,7 @@ namespace Robust.Shared.GameObjects
             {
 #endif
             // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && component is TransformComponent or MetaDataComponent)
+            if (!terminating && component is TransformComponent or MetaDataComponent)
             {
                 DebugTools.Assert("Tried to remove a protected component.");
                 return;
@@ -504,7 +504,7 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
-        private void RemoveComponentImmediate(Component component, EntityUid uid, bool removeProtected)
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
@@ -518,7 +518,7 @@ namespace Robust.Shared.GameObjects
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (!removeProtected && component is TransformComponent or MetaDataComponent)
+                if (!terminating && component is TransformComponent or MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;
@@ -530,7 +530,7 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this); // Sets delete
 
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
 
@@ -544,7 +544,7 @@ namespace Robust.Shared.GameObjects
             }
 #endif
 
-            DeleteComponent(component);
+            DeleteComponent(component, terminating);
         }
 
         /// <inheritdoc />
@@ -570,7 +570,7 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this);
 
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner));
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner), false);
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
 
@@ -583,13 +583,13 @@ namespace Robust.Shared.GameObjects
             }
 #endif
 
-                DeleteComponent(component);
+                DeleteComponent(component, false);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(Component component)
+        private void DeleteComponent(Component component, bool terminating)
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
@@ -603,7 +603,7 @@ namespace Robust.Shared.GameObjects
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                if (component.NetSyncEnabled)
+                if (!terminating && component.NetSyncEnabled)
                     Dirty(entityUid);
             }
 
@@ -613,7 +613,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _entCompIndex.Remove(entityUid, component);
-            ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid)));
+            ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
 
         /// <inheritdoc />

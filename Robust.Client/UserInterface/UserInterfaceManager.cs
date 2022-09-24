@@ -77,6 +77,7 @@ namespace Robust.Client.UserInterface
 
         private bool _rendering = true;
 
+        private readonly Queue<Action> _deferQueue = new();
         private readonly Queue<Control> _styleUpdateQueue = new();
         private readonly Queue<Control> _measureUpdateQueue = new();
         private readonly Queue<Control> _arrangeUpdateQueue = new();
@@ -172,6 +173,11 @@ namespace Robust.Client.UserInterface
 
         public event Action<PostDrawUIRootEventArgs>? OnPostDrawUIRoot;
 
+        public void DeferAction(Action action)
+        {
+            _deferQueue.Enqueue(action);
+        }
+
         private void WindowDestroyed(WindowDestroyedEventArgs args)
         {
             DestroyWindowRoot(args.Window);
@@ -261,6 +267,14 @@ namespace Robust.Client.UserInterface
             {
                 _needUpdateActiveCursor = false;
                 UpdateActiveCursor();
+            }
+
+            using (_prof.Group("Deferred actions"))
+            {
+                while (_deferQueue.TryDequeue(out var action))
+                {
+                    action();
+                }
             }
         }
 

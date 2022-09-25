@@ -20,7 +20,7 @@ namespace Robust.Client.Debugging
 
         private Label? _label;
 
-        private (GridId GridId, TileRef Tile)? _hovered;
+        private (EntityUid GridUid, TileRef Tile)? _hovered;
 
         public bool Enabled
         {
@@ -71,9 +71,9 @@ namespace Robust.Client.Debugging
             var tile = grid.GetTileRef(spot);
             _label.Position = mouseSpot.Position + new Vector2(32, 0);
 
-            if (_hovered?.GridId == grid.Index && _hovered?.Tile == tile) return;
+            if (_hovered?.GridUid == grid.GridEntityId && _hovered?.Tile == tile) return;
 
-            _hovered = (grid.Index, tile);
+            _hovered = (grid.GridEntityId, tile);
 
             var text = new StringBuilder();
 

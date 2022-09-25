@@ -95,7 +95,7 @@ namespace Robust.Client.GameObjects
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out grid))
+            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.gridUid, out grid))
             {
                 var pos = ev.LastPosition.Value.pos;
 
@@ -122,13 +122,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(EntityUid sender, (GridId grid, Vector2i pos)? lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (EntityUid gridUid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
-        public (GridId grid, Vector2i pos)? LastPosition { get; }
+        public (EntityUid gridUid, Vector2i pos)? LastPosition { get; }
         public EntityUid Sender { get; }
     }
 }

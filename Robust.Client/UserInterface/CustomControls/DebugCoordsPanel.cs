@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
                     mouseWorldMap.Position);
-                tile = new TileRef(GridId.Invalid, EntityUid.Invalid,
+                tile = new TileRef(EntityUid.Invalid,
                     mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
             }
 

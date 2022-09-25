@@ -13,7 +13,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables] private (GridId, Vector2i) _lastPosition;
+        [ViewVariables] private (EntityUid, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 
@@ -47,7 +47,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             var grid = _mapManager.GetGrid(xform.GridID);
-            _lastPosition = (xform.GridID, grid.TileIndicesFor(xform.Coordinates));
+            _lastPosition = (xform.GridUid ?? EntityUid.Invalid, grid.TileIndicesFor(xform.Coordinates));
         }
 
         protected override void Shutdown()

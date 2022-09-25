@@ -487,7 +487,9 @@ internal partial class Clyde
             public uint WindowId;
             public nint GlContext;
             public SDL_SysWMinfo SysWMinfo;
+#pragma warning disable CS0649
             public bool Fullscreen;
+#pragma warning restore CS0649
             public int SwapInterval;
 
             // Kept around to avoid it being GCd.

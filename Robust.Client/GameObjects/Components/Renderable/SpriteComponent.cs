@@ -2029,6 +2029,8 @@ namespace Robust.Client.GameObjects
                     // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
                     // our bounding box.
                     (_, {Directions: RSI.State.DirectionType.Dir8}) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+
+                    _ => throw new ArgumentException($"Invalid DirectionType '{_actualState.Directions}' in CalculateBoundingBox")
                 };
                 return _scale == Vector2.One ? box : box.Scale(_scale);
             }

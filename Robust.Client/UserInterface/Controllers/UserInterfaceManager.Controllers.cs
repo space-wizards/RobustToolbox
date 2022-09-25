@@ -22,6 +22,11 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<Type, UIController> _uiControllers = new();
 
     /// <summary>
+    ///     Dependency collection holding UI controllers, IoC services and entity systems
+    /// </summary>
+    private DependencyCollection _dependencies = default!;
+
+    /// <summary>
     ///     Implementations of <see cref="IOnStateEntered{T}"/> to invoke when a state is entered
     ///     State Type -> (UIController, Caller)
     /// </summary>
@@ -154,11 +159,6 @@ internal partial class UserInterfaceManager
         return method.CreateDelegate<SystemChangedCaller>();
     }
 
-    private void RegisterUIController(Type type, UIController controller)
-    {
-        _uiControllers.Add(type, controller);
-    }
-
     private ref UIController GetUIControllerRef(Type type)
     {
         return ref CollectionsMarshal.GetValueRefOrNullRef(_uiControllers, type);
@@ -174,18 +174,24 @@ internal partial class UserInterfaceManager
         return (T) GetUIController(typeof(T));
     }
 
-    private void _setupControllers()
+    private void SetupControllers()
     {
         foreach (var uiControllerType in _reflectionManager.GetAllChildren<UIController>())
         {
             if (uiControllerType.IsAbstract)
                 continue;
 
-            var newController = _typeFactory.CreateInstanceUnchecked<UIController>(uiControllerType);
+            _dependencies.Register(uiControllerType);
+        }
 
-            RegisterUIController(uiControllerType, newController);
+        _dependencies.BuildGraph();
 
-            foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
+        foreach (var controllerType in _reflectionManager.GetAllChildren<UIController>())
+        {
+            var controller = (UIController) _dependencies.ResolveType(controllerType);
+            _uiControllers[controllerType] = controller;
+
+            foreach (var fieldInfo in controllerType.GetAllPropertiesAndFields())
             {
                 if (!fieldInfo.HasAttribute<UISystemDependencyAttribute>())
                 {
@@ -211,15 +217,15 @@ internal partial class UserInterfaceManager
                 }
 
                 //Do not do anything if the field isn't an entity system
-                if (!typeof(IEntitySystem).IsAssignableFrom(backingField.FieldType))
+                if (!backingField.FieldType.IsAssignableTo(typeof(IEntitySystem)))
                     continue;
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                var assigner = EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField);
-                typeDict.Add(uiControllerType, assigner);
+                var assigner = EmitFieldAssigner<UIController>(controllerType, fieldInfo.FieldType, backingField);
+                typeDict.Add(controllerType, assigner);
             }
 
-            foreach (var @interface in uiControllerType.GetInterfaces())
+            foreach (var @interface in controllerType.GetInterfaces())
             {
                 if (!@interface.IsGenericType)
                     continue;
@@ -228,23 +234,23 @@ internal partial class UserInterfaceManager
                 var genericType = @interface.GetGenericArguments()[0];
                 if (typeDefinition == typeof(IOnStateEntered<>))
                 {
-                    var enteredCaller = EmitStateChangedCaller(uiControllerType, genericType, true);
-                    _onStateEnteredDelegates.GetOrNew(genericType).Add(newController, enteredCaller);
+                    var enteredCaller = EmitStateChangedCaller(controllerType, genericType, true);
+                    _onStateEnteredDelegates.GetOrNew(genericType).Add(controller, enteredCaller);
                 }
                 else if (typeDefinition == typeof(IOnStateExited<>))
                 {
-                    var exitedCaller = EmitStateChangedCaller(uiControllerType, genericType, false);
-                    _onStateExitedDelegates.GetOrNew(genericType).Add(newController, exitedCaller);
+                    var exitedCaller = EmitStateChangedCaller(controllerType, genericType, false);
+                    _onStateExitedDelegates.GetOrNew(genericType).Add(controller, exitedCaller);
                 }
                 else if (typeDefinition == typeof(IOnSystemLoaded<>))
                 {
-                    var loadedCaller = EmitSystemChangedCaller(uiControllerType, genericType, true);
-                    _onSystemLoadedDelegates.GetOrNew(genericType).Add(newController, loadedCaller);
+                    var loadedCaller = EmitSystemChangedCaller(controllerType, genericType, true);
+                    _onSystemLoadedDelegates.GetOrNew(genericType).Add(controller, loadedCaller);
                 }
                 else if (typeDefinition == typeof(IOnSystemUnloaded<>))
                 {
-                    var unloadedCaller = EmitSystemChangedCaller(uiControllerType, genericType, false);
-                    _onSystemUnloadedDelegates.GetOrNew(genericType).Add(newController, unloadedCaller);
+                    var unloadedCaller = EmitSystemChangedCaller(controllerType, genericType, false);
+                    _onSystemUnloadedDelegates.GetOrNew(genericType).Add(controller, unloadedCaller);
                 }
             }
         }
@@ -253,9 +259,11 @@ internal partial class UserInterfaceManager
         _systemManager.SystemUnloaded += OnSystemUnloaded;
 
         _stateManager.OnStateChanged += OnStateChanged;
+
+        _dependencies.BuildGraph();
     }
 
-    private void _initializeControllers()
+    private void InitializeControllers()
     {
         foreach (var controller in _uiControllers.Values)
         {
@@ -267,6 +275,7 @@ internal partial class UserInterfaceManager
     {
         foreach (var controller in _uiControllers.Values)
         {
+            // TODO hud refactor run frame update only if it has been overriden
             controller.FrameUpdate(args);
         }
     }

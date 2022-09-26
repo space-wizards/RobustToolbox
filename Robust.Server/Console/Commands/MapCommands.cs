@@ -384,7 +384,7 @@ namespace Robust.Server.Console.Commands
             var pos = pt.Coordinates;
 
             shell.WriteLine(
-                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
+                $"MapID:{pos.GetMapId(entityManager)} GridUid:{pos.GetGridUid(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
@@ -401,7 +401,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Wrong number of args.");
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
             var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
@@ -433,17 +433,17 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (!mapManager.GridExists(gridId))
             {
-                shell.WriteError($"Grid {gridId.Value} does not exist.");
+                shell.WriteError($"Grid {gridId} does not exist.");
                 return;
             }
 
             mapManager.DeleteGrid(gridId);
-            shell.WriteLine($"Grid {gridId.Value} was removed.");
+            shell.WriteLine($"Grid {gridId} was removed.");
         }
     }
 

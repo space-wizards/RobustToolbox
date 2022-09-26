@@ -141,6 +141,7 @@ namespace Robust.Shared.Map
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
         void DeleteGrid(GridId gridId);
+        void DeleteGrid(EntityUid euid);
 
         /// <summary>
         ///     A tile is being modified.

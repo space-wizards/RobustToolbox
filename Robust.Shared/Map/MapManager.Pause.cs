@@ -95,7 +95,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void DoGridMapInitialize(GridId gridId)
+        public void DoGridMapInitialize(EntityUid gridId)
         {
             // NOP
         }

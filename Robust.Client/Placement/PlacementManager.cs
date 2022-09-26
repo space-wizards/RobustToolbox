@@ -726,9 +726,9 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var gridId = coordinates.GetGridId(EntityManager);
+                var gridIdOpt = coordinates.GetGridUid(EntityManager);
                 // If we have actually placed something on a valid grid...
-                if (gridId.IsValid())
+                if (gridIdOpt is EntityUid gridId && gridId.IsValid())
                 {
                     var grid = MapManager.GetGrid(gridId);
 

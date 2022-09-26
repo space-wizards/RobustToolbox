@@ -15,8 +15,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     public sealed class TransformComponentTests
     {
         private static readonly MapId TestMapId = new(1);
-        private static readonly GridId TestGridAId = new(1);
-        private static readonly GridId TestGridBId = new(2);
+        private static EntityUid TestGridAId;
+        private static EntityUid TestGridBId;
 
         private static ISimulation SimulationFactory()
         {
@@ -30,8 +30,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             mapManager.CreateMap(TestMapId);
 
             // Adds two grids to use in tests.
-            mapManager.CreateGrid(TestMapId, TestGridAId);
-            mapManager.CreateGrid(TestMapId, TestGridBId);
+            TestGridAId = mapManager.CreateGrid(TestMapId).GridEntityId;
+            TestGridBId = mapManager.CreateGrid(TestMapId).GridEntityId;
 
             return sim;
         }

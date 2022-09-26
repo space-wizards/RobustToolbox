@@ -104,7 +104,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.Multiple(() =>
             {
                 Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
-                Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
+                Assert.That(childTrans.GridUid, Is.EqualTo(parentTrans.GridUid));
                 Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(parentTrans.Owner, (-1, -1))));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
             });

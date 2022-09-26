@@ -122,7 +122,7 @@ internal partial class MapManager
     public GridEnumerator GetAllGridsEnumerator()
     {
         var query = EntityManager.GetEntityQuery<MapGridComponent>();
-        return new GridEnumerator(_grids.GetEnumerator(), query);
+        return new GridEnumerator(_grids.Values.GetEnumerator(), query);
     }
 
     public IEnumerable<IMapGrid> GetAllGrids()
@@ -237,6 +237,39 @@ internal partial class MapManager
         if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} with {gridId}, but there was no allocated entity.");
+            return; // Silently fail on release
+        }
+
+        // DeleteGrid may be triggered by the entity being deleted,
+        // so make sure that's not the case.
+        if (metaComp.EntityLifeStage < EntityLifeStage.Terminating)
+            EntityManager.DeleteEntity(entityId);
+    }
+
+    public virtual void DeleteGrid(EntityUid euid)
+    {
+#if DEBUG
+        DebugTools.Assert(_dbgGuardRunning);
+#endif
+
+        // Possible the grid was already deleted / is invalid
+        if (!TryGetGrid(euid, out var iGrid))
+        {
+            DebugTools.Assert($"Calling {nameof(DeleteGrid)} with unknown uid {euid}.");
+            return; // Silently fail on release
+        }
+
+        var grid = (MapGrid)iGrid;
+        if (grid.Deleting)
+        {
+            DebugTools.Assert($"Calling {nameof(DeleteGrid)} multiple times for grid {euid}.");
+            return; // Silently fail on release
+        }
+
+        var entityId = grid.GridEntityId;
+        if (!EntityManager.TryGetComponent(entityId, out MetaDataComponent? metaComp))
+        {
+            DebugTools.Assert($"Calling {nameof(DeleteGrid)} with {euid}, but there was no allocated entity.");
             return; // Silently fail on release
         }
 

@@ -6,10 +6,10 @@ namespace Robust.Shared.Map;
 
 public struct GridEnumerator
 {
-    private Dictionary<GridId, EntityUid>.Enumerator _enumerator;
+    private IEnumerator<EntityUid> _enumerator;
     private EntityQuery<MapGridComponent> _query;
 
-    internal GridEnumerator(Dictionary<GridId, EntityUid>.Enumerator enumerator, EntityQuery<MapGridComponent> query)
+    internal GridEnumerator(IEnumerator<EntityUid> enumerator, EntityQuery<MapGridComponent> query)
     {
         _enumerator = enumerator;
         _query = query;
@@ -23,9 +23,7 @@ public struct GridEnumerator
             return false;
         }
 
-        var (_, uid) = _enumerator.Current;
-
-        grid = _query.GetComponent(uid).Grid;
+        grid = _query.GetComponent(_enumerator.Current).Grid;
         return true;
     }
 }

@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
     public sealed class AnchoredSystemTests
     {
         private static readonly MapId TestMapId = new(1);
-        private static readonly GridId TestGridId = new(1);
+        private static EntityUid TestGridId;
 
         private sealed class Subscriber : IEntityEventSubscriber { }
 
@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapManager.CreateMap(TestMapId);
 
             // Add grid 1, as the default grid to anchor things to.
-            mapManager.CreateGrid(TestMapId, TestGridId);
+            TestGridId = mapManager.CreateGrid(TestMapId).GridEntityId;
 
             return sim;
         }

@@ -304,7 +304,7 @@ internal partial class MapManager
             return;
 
         TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
-        var euid = GetGridEuid(tileRef.GridIndex);
+        var euid = tileRef.GridUid;
         EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile), true);
     }
 

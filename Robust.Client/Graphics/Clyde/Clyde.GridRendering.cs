@@ -195,7 +195,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
+            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }

@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
             if(e.NewTile.Tile != Tile.Empty)
                 return;
 
-            DeparentAllEntsOnTile(e.NewTile.GridIndex, e.NewTile.GridIndices);
+            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace Robust.Shared.GameObjects
         ///     Used when a tile on a grid is removed (becomes space). Only de-parents entities if they are actually
         ///     parented to that grid. No more disemboweling mobs.
         /// </remarks>
-        private void DeparentAllEntsOnTile(GridId gridId, Vector2i tileIndices)
+        private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
             var grid = _mapManager.GetGrid(gridId);
             var gridUid = grid.GridEntityId;

@@ -710,7 +710,7 @@ public sealed partial class EntityLookupSystem
 
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
     {
-        var grid = _mapManager.GetGrid(tileRef.GridIndex);
+        var grid = _mapManager.GetGrid(tileRef.GridUid);
 
         if (worldMatrix == null || angle == null)
         {

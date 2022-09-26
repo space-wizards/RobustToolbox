@@ -186,7 +186,7 @@ namespace Robust.Server.Bql
             var map = IoCManager.Resolve<IMapManager>();
             if (tileTy.TileId == 0)
             {
-                return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.GridID == GridId.Invalid) ^ isInverted);
+                return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.GridUid is null) ^ isInverted);
             }
             else
             {
@@ -194,8 +194,7 @@ namespace Robust.Server.Bql
                 {
                     if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform)) return isInverted;
 
-                    var gridId = transform.GridID;
-                    if (!map.TryGetGrid(gridId, out var grid))
+                    if (!map.TryGetGrid(transform.GridUid, out var grid))
                         return isInverted;
 
                     return (grid.GetTileRef(transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;

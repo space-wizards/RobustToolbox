@@ -204,26 +204,6 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Returns the Grid Id these coordinates are on.
-        ///     If none of the ancestors are a grid, returns <see cref="GridId.Invalid"/> grid instead.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
-        [Obsolete("Use GetGridUid")]
-        public GridId GetGridId(IEntityManager entityManager)
-        {
-            if (!IsValid(entityManager))
-                return GridId.Invalid;
-
-            var uid = entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
-
-            if (uid == null)
-                return GridId.Invalid;
-
-            return entityManager.GetComponent<IMapGridComponent>(uid.Value).GridIndex;
-        }
-
-        /// <summary>
         ///     Returns the Grid EntityUid these coordinates are on.
         ///     If none of the ancestors are a grid, returns null instead.
         /// </summary>

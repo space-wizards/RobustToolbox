@@ -17,7 +17,6 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapGridComponent : IComponent
     {
-        GridId GridIndex { get; }
         IMapGrid Grid { get; }
     }
 
@@ -33,15 +32,14 @@ namespace Robust.Shared.GameObjects
         // If you want to remove this, you would have to restructure the map save file.
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
-        private GridId _gridIndex = GridId.Invalid;
+        private int _gridIndex = 0;
 
         private IMapGrid? _mapGrid;
 
-        /// <inheritdoc />
-        public GridId GridIndex
+        internal int GridIndex
         {
             get => _gridIndex;
-            internal set => _gridIndex = value;
+            set => _gridIndex = value;
         }
 
         [DataField("chunkSize")]
@@ -77,7 +75,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new MapGridComponentState(_gridIndex, _chunkSize);
+            return new MapGridComponentState(Owner, _chunkSize);
         }
 
         /// <inheritdoc />
@@ -88,7 +86,6 @@ namespace Robust.Shared.GameObjects
             if (curState is not MapGridComponentState state)
                 return;
 
-            _gridIndex = state.GridIndex;
             _chunkSize = state.ChunkSize;
         }
 
@@ -96,11 +93,10 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
-            var grid = new MapGrid(_mapManager, _entMan, GridIndex, chunkSize);
+            var grid = new MapGrid(_mapManager, _entMan, Owner, chunkSize);
             grid.TileSize = tileSize;
 
             Grid = grid;
-            grid.GridEntityId = Owner;
 
             _mapManager.OnGridAllocated(this, grid);
             return grid;
@@ -166,7 +162,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Index of the grid this component is linked to.
         /// </summary>
-        public GridId GridIndex { get; }
+        public EntityUid GridIndex { get; }
 
         /// <summary>
         ///     The size of the chunks in the map grid.
@@ -178,7 +174,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         /// <param name="chunkSize">The size of the chunks in the map grid.</param>
-        public MapGridComponentState(GridId gridIndex, ushort chunkSize)
+        public MapGridComponentState(EntityUid gridIndex, ushort chunkSize)
         {
             GridIndex = gridIndex;
             ChunkSize = chunkSize;

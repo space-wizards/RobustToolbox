@@ -91,11 +91,8 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
-        IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
-        IMapGrid GetGrid(GridId gridId);
+        IMapGrid CreateGrid(MapId currentMapId, ushort chunkSize = 16);
         IMapGrid GetGrid(EntityUid gridId);
-        bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists(GridId gridId);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
         /// <summary>
@@ -140,7 +137,6 @@ namespace Robust.Shared.Map
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
-        void DeleteGrid(GridId gridId);
         void DeleteGrid(EntityUid euid);
 
         /// <summary>
@@ -180,8 +176,6 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        EntityUid GetGridEuid(GridId id);
-        IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
         bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists([NotNullWhen(true)] EntityUid? euid);

@@ -23,11 +23,6 @@ namespace Robust.Shared.Map
         EntityUid GridEntityId { get; }
 
         /// <summary>
-        ///     The identifier of this grid.
-        /// </summary>
-        GridId Index { get; }
-
-        /// <summary>
         ///     The length of the side of a square tile in world units.
         /// </summary>
         ushort TileSize { get; }

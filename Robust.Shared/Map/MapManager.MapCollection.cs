@@ -58,7 +58,7 @@ internal partial class MapManager
         // grids are cached because Delete modifies collection
         foreach (var grid in GetAllMapGrids(mapId).ToList())
         {
-            DeleteGrid(grid.Index);
+            DeleteGrid(grid.GridEntityId);
         }
 
         if (mapId != MapId.Nullspace)

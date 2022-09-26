@@ -115,7 +115,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     }
 
     private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
-    private List<(MapId mapId, EntityUid euid, GridId gridId, ushort chunkSize)> _newGrids = new();
+    private List<(MapId mapId, EntityUid euid, ushort chunkSize)> _newGrids = new();
 
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
     {
@@ -163,7 +163,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                         DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridEuid}.");
 
-                        _newGrids.Add((gridMapId, gridEuid, gridCompState.GridIndex, chunkSize));
+                        _newGrids.Add((gridMapId, gridEuid, chunkSize));
                     }
                 }
             }
@@ -176,9 +176,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             _newMaps.Clear();
 
             // create all the new grids
-            foreach (var (mapId, euid, gridId, chunkSize) in _newGrids)
+            foreach (var (mapId, euid, chunkSize) in _newGrids)
             {
-                CreateGrid(mapId, gridId, chunkSize, euid);
+                CreateGrid(mapId, chunkSize, euid);
             }
             _newGrids.Clear();
         }

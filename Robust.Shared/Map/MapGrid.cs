@@ -72,11 +72,11 @@ namespace Robust.Shared.Map
         /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
-        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize)
+        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, EntityUid gridEntityId, ushort chunkSize)
         {
             _mapManager = mapManager;
             _entityManager = entityManager;
-            Index = gridIndex;
+            GridEntityId = gridEntityId;
             ChunkSize = chunkSize;
             LastTileModifiedTick = _mapManager.GameTiming.CurTick;
         }
@@ -106,10 +106,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public ushort ChunkSize { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public GridId Index { get; }
 
         /// <summary>
         ///     The length of the side of a square tile in world units.

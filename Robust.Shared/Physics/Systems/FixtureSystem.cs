@@ -101,7 +101,7 @@ namespace Robust.Shared.Physics.Systems
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData(manager);
+                _physics.ResetMassData(manager, body);
                 Dirty(manager);
             }
             // TODO: Set newcontacts to true.
@@ -120,21 +120,20 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
         /// </summary>
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density)
         {
             // TODO: Make it take in density instead?
-            var fixture = new Fixture(body, shape) {Mass = mass};
+            var fixture = new Fixture(body, shape) {Density = density};
             CreateFixture(body, fixture);
         }
 
         /// <summary>
         /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
         /// </summary>
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass, int collisionLayer, int collisionMask)
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density, int collisionLayer, int collisionMask)
         {
-            // TODO: Make it take in density instead?
             var fixture = new Fixture(body, shape) {
-                Mass = mass,
+                Density = density,
                 CollisionLayer = collisionLayer,
                 CollisionMask = collisionMask
             };
@@ -401,11 +400,12 @@ namespace Robust.Shared.Physics.Systems
 
         #region Mass
 
-        public void SetMass(Fixture fixture, float value, FixturesComponent? manager = null, bool update = true)
+        [Obsolete("Use Density")]
+        public void SetMass(Fixture fixture, float value, FixturesComponent? manager = null)
         {
-            fixture._mass = value;
-            if (update && Resolve(fixture.Body.Owner, ref manager))
-                FixtureUpdate(manager);
+            var area = fixture.Area;
+            var density = area / value;
+            _physics.SetDensity(fixture, density, manager);
         }
 
         #endregion
@@ -420,6 +420,14 @@ namespace Robust.Shared.Physics.Systems
         }
 
         #endregion
+
+        public void FixtureUpdate(Fixture fixture, FixturesComponent? fixturesComponent = null)
+        {
+            if (!Resolve(fixture.Body.Owner, ref fixturesComponent))
+                return;
+
+            FixtureUpdate(fixturesComponent, fixture.Body);
+        }
 
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.
@@ -440,7 +448,7 @@ namespace Robust.Shared.Physics.Systems
                 hard |= fixture.Hard;
             }
 
-            body.ResetMassData(component);
+            _physics.ResetMassData(component, body);
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

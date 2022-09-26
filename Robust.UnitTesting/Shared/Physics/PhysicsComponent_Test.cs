@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
                 var fixture = fixtureSystem.CreateFixture(box, poly);
-                fixture.Mass = 1f;
+                fixture.Density = 1f;
                 box.FixedRotation = false;
                 box.BodyType = BodyType.Dynamic;
                 Assert.That(box.InvI, Is.GreaterThan(0f));

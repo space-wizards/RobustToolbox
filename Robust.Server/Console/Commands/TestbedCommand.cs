@@ -186,7 +186,7 @@ namespace Robust.Server.Console.Commands
                         CollisionMask = 2,
                         CollisionLayer = 2,
                         Hard = true,
-                        Mass = 1.0f,
+                        Density = 1.0f,
                         Friction = 0.3f,
                     };
 
@@ -252,7 +252,7 @@ namespace Robust.Server.Console.Commands
                         CollisionMask = 2,
                         CollisionLayer = 2,
                         Hard = true,
-                        Mass = 5.0f,
+                        Density = 5.0f,
                     };
 
                     broadphase.CreateFixture(box, fixture);
@@ -305,7 +305,7 @@ namespace Robust.Server.Console.Commands
                         CollisionLayer = 2,
                         CollisionMask = 2,
                         Hard = true,
-                        Mass = 5.0f,
+                        Density = 5.0f,
                     });
                     y += deltaY;
                 }

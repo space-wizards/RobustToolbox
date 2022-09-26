@@ -364,10 +364,13 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (e.NewStatus == SessionStatus.InGame)
         {
-            _playerVisibleSets.Add(e.Session, new());
+            if (!_playerVisibleSets.TryAdd(e.Session, new()))
+                _sawmill.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
+
             foreach (var pvsCollection in _pvsCollections)
             {
-                pvsCollection.AddPlayer(e.Session);
+                if (!pvsCollection.AddPlayer(e.Session))
+                    _sawmill.Error($"Attempted to add player to pvsCollection, but they were already present? Session:{e.Session}");
             }
             return;
         }
@@ -377,7 +380,8 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var pvsCollection in _pvsCollections)
         {
-            pvsCollection.RemovePlayer(e.Session);
+            if (!pvsCollection.RemovePlayer(e.Session))
+                _sawmill.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
         }
 
         if (!_playerVisibleSets.Remove(e.Session, out var data))
@@ -1163,34 +1167,6 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var xform = transformQuery.GetComponent(euid);
         return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
-    }
-
-    public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
-    {
-        public override HashSet<T> Create()
-        {
-            return new HashSet<T>();
-        }
-
-        public override bool Return(HashSet<T> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
-    public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
-    {
-        public override Dictionary<T1, T2> Create()
-        {
-            return new Dictionary<T1, T2>();
-        }
-
-        public override bool Return(Dictionary<T1, T2> obj)
-        {
-            obj.Clear();
-            return true;
-        }
     }
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull

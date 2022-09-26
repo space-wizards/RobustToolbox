@@ -42,8 +42,8 @@ namespace Robust.Shared.GameObjects
         internal Angle _prevRotation;
 
         // Cache changes so we can distribute them after physics is done (better cache)
-        private EntityCoordinates? _oldCoords;
-        private Angle? _oldLocalRotation;
+        internal EntityCoordinates? _oldCoords;
+        internal Angle? _oldLocalRotation;
 
         /// <summary>
         ///     While updating did we actually defer anything?
@@ -125,8 +125,8 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
+                    var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
                 else
                 {
@@ -377,7 +377,7 @@ namespace Robust.Shared.GameObjects
                     {
                         if (!oldPosition.Equals(Coordinates))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this, _gameTiming.ApplyingState);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                         }
                     }
@@ -420,7 +420,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this, _gameTiming.ApplyingState);
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
                 else
@@ -529,7 +529,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
+        ///     Raise deferred MoveEvents and rebuild matrices.
         /// </summary>
         public void RunDeferred()
         {
@@ -542,19 +542,10 @@ namespace Robust.Shared.GameObjects
 
             RebuildMatrices();
 
-            if (_oldCoords != null)
-            {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
-                _oldCoords = null;
-            }
-
-            if (_oldLocalRotation != null)
-            {
-                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent, true);
-                _oldLocalRotation = null;
-            }
+            var moveEvent = new MoveEvent(Owner, _oldCoords ?? Coordinates, Coordinates, _oldLocalRotation ?? _localRotation, _localRotation, this, _gameTiming.ApplyingState);
+            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+            _oldCoords = null;
+            _oldLocalRotation = null;
         }
 
         /// <summary>
@@ -795,6 +786,8 @@ namespace Robust.Shared.GameObjects
 
         internal void RebuildMatrices()
         {
+            // TODO maybe just add a matrix dirty bool, and rebuild only when needed? I.e., if a lone entity is just
+            // drifting through space, do things even usually need to access both the local & inverse-local matrices??
             var pos = _localPosition;
 
             if (!_parent.IsValid()) // Root Node
@@ -825,17 +818,18 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever an entity moves.
-    ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
+    ///     Raised whenever an entity translates or rotates relative to their parent.
     /// </summary>
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, bool stateHandling)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRotation, Angle newRotation, TransformComponent component, bool stateHandling)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
+            OldRotation = oldRotation;
+            NewRotation = newRotation;
             Component = component;
             FromStateHandling = stateHandling;
         }
@@ -843,32 +837,14 @@ namespace Robust.Shared.GameObjects
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
+        public readonly Angle OldRotation;
+        public readonly Angle NewRotation;
         public readonly TransformComponent Component;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
         /// </summary>
         public readonly bool FromStateHandling;
-    }
-
-    /// <summary>
-    ///     Raised whenever this entity rotates in relation to their parent.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct RotateEvent
-    {
-        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, TransformComponent xform)
-        {
-            Sender = sender;
-            OldRotation = oldRotation;
-            NewRotation = newRotation;
-            Component = xform;
-        }
-
-        public readonly EntityUid Sender;
-        public readonly Angle OldRotation;
-        public readonly Angle NewRotation;
-        public readonly TransformComponent Component;
     }
 
     public struct TransformChildrenEnumerator : IDisposable

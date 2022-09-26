@@ -17,5 +17,7 @@ namespace Robust.Server.Player
         ///     Go wild.
         /// </summary>
         object? ContentDataUncast { get; set; }
+
+        string UserName { get; }
     }
 }

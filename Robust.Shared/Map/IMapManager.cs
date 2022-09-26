@@ -203,9 +203,6 @@ namespace Robust.Shared.Map
         bool IsGridPaused(IMapGrid grid);
 
         [Pure]
-        bool IsGridPaused(GridId gridId);
-
-        [Pure]
         bool IsGridPaused(EntityUid gridId);
 
         [Pure]

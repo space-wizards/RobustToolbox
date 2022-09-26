@@ -6,20 +6,10 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, GridId gridId, IMapManager? mapManager = null)
-        {
-            IoCManager.Resolve(ref mapManager);
-
-            var grid = mapManager.GetGrid(gridId);
-            var tile = grid.TileSize;
-
-            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
-        }
-
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref mapManager);
-            
+
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 

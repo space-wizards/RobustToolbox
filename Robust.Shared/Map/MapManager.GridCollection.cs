@@ -116,7 +116,7 @@ internal partial class MapManager
     {
         _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
         Logger.InfoS("map", $"Binding grid {mapGrid.Index} to entity {gridComponent.Owner}");
-        OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
+        OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.GridEntityId);
     }
 
     public GridEnumerator GetAllGridsEnumerator()
@@ -291,7 +291,7 @@ internal partial class MapManager
         Logger.DebugS("map", $"Deleted grid {gridId}");
 
         // TODO: Remove this trash
-        OnGridRemoved?.Invoke(mapId, gridId);
+        OnGridRemoved?.Invoke(mapId, grid.GridEntityId);
     }
 
     /// <inheritdoc />

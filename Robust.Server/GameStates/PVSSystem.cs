@@ -285,20 +285,19 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         foreach (var pvsCollection in _pvsCollections)
         {
-            pvsCollection.RemoveGrid(ev.GridId);
+            pvsCollection.RemoveGrid(ev.EntityUid);
         }
     }
 
     private void OnGridCreated(GridInitializeEvent ev)
     {
-        var gridId = ev.GridId;
+        var gridId = ev.EntityUid;
         foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
         }
 
-        var euid = _mapManager.GetGridEuid(gridId);
-        _entityPvsCollection.UpdateIndex(euid);
+        _entityPvsCollection.UpdateIndex(gridId);
     }
 
     private void OnMapDestroyed(MapChangedEvent e)
@@ -412,7 +411,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value);
+                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
                         var entry = (visMask, chunkLocation);
 
                         if (gridDict.TryGetValue(chunkLocation, out var indexOf))

@@ -557,9 +557,6 @@ namespace Robust.Server.Maps
                     // These should actually be new, pre-init
                     DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
 
-                    // yaml deserializer turns "null" into Invalid, this has been encountered by a customer from failed serialization.
-                    DebugTools.Assert(gridComp.GridIndex != 0);
-
                     gridComps[gridComp.GridIndex] = gridComp;
                 }
 

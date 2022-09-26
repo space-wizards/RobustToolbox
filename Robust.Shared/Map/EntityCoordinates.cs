@@ -150,9 +150,8 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridId = GetGridId(entityManager);
-
-            if (gridId != GridId.Invalid)
+            var gridIdOpt = GetGridUid(entityManager);
+            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {
                 return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
             }

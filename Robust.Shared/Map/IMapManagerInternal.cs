@@ -14,7 +14,7 @@ namespace Robust.Shared.Map
 
         void OnComponentRemoved(MapGridComponent comp);
 
-        void ChunkRemoved(GridId gridId, MapChunk chunk);
+        void ChunkRemoved(EntityUid gridId, MapChunk chunk);
 
         /// <summary>
         /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.

@@ -418,11 +418,11 @@ namespace Robust.Shared.Map
             chunk.Fixtures.Clear();
             _chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved(Index, chunk);
+            _mapManager.ChunkRemoved(GridEntityId, chunk);
 
             if (_chunks.Count == 0)
             {
-                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index}, true);
+                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = GridEntityId}, true);
             }
         }
 
@@ -780,9 +780,9 @@ namespace Robust.Shared.Map
         public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
             if(posWorld.MapId != ParentMapId)
-                throw new ArgumentException($"Grid {Index} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
+                throw new ArgumentException($"Grid {GridEntityId} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
 
-            if (!_mapManager.TryGetGrid(Index, out var grid))
+            if (!_mapManager.TryGetGrid(GridEntityId, out var grid))
             {
                 return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
             }
@@ -1065,7 +1065,7 @@ namespace Robust.Shared.Map
     /// </summary>
     public sealed class EmptyGridEvent : EntityEventArgs
     {
-        public GridId GridId { get; init;  }
+        public EntityUid GridId { get; init;  }
     }
 
     /// <summary>

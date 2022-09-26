@@ -21,9 +21,9 @@ namespace Robust.Shared.Map
             var coords = coordinates;
             IoCManager.Resolve(ref entityManager, ref mapManager);
 
-            var gridId = coords.GetGridId(entityManager);
+            var gridIdOpt = coords.GetGridUid(entityManager);
 
-            if (!gridId.IsValid() || !mapManager.GridExists(gridId))
+            if (!(gridIdOpt is EntityUid gridId) || !gridId.IsValid() || !mapManager.GridExists(gridId))
             {
                 var mapCoords = coords.ToMap(entityManager);
 

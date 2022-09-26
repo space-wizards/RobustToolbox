@@ -1,6 +1,8 @@
 using System;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -13,8 +15,7 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
-    [TypeSerializer]
-    public sealed class SpriteSpecifierSerializer :
+    public abstract class SpriteSpecifierSerializer :
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
@@ -123,23 +124,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            if (!node.TryGet("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
-            {
-                return new ErrorNode(node, "Sprite specifier has missing/invalid sprite node");
-            }
-
-            if (!node.TryGet("state", out var stateNode) || stateNode is not ValueDataNode)
-            {
-                return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
-            }
-
-            var path = serializationManager.ValidateNode(typeof(ResourcePath),
-                new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);
-
-            if (path is ErrorNode) return path;
-
-            return new ValidatedValueNode(node);
+            // apparently explicit interface implementations can't be abstract.
+            return ValidateRsi(serializationManager, node, dependencies, context);
         }
+
+        public abstract ValidationNode ValidateRsi(ISerializationManager serializationManager,
+            MappingDataNode node,
+            IDependencyCollection dependencies,
+            ISerializationContext? context);
 
         public DataNode Write(ISerializationManager serializationManager, Texture value, bool alwaysWrite = false,
             ISerializationContext? context = null)

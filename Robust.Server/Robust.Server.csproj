@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+    <ProjectReference Include="..\Robust.Packaging\Robust.Packaging.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="server_config.toml">

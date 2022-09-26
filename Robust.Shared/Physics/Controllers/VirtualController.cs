@@ -5,6 +5,7 @@ using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Physics.Controllers

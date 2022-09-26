@@ -64,6 +64,11 @@ namespace Robust.Shared.Configuration
         bool IsCVarRegistered(string name);
 
         /// <summary>
+        /// Get the CVar flags of a registered cvar.
+        /// </summary>
+        CVar GetCVarFlags(string name);
+
+        /// <summary>
         /// Gets a list of all registered cvars
         /// </summary>
         /// <returns></returns>

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -55,31 +58,65 @@ namespace Robust.Shared.Containers
         protected BaseContainer() { }
 
         /// <inheritdoc />
-        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null)
+        public bool Insert(
+            EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
-            DebugTools.Assert(meta == null || meta.Owner == toinsert);
+            DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
+            DebugTools.Assert(physics == null || physics.Owner == toinsert);
+            DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container
             if (!CanInsert(toinsert, entMan))
                 return false;
 
-            transform ??= entMan.GetComponent<TransformComponent>(toinsert);
+            var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
+            var transformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var jointQuery = entMan.GetEntityQuery<JointComponent>();
 
-            // CanInsert already checks nullability of Parent (or container forgot to call base that does)
-            if (toinsert.TryGetContainerMan(out var containerManager, entMan) && !containerManager.Remove(toinsert))
-                return false; // Can't remove from existing container, can't insert.
+            // ECS containers when
+            var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+            var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
+
+            transform ??= transformQuery.GetComponent(toinsert);
+            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
+
+            // remove from any old containers.
+            if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                entMan.TryGetComponent(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
+                oldManager.TryGetContainer(toinsert, out var oldContainer) &&
+                !oldContainer.Remove(toinsert, entMan, transform, meta, false))
+            {
+                // failed to remove from container --> cannot insert.
+                return false;
+            }
 
             // Update metadata first, so that parent change events can check IsInContainer.
-            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
             meta.Flags |= MetaDataFlags.InContainer;
 
-            ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
+            // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
+            // because the insertion may not result in a parent change. This could alternatively be done via a
+            // got-inserted event, but really that event should run after the entity was actually inserted (so that
+            // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
+            if (physics == null)
+                physicsQuery.TryGetComponent(toinsert, out physics);
+            RecursivelyUpdatePhysics(transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+
+            ownerTransform ??= transformQuery.GetComponent(Owner);
+            var oldParent = transform.ParentUid;
             transform.AttachParent(ownerTransform);
-            InternalInsert(toinsert, entMan);
+            InternalInsert(toinsert, oldParent, entMan);
+
+            // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -90,7 +127,37 @@ namespace Robust.Shared.Containers
             transform.LocalPosition = Vector2.Zero;
             transform.LocalRotation = Angle.Zero;
 
+            DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || !phys.Awake);
             return true;
+        }
+
+        private void RecursivelyUpdatePhysics(TransformComponent xform,
+            PhysicsComponent? physics,
+            SharedPhysicsSystem physicsSys,
+            SharedJointSystem jointSys,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<TransformComponent> transformQuery,
+            EntityQuery<JointComponent> jointQuery)
+        {
+            if (physics != null)
+            {
+                // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                physicsSys.SetLinearVelocity(physics, Vector2.Zero, false);
+                physicsSys.SetAngularVelocity(physics, 0, false);
+                physicsSys.SetCanCollide(physics, false, false);
+
+                if (jointQuery.TryGetComponent(xform.Owner, out var joint))
+                    jointSys.ClearJoints(joint);
+            }
+
+            foreach (var child in xform.ChildEntities)
+            {
+                var childXform = transformQuery.GetComponent(child);
+                physicsQuery.TryGetComponent(child, out var childPhysics);
+                RecursivelyUpdatePhysics(childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+            }
         }
 
         /// <inheritdoc />
@@ -132,7 +199,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null)
+        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -144,8 +211,12 @@ namespace Robust.Shared.Containers
             if (!CanRemove(toremove, entMan)) return false;
             InternalRemove(toremove, entMan, meta);
 
-            xform ??= entMan.GetComponent<TransformComponent>(toremove);
-            xform.AttachParentToContainerOrGrid(entMan);
+            if (reparent)
+            {
+                xform ??= entMan.GetComponent<TransformComponent>(toremove);
+                xform.AttachParentToContainerOrGrid(entMan);
+            }
+
             return true;
         }
 
@@ -200,10 +271,10 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+        protected virtual void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
         {
             DebugTools.Assert(!Deleted);
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this), true);
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
             Manager.Dirty(entMan);
         }
 

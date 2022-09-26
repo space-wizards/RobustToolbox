@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
@@ -20,7 +21,7 @@ namespace Robust.Shared.Network.Messages
         public List<(string name, object value)> NetworkedVars = null!;
 
         /// <inheritdoc />
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             if(buffer.LengthBytes > MaxMessageSize)
                 Logger.WarningS("net", $"{MsgChannel}: received a large {nameof(MsgConVars)}, {buffer.LengthBytes}B > {MaxMessageSize}B");
@@ -76,7 +77,7 @@ namespace Robust.Shared.Network.Messages
         }
 
         /// <inheritdoc />
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             if(NetworkedVars == null)
                 throw new InvalidOperationException($"{nameof(NetworkedVars)} collection is null.");

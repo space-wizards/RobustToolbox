@@ -34,13 +34,13 @@ namespace Robust.Shared.GameObjects
         [DataField("index")]
         private int _gridIndex = 0;
 
-        private IMapGrid? _mapGrid;
-
         internal int GridIndex
         {
             get => _gridIndex;
             set => _gridIndex = value;
         }
+
+        private IMapGrid? _mapGrid;
 
         [DataField("chunkSize")]
         private ushort _chunkSize = 16;
@@ -67,7 +67,8 @@ namespace Robust.Shared.GameObjects
 
         protected override void OnRemove()
         {
-            _mapManager.TrueGridDelete((MapGrid)_mapGrid!);
+            if (_mapGrid != null)
+                _mapManager.TrueGridDelete((MapGrid)_mapGrid);
 
             base.OnRemove();
         }
@@ -156,6 +157,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
+#pragma warning disable CS0618
     [Serializable, NetSerializable]
     internal sealed class MapGridComponentState : ComponentState
     {
@@ -180,4 +182,5 @@ namespace Robust.Shared.GameObjects
             ChunkSize = chunkSize;
         }
     }
+#pragma warning restore CS0618
 }

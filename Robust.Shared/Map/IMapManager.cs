@@ -16,6 +16,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// A faster version of <see cref="GetAllGrids"/>
         /// </summary>
+        [Obsolete("EntityQuery for MapGridComponent instead")]
         GridEnumerator GetAllGridsEnumerator();
 
         IEnumerable<IMapGrid> GetAllGrids();
@@ -91,8 +92,13 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
+        // ReSharper disable once MethodOverloadWithOptionalParameter
         IMapGrid CreateGrid(MapId currentMapId, ushort chunkSize = 16);
+        IMapGrid CreateGrid(MapId currentMapId, in GridCreateOptions options);
+        IMapGrid CreateGrid(MapId currentMapId);
         IMapGrid GetGrid(EntityUid gridId);
+        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
+        bool GridExists([NotNullWhen(true)] EntityUid? euid);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
         /// <summary>
@@ -177,8 +183,6 @@ namespace Robust.Shared.Map
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
         IMapGridComponent GetGridComp(EntityUid euid);
-        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists([NotNullWhen(true)] EntityUid? euid);
 
         //
         // Pausing functions
@@ -201,5 +205,15 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapInitialized(MapId mapId);
+    }
+
+    public struct GridCreateOptions
+    {
+        public static readonly GridCreateOptions Default = new()
+        {
+            ChunkSize = 16
+        };
+
+        public ushort ChunkSize;
     }
 }

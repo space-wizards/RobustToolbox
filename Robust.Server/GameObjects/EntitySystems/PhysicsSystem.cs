@@ -6,6 +6,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.GameObjects
 {
@@ -37,11 +39,10 @@ namespace Robust.Server.GameObjects
             collideComp.BodyType = BodyType.Static;
         }
 
-        protected override void HandleMapCreated(MapChangedEvent eventArgs)
+        protected override void OnMapAdded(ref MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            var mapUid = MapManager.GetMapEntityIdOrThrow(eventArgs.Map);
-            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
+            EnsureComp<PhysicsMapComponent>(MapManager.GetMapEntityId(eventArgs.Map));
         }
 
         /// <inheritdoc />

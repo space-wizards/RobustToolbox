@@ -89,18 +89,6 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void DoGridMapInitialize(IMapGrid grid)
-        {
-            // NOP
-        }
-
-        /// <inheritdoc />
-        public void DoGridMapInitialize(EntityUid gridId)
-        {
-            // NOP
-        }
-
-        /// <inheritdoc />
         public void AddUninitializedMap(MapId mapId)
         {
             SetMapPreInit(mapId);

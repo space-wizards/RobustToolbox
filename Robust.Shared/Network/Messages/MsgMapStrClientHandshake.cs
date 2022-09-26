@@ -28,10 +28,10 @@ namespace Robust.Shared.Network.Messages
         /// </value>
         public bool NeedsStrings { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
             => NeedsStrings = buffer.ReadBoolean();
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
             => buffer.Write(NeedsStrings);
     }
 }

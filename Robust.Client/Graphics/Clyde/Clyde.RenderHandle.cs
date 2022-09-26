@@ -4,6 +4,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -203,9 +204,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawRenderTarget(target?.Handle ?? default);
             }
 
-            public void Clear(Color color)
+            public void Clear(Color color, int stencil = 0, ClearBufferMask mask = ClearBufferMask.ColorBufferBit)
             {
-                _clyde.DrawClear(color);
+                _clyde.DrawClear(color, stencil, mask);
             }
 
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,

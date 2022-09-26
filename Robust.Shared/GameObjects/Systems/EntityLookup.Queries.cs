@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -443,6 +444,8 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles

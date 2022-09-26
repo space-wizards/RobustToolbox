@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -12,7 +13,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
-    internal sealed class DebugRayDrawingSystem : EntitySystem
+    internal sealed class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IGameTiming _gameTimer = default!;
@@ -57,11 +58,9 @@ namespace Robust.Client.Debugging
         {
             base.Initialize();
             SubscribeNetworkEvent<MsgRay>(HandleDrawRay);
-            // To catch anything that's client-only and not sent by the server.
-            SubscribeLocalEvent<DebugDrawRayMessage>(OnDebugDrawRay);
         }
 
-        private void OnDebugDrawRay(DebugDrawRayMessage ev)
+        protected override void ReceiveLocalRayAtMainThread(DebugRayData ev)
         {
             if (!_debugDrawRays)
             {
@@ -70,9 +69,9 @@ namespace Robust.Client.Debugging
 
             var newRayWithLifetime = new RayWithLifetime
             {
-                DidActuallyHit = ev.Data.Results != null,
-                RayOrigin = ev.Data.Ray.Position,
-                RayHit = ev.Data.Results?.HitPos ?? ev.Data.Ray.Direction * ev.Data.MaxLength + ev.Data.Ray.Position,
+                DidActuallyHit = ev.Results != null,
+                RayOrigin = ev.Ray.Position,
+                RayHit = ev.Results?.HitPos ?? ev.Ray.Direction * ev.MaxLength + ev.Ray.Position,
                 LifeTime = _gameTimer.RealTime + DebugRayLifetime
             };
 

@@ -18,6 +18,7 @@ namespace Robust.Server.Prototypes
         public ServerPrototypeManager()
         {
             RegisterIgnore("shader");
+            RegisterIgnore("uiTheme");
         }
 
         public override void Initialize()

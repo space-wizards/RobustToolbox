@@ -5,6 +5,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
 
@@ -75,7 +76,6 @@ public sealed class EntityLookupOverlay : Overlay
 
             worldHandle.SetTransform(matrix);
 
-
             var lookupAABB = invMatrix.TransformBox(args.WorldBounds);
             var ents = new List<EntityUid>();
 
@@ -101,5 +101,7 @@ public sealed class EntityLookupOverlay : Overlay
                 worldHandle.DrawRect(aabb, Color.Blue.WithAlpha(0.2f));
             }
         }
+
+        worldHandle.SetTransform(Matrix3.Identity);
     }
 }

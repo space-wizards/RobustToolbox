@@ -26,24 +26,9 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-
-            //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and  is initialized
-            CommandBinds.Builder
-                .Bind(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler())
-                .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
-                .Register<EyeUpdateSystem>();
-
             // Make sure this runs *after* entities have been moved by interpolation and movement.
             UpdatesAfter.Add(typeof(TransformSystem));
             UpdatesAfter.Add(typeof(PhysicsSystem));
-        }
-
-        /// <inheritdoc />
-        public override void Shutdown()
-        {
-            //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and is initialized
-            CommandBinds.Unregister<EyeUpdateSystem>();
-            base.Shutdown();
         }
 
         /// <inheritdoc />

@@ -48,7 +48,10 @@ internal partial class Clyde
             // Block the main thread (to avoid stuff like texture uploads being problematic).
             WaitWindowCreate(task);
 
+#pragma warning disable RA0004
+            // Block above ensured task is done, this is safe.
             var (reg, error) = task.Result;
+#pragma warning restore RA0004
             if (reg != null)
             {
                 reg.Owner = reg.Handle;
@@ -227,6 +230,14 @@ internal partial class Clyde
 
             // Make sure window thread doesn't keep hold of the GL context.
             SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
+
+
+            if (OperatingSystem.IsWindows())
+            {
+                SDL_SysWMinfo info = default;
+                if (SDL_GetWindowWMInfo(window, ref info) == SDL_TRUE && info.subsystem == SDL_SYSWM_WINDOWS)
+                    WsiShared.WindowsSharedWindowCreate((HWND) info.info.win.window, _cfg);
+            }
 
             if (parameters.Visible)
                 SDL_ShowWindow(window);

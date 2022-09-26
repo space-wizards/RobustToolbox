@@ -62,9 +62,9 @@ namespace Robust.Client.GameObjects
         /// <remarks>
         ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
         /// </remarks>
-        private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
+        private Dictionary<Enum, object> CloneAppearanceData(Dictionary<Enum, object> data)
         {
-            Dictionary<object, object> newDict = new(data.Count);
+            Dictionary<Enum, object> newDict = new(data.Count);
 
             foreach (var (key, value) in data)
             {
@@ -79,33 +79,38 @@ namespace Robust.Client.GameObjects
             return newDict;
         }
 
-        public override void MarkDirty(AppearanceComponent component)
+        public override void MarkDirty(AppearanceComponent component, bool updateDetached = false)
         {
+            var clientComp = (ClientAppearanceComponent)component;
+            clientComp.UpdateDetached |= updateDetached;
+
             if (component.AppearanceDirty)
                 return;
 
-            _queuedUpdates.Enqueue((ClientAppearanceComponent) component);
+            _queuedUpdates.Enqueue(clientComp);
             component.AppearanceDirty = true;
-        }
-
-        internal void UnmarkDirty(ClientAppearanceComponent component)
-        {
-            component.AppearanceDirty = false;
         }
 
         public override void FrameUpdate(float frameTime)
         {
             var spriteQuery = GetEntityQuery<SpriteComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
                 if (appearance.Deleted)
                     continue;
 
+                appearance.AppearanceDirty = false;
+
+                // If the entity is no longer within the clients PVS, don't bother updating.
+                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0 && !appearance.UpdateDetached)
+                    continue;
+
+                appearance.UpdateDetached = false;
+
                 // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
                 spriteQuery.TryGetComponent(appearance.Owner, out var sprite);
-
                 OnChangeData(appearance.Owner, sprite, appearance);
-                UnmarkDirty(appearance);
             }
         }
 
@@ -138,7 +143,7 @@ namespace Robust.Client.GameObjects
     public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component;
-        public IReadOnlyDictionary<object, object> AppearanceData;
+        public IReadOnlyDictionary<Enum, object> AppearanceData;
         public SpriteComponent? Sprite;
     }
 }

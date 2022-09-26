@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Client.GameObjects;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -76,10 +78,22 @@ namespace Robust.UnitTesting
 
             var systems = IoCManager.Resolve<IEntitySystemManager>();
             // Required systems
-            systems.LoadExtraSystemType<ContainerSystem>();
-            systems.LoadExtraSystemType<TransformSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
-            systems.LoadExtraSystemType<MetaDataSystem>();
+
+            // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
+            // and it was like this when I found it.
+            systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
+            systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+
+            if (Project == UnitTestProject.Client)
+            {
+                systems.LoadExtraSystemType<ClientMetaDataSystem>();
+            }
+            else
+            {
+                systems.LoadExtraSystemType<ServerMetaDataSystem>();
+                systems.LoadExtraSystemType<PVSSystem>();
+            }
 
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();

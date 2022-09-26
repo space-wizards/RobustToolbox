@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.GameObjects
 {

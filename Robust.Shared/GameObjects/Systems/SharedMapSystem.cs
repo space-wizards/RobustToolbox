@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -15,7 +16,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapAdded);
+            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
 
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
@@ -24,40 +25,40 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
         }
 
-        private void OnMapAdded(EntityUid uid, MapComponent component, ComponentInit args)
+        private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
         {
             var msg = new MapChangedEvent(component.WorldMap, true);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
             var msg = new MapChangedEvent(component.WorldMap, false);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
             var msg = new GridInitializeEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
             var msg = new GridStartupEvent(uid);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg, true);
+            RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
+            RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
             MapManager.OnComponentRemoved(component);
         }
     }
@@ -92,6 +93,7 @@ namespace Robust.Shared.GameObjects
         public bool Destroyed => !Created;
     }
 
+#pragma warning disable CS0618
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
@@ -124,6 +126,7 @@ namespace Robust.Shared.GameObjects
             EntityUid = uid;
         }
     }
+#pragma warning restore CS0618
 
     /// <summary>
     /// Raised whenever a grid is Added

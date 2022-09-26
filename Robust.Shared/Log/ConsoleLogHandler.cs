@@ -151,13 +151,13 @@ namespace Robust.Shared.Log
             }
         }
 
-        private static string LogLevelToString(LogLevel level)
+        internal static string LogLevelToString(LogLevel level)
         {
             if (WriteAnsiColors)
             {
                 return level switch
                 {
-                    LogLevel.Verbose => LogBeforeLevel + AnsiFgGreen + LogMessage.LogNameDebug + LogAfterLevel,
+                    LogLevel.Verbose => LogBeforeLevel + AnsiFgGreen + LogMessage.LogNameVerbose + LogAfterLevel,
                     LogLevel.Debug => LogBeforeLevel + AnsiFgBlue + LogMessage.LogNameDebug + LogAfterLevel,
                     LogLevel.Info => LogBeforeLevel + AnsiFgBrightCyan + LogMessage.LogNameInfo + LogAfterLevel,
                     LogLevel.Warning => LogBeforeLevel + AnsiFgBrightYellow + LogMessage.LogNameWarning + LogAfterLevel,

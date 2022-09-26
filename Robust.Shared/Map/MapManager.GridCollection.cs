@@ -7,6 +7,9 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
+// All the obsolete warnings about GridId are probably useless here.
+#pragma warning disable CS0618
+
 namespace Robust.Shared.Map;
 
 /// <summary>
@@ -91,9 +94,20 @@ internal partial class MapManager
         }
     }
 
+    // ReSharper disable once MethodOverloadWithOptionalParameter
     public IMapGrid CreateGrid(MapId currentMapId, ushort chunkSize = 16)
     {
         return CreateGrid(currentMapId, chunkSize, default);
+    }
+
+    public IMapGrid CreateGrid(MapId currentMapId, in GridCreateOptions options)
+    {
+        return CreateGrid(currentMapId, options.ChunkSize, default);
+    }
+
+    public IMapGrid CreateGrid(MapId currentMapId)
+    {
+        return CreateGrid(currentMapId, GridCreateOptions.Default);
     }
 
     public IMapGrid GetGrid(EntityUid gridId)
@@ -127,8 +141,10 @@ internal partial class MapManager
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
         return EntityManager.EntityQuery<IMapGridComponent>(true)
-            .Where(c => c.Grid.ParentMapId == mapId)
+            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
             .Select(c => c.Grid);
     }
 

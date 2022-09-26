@@ -321,18 +321,18 @@ namespace Robust.Shared.Serialization
                     foreach (var node in doc.AllNodes)
                     {
                         var a = node.Anchor;
-                        if (!string.IsNullOrEmpty(a))
+                        if (!a.IsEmpty)
                         {
-                            AddString(a);
+                            AddString(a.Value);
                         }
 
                         var t = node.Tag;
-                        if (!string.IsNullOrEmpty(t))
+                        if (!t.IsEmpty)
                         {
-                            AddString(t);
+                            AddString(t.Value);
                         }
 
-                        if (!(node is YamlScalarNode scalar))
+                        if (node is not YamlScalarNode scalar)
                             continue;
 
                         var v = scalar.Value;
@@ -394,6 +394,7 @@ namespace Robust.Shared.Serialization
                     }
 #endif
                     Primitives.WritePrimitive(stream, (uint) mapping + FirstMappedIndexStart);
+                    StringsHitMetric.Inc();
                     //Logger.DebugS("szr", $"Encoded mapped string: {value}");
                     return;
                 }
@@ -401,6 +402,8 @@ namespace Robust.Shared.Serialization
                 // indicate not mapped
                 Primitives.WritePrimitive(stream, UnmappedString);
                 Primitives.WritePrimitive(stream, value);
+                StringsMissMetric.Inc();
+                StringsMissCharsMetric.Inc(value.Length);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

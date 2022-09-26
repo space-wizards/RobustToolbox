@@ -28,8 +28,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
-using PhysicsComponent = Robust.Shared.GameObjects.PhysicsComponent;
+using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -43,6 +44,11 @@ namespace Robust.Shared.Physics.Dynamics
         internal ContactManager ContactManager = default!;
 
         public bool AutoClearForces;
+
+        /// <summary>
+        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+        /// </summary>
+        public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
 
         /// <summary>
         ///     Change the global gravity vector.
@@ -137,6 +143,7 @@ namespace Robust.Shared.Physics.Dynamics
                 return;
             }
 
+            DebugTools.Assert(body.Awake);
             AwakeBodies.Add(body);
         }
 
@@ -157,7 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            BroadphaseSystem.FindNewContacts(MapId);
+            BroadphaseSystem.FindNewContacts(this, MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
@@ -262,7 +269,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType == BodyType.Static) continue;
 
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                    body.ForceAwake();
+                    body.SetAwake(true, updateSleepTime: false);
 
                     var node = body.Contacts.First;
 
@@ -300,7 +307,9 @@ namespace Robust.Shared.Physics.Dynamics
                     {
                         if (joint.IslandFlag) continue;
 
-                        var other = joint.BodyA == body ? joint.BodyB : joint.BodyA;
+                        var other = joint.BodyAUid == body.Owner
+                            ? _entityManager.GetComponent<PhysicsComponent>(joint.BodyBUid)
+                            : _entityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;
@@ -336,8 +345,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             SolveIslands(frameTime, dtRatio, invDt, prediction);
             Cleanup(frameTime);
-
-            ContactManager.PostSolve();
         }
 
         protected virtual void Cleanup(float frameTime)

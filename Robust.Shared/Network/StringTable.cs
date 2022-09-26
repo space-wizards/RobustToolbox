@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Lidgren.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -300,7 +301,7 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var count = buffer.ReadUInt32();
             Entries = new Entry[count];
@@ -312,7 +313,7 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             if (Entries == null)
                 throw new InvalidOperationException("Entries is null!");

@@ -15,14 +15,14 @@ namespace Robust.Shared.Network.Messages
     [UsedImplicitly]
     internal sealed class MsgMapStrServerHandshake : NetMessage
     {
-        public override MsgGroups MsgGroup => MsgGroups.Core;
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         /// <value>
         /// The hash of the current string mapping held by the server.
         /// </value>
         public byte[]? Hash { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var len = buffer.ReadVariableInt32();
             if (len > 64)
@@ -33,7 +33,7 @@ namespace Robust.Shared.Network.Messages
             buffer.ReadBytes(Hash = new byte[len]);
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             if (Hash == null)
             {

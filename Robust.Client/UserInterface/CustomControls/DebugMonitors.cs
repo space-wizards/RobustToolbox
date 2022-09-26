@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
 using Robust.Client.State;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
@@ -19,7 +20,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly Control[] _monitors = new Control[Enum.GetNames<DebugMonitor>().Length];
 
         //TODO: Think about a factory for this
-        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager,
+        public DebugMonitors(IClientGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager,
             IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager,
             IMapManager mapManager)
         {

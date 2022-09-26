@@ -126,6 +126,34 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Box2 FromTwoPoints(Vector2 a, Vector2 b)
+        {
+            float minX, minY, maxX, maxY;
+            if (a.X < b.X)
+            {
+                minX = a.X;
+                maxX = b.X;
+            }
+            else
+            {
+                minX = b.X;
+                maxX = a.X;
+            }
+            if (a.Y < b.Y)
+            {
+                minY = a.Y;
+                maxY = b.Y;
+            }
+            else
+            {
+                minY = b.Y;
+                maxY = a.Y;
+            }
+
+            return new Box2(minX, minY, maxX, maxY);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool Intersects(in Box2 other)
         {
             return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&

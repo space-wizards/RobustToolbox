@@ -142,6 +142,8 @@ namespace Robust.Client.Graphics.Audio
 
             if (_openALContext != ALContext.Null)
             {
+                ALC.MakeContextCurrent(ALContext.Null);
+
                 ALC.DestroyContext(_openALContext);
             }
 

@@ -335,7 +335,6 @@ namespace Robust.Server
             _entityManager.Initialize();
             _mapManager.Initialize();
 
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
@@ -646,9 +645,6 @@ namespace Robust.Server
         {
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
-
-            // These are always the same on the server, there is no prediction.
-            _time.LastRealTick = _time.CurTick;
 
             _systemConsole.UpdateTick();
 

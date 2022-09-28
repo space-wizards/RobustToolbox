@@ -118,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics
                 var contact = new Contact();
                 IoCManager.InjectDependencies(contact);
 #if DEBUG
-                contact._debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
 #endif
                 contact.Manifold = new Manifold
                 {
@@ -307,10 +307,10 @@ namespace Robust.Shared.Physics.Dynamics
             if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
             {
                 if (bodyA.CanCollide)
-                    contact.FixtureA.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureA.Body, true);
 
                 if (bodyB.CanCollide)
-                    contact.FixtureB.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureB.Body, true);
             }
 
             // Remove from the world
@@ -574,8 +574,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                bodyA.Awake = true;
-                bodyB.Awake = true;
+                _physics.SetAwake(bodyA, true);
+                _physics.SetAwake(bodyB, true);
             }
 
             ArrayPool<bool>.Shared.Return(wake);

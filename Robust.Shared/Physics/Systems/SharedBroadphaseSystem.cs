@@ -197,8 +197,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        proxyABody.WakeBody();
-                        otherBody.WakeBody();
+                        _physicsSystem.WakeBody(proxyABody);
+                        _physicsSystem.WakeBody(otherBody);
                     }
 
                     contactManager.AddPair(proxyA, other);

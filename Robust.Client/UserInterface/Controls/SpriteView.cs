@@ -1,6 +1,7 @@
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -54,7 +55,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _spriteSystem ??= EntitySystem.Get<SpriteSystem>();
+            _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             _spriteSystem?.ForceUpdate(Sprite);
 
             renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2, Scale * UIScale, OverrideDirection);

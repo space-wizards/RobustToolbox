@@ -149,7 +149,7 @@ namespace Robust.Shared.Containers
                 physicsSys.SetCanCollide(physics, false, false);
 
                 if (jointQuery.TryGetComponent(xform.Owner, out var joint))
-                    jointSys.ClearJoints(joint);
+                    jointSys.ClearJoints(xform.Owner, joint);
             }
 
             foreach (var child in xform.ChildEntities)

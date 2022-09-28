@@ -94,7 +94,7 @@ namespace Robust.Client.Debugging
                             IoCManager.Resolve<IMapManager>(),
                             IoCManager.Resolve<IResourceCache>(),
                             this,
-                            Get<SharedPhysicsSystem>()));
+                            EntityManager.System<SharedPhysicsSystem>()));
 
                 if (value == PhysicsDebugFlags.None)
                     IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));

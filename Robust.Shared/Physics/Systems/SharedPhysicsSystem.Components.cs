@@ -96,22 +96,22 @@ public partial class SharedPhysicsSystem
         if (args.Current is not PhysicsComponentState newState)
             return;
 
-        component.SleepingAllowed = newState.SleepingAllowed;
-        component.FixedRotation = newState.FixedRotation;
-        component.CanCollide = newState.CanCollide;
+        SetSleepingAllowed(component, newState.SleepingAllowed, false);
+        SetFixedRotation(component, newState.FixedRotation, false);
+        SetCanCollide(component, newState.CanCollide, false);
         component.BodyStatus = newState.Status;
 
         // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
-        Dirty(component);
-        component.LinearVelocity = newState.LinearVelocity;
-        component.AngularVelocity = newState.AngularVelocity;
-        component.BodyType = newState.BodyType;
-        component.Friction = newState.Friction;
-        component.LinearDamping = newState.LinearDamping;
-        component.AngularDamping = newState.AngularDamping;
+        SetLinearVelocity(component, newState.LinearVelocity, false);
+        SetAngularVelocity(component, newState.AngularVelocity, false);
+        SetBodyType(component, newState.BodyType);
+        SetFriction(component, newState.Friction, false);
+        SetLinearDamping(component, newState.LinearDamping, false);
+        SetAngularDamping(component, newState.AngularDamping, false);
         component.Predict = false;
+        Dirty(component);
     }
 
     #endregion
@@ -377,12 +377,12 @@ public partial class SharedPhysicsSystem
         }
 
         if (updateSleepTime)
-            body.SleepTime = 0.0f;
+            SetSleepTime(body, 0f);
 
         Dirty(body);
     }
 
-    public void SetBodyType(PhysicsComponent body, BodyType value)
+    public void SetBodyType(PhysicsComponent body, BodyType value, bool dirty = true)
     {
         if (body._bodyType == value)
             return;
@@ -410,6 +410,9 @@ public partial class SharedPhysicsSystem
 
         var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
         RaiseLocalEvent(body.Owner, ref ev, true);
+
+        if (dirty)
+            Dirty(body);
     }
 
     /// <summary>
@@ -507,10 +510,6 @@ public partial class SharedPhysicsSystem
     public void SetSleepTime(PhysicsComponent body, float value)
     {
         DebugTools.Assert(!float.IsNaN(value));
-
-        if (MathHelper.CloseToPercent(value, body._sleepTime))
-            return;
-
         body._sleepTime = value;
     }
 

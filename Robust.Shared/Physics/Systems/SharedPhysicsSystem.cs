@@ -89,7 +89,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
         {
-            component.CanCollide = false;
+            SetCanCollide(component, false);
             DebugTools.Assert(!component.Awake);
         }
 
@@ -241,7 +241,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             if (jointQuery.TryGetComponent(uid, out var joint))
-                _joints.ClearJoints(joint);
+                _joints.ClearJoints(uid.Value, joint);
 
             if (newMapId != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroadphase))
                 newBroadphase = parentBroadphase;
@@ -263,7 +263,7 @@ namespace Robust.Shared.Physics.Systems
             if (!EntityManager.EntityExists(ev.EntityUid)) return;
             // Yes this ordering matters
             var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
-            collideComp.BodyType = BodyType.Static;
+            SetBodyType(collideComp, BodyType.Static);
             EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 

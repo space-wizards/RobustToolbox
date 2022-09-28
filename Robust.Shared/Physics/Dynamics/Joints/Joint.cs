@@ -166,7 +166,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 _collideConnected = value;
 
                 if (!_collideConnected)
-                    EntitySystem.Get<SharedJointSystem>().FilterContactsForJoint(this);
+                    IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedJointSystem>().FilterContactsForJoint(this);
 
                 Dirty();
             }

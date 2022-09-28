@@ -13,7 +13,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables] private (GridId, Vector2i) _lastPosition;
+        [ViewVariables] private (EntityUid?, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 
@@ -43,11 +43,10 @@ namespace Robust.Client.GameObjects
             var xform = _entityManager.GetComponent<TransformComponent>(Owner);
             SendDirty(xform);
 
-            if(!xform.Anchored)
+            if(!xform.Anchored || !_mapManager.TryGetGrid(xform.GridUid, out var grid))
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridID);
-            _lastPosition = (xform.GridID, grid.TileIndicesFor(xform.Coordinates));
+            _lastPosition = (xform.GridUid, grid.TileIndicesFor(xform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -89,10 +88,9 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            if (!xform.Anchored)
+            if (!xform.Anchored || !_mapManager.TryGetGrid(xform.GridUid, out var grid))
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridID);
             var position = xform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {

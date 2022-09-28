@@ -229,19 +229,19 @@ namespace Robust.Client.GameObjects
             component.LightTree.Clear();
         }
 
-        private void MapManagerOnMapCreated(MapChangedEvent e)
+        private void MapManagerOnMapCreated(MapChangedEvent ev)
         {
-            if (e.Destroyed || e.Map == MapId.Nullspace)
+            if (ev.Destroyed || ev.Map == MapId.Nullspace)
             {
                 return;
             }
 
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(ev.Map));
         }
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.GridId).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(ev.EntityUid);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, TransformComponent xform, EntityQuery<TransformComponent> xforms)

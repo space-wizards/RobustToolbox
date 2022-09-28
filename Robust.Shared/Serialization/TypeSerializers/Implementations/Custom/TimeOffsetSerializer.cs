@@ -24,7 +24,7 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
         var curTime = dependencies.Resolve<IGameTiming>().CurTime.TotalSeconds;
 
-        return TimeSpan.FromSeconds(seconds - curTime);
+        return TimeSpan.FromSeconds(seconds + curTime);
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
@@ -36,10 +36,11 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
             : new ErrorNode(node, "Failed parsing TimeSpan");
     }
 
-    public DataNode Write(ISerializationManager serializationManager, TimeSpan value, bool alwaysWrite = false,
+    public DataNode Write(ISerializationManager serializationManager, TimeSpan value, IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+        var curTime = dependencies.Resolve<IGameTiming>().CurTime;
+        return new ValueDataNode((value.TotalSeconds - curTime.TotalSeconds).ToString(CultureInfo.InvariantCulture));
     }
 
     [MustUseReturnValue]

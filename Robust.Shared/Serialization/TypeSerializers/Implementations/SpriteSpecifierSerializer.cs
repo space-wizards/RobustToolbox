@@ -133,13 +133,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context);
 
-        public DataNode Write(ISerializationManager serializationManager, Texture value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Texture value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, EntityPrototype value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, EntityPrototype value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
@@ -147,7 +149,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Rsi value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Rsi value, IDependencyCollection dependencies,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
@@ -174,19 +177,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new(source.RsiPath, source.RsiState);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return value switch
             {
                 Rsi rsi
-                    => Write(serializationManager, rsi, alwaysWrite, context),
+                    => Write(serializationManager, rsi, dependencies, alwaysWrite, context),
 
                 Texture texture
-                    => Write(serializationManager, texture, alwaysWrite, context),
+                    => Write(serializationManager, texture, dependencies, alwaysWrite, context),
 
                 EntityPrototype entityPrototype
-                    => Write(serializationManager, entityPrototype, alwaysWrite, context),
+                    => Write(serializationManager, entityPrototype, dependencies, alwaysWrite, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };

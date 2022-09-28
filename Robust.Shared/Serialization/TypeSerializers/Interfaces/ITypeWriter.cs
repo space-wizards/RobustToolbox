@@ -6,7 +6,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
     public interface ITypeWriter<TType>
     {
-        DataNode Write(ISerializationManager serializationManager, TType value, IDependencyCollection dependencies, bool alwaysWrite = false,
+        DataNode Write(ISerializationManager serializationManager, TType value, IDependencyCollection dependencies,
+            bool alwaysWrite = false,
             ISerializationContext? context = null);
     }
 }

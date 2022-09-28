@@ -34,7 +34,8 @@ public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
         throw new ArgumentException($"Failed to parse enum {node.Value}");
     }
 
-    public DataNode Write(ISerializationManager serializationManager, Enum value, bool alwaysWrite = false,
+    public DataNode Write(ISerializationManager serializationManager, Enum value, IDependencyCollection dependencies,
+        bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
         return new ValueDataNode(serializationManager.ReflectionManager.GetEnumReference(value));

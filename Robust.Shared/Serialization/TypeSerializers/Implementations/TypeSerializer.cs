@@ -43,7 +43,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : type;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Type value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Type value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.FullName ?? value.Name);

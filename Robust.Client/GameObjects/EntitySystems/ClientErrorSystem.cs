@@ -12,10 +12,12 @@ public sealed class ClientErrorSystem : EntitySystem
 {
     /// <summary>
     ///     Raises an error event and optionally modifies the entity's sprite and description to indicate to players
-    ///     that something has gone wrong.
+    ///     that something has gone wrong. Note that if this modifies the entity, then the player has to reconnect in
+    ///     order to properly reset the entity. So this should only be used for relatively significant errors.
     /// </summary>
-    public void NotifyEntityError(EntityUid uid, Exception e, bool updateEntity)
+    public void NotifyEntityError(EntityUid uid, Exception e, bool updateEntity = false)
     {
+        // SubnauticaSystem when?
         RaiseLocalEvent(uid, new EntityErrorEvent(uid, e), true);
 
         if (!updateEntity || !TryComp(uid, out MetaDataComponent? meta))

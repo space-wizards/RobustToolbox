@@ -363,20 +363,6 @@ public partial class EntitySystem
         return true;
     }
 
-    /// <summary>
-    ///     Attempts to set the paused status on an entity.
-    /// </summary>
-    /// <returns>Whether the paused status could be set.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TrySetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
-    {
-        if (!Resolve(uid, ref metaData, false))
-            return false;
-
-        metaData.EntityPaused = paused;
-        return true;
-    }
-
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid)

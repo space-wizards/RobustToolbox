@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -409,10 +410,38 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public bool LayerMapTryGet(object key, out int layer)
+        public bool LayerMapTryGet(object key, out int layer, bool logError = false)
         {
-            return LayerMap.TryGetValue(key, out layer);
+            var result = LayerMap.TryGetValue(key, out layer);
+
+            if (!result && logError)
+            {
+                Logger.ErrorS(LogCategory, "{0} - Layer with key '{1}' does not exist! Trace:\n{2}",
+                    entities.ToPrettyString(Owner), layer, Environment.StackTrace);
+            }
+
+            return result;
         }
+
+        public bool TryGetLayer(int index, [NotNullWhen(true)] out Layer? layer, bool logError = false)
+        {
+            if (index < Layers.Count)
+            {
+                layer = Layers[index];
+                return true;
+            }
+
+            if (logError)
+            {
+                Logger.ErrorS(LogCategory, "{0} - Layer index '{1}' does not exist! Trace:\n{2}",
+                    entities.ToPrettyString(Owner), index, Environment.StackTrace);
+            }
+
+            layer = null;
+            return false;
+        }
+
+        public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
 
         private void _layerMapEnsurePrivate()
         {
@@ -597,12 +626,8 @@ namespace Robust.Client.GameObjects
 
         public void RemoveLayer(int layer)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer,
-                    Environment.StackTrace);
+            if (!LayerExists(layer))
                 return;
-            }
 
             Layers.RemoveAt(layer);
             foreach (var kv in LayerMap)
@@ -624,12 +649,8 @@ namespace Robust.Client.GameObjects
 
         public void RemoveLayer(object layerKey)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             RemoveLayer(layer);
         }
@@ -652,12 +673,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {
-            if (Layers.Count <= index)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set layer data! Trace:\n{1}",
-                    index, Environment.StackTrace);
+            if (!LayerExists(layer))
                 return;
-            }
 
             var layer = Layers[index];
 
@@ -774,38 +791,25 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetData(layer, data);
         }
 
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.Shader = shader;
             theLayer.ShaderPrototype = prototype;
         }
 
         public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetShader(layer, shader, prototype);
         }
@@ -826,25 +830,14 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetShader(object layerKey, string shaderName)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetShader(layer, shaderName);
         }
 
         public void LayerSetSprite(int layer, SpriteSpecifier specifier)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}",
-                    layer, Environment.StackTrace);
-                return;
-            }
-
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
@@ -862,38 +855,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set sprite! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetSprite(layer, specifier);
         }
 
         public void LayerSetTexture(int layer, Texture? texture)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetTexture(texture);
             RebuildBounds();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetTexture(layer, texture);
         }
@@ -928,52 +907,32 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetTexture(object layerKey, ResourcePath texturePath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetTexture(layer, texturePath);
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetState(stateId);
             RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId);
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.State = stateId;
             theLayer.RSI = rsi;
             var actualRsi = theLayer.RSI ?? BaseRSI;
@@ -1003,12 +962,8 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId, rsi);
         }
@@ -1035,38 +990,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, ResourcePath rsiPath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId, rsiPath);
         }
 
         public void LayerSetRSI(int layer, RSI? rsi)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer,
-                    Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetRsi(rsi);
             RebuildBounds();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRSI(layer, rsi);
         }
@@ -1093,38 +1034,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetRSI(object layerKey, ResourcePath rsiPath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRSI(layer, rsiPath);
         }
 
         public void LayerSetScale(int layer, Vector2 scale)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.Scale = scale;
             RebuildBounds();
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetScale(layer, scale);
         }
@@ -1132,64 +1059,41 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetRotation(int layer, Angle rotation)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.Rotation = rotation;
             RebuildBounds();
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRotation(layer, rotation);
         }
 
         public void LayerSetVisible(int layer, bool visible)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetVisible(visible);
+            theLayer.SetVisible(visible);
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetVisible(layer, visible);
         }
 
         public void LayerSetColor(int layer, Color color)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.Color = color;
 
             RebuildBounds();
@@ -1197,26 +1101,17 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetColor(object layerKey, Color color)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetColor(layer, color);
         }
 
         public void LayerSetDirOffset(int layer, DirectionOffset offset)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.DirOffset = offset;
 
             RebuildBounds();
@@ -1224,92 +1119,60 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetDirOffset(layer, offset);
         }
 
         public void LayerSetAnimationTime(int layer, float animationTime)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set animation time! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetAnimationTime(animationTime);
+            theLayer.SetAnimationTime(animationTime);
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with key '{0}' does not exist, cannot set animation time! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetAnimationTime(layer, animationTime);
         }
 
         public void LayerSetAutoAnimated(int layer, bool autoAnimated)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetAutoAnimated(autoAnimated);
+            theLayer.SetAutoAnimated(autoAnimated);
 
             RebuildBounds();
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
         public void LayerSetOffset(int layer, Vector2 layerOffset)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].Offset = layerOffset;
+            theLayer.Offset = layerOffset;
 
             RebuildBounds();
         }
 
         public void LayerSetOffset(object layerKey, Vector2 layerOffset)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetOffset(layer, layerOffset);
         }
@@ -1317,15 +1180,10 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot get state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
-                return null;
-            }
+            if (!TryGetLayer(layer, out var theLayer, true))
+                return default;
 
-            var thelayer = Layers[layer];
-            return thelayer.State;
+            return theLayer.State;
         }
 
         public RSI? LayerGetActualRSI(int layer)

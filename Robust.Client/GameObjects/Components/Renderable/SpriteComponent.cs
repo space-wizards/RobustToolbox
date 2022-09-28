@@ -673,10 +673,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {
-            if (!LayerExists(layer))
+            if (!TryGetLayer(index, out var layer))
                 return;
-
-            var layer = Layers[index];
 
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {

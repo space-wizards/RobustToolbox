@@ -14,7 +14,7 @@ public sealed class ClientErrorSystem : EntitySystem
     ///     Raises an error event and optionally modifies the entity's sprite and description to indicate to players
     ///     that something has gone wrong.
     /// </summary>
-    public void EntityError(EntityUid uid, Exception e, bool updateEntity)
+    public void NotifyEntityError(EntityUid uid, Exception e, bool updateEntity)
     {
         RaiseLocalEvent(uid, new EntityErrorEvent(uid, e), true);
 

@@ -957,11 +957,16 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-#if EXCEPTION_TOLERANCE
-                        _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
-                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
-#else
                     _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+
+                    // There may be client-side state application errors. Sometimes these are relatively unnoticeable in
+                    // release mode, and they obviously don't show up in sever logs. So we will update the client's
+                    // sprite in the hopes that they actually open the console and report bugs for once.
+                    _entitySystemManager.GetEntitySystem<ClientErrorSystem>().NotifyEntityError(comp.Owner, e, true);
+
+#if EXCEPTION_TOLERANCE
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
+#else
                     throw;
 #endif
                 }

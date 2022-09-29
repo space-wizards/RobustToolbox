@@ -97,6 +97,35 @@ namespace Robust.Client.Graphics
             return advanceTotal;
         }
 
+        public Vector2 GetDimensions(Font font, ReadOnlySpan<char> str, float scale)
+        {
+            var baseLine = new Vector2(0f, font.GetAscent(scale));
+            var lineHeight = font.GetLineHeight(scale);
+            var advanceTotal = new Vector2(0f, lineHeight);
+
+            foreach (var rune in str.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    baseLine.X = 0f;
+                    baseLine.Y += lineHeight;
+                    advanceTotal.Y += lineHeight;
+                    continue;
+                }
+
+                var metrics = font.GetCharMetrics(rune, scale);
+
+                if (metrics == null)
+                    continue;
+
+                var advance = metrics.Value.Advance;
+                advanceTotal.X += advance;
+                baseLine += new Vector2(advance, 0);
+            }
+
+            return advanceTotal;
+        }
+
         public abstract void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }
 }

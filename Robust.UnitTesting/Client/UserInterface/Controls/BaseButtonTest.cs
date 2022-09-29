@@ -14,7 +14,7 @@ public sealed class BaseButtonTest : RobustUnitTest
     public override UnitTestProject Project => UnitTestProject.Client;
 
     private string UIRightClick = "UIRightClick";
-    private string OpenContextMenu = "AltUse";
+    private string OpenContextMenu = "UseSecondary";
 
     private sealed class TestButton : BaseButton { }
 

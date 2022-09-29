@@ -383,7 +383,7 @@ namespace Robust.Server.Player
         {
             if (!_playerData.TryGetValue(args.Channel.UserId, out var data))
             {
-                data = new PlayerData(args.Channel.UserId);
+                data = new PlayerData(args.Channel.UserId, args.Channel.UserName);
                 _playerData.Add(args.Channel.UserId, data);
             }
 

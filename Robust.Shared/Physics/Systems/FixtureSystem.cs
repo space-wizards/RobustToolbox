@@ -450,6 +450,16 @@ namespace Robust.Shared.Physics.Systems
                 Dirty(component);
         }
 
+        public int GetFixtureCount(EntityUid uid, FixturesComponent? component = null)
+        {
+            if (!Resolve(uid, ref component))
+            {
+                return 0;
+            }
+
+            return component.FixtureCount;
+        }
+
         [Serializable, NetSerializable]
         private sealed class FixtureManagerComponentState : ComponentState
         {

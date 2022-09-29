@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.IoC;
@@ -133,6 +133,19 @@ namespace Robust.Client.UserInterface.CustomControls
         public Vector2 WorldToScreen(Vector2 point)
         {
             return WorldToLocalPixel(point) + GlobalPixelPosition;
+        }
+
+        public Matrix3 GetWorldToScreenMatrix()
+        {
+            if (Viewport == null)
+                return Matrix3.Identity;
+
+            return Viewport.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
+        }
+
+        public Matrix3 GetLocalToScreenMatrix()
+        {
+            return Matrix3.CreateTransform(GlobalPixelPosition, 0, Vector2.One / _viewportResolution);
         }
     }
 }

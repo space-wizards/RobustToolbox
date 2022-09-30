@@ -48,6 +48,7 @@ Template for new versions:
 ### Other
 
 * Changed Lidgren to be compiled against `net6.0`. This unlocks `Half` read/write methods.
+* Lidgren has been updated to [0.2.2](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.2.2/RELEASE-NOTES.md). Not all the changes since 0.1.0 are new here, since this is the first version where we're properly tracking this in release notes.
 
 ### Internal
 

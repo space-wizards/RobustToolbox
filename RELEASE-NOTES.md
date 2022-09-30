@@ -35,7 +35,11 @@ Template for new versions:
 
 ### New features
 
-*None yet*
+* Added CVars to control Lidgren's <abbr title="Maximum Transmission Unit">MTU</abbr> parameters:
+  * `net.mtu`
+  * `net.mtu_expand`
+  * `net.mtu_expand_frequency`
+  * `net.mtu_expand_fail_attempts`
 
 ### Bugfixes
 

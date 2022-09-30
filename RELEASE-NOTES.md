@@ -52,4 +52,4 @@ Template for new versions:
 ### Internal
 
 * Renamed Lidgren's assembly to `SpaceWizards.Lidgren.Network`.
-
+* Rogue `obj/` folders inside Lidgren no longer break the build.

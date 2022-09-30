@@ -15,6 +15,7 @@
     <Compile Include="Lidgren.Network\Lidgren.Network\**\*.cs">
      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Remove="Lidgren.Network\Lidgren.Network\obj\**\*.cs" />
   </ItemGroup>
 
 </Project>

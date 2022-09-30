@@ -47,8 +47,9 @@ Template for new versions:
 
 ### Other
 
-*None yet*
+* Changed Lidgren to be compiled against `net6.0`. This unlocks `Half` read/write methods.
 
 ### Internal
 
-*None yet*
+* Renamed Lidgren's assembly to `SpaceWizards.Lidgren.Network`.
+

@@ -603,6 +603,12 @@ namespace Robust.Shared.Network
             netConfig.ConnectionTimeout = 30000f;
 #endif
 
+            // MTU stuff.
+            netConfig.MaximumTransmissionUnit = _config.GetCVar(CVars.NetMtu);
+            netConfig.AutoExpandMTU = _config.GetCVar(CVars.NetMtuExpand);
+            netConfig.ExpandMTUFrequency = _config.GetCVar(CVars.NetMtuExpandFrequency);
+            netConfig.ExpandMTUFailAttempts = _config.GetCVar(CVars.NetMtuExpandFailAttempts);
+
             return netConfig;
         }
 
@@ -882,7 +888,7 @@ namespace Robust.Shared.Network
 
             try
             {
-                instance.ReadFromBuffer(msg);
+                instance.ReadFromBuffer(msg, _serializer);
             }
             catch (InvalidCastException ice)
             {
@@ -967,7 +973,7 @@ namespace Robust.Shared.Network
                     $"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
             packet.Write((byte) msgId);
-            message.WriteToBuffer(packet);
+            message.WriteToBuffer(packet, _serializer);
             return packet;
         }
 

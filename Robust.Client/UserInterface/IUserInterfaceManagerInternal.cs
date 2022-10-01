@@ -11,7 +11,6 @@ namespace Robust.Client.UserInterface
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
     {
         void Initialize();
-        void InitializeTesting();
 
         void FrameUpdate(FrameEventArgs args);
 

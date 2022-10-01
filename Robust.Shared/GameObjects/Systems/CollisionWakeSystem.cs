@@ -2,6 +2,8 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.GameObjects
 {
@@ -69,12 +71,10 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
-            UpdateCanCollide(uid, component, xform: args.Transform);
-        }
+            if (component.LifeStage < ComponentLifeStage.Initialized)
+                return;
 
-        internal void OnPhysicsInit(EntityUid uid, CollisionWakeComponent component)
-        {
-            UpdateCanCollide(uid, component, checkTerminating: false, dirty: false);
+            UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)

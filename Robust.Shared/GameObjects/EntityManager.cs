@@ -361,7 +361,8 @@ namespace Robust.Shared.GameObjects
                 RecursiveDeleteEntity(metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
             }
 
-            DebugTools.Assert(transform._children.Count == 0, $"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
+            if (transform._children.Count != 0)
+                Logger.Error($"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
 
             // Shut down all components.
             foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))
@@ -563,9 +564,16 @@ namespace Robust.Shared.GameObjects
             return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
-#endregion Entity Management
+        #endregion Entity Management
 
-/// <summary>
+        public virtual void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+        {
+            // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
+            // server should never be calling this.
+            DebugTools.Assert("Why are you raising predictive events on the server?");
+        }
+
+        /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         /// <inheritdoc />

@@ -1,5 +1,6 @@
 using System;
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -80,13 +81,15 @@ namespace Robust.Shared.Network
         /// Deserializes the NetIncomingMessage into this NetMessage class.
         /// </summary>
         /// <param name="buffer">The buffer of the raw incoming packet.</param>
-        public abstract void ReadFromBuffer(NetIncomingMessage buffer);
+        /// <param name="serializer"></param>
+        public abstract void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer);
 
         /// <summary>
         /// Serializes this NetMessage into a new NetOutgoingMessage.
         /// </summary>
         /// <param name="buffer">The buffer of the new packet being serialized.</param>
-        public abstract void WriteToBuffer(NetOutgoingMessage buffer);
+        /// <param name="serializer"></param>
+        public abstract void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer);
 
         public virtual NetDeliveryMethod DeliveryMethod
         {

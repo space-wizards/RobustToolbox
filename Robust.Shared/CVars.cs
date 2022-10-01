@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -48,8 +49,43 @@ namespace Robust.Shared
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
 
         /// <summary>
+        /// Maximum UDP payload size to send.
+        /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtu =
+            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+
+        /// <summary>
+        /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
+        /// </summary>
+        /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuExpandFrequency"/>
+        /// <seealso cref="NetMtuExpandFailAttempts"/>
+        public static readonly CVarDef<bool> NetMtuExpand =
+            CVarDef.Create("net.mtu_expand", false, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Interval between MTU expansion attempts, in seconds.
+        /// </summary>
+        /// <remarks>
+        /// This property is named incorrectly: it is actually an interval, not a frequency.
+        /// The name is chosen to match Lidgren's <see cref="NetPeerConfiguration.ExpandMTUFrequency"/>.
+        /// </remarks>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<float> NetMtuExpandFrequency =
+            CVarDef.Create("net.mtu_expand_frequency", 2f, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many times an MTU expansion attempt can fail before settling on a final MTU value.
+        /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtuExpandFailAttempts =
+            CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
         /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<bool> NetVerbose =
             CVarDef.Create("net.verbose", false);
 
@@ -650,7 +686,7 @@ namespace Robust.Shared
         /// <remarks>
         ///     The bias needs to be large enough to prevent sprites on rotating grids from flickering, but should be
         ///     small enough that it is generally unnoticeable. Currently it is somewhat large to combat issues with
-        ///     eye-lerping & grid rotations. 
+        ///     eye-lerping & grid rotations.
         /// </remarks>
         public static readonly CVarDef<double> RenderSpriteDirectionBias =
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);

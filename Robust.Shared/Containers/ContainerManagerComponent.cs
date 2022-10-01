@@ -58,7 +58,7 @@ namespace Robust.Shared.Containers
         public override ComponentState GetComponentState()
         {
             // naive implementation that just sends the full state of the component
-            List<ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
+            Dictionary<string, ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
 
             foreach (var container in Containers.Values)
             {
@@ -70,7 +70,7 @@ namespace Robust.Shared.Containers
                 }
 
                 var sContainer = new ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
-                containerSet.Add(sContainer);
+                containerSet.Add(container.ID, sContainer);
             }
 
             return new ContainerManagerComponentState(containerSet);
@@ -181,11 +181,11 @@ namespace Robust.Shared.Containers
         [Serializable, NetSerializable]
         internal sealed class ContainerManagerComponentState : ComponentState
         {
-            public List<ContainerData> ContainerSet;
+            public Dictionary<string, ContainerData> Containers;
 
-            public ContainerManagerComponentState(List<ContainerData> containers)
+            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers)
             {
-                ContainerSet = containers;
+                Containers = containers;
             }
 
             [Serializable, NetSerializable]

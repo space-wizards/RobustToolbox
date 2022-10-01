@@ -18,17 +18,15 @@ public sealed class MsgInput : NetMessage
 
     public InputMessageList InputMessageList;
 
-    public override void ReadFromBuffer(NetIncomingMessage buffer)
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
         int length = buffer.ReadVariableInt32();
         using var stream = buffer.ReadAlignedMemory(length);
         InputMessageList = serializer.Deserialize<InputMessageList>(stream);
     }
 
-    public override void WriteToBuffer(NetOutgoingMessage buffer)
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
     {
-        var serializer = IoCManager.Resolve<IRobustSerializer>();
         var stream = new MemoryStream();
         serializer.Serialize(stream, InputMessageList);
         buffer.WriteVariableInt32((int)stream.Length);

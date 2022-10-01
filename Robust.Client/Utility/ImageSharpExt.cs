@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
@@ -32,31 +33,13 @@ namespace Robust.Client.Utility
             Image<T> destination, Vector2i destinationOffset)
             where T : unmanaged, IPixel<T>
         {
-            // TODO: Bounds checks.
-
-            Blit(source.GetPixelSpan(), source.Width, sourceRect, destination, destinationOffset);
+            ImageOps.Blit(source, sourceRect, destination, destinationOffset);
         }
 
         public static void Blit<T>(this ReadOnlySpan<T> source, int sourceWidth, UIBox2i sourceRect,
             Image<T> destination, Vector2i destinationOffset) where T : unmanaged, IPixel<T>
         {
-            var dstSpan = destination.GetPixelSpan();
-            var dstWidth = destination.Width;
-            var srcHeight = sourceRect.Height;
-            var srcWidth = sourceRect.Width;
-
-            var (ox, oy) = destinationOffset;
-
-            for (var y = 0; y < srcHeight; y++)
-            {
-                var sourceRowOffset = sourceWidth * (y + sourceRect.Top) + sourceRect.Left;
-                var destRowOffset = dstWidth * (y + oy) + ox;
-
-                var srcRow = source[sourceRowOffset..(sourceRowOffset + srcWidth)];
-                var dstRow = dstSpan[destRowOffset..(destRowOffset + srcWidth)];
-
-                srcRow.CopyTo(dstRow);
-            }
+            ImageOps.Blit(source, sourceWidth, sourceRect, destination, destinationOffset);
         }
 
         /// <summary>
@@ -66,12 +49,7 @@ namespace Robust.Client.Utility
         /// <exception cref="ArgumentException">Thrown if the image is not a single contiguous buffer.</exception>
         public static Span<T> GetPixelSpan<T>(this Image<T> image) where T : unmanaged, IPixel<T>
         {
-            if (!image.DangerousTryGetSinglePixelMemory(out var memory))
-            {
-                throw new ArgumentException("Image is not backed by a single buffer, cannot fetch span.");
-            }
-
-            return memory.Span;
+            return ImageOps.GetPixelSpan(image);
         }
     }
 }

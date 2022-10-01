@@ -23,6 +23,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction CameraReset = "CameraReset";
 
         public static readonly BoundKeyFunction Use = "Use";
+        public static readonly BoundKeyFunction UseSecondary = "UseSecondary";
         public static readonly BoundKeyFunction UIClick = "UIClick";
         public static readonly BoundKeyFunction UIRightClick = "UIRightClick";
 

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Components
 {
     [Serializable, NetSerializable]
     public sealed class PhysicsComponentState : ComponentState
@@ -19,6 +16,10 @@ namespace Robust.Shared.GameObjects
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
         public readonly BodyType BodyType;
+
+        public float Friction;
+        public float LinearDamping;
+        public float AngularDamping;
 
         /// <summary>
         ///
@@ -37,7 +38,10 @@ namespace Robust.Shared.GameObjects
             BodyStatus status,
             Vector2 linearVelocity,
             float angularVelocity,
-            BodyType bodyType)
+            BodyType bodyType,
+            float friction,
+            float linearDamping,
+            float angularDamping)
         {
             CanCollide = canCollide;
             SleepingAllowed = sleepingAllowed;
@@ -47,6 +51,10 @@ namespace Robust.Shared.GameObjects
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
             BodyType = bodyType;
+
+            Friction = friction;
+            LinearDamping = linearDamping;
+            AngularDamping = angularDamping;
         }
     }
 }

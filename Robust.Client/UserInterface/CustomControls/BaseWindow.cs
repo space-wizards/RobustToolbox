@@ -242,7 +242,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public void OpenCenteredAt(Vector2 relativePosition)
         {
             Measure(Vector2.Infinity);
-            SetSize = DesiredSize;
             Open();
             RecenterWindow(relativePosition);
         }

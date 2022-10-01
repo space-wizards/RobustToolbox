@@ -34,12 +34,14 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
 
         private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
         private ISawmill _aczSawmill = default!;
+        private ISawmill _aczPackagingSawmill = default!;
 
         private string? _serverNameCache;
         private string[]? _serverTagsCache;
@@ -98,6 +100,8 @@ namespace Robust.Server.ServerStatus
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
             _aczSawmill = Logger.GetSawmill($"{Sawmill}.acz");
+            _aczPackagingSawmill = Logger.GetSawmill($"{Sawmill}.acz.packaging");
+
             RegisterCVars();
 
             // Cache these in fields to avoid thread safety shenanigans.

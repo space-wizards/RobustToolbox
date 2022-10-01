@@ -37,9 +37,8 @@ internal sealed class ClientDirtySystem : EntitySystem
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
     {
-        // TODO if entity deletion ever gets predicted, enable this check. Currently it is redundant:
-        // if (args.Terminating)
-        //    return;
+        if (args.Terminating)
+            return;
 
         var comp = args.BaseArgs.Component;
         if (!_timing.InPrediction || comp.Owner.IsClientSide() || !comp.NetSyncEnabled)

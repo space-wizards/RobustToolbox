@@ -68,7 +68,7 @@ namespace Robust.Server.GameObjects
                 return;
             }
 
-            foreach (var inputMsg in message.InputMessageList.List.Span) // good ol' message.list.list.span
+            foreach (var inputMsg in message.InputMessageList.Span)
             {
                 if (inputMsg.InputSequence <= data.LastProcessedSequence)
                     continue;

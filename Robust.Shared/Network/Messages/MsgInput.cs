@@ -16,13 +16,13 @@ public sealed class MsgInput : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.Input;
 
-    public InputMessageList InputMessageList;
+    public NetListAsArray<FullInputCmdMessage> InputMessageList;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         int length = buffer.ReadVariableInt32();
         using var stream = buffer.ReadAlignedMemory(length);
-        InputMessageList = serializer.Deserialize<InputMessageList>(stream);
+        InputMessageList = serializer.Deserialize<NetListAsArray<FullInputCmdMessage>>(stream);
     }
 
     public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -31,17 +31,5 @@ public sealed class MsgInput : NetMessage
         serializer.Serialize(stream, InputMessageList);
         buffer.WriteVariableInt32((int)stream.Length);
         buffer.Write(stream.AsSpan());
-    }
-}
-
-
-[Serializable, NetSerializable]
-public sealed class InputMessageList
-{
-    public readonly NetListAsArray<FullInputCmdMessage> List;
-
-    public InputMessageList(NetListAsArray<FullInputCmdMessage> list)
-    {
-        List = list;
     }
 }

@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using Robust.Shared.Input;
 
 namespace Robust.Shared.Serialization
 {
@@ -32,7 +33,8 @@ namespace Robust.Shared.Serialization
 
         private static Type[] AlwaysNetSerializable => new[]
         {
-            typeof(Vector2i)
+            typeof(Vector2i),
+            typeof(NetListAsArray<FullInputCmdMessage>)
         };
 
         #region Statistics

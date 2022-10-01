@@ -368,7 +368,7 @@ namespace Robust.Client.GameStates
 
         public void RequestFullState(EntityUid? missingEntity = null)
         {
-            Logger.Info("Requesting full server state");
+            _sawmill.Info("Requesting full server state");
             _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
@@ -837,7 +837,8 @@ namespace Robust.Client.GameStates
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("state", $"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}\n{e}");
+                        _sawmill.Error($"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
                         toCreate.Remove(entity);
                     }
@@ -858,7 +859,8 @@ namespace Robust.Client.GameStates
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("state", $"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}\n{e}");
+                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
                         toCreate.Remove(entity);
                     }
@@ -966,10 +968,10 @@ namespace Robust.Client.GameStates
                 catch (Exception e)
                 {
 #if EXCEPTION_TOLERANCE
-                _runtimeLog.LogException(new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e), "Component state apply");
+                        _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
 #else
-                    Logger.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                    _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
                     throw;
 #endif
                 }

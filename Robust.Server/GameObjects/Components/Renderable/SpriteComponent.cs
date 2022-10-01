@@ -13,6 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
+    [Obsolete("Use client-side systems, or appearance data & visualizers instead")]
     public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
         [ViewVariables]

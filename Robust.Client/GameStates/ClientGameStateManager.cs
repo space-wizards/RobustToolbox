@@ -883,7 +883,7 @@ namespace Robust.Client.GameStates
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
 
             // First remove any deleted components
-            if (curState?.NetComponents is { } netCompIds)
+            if (curState.NetComponents != null)
             {
                 RemQueue<Component> toRemove = new();
                 foreach (var (id, comp) in _entities.GetNetComponents(uid))

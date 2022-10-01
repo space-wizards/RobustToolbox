@@ -179,18 +179,18 @@ namespace Robust.Client.GameStates
                     _lastStateFullRep.Add(entityState.Uid, compData);
                 }
 
-                if (entityState.NetComponents != null)
-                {
-                    foreach (var key in compData.Keys)
-                    {
-                        if (!entityState.NetComponents.Contains(key))
-                            compData.Remove(key);
-                    }
-                }
-
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
                     compData[change.NetID] = change.State;
+                }
+
+                if (entityState.NetComponents == null)
+                    continue;
+
+                foreach (var key in compData.Keys)
+                {
+                    if (!entityState.NetComponents.Contains(key))
+                        compData.Remove(key);
                 }
             }
         }

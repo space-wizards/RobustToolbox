@@ -21,13 +21,14 @@ namespace Robust.Shared.GameObjects
         ///     Set of all networked component ids. Only sent to clients if a component has been removed sometime since the
         ///     entity was last sent to a player.
         /// </summary>
-        public HashSet<ushort>? NetComponents = null;
+        public HashSet<ushort>? NetComponents;
 
-        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified)
+        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
         {
             Uid = uid;
             ComponentChanges = changedComponents;
             EntityLastModified = lastModified;
+            NetComponents = netComps;
         }
     }
 

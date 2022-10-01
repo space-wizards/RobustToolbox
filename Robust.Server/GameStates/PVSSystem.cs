@@ -1055,6 +1055,9 @@ internal sealed partial class PVSSystem : EntitySystem
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
 
+        bool sendCompList = meta.LastComponentRemoved > fromTick;
+        HashSet<ushort>? netComps = sendCompList ? new() : null;
+
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
             if (!component.NetSyncEnabled)
@@ -1066,26 +1069,27 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            if (component.LastModifiedTick <= fromTick)
-                continue;
-
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
+
+            if (component.LastModifiedTick <= fromTick)
+            {
+                if (sendCompList && (!component.SessionSpecific || EntityManager.CanGetComponentState(bus, component, player)))
+                    netComps!.Add(netId);
+                continue;
+            }
 
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
             var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
+
+            if (sendCompList)
+                netComps!.Add(netId);
         }
 
-        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
-
-        if (meta.LastComponentRemoved > fromTick)
-        {
-            // TODO: should this respect NetSyncEnabled, SendOnlyToOwner & CanGetComponentState?
-            entState.NetComponents = new(EntityManager.GetNetComponentIds(entityUid));
-        }
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }
@@ -1097,6 +1101,8 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
+
+        HashSet<ushort> netComps = new();
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -1110,12 +1116,10 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
 
             changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            netComps.Add(netId);
         }
 
-        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick);
-
-        // TODO: should this respect NetSyncEnabled, SendOnlyToOwner & CanGetComponentState?
-        entState.NetComponents = new(EntityManager.GetNetComponentIds(entityUid));
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }

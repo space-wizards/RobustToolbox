@@ -945,8 +945,6 @@ namespace Robust.Shared.GameObjects
             return new NetComponentEnumerable(_netComponents[uid]);
         }
 
-        public IReadOnlyCollection<ushort> GetNetComponentIds(EntityUid uid) => _netComponents[uid].Keys;
-
         #region Join Functions
 
         /// <inheritdoc />

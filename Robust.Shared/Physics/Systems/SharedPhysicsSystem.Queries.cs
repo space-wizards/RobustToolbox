@@ -8,6 +8,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
 {
@@ -321,7 +322,7 @@ namespace Robust.Shared.Physics.Systems
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
         {
             // ReSharper disable once ConvertToLocalFunction
-            var wrapper = (EntityUid uid, EntityUid? ignored)
+            var wrapper = static (EntityUid uid, EntityUid? ignored)
                 => uid == ignored;
 
             return IntersectRayWithPredicate(mapId, ray, ignoredEnt, wrapper, maxLength, returnOnFirstHit);
@@ -354,8 +355,6 @@ namespace Robust.Shared.Physics.Systems
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt) return true;
-
                     if (!proxy.Fixture.Hard)
                         return true;
 
@@ -434,32 +433,30 @@ namespace Robust.Shared.Physics.Systems
             input.TransformB = xfB;
             input.UseRadii = true;
 
+            // No requirement on collision being enabled so chainshapes will fail
             foreach (var (_, fixtureA) in managerA.Fixtures)
             {
                 if (!fixtureA.Hard)
                     continue;
 
-                for (var i = 0; i < fixtureA.ProxyCount; i++)
+                DebugTools.Assert(fixtureA.ProxyCount <= 1);
+
+                foreach (var (_, fixtureB) in managerB.Fixtures)
                 {
-                    foreach (var (_, fixtureB) in managerB.Fixtures)
-                    {
-                        if (!fixtureB.Hard)
-                            continue;
+                    if (!fixtureB.Hard)
+                        continue;
 
-                        for (var j = 0; j < fixtureB.ProxyCount; j++)
-                        {
-                            input.ProxyA.Set(fixtureA.Shape, i);
-                            input.ProxyB.Set(fixtureB.Shape, j);
-                            DistanceManager.ComputeDistance(out var output, out _, input);
+                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
+                    input.ProxyA.Set(fixtureA.Shape, 0);
+                    input.ProxyB.Set(fixtureB.Shape, 0);
+                    DistanceManager.ComputeDistance(out var output, out _, input);
 
-                            if (distance < output.Distance)
-                                continue;
+                    if (distance < output.Distance)
+                        continue;
 
-                            pointA = output.PointA;
-                            pointB = output.PointB;
-                            distance = output.Distance;
-                        }
-                    }
+                    pointA = output.PointA;
+                    pointB = output.PointB;
+                    distance = output.Distance;
                 }
             }
 

@@ -403,6 +403,9 @@ namespace Robust.Shared.Physics.Systems
             return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, managerA, managerB);
         }
 
+        /// <summary>
+        /// Gets the nearest points in map terms and the distance between them for non-sensor proxies.
+        /// </summary>
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
             out Vector2 pointA,
             out Vector2 pointB,
@@ -412,7 +415,6 @@ namespace Robust.Shared.Physics.Systems
         {
             pointA = Vector2.Zero;
             pointB = Vector2.Zero;
-            distance = float.MaxValue;
 
             if (!Resolve(uidA, ref managerA, ref xformA) || !Resolve(uidB, ref managerB, ref xformB) ||
                 xformA.MapUid != xformB.MapUid)
@@ -421,6 +423,7 @@ namespace Robust.Shared.Physics.Systems
                 return false;
             }
 
+            distance = float.MaxValue;
             var input = new DistanceInput();
             var xformQuery = GetEntityQuery<TransformComponent>();
 

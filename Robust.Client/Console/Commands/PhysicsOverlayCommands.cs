@@ -9,7 +9,7 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "physics";
         public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
-        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / joints / shapeinfo / shapes>";
+        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / distance / joints / shapeinfo / shapes>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -34,6 +34,9 @@ namespace Robust.Client.Console.Commands
                     break;
                 case "contactpoints":
                     system.Flags ^= PhysicsDebugFlags.ContactPoints;
+                    break;
+                case "distance":
+                    system.Flags ^= PhysicsDebugFlags.Distance;
                     break;
                 case "joints":
                     system.Flags ^= PhysicsDebugFlags.Joints;
@@ -62,6 +65,7 @@ namespace Robust.Client.Console.Commands
                 "com",
                 "contactnormals",
                 "contactpoints",
+                "distance",
                 "joints",
                 "shapeinfo",
                 "shapes",

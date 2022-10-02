@@ -529,12 +529,13 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
     {
         if (!Resolve(uid, ref xform))
             return new Transform();
 
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        xformQuery ??= GetEntityQuery<TransformComponent>();
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery.Value);
 
         return new Transform(worldPos, worldRot);
     }

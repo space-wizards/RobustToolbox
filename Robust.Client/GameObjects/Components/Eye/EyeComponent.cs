@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
         private Vector2 _setZoomOnInitialize = Vector2.One;
 
         /// <summary>
-        ///     If not null, this entity is used to set eye position.
+        ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.
         /// </summary>
         /// <remarks>
         ///     This is useful for things like vehicles that effectively need to hijack the eye. This allows them to do

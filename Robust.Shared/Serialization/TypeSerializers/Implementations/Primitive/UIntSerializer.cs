@@ -26,7 +26,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return uint.Parse(node.Value, CultureInfo.InvariantCulture);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, uint value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, uint value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));

@@ -44,10 +44,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return builder.ToImmutable();
         }
 
-        public DataNode Write(ISerializationManager serializationManager, ImmutableList<string> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, ImmutableList<string> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return WriteInternal(serializationManager, value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         public ImmutableList<string> Copy(ISerializationManager serializationManager, ImmutableList<string> source, ImmutableList<string> target,

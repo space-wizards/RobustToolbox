@@ -26,7 +26,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return decimal.Parse(node.Value, CultureInfo.InvariantCulture);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, decimal value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, decimal value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));

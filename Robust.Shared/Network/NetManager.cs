@@ -603,6 +603,12 @@ namespace Robust.Shared.Network
             netConfig.ConnectionTimeout = 30000f;
 #endif
 
+            // MTU stuff.
+            netConfig.MaximumTransmissionUnit = _config.GetCVar(CVars.NetMtu);
+            netConfig.AutoExpandMTU = _config.GetCVar(CVars.NetMtuExpand);
+            netConfig.ExpandMTUFrequency = _config.GetCVar(CVars.NetMtuExpandFrequency);
+            netConfig.ExpandMTUFailAttempts = _config.GetCVar(CVars.NetMtuExpandFailAttempts);
+
             return netConfig;
         }
 

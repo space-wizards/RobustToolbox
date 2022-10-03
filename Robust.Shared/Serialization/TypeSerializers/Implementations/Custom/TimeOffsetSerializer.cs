@@ -22,9 +22,9 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null, TimeSpan value = default)
     {
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        var curTime = dependencies.Resolve<IGameTiming>().CurTime.TotalSeconds;
+        var curTime = dependencies.Resolve<IGameTiming>().CurTime;
 
-        return TimeSpan.FromSeconds(seconds + curTime);
+        return curTime + TimeSpan.FromSeconds(seconds);
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

@@ -40,7 +40,7 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null)
     {
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
-        return new ValueDataNode((value.TotalSeconds - curTime.TotalSeconds).ToString(CultureInfo.InvariantCulture));
+        return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }
 
     [MustUseReturnValue]

@@ -94,24 +94,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<string, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Write(serializationManager, value, alwaysWrite, context);
+            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, SortedDictionary<string, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Write(serializationManager, value, alwaysWrite, context);
+            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, IReadOnlyDictionary<string, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Write(serializationManager, value, alwaysWrite, context);
+            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         public Dictionary<string, TValue> Copy(ISerializationManager serializationManager,

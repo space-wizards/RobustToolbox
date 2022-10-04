@@ -85,7 +85,8 @@ namespace Robust.Server.Maps
             return chunk;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, MapChunk value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, MapChunk value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var root = new MappingDataNode();
@@ -186,7 +187,8 @@ namespace Robust.Server.Maps
             return grid;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, MapGrid value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, MapGrid value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var gridn = new MappingDataNode();

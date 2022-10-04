@@ -34,7 +34,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing Color.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Color value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Color value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToHex());

@@ -60,13 +60,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return Write(serializationManager, value.ToHashSet(), alwaysWrite, context);
+            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();

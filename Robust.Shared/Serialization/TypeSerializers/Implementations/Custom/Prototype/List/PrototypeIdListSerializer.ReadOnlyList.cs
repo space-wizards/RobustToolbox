@@ -15,13 +15,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
     public partial class PrototypeIdListSerializer<T> : ITypeSerializer<IReadOnlyList<string>, SequenceDataNode>
         where T : class, IPrototype
     {
-        DataNode ITypeWriter<IReadOnlyList<string>>.Write(
-            ISerializationManager serializationManager,
+        DataNode ITypeWriter<IReadOnlyList<string>>.Write(ISerializationManager serializationManager,
             IReadOnlyList<string> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite,
-            ISerializationContext? context)
+            ISerializationContext? context = null)
         {
-            return WriteInternal(serializationManager, value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         [MustUseReturnValue]

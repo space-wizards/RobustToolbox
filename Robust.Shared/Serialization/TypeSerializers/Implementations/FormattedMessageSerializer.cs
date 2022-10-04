@@ -30,6 +30,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public DataNode Write(ISerializationManager serializationManager, FormattedMessage value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

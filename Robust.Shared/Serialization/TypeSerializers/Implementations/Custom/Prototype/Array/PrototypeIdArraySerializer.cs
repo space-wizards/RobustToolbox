@@ -39,7 +39,8 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
             .ToArray();
     }
 
-    public DataNode Write(ISerializationManager serializationManager, string[] value, bool alwaysWrite = false,
+    public DataNode Write(ISerializationManager serializationManager, string[] value,
+        IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
         return serializationManager.WriteValue(value, alwaysWrite, context);

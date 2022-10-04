@@ -14,10 +14,9 @@ namespace Robust.Shared.Network.Messages
 {
     public sealed class MsgState : NetMessage
     {
-        // If a state is large enough we send it ReliableUnordered instead.
-        // This is to avoid states being so large that they consistently fail to reach the other end
-        // (due to being in many parts).
-        public const int ReliableThreshold = 1300;
+        // Lidgren does not currently support unreliable messages above MTU.
+        // Ideally we would peg this to the actual configured MTU instead of the default constant, but oh well...
+        public const int ReliableThreshold = NetPeerConfiguration.kDefaultMTU - 20;
 
         // If a state is larger than this, compress it with deflate.
         public const int CompressionThreshold = 256;

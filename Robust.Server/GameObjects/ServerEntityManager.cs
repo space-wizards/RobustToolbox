@@ -6,6 +6,9 @@ using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+#if EXCEPTION_TOLERANCE
+using Robust.Shared.Exceptions;
+#endif
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -31,6 +34,9 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+#if EXCEPTION_TOLERANCE
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+#endif
 
         protected override int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
 
@@ -289,7 +295,7 @@ namespace Robust.Server.GameObjects
 #if EXCEPTION_TOLERANCE
             catch (Exception e)
             {
-                Logger.ErrorS("net.ent", $"Caught exception while dispatching {message.Type}: {e}");
+                _runtimeLog.LogException(e, $"{nameof(DispatchEntityNetworkMessage)}({message.Type})");
             }
 #endif
         }

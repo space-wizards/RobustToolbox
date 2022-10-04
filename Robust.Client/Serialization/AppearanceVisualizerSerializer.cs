@@ -72,7 +72,8 @@ namespace Robust.Client.Serialization
             return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().Remove("type"));
         }
 
-        public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = serializationManager.WriteValueAs<MappingDataNode>(value.GetType(), value, alwaysWrite, context);

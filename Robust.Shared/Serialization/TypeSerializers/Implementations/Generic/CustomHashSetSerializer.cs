@@ -51,7 +51,8 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         return new ValidatedSequenceNode(list);
     }
 
-    public DataNode Write(ISerializationManager serializationManager, HashSet<T> value, bool alwaysWrite = false,
+    public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
+        IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
         var sequence = new SequenceDataNode();

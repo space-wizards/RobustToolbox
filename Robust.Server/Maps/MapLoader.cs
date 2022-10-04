@@ -1103,7 +1103,8 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
+            public DataNode Write(ISerializationManager serializationManager, EntityUid value,
+                IDependencyCollection dependencies, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))

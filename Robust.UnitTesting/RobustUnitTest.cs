@@ -5,17 +5,20 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Server.Containers;
+using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -84,6 +87,13 @@ namespace Robust.UnitTesting
             // and it was like this when I found it.
             systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
             systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+            // All of the below will probably get nuked when anchoring moves to content.
+            systems.LoadExtraSystemType<PhysicsSystem>();
+            systems.LoadExtraSystemType<FixtureSystem>();
+            systems.LoadExtraSystemType<BroadPhaseSystem>();
+            systems.LoadExtraSystemType<JointSystem>();
+            systems.LoadExtraSystemType<SharedGridTraversalSystem>();
+            systems.LoadExtraSystemType<DebugRayDrawingSystem>();
 
             if (Project == UnitTestProject.Client)
             {

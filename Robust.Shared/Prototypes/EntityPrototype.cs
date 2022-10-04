@@ -305,7 +305,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            serManager.Copy(data, component, context);
+            serManager.Copy(data, ref component, context);
         }
 
         public override string ToString()

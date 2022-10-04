@@ -120,8 +120,11 @@ internal partial class MapManager
         {
             if (kvEntity.Value == newMapEntity)
             {
+                if (mapId == kvEntity.Key)
+                    return;
+
                 throw new InvalidOperationException(
-                    $"Entity {newMapEntity} is already the root node of map {kvEntity.Key}.");
+                    $"Entity {newMapEntity} is already the root node of another map {kvEntity.Key}.");
             }
         }
 

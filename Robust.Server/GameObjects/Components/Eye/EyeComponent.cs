@@ -89,7 +89,7 @@ namespace Robust.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            return new EyeComponentState(DrawFov, Zoom, Offset, Rotation, VisibilityMask);
+            return new EyeComponentState(DrawFov, Zoom, Offset, VisibilityMask);
         }
     }
 }

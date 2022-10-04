@@ -24,6 +24,8 @@ namespace Robust.Client.UserInterface
 
             var typeName = visControl.GetType().Name;
             ControlName.Text = visControl.Name == null ? typeName : $"{visControl.Name} ({typeName})";
+
+            _tab.EntryAdded(this);
         }
 
         private void InitializeComponent()
@@ -100,16 +102,23 @@ namespace Robust.Client.UserInterface
             entry.SetPositionInParent(eventArgs.NewIndex);
         }
 
+        internal void Open()
+        {
+            DebugTools.Assert(ChildEntryContainer.ChildCount == 0);
+
+            ExpandButton.Pressed = true;
+
+            foreach (var child in VisControl.Children)
+            {
+                ChildEntryContainer.AddChild(new DevWindowUITreeEntry(_tab, child));
+            }
+        }
+
         private void ExpandButtonOnOnToggled(BaseButton.ButtonToggledEventArgs obj)
         {
             if (obj.Pressed)
             {
-                DebugTools.Assert(ChildEntryContainer.ChildCount == 0);
-
-                foreach (var child in VisControl.Children)
-                {
-                    ChildEntryContainer.AddChild(new DevWindowUITreeEntry(_tab, child));
-                }
+                Open();
             }
             else
             {

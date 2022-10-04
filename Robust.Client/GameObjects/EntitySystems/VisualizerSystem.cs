@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
@@ -9,6 +10,8 @@ namespace Robust.Client.GameObjects;
 public abstract class VisualizerSystem<T> : EntitySystem
     where T: Component
 {
+    [Dependency] protected readonly AppearanceSystem AppearanceSystem = default!; 
+
     public override void Initialize()
     {
         base.Initialize();

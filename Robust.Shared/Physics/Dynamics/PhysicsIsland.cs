@@ -27,8 +27,10 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -142,6 +144,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         private SharedTransformSystem _transform = default!;
+        private SharedPhysicsSystem _physics = default!;
 #if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
@@ -166,7 +169,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
-        private Joint[] _joints = Array.Empty<Joint>();
+        private (Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)[] _joints = Array.Empty<(Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB)>();
 
         private List<(Joint Joint, float ErrorSquared)> _brokenJoints = new();
 
@@ -218,7 +221,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         }
 
         internal void LoadConfig(in IslandCfg cfg)
@@ -251,9 +255,12 @@ stored in a single array since multiple arrays lead to multiple misses.
                 Add(contact);
             }
 
+            var query = _entityManager.GetEntityQuery<PhysicsComponent>();
             foreach (var joint in joints)
             {
-                Add(joint);
+                var bodyA = query.GetComponent(joint.BodyAUid);
+                var bodyB = query.GetComponent(joint.BodyBUid);
+                Add((joint, bodyA, bodyB));
             }
         }
 
@@ -268,7 +275,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _contacts[ContactCount++] = contact;
         }
 
-        public void Add(Joint joint)
+        public void Add((Joint Joint, PhysicsComponent BodyA, PhysicsComponent BodyB) joint)
         {
             _joints[JointCount++] = joint;
         }
@@ -391,9 +398,9 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             for (var i = 0; i < JointCount; i++)
             {
-                var joint = _joints[i];
+                var (joint, bodyA, bodyB) = _joints[i];
                 if (!joint.Enabled) continue;
-                joint.InitVelocityConstraints(SolverData);
+                joint.InitVelocityConstraints(SolverData, bodyA, bodyB);
             }
 
             // Velocity solver
@@ -401,7 +408,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 for (var j = 0; j < JointCount; ++j)
                 {
-                    Joint joint = _joints[j];
+                    Joint joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;
@@ -430,7 +437,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var angle = _angles[i];
 
                 var translation = linearVelocity * frameTime;
-                if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
+                if (translation.Length > _maxLinearVelocity)
                 {
                     var ratio = _maxLinearVelocity / translation.Length;
                     linearVelocity *= ratio;
@@ -462,7 +469,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 for (int j = 0; j < JointCount; ++j)
                 {
-                    var joint = _joints[j];
+                    var joint = _joints[j].Joint;
 
                     if (!joint.Enabled)
                         continue;
@@ -516,16 +523,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                     var q = new Quaternion2D(angle);
 
                     bodyPos -= Transform.Mul(q, body.LocalCenter);
-                    // body.Sweep.Center = bodyPos;
-                    // body.Sweep.Angle = angle;
-
-                    // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
                     var transform = xforms.GetComponent(body.Owner);
 
-                    // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                    // Defer MoveEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;
-                    _transform.SetWorldPosition(transform, bodyPos, xforms);
-                    _transform.SetWorldRotation(transform, angle, xforms);
+                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position
@@ -540,14 +542,14 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
                 {
-                    body.LinearVelocity = linVelocity;
+                    _physics.SetLinearVelocity(body, linVelocity);
                 }
 
                 var angVelocity = _angularVelocities[i];
 
                 if (!float.IsNaN(angVelocity))
                 {
-                    body.AngularVelocity = angVelocity;
+                    _physics.SetAngularVelocity(body, angVelocity);
                 }
             }
         }
@@ -568,16 +570,16 @@ stored in a single array since multiple arrays lead to multiple misses.
                             body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
                             Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
                         {
-                            body.SleepTime = 0.0f;
+                            _physics.SetSleepTime(body, 0f);
                         }
                         else
                         {
-                            body.SleepTime += frameTime;
+                            _physics.SetSleepTime(body, body.SleepTime + frameTime);
                         }
 
                         if (body.SleepTime >= _timeToSleep && _positionSolved)
                         {
-                            body.Awake = false;
+                            _physics.SetAwake(body, false);
                         }
                     }
                 }
@@ -599,12 +601,12 @@ stored in a single array since multiple arrays lead to multiple misses.
                             body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
                             Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
                         {
-                            body.SleepTime = 0.0f;
+                            _physics.SetSleepTime(body, 0f);
                             minSleepTime = 0.0f;
                         }
                         else
                         {
-                            body.SleepTime += frameTime;
+                            _physics.SetSleepTime(body, body.SleepTime + frameTime);
                             minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
                         }
                     }
@@ -614,7 +616,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                         for (var i = 0; i < BodyCount; i++)
                         {
                             var body = Bodies[i];
-                            body.Awake = false;
+                            _physics.SetAwake(body, false);
                         }
                     }
                 }

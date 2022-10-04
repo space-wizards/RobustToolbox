@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
@@ -14,10 +14,9 @@ namespace Robust.Shared.Network.Messages
 {
     public sealed class MsgState : NetMessage
     {
-        // If a state is large enough we send it ReliableUnordered instead.
-        // This is to avoid states being so large that they consistently fail to reach the other end
-        // (due to being in many parts).
-        public const int ReliableThreshold = 1300;
+        // Lidgren does not currently support unreliable messages above MTU.
+        // Ideally we would peg this to the actual configured MTU instead of the default constant, but oh well...
+        public const int ReliableThreshold = NetPeerConfiguration.kDefaultMTU - 20;
 
         // If a state is larger than this, compress it with deflate.
         public const int CompressionThreshold = 256;
@@ -27,9 +26,9 @@ namespace Robust.Shared.Network.Messages
         public GameState State;
         public ZStdCompressionContext CompressionContext;
 
-        private bool _hasWritten;
+        internal bool _hasWritten;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             MsgSize = buffer.LengthBytes;
             var uncompressedLength = buffer.ReadVariableInt32();
@@ -53,16 +52,14 @@ namespace Robust.Shared.Network.Messages
                 finalStream = stream;
             }
 
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             serializer.DeserializeDirect(finalStream, out State);
             finalStream.Dispose();
 
             State.PayloadSize = uncompressedLength;
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
             var stateStream = new MemoryStream();
             serializer.SerializeDirect(stateStream, State);
             buffer.WriteVariableInt32((int)stateStream.Length);
@@ -70,7 +67,7 @@ namespace Robust.Shared.Network.Messages
             // We compress the state.
             if (stateStream.Length > CompressionThreshold)
             {
-                var sw = Stopwatch.StartNew();
+                // var sw = Stopwatch.StartNew();
                 stateStream.Position = 0;
                 var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)stateStream.Length));
                 var length = CompressionContext.Compress2(buf, stateStream.AsSpan());
@@ -79,7 +76,7 @@ namespace Robust.Shared.Network.Messages
 
                 buffer.Write(buf.AsSpan(0, length));
 
-                var elapsed = sw.Elapsed;
+                // var elapsed = sw.Elapsed;
                 // System.Console.WriteLine(
                 //    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
 
@@ -94,8 +91,7 @@ namespace Robust.Shared.Network.Messages
                 buffer.Write(stateStream.AsSpan());
             }
 
-
-            _hasWritten = false;
+            _hasWritten = true;
             MsgSize = buffer.LengthBytes;
         }
 
@@ -106,13 +102,7 @@ namespace Robust.Shared.Network.Messages
         /// <returns></returns>
         public bool ShouldSendReliably()
         {
-            // This check will be true in integration tests.
-            // TODO: Maybe handle this better so that packet loss integration testing can be done?
-            if (!_hasWritten)
-            {
-                return true;
-            }
-
+            DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
             return MsgSize > ReliableThreshold;
         }
 

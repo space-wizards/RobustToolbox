@@ -85,6 +85,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<TKey, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -92,6 +93,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, SortedDictionary<TKey, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -99,6 +101,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -147,8 +150,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 target.Add(keyCopy, valueCopy);
             }
@@ -179,8 +182,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value, context)!;
+                var keyCopy = serializationManager.Copy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.Copy(value, context)!;
 
                 dictionary.Add(keyCopy, valueCopy);
             }

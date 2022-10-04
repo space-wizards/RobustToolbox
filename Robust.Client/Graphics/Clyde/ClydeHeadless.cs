@@ -37,6 +37,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHeadless()
         {
+            Configuration.Default.PreferContiguousImageBuffers = true;
+
             var mainRt = new DummyRenderWindow(this);
             var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
 
@@ -578,7 +580,7 @@ namespace Robust.Client.Graphics.Clyde
                 return default;
             }
 
-            public Matrix3 WorldToLocalMatrix => default;
+            public Matrix3 GetWorldToLocalMatrix() => default;
 
             public Vector2 WorldToLocal(Vector2 point)
             {

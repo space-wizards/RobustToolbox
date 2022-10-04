@@ -34,7 +34,7 @@ namespace Robust.Client.Serialization
                 if (typeNode is not ValueDataNode typeValueDataNode)
                     throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
 
-                type = IoCManager.Resolve<IReflectionManager>()
+                type = dependencies.Resolve<IReflectionManager>()
                     .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
                 if (type == null)
                     throw new InvalidMappingException(
@@ -61,7 +61,7 @@ namespace Robust.Client.Serialization
                 return new ErrorNode(node, "Missing/Invalid type", true);
             }
 
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var reflectionManager = dependencies.Resolve<IReflectionManager>();
             var type = reflectionManager.YamlTypeTagLookup(typeof(AppearanceVisualizer), valueNode.Value);
 
             if (type == null)
@@ -72,7 +72,8 @@ namespace Robust.Client.Serialization
             return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().Remove("type"));
         }
 
-        public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = serializationManager.WriteValueAs<MappingDataNode>(value.GetType(), value, alwaysWrite, context);
@@ -83,7 +84,8 @@ namespace Robust.Client.Serialization
         public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
             AppearanceVisualizer target, bool skipHook, ISerializationContext? context = null)
         {
-            return serializationManager.Copy(source, target, context)!;
+            serializationManager.Copy(source, ref target, context);
+            return target;
         }
     }
 }

@@ -2,22 +2,16 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
 using Robust.Shared;
-using Robust.Shared.Collections;
-using Robust.Shared.ContentPack;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
-using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus
 {
@@ -324,16 +318,18 @@ namespace Robust.Server.ServerStatus
                 // ACZ hasn't been prepared, prepare it
                 try
                 {
-                    // Run actual ACZ generation via Task.Run because it's synchronous
-                    var maybeData = await Task.Run(() =>
+                    // Run actual ACZ generation via Task.Run because it's potentially synchronous
+                    var maybeData = await Task.Run(async () =>
                     {
-                        var sw = Stopwatch.StartNew();
+                        var sw = RStopwatch.StartNew();
 
-                        var gen = SourceAczDictionary();
-                        if (gen == null) return null;
-                        var results = PrepareAczInnards(gen);
+                        var results = await PrepareAczInner();
+                        if (results == null)
+                            return null;
 
-                        _aczSawmill.Info("StatusHost synthesized client manifest in {Elapsed} ms!", sw.ElapsedMilliseconds);
+                        _aczSawmill.Info(
+                            "StatusHost synthesized client manifest in {Elapsed} ms!",
+                            sw.Elapsed.TotalMilliseconds);
 
                         return results;
                     });
@@ -356,153 +352,6 @@ namespace Robust.Server.ServerStatus
             finally
             {
                 _aczLock.Release();
-            }
-        }
-
-        // -- All methods from this point forward do not access the ACZ global state --
-
-        private AczManifestInfo? PrepareAczInnards(Dictionary<string, OnDemandFile> zipData)
-        {
-            _aczSawmill.Debug("Making ACZ manifest...");
-
-            var streamCompression = _cfg.GetCVar(CVars.AczStreamCompress);
-            var blobCompress = _cfg.GetCVar(CVars.AczBlobCompress);
-            var blobCompressLevel = _cfg.GetCVar(CVars.AczBlobCompressLevel);
-            var blobCompressSaveThresh = _cfg.GetCVar(CVars.AczBlobCompressSaveThreshold);
-            var manifestCompress = _cfg.GetCVar(CVars.AczManifestCompress);
-            var manifestCompressLevel = _cfg.GetCVar(CVars.AczManifestCompressLevel);
-
-            // Stream compression disables individual compression.
-            blobCompress &= !streamCompression;
-
-            var (manifestData, manifestEntries, manifestBlobData) = CalcManifestData(
-                zipData,
-                blobCompress,
-                blobCompressLevel,
-                blobCompressSaveThresh);
-
-            var manifestHash = CryptoGenericHashBlake2B.Hash(32, manifestData, ReadOnlySpan<byte>.Empty);
-            var manifestHashString = Convert.ToHexString(manifestHash);
-
-            _aczSawmill.Debug("ACZ Manifest hash: {ManifestHash}", manifestHashString);
-
-            if (manifestCompress)
-            {
-                _aczSawmill.Debug("Compressing ACZ manifest at level {ManifestCompressLevel}", manifestCompressLevel);
-
-                var beforeSize = manifestData.Length;
-                var compressBuffer = (int) Zstd.ZSTD_COMPRESSBOUND((nuint) manifestData.Length);
-                var compressed = ArrayPool<byte>.Shared.Rent(compressBuffer);
-
-                var size = ZStd.Compress(compressed, manifestData, manifestCompressLevel);
-
-                manifestData = compressed[..size];
-
-                ArrayPool<byte>.Shared.Return(compressed);
-
-                _aczSawmill.Debug(
-                    "ACZ manifest compression: {ManifestSize} -> {ManifestSizeCompressed} ({ManifestSizeRatio} ratio)",
-                    beforeSize, manifestData.Length, manifestData.Length / (float) beforeSize);
-            }
-
-            return new AczManifestInfo(
-                manifestData,
-                manifestCompress,
-                manifestHashString,
-                manifestBlobData,
-                manifestEntries,
-                blobCompress);
-        }
-
-        private static (byte[] manifestContent, AczManifestEntry[] manifestEntries, byte[] blobData)
-            CalcManifestData(
-                Dictionary<string, OnDemandFile> zipEntries,
-                bool blobCompress,
-                int blobCompressLevel,
-                int blobCompressSaveThresh)
-        {
-            var blobData = new MemoryStream();
-            ZStdCompressStream? compressStream = null;
-            if (blobCompress)
-            {
-                var zStdCompressStream = new ZStdCompressStream(blobData);
-                zStdCompressStream.Context.SetParameter(
-                    ZSTD_cParameter.ZSTD_c_compressionLevel,
-                    blobCompressLevel);
-
-                compressStream = zStdCompressStream;
-            }
-
-            try
-            {
-                var decompressBuffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
-                Span<byte> entryHash = stackalloc byte[256 / 8];
-
-                var manifestStream = new MemoryStream();
-                using var manifestWriter = new StreamWriter(manifestStream, EncodingHelpers.UTF8);
-                manifestWriter.Write("Robust Content Manifest 1\n");
-
-                var manifestEntries = new ValueList<AczManifestEntry>();
-
-                foreach (var (fullName, entry) in zipEntries.OrderBy((e) => e.Key, StringComparer.Ordinal))
-                {
-                    var length = (int)entry.Length;
-                    var startPos = (int)blobData.Position;
-
-                    BufferHelpers.EnsurePooledBuffer(ref decompressBuffer, ArrayPool<byte>.Shared, length);
-                    var data = decompressBuffer.AsSpan(0, length);
-
-                    entry.ReadExact(data);
-
-                    // Calculate hash.
-                    CryptoGenericHashBlake2B.Hash(entryHash, data, ReadOnlySpan<byte>.Empty);
-
-                    // Set to 0 to indicate not compressed.
-                    int dataLength;
-
-                    // Try compression if enabled.
-                    if (blobCompress)
-                    {
-                        // Actually compress.
-                        compressStream!.Write(data);
-                        compressStream.FlushEnd();
-
-                        // See if compression was worth it.
-                        var endPos = (int)blobData.Position;
-                        var compressedSize = endPos - startPos;
-                        if (compressedSize + blobCompressSaveThresh < length)
-                        {
-                            dataLength = compressedSize;
-                        }
-                        else
-                        {
-                            // Compression not worth it, just send an uncompressed blob instead.
-                            blobData.Position = startPos;
-                            blobData.Write(data);
-                            dataLength = 0;
-                        }
-                    }
-                    else
-                    {
-                        // No compression, just write.
-                        blobData.Write(data);
-                        dataLength = 0;
-                    }
-
-                    manifestWriter.Write($"{Convert.ToHexString(entryHash)} {fullName}\n");
-
-                    manifestEntries.Add(new AczManifestEntry(length, startPos, dataLength));
-                }
-
-                manifestWriter.Flush();
-
-                ArrayPool<byte>.Shared.Return(decompressBuffer);
-
-                return (manifestStream.ToArray(), manifestEntries.ToArray(), blobData.ToArray());
-            }
-            finally
-            {
-                compressStream?.Dispose();
             }
         }
 

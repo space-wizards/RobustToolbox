@@ -60,13 +60,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return Write(serializationManager, value.ToHashSet(), alwaysWrite, context);
+            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();
@@ -108,7 +110,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 target.Add(elementCopy);
             }
 
@@ -123,7 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
                 builder.Add(elementCopy);
             }
 

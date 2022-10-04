@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -30,5 +30,18 @@ namespace Robust.Client.UserInterface.CustomControls
         ///     The coordinates, in ABSOLUTE SCREEN PIXEL COORDINATES. NOT CONTROL-RELATIVE COORDINATES.
         /// </returns>
         Vector2 WorldToScreen(Vector2 map);
+
+        /// <summary>
+        ///     Returns a matrix that can be used to perform the <see cref="WorldToScreen(Vector2)"/> transformations.
+        /// </summary>
+        /// <remarks>
+        ///     This is generally just be a combination of <see cref="IClydeViewport.GetWorldToLocalMatrix"/> and <see cref="GetLocalToScreenMatrix"/>
+        /// </remarks>
+        Matrix3 GetWorldToScreenMatrix();
+
+        /// <summary>
+        ///     Returns a matrix that can be used to transform from view-port local to screen coordinates.
+        /// </summary>
+        Matrix3 GetLocalToScreenMatrix();
     }
 }

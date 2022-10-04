@@ -146,7 +146,7 @@ internal sealed partial class MidiManager
                 break;
 
             default:
-                _midiSawmill.Error($"Unsupported Sequencer Event: {tick:D8}: {SequencerEventToString(midiEvent)}");
+                _midiSawmill.Warning($"Unsupported Sequencer Event: {tick:D8}: {SequencerEventToString(midiEvent)}");
                 break;
         }
 

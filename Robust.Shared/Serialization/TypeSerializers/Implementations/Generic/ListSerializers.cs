@@ -33,19 +33,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, ImmutableList<T> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, List<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, List<T> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, IReadOnlyCollection<T> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -53,6 +56,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, IReadOnlyList<T> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -174,7 +178,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context)!;
+                var elementCopy = serializationManager.Copy(element, context)!;
                 target.Add(elementCopy);
             }
 
@@ -202,7 +206,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context)!;
+                var elementCopy = serializationManager.Copy(element, context)!;
                 list.Add(elementCopy);
             }
 
@@ -222,7 +226,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context)!;
+                var elementCopy = serializationManager.Copy(element, context)!;
                 list.Add(elementCopy);
             }
 
@@ -237,7 +241,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element, context)!;
+                var elementCopy = serializationManager.Copy(element, context)!;
                 builder.Add(elementCopy);
             }
 

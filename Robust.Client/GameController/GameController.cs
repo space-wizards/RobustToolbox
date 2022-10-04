@@ -13,6 +13,7 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -128,10 +129,7 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
-
             _resourceCache.PreloadTextures();
-            _userInterfaceManager.Initialize();
-            _eyeManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
@@ -141,16 +139,18 @@ namespace Robust.Client
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.ResolveResults();
+            _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
             _scriptClient.Initialize();
-
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _userInterfaceManager.PostInitialize();
 
             if (_commandLineArgs?.Username != null)
             {
@@ -517,7 +517,7 @@ namespace Robust.Client
                 using (_prof.Group("Entity"))
                 {
                     // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                    _gameTiming.LastRealTick = _gameTiming.CurTick;
+                    _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
                     _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 }
             }

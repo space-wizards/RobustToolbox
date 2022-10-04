@@ -4,6 +4,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Client.Physics

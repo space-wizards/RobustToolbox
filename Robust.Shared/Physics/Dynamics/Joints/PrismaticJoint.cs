@@ -25,6 +25,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -104,25 +105,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var joint = new PrismaticJoint(UidA, UidB)
-            {
-                ID = ID,
-                Breakpoint = Breakpoint,
-                CollideConnected = CollideConnected,
-                Enabled = Enabled,
-                LocalAxisA = LocalAxisA,
-                ReferenceAngle = ReferenceAngle,
-                EnableLimit = EnableLimit,
-                LowerTranslation = LowerTranslation,
-                UpperTranslation = UpperTranslation,
-                EnableMotor = EnableMotor,
-                MaxMotorForce = MaxMotorForce,
-                MotorSpeed = MotorSpeed,
-                LocalAnchorA = LocalAnchorA,
-                LocalAnchorB = LocalAnchorB
-            };
-
-            return joint;
+            return new PrismaticJoint(this);
         }
 
     }
@@ -237,6 +220,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             ReferenceAngle = (float) (xformB.WorldRotation - xformA.WorldRotation);
         }
 
+        internal PrismaticJoint(PrismaticJointState state) : base(state)
+        {
+            LocalAxisA = state.LocalAxisA;
+            ReferenceAngle = state.ReferenceAngle;
+            EnableLimit = state.EnableLimit;
+            LowerTranslation = state.LowerTranslation;
+            UpperTranslation = state.UpperTranslation;
+            EnableMotor = state.EnableMotor;
+            MaxMotorForce = state.MaxMotorForce;
+            MotorSpeed = state.MotorSpeed;
+        }
+
         public override JointType JointType => JointType.Prismatic;
 
         public override JointState GetState()
@@ -261,18 +256,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * _impulse.Y;
         }
 
-        internal override void InitVelocityConstraints(SolverData data)
+        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
-            _indexA = BodyA.IslandIndex[data.IslandIndex];
-	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-	        _localCenterA = BodyA.LocalCenter;
-	        _localCenterB = BodyB.LocalCenter;
-	        _invMassA = BodyA.InvMass;
-	        _invMassB = BodyB.InvMass;
-	        _invIA = BodyA.InvI;
-	        _invIB = BodyB.InvI;
+            _indexA = bodyA.IslandIndex[data.IslandIndex];
+            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            _localCenterA = bodyA.LocalCenter;
+            _localCenterB = bodyB.LocalCenter;
+            _invMassA = bodyA.InvMass;
+            _invMassB = bodyB.InvMass;
+            _invIA = bodyA.InvI;
+            _invIB = bodyB.InvI;
 
-	        var cA = data.Positions[_indexA];
+            var cA = data.Positions[_indexA];
 	        float aA = data.Angles[_indexA];
 	        var vA = data.Positions[_indexA];
 	        float wA = data.Angles[_indexA];

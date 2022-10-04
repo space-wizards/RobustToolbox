@@ -169,15 +169,15 @@ namespace Robust.Shared.Serialization.Manager
             where TSerializer : ITypeWriter<T>
         {
             var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Write(this, value, alwaysWrite, context);
+            return serializer.Write(this, value, DependencyCollection, alwaysWrite, context);
         }
 
         private object CopyWithSerializerRaw(Type serializer, object source, ref object target, bool skipHook, ISerializationContext? context = null)
         {
             var sourceType = source.GetType();
             var targetType = target.GetType();
-            var commonType = TypeHelpers.SelectCommonType(sourceType, targetType) ??
-                             throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
+            if(!TypeHelpers.TrySelectCommonType(sourceType, targetType, out var commonType))
+                throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
 
             return GetOrCreateCopySerializerDelegate(commonType, sourceType, targetType, serializer)(source, ref target, skipHook, context);
         }

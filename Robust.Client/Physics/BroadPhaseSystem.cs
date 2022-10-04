@@ -1,4 +1,5 @@
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Physics
 {

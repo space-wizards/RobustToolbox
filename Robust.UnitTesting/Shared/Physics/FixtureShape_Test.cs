@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Physics
 {

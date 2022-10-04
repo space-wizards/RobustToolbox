@@ -10,7 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public sealed class AbstractPrototypeIdListSerializer<T> : PrototypeIdListSerializer<T> where T : class, IPrototype
+    public sealed class AbstractPrototypeIdListSerializer<T> : PrototypeIdListSerializer<T> where T : class, IPrototype, IInheritingPrototype
     {
         protected override PrototypeIdSerializer<T> PrototypeSerializer => new AbstractPrototypeIdSerializer<T>();
     }
@@ -45,6 +45,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         private DataNode WriteInternal(
             ISerializationManager serializationManager,
             IEnumerable<string> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite,
             ISerializationContext? context)
         {
@@ -52,7 +53,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var str in value)
             {
-                list.Add(PrototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
+                list.Add(PrototypeSerializer.Write(serializationManager, str, dependencies, alwaysWrite, context));
             }
 
             return new SequenceDataNode(list);
@@ -88,13 +89,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return list;
         }
 
-        DataNode ITypeWriter<List<string>>.Write(
-            ISerializationManager serializationManager,
+        DataNode ITypeWriter<List<string>>.Write(ISerializationManager serializationManager,
             List<string> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite,
-            ISerializationContext? context)
+            ISerializationContext? context = null)
         {
-            return WriteInternal(serializationManager, value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         List<string> ITypeCopier<List<string>>.Copy(

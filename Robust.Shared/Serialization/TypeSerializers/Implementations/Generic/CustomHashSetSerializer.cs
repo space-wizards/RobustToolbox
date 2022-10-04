@@ -17,6 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     : ITypeSerializer<HashSet<T>, SequenceDataNode>
     where TCustomSerializer : ITypeSerializer<T, ValueDataNode>
+    where T : new() // required for copying.
 {
     HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
@@ -50,7 +51,8 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         return new ValidatedSequenceNode(list);
     }
 
-    public DataNode Write(ISerializationManager serializationManager, HashSet<T> value, bool alwaysWrite = false,
+    public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
+        IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
         var sequence = new SequenceDataNode();
@@ -72,7 +74,11 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
 
         foreach (var element in source)
         {
-            var value = serializationManager.CopyWithTypeSerializer(typeof(T), typeof(TCustomSerializer), element, context, skipHook);
+            // we have to create a new instance of T, even if this instance is never actually used?
+            // Maybe this will change in the future.
+            var A = new T();
+
+            var value = serializationManager.CopyWithTypeSerializer(typeof(TCustomSerializer), element, A, context, skipHook);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when copying using a custom hashset serializer.");
 

@@ -17,8 +17,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private Vector2 DragOffsetTopLeft;
         private Vector2 DragOffsetBottomRight;
 
-        protected bool _firstTimeOpened = true;
-
         public bool Resizable { get; set; } = true;
         public bool IsOpen => Parent != null;
 
@@ -26,6 +24,8 @@ namespace Robust.Client.UserInterface.CustomControls
         ///     Invoked when the close button of this window is pressed.
         /// </summary>
         public event Action? OnClose;
+
+        public event Action? OnOpen;
 
         public virtual void Close()
         {
@@ -210,7 +210,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             return true;
         }
-
         public void Open()
         {
             if (!Visible)
@@ -225,9 +224,11 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             Opened();
+            OnOpen?.Invoke();
         }
 
         public void OpenCentered() => OpenCenteredAt((0.5f, 0.5f));
+
         public void OpenToLeft() => OpenCenteredAt((0, 0.5f));
         public void OpenCenteredLeft() => OpenCenteredAt((0.25f, 0.5f));
         public void OpenToRight() => OpenCenteredAt((1, 0.5f));
@@ -240,17 +241,9 @@ namespace Robust.Client.UserInterface.CustomControls
         /// lower right.</param>
         public void OpenCenteredAt(Vector2 relativePosition)
         {
-            if (!_firstTimeOpened)
-            {
-                Open();
-                return;
-            }
-
             Measure(Vector2.Infinity);
-            SetSize = DesiredSize;
             Open();
             RecenterWindow(relativePosition);
-            _firstTimeOpened = false;
         }
 
         /// <summary>

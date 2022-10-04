@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -44,6 +45,8 @@ public abstract partial class SharedTransformSystem
         var movEevee = new MoveEvent(xform.Owner,
             new EntityCoordinates(oldGrid.Owner, xform._localPosition),
             new EntityCoordinates(newGrid.Owner, xform._localPosition),
+            xform.LocalRotation,
+            xform.LocalRotation,
             xform,
             _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref movEevee, true);
@@ -188,7 +191,8 @@ public abstract partial class SharedTransformSystem
                 }
                 else
                 {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                    // We allow entities to be spawned directly into null-space.
+                    value = MapId.Nullspace;
                 }
             }
 
@@ -428,18 +432,14 @@ public abstract partial class SharedTransformSystem
                 rebuildMatrices = true;
             }
 
-            if (component.LocalRotation != newState.Rotation)
-            {
-                component._localRotation = newState.Rotation;
-                rebuildMatrices = true;
-            }
-
-            if (!component.LocalPosition.EqualsApprox(newState.LocalPosition))
+            if (!component.LocalPosition.EqualsApprox(newState.LocalPosition) || !component.LocalRotation.EqualsApprox(newState.Rotation))
             {
                 var oldPos = component.Coordinates;
                 component._localPosition = newState.LocalPosition;
+                var oldRot = component.LocalRotation;
+                component._localRotation = newState.Rotation;
 
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, component, _gameTiming.ApplyingState);
+                var ev = new MoveEvent(uid, oldPos, component.Coordinates, oldRot, component.LocalRotation, component, _gameTiming.ApplyingState);
                 DeferMoveEvent(ref ev);
 
                 rebuildMatrices = true;
@@ -589,15 +589,7 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(TransformComponent component, Vector2 worldPos)
     {
-        if (!component._parent.IsValid())
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-            return;
-        }
-
-        // world coords to parent coords
-        var newPos = component.Parent!.InvWorldMatrix.Transform(worldPos);
-        SetLocalPosition(component, newPos);
+        SetWorldPosition(component, worldPos, GetEntityQuery<TransformComponent>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -608,6 +600,8 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
+
+        // TODO look at SetWorldPositionRotation and how it sets world position. I ASSUME that is faster than matrix products + transform, but not actually sure.
 
         // world coords to parent coords
         var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
@@ -678,6 +672,81 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
+    #region Set Position+Rotation
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
+    {
+        var component = xformQuery.GetComponent(uid);
+        SetWorldPositionRotation(component, worldPos, worldRot, xformQuery);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
+    {
+        SetWorldPositionRotation(component, worldPos, worldRot, GetEntityQuery<TransformComponent>());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (!component._parent.IsValid())
+        {
+            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
+            return;
+        }
+
+        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component, xformQuery);
+
+        var negativeParentWorldRot = component.LocalRotation - curWorldRot;
+
+        var newLocalPos = component.LocalPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
+        var newLocalRot = component.LocalRotation + worldRot - curWorldRot;
+
+        SetLocalPositionRotation(component, newLocalPos, newLocalRot);
+    }
+
+    /// <summary>
+    ///     Simultaneously set the position and rotation. This is better than setting individually, as it reduces the number of move events and matrix rebuilding operations.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot)
+    {
+        if (!xform._parent.IsValid())
+        {
+            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
+            return;
+        }
+
+        if (xform._localPosition.EqualsApprox(pos) && xform.LocalRotation.EqualsApprox(rot))
+            return;
+
+        var oldPosition = xform.Coordinates;
+        var oldRotation = xform.LocalRotation;
+
+        if (!xform.Anchored)
+            xform._localPosition = pos;
+
+        if (!xform.NoLocalRotation)
+            xform.LocalRotation = rot;
+
+        Dirty(xform);
+
+        if (!xform.DeferUpdates)
+        {
+            xform.RebuildMatrices();
+            var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
+            RaiseLocalEvent(xform.Owner, ref moveEvent, true);
+        }
+        else
+        {
+            xform._oldCoords ??= oldPosition;
+            xform._oldLocalRotation ??= oldRotation;
+        }
+    }
+
+    #endregion
+
     #region Inverse World Matrix
 
     [Pure]
@@ -733,7 +802,7 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(!xform.Anchored);
     }
 
-    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+    public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
     {
         var oldParent = xform._parent;
 
@@ -762,7 +831,7 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
-        var oldConcrete = xformQuery.GetComponent(oldParent);
+        oldConcrete ??= xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
         xform._parent = EntityUid.Invalid;

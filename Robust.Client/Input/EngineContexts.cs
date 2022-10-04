@@ -15,6 +15,7 @@ namespace Robust.Client.Input
         {
             var common = contexts.GetContext(InputContextContainer.DefaultContextName);
             common.AddFunction(EngineKeyFunctions.Use);
+            common.AddFunction(EngineKeyFunctions.UseSecondary);
             common.AddFunction(EngineKeyFunctions.UIClick);
             common.AddFunction(EngineKeyFunctions.UIRightClick);
 
@@ -30,6 +31,7 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.Walk);
             common.AddFunction(EngineKeyFunctions.CameraRotateRight);
             common.AddFunction(EngineKeyFunctions.CameraRotateLeft);
+            common.AddFunction(EngineKeyFunctions.CameraReset);
 
             common.AddFunction(EngineKeyFunctions.GuiTabNavigateNext);
             common.AddFunction(EngineKeyFunctions.GuiTabNavigatePrev);

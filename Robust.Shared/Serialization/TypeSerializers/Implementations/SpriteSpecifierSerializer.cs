@@ -1,6 +1,8 @@
 using System;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -13,8 +15,7 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
-    [TypeSerializer]
-    public sealed class SpriteSpecifierSerializer :
+    public abstract class SpriteSpecifierSerializer :
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
@@ -123,31 +124,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            if (!node.TryGet("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
-            {
-                return new ErrorNode(node, "Sprite specifier has missing/invalid sprite node");
-            }
-
-            if (!node.TryGet("state", out var stateNode) || stateNode is not ValueDataNode)
-            {
-                return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
-            }
-
-            var path = serializationManager.ValidateNode(typeof(ResourcePath),
-                new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);
-
-            if (path is ErrorNode) return path;
-
-            return new ValidatedValueNode(node);
+            // apparently explicit interface implementations can't be abstract.
+            return ValidateRsi(serializationManager, node, dependencies, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Texture value, bool alwaysWrite = false,
+        public abstract ValidationNode ValidateRsi(ISerializationManager serializationManager,
+            MappingDataNode node,
+            IDependencyCollection dependencies,
+            ISerializationContext? context);
+
+        public DataNode Write(ISerializationManager serializationManager, Texture value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, EntityPrototype value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, EntityPrototype value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
@@ -155,7 +149,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Rsi value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Rsi value, IDependencyCollection dependencies,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
@@ -182,19 +177,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new(source.RsiPath, source.RsiState);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return value switch
             {
                 Rsi rsi
-                    => Write(serializationManager, rsi, alwaysWrite, context),
+                    => Write(serializationManager, rsi, dependencies, alwaysWrite, context),
 
                 Texture texture
-                    => Write(serializationManager, texture, alwaysWrite, context),
+                    => Write(serializationManager, texture, dependencies, alwaysWrite, context),
 
                 EntityPrototype entityPrototype
-                    => Write(serializationManager, entityPrototype, alwaysWrite, context),
+                    => Write(serializationManager, entityPrototype, dependencies, alwaysWrite, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };

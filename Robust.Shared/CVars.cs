@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -48,8 +49,43 @@ namespace Robust.Shared
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
 
         /// <summary>
+        /// Maximum UDP payload size to send.
+        /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtu =
+            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+
+        /// <summary>
+        /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
+        /// </summary>
+        /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuExpandFrequency"/>
+        /// <seealso cref="NetMtuExpandFailAttempts"/>
+        public static readonly CVarDef<bool> NetMtuExpand =
+            CVarDef.Create("net.mtu_expand", false, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Interval between MTU expansion attempts, in seconds.
+        /// </summary>
+        /// <remarks>
+        /// This property is named incorrectly: it is actually an interval, not a frequency.
+        /// The name is chosen to match Lidgren's <see cref="NetPeerConfiguration.ExpandMTUFrequency"/>.
+        /// </remarks>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<float> NetMtuExpandFrequency =
+            CVarDef.Create("net.mtu_expand_frequency", 2f, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many times an MTU expansion attempt can fail before settling on a final MTU value.
+        /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtuExpandFailAttempts =
+            CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
         /// </summary>
+        /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<bool> NetVerbose =
             CVarDef.Create("net.verbose", false);
 
@@ -70,13 +106,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// The target number of game states to keep buffered up to smooth out against network inconsistency.
+        /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
-        public static readonly CVarDef<int> NetInterpRatio =
-            CVarDef.Create("net.interp_ratio", 0, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetBufferSize =
+            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -136,6 +172,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+
+        /// <summary>
+        /// The amount of pvs-exiting entities that a client will process in a single tick.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSEntityExitBudget =
+            CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// ZSTD compression level to use when compressing game states.
@@ -469,7 +511,7 @@ namespace Robust.Shared
         /// API token set by the watchdog to communicate to the server.
         /// </summary>
         public static readonly CVarDef<string> WatchdogToken =
-            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY);
+            CVarDef.Create("watchdog.token", "", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 
         /// <summary>
         /// Watchdog server identifier for this server.
@@ -632,6 +674,22 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
+
+        /*
+         * RENDERING
+         */
+
+        /// <summary>
+        ///     This biases the RSI-direction used to draw diagonally oriented 4-directional sprites to avoid flickering between directions. A positive
+        ///     value biases towards facing N/S, while a negative value will bias towards E/W.
+        /// </summary>
+        /// <remarks>
+        ///     The bias needs to be large enough to prevent sprites on rotating grids from flickering, but should be
+        ///     small enough that it is generally unnoticeable. Currently it is somewhat large to combat issues with
+        ///     eye-lerping & grid rotations.
+        /// </remarks>
+        public static readonly CVarDef<double> RenderSpriteDirectionBias =
+            CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * DISPLAY
@@ -1029,6 +1087,56 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
+
+
+        /*
+         * User interface
+         */
+
+        /// <summary>
+        /// Change the UITheme
+        /// </summary>
+        public static readonly CVarDef<string> InterfaceTheme =
+            CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
+
+
+        /// <summary>
+        ///Minimum resolution to start clamping autoscale to 1
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleUpperX =
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX",1080 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Minimum resolution to start clamping autoscale to 1
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleUpperY =
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY",720 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Maximum resolution to start clamping autos scale to autoscale minimum
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleLowX =
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX",520 , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Maximum resolution to start clamping autos scale to autoscale minimum
+        /// </summary>
+        public static readonly CVarDef<int> ResAutoScaleLowY =
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY",520 , CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The minimum ui scale value that autoscale will scale to
+        /// </summary>
+        public static readonly CVarDef<float> ResAutoScaleMin =
+            CVarDef.Create("interface.resolutionAutoScaleMinimum",0.5f , CVar.CLIENTONLY);
+
+        /// <summary>
+        ///Enable the UI autoscale system on this control, this will scale down the UI for lower resolutions
+        /// </summary>
+        public static readonly CVarDef<bool> ResAutoScaleEnabled =
+            CVarDef.Create("interface.resolutionAutoScaleEnabled",true , CVar.CLIENTONLY | CVar.ARCHIVE);
+
+
 
         /*
          * DISCORD

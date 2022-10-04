@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set
 {
     public sealed class AbstractPrototypeIdHashSetSerializer<TPrototype> : PrototypeIdHashSetSerializer<TPrototype>
-        where TPrototype : class, IPrototype
+        where TPrototype : class, IPrototype, IInheritingPrototype
     {
         protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
             new AbstractPrototypeIdSerializer<TPrototype>();
@@ -59,13 +59,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return set;
         }
 
-        public DataNode Write(ISerializationManager serializationManager, HashSet<string> value, bool alwaysWrite = false, ISerializationContext? context = null)
+        public DataNode Write(ISerializationManager serializationManager, HashSet<string> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext? context = null)
         {
             var list = new List<DataNode>();
 
             foreach (var str in value)
             {
-                list.Add(PrototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
+                list.Add(PrototypeSerializer.Write(serializationManager, str, dependencies, alwaysWrite, context));
             }
 
             return new SequenceDataNode(list);

@@ -8,9 +8,11 @@ using Robust.Shared.Map;
 
 namespace Robust.Client.UserInterface
 {
-    public interface IUserInterfaceManager
+    public partial interface IUserInterfaceManager
     {
-        UITheme ThemeDefaults { get; }
+        void InitializeTesting();
+
+        InterfaceTheme ThemeDefaults { get; }
 
         /// <summary>
         ///     Default style sheet that applies to all controls
@@ -33,6 +35,7 @@ namespace Robust.Client.UserInterface
         /// happens. When focus is lost on a control, it always fires Control.ControlFocusExited.
         /// </summary>
         Control? ControlFocused { get; set; }
+        public void PostInitialize();
 
         ViewportContainer MainViewport { get; }
 

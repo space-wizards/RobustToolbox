@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
@@ -16,7 +17,7 @@ public sealed class RobustTree<T> where T : notnull
 
     public RobustTree(ObjectPool<HashSet<T>>? pool = null)
     {
-        _pool = pool ?? new DefaultObjectPool<HashSet<T>>(new PVSSystem.SetPolicy<T>());
+        _pool = pool ?? new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>());
     }
 
     public void Clear()

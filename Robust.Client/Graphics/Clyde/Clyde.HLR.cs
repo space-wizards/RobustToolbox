@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Clear screen to correct color.
-            ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
+            ClearFramebuffer(ConvertClearFromSrgb(_userInterfaceManager.GetMainClearColor()));
 
             using (DebugGroup("UI"))
             using (_prof.Group("UI"))
@@ -325,7 +325,7 @@ namespace Robust.Client.Graphics.Clyde
                                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                                 name: nameof(entityPostRenderTarget));
                         }
-                        
+
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
                         _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
 
@@ -398,7 +398,7 @@ namespace Robust.Client.Graphics.Clyde
             var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
 
             // matrix equivalent for Viewport.WorldToLocal()
-            var worldToLocal = view.WorldToLocalMatrix;
+            var worldToLocal = view.GetWorldToLocalMatrix();
 
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
@@ -449,7 +449,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 BindRenderTargetFull(RtToLoaded(rt));
                 if (clearColor is not null)
-                    ClearFramebuffer(clearColor.Value);
+                    ClearFramebuffer(ConvertClearFromSrgb(clearColor.Value));
+
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);

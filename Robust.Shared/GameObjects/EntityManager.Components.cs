@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Log;
 using System.Diagnostics;
+using Robust.Shared.Physics.Components;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -88,12 +89,26 @@ namespace Robust.Shared.GameObjects
             AddComponentRefType(obj.Idx);
         }
 
+        #region Component Management
+
         private void OnComponentReferenceAdded(ComponentRegistration reg, CompIdx type)
         {
             AddComponentRefType(type);
         }
 
-        #region Component Management
+        /// <inheritdoc />
+        public int Count<T>() where T : Component
+        {
+            var dict = _entTraitDict[typeof(T)];
+            return dict.Count;
+        }
+
+        /// <inheritdoc />
+        public int Count(Type component)
+        {
+            var dict = _entTraitDict[component];
+            return dict.Count;
+        }
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
@@ -305,6 +320,10 @@ namespace Robust.Shared.GameObjects
                 // mark the component as dirty for networking
                 Dirty(component);
             }
+            else
+            {
+                component.Networked = false;
+            }
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
             ComponentAdded?.Invoke(eventArgs);
@@ -475,20 +494,12 @@ namespace Robust.Shared.GameObjects
 
             if (component.Running)
                 component.LifeShutdown(this);
-
-            if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity(this);
-
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid));
-            ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
-
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
             {
-                _runtimeLog.LogException(e,
-                    $"RemoveComponentDeferred, owner={component.Owner}, type={component.GetType()}");
+                Logger.Error($"Caught exception while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(RemoveComponentDeferred));
             }
 #endif
         }
@@ -528,8 +539,8 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                _runtimeLog.LogException(e,
-                    $"RemoveComponentImmediate, owner={component.Owner}, type={component.GetType()}");
+                Logger.Error($"Caught exception during immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
 
@@ -541,6 +552,37 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var component in InSafeOrder(_deleteSet))
             {
+                if (component.Deleted)
+                    continue;
+
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
+                // The component may have been restarted sometime after removal was deferred.
+                if (component.Running)
+                {
+                    // TODO add options to cancel deferred deletion?
+                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                    component.LifeShutdown(this);
+                }
+
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity(this);
+
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner));
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
+
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Caught exception  while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _runtimeLog.LogException(e, nameof(CullRemovedComponents));
+            }
+#endif
+
                 DeleteComponent(component);
             }
 
@@ -1129,10 +1171,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
-            var getState = new ComponentGetState();
+            var getState = new ComponentGetState(session);
             eventBus.RaiseComponentEvent(component, ref getState);
 
             return getState.State ?? component.GetComponentState();

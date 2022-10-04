@@ -205,10 +205,9 @@ namespace Robust.Shared.GameObjects
         None = 0,
 
         /// <summary>
-        /// Whether the entity has states specific to particular players. This will cause many state-attempt events to
-        /// be raised, and is generally somewhat expensive.
+        /// Whether the entity has any component that has state information specific to particular players.
         /// </summary>
-        EntitySpecific = 1 << 0,
+        SessionSpecific = 1 << 0,
 
         /// <summary>
         /// Whether the entity is currently inside of a container.

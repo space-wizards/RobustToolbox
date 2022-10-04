@@ -1,4 +1,7 @@
-namespace Robust.Shared.GameObjects
+using Robust.Shared.GameObjects;
+using Robust.Shared.Physics.Components;
+
+namespace Robust.Shared.Physics.Events
 {
     [ByRefEvent]
     public readonly struct CollisionChangeEvent

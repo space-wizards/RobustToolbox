@@ -85,10 +85,11 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
+            _dependencies = new DependencyCollection(IoCManager.Instance!);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
-            _setupControllers();
+            SetupControllers();
             _initializeCommon();
 
             DebugConsole = new DropDownDebugConsole();
@@ -117,7 +118,7 @@ namespace Robust.Client.UserInterface
         public void PostInitialize()
         {
             _initializeScreens();
-            _initializeControllers();
+            InitializeControllers();
         }
         private void _initializeCommon()
         {

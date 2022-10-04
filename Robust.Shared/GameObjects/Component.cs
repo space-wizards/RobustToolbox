@@ -23,7 +23,16 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [DataField("netsync")]
-        public bool NetSyncEnabled { get; set;  } = true;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool _netSync { get; set; } = true;
+
+        internal bool Networked = true;
+
+        public bool NetSyncEnabled
+        {
+            get => Networked && _netSync;
+            set => _netSync = value;
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -35,10 +44,16 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     If true, and if this is a networked component, then component data will only be sent to players if their
-        ///     controlled entity is the owner of this component. This is a faster alternative to <see
-        ///     cref="MetaDataFlags.EntitySpecific"/>.
+        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
         /// </summary>
         public virtual bool SendOnlyToOwner => false;
+
+        /// <summary>
+        ///     If true, and if this is a networked component, then this component will cause <see
+        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
+        ///     receive this component's state.
+        /// </summary>
+        public virtual bool SessionSpecific => false;
 
         /// <summary>
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,

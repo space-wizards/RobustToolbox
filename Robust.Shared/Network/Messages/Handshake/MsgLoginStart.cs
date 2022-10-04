@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 #nullable disable
 
@@ -20,7 +21,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public bool NeedPubKey;
         public bool Encrypt;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             UserName = buffer.ReadString();
             var length = buffer.ReadByte();
@@ -30,7 +31,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             Encrypt = buffer.ReadBoolean();
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(UserName);
             buffer.Write((byte) HWId.Length);

@@ -398,7 +398,7 @@ namespace Robust.Client.Graphics.Clyde
             var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
 
             // matrix equivalent for Viewport.WorldToLocal()
-            var worldToLocal = view.WorldToLocalMatrix;
+            var worldToLocal = view.GetWorldToLocalMatrix();
 
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {

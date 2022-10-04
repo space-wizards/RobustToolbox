@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Prometheus;
+using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
@@ -19,6 +20,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientGameStateManager _stateMan = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
@@ -67,6 +69,24 @@ namespace Robust.Client.GameObjects
                 return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
             else
                 return base.ToPrettyString(uid);
+        }
+
+        public override void RaisePredictiveEvent<T>(T msg)
+        {
+            var localPlayer = _playerManager.LocalPlayer;
+            DebugTools.AssertNotNull(localPlayer);
+
+            var sequence = _stateMan.SystemMessageDispatched(msg);
+            EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
+
+            if (!_stateMan.IsPredictionEnabled)
+                return;
+
+            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted);
+
+            var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
+            EventBus.RaiseEvent(EventSource.Local, msg);
+            EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
         }
 
         #region IEntityNetworkManager impl

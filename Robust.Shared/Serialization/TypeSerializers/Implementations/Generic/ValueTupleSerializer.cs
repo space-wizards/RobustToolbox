@@ -47,7 +47,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new ValidatedMappingNode(dict);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, (T1, T2) value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, (T1, T2) value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();

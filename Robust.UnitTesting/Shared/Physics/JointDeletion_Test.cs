@@ -5,7 +5,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
@@ -46,15 +48,10 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
             body2.BodyType = BodyType.Dynamic;
             body1.CanCollide = true;
             body2.CanCollide = true;
-            fixSystem.CreateFixture(body2, new PolygonShape()
-            {
-                Vertices = new[]
-                {
-                    Vector2.One,
-                    Vector2.Zero,
-                    new Vector2(0f, 1f),
-                }
-            });
+            var shape = new PolygonShape();
+            shape.SetAsBox(0.5f, 0.5f);
+
+            fixSystem.CreateFixture(body2, shape);
 
             joint = jointSystem.CreateDistanceJoint(ent1, ent2, id: "distance-joint");
             joint.CollideConnected = false;

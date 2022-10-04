@@ -5,7 +5,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
@@ -21,7 +23,6 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
         // Checks that FindGridContacts succesfully overlaps a grid + map broadphase physics body
         var systems = server.ResolveDependency<IEntitySystemManager>();
-        var broadphase = systems.GetEntitySystem<SharedBroadphaseSystem>();
         var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
         var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -33,7 +34,6 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
             grid.SetTile(Vector2i.Zero, new Tile(1));
-            var physics = entManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
             var fixtures = entManager.GetComponent<FixturesComponent>(grid.GridEntityId);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
@@ -41,20 +41,20 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             onGridBody.BodyType = BodyType.Dynamic;
             var shapeA = new PolygonShape();
-            shapeA.SetAsBox(-0.5f, 0.5f);
+            shapeA.SetAsBox(0.5f, 0.5f);
             var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
             fixtureA.CollisionMask = 1;
-            Assert.That(onGridBody.FixtureCount, Is.EqualTo(1));
+            Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.GridEntityId));
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
             offGridBody.BodyType = BodyType.Dynamic;
             var shapeB = new PolygonShape();
-            shapeB.SetAsBox(-0.5f, 0.5f);
+            shapeB.SetAsBox(0.5f, 0.5f);
             var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
             fixtureB.CollisionLayer = 1;
-            Assert.That(offGridBody.FixtureCount, Is.EqualTo(1));
+            Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.GridEntityId)));
 
             // Alright just a quick validation then we start the actual damn test.

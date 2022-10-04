@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
@@ -23,7 +23,7 @@ namespace Robust.Shared.Network.Messages
         public uint Sequence { get; set; }
         public GameTick SourceTick { get; set; }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             Type = (EntityMessageType)buffer.ReadByte();
             SourceTick = buffer.ReadGameTick();
@@ -33,7 +33,6 @@ namespace Robust.Shared.Network.Messages
             {
                 case EntityMessageType.SystemMessage:
                 {
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAlignedMemory(length);
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
@@ -42,7 +41,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write((byte)Type);
             buffer.Write(SourceTick);
@@ -52,7 +51,6 @@ namespace Robust.Shared.Network.Messages
             {
                 case EntityMessageType.SystemMessage:
                 {
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
                     var stream = new MemoryStream();
 
                     serializer.Serialize(stream, SystemMessage);

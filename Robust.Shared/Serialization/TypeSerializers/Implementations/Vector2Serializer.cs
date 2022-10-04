@@ -44,7 +44,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing values for Vector2.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Vector2 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Vector2 value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)}," +

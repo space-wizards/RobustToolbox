@@ -21,6 +21,7 @@
 */
 
 using Robust.Shared.GameObjects;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {

@@ -4,7 +4,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Systems
 {
     public partial class FixtureSystem
     {
@@ -62,7 +62,7 @@ namespace Robust.Shared.Physics
                     break;
                 case PhysShapeAabb aabb:
                     var polygon = (PolygonShape) aabb;
-                    GetMassData(polygon, ref data);
+                    GetMassData(polygon, ref data, density);
                     break;
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.
@@ -146,10 +146,8 @@ namespace Robust.Shared.Physics
             return data;
         }
 
-        public static void GetMassData(IPhysShape shape, ref MassData data)
+        public static void GetMassData(IPhysShape shape, ref MassData data, float density)
         {
-            DebugTools.Assert(data.Mass > 0f);
-
             // Box2D just calls fixture.GetMassData which just calls the shape method anyway soooo
             // we can just cut out the middle-man
             switch (shape)
@@ -160,7 +158,7 @@ namespace Robust.Shared.Physics
                     data.I = 0.0f;
                     break;
                 case PhysShapeCircle circle:
-                    // massData->mass = density * b2_pi * m_radius * m_radius;
+                    data.Mass = density * MathF.PI * circle.Radius * circle.Radius;
                     data.Center = circle.Position;
 
                     // inertia about the local origin
@@ -168,7 +166,7 @@ namespace Robust.Shared.Physics
                     break;
                 case PhysShapeAabb aabb:
                     var polygon = (PolygonShape) aabb;
-                    GetMassData(polygon, ref data);
+                    GetMassData(polygon, ref data, density);
                     break;
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.
@@ -232,8 +230,7 @@ namespace Robust.Shared.Physics
                     }
 
                     // Total mass
-                    // data.Mass = density * area;
-                    var density = data.Mass / area;
+                    data.Mass = density * area;
 
                     // Center of mass
                     DebugTools.Assert(area > float.Epsilon);

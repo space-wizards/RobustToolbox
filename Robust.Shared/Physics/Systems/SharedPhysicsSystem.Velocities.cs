@@ -1,14 +1,32 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 
-namespace Robust.Shared.GameObjects;
+namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+
+    /// <summary>
+    /// Gets the linear velocity of a particular body at the specified point.
+    /// </summary>
+    public Vector2 GetLinearVelocity(
+        EntityUid uid,
+        Vector2 point,
+        PhysicsComponent? component = null,
+        TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref component, ref xform))
+            return Vector2.Zero;
+
+        var velocity = component.LinearVelocity;
+        var angVelocity = xform.LocalRotation.RotateVec(Vector2.Cross(component.AngularVelocity, point - component.LocalCenter));
+        return velocity + angVelocity;
+    }
 
     /// <summary>
     ///     This is the total rate of change of the entity's map-position, resulting from the linear and angular

@@ -580,7 +580,7 @@ namespace Robust.Client.Graphics.Clyde
                 return default;
             }
 
-            public Matrix3 WorldToLocalMatrix => default;
+            public Matrix3 GetWorldToLocalMatrix() => default;
 
             public Vector2 WorldToLocal(Vector2 point)
             {

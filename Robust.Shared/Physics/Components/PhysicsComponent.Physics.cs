@@ -24,19 +24,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
@@ -91,14 +92,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Dictionary<int, int> IslandIndex { get; set; } = new();
 
-        // TODO: Actually implement after the initial pr dummy
-        /// <summary>
-        ///     Gets or sets where this body should be included in the CCD solver.
-        /// </summary>
-        public bool IsBullet { get; set; }
-
-        public bool IgnoreCCD { get; set; }
-
+        [Obsolete("use FixtureSystem.FixtureCount")]
         public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
         [ViewVariables] public int ContactCount => Contacts.Count;
@@ -116,41 +110,11 @@ namespace Robust.Shared.GameObjects
         public BodyType BodyType
         {
             get => _bodyType;
-            set
-            {
-                if (_bodyType == value)
-                    return;
-
-                var oldType = _bodyType;
-                _bodyType = value;
-                ResetMassData();
-
-                if (_bodyType == BodyType.Static)
-                {
-                    SetAwake(false);
-                    _linearVelocity = Vector2.Zero;
-                    _angularVelocity = 0.0f;
-                    // SynchronizeFixtures(); TODO: When CCD
-                }
-                // Even if it's dynamic if it can't collide then don't force it awake.
-                else if (_canCollide)
-                {
-                    SetAwake(true);
-                }
-
-                Force = Vector2.Zero;
-                Torque = 0.0f;
-
-                _entMan.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
-
-                var ev = new PhysicsBodyTypeChangedEvent(Owner, _bodyType, oldType, this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetBodyType")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetBodyType(this, value);
         }
 
-
-        [DataField("bodyType")]
-        private BodyType _bodyType = BodyType.Static;
+        [DataField("bodyType")] internal BodyType _bodyType = BodyType.Static;
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
@@ -158,45 +122,16 @@ namespace Robust.Shared.GameObjects
         public bool Awake
         {
             get => _awake;
+            [Obsolete("Use SharedPhysicsSystem.SetAwake")]
             set => SetAwake(value);
         }
 
-        private bool _awake = false;
+        internal bool _awake = false;
 
+        [Obsolete("Use SharedPhysicsSystem.SetAwake")]
         public void SetAwake(bool value, bool updateSleepTime = true)
         {
-            if (_awake == value)
-                return;
-
-            if (value && _bodyType == BodyType.Static)
-                return;
-
-            // TODO: Remove this. Need to think of just making Awake read-only and just having WakeBody / SleepBody
-            if (value && !_canCollide)
-            {
-                CanCollide = true;
-                if (!_canCollide)
-                    return;
-            }
-
-            _awake = value;
-
-            if (value)
-            {
-                var ev = new PhysicsWakeEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
-            }
-            else
-            {
-                var ev = new PhysicsSleepEvent(this);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref ev, true);
-                ResetDynamics();
-            }
-
-            if (updateSleepTime)
-                _sleepTime = 0.0f;
-
-            Dirty(_entMan);
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetAwake(this, value, updateSleepTime);
         }
 
         /// <summary>
@@ -208,61 +143,37 @@ namespace Robust.Shared.GameObjects
         public bool SleepingAllowed
         {
             get => _sleepingAllowed;
-            set
-            {
-                if (_sleepingAllowed == value)
-                    return;
-
-                if (!value)
-                    Awake = true;
-
-                _sleepingAllowed = value;
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetSleepingAllowed")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetSleepingAllowed(this, value);
         }
 
-        [DataField("sleepingAllowed")]
-        private bool _sleepingAllowed = true;
+        [DataField("sleepingAllowed")] internal bool _sleepingAllowed = true;
 
         [ViewVariables]
         public float SleepTime
         {
             get => _sleepTime;
-            set
-            {
-                DebugTools.Assert(!float.IsNaN(value));
-
-                if (MathHelper.CloseToPercent(value, _sleepTime))
-                    return;
-
-                _sleepTime = value;
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetSleepTime")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetSleepTime(this, value);
         }
 
-        [DataField("sleepTime")]
-        private float _sleepTime;
+        [DataField("sleepTime")] internal float _sleepTime;
 
         /// <inheritdoc />
+        [Obsolete("Use SharedPhysicsSystem.WakeBody")]
         public void WakeBody()
         {
-            CanCollide = true;
-
-            if (!_canCollide) return;
-
-            Awake = true;
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(this);
         }
 
         /// <summary>
         /// Resets the dynamics of this body.
         /// Sets torque, force and linear/angular velocity to 0
         /// </summary>
+        [Obsolete("Use SharedPhysicsSystem.ResetDynamics")]
         public void ResetDynamics()
         {
-            Torque = 0;
-            _angularVelocity = 0;
-            Force = Vector2.Zero;
-            _linearVelocity = Vector2.Zero;
-            Dirty(_entMan);
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetDynamics(this);
         }
 
         public Box2 GetAABB(Transform transform)
@@ -314,25 +225,8 @@ namespace Robust.Shared.GameObjects
         public bool CanCollide
         {
             get => _canCollide;
-            set
-            {
-                if (_canCollide == value)
-                    return;
-
-                // If we're recursively in a container then never set this.
-                if (value && _entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>()
-                    .IsEntityOrParentInContainer(Owner)) return;
-
-                if (!value)
-                {
-                    Awake = false;
-                }
-
-                _canCollide = value;
-                var ev = new CollisionChangeEvent(this, _canCollide);
-                _entMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetCanCollide")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetCanCollide(this, value);
         }
 
         [DataField("canCollide")] internal bool _canCollide = true;
@@ -372,7 +266,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadOnly)]
         public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
-        private float _mass;
+        internal float _mass;
 
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).
@@ -380,7 +274,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public float InvMass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _invMass : 0.0f;
 
-        private float _invMass;
+        internal float _invMass;
 
         /// <summary>
         /// Moment of inertia, or angular mass, in kg * m^2.
@@ -392,25 +286,11 @@ namespace Robust.Shared.GameObjects
         public float Inertia
         {
             get => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
-            set
-            {
-                DebugTools.Assert(!float.IsNaN(value));
-
-                if (_bodyType != BodyType.Dynamic) return;
-
-                if (MathHelper.CloseToPercent(_inertia, value)) return;
-
-                if (value > 0.0f && !_fixedRotation)
-                {
-                    _inertia = value - Mass * Vector2.Dot(_localCenter, _localCenter);
-                    DebugTools.Assert(_inertia > 0.0f);
-                    InvI = 1.0f / _inertia;
-                    Dirty(_entMan);
-                }
-            }
+            [Obsolete("Use SharedPhysicsSystem.Inertia")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetInertia(this, value);
         }
 
-        private float _inertia;
+        internal float _inertia;
 
         /// <summary>
         ///     Indicates whether this body ignores gravity
@@ -430,44 +310,25 @@ namespace Robust.Shared.GameObjects
         public bool FixedRotation
         {
             get => _fixedRotation;
-            set
-            {
-                if (_fixedRotation == value)
-                    return;
-
-                _fixedRotation = value;
-                _angularVelocity = 0.0f;
-                ResetMassData();
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetFixedRotation")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetFixedRotation(this, value);
         }
 
         // TODO: Should default to false someday IMO
-        [DataField("fixedRotation")]
-        private bool _fixedRotation = true;
+        [DataField("fixedRotation")] internal bool _fixedRotation = true;
 
         /// <summary>
         ///     Get this body's center of mass offset to world position.
         /// </summary>
-        /// <remarks>
-        ///     AKA Sweep.LocalCenter in Box2D.
-        ///     Not currently in use as this is set after mass data gets set (when fixtures update).
-        /// </remarks>
         [ViewVariables]
         public Vector2 LocalCenter
         {
             get => _localCenter;
-            set
-            {
-                if (_bodyType != BodyType.Dynamic) return;
-
-                if (value.EqualsApprox(_localCenter)) return;
-
-                _localCenter = value;
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetLocalCenter")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetLocalCenter(this, value);
         }
 
-        private Vector2 _localCenter = Vector2.Zero;
+        internal Vector2 _localCenter = Vector2.Zero;
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
@@ -496,18 +357,11 @@ namespace Robust.Shared.GameObjects
         public float Friction
         {
             get => _friction;
-            set
-            {
-                if (MathHelper.CloseToPercent(value, _friction))
-                    return;
-
-                _friction = value;
-                // TODO
-                // Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetFriction")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetFriction(this, value);
         }
 
-        private float _friction;
+        internal float _friction;
 
         /// <summary>
         ///     This is a set amount that the body's linear velocity is reduced by every tick.
@@ -517,20 +371,11 @@ namespace Robust.Shared.GameObjects
         public float LinearDamping
         {
             get => _linearDamping;
-            set
-            {
-                DebugTools.Assert(!float.IsNaN(value));
-
-                if (MathHelper.CloseToPercent(value, _linearDamping))
-                    return;
-
-                _linearDamping = value;
-                // Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetLinearDamping")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetLinearDamping(this, value);
         }
 
-        [DataField("linearDamping")]
-        private float _linearDamping = 0.2f;
+        [DataField("linearDamping")] internal float _linearDamping = 0.2f;
 
         /// <summary>
         ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -541,20 +386,11 @@ namespace Robust.Shared.GameObjects
         public float AngularDamping
         {
             get => _angularDamping;
-            set
-            {
-                DebugTools.Assert(!float.IsNaN(value));
-
-                if (MathHelper.CloseToPercent(value, _angularDamping))
-                    return;
-
-                _angularDamping = value;
-                // Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetAngularDamping")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetAngularDamping(this, value);
         }
 
-        [DataField("angularDamping")]
-        private float _angularDamping = 0.2f;
+        [DataField("angularDamping")] internal float _angularDamping = 0.2f;
 
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.
@@ -568,23 +404,8 @@ namespace Robust.Shared.GameObjects
         public Vector2 LinearVelocity
         {
             get => _linearVelocity;
-            set
-            {
-                // Curse you Q
-                // DebugTools.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
-
-                if (BodyType == BodyType.Static)
-                    return;
-
-                if (Vector2.Dot(value, value) > 0.0f)
-                    Awake = true;
-
-                if (_linearVelocity.EqualsApprox(value, 0.0001f))
-                    return;
-
-                _linearVelocity = value;
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetLinearVelocity")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetLinearVelocity(this, value);
         }
 
         internal Vector2 _linearVelocity;
@@ -596,26 +417,8 @@ namespace Robust.Shared.GameObjects
         public float AngularVelocity
         {
             get => _angularVelocity;
-            set
-            {
-                // TODO: This and linearvelocity asserts
-                // DebugTools.Assert(!float.IsNaN(value));
-
-                if (BodyType == BodyType.Static)
-                    return;
-
-                if (value * value > 0.0f)
-                    Awake = true;
-
-                // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
-                // sleep-tolerance can damp down to sleeping.
-
-                if (MathHelper.CloseToPercent(_angularVelocity, value, 0.00001f))
-                    return;
-
-                _angularVelocity = value;
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetAngularVelocity")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetAngularVelocity(this, value);
         }
 
         internal float _angularVelocity;
@@ -687,6 +490,7 @@ namespace Robust.Shared.GameObjects
             return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));
         }
 
+        [Obsolete("Use SharedPhysicsSystem.GetPhysicsTransform")]
         public Transform GetTransform(TransformComponent xform)
         {
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
@@ -700,158 +504,37 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Applies an impulse to the centre of mass.
         /// </summary>
+        [Obsolete("Use SharedPhysicsSystem.ApplyLinearImpulse")]
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
-            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
-            Awake = true;
-
-            LinearVelocity += impulse * _invMass;
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyLinearImpulse(this, impulse);
         }
 
         /// <summary>
         /// Applies an impulse from the specified point.
         /// </summary>
+        [Obsolete("Use SharedPhysicsSystem.ApplyLinearImpulse")]
         public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
         {
-            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
-            Awake = true;
-
-            LinearVelocity += impulse * _invMass;
-            // TODO: Sweep here
-            AngularVelocity += InvI * Vector2.Cross(point, impulse);
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyLinearImpulse(this, impulse, point);
         }
 
+        [Obsolete("Use SharedPhysicsSystem.ApplyAngularImpulse")]
         public void ApplyAngularImpulse(float impulse)
         {
-            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
-            Awake = true;
-
-            AngularVelocity += impulse * InvI;
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyAngularImpulse(this, impulse);
         }
 
+        [Obsolete("Use SharedPhysicsSystem.ApplyForce")]
         public void ApplyForce(in Vector2 force)
         {
-            if (_bodyType != BodyType.Dynamic) return;
-
-            Awake = true;
-            Force += force;
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyForce(this, force);
         }
 
+        [Obsolete("Use SharedPhysicsSystem.ResetMassData")]
         public void ResetMassData(FixturesComponent? fixtures = null)
         {
-            _mass = 0.0f;
-            _invMass = 0.0f;
-            _inertia = 0.0f;
-            InvI = 0.0f;
-            _localCenter = Vector2.Zero;
-
-            // Temporary until ECS don't @ me.
-            fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
-            var localCenter = Vector2.Zero;
-
-            foreach (var (_, fixture) in fixtures.Fixtures)
-            {
-                if (fixture.Mass <= 0.0f) continue;
-
-                var data = new MassData {Mass = fixture.Mass};
-                FixtureSystem.GetMassData(fixture.Shape, ref data);
-
-                _mass += data.Mass;
-                localCenter += data.Center * data.Mass;
-                _inertia += data.I;
-            }
-
-            // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
-            if (((int) _bodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return;
-            }
-
-            if (_mass > 0.0f)
-            {
-                _invMass = 1.0f / _mass;
-                localCenter *= _invMass;
-            }
-            else
-            {
-                // Always need positive mass.
-                _mass = 1.0f;
-                _invMass = 1.0f;
-            }
-
-            if (_inertia > 0.0f && !_fixedRotation)
-            {
-                // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
-
-                DebugTools.Assert(_inertia > 0.0f);
-                InvI = 1.0f / _inertia;
-            }
-            else
-            {
-                _inertia = 0.0f;
-                InvI = 0.0f;
-            }
-
-            _localCenter = localCenter;
-
-            // TODO: Calculate Sweep
-
-            /*
-            var oldCenter = Sweep.Center;
-            Sweep.LocalCenter = localCenter;
-            Sweep.Center0 = Sweep.Center = Transform.Mul(GetTransform(), Sweep.LocalCenter);
-            */
-
-            // Update center of mass velocity.
-            // _linVelocity += Vector2.Cross(_angVelocity, Worl - oldCenter);
-
-        }
-
-        /// <summary>
-        ///     Used to prevent bodies from colliding; may lie depending on joints.
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        internal bool ShouldCollide(PhysicsComponent other)
-        {
-            if ((_bodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
-                (other._bodyType & (BodyType.Kinematic | BodyType.Static)) != 0)
-            {
-                return false;
-            }
-
-            // Does a joint prevent collision?
-            // if one of them doesn't have jointcomp then they can't share a common joint.
-            // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-            if (_entMan.TryGetComponent(Owner, out JointComponent? jointComponentA) &&
-                _entMan.TryGetComponent(other.Owner, out JointComponent? jointComponentB))
-            {
-                var aUid = jointComponentA.Owner;
-                var bUid = jointComponentB.Owner;
-
-                foreach (var (_, joint) in jointComponentA.Joints)
-                {
-                    // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                    if (!joint.CollideConnected &&
-                        ((aUid == joint.BodyAUid &&
-                         bUid == joint.BodyBUid) ||
-                        (bUid == joint.BodyAUid &&
-                         aUid == joint.BodyBUid))) return false;
-                }
-            }
-
-            var preventCollideMessage = new PreventCollideEvent(this, other);
-            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage, true);
-
-            if (preventCollideMessage.Cancelled) return false;
-
-            preventCollideMessage = new PreventCollideEvent(other, this);
-            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage, true);
-
-            if (preventCollideMessage.Cancelled) return false;
-
-            return true;
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetMassData(this, fixtures);
         }
 
         // View variables conveniences properties.
@@ -859,34 +542,5 @@ namespace Robust.Shared.GameObjects
         private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
         [ViewVariables]
         private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
-    }
-
-    /// <summary>
-    ///     Directed event raised when an entity's physics BodyType changes.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct PhysicsBodyTypeChangedEvent
-    {
-        public readonly EntityUid Entity;
-
-        /// <summary>
-        ///     New BodyType of the entity.
-        /// </summary>
-        public readonly BodyType New;
-
-        /// <summary>
-        ///     Old BodyType of the entity.
-        /// </summary>
-        public readonly BodyType Old;
-
-        public readonly PhysicsComponent Component;
-
-        public PhysicsBodyTypeChangedEvent(EntityUid entity, BodyType newType, BodyType oldType, PhysicsComponent component)
-        {
-            Entity = entity;
-            New = newType;
-            Old = oldType;
-            Component = component;
-        }
     }
 }

@@ -235,7 +235,7 @@ namespace Robust.Client.Debugging
                     foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
                     {
                         // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
-                        if (physBody.BodyType == BodyType.Dynamic && fixture.Mass == 0f && fixture.Hard)
+                        if (physBody.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
                         {
                             DrawShape(worldHandle, fixture, xform, Color.Red.WithAlpha(AlphaModifier));
                         }

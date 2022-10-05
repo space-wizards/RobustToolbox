@@ -39,7 +39,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing angle.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Angle value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Angle value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.Theta.ToString(CultureInfo.InvariantCulture)} rad");

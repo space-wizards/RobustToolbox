@@ -59,7 +59,6 @@ public sealed class ScaleCommand : IConsoleCommand
         {
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                // TODO: May be worthwhile to swap to density like box2d? Either way mass is unchanged for now.
                 switch (fixture.Shape)
                 {
                     case EdgeShape edge:
@@ -87,7 +86,7 @@ public sealed class ScaleCommand : IConsoleCommand
                 }
             }
 
-            EntitySystem.Get<FixtureSystem>().FixtureUpdate(manager);
+            entManager.EntitySysManager.GetEntitySystem<FixtureSystem>().FixtureUpdate(manager);
         }
     }
 

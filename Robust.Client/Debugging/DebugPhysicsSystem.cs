@@ -46,8 +46,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -92,8 +94,10 @@ namespace Robust.Client.Debugging
                             IoCManager.Resolve<IEyeManager>(),
                             IoCManager.Resolve<IInputManager>(),
                             IoCManager.Resolve<IMapManager>(),
+                            IoCManager.Resolve<IPlayerManager>(),
                             IoCManager.Resolve<IResourceCache>(),
                             this,
+                            Get<EntityLookupSystem>(),
                             Get<SharedPhysicsSystem>()));
 
                 if (value == PhysicsDebugFlags.None)
@@ -173,16 +177,23 @@ namespace Robust.Client.Debugging
         /// Shows Center of Mass for all bodies in the viewport.
         /// </summary>
         COM = 1 << 6,
+
+        /// <summary>
+        /// Shows nearest edge from target to player.
+        /// </summary>
+        Distance = 1 << 7,
     }
 
     internal sealed class PhysicsDebugOverlay : Overlay
     {
-        private IEntityManager _entityManager = default!;
-        private IEyeManager _eyeManager = default!;
-        private IInputManager _inputManager = default!;
-        private IMapManager _mapManager = default!;
-        private DebugPhysicsSystem _debugPhysicsSystem = default!;
-        private SharedPhysicsSystem _physicsSystem = default!;
+        private readonly IEntityManager _entityManager;
+        private readonly IEyeManager _eyeManager;
+        private readonly IInputManager _inputManager;
+        private readonly IMapManager _mapManager;
+        private readonly IPlayerManager _playerManager;
+        private readonly DebugPhysicsSystem _debugPhysicsSystem;
+        private readonly EntityLookupSystem _lookup;
+        private readonly SharedPhysicsSystem _physicsSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
@@ -192,13 +203,15 @@ namespace Robust.Client.Debugging
 
         private HashSet<Joint> _drawnJoints = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IResourceCache cache, DebugPhysicsSystem system, SharedPhysicsSystem physicsSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
             _mapManager = mapManager;
+            _playerManager = playerManager;
             _debugPhysicsSystem = system;
+            _lookup = lookup;
             _physicsSystem = physicsSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
@@ -381,6 +394,35 @@ namespace Robust.Client.Debugging
                     row++;
                     screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {(body).BodyType == BodyType.Static}");
                     row++;
+                }
+            }
+
+            if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Distance) != 0x0)
+            {
+                var mapPos = _eyeManager.ScreenToMap(mousePos);
+
+                if (mapPos.MapId != args.MapId)
+                    return;
+
+                var player = _playerManager.LocalPlayer?.ControlledEntity;
+
+                if (!_entityManager.TryGetComponent<TransformComponent>(player, out var playerXform) ||
+                    playerXform.MapID != args.MapId)
+                    return;
+
+                var flags = EntityLookupSystem.DefaultFlags;
+                flags &= ~LookupFlags.Contained;
+
+                foreach (var ent in _lookup.GetEntitiesIntersecting(mapPos, flags))
+                {
+                    if (!_entityManager.TryGetComponent<FixturesComponent>(ent, out var managerB))
+                        continue;
+
+                    if (_physicsSystem.TryGetDistance(player.Value, ent, out var distance, managerB: managerB))
+                    {
+                        screenHandle.DrawString(_font, mousePos.Position, $"Ent: {_entityManager.ToPrettyString(ent)}\nDistance: {distance:0.00}");
+                        break;
+                    }
                 }
             }
         }

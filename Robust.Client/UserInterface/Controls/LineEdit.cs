@@ -18,7 +18,6 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LineEdit : Control
     {
-        private const float BlinkTime = 0.5f;
         private const float MouseScrollDelay = 0.001f;
 
         public const string StylePropertyStyleBox = "stylebox";
@@ -36,8 +35,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _drawOffset;
 
-        private float _cursorBlinkTimer;
-        private bool _cursorCurrentlyLit;
+        private CursorBlink _blink;
         private readonly LineEditRenderBox _renderBox;
 
         private bool _mouseSelectingText;
@@ -235,12 +233,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            _cursorBlinkTimer -= args.DeltaSeconds;
-            if (_cursorBlinkTimer <= 0)
-            {
-                _cursorBlinkTimer += BlinkTime;
-                _cursorCurrentlyLit = !_cursorCurrentlyLit;
-            }
+            _blink.FrameUpdate(args);
 
             if (_mouseSelectingText)
             {
@@ -567,7 +560,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
-            _resetCursorBlink();
+            _blink.Reset();
 
             void ShiftCursorLeft()
             {
@@ -697,7 +690,7 @@ namespace Robust.Client.UserInterface.Controls
             base.KeyboardFocusEntered();
 
             // Reset this so the cursor is always visible immediately after gaining focus..
-            _resetCursorBlink();
+            _blink.Reset();
             OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
         }
 
@@ -926,6 +919,10 @@ namespace Robust.Client.UserInterface.Controls
                     posX += metrics.Advance;
                     count += chr.Utf16SequenceLength;
 
+                    // NOTE: Due to the way this code works, these if statements don't get triggered
+                    // if the relevant positions are all the way at the left of the LineEdit.
+                    // This happens to be fine, because in that case the horizontal position = 0,
+                    // and that's what we initialize the variables to by default.
                     if (count == _master._cursorPosition)
                     {
                         actualCursorPosition = posX;
@@ -1003,7 +1000,7 @@ namespace Robust.Client.UserInterface.Controls
                             color);
                     }
 
-                    if (_master._cursorCurrentlyLit)
+                    if (_master._blink.CurrentlyLit)
                     {
                         var color = _master.StylePropertyDefault(
                             StylePropertyCursorColor,
@@ -1017,11 +1014,30 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
         }
+    }
 
-        private void _resetCursorBlink()
+    // Also used by TextEdit.
+    internal struct CursorBlink
+    {
+        private const float BlinkTime = 0.5f;
+
+        public bool CurrentlyLit;
+        public float Timer;
+
+        public void Reset()
         {
-            _cursorCurrentlyLit = true;
-            _cursorBlinkTimer = BlinkTime;
+            CurrentlyLit = true;
+            Timer = BlinkTime;
+        }
+
+        public void FrameUpdate(FrameEventArgs args)
+        {
+            Timer -= args.DeltaSeconds;
+            if (Timer <= 0)
+            {
+                Timer += BlinkTime;
+                CurrentlyLit = !CurrentlyLit;
+            }
         }
     }
 }

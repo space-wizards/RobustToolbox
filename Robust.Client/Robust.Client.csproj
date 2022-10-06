@@ -19,7 +19,7 @@
     <PackageReference Include="NVorbis" Version="0.10.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
-    <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
+    <PackageReference Include="OpenTK.OpenAL" Version="4.7.5" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
     <PackageReference Include="Robust.Natives" Version="0.1.1" />
     <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" />

@@ -355,6 +355,9 @@ namespace Robust.Shared.Physics.Systems
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
+                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt)
+                        return true;
+
                     if (!proxy.Fixture.Hard)
                         return true;
 

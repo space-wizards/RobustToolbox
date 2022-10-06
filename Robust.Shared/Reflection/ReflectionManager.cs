@@ -139,8 +139,20 @@ namespace Robust.Shared.Reflection
             // Check standard types first.
             switch (name)
             {
+                case "Byte":
+                    type = typeof(byte);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "Bool":
+                    type = typeof(bool);
+                    _looseTypeCache[name] = type;
+                    return true;
                 case "Double":
                     type = typeof(double);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "SByte":
+                    type = typeof(sbyte);
                     _looseTypeCache[name] = type;
                     return true;
                 case "Single":

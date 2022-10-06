@@ -54,7 +54,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
-            SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
@@ -592,34 +591,17 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
         {
-            if (!component.CanCollide ||
-                !TryComp<FixturesComponent>(uid, out var manager) ||
-                _mapManager.IsGrid(uid)) return;
-
-            var worldRot = Transform(uid).WorldRotation;
-
-            SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta, manager);
-        }
-
-        private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
-        {
-            if (!component.CanCollide ||
-                _mapManager.IsGrid(uid)) return;
-
-            var xform = Transform(uid);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-            DebugTools.Assert(xform.LocalRotation.Equals(args.NewRotation));
-
-            SynchronizeFixtures(component, worldPos, (float) worldRot.Theta);
-        }
-
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
-        {
-            if (!Resolve(body.Owner, ref manager))
-            {
+            if (!component.CanCollide
+                || args.Component.GridUid == uid
+                || !TryComp(uid, out FixturesComponent? manager))
                 return;
-            }
 
+            var (worldPos, worldRot) = _xformSys.GetWorldPositionRotation(args.Component, GetEntityQuery<TransformComponent>());
+            SynchronizeFixtures(component, worldPos, (float)worldRot, manager);
+        }
+
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent manager)
+        {
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
             // Don't cache this as controllers may change it freely before we run physics!
             var xf = new Transform(worldPos, worldRot);

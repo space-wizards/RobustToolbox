@@ -41,7 +41,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             onGridBody.BodyType = BodyType.Dynamic;
             var shapeA = new PolygonShape();
-            shapeA.SetAsBox(-0.5f, 0.5f);
+            shapeA.SetAsBox(0.5f, 0.5f);
             var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
             fixtureA.CollisionMask = 1;
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
@@ -51,7 +51,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
             offGridBody.BodyType = BodyType.Dynamic;
             var shapeB = new PolygonShape();
-            shapeB.SetAsBox(-0.5f, 0.5f);
+            shapeB.SetAsBox(0.5f, 0.5f);
             var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
             fixtureB.CollisionLayer = 1;
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));

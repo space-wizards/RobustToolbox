@@ -38,7 +38,6 @@ namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     #region Lifetime
@@ -73,7 +72,7 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsInitialized(EntityUid uid)
     {
-        _fixtureSystem.OnPhysicsInit(uid);
+        _fixtures.OnPhysicsInit(uid);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -236,10 +235,10 @@ public partial class SharedPhysicsSystem
 
         foreach (var (_, fixture) in fixtures.Fixtures)
         {
-            if (fixture.Mass <= 0.0f) continue;
+            if (fixture.Density <= 0.0f) continue;
 
-            var data = new MassData {Mass = fixture.Mass};
-            FixtureSystem.GetMassData(fixture.Shape, ref data);
+            var data = new MassData();
+            FixtureSystem.GetMassData(fixture.Shape, ref data, fixture.Density);
 
             body._mass += data.Mass;
             localCenter += data.Center * data.Mass;
@@ -529,12 +528,13 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
     {
         if (!Resolve(uid, ref xform))
             return new Transform();
 
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        xformQuery ??= GetEntityQuery<TransformComponent>();
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery.Value);
 
         return new Transform(worldPos, worldRot);
     }

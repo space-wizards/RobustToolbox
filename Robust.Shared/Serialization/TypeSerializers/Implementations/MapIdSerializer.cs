@@ -32,7 +32,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing MapId");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, MapId value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, MapId value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var val = (int)value;

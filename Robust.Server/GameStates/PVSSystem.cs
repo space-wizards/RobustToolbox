@@ -1170,34 +1170,6 @@ internal sealed partial class PVSSystem : EntitySystem
         return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 
-    public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
-    {
-        public override HashSet<T> Create()
-        {
-            return new HashSet<T>();
-        }
-
-        public override bool Return(HashSet<T> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
-    public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
-    {
-        public override Dictionary<T1, T2> Create()
-        {
-            return new Dictionary<T1, T2>();
-        }
-
-        public override bool Return(Dictionary<T1, T2> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
         public override RobustTree<T> Create()

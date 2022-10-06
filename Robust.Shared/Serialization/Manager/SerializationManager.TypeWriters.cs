@@ -81,7 +81,7 @@ namespace Robust.Shared.Serialization.Manager
             node = default;
             if (TryGetWriter<T>(context, out var writer))
             {
-                node = writer.Write(this, obj, alwaysWrite, context);
+                node = writer.Write(this, obj, DependencyCollection, alwaysWrite, context);
                 return true;
             }
 

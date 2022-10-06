@@ -63,7 +63,6 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             SubscribeLocalEvent<MoveEvent>(OnMove);
-            SubscribeLocalEvent<RotateEvent>(OnRotate);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(OnContainerInsert);
@@ -236,11 +235,6 @@ namespace Robust.Shared.GameObjects
         }
 
         private void OnMove(ref MoveEvent args)
-        {
-            UpdatePosition(args.Sender, args.Component);
-        }
-
-        private void OnRotate(ref RotateEvent args)
         {
             UpdatePosition(args.Sender, args.Component);
         }

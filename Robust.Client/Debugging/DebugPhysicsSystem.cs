@@ -412,15 +412,17 @@ namespace Robust.Client.Debugging
 
                 var flags = EntityLookupSystem.DefaultFlags;
                 flags &= ~LookupFlags.Contained;
-                var ents = _lookup.GetEntitiesIntersecting(mapPos, flags);
 
-                if (ents.Count == 0)
-                    return;
-
-                var ent = ents.First();
-                if (_physicsSystem.TryGetDistance(player.Value, ent, out var distance))
+                foreach (var ent in _lookup.GetEntitiesIntersecting(mapPos, flags))
                 {
-                    screenHandle.DrawString(_font, mousePos.Position, $"Ent: {_entityManager.ToPrettyString(ent)}\nDistance: {distance:0.00}");
+                    if (!_entityManager.TryGetComponent<FixturesComponent>(ent, out var managerB))
+                        continue;
+
+                    if (_physicsSystem.TryGetDistance(player.Value, ent, out var distance, managerB: managerB))
+                    {
+                        screenHandle.DrawString(_font, mousePos.Position, $"Ent: {_entityManager.ToPrettyString(ent)}\nDistance: {distance:0.00}");
+                        break;
+                    }
                 }
             }
         }

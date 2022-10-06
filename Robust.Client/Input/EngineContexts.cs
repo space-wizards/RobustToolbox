@@ -52,6 +52,7 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextCursorSelectEnd);
 
             common.AddFunction(EngineKeyFunctions.TextBackspace);
+            common.AddFunction(EngineKeyFunctions.TextNewline);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
             common.AddFunction(EngineKeyFunctions.TextCopy);
             common.AddFunction(EngineKeyFunctions.TextCut);

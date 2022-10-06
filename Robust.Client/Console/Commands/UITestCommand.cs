@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -14,6 +13,18 @@ namespace Robust.Client.Console.Commands;
 
 internal sealed class UITestControl : Control
 {
+    private const string Lipsum = @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sed interdum diam. Duis erat risus, tincidunt at pulvinar non, accumsan non dui. Morbi feugiat nisi in odio consectetur, ac suscipit nulla mollis. Nulla consequat neque sit amet neque venenatis feugiat. Proin placerat eget mauris sit amet tincidunt. Sed pulvinar purus sed ex varius, et lobortis risus efficitur. Integer blandit eu neque quis elementum. Vivamus lacinia sem non lacinia eleifend. Integer sit amet est ac risus tempus iaculis sed quis leo. Proin eu dui tincidunt orci ornare elementum. Curabitur molestie enim scelerisque, porttitor ipsum vitae, posuere libero. Donec finibus placerat accumsan. Nam et arcu lacus.
+
+Proin sed dui gravida nibh faucibus sodales ut sit amet dolor. Pellentesque ornare neque ac ante sagittis posuere. Maecenas ullamcorper pellentesque aliquet. Vestibulum ipsum ipsum, hendrerit eu venenatis eget, tempor aliquet ex. Etiam sed nunc eu orci condimentum consequat. Praesent commodo sem a lorem consequat, nec vestibulum elit dignissim. Sed fermentum maximus neque, non vestibulum felis. Quisque vulputate vehicula massa, sit amet accumsan purus condimentum nec. Ut tincidunt in purus sit amet lobortis. Nunc et eros vel elit sodales mollis. Aenean facilisis justo libero, at mollis arcu rutrum eget. Aenean rutrum, orci pretium faucibus auctor, tellus quam tincidunt diam, et feugiat turpis lectus nec sem.
+
+Donec et ipsum urna. Vestibulum consequat risus vitae orci consectetur ornare id id ligula. Donec ac nunc venenatis, volutpat elit eget, eleifend ex. Fusce eget odio sed tortor luctus feugiat. Maecenas lobortis nulla sit amet nisl egestas vulputate. Aliquam a placerat nunc. Fusce porta ultricies tortor, vitae dictum elit aliquet ac. In massa sapien, lobortis laoreet odio dignissim, congue blandit nibh. Quisque et iaculis eros, sed pretium felis. Praesent venenatis porta odio sed vulputate. Vivamus lacus nulla, lacinia non commodo id, ultricies nec arcu. Donec scelerisque pretium mollis. Etiam eu facilisis leo.
+
+Curabitur vulputate euismod massa, pulvinar tincidunt arcu vestibulum ut. Sed eu tempus velit, at porttitor justo. In eget turpis fermentum nibh euismod vestibulum. Proin vitae malesuada ipsum. Nunc at aliquet erat, sed maximus tortor. Cras tristique consequat elit, ut venenatis elit feugiat et. In malesuada, erat a tempus vehicula, nulla justo efficitur mauris, vitae ornare lectus massa eu sapien. Nam libero diam, gravida ac dapibus sed, hendrerit sed libero. Sed fringilla enim vel elit finibus congue. Fusce tristique, neque sit amet blandit posuere, ex urna malesuada ligula, ut sodales dolor est vitae lectus. Sed pharetra tincidunt pulvinar. Fusce sit amet finibus nulla, vel maximus tellus. Etiam in nisl ex. Fusce tempus augue lectus, eu sagittis arcu tempor id. Sed feugiat venenatis semper. Cras eget mollis nisi.
+
+Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat malesuada commodo id vel dolor. Etiam sem magna, placerat lobortis mattis a, tincidunt at nisi. Ut gravida arcu purus, eu feugiat turpis accumsan non. Sed sit amet varius enim, sed ornare ante. Integer porta felis felis. Vestibulum euismod velit sit amet eleifend posuere. Cras laoreet fermentum condimentum. Suspendisse potenti. Donec iaculis sodales vestibulum. Etiam quis dictum nisl. Fusce dui ex, viverra nec lacus sed, tincidunt accumsan odio. Nulla sit amet ipsum eros. Curabitur et lectus ut nisi lobortis sollicitudin a eu turpis. Etiam molestie purus vitae porttitor auctor.
+";
+
+
     private readonly TabContainer _tabContainer;
 
     public UITestControl()
@@ -136,6 +147,48 @@ internal sealed class UITestControl : Control
                 },
             }
         });
+
+        _tabContainer.AddChild(TabTextEdit());
+        _tabContainer.AddChild(TabRichText());
+    }
+
+    private Control TabTextEdit()
+    {
+        var textEdit = new TextEdit();
+        TabContainer.SetTabTitle(textEdit, "TextEdit");
+
+        var rope = new Rope.Branch(new Rope.Leaf(""), null);
+
+        var startIndex = 0;
+        while (true)
+        {
+            var nextIndex = Lipsum.IndexOf(' ', startIndex);
+            var str = nextIndex == -1 ? Lipsum[startIndex..] : Lipsum[startIndex..(nextIndex+1)];
+
+            rope = new Rope.Branch(rope, new Rope.Leaf(str));
+            if (rope.Depth > 250)
+                rope = (Rope.Branch)Rope.Rebalance(rope);
+
+            if (nextIndex == -1)
+                break;
+
+            startIndex = nextIndex + 1;
+        }
+
+        rope = (Rope.Branch) Rope.Rebalance(rope);
+
+        textEdit.TextRope = rope;
+
+        return textEdit;
+    }
+
+    private Control TabRichText()
+    {
+        var label = new RichTextLabel();
+        label.SetMessage(FormattedMessage.FromMarkup(Lipsum));
+
+        TabContainer.SetTabTitle(label, "RichText");
+        return label;
     }
 
     public void SelectTab(Tab tab)
@@ -151,6 +204,8 @@ internal sealed class UITestControl : Control
         RadioButtons = 3,
         Slider = 4,
         Untitled4 = 5,
+        TextEdit = 6,
+        RichText = 7,
     }
 }
 

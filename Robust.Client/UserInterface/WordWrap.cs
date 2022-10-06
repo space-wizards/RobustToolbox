@@ -17,6 +17,7 @@ internal struct WordWrap
     public float MaxUsedWidth;
     // Index we put into the LineBreaks list when a line break should occur.
     public int BreakIndexCounter;
+    public int NextBreakIndexCounter;
     // If the CURRENT processing word ends up too long, this is the index to put a line break.
     public (int index, float lineSize)? WordStartBreakIndex;
     // Word size in pixels.
@@ -37,7 +38,8 @@ internal struct WordWrap
 
     public void NextRune(Rune rune, out int? breakLine, out int? breakNewLine, out bool skip)
     {
-        BreakIndexCounter += 1;
+        BreakIndexCounter = NextBreakIndexCounter;
+        NextBreakIndexCounter += rune.Utf16SequenceLength;
 
         breakLine = null;
         breakNewLine = null;

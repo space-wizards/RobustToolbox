@@ -16,6 +16,11 @@
         <ActualOS>MacOS</ActualOS>
       </PropertyGroup>
     </When>
+    <When Condition="$([MSBuild]::IsOSPlatform('FreeBSD'))">
+      <PropertyGroup>
+        <ActualOS>FreeBSD</ActualOS>
+      </PropertyGroup>
+    </When>
     <Otherwise>
       <PropertyGroup>
         <ActualOS>Linux</ActualOS>
@@ -30,5 +35,6 @@
     <EnableClientScripting>True</EnableClientScripting>
     <!-- Client scripting is disabled on full release builds for security and size reasons. -->
     <EnableClientScripting Condition="'$(FullRelease)' == 'True'">False</EnableClientScripting>
+    <UseSystemSqlite Condition="'$(TargetOS)' == 'FreeBSD'">True</UseSystemSqlite>
   </PropertyGroup>
 </Project>

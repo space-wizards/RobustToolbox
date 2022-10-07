@@ -26,4 +26,7 @@
   <PropertyGroup Condition="'$(EnableClientScripting)' == 'True'">
     <DefineConstants>$(DefineConstants);CLIENT_SCRIPTING</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(UseSystemSqlite)' == 'True'">
+    <DefineConstants>$(DefineConstants);USE_SYSTEM_SQLITE</DefineConstants>
+  </PropertyGroup>
 </Project>

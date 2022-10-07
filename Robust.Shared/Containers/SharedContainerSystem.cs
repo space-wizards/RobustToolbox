@@ -391,14 +391,12 @@ namespace Robust.Shared.Containers
         /// </summary>
         public void CleanContainer(IContainer container)
         {
-            var count = container.ContainedEntities.Count;
-
-            if (count == 0)
+            if (container.ContainedEntities.Count == 0)
                 return;
 
             var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < container.ContainedEntities.Count; i++)
             {
                 var ent = container.ContainedEntities[i];
 

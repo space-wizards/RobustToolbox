@@ -389,9 +389,10 @@ namespace Robust.Shared.Physics.Systems
         public bool TryGetDistance(EntityUid uidA, EntityUid uidB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null)
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            return TryGetNearest(uidA, uidB, out _, out _, out distance, xformA, xformB, managerA, managerB);
+            return TryGetNearest(uidA, uidB, out _, out _, out distance, xformA, xformB, managerA, managerB, bodyA, bodyB);
         }
 
         /// <summary>
@@ -400,26 +401,32 @@ namespace Robust.Shared.Physics.Systems
         public bool TryGetNearestPoints(EntityUid uidA, EntityUid uidB,
             out Vector2 pointA, out Vector2 pointB,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null)
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, managerA, managerB);
+            return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, managerA, managerB, bodyA, bodyB);
         }
 
         /// <summary>
-        /// Gets the nearest points in map terms and the distance between them for non-sensor proxies.
+        /// Gets the nearest points in map terms and the distance between them.
+        /// If a body is hard it only considers hard fixtures.
         /// </summary>
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
             out Vector2 pointA,
             out Vector2 pointB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-        FixturesComponent? managerA = null, FixturesComponent? managerB = null)
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
             pointA = Vector2.Zero;
             pointB = Vector2.Zero;
 
-            if (!Resolve(uidA, ref managerA, ref xformA) || !Resolve(uidB, ref managerB, ref xformB) ||
-                xformA.MapUid != xformB.MapUid)
+            if (!Resolve(uidA, ref managerA, ref xformA, ref bodyA) ||
+                !Resolve(uidB, ref managerB, ref xformB, ref bodyB) ||
+                xformA.MapUid != xformB.MapUid ||
+                managerA.FixtureCount == 0 ||
+                managerB.FixtureCount == 0)
             {
                 distance = 0f;
                 return false;
@@ -439,14 +446,14 @@ namespace Robust.Shared.Physics.Systems
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var (_, fixtureA) in managerA.Fixtures)
             {
-                if (!fixtureA.Hard)
+                if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
                 DebugTools.Assert(fixtureA.ProxyCount <= 1);
 
                 foreach (var (_, fixtureB) in managerB.Fixtures)
                 {
-                    if (!fixtureB.Hard)
+                    if (bodyB.Hard && !fixtureB.Hard)
                         continue;
 
                     DebugTools.Assert(fixtureB.ProxyCount <= 1);

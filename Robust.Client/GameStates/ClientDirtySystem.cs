@@ -37,6 +37,9 @@ internal sealed class ClientDirtySystem : EntitySystem
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
     {
+        if (args.Terminating)
+            return;
+
         var comp = args.BaseArgs.Component;
         if (!_timing.InPrediction || comp.Owner.IsClientSide() || !comp.NetSyncEnabled)
             return;
@@ -44,12 +47,6 @@ internal sealed class ClientDirtySystem : EntitySystem
         // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.
         if (comp.CreationTick > _timing.LastRealTick)
             return;
-
-        // TODO if entity deletion ever gets predicted, then to speed this function up the component removal event
-        // should probably get an arg that specifies whether removal is occurring because of entity deletion. AKA: I
-        // don't want to have to fetch the meta-data component 10+ times for each entity that gets deleted. Currently
-        // server-induced deletions should get ignored, as _timing.InPrediction will be false while applying game
-        // states.
 
         var netId = _compFact.GetRegistration(comp).NetID;
         if (netId != null)

@@ -126,9 +126,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             {
                 foreach (var compChange in entityState.ComponentChanges.Span)
                 {
-                    if (!compChange.Created)
-                        continue;
-
                     if (compChange.State is MapComponentState mapCompState)
                     {
                         var mapEuid = entityState.Uid;

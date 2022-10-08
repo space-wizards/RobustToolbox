@@ -536,7 +536,7 @@ namespace Robust.Client.GameStates
                 }
 
                 var meta = query.GetComponent(entity);
-                DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
+                DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 

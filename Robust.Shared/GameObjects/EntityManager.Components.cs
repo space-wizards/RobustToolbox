@@ -112,9 +112,14 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
+            DebugTools.Assert(metadata == null || metadata.Owner == uid);
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
+
+            // ensure that modified networked components get sent when PVS is disabled:
+            metadata.EntityLastModifiedTick = _gameTiming.CurTick;
+            EntityDirtied?.Invoke(uid);
 
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<Component?> compsFixed = default;
@@ -316,9 +321,6 @@ namespace Robust.Shared.GameObjects
                 }
 
                 netSet.Add(netId, component);
-
-                // mark the component as dirty for networking
-                Dirty(component);
             }
             else
             {

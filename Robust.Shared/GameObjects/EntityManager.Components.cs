@@ -337,6 +337,9 @@ namespace Robust.Shared.GameObjects
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
+            if (component.Networked)
+                Dirty(uid, metadata);
+
             component.LifeInitialize(this, reg.Idx);
 
             if (metadata.EntityInitialized)

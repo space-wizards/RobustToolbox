@@ -510,7 +510,7 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
         }
 
-        private void InitializeAndStartEntity(EntityUid entity, MapId mapId)
+        public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
             try
             {
@@ -519,7 +519,7 @@ namespace Robust.Shared.GameObjects
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId))
+                if (_mapManager.IsMapInitialized(mapId ?? GetComponent<TransformComponent>(entity).MapID))
                     RunMapInit(entity, meta);
             }
             catch (Exception e)

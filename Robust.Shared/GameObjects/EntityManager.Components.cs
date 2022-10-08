@@ -117,10 +117,6 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 
-            // ensure that modified networked components get sent when PVS is disabled:
-            metadata.EntityLastModifiedTick = _gameTiming.CurTick;
-            EntityDirtied?.Invoke(uid);
-
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<Component?> compsFixed = default;
 

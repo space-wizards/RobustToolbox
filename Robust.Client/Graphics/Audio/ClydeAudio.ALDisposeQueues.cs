@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using OpenToolkit.Audio.OpenAL;
+using OpenTK.Audio.OpenAL;
 
 namespace Robust.Client.Graphics.Audio
 {

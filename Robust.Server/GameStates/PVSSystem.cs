@@ -1054,6 +1054,9 @@ internal sealed partial class PVSSystem : EntitySystem
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
 
+        bool sendCompList = meta.LastComponentRemoved > fromTick;
+        HashSet<ushort>? netComps = sendCompList ? new() : null;
+
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
             if (!component.NetSyncEnabled)
@@ -1065,37 +1068,29 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-            // "not different from entity creation".
-            // i.e. when the client spawns the entity and loads the entity prototype,
-            // the data it deserializes from the prototype SHOULD be equal
-            // to what the component state / ComponentChange would send.
-            // As such, we can avoid sending this data in this case since the client "already has it".
-
-            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-            var addState = component.CreationTick != GameTick.Zero && component.CreationTick > fromTick;
-            var changedState = component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick > fromTick;
-
-            if (!(addState || changedState))
-                continue;
-
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
+
+            if (component.LastModifiedTick <= fromTick)
+            {
+                if (sendCompList && (!component.SessionSpecific || EntityManager.CanGetComponentState(bus, component, player)))
+                    netComps!.Add(netId);
+                continue;
+            }
 
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = changedState ? EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null) : null;
-            changed.Add(ComponentChange.Added(netId, state, component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
+
+            if (sendCompList)
+                netComps!.Add(netId);
         }
 
-        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, fromTick))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
-        return new EntityState(entityUid, changed.ToArray(), meta.EntityLastModifiedTick);
+        return entState;
     }
 
     /// <summary>
@@ -1105,6 +1100,8 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
+
+        HashSet<ushort> netComps = new();
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -1117,15 +1114,13 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            netComps.Add(netId);
         }
 
-        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, GameTick.Zero))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
-        return new EntityState(entityUid, changed.ToArray(), meta.EntityLastModifiedTick);
+        return entState;
     }
 
     private EntityUid[] GetSessionViewers(ICommonSession session)

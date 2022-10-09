@@ -173,18 +173,18 @@ public partial class EntitySystem
     ///     Marks an entity as dirty.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid)
+    protected void Dirty(EntityUid uid, MetaDataComponent? meta = null)
     {
-        EntityManager.Dirty(uid);
+        EntityManager.DirtyEntity(uid, meta);
     }
 
     /// <summary>
-    ///     Marks a component as dirty.
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(Component component)
+    protected void Dirty(Component component, MetaDataComponent? meta = null)
     {
-        EntityManager.Dirty(component);
+        EntityManager.Dirty(component, meta);
     }
 
     /// <summary>

@@ -252,13 +252,19 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Calling Dirty on a component will call this directly.
         /// </remarks>
-        public virtual void Dirty(EntityUid uid)
+        public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
         {
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
-                throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
-
-            var metadata = (MetaDataComponent)component;
+            if (metadata == null)
+            {
+                if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+                    throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
+                metadata = (MetaDataComponent)component;
+            }
+            else
+            {
+                DebugTools.Assert(metadata.Owner == uid);
+            }
 
             if (metadata.EntityLastModifiedTick == _gameTiming.CurTick) return;
 
@@ -270,7 +276,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public virtual void Dirty(Component component)
+        public virtual void Dirty(Component component, MetaDataComponent? meta = null)
         {
             var owner = component.Owner;
 
@@ -282,7 +288,7 @@ namespace Robust.Shared.GameObjects
             if (!component.NetSyncEnabled)
                 return;
 
-            Dirty(owner);
+            DirtyEntity(owner, meta);
             component.LastModifiedTick = CurrentTick;
         }
 
@@ -441,7 +447,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(out metadata, uid);
 
             metadata._entityPrototype = prototype;
-            Dirty(metadata);
+            Dirty(metadata, metadata);
 
             return entity;
         }

@@ -1,12 +1,13 @@
 ﻿using System;
+using BenchmarkDotNet.Mathematics;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Robust.Benchmarks.Exporters;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Robust.Benchmarks.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -14,11 +15,13 @@ namespace Robust.Benchmarks.Migrations
                 name: "BenchmarkRuns",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     GitHash = table.Column<string>(type: "text", nullable: false),
-                    RunDate = table.Column<DateTime>(type: "Date", nullable: false),
+                    RunDate = table.Column<DateTime>(type: "timestamptz", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Reports = table.Column<BenchmarkRunReport[]>(type: "jsonb", nullable: false)
+                    ParameterMapping = table.Column<string>(type: "text", nullable: false),
+                    Statistics = table.Column<Statistics>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -201,6 +201,7 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
+    [Virtual]
     public class PrototypeAttribute : Attribute
     {
         private readonly string type;

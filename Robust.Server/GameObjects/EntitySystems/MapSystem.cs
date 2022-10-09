@@ -38,7 +38,7 @@ namespace Robust.Server.GameObjects
 
                 foreach (var grid in toDelete)
                 {
-                    MapManager.DeleteGrid(grid.Index);
+                    MapManager.DeleteGrid(grid.GridEntityId);
                 }
             }
         }

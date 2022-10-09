@@ -269,7 +269,7 @@ namespace Robust.Client.GameStates
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
                 {
-                    _processor.UpdateFullRep(curState);
+                    _processor.UpdateFullRep(curState, _entities);
                 }
 
                 IEnumerable<EntityUid> createdEntities;
@@ -882,6 +882,22 @@ namespace Robust.Client.GameStates
             var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
 
+            // First remove any deleted components
+            if (curState?.NetComponents != null)
+            {
+                RemQueue<Component> toRemove = new();
+                foreach (var (id, comp) in _entities.GetNetComponents(uid))
+                {
+                    if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
+                        toRemove.Add(comp);
+                }
+
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(uid, comp);
+                }
+            }
+
             if (enteringPvs)
             {
                 // last-server state has already been updated with new information from curState
@@ -906,12 +922,6 @@ namespace Robust.Client.GameStates
             {
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
-                    if (compChange.Deleted)
-                    {
-                        _entityManager.RemoveComponent(uid, compChange.NetID);
-                        continue;
-                    }
-
                     if (!_entityManager.TryGetComponent(uid, compChange.NetID, out var comp))
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
@@ -1097,10 +1107,10 @@ namespace Robust.Client.GameStates
 
             var uid = meta.Owner;
 
-            if (!_processor.TryGetLastServerStates(uid, out var data))
+            if (!_processor.TryGetLastServerStates(uid, out var lastState))
                 return;
 
-            foreach (var (id, state) in data)
+            foreach (var (id, state) in lastState)
             {
                 if (!_entityManager.TryGetComponent(uid, id, out var comp))
                 {
@@ -1113,6 +1123,19 @@ namespace Robust.Client.GameStates
                 var handleState = new ComponentHandleState(state, null);
                 _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
                 comp.HandleComponentState(state, null);
+            }
+
+            // ensure we don't have any extra components
+            RemQueue<Component> toRemove = new();
+            foreach (var (id, comp) in _entities.GetNetComponents(uid))
+            {
+                if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
+                    toRemove.Add(comp);
+            }
+
+            foreach (var comp in toRemove)
+            {
+                _entities.RemoveComponent(uid, comp);
             }
         }
         #endregion

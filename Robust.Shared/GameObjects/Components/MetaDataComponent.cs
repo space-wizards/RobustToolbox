@@ -68,6 +68,12 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
+        ///     This is the most recent tick at which some component was removed from this entity.
+        /// </summary>
+        [ViewVariables]
+        public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;
+
+        /// <summary>
         ///     The in-game name of this entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]

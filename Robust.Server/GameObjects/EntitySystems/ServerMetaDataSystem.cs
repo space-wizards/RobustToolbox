@@ -42,11 +42,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     private void OnComponentRemoved(RemovedComponentEventArgs obj)
     {
         var removed = obj.BaseArgs.Component;
-        if (!removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
-            return;
-
-        var meta = MetaData(obj.BaseArgs.Owner);
-        if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+        if (obj.Terminating || !removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
             return;
 
         foreach (var (_, comp) in EntityManager.GetNetComponents(obj.BaseArgs.Owner))
@@ -59,7 +55,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         }
 
         // remove the flag
-        meta.Flags &= ~MetaDataFlags.SessionSpecific;
+        MetaData(obj.BaseArgs.Owner).Flags &= ~MetaDataFlags.SessionSpecific;
     }
 
     /// <summary>

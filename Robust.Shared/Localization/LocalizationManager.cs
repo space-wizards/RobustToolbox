@@ -180,18 +180,27 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
-            var bundle = LinguiniBuilder.Builder()
-                .CultureInfo(culture)
-                .SkipResources()
-                .SetUseIsolating(false)
-                .UseConcurrent()
-                .UncheckedBuild();
+            _contexts.TryGetValue(culture, out var bundle);
 
-            _contexts.Add(culture, bundle);
-            AddBuiltInFunctions(bundle);
+            if (!_contexts.ContainsKey(culture))
+            {
+                bundle = LinguiniBuilder.Builder()
+                    .CultureInfo(culture)
+                    .SkipResources()
+                    .SetUseIsolating(false)
+                    .UseConcurrent()
+                    .UncheckedBuild();
+
+                _contexts.Add(culture, bundle);
+                AddBuiltInFunctions(bundle);
+            }else if (bundle == null)
+            {
+                Logger.Error("LocalizationManager _context has a culture with a null bundle!");
+                return;
+            }
 
             _loadData(_res, culture, bundle);
-            DefaultCulture ??= culture;
+            DefaultCulture = culture;
         }
 
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)

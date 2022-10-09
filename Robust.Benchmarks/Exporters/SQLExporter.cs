@@ -164,7 +164,6 @@ public class BenchmarkRun
 
     public string ParameterMapping { get; set; } = string.Empty;
 
-    [Column(TypeName = "jsonb")]
     public Statistics Statistics { get; set; } = default!;
 
     public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)

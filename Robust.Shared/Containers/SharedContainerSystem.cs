@@ -167,7 +167,7 @@ namespace Robust.Shared.Containers
 
             if (meta == null)
             {
-                metas ??= GetEntityQuery<MetaDataComponent>();
+                metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
                 meta = metas.Value.GetComponent(uid);
             }
 
@@ -176,7 +176,7 @@ namespace Robust.Shared.Containers
 
             if (xform == null)
             {
-                xforms ??= GetEntityQuery<TransformComponent>();
+                xforms ??= EntityManager.GetEntityQuery<TransformComponent>();
                 xform = xforms.Value.GetComponent(uid);
             }
 
@@ -289,8 +289,8 @@ namespace Robust.Shared.Containers
             if (!uid.IsValid())
                 return false;
 
-            var conQuery = GetEntityQuery<ContainerManagerComponent>();
-            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var conQuery = EntityManager.GetEntityQuery<ContainerManagerComponent>();
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             var child = uid;
             var parent = xform.ParentUid;
 
@@ -327,9 +327,9 @@ namespace Robust.Shared.Containers
                 wasInContainer = true;
 
                 if (!force)
-                    return container.Remove(entity, EntityManager);
+                    return container.Remove(entity);
 
-                container.ForceRemove(entity, EntityManager);
+                container.ForceRemove(entity);
                 return true;
             }
 
@@ -354,35 +354,21 @@ namespace Robust.Shared.Containers
         public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
             bool attachToGridOrMap = false)
         {
-            if (container.ContainedEntities.Count == 0)
-                return;
-
-            var metaQuery = GetEntityQuery<MetaDataComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
-            for (var i = 0; i < container.ContainedEntities.Count; i++)
+            foreach (var entity in container.ContainedEntities.ToArray())
             {
-                var entity = container.ContainedEntities[i];
-
-                if (!metaQuery.TryGetComponent(entity, out var meta) ||
-                    meta.EntityDeleted ||
-                    !xformQuery.TryGetComponent(entity, out var xform))
-                {
+                if (Deleted(entity))
                     continue;
-                }
 
                 if (force)
-                    container.ForceRemove(entity, EntityManager, meta);
+                    container.ForceRemove(entity);
                 else
-                    container.Remove(entity, EntityManager, xform, meta);
+                    container.Remove(entity);
 
                 if (moveTo.HasValue)
-                    xform.Coordinates = moveTo.Value;
+                    Transform(entity).Coordinates = moveTo.Value;
 
                 if (attachToGridOrMap)
-                    xform.AttachToGridOrMap();
-
-                i--;
+                    Transform(entity).AttachToGridOrMap();
             }
         }
 
@@ -391,31 +377,18 @@ namespace Robust.Shared.Containers
         /// </summary>
         public void CleanContainer(IContainer container)
         {
-            if (container.ContainedEntities.Count == 0)
-                return;
-
-            var metaQuery = GetEntityQuery<MetaDataComponent>();
-
-            for (var i = 0; i < container.ContainedEntities.Count; i++)
+            foreach (var ent in container.ContainedEntities.ToArray())
             {
-                var ent = container.ContainedEntities[i];
-
-                if (!metaQuery.TryGetComponent(ent, out var meta) ||
-                    meta.EntityDeleted)
-                {
-                    continue;
-                }
-
-                container.ForceRemove(ent, EntityManager, meta);
+                if (Deleted(ent)) continue;
+                container.ForceRemove(ent);
                 Del(ent);
-                i--;
             }
         }
 
         public void AttachParentToContainerOrGrid(TransformComponent transform)
         {
-            if (!transform.ParentUid.IsValid()
-                || !TryGetContainingContainer(transform.ParentUid, out var container)
+            if (transform.Parent == null
+                || !TryGetContainingContainer(transform.Parent.Owner, out var container)
                 || !TryInsertIntoContainer(transform, container))
                 transform.AttachToGridOrMap();
         }
@@ -424,7 +397,7 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (Transform(container.Owner).ParentUid.IsValid()
+            if (Transform(container.Owner).Parent != null
                 && TryGetContainingContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
@@ -456,7 +429,7 @@ namespace Robust.Shared.Containers
             if (oldParentEntity == null || !EntityManager.EntityExists(oldParentEntity!.Value))
                 return;
 
-            if (EntityManager.TryGetComponent(oldParentEntity.Value, out IContainerManager? containerManager))
+            if (EntityManager.TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
         }
     }

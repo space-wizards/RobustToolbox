@@ -565,6 +565,11 @@ namespace Robust.Server.Maps
                     // designed to throw if something is broken, every grid must map to an ent
                     var gridComp = gridComps[index];
 
+                    // TODO Once maps have been updated (save+load), remove GridComponent.GridIndex altogether and replace it with:
+                    // var savedUid = ((ValueDataNode)yamlGrid["uid"]).Value;
+                    // var gridUid = UidEntityMap[int.Parse(savedUid)];
+                    // var gridComp = gridQuery.GetComponent(gridUid);
+
                     MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
                     SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
@@ -869,9 +874,8 @@ namespace Robust.Server.Maps
             {
                 WriteMetaSection();
                 WriteTileMapSection();
-                WriteGridSection();
-
                 PopulateEntityList();
+                WriteGridSection();
                 WriteEntitySection();
 
                 return RootNode.ToYaml();

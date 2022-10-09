@@ -195,6 +195,7 @@ namespace Robust.Server.Maps
             var info = new MappingDataNode();
             var chunkSeq = new SequenceDataNode();
 
+            gridn.Add("uid", serializationManager.WriteValue(value.GridEntityId, alwaysWrite, context));
             gridn.Add("settings", info);
             gridn.Add("chunks", chunkSeq);
 

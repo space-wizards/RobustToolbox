@@ -30,15 +30,10 @@ namespace Robust.Shared.GameObjects
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
-        [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
-        private int _gridIndex = 0;
-
-        internal int GridIndex
-        {
-            get => _gridIndex;
-            set => _gridIndex = value;
-        }
+        internal int GridIndex = 0;
+        // the grid section now writes the grid's EntityUID. as long as existing maps get updated (just a load+save),
+        // this can be removed
 
         private IMapGrid? _mapGrid;
 

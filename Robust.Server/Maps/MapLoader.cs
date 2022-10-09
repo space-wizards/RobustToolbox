@@ -921,10 +921,13 @@ namespace Robust.Server.Maps
                 var grids = new SequenceDataNode();
                 RootNode.Add("grids", grids);
 
+                int index = 0;
                 foreach (var grid in Grids)
                 {
+                    _serverEntityManager.GetComponent<MapGridComponent>(grid.GridEntityId).GridIndex = index;
                     var entry = _serializationManager.WriteValue(grid, context: this);
                     grids.Add(entry);
+                    index++;
                 }
             }
 

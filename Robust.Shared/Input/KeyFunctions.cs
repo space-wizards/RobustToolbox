@@ -46,6 +46,8 @@ namespace Robust.Shared.Input
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
+        public static readonly BoundKeyFunction TextCursorUp = "TextCursorUp";
+        public static readonly BoundKeyFunction TextCursorDown = "TextCursorDown";
         public static readonly BoundKeyFunction TextCursorWordLeft = "TextCursorWordLeft";
         public static readonly BoundKeyFunction TextCursorWordRight = "TextCursorWordRight";
         public static readonly BoundKeyFunction TextCursorBegin = "TextCursorBegin";
@@ -55,6 +57,8 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextCursorSelect = "TextCursorSelect";
         public static readonly BoundKeyFunction TextCursorSelectLeft = "TextCursorSelectLeft";
         public static readonly BoundKeyFunction TextCursorSelectRight = "TextCursorSelectRight";
+        public static readonly BoundKeyFunction TextCursorSelectUp = "TextCursorSelectUp";
+        public static readonly BoundKeyFunction TextCursorSelectDown = "TextCursorSelectDown";
         public static readonly BoundKeyFunction TextCursorSelectWordLeft = "TextCursorSelectWordLeft";
         public static readonly BoundKeyFunction TextCursorSelectWordRight = "TextCursorSelectWordRight";
         public static readonly BoundKeyFunction TextCursorSelectBegin = "TextCursorSelectBegin";

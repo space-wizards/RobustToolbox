@@ -605,7 +605,7 @@ namespace Robust.Shared.GameObjects
                     netSet.Remove(reg.NetID.Value);
 
                 if (!terminating && component.NetSyncEnabled)
-                    Dirty(entityUid);
+                    DirtyEntity(entityUid);
             }
 
             foreach (var refType in reg.References)

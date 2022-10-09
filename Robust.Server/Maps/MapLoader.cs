@@ -465,11 +465,8 @@ namespace Robust.Server.Maps
                                 // Though it's still in the prototype itself so creation doesn't need to be sent.
                                 castComp.ClearCreationTick();
                             }
-                            else
-                            {
-                                // New component that the prototype normally does not have, need to sync full data.
-                                continue;
-                            }
+
+                            continue;
                         }
 
                         // This component is not modified by the map file,

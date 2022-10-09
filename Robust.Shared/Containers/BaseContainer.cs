@@ -127,6 +127,9 @@ namespace Robust.Shared.Containers
             transform.LocalPosition = Vector2.Zero;
             transform.LocalRotation = Angle.Zero;
 
+            var gotInsertedEvent = new GotInsertedEvent(toinsert, this);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
+
             DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || !phys.Awake);
             return true;
         }

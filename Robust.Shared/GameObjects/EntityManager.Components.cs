@@ -338,7 +338,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             if (component.Networked)
-                Dirty(uid, metadata);
+                DirtyEntity(uid, metadata);
 
             component.LifeInitialize(this, reg.Idx);
 

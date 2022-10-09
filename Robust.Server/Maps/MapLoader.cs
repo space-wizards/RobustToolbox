@@ -1037,8 +1037,10 @@ namespace Robust.Server.Maps
                             if(compMapping == null) continue;
                         }
 
-                        // Don't need to write it if nothing was written!
-                        if (compMapping.Children.Count != 0)
+                        // Don't need to write it if nothing was written! Note that if this entity has no associated
+                        // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
+                        // information that needs to be written.
+                        if (compMapping.Children.Count != 0 || md.EntityPrototype == null)
                         {
                             compMapping.Add("type", new ValueDataNode(compName));
                             // Something actually got written!

@@ -135,6 +135,7 @@ class JsonOverrideTypeHandlerResolverFactory : TypeHandlerResolverFactory
             => null; // Let the built-in resolver do this
     }
 }
+
 public sealed class DesignTimeContextFactoryPostgres : IDesignTimeDbContextFactory<BenchmarkContext>
 {
     public BenchmarkContext CreateDbContext(string[] args)
@@ -164,6 +165,7 @@ public class BenchmarkRun
 
     public string ParameterMapping { get; set; } = string.Empty;
 
+    [Column(TypeName = "jsonb")]
     public Statistics Statistics { get; set; } = default!;
 
     public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)

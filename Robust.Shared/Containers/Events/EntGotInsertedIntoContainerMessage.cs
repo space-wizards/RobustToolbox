@@ -7,7 +7,7 @@ namespace Robust.Shared.Containers;
 /// Directed at the entity that was inserted successfully.
 /// </summary>
 [PublicAPI]
-public sealed class GotInsertedEvent : ContainerModifiedMessage
+public sealed class EntGotInsertedIntoContainerMessage : ContainerModifiedMessage
 {
-    public GotInsertedEvent(EntityUid entity, IContainer container) : base(entity, container) { }
+    public EntGotInsertedIntoContainerMessage(EntityUid entity, IContainer container) : base(entity, container) { }
 }

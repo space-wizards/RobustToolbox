@@ -115,6 +115,9 @@ namespace Robust.Shared.Containers
             transform.AttachParent(ownerTransform);
             InternalInsert(toinsert, oldParent, entMan);
 
+            var gotInsertedEvent = new EntGotInsertedIntoContainerMessage(toinsert, this);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
+
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
@@ -126,9 +129,6 @@ namespace Robust.Shared.Containers
             // calling code can save the local position before calling this function, and apply it afterwords.
             transform.LocalPosition = Vector2.Zero;
             transform.LocalRotation = Angle.Zero;
-
-            var gotInsertedEvent = new GotInsertedEvent(toinsert, this);
-            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
 
             DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || !phys.Awake);
             return true;

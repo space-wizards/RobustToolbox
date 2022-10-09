@@ -35,7 +35,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _drawOffset;
 
-        private CursorBlink _blink;
+        private TextEditShared.CursorBlink _blink;
         private readonly LineEditRenderBox _renderBox;
 
         private bool _mouseSelectingText;
@@ -410,13 +410,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordLeft)
                 {
-                    _selectionStart = _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.PrevWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordRight)
                 {
-                    _selectionStart = _cursorPosition = NextWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -444,13 +444,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordLeft)
                 {
-                    _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.PrevWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordRight)
                 {
-                    _cursorPosition = NextWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -745,102 +745,6 @@ namespace Robust.Client.UserInterface.Controls
             _getStyleBox().Draw(handle, PixelSizeBox);
         }
 
-        // Approach for NextWordPosition and PrevWordPosition taken from Avalonia.
-        internal static int NextWordPosition(string str, int cursor)
-        {
-            if (cursor >= str.Length)
-            {
-                return str.Length;
-            }
-
-            var charClass = GetCharClass(Rune.GetRuneAt(str, cursor));
-
-            var i = cursor;
-
-            IterForward(charClass);
-            IterForward(CharClass.Whitespace);
-
-            return i;
-
-            void IterForward(CharClass cClass)
-            {
-                while (i < str.Length)
-                {
-                    var rune = Rune.GetRuneAt(str, i);
-
-                    if (GetCharClass(rune) != cClass)
-                        break;
-
-                    i += rune.Utf16SequenceLength;
-                }
-            }
-        }
-
-        internal static int PrevWordPosition(string str, int cursor)
-        {
-            if (cursor == 0)
-            {
-                return 0;
-            }
-
-            var startRune = GetRuneBackwards(str, cursor - 1);
-            var charClass = GetCharClass(startRune);
-
-            var i = cursor;
-            IterBackward();
-
-            if (charClass == CharClass.Whitespace)
-            {
-                if (!Rune.TryGetRuneAt(str, i - 1, out var midRune))
-                    midRune = Rune.GetRuneAt(str, i - 2);
-                charClass = GetCharClass(midRune);
-
-                IterBackward();
-            }
-
-            return i;
-
-            void IterBackward()
-            {
-                while (i > 0)
-                {
-                    var rune = GetRuneBackwards(str, i - 1);
-
-                    if (GetCharClass(rune) != charClass)
-                        break;
-
-                    i -= rune.Utf16SequenceLength;
-                }
-            }
-
-            static Rune GetRuneBackwards(string str, int i)
-            {
-                return Rune.TryGetRuneAt(str, i, out var rune) ? rune : Rune.GetRuneAt(str, i - 1);
-            }
-        }
-
-        internal static CharClass GetCharClass(Rune rune)
-        {
-            if (Rune.IsWhiteSpace(rune))
-            {
-                return CharClass.Whitespace;
-            }
-
-            if (Rune.IsLetterOrDigit(rune))
-            {
-                return CharClass.AlphaNumeric;
-            }
-
-            return CharClass.Other;
-        }
-
-        internal enum CharClass : byte
-        {
-            Other,
-            AlphaNumeric,
-            Whitespace
-        }
-
         public sealed class LineEditEventArgs : EventArgs
         {
             public LineEdit Control { get; }
@@ -1012,31 +916,6 @@ namespace Robust.Client.UserInterface.Controls
                             color);
                     }
                 }
-            }
-        }
-    }
-
-    // Also used by TextEdit.
-    internal struct CursorBlink
-    {
-        private const float BlinkTime = 0.5f;
-
-        public bool CurrentlyLit;
-        public float Timer;
-
-        public void Reset()
-        {
-            CurrentlyLit = true;
-            Timer = BlinkTime;
-        }
-
-        public void FrameUpdate(FrameEventArgs args)
-        {
-            Timer -= args.DeltaSeconds;
-            if (Timer <= 0)
-            {
-                Timer += BlinkTime;
-                CurrentlyLit = !CurrentlyLit;
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.CustomControls;
@@ -21,7 +22,10 @@ public sealed class TextEdit : Control
 
     public LineBreakBias CursorBias { get; set; }
     private int _cursorPosition;
+
     private float? _horizontalCursorPos;
+
+    // TODO: Track cursor bias on selection start.
     private int _selectionStart;
 
     private ValueList<int> _lineBreaks;
@@ -35,7 +39,7 @@ public sealed class TextEdit : Control
     internal bool DebugOverlay;
     private Vector2? _lastMousePos;
 
-    private CursorBlink _blink;
+    private TextEditShared.CursorBlink _blink;
 
     public TextEdit()
     {
@@ -91,6 +95,29 @@ public sealed class TextEdit : Control
     // TODO: cache
     public int TextLength => (int)Rope.CalcTotalLength(TextRope);
 
+    private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
+    {
+        // @formatter:off
+        { EngineKeyFunctions.TextCursorLeft,            MoveType.Left      },
+        { EngineKeyFunctions.TextCursorRight,           MoveType.Right     },
+        { EngineKeyFunctions.TextCursorUp,              MoveType.Up        },
+        { EngineKeyFunctions.TextCursorDown,            MoveType.Down      },
+        { EngineKeyFunctions.TextCursorWordLeft,        MoveType.LeftWord  },
+        { EngineKeyFunctions.TextCursorWordRight,       MoveType.RightWord },
+        { EngineKeyFunctions.TextCursorBegin,           MoveType.Begin     },
+        { EngineKeyFunctions.TextCursorEnd,             MoveType.End       },
+
+        { EngineKeyFunctions.TextCursorSelectLeft,      MoveType.Left      | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectRight,     MoveType.Right     | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectUp,        MoveType.Up        | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectDown,      MoveType.Down      | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectWordLeft,  MoveType.LeftWord  | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectWordRight, MoveType.RightWord | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectBegin,     MoveType.Begin     | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectEnd,       MoveType.End       | MoveType.SelectFlag },
+        // @formatter:on
+    };
+
     protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
     {
         base.KeyBindDown(args);
@@ -98,117 +125,23 @@ public sealed class TextEdit : Control
         if (args.Handled)
             return;
 
-        if (args.Function == EngineKeyFunctions.TextCursorRight)
+        if (MoveTypeMap.TryGetValue(args.Function, out var moveType))
         {
-            if (_selectionStart != _cursorPosition)
-            {
-                _cursorPosition = _selectionStart = SelectionUpper;
-            }
-            else
-            {
-                var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
-                if (CursorBias == LineBreakBias.Top
-                    && _cursorPosition == lineEnd
-                    && _cursorPosition != TextLength
-                    && Rope.Index(TextRope, _cursorPosition) != '\n')
-                {
-                    CursorBias = LineBreakBias.Bottom;
-                }
-                else
-                {
-                    ShiftCursorRight();
+            var selectFlag = (moveType & MoveType.SelectFlag) != 0;
+            var newPos = CalcKeyMove(moveType & MoveType.ActionMask, selectFlag, out var keepH);
 
-                    CursorBias = LineBreakBias.Top;
-                }
+            (_cursorPosition, CursorBias) = newPos;
 
+            if (!selectFlag)
                 _selectionStart = _cursorPosition;
-            }
 
-            InvalidateHorizontalCursorPos();
-
-            args.Handle();
-        }
-        else if (args.Function == EngineKeyFunctions.TextCursorLeft)
-        {
-            if (_selectionStart != _cursorPosition)
-            {
-                _cursorPosition = _selectionStart = SelectionLower;
-            }
-            else
-            {
-                var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
-
-
-                if (CursorBias == LineBreakBias.Bottom && _cursorPosition == lineStart)
-                {
-                    CursorBias = LineBreakBias.Top;
-                }
-                else
-                {
-                    ShiftCursorLeft();
-
-                    CursorBias = Rope.Index(TextRope, _cursorPosition) == '\n'
-                        ? LineBreakBias.Top
-                        : LineBreakBias.Bottom;
-                }
-
-                _selectionStart = _cursorPosition;
-            }
-
-            InvalidateHorizontalCursorPos();
-
-            args.Handle();
-        }
-
-        if (args.Function == EngineKeyFunctions.TextCursorUp)
-        {
-            CacheHorizontalCursorPos();
-
-            var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
-
-            if (line == 0)
-            {
-                _cursorPosition = 0;
-
+            if (!keepH)
                 InvalidateHorizontalCursorPos();
-            }
-            else
-            {
-                line -= 1;
-
-                (_cursorPosition, CursorBias) = GetIndexAtHorizontalPos(line, _horizontalCursorPos!.Value);
-            }
-
-            _selectionStart = _cursorPosition;
 
             args.Handle();
         }
-        else if (args.Function == EngineKeyFunctions.TextCursorDown)
-        {
-            CacheHorizontalCursorPos();
 
-            var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
-
-            CursorBias = LineBreakBias.Bottom;
-
-            if (line == _lineBreaks.Count - 1)
-            {
-                _cursorPosition = TextLength;
-
-                InvalidateHorizontalCursorPos();
-            }
-            else
-            {
-                line += 1;
-
-                (_cursorPosition, CursorBias) = GetIndexAtHorizontalPos(line, _horizontalCursorPos!.Value);
-            }
-
-            _selectionStart = _cursorPosition;
-
-            args.Handle();
-        }
-        else if (args.Function == EngineKeyFunctions.TextBackspace)
+        if (args.Function == EngineKeyFunctions.TextBackspace)
         {
             if (Editable)
             {
@@ -324,30 +257,36 @@ public sealed class TextEdit : Control
         // Reset this so the cursor is always visible immediately after a keybind is pressed.
         _blink.Reset();
 
-        void ShiftCursorLeft()
+        [Pure]
+        int ShiftCursorLeft()
         {
             if (_cursorPosition == 0)
-                return;
+                return _cursorPosition;
 
-            _cursorPosition -= 1;
+            var pos = _cursorPosition - 1;
 
-            if (char.IsLowSurrogate(Rope.Index(TextRope, _cursorPosition)))
-                _cursorPosition -= 1;
+            if (char.IsLowSurrogate(Rope.Index(TextRope, pos)))
+                pos -= 1;
+
+            return pos;
         }
 
-        void ShiftCursorRight()
+        [Pure]
+        int ShiftCursorRight()
         {
             if (_cursorPosition == TextLength)
-                return;
+                return _cursorPosition;
 
-            _cursorPosition += 1;
+            var pos = _cursorPosition + 1;
 
             // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
             // (Because yes, I did myself too a week after writing it)
             // char.IsLowSurrogate(_text[_cursorPosition]) means "is the cursor between a surrogate pair"
             // because we ALREADY moved.
-            if (_cursorPosition != TextLength && char.IsLowSurrogate(Rope.Index(TextRope, _cursorPosition)))
-                _cursorPosition += 1;
+            if (pos != TextLength && char.IsLowSurrogate(Rope.Index(TextRope, pos)))
+                pos += 1;
+
+            return pos;
         }
 
         void CacheHorizontalCursorPos()
@@ -358,6 +297,118 @@ public sealed class TextEdit : Control
                 return;
 
             _horizontalCursorPos = GetHorizontalPositionAtIndex(_cursorPosition, CursorBias);
+        }
+
+        // NOTE: Much to my dismay, this isn't a pure function. It calls CacheHorizontalCursorPos().
+        CursorPos CalcKeyMove(MoveType type, bool select, out bool keepHorizontalCursorPos)
+        {
+            keepHorizontalCursorPos = false;
+
+            switch (type)
+            {
+                case MoveType.Left:
+                {
+                    if (_selectionStart != _cursorPosition && !select)
+                    {
+                        // TODO: Bias comes from selection start bias.
+                        return new CursorPos(SelectionLower, LineBreakBias.Bottom);
+                    }
+
+                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+                    if (CursorBias == LineBreakBias.Bottom && _cursorPosition == lineStart)
+                    {
+                        return new CursorPos(_cursorPosition, LineBreakBias.Top);
+                    }
+
+                    var newPos = ShiftCursorLeft();
+                    var bias = Rope.Index(TextRope, newPos) == '\n'
+                        ? LineBreakBias.Top
+                        : LineBreakBias.Bottom;
+
+                    return new CursorPos(newPos, bias);
+                }
+                case MoveType.Right:
+                {
+                    if (_selectionStart != _cursorPosition && !select)
+                    {
+                        // TODO: Bias comes from selection start bias.
+                        return new CursorPos(SelectionUpper, LineBreakBias.Top);
+                    }
+
+                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
+                    if (CursorBias == LineBreakBias.Top
+                        && _cursorPosition == lineEnd
+                        && _cursorPosition != TextLength
+                        && Rope.Index(TextRope, _cursorPosition) != '\n')
+                    {
+                        return new CursorPos(_cursorPosition, LineBreakBias.Bottom);
+                    }
+
+                    return new CursorPos(ShiftCursorRight(), LineBreakBias.Top);
+                }
+                case MoveType.LeftWord:
+                {
+                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition);
+                    var pos = _cursorPosition + TextEditShared.PrevWordPosition(runes.GetEnumerator());
+
+                    return new CursorPos(pos, LineBreakBias.Bottom);
+                }
+                case MoveType.RightWord:
+                {
+                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition);
+                    var pos = _cursorPosition + TextEditShared.NextWordPosition(runes.GetEnumerator());
+
+                    return new CursorPos(pos, LineBreakBias.Bottom);
+                }
+                case MoveType.Up:
+                {
+                    CacheHorizontalCursorPos();
+
+                    // TODO: From selection lower, not cursor pos.
+                    var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+                    if (line == 0)
+                    {
+                        // We're on the top line already, move to the start of it instead.
+                        return new CursorPos(0, LineBreakBias.Top);
+                    }
+
+                    keepHorizontalCursorPos = true;
+
+                    return GetIndexAtHorizontalPos(line - 1, _horizontalCursorPos!.Value);
+                }
+                case MoveType.Down:
+                {
+                    CacheHorizontalCursorPos();
+
+                    var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+                    // TODO: Isn't this off-by-one.
+                    if (line == _lineBreaks.Count - 1)
+                    {
+                        // On the last line already, move to the end of it.
+                        return new CursorPos(_cursorPosition, LineBreakBias.Top);
+                    }
+
+                    return GetIndexAtHorizontalPos(line + 1, _horizontalCursorPos!.Value);
+                }
+                case MoveType.Begin:
+                {
+                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
+                    if (Rope.Index(TextRope, lineStart) == '\n')
+                        lineStart += 1;
+
+                    return new CursorPos(lineStart, LineBreakBias.Bottom);
+                }
+                case MoveType.End:
+                {
+                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
+                    return new CursorPos(lineEnd, LineBreakBias.Top);
+                }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
         }
     }
 
@@ -710,7 +761,11 @@ public sealed class TextEdit : Control
 
                 CheckDrawCursors(LineBreakBias.Bottom);
 
-                baseLine.X += font.DrawChar(handle, rune, baseLine, scale, Color.White);
+                var color = Color.White;
+                if (count >= _master.SelectionLower && count < _master.SelectionUpper)
+                    color = Color.Red;
+
+                baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
 
                 count += rune.Utf16SequenceLength;
             }
@@ -769,6 +824,24 @@ public sealed class TextEdit : Control
     }
 
     public record struct CursorPos(int Index, LineBreakBias Bias);
+
+    [Flags]
+    private enum MoveType
+    {
+        // @formatter:off
+        Left       = 1 << 0,
+        Right      = 1 << 1,
+        LeftWord   = 1 << 2,
+        RightWord  = 1 << 3,
+        Up         = 1 << 4,
+        Down       = 1 << 5,
+        Begin      = 1 << 6,
+        End        = 1 << 7,
+
+        ActionMask         = (1 << 16) - 1,
+        SelectFlag         =  1 << 16,
+        // @formatter:on
+    }
 }
 
 // To run these, you need a Command input keybinding for them.

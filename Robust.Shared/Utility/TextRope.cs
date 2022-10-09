@@ -63,6 +63,34 @@ public static class Rope
         }
     }
 
+    public static IEnumerable<Leaf> CollectLeavesReverse(Node node)
+    {
+        var stack = new Stack<Branch>();
+
+        var leaf = RunTillLeaf(stack, node);
+        if (leaf != null)
+            yield return leaf;
+
+        while (stack.TryPop(out var branch))
+        {
+            leaf = RunTillLeaf(stack, branch.Left);
+            if (leaf != null)
+                yield return leaf;
+        }
+
+        static Leaf? RunTillLeaf(Stack<Branch> stack, Node? node)
+        {
+            while (node is Branch branch)
+            {
+                stack.Push(branch);
+
+                node = branch.Right;
+            }
+
+            return (Leaf?)node;
+        }
+    }
+
     // TODO: Move to struct enumerator with managed stack memory.
     public static IEnumerable<Rune> EnumerateRunes(Node node)
     {
@@ -87,6 +115,36 @@ public static class Rope
             }
 
             pos += rune.Utf16SequenceLength;
+        }
+    }
+
+    public static IEnumerable<Rune> EnumerateRunesReverse(Node node)
+    {
+        foreach (var leaf in CollectLeavesReverse(node))
+        {
+            // TODO: God forgive my LINQ sins
+            var enumerator = new StringEnumerateHelpers.SubstringReverseRuneEnumerator(leaf.Text, leaf.Text.Length);
+            while (enumerator.MoveNext())
+            {
+                yield return enumerator.Current;
+            }
+        }
+    }
+
+    public static IEnumerable<Rune> EnumerateRunesReverse(Node node, long endPos)
+    {
+        var pos = CalcTotalLength(node);
+
+        // TODO: Actually start at the position instead of skipping like a worse linked list thanks.
+
+        foreach (var rune in EnumerateRunesReverse(node))
+        {
+            if (pos <= endPos)
+            {
+                yield return rune;
+            }
+
+            pos -= rune.Utf16SequenceLength;
         }
     }
 

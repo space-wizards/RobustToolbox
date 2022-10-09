@@ -53,6 +53,18 @@ public static class TextRope_Test
     }
 
     [Test]
+    public static void TestCollectReverse()
+    {
+        var tree = BuildExample(out _);
+        var leaves = Rope.CollectLeavesReverse(tree).Select(x => x.Text).ToArray();
+
+        Assert.That(leaves, Is.EquivalentTo(new[]
+        {
+            "Hello ", "my ", "na", "me i", "s", " Simon"
+        }.Reverse()));
+    }
+
+    [Test]
     public static void TestCollapse()
     {
         var tree = BuildExample(out _);
@@ -80,6 +92,17 @@ public static class TextRope_Test
 
         tree = Rope.Delete(tree, 2, 11);
         Assert.That(Rope.Collapse(tree), Is.EqualTo("He is Simon"));
+    }
+
+    [Test]
+    public static void TestEnumerateRunesReverseSub()
+    {
+        var tree = BuildExample(out _);
+
+        var runes = Rope.EnumerateRunesReverse(tree, 10);
+        Assert.That(
+            runes,
+            Is.EquivalentTo("Hello my n".EnumerateRunes().Reverse()));
     }
 
     private static Rope.Node BuildExample(out ExampleTree tree)

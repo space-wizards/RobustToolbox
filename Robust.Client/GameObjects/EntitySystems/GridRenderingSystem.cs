@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects;
 
-internal sealed class GridRenderingSystem : EntitySystem
+internal class GridRenderingSystem : EntitySystem
 {
     private readonly IClydeInternal _clyde;
 

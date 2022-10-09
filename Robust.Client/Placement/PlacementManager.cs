@@ -334,7 +334,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(TileChangedEvent args)
         {
-            var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = MapManager.GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -740,9 +740,9 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var gridIdOpt = coordinates.GetGridUid(EntityManager);
+                var gridId = coordinates.GetGridId(EntityManager);
                 // If we have actually placed something on a valid grid...
-                if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+                if (gridId.IsValid())
                 {
                     var grid = MapManager.GetGrid(gridId);
 

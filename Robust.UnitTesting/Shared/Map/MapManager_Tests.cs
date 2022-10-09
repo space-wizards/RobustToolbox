@@ -46,11 +46,11 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            var grid = mapMan.CreateGrid(mapID);
+            var gridId = mapMan.CreateGrid(mapID).GridEntityId;
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid.GridEntityId), Is.False);
+            Assert.That(mapMan.GridExists(gridId), Is.False);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(mapMan.GridExists(EntityUid.Invalid), Is.False);
+            Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
             Assert.That(entMan.Deleted(oldEntity), Is.True);
 
         }

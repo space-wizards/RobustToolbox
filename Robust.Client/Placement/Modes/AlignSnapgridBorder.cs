@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -19,9 +18,9 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
             SnapSize = 1f;
-            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+            if (gridId.IsValid())
             {
                 Grid = pManager.MapManager.GetGrid(gridId);
                 SnapSize = Grid.TileSize; //Find snap size for the grid.

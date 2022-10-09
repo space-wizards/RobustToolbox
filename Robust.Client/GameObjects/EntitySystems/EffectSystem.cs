@@ -251,7 +251,7 @@ namespace Robust.Client.GameObjects
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if (_mapManager.GridExists(EmitterCoordinates.GetGridUid(_entityManager)))
+                if (_mapManager.GridExists(EmitterCoordinates.GetGridId(_entityManager)))
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter =

@@ -13,7 +13,13 @@ namespace Robust.Shared.Map
     [PublicAPI]
     public readonly struct TileRef : IEquatable<TileRef>, ISpanFormattable
     {
-        public static TileRef Zero => new(EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
+        public static TileRef Zero => new(GridId.Invalid, EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
+
+        /// <summary>
+        ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
+        /// </summary>
+        [Obsolete("Use EntityUids instead")]
+        public readonly GridId GridIndex;
 
         /// <summary>
         ///     Grid Entity this Tile belongs to.
@@ -38,8 +44,8 @@ namespace Robust.Shared.Map
         /// <param name="xIndex">Positional X index of this tile on the grid.</param>
         /// <param name="yIndex">Positional Y index of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
-        internal TileRef(EntityUid gridUid, int xIndex, int yIndex, Tile tile)
-            : this(gridUid, new Vector2i(xIndex, yIndex), tile) { }
+        internal TileRef(GridId gridId, EntityUid gridUid, int xIndex, int yIndex, Tile tile)
+            : this(gridId, gridUid, new Vector2i(xIndex, yIndex), tile) { }
 
         /// <summary>
         ///     Constructs a new instance of TileRef.
@@ -48,8 +54,9 @@ namespace Robust.Shared.Map
         /// <param name="gridUid">Identifier of the grid entity this tile belongs to.</param>
         /// <param name="gridIndices">Positional indices of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
-        internal TileRef(EntityUid gridUid, Vector2i gridIndices, Tile tile)
+        internal TileRef(GridId gridId, EntityUid gridUid, Vector2i gridIndices, Tile tile)
         {
+            GridIndex = gridId;
             GridUid = gridUid;
             GridIndices = gridIndices;
             Tile = tile;
@@ -91,7 +98,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool Equals(TileRef other)
         {
-            return GridUid.Equals(other.GridUid) &&
+            return GridIndex.Equals(other.GridIndex) &&
                    GridIndices.Equals(other.GridIndices) &&
                    Tile.Equals(other.Tile);
         }
@@ -125,7 +132,7 @@ namespace Robust.Shared.Map
         {
             unchecked
             {
-                var hashCode = GridUid.GetHashCode();
+                var hashCode = GridIndex.GetHashCode();
                 hashCode = (hashCode * 397) ^ GridIndices.GetHashCode();
                 hashCode = (hashCode * 397) ^ Tile.GetHashCode();
                 return hashCode;

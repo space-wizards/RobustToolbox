@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
 
         void OnComponentRemoved(MapGridComponent comp);
 
-        void ChunkRemoved(EntityUid gridId, MapChunk chunk);
+        void ChunkRemoved(GridId gridId, MapChunk chunk);
 
         /// <summary>
         /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.
@@ -46,8 +46,11 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
+        bool TryGetGridComp(GridId id, [NotNullWhen(true)] out IMapGridComponent? comp);
+        bool TryGetGridEuid(GridId id, [NotNullWhen(true)] out EntityUid? euid);
         void TrueGridDelete(MapGrid grid);
         void TrueDeleteMap(MapId mapId);
+        GridId GenerateGridId(GridId? forcedGridId);
         void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid);
         void OnGridBoundsChange(EntityUid uid, MapGrid grid);
     }

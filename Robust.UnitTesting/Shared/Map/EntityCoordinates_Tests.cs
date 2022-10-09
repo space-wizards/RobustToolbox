@@ -137,8 +137,8 @@ namespace Robust.UnitTesting.Shared.Map
             var mapEnt = mapManager.CreateNewMapEntity(mapId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new MapCoordinates(Vector2.Zero, mapId));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt).Coordinates.GetGridUid(entityManager), Is.Null);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.GetGridUid(entityManager), Is.Null);
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt).Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
         }
 
@@ -154,8 +154,8 @@ namespace Robust.UnitTesting.Shared.Map
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(gridEnt, Vector2.Zero));
 
             // Grids aren't parented to other grids.
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).Coordinates.GetGridUid(entityManager), Is.Null);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.GetGridUid(entityManager), Is.EqualTo(grid.GridEntityId));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.GetGridId(entityManager), Is.EqualTo(grid.Index));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(gridEnt));
         }
 

@@ -23,16 +23,16 @@ internal interface INetworkedMapManager : IMapManagerInternal
 
 internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
-    private readonly Dictionary<EntityUid, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
+    private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
 
-    public override void DeleteGrid(EntityUid gridId)
+    public override void DeleteGrid(GridId gridId)
     {
         base.DeleteGrid(gridId);
         // No point syncing chunk removals anymore!
         _chunkDeletionHistory.Remove(gridId);
     }
 
-    public override void ChunkRemoved(EntityUid gridId, MapChunk chunk)
+    public override void ChunkRemoved(GridId gridId, MapChunk chunk)
     {
         base.ChunkRemoved(gridId, chunk);
         if (!_chunkDeletionHistory.TryGetValue(gridId, out var chunks))
@@ -58,7 +58,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
             var chunkData = new List<GameStateMapData.ChunkDatum>();
 
-            if (_chunkDeletionHistory.TryGetValue(grid.GridEntityId, out var chunks))
+            if (_chunkDeletionHistory.TryGetValue(grid.Index, out var chunks))
             {
                 foreach (var (tick, indices) in chunks)
                 {
@@ -115,7 +115,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     }
 
     private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
-    private List<(MapId mapId, EntityUid euid, ushort chunkSize)> _newGrids = new();
+    private List<(MapId mapId, EntityUid euid, GridId gridId, ushort chunkSize)> _newGrids = new();
 
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
     {
@@ -160,7 +160,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                         DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridEuid}.");
 
-                        _newGrids.Add((gridMapId, gridEuid, chunkSize));
+                        _newGrids.Add((gridMapId, gridEuid, gridCompState.GridIndex, chunkSize));
                     }
                 }
             }
@@ -173,9 +173,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             _newMaps.Clear();
 
             // create all the new grids
-            foreach (var (mapId, euid, chunkSize) in _newGrids)
+            foreach (var (mapId, euid, gridId, chunkSize) in _newGrids)
             {
-                CreateGrid(mapId, chunkSize, euid);
+                CreateGrid(mapId, gridId, chunkSize, euid);
             }
             _newGrids.Clear();
         }

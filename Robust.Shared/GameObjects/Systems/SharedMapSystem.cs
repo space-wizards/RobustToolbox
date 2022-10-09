@@ -46,19 +46,21 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
-            var msg = new GridInitializeEvent(uid);
+#pragma warning disable CS0618
+            var msg = new GridInitializeEvent(uid, component.GridIndex);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
-            var msg = new GridStartupEvent(uid);
+#pragma warning disable CS0618
+            var msg = new GridStartupEvent(uid, component.GridIndex);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
+            RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
             MapManager.OnComponentRemoved(component);
         }
     }
@@ -97,20 +99,26 @@ namespace Robust.Shared.GameObjects
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
+        public GridId GridId { get; }
 
-        public GridStartupEvent(EntityUid uid)
+        public GridStartupEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
+            GridId = gridId;
         }
     }
 
     public sealed class GridRemovalEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
+        public GridId GridId { get; }
 
-        public GridRemovalEvent(EntityUid uid)
+        public GridRemovalEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
+            GridId = gridId;
         }
     }
 
@@ -120,10 +128,13 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        [Obsolete("Use EntityUids")]
+        public GridId GridId { get; }
 
-        public GridInitializeEvent(EntityUid uid)
+        public GridInitializeEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
+            GridId = gridId;
         }
     }
 #pragma warning restore CS0618

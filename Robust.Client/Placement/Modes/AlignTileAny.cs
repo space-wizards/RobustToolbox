@@ -16,7 +16,7 @@ namespace Robust.Client.Placement.Modes
 
             MouseCoords = ScreenToCursorGrid(mouseScreen).AlignWithClosestGridTile(SearchBoxSize, pManager.EntityManager, pManager.MapManager);
 
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridUid(pManager.EntityManager);
 
             if (!pManager.MapManager.TryGetGrid(gridId, out var mapGrid))
                 return;

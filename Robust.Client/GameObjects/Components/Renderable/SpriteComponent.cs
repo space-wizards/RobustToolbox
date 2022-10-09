@@ -1933,7 +1933,7 @@ namespace Robust.Client.GameObjects
                         _ => textureSize
                     };
                 }
-                
+
                 return Box2.CenteredAround(Offset, size * _scale);
             }
 

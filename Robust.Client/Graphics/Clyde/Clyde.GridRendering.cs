@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
+        private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
@@ -42,7 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var grid = (IMapGridInternal) mapGrid;
 
-                if (!_mapChunkData.ContainsKey(grid.Index))
+                if (!_mapChunkData.ContainsKey(grid.GridEntityId))
                 {
                     continue;
                 }
@@ -58,7 +58,7 @@ namespace Robust.Client.Graphics.Clyde
                         _updateChunkMesh(grid, chunk);
                     }
 
-                    var datum = _mapChunkData[grid.Index][chunk.Indices];
+                    var datum = _mapChunkData[grid.GridEntityId][chunk.Indices];
 
                     if (datum.TileCount == 0)
                     {
@@ -77,7 +77,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
 
             if (!data.TryGetValue(chunk.Indices, out var datum))
             {
@@ -145,11 +145,11 @@ namespace Robust.Client.Graphics.Clyde
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                vboSize, $"Grid {grid.Index} chunk {chunk.Indices} VBO");
+                vboSize, $"Grid {grid.GridEntityId} chunk {chunk.Indices} VBO");
             var ebo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                eboSize, $"Grid {grid.Index} chunk {chunk.Indices} EBO");
+                eboSize, $"Grid {grid.GridEntityId} chunk {chunk.Indices} EBO");
 
-            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Index} chunk {chunk.Indices} VAO");
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.GridEntityId} chunk {chunk.Indices} VAO");
             SetupVAOLayout();
             CheckGlError();
 
@@ -163,19 +163,19 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.Index].Add(chunk.Indices, datum);
+            _mapChunkData[grid.GridEntityId].Add(chunk.Indices, datum);
             return datum;
         }
 
         private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
         public void _setChunkDirty(IMapGrid grid, Vector2i chunk)
         {
-            var data = _mapChunkData[grid.Index];
+            var data = _mapChunkData[grid.GridEntityId];
             if (data.TryGetValue(chunk, out var datum))
             {
                 datum.Dirty = true;
@@ -195,20 +195,20 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
+            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
         {
-            var gridId = ev.GridId;
+            var gridId = ev.EntityUid;
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
-            var gridId = ev.GridId;
+            var gridId = ev.EntityUid;
 
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)

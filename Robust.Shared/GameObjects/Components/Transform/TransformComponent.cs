@@ -85,14 +85,6 @@ namespace Robust.Shared.GameObjects
         [Access(typeof(SharedTransformSystem))]
         internal EntityUid? _gridUid = null;
 
-        [Obsolete("Use GridUid")]
-        public GridId GridID
-        {
-            get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)
-                ? grid.GridIndex
-                : GridId.Invalid;
-        }
-
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
@@ -406,7 +398,7 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Local offset of this entity relative to its parent
-        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
+        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridUid"/> otherwise).
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]

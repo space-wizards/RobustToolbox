@@ -115,9 +115,6 @@ namespace Robust.Shared.Containers
             transform.AttachParent(ownerTransform);
             InternalInsert(toinsert, oldParent, entMan);
 
-            var gotInsertedEvent = new EntGotInsertedIntoContainerMessage(toinsert, this);
-            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
-
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
@@ -278,6 +275,8 @@ namespace Robust.Shared.Containers
         {
             DebugTools.Assert(!Deleted);
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
+            var gotInsertedEvent = new EntGotInsertedIntoContainerMessage(toinsert, this);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
             Manager.Dirty(entMan);
         }
 

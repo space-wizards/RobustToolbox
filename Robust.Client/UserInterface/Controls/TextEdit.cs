@@ -19,7 +19,9 @@ public sealed class TextEdit : Control
 {
     private readonly RenderBox _renderBox;
 
+    public LineBreakBias CursorBias { get; set; }
     private int _cursorPosition;
+    private float? _horizontalCursorPos;
     private int _selectionStart;
 
     private ValueList<int> _lineBreaks;
@@ -104,10 +106,25 @@ public sealed class TextEdit : Control
             }
             else
             {
-                ShiftCursorRight();
+                var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
+                if (CursorBias == LineBreakBias.Top
+                    && _cursorPosition == lineEnd
+                    && _cursorPosition != TextLength
+                    && Rope.Index(TextRope, _cursorPosition) != '\n')
+                {
+                    CursorBias = LineBreakBias.Bottom;
+                }
+                else
+                {
+                    ShiftCursorRight();
+
+                    CursorBias = LineBreakBias.Top;
+                }
 
                 _selectionStart = _cursorPosition;
             }
+
+            InvalidateHorizontalCursorPos();
 
             args.Handle();
         }
@@ -119,10 +136,75 @@ public sealed class TextEdit : Control
             }
             else
             {
-                ShiftCursorLeft();
+                var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+
+                if (CursorBias == LineBreakBias.Bottom && _cursorPosition == lineStart)
+                {
+                    CursorBias = LineBreakBias.Top;
+                }
+                else
+                {
+                    ShiftCursorLeft();
+
+                    CursorBias = Rope.Index(TextRope, _cursorPosition) == '\n'
+                        ? LineBreakBias.Top
+                        : LineBreakBias.Bottom;
+                }
 
                 _selectionStart = _cursorPosition;
             }
+
+            InvalidateHorizontalCursorPos();
+
+            args.Handle();
+        }
+
+        if (args.Function == EngineKeyFunctions.TextCursorUp)
+        {
+            CacheHorizontalCursorPos();
+
+            var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+            if (line == 0)
+            {
+                _cursorPosition = 0;
+
+                InvalidateHorizontalCursorPos();
+            }
+            else
+            {
+                line -= 1;
+
+                (_cursorPosition, CursorBias) = GetIndexAtHorizontalPos(line, _horizontalCursorPos!.Value);
+            }
+
+            _selectionStart = _cursorPosition;
+
+            args.Handle();
+        }
+        else if (args.Function == EngineKeyFunctions.TextCursorDown)
+        {
+            CacheHorizontalCursorPos();
+
+            var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+
+            CursorBias = LineBreakBias.Bottom;
+
+            if (line == _lineBreaks.Count - 1)
+            {
+                _cursorPosition = TextLength;
+
+                InvalidateHorizontalCursorPos();
+            }
+            else
+            {
+                line += 1;
+
+                (_cursorPosition, CursorBias) = GetIndexAtHorizontalPos(line, _horizontalCursorPos!.Value);
+            }
+
+            _selectionStart = _cursorPosition;
 
             args.Handle();
         }
@@ -164,6 +246,8 @@ public sealed class TextEdit : Control
                     // OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
                 }
 
+                InvalidateHorizontalCursorPos();
+
                 args.Handle();
             }
         }
@@ -195,6 +279,8 @@ public sealed class TextEdit : Control
                     // _updatePseudoClass();
                 }
 
+                InvalidateHorizontalCursorPos();
+
                 args.Handle();
             }
         }
@@ -202,12 +288,17 @@ public sealed class TextEdit : Control
         {
             InsertAtCursor("\n");
 
+            InvalidateHorizontalCursorPos();
+
             args.Handle();
         }
         else if (args.Function == EngineKeyFunctions.TextSelectAll)
         {
             _cursorPosition = TextLength;
             _selectionStart = 0;
+
+            InvalidateHorizontalCursorPos();
+
             args.Handle();
         }
         else if (args.Function == EngineKeyFunctions.UIClick || args.Function == EngineKeyFunctions.TextCursorSelect)
@@ -218,12 +309,14 @@ public sealed class TextEdit : Control
             // Find closest cursor position under mouse.
             var index = GetIndexAtPos(args.RelativePosition);
 
-            _cursorPosition = index;
+            (_cursorPosition, CursorBias) = index;
 
             if (args.Function != EngineKeyFunctions.TextCursorSelect)
             {
-                _selectionStart = index;
+                _selectionStart = _cursorPosition;
             }
+
+            InvalidateHorizontalCursorPos();
 
             args.Handle();
         }
@@ -256,6 +349,21 @@ public sealed class TextEdit : Control
             if (_cursorPosition != TextLength && char.IsLowSurrogate(Rope.Index(TextRope, _cursorPosition)))
                 _cursorPosition += 1;
         }
+
+        void CacheHorizontalCursorPos()
+        {
+            EnsureLineBreaksUpdated();
+
+            if (_horizontalCursorPos != null)
+                return;
+
+            _horizontalCursorPos = GetHorizontalPositionAtIndex(_cursorPosition, CursorBias);
+        }
+    }
+
+    private void InvalidateHorizontalCursorPos()
+    {
+        _horizontalCursorPos = null;
     }
 
     protected internal override void TextEntered(GUITextEventArgs args)
@@ -332,6 +440,7 @@ public sealed class TextEdit : Control
     private void UpdateLineBreaks(int pixelWidth)
     {
         _lineBreaks.Clear();
+        InvalidateHorizontalCursorPos();
 
         var font = GetFont();
         var scale = UIScale;
@@ -372,7 +481,7 @@ public sealed class TextEdit : Control
         _lineUpdateQueued = false;
     }
 
-    private int GetIndexAtPos(Vector2 position)
+    private CursorPos GetIndexAtPos(Vector2 position)
     {
         EnsureLineBreaksUpdated();
 
@@ -385,21 +494,30 @@ public sealed class TextEdit : Control
         var font = GetFont();
 
         var lineHeight = font.GetLineHeight(UIScale);
+        var lineIndex = (int)(clickPos.Y / lineHeight);
 
-        (int, int?) FindVerticalLine()
+        return GetIndexAtHorizontalPos(lineIndex, position.X);
+    }
+
+    private CursorPos GetIndexAtHorizontalPos(int line, float horizontalPos)
+    {
+        var contentBox = PixelSizeBox;
+        var font = GetFont();
+        horizontalPos *= UIScale;
+
+        (int, int) FindVerticalLine()
         {
             // Step one: find the vertical line containing the mouse position.
-            var lineIndex = (int)(clickPos.Y / lineHeight);
 
-            if (lineIndex > _lineBreaks.Count)
+            if (line > _lineBreaks.Count)
             {
                 // Below the last line, return the far end of the last line then.
-                return (TextLength, null);
+                return (TextLength, TextLength);
             }
 
             return (
-                lineIndex == 0 ? 0 : _lineBreaks[lineIndex - 1],
-                _lineBreaks.Count == lineIndex ? null : _lineBreaks[lineIndex]
+                line == 0 ? 0 : _lineBreaks[line - 1],
+                _lineBreaks.Count == line ? TextLength : _lineBreaks[line]
             );
         }
 
@@ -423,7 +541,7 @@ public sealed class TextEdit : Control
                 continue;
             }
 
-            if (chrPosX > clickPos.X)
+            if (chrPosX > horizontalPos)
             {
                 break;
             }
@@ -439,16 +557,74 @@ public sealed class TextEdit : Control
         }
 
         // Distance between the right side of the glyph overlapping the mouse and the mouse.
-        var distanceRight = chrPosX - clickPos.X;
+        var distanceRight = chrPosX - horizontalPos;
         // Same but left side.
-        var distanceLeft = clickPos.X - lastChrPosX;
+        var distanceLeft = horizontalPos - lastChrPosX;
         // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
         if (index > 0 && distanceRight > distanceLeft)
         {
             index = (int)Rope.RuneShiftLeft(index, TextRope);
         }
 
-        return index;
+        return new CursorPos(index, index == textIdx ? LineBreakBias.Bottom : LineBreakBias.Top);
+    }
+
+    private float GetHorizontalPositionAtIndex(int index, LineBreakBias bias)
+    {
+        EnsureLineBreaksUpdated();
+
+        var hPos = 0;
+        var font = GetFont();
+
+        var (_, lineStart, _) = GetLineForIndex(index, bias);
+        using var runeEnumerator = Rope.EnumerateRunes(TextRope, lineStart).GetEnumerator();
+
+        var i = lineStart;
+        while (true)
+        {
+            if (i >= index)
+                break;
+
+            if (!runeEnumerator.MoveNext())
+                break;
+
+            var rune = runeEnumerator.Current;
+            if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                hPos += metrics.Advance;
+
+            i += rune.Utf16SequenceLength;
+        }
+
+        return hPos;
+    }
+
+    private (int lineIdx, int lineStart, int lineEnd) GetLineForIndex(int index, LineBreakBias bias)
+    {
+        DebugTools.Assert(index >= 0);
+
+        EnsureLineBreaksUpdated();
+
+        if (_lineBreaks.Count == 0)
+            return (0, 0, TextLength);
+
+        int i;
+        for (i = 0; i < _lineBreaks.Count; i++)
+        {
+            var lineIdx = _lineBreaks[i];
+            if (bias == LineBreakBias.Bottom ? (lineIdx > index) : (lineIdx >= index))
+            {
+                if (i == 0)
+                {
+                    // First line
+                    return (0, 0, lineIdx);
+                }
+
+                return (i, _lineBreaks[i - 1], lineIdx);
+            }
+        }
+
+        // Position is on last line.
+        return (_lineBreaks.Count, _lineBreaks[^1], TextLength);
     }
 
     protected internal override void MouseExited()
@@ -467,6 +643,22 @@ public sealed class TextEdit : Control
 
     private sealed class RenderBox : Control
     {
+        private static readonly (Vector2, Vector2)[] ArrowUp =
+        {
+            ((8, 14), (8, 2)),
+            ((4, 7), (8, 2)),
+            ((12, 7), (8, 2)),
+        };
+
+        private static readonly (Vector2, Vector2)[] ArrowDown =
+        {
+            ((8, 14), (8, 2)),
+            ((4, 9), (8, 14)),
+            ((12, 9), (8, 14)),
+        };
+
+        private static readonly Vector2 ArrowSize = (16, 16);
+
         private readonly TextEdit _master;
         private Vector2? _lastMousePos;
 
@@ -479,7 +671,7 @@ public sealed class TextEdit : Control
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            int? drawIndexDebug = null;
+            CursorPos? drawIndexDebug = null;
             if (_master.DebugOverlay && _master._lastMousePos is { } mouse)
             {
                 drawIndexDebug = _master.GetIndexAtPos(mouse);
@@ -487,6 +679,14 @@ public sealed class TextEdit : Control
 
             var drawBox = PixelSizeBox;
             var font = _master.GetFont();
+
+            if (_master.DebugOverlay && _master._horizontalCursorPos is { } hPos)
+            {
+                handle.DrawLine(
+                    (hPos + drawBox.Left, drawBox.Top),
+                    (hPos + drawBox.Left, drawBox.Bottom),
+                    Color.Purple);
+            }
 
             var scale = UIScale;
             var baseLine = new Vector2(0, font.GetAscent(scale));
@@ -499,7 +699,7 @@ public sealed class TextEdit : Control
 
             foreach (var rune in Rope.EnumerateRunes(_master.TextRope))
             {
-                CheckDrawCursors();
+                CheckDrawCursors(LineBreakBias.Top);
 
                 if (lineBreakIndex < _master._lineBreaks.Count
                     && _master._lineBreaks[lineBreakIndex] == count)
@@ -508,17 +708,33 @@ public sealed class TextEdit : Control
                     lineBreakIndex += 1;
                 }
 
+                CheckDrawCursors(LineBreakBias.Bottom);
+
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, Color.White);
 
                 count += rune.Utf16SequenceLength;
             }
 
             // Also draw cursor if it's at the very end.
-            CheckDrawCursors();
+            CheckDrawCursors(LineBreakBias.Bottom);
+            CheckDrawCursors(LineBreakBias.Top);
 
-            void CheckDrawCursors()
+            // Draw cursor bias
+            if (_master.DebugOverlay)
             {
-                if (drawIndexDebug == count)
+                var arrow = _master.CursorBias == LineBreakBias.Bottom ? ArrowDown : ArrowUp;
+                foreach (var (to, from) in arrow)
+                {
+                    var offset = new Vector2(0, drawBox.Bottom - ArrowSize.Y);
+                    handle.DrawLine(to + offset, from + offset, Color.Green);
+                }
+            }
+
+            void CheckDrawCursors(LineBreakBias bias)
+            {
+                if (drawIndexDebug != null
+                    && drawIndexDebug.Value.Index == count
+                    && drawIndexDebug.Value.Bias == bias)
                 {
                     handle.DrawRect(
                         new UIBox2(
@@ -529,19 +745,30 @@ public sealed class TextEdit : Control
                         Color.Yellow);
                 }
 
-                if (_master._cursorPosition == count && _master.HasKeyboardFocus() && _master._blink.CurrentlyLit)
+                if (_master._cursorPosition == count
+                    && _master.HasKeyboardFocus()
+                    && _master._blink.CurrentlyLit
+                    && _master.CursorBias == bias)
                 {
                     handle.DrawRect(
                         new UIBox2(
                             baseLine.X,
-                            baseLine.Y - height  + descent,
+                            baseLine.Y - height + descent,
                             baseLine.X + 1,
-                            baseLine.Y  + descent),
+                            baseLine.Y + descent),
                         Color.White);
                 }
             }
         }
     }
+
+    public enum LineBreakBias
+    {
+        Top,
+        Bottom
+    }
+
+    public record struct CursorPos(int Index, LineBreakBias Bias);
 }
 
 // To run these, you need a Command input keybinding for them.

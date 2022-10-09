@@ -457,6 +457,13 @@ public sealed partial class EntityLookupSystem
 
     #region Grid Methods
 
+    [Obsolete("Use Grid EntityUid")]
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
+    }
+
     /// <summary>
     /// Returns the entities intersecting any of the supplied tiles. Faster than doing each tile individually.
     /// </summary>
@@ -497,6 +504,13 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    [Obsolete("Use Grid EntityUid")]
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, gridIndices, flags);
+    }
+
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
@@ -527,6 +541,13 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    [Obsolete("Use grid EntityUid")]
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, worldAABB, flags);
+    }
+
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
@@ -547,6 +568,13 @@ public sealed partial class EntityLookupSystem
 
         AddContained(intersecting, flags, xformQuery);
         return intersecting;
+    }
+
+    [Obsolete("Use grid EntityUid")]
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
+    {
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(grid.GridEntityId, worldBounds, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)

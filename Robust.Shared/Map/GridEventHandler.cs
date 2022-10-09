@@ -7,5 +7,5 @@ namespace Robust.Shared.Map
     /// </summary>
     /// <param name="mapId">Passed to the delegate given it may no longer be retrievable.</param>
     /// <param name="gridId">The index of the grid being changed.</param>
-    public delegate void GridEventHandler(MapId mapId, EntityUid gridId);
+    public delegate void GridEventHandler(MapId mapId, GridId gridId);
 }

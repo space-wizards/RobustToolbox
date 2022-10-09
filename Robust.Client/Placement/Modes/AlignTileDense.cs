@@ -1,5 +1,4 @@
-﻿using Robust.Shared.GameObjects;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -15,11 +14,11 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var tileSize = 1f;
-            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
 
-            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+            if (gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(gridId);
+                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }
 

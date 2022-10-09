@@ -241,7 +241,7 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.GridId).GridEntityId);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, TransformComponent xform, EntityQuery<TransformComponent> xforms)

@@ -246,13 +246,13 @@ namespace Robust.Server.Physics
                 var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
-                var newGrids = new EntityUid[grids.Count - 1];
+                var newGrids = new GridId[grids.Count - 1];
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
                     var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
-                    newGrids[i] = splitGrid.GridEntityId;
+                    newGrids[i] = splitGrid.Index;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
                     splitGrid.WorldPosition = gridPos;
@@ -310,7 +310,7 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.GridEntityId, tilePos, LookupFlags.None))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Index, tilePos, LookupFlags.None))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);
@@ -355,7 +355,7 @@ namespace Robust.Server.Physics
                 }
 
                 // Allow content to react to the grid being split...
-                var ev = new GridSplitEvent(newGrids, mapGrid.GridEntityId);
+                var ev = new GridSplitEvent(newGrids, mapGrid.Index);
                 RaiseLocalEvent(uid, ref ev, true);
 
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
@@ -745,14 +745,14 @@ public readonly struct GridSplitEvent
     /// <summary>
     ///     Contains the IDs of the newly created grids.
     /// </summary>
-    public readonly EntityUid[] NewGrids;
+    public readonly GridId[] NewGrids;
 
     /// <summary>
     ///     The grid that has been split.
     /// </summary>
-    public readonly EntityUid Grid;
+    public readonly GridId Grid;
 
-    public GridSplitEvent(EntityUid[] newGrids, EntityUid grid)
+    public GridSplitEvent(GridId[] newGrids, GridId grid)
     {
         NewGrids = newGrids;
         Grid = grid;

@@ -150,10 +150,11 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridIdOpt = GetGridUid(entityManager);
-            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+            var gridId = GetGridUid(entityManager);
+
+            if (gridId != null)
             {
-                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
+                return mapManager.GetGrid(gridId.Value).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);
@@ -201,6 +202,26 @@ namespace Robust.Shared.Map
 
             var localPos = entMan.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
             return new EntityCoordinates(entity, localPos);
+        }
+
+        /// <summary>
+        ///     Returns the Grid Id these coordinates are on.
+        ///     If none of the ancestors are a grid, returns <see cref="GridId.Invalid"/> grid instead.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
+        [Obsolete("Use GetGridUid")]
+        public GridId GetGridId(IEntityManager entityManager)
+        {
+            if (!IsValid(entityManager))
+                return GridId.Invalid;
+
+            var uid = entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
+
+            if (uid == null)
+                return GridId.Invalid;
+
+            return entityManager.GetComponent<IMapGridComponent>(uid.Value).GridIndex;
         }
 
         /// <summary>

@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            return int.TryParse(node.Value, out _)
+            return int.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing MapId");
         }

@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return decimal.TryParse(node.Value, out _)
+            return decimal.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing decimal value: {node.Value}");
         }

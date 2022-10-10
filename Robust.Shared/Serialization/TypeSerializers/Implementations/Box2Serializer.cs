@@ -45,10 +45,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
-            return float.TryParse(args[0], out _) &&
-                   float.TryParse(args[1], out _) &&
-                   float.TryParse(args[2], out _) &&
-                   float.TryParse(args[3], out _)
+            return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing values of Box2.");
         }

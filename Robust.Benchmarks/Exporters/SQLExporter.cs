@@ -170,7 +170,7 @@ public class BenchmarkRun
 
     public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)
     {
-        var runDate = DateTime.Now;
+        var runDate = DateTime.UtcNow;
         var name = summary.BenchmarksCases.First().FolderInfo;
 
         foreach (var benchmarkReport in summary.Reports)

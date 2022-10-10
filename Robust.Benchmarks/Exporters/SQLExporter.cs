@@ -171,7 +171,6 @@ public class BenchmarkRun
     public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)
     {
         var runDate = DateTime.UtcNow;
-        var name = summary.BenchmarksCases.First().FolderInfo;
 
         foreach (var benchmarkReport in summary.Reports)
         {
@@ -186,7 +185,7 @@ public class BenchmarkRun
 
             yield return new BenchmarkRun
             {
-                Name = name,
+                Name = benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo,
                 RunDate = runDate,
                 GitHash = gitHash,
                 ParameterMapping = paramString.ToString(),

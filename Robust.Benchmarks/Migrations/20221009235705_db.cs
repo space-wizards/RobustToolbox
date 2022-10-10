@@ -8,6 +8,7 @@ namespace Robust.Benchmarks.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("DELETE FROM BenchmarkRuns", true);
             migrationBuilder.RenameColumn(
                 name: "Reports",
                 table: "BenchmarkRuns",

@@ -130,6 +130,10 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
         {
+            // THis entity might be getting deleted before ever having been initialized.
+            if (component.ContactManager == null)
+                return;
+
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
             component.ContactManager.Shutdown();
         }

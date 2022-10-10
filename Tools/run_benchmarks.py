@@ -19,7 +19,7 @@ try:
     run(f"git clone {args.repo} repo_dir --recursive", shell=True, check=True)
     run(f"git checkout {args.commit}", shell=True, cwd="repo_dir", check=True)
     run("dotnet restore", cwd="repo_dir/Robust.Benchmarks", shell=True, check=True)
-    
+
     run_env = environ.copy()
     run_env["ROBUST_BENCHMARKS_ENABLE_SQL"] = "1"
     run_env["ROBUST_BENCHMARKS_SQL_ADDRESS"] = args.address
@@ -28,7 +28,7 @@ try:
     run_env["ROBUST_BENCHMARKS_SQL_PASSWORD"] = args.pwd
     run_env["ROBUST_BENCHMARKS_SQL_DATABASE"] = args.database
     run_env["GITHUB_SHA"] = args.commit
-    run("dotnet run --filter '*' --configuration Release",
+    run("dotnet run --filter 'Robust.Benchmarks.NumericsHelpers.AddBenchmark.Bench' --configuration Release",
         cwd=f"repo_dir/{args.project}",
         shell=True,
         check=True,

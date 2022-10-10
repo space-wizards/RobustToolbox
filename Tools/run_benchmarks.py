@@ -28,7 +28,7 @@ try:
     run_env["ROBUST_BENCHMARKS_SQL_PASSWORD"] = args.pwd
     run_env["ROBUST_BENCHMARKS_SQL_DATABASE"] = args.database
     run_env["GITHUB_SHA"] = args.commit
-    run("dotnet run --filter 'Robust.Benchmarks.NumericsHelpers.AddBenchmark.Bench' --configuration Release",
+    run("dotnet run --filter '*' --configuration Release",
         cwd=f"repo_dir/{args.project}",
         shell=True,
         check=True,

@@ -112,6 +112,7 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
+            DebugTools.Assert(metadata == null || metadata.Owner == uid);
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
@@ -316,9 +317,6 @@ namespace Robust.Shared.GameObjects
                 }
 
                 netSet.Add(netId, component);
-
-                // mark the component as dirty for networking
-                Dirty(component);
             }
             else
             {
@@ -338,6 +336,9 @@ namespace Robust.Shared.GameObjects
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
+
+            if (component.Networked)
+                DirtyEntity(uid, metadata);
 
             component.LifeInitialize(this, reg.Idx);
 

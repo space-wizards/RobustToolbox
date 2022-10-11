@@ -35,9 +35,12 @@ public sealed class TextEdit : Control
 
     public bool Editable { get; set; } = true;
 
+    private bool _mouseSelectingText;
+    private Vector2 _lastMouseSelectPos;
+
     // Debug overlay stuff.
     internal bool DebugOverlay;
-    private Vector2? _lastMousePos;
+    private Vector2? _lastDebugMousePos;
 
     private TextEditShared.CursorBlink _blink;
 
@@ -140,8 +143,7 @@ public sealed class TextEdit : Control
 
             args.Handle();
         }
-
-        if (args.Function == EngineKeyFunctions.TextBackspace)
+        else if (args.Function == EngineKeyFunctions.TextBackspace)
         {
             if (Editable)
             {
@@ -236,8 +238,8 @@ public sealed class TextEdit : Control
         }
         else if (args.Function == EngineKeyFunctions.UIClick || args.Function == EngineKeyFunctions.TextCursorSelect)
         {
-            // _mouseSelectingText = true;
-            // _lastMousePosition = args.RelativePosition.X;
+            _mouseSelectingText = true;
+            _lastMouseSelectPos = args.RelativePosition;
 
             // Find closest cursor position under mouse.
             var index = GetIndexAtPos(args.RelativePosition);
@@ -412,6 +414,16 @@ public sealed class TextEdit : Control
         }
     }
 
+    protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+    {
+        base.KeyBindUp(args);
+
+        if (args.Function == EngineKeyFunctions.UIClick || args.Function == EngineKeyFunctions.TextCursorSelect)
+        {
+            _mouseSelectingText = false;
+        }
+    }
+
     private void InvalidateHorizontalCursorPos()
     {
         _horizontalCursorPos = null;
@@ -442,6 +454,28 @@ public sealed class TextEdit : Control
         base.FrameUpdate(args);
 
         _blink.FrameUpdate(args);
+
+        if (_mouseSelectingText)
+        {
+            //var style = _getStyleBox();
+            var contentBox = PixelSizeBox;
+
+            /*
+            if (_lastMouseSelectPos < contentBox.Left)
+            {
+                _drawOffset = Math.Max(0, _drawOffset - (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay));
+            }
+            else if (_lastMousePosition > contentBox.Right)
+            {
+                // Will get clamped inside rendering code.
+                _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
+            }
+            */
+
+            var index = GetIndexAtPos(_lastMouseSelectPos);
+
+            (_cursorPosition, CursorBias) = index;
+        }
 
         EnsureLineBreaksUpdated();
     }
@@ -682,14 +716,15 @@ public sealed class TextEdit : Control
     {
         base.MouseExited();
 
-        _lastMousePos = null;
+        _lastDebugMousePos = null;
     }
 
     protected internal override void MouseMove(GUIMouseMoveEventArgs args)
     {
         base.MouseMove(args);
 
-        _lastMousePos = args.RelativePosition;
+        _lastDebugMousePos = args.RelativePosition;
+        _lastMouseSelectPos = args.RelativePosition;
     }
 
     private sealed class RenderBox : Control
@@ -723,7 +758,7 @@ public sealed class TextEdit : Control
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             CursorPos? drawIndexDebug = null;
-            if (_master.DebugOverlay && _master._lastMousePos is { } mouse)
+            if (_master.DebugOverlay && _master._lastDebugMousePos is { } mouse)
             {
                 drawIndexDebug = _master.GetIndexAtPos(mouse);
             }

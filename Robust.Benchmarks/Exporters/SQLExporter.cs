@@ -188,6 +188,12 @@ public class BenchmarkRun
                 if (i < parametersItems.Count - 1) paramString.Append(',');
             }
 
+            if (benchmarkReport.ResultStatistics == null)
+            {
+                Console.WriteLine($"err: No statistics available for {benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo}!");
+                continue;
+            }
+
             yield return new BenchmarkRun
             {
                 Name = benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo,
@@ -195,7 +201,7 @@ public class BenchmarkRun
                 GitHash = gitHash,
                 ParameterMapping = runParameters.Length > 0 ? paramString.ToString() : null,
                 ParameterMappingJson = runParameters.Length > 0 ? runParameters : null,
-                Statistics = benchmarkReport.ResultStatistics ?? new Statistics()
+                Statistics = benchmarkReport.ResultStatistics
             };
         }
     }

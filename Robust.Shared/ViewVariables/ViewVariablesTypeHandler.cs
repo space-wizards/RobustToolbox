@@ -56,13 +56,24 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
         throw new ArgumentException("The specified arguments were not found in the list!");
     }
 
+    /// <inheritdoc cref="AddPath"/>
+    /// <remarks>As opposed to <see cref="AddPath"/>, here the passed object is nullable.</remarks>
+    public ViewVariablesTypeHandler<T> AddNullablePath(string path, Func<T?, ViewVariablesFakePath?> handler)
+    {
+        _paths.Add(path, handler);
+        return this;
+    }
+
     /// <summary>
     ///     With this method you can register a handler to handle a specific path relative to the type instance.
     /// </summary>
     /// <returns>The same object instance, so you can chain method calls.</returns>
-    public ViewVariablesTypeHandler<T> AddPath(string path, Func<T?, ViewVariablesFakePath?> handler)
+    public ViewVariablesTypeHandler<T> AddPath(string path, Func<T, ViewVariablesFakePath?> handler)
     {
-        _paths.Add(path, handler);
+        ViewVariablesFakePath? Wrapper(T? t)
+            => t != null ? handler(t) : null;
+
+        _paths.Add(path, Wrapper);
         return this;
     }
 

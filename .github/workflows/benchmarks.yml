@@ -28,8 +28,12 @@ jobs:
         host: centcomm.spacestation14.io
         username: robust-benchmark-runner
         key: ${{ secrets.CENTCOMM_ROBUST_BENCHMARK_RUNNER_KEY }}
-        command_timeout: 100000m 
+        command_timeout: 100000m
         script: |
+          mkdir benchmark_run_${{ github.sha }}
+          cd benchmark_run_${{ github.sha }}
           wget https://raw.githubusercontent.com/space-wizards/RobustToolbox/${{ github.sha }}/Tools/run_benchmarks.py
           python3 run_benchmarks.py "${{ secrets.BENCHMARKS_WRITE_ADDRESS }}" "${{ secrets.BENCHMARKS_WRITE_PORT }}" "${{ secrets.BENCHMARKS_WRITE_USER }}" "${{ secrets.BENCHMARKS_WRITE_PASSWORD }}" "${{ github.sha }}"
           rm run_benchmarks.py
+          cd ..
+          rmdir benchmark_run_${{ github.sha }}

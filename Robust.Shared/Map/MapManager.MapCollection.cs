@@ -60,7 +60,7 @@ internal partial class MapManager
 
         foreach (var grid in grids)
         {
-            DeleteGrid(grid.Index);
+            DeleteGrid(grid.GridEntityId);
         }
 
         if (mapId != MapId.Nullspace)

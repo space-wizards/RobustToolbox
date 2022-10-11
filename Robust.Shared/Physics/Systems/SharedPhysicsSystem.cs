@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
@@ -46,6 +47,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly IManifoldManager _collision = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -128,6 +130,10 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
         {
+            // THis entity might be getting deleted before ever having been initialized.
+            if (component.ContactManager == null)
+                return;
+
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
             component.ContactManager.Shutdown();
         }
@@ -308,8 +314,7 @@ namespace Robust.Shared.Physics.Systems
             if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
                 return;
 
-            SetCanCollide(physics, true, false);
-            physics.Awake = true;
+            WakeBody(physics);
         }
 
         /// <summary>

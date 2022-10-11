@@ -54,7 +54,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing values for UIBox2.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, UIBox2 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, UIBox2 value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)}," +

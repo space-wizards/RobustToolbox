@@ -58,7 +58,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new PrototypeFlags<T>(flags);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, PrototypeFlags<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, PrototypeFlags<T> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new SequenceDataNode(value.ToArray());

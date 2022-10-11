@@ -111,7 +111,7 @@ namespace Robust.Client.GameObjects
         /// <exception cref="ArgumentNullException">
         ///     Thrown if <paramref name="key"/> is null.
         /// </exception>
-        bool LayerMapTryGet(object key, out int layer);
+        bool LayerMapTryGet(object key, out int layer, bool logError = false);
 
         /// <summary>
         ///     Create a new blank layer and add it to the layer map,

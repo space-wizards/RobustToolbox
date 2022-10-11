@@ -269,7 +269,7 @@ namespace Robust.Client.GameStates
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
                 {
-                    _processor.UpdateFullRep(curState);
+                    _processor.UpdateFullRep(curState, _entities);
                 }
 
                 IEnumerable<EntityUid> createdEntities;
@@ -368,7 +368,7 @@ namespace Robust.Client.GameStates
 
         public void RequestFullState(EntityUid? missingEntity = null)
         {
-            Logger.Info("Requesting full server state");
+            _sawmill.Info("Requesting full server state");
             _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
@@ -536,7 +536,7 @@ namespace Robust.Client.GameStates
                 }
 
                 var meta = query.GetComponent(entity);
-                DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
+                DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
@@ -837,7 +837,8 @@ namespace Robust.Client.GameStates
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("state", $"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}\n{e}");
+                        _sawmill.Error($"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
                         toCreate.Remove(entity);
                     }
@@ -858,7 +859,8 @@ namespace Robust.Client.GameStates
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("state", $"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}\n{e}");
+                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
                         toCreate.Remove(entity);
                     }
@@ -879,6 +881,22 @@ namespace Robust.Client.GameStates
         {
             var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
+
+            // First remove any deleted components
+            if (curState?.NetComponents != null)
+            {
+                RemQueue<Component> toRemove = new();
+                foreach (var (id, comp) in _entities.GetNetComponents(uid))
+                {
+                    if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
+                        toRemove.Add(comp);
+                }
+
+                foreach (var comp in toRemove)
+                {
+                    _entities.RemoveComponent(uid, comp);
+                }
+            }
 
             if (enteringPvs)
             {
@@ -904,12 +922,6 @@ namespace Robust.Client.GameStates
             {
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
-                    if (compChange.Deleted)
-                    {
-                        _entityManager.RemoveComponent(uid, compChange.NetID);
-                        continue;
-                    }
-
                     if (!_entityManager.TryGetComponent(uid, compChange.NetID, out var comp))
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
@@ -956,10 +968,10 @@ namespace Robust.Client.GameStates
                 catch (Exception e)
                 {
 #if EXCEPTION_TOLERANCE
-                _runtimeLog.LogException(new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}", e), "Component state apply");
+                        _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
 #else
-                    Logger.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                    _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
                     throw;
 #endif
                 }
@@ -1095,10 +1107,10 @@ namespace Robust.Client.GameStates
 
             var uid = meta.Owner;
 
-            if (!_processor.TryGetLastServerStates(uid, out var data))
+            if (!_processor.TryGetLastServerStates(uid, out var lastState))
                 return;
 
-            foreach (var (id, state) in data)
+            foreach (var (id, state) in lastState)
             {
                 if (!_entityManager.TryGetComponent(uid, id, out var comp))
                 {
@@ -1111,6 +1123,19 @@ namespace Robust.Client.GameStates
                 var handleState = new ComponentHandleState(state, null);
                 _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
                 comp.HandleComponentState(state, null);
+            }
+
+            // ensure we don't have any extra components
+            RemQueue<Component> toRemove = new();
+            foreach (var (id, comp) in _entities.GetNetComponents(uid))
+            {
+                if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
+                    toRemove.Add(comp);
+            }
+
+            foreach (var comp in toRemove)
+            {
+                _entities.RemoveComponent(uid, comp);
             }
         }
         #endregion

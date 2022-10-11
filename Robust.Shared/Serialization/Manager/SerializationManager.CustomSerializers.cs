@@ -169,7 +169,7 @@ namespace Robust.Shared.Serialization.Manager
             where TSerializer : ITypeWriter<T>
         {
             var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Write(this, value, alwaysWrite, context);
+            return serializer.Write(this, value, DependencyCollection, alwaysWrite, context);
         }
 
         private object CopyWithSerializerRaw(Type serializer, object source, ref object target, bool skipHook, ISerializationContext? context = null)

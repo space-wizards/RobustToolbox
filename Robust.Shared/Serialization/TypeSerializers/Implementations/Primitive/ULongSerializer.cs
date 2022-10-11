@@ -26,7 +26,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return ulong.Parse(node.ToString(), CultureInfo.InvariantCulture);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, ulong value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, ulong value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));

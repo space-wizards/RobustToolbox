@@ -5,8 +5,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
 {
@@ -320,7 +322,7 @@ namespace Robust.Shared.Physics.Systems
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
         {
             // ReSharper disable once ConvertToLocalFunction
-            var wrapper = (EntityUid uid, EntityUid? ignored)
+            var wrapper = static (EntityUid uid, EntityUid? ignored)
                 => uid == ignored;
 
             return IntersectRayWithPredicate(mapId, ray, ignoredEnt, wrapper, maxLength, returnOnFirstHit);
@@ -353,7 +355,8 @@ namespace Robust.Shared.Physics.Systems
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt) return true;
+                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt)
+                        return true;
 
                     if (!proxy.Fixture.Hard)
                         return true;
@@ -374,6 +377,100 @@ namespace Robust.Shared.Physics.Systems
             _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
 
             return penetration;
+        }
+
+        #endregion
+
+        #region Distance
+
+        /// <summary>
+        /// Gets the nearest distance of 2 entities, ignoring any sensor proxies.
+        /// </summary>
+        public bool TryGetDistance(EntityUid uidA, EntityUid uidB,
+            out float distance,
+            TransformComponent? xformA = null, TransformComponent? xformB = null,
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
+        {
+            return TryGetNearest(uidA, uidB, out _, out _, out distance, xformA, xformB, managerA, managerB, bodyA, bodyB);
+        }
+
+        /// <summary>
+        /// Get the nearest non-sensor points on entity A and entity B to each other.
+        /// </summary>
+        public bool TryGetNearestPoints(EntityUid uidA, EntityUid uidB,
+            out Vector2 pointA, out Vector2 pointB,
+            TransformComponent? xformA = null, TransformComponent? xformB = null,
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
+        {
+            return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, managerA, managerB, bodyA, bodyB);
+        }
+
+        /// <summary>
+        /// Gets the nearest points in map terms and the distance between them.
+        /// If a body is hard it only considers hard fixtures.
+        /// </summary>
+        public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
+            out Vector2 pointA,
+            out Vector2 pointB,
+            out float distance,
+            TransformComponent? xformA = null, TransformComponent? xformB = null,
+            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
+            PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
+        {
+            pointA = Vector2.Zero;
+            pointB = Vector2.Zero;
+
+            if (!Resolve(uidA, ref managerA, ref xformA, ref bodyA) ||
+                !Resolve(uidB, ref managerB, ref xformB, ref bodyB) ||
+                xformA.MapUid != xformB.MapUid ||
+                managerA.FixtureCount == 0 ||
+                managerB.FixtureCount == 0)
+            {
+                distance = 0f;
+                return false;
+            }
+
+            distance = float.MaxValue;
+            var input = new DistanceInput();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            var xfA = GetPhysicsTransform(uidA, xformA, xformQuery);
+            var xfB = GetPhysicsTransform(uidB, xformB, xformQuery);
+
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+
+            // No requirement on collision being enabled so chainshapes will fail
+            foreach (var (_, fixtureA) in managerA.Fixtures)
+            {
+                if (bodyA.Hard && !fixtureA.Hard)
+                    continue;
+
+                DebugTools.Assert(fixtureA.ProxyCount <= 1);
+
+                foreach (var (_, fixtureB) in managerB.Fixtures)
+                {
+                    if (bodyB.Hard && !fixtureB.Hard)
+                        continue;
+
+                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
+                    input.ProxyA.Set(fixtureA.Shape, 0);
+                    input.ProxyB.Set(fixtureB.Shape, 0);
+                    DistanceManager.ComputeDistance(out var output, out _, input);
+
+                    if (distance < output.Distance)
+                        continue;
+
+                    pointA = output.PointA;
+                    pointB = output.PointB;
+                    distance = output.Distance;
+                }
+            }
+
+            return true;
         }
 
         #endregion

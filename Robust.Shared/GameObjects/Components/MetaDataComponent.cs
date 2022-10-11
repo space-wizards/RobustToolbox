@@ -27,10 +27,16 @@ namespace Robust.Shared.GameObjects
         ///     The in-game description of this entity.
         /// </summary>
         public string? Description { get; }
+
         /// <summary>
         ///     The prototype this entity was created from, if any.
         /// </summary>
         public string? PrototypeId { get; }
+
+        /// <summary>
+        ///     When this entity was paused.
+        /// </summary>
+        public TimeSpan? PauseTime;
 
         /// <summary>
         ///     Constructs a new instance of <see cref="MetaDataComponentState"/>.
@@ -38,11 +44,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="name">The in-game name of this entity.</param>
         /// <param name="description">The in-game description of this entity.</param>
         /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
-        public MetaDataComponentState(string? name, string? description, string? prototypeId)
+        /// <param name="pauseTime">When this entity was paused.</param>
+        public MetaDataComponentState(string? name, string? description, string? prototypeId, TimeSpan? pauseTime)
         {
             Name = name;
             Description = description;
             PrototypeId = prototypeId;
+            PauseTime = pauseTime;
         }
     }
 
@@ -55,7 +63,11 @@ namespace Robust.Shared.GameObjects
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
-        internal bool _entityPaused;
+
+        /// <summary>
+        /// When this entity was paused, if applicable
+        /// </summary>
+        internal TimeSpan? PauseTime;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
@@ -66,6 +78,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables]
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
+
+        /// <summary>
+        ///     This is the most recent tick at which some component was removed from this entity.
+        /// </summary>
+        [ViewVariables]
+        public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;
 
         /// <summary>
         ///     The in-game name of this entity.
@@ -171,19 +189,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables]
-        public bool EntityPaused
-        {
-            get => _entityPaused;
-            [Obsolete("Call MetaDataSystem to change this.")]
-            set
-            {
-                if (_entityPaused == value)
-                    return;
-
-                _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
-            }
-        }
+        public bool EntityPaused => PauseTime != null;
 
         public bool EntityInitialized => EntityLifeStage >= EntityLifeStage.Initialized;
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;

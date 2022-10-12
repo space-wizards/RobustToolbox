@@ -9,6 +9,8 @@ namespace Robust.Shared;
 
 internal static class ProgramShared
 {
+    public static string PathOffset = "";
+
     public static void RunExecCommands(IConsoleHost consoleHost, IReadOnlyList<string>? commands)
     {
         if (commands == null)
@@ -23,12 +25,12 @@ internal static class ProgramShared
 #if !FULL_RELEASE
     private static string FindContentRootDir(bool contentStart)
     {
-        return contentStart ? "../../" : "../../../";
+        return PathOffset + (contentStart ? "../../" : "../../../");
     }
 
     private static string FindEngineRootDir(bool contentStart)
     {
-        return contentStart ? "../../RobustToolbox/" : "../../";
+        return PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
     }
 #endif
 

@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return decimal.TryParse(node.Value, out _)
+            return Parse.TryDecimal(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing decimal value: {node.Value}");
         }
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public decimal Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, decimal value = default)
         {
-            return decimal.Parse(node.Value, CultureInfo.InvariantCulture);
+            return Parse.Decimal(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, decimal value,

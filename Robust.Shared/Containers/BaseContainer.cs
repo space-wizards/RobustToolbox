@@ -148,8 +148,7 @@ namespace Robust.Shared.Containers
                 physicsSys.SetAngularVelocity(physics, 0, false);
                 physicsSys.SetCanCollide(physics, false, false);
 
-                if (jointQuery.TryGetComponent(xform.Owner, out var joint))
-                    jointSys.ClearJoints(joint);
+                jointSys.ClearJoints(xform.Owner);
             }
 
             foreach (var child in xform.ChildEntities)

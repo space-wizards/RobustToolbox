@@ -197,8 +197,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        proxyABody.WakeBody();
-                        otherBody.WakeBody();
+                        _physicsSystem.WakeBody(proxyABody);
+                        _physicsSystem.WakeBody(otherBody);
                     }
 
                     contactManager.AddPair(proxyA, other);
@@ -232,7 +232,7 @@ namespace Robust.Shared.Physics.Systems
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
 
-                var transform = bodyQuery.GetComponent(grid.GridEntityId).GetTransform(xform);
+                var transform = _physicsSystem.GetPhysicsTransform(grid.GridEntityId, xformQuery: xformQuery);
                 gridsPool.Clear();
 
                 foreach (var colliding in _mapManager.FindGridsIntersecting(mapId, aabb, gridsPool, xformQuery, bodyQuery, true))
@@ -242,7 +242,7 @@ namespace Robust.Shared.Physics.Systems
                     var otherGrid = (MapGrid)colliding;
                     var otherGridBounds = colliding.WorldAABB;
                     var otherGridInvMatrix = colliding.InvWorldMatrix;
-                    var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
+                    var otherTransform = _physicsSystem.GetPhysicsTransform(colliding.GridEntityId, xformQuery: xformQuery);
 
                     // Get Grid2 AABB in grid1 ref
                     var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));

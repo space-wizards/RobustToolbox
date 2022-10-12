@@ -146,8 +146,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        [DataField("hard")]
-        private bool _hard = true;
+        [DataField("hard")] private bool _hard = true;
 
         // MassData
         // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.

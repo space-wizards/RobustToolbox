@@ -54,7 +54,7 @@ namespace Robust.Shared.Physics.Systems
             _broadphaseSystem.RemoveBody(body, component);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
-            body.CanCollide = false;
+            _physics.SetCanCollide(body, false);
         }
         #region Public
 
@@ -132,11 +132,12 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density, int collisionLayer, int collisionMask)
         {
-            var fixture = new Fixture(body, shape) {
-                Density = density,
-                CollisionLayer = collisionLayer,
-                CollisionMask = collisionMask
+            var fixture = new Fixture(body, shape)
+            {
+                Density = density
             };
+            _physics.SetCollisionLayer(fixture, collisionLayer);
+            _physics.SetCollisionMask(fixture, collisionMask);
             CreateFixture(body, fixture);
         }
 
@@ -218,7 +219,7 @@ namespace Robust.Shared.Physics.Systems
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData(manager);
+                _physics.ResetMassData(body);
                 Dirty(manager);
             }
         }
@@ -371,7 +372,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (computeProperties)
             {
-                physics.ResetMassData(component);
+                _physics.ResetMassData(physics, component);
             }
         }
 

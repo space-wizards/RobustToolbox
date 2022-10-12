@@ -189,8 +189,8 @@ public abstract partial class SharedPhysicsSystem
         if (args.OldParent is not EntityUid { Valid: true } parent)
         {
             // no previous parent --> simple
-            physics.LinearVelocity += physics.LinearVelocity - newLinear;
-            physics.AngularVelocity += physics.AngularVelocity - newAngular;
+            SetLinearVelocity(physics, physics.LinearVelocity - newLinear);
+            SetAngularVelocity(physics, physics.AngularVelocity - newAngular);
             return;
         }
 
@@ -225,7 +225,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Finally we can update the Velocities. linear velocity is already in terms of map-coordinates, so no
         // world-rotation is required
-        physics.LinearVelocity += oldLinear - newLinear;
-        physics.AngularVelocity += oldAngular - newAngular;
+        SetLinearVelocity(physics, oldLinear - newLinear);
+        SetAngularVelocity(physics, oldAngular - newAngular);
     }
 }

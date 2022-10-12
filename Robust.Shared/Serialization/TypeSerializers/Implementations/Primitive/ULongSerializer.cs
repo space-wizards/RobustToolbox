@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return ulong.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+            return Parse.TryUInt64(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing unsigned long value: {node.Value}");
         }
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ulong Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ulong value = default)
         {
-            return ulong.Parse(node.ToString(), CultureInfo.InvariantCulture);
+            return Parse.UInt64(node.ToString());
         }
 
         public DataNode Write(ISerializationManager serializationManager, ulong value,

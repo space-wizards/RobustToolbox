@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return long.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+            return Parse.TryInt64(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing long value: {node.Value}");
         }
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public long Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, long value = default)
         {
-            return long.Parse(node.Value, CultureInfo.InvariantCulture);
+            return Parse.Int64(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, long value,

@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return uint.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+            return Parse.TryUInt32(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing unsigned int value: {node.Value}");
         }
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public uint Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, uint value = default)
         {
-            return uint.Parse(node.Value, CultureInfo.InvariantCulture);
+            return Parse.UInt32(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, uint value,

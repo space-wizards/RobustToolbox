@@ -10,7 +10,7 @@ public sealed class ViewVariablesWriteCommand : ViewVariablesBaseCommand, IConso
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        if (args.Length is 0 or >2)
+        if (args.Length != 2)
         {
             shell.WriteError("Incorrect number of arguments!");
             return;

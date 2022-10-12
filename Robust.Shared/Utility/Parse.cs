@@ -98,7 +98,7 @@ public static class Parse
         return long.Parse(text, style, CultureInfo.InvariantCulture);
     }
 
-    // ULONG64
+    // UINT64
 
     public static bool TryUInt64(ReadOnlySpan<char> text, out ulong result)
     {

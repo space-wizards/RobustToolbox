@@ -78,7 +78,7 @@ internal abstract partial class ViewVariablesManager
 
         if (_typeHandlers.TryGetValue(type, out var typeData))
         {
-            paths.AddRange(typeData.ListPath(obj));
+            paths.AddRange(typeData.ListPath(resolved));
         }
 
         // We also use a set here for unique names as we need to handle member hiding properly...

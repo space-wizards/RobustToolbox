@@ -73,7 +73,7 @@ internal abstract partial class ViewVariablesManager
 
             VVAccess? access = null;
 
-            if (specifiers.Count == 1 || ResolveTypeHandlers(obj, nextSegmentClean) is not {} customPath)
+            if (specifiers.Count == 1 || ResolveTypeHandlers(path, nextSegmentClean) is not {} customPath)
             {
                 Type? declaringType = null;
 
@@ -163,42 +163,41 @@ internal abstract partial class ViewVariablesManager
         return new ViewVariablesIndexedPath(obj, indexer, parameters, access);
     }
 
-    private ViewVariablesPath? ResolveTypeHandlers(object? obj, string relativePath)
+    private ViewVariablesPath? ResolveTypeHandlers(ViewVariablesPath path, string relativePath)
     {
-        if (obj == null
+        if (path.Get() is not {} obj
             || string.IsNullOrEmpty(relativePath)
             || relativePath.Contains('/'))
             return null;
 
-        var type = obj.GetType();
+        var origType = obj.GetType();
+        var type = origType;
 
         // First go through the inheritance chain, from current type to base types...
         while (type != null)
         {
             if (_typeHandlers.TryGetValue(type, out var data))
             {
+                var newPath = data.HandlePath(path, relativePath);
 
-                var path = data.HandlePath(obj, relativePath);
-
-                if (path != null)
-                    return path;
+                if (newPath != null)
+                    return newPath;
             }
 
             type = type.BaseType;
         }
 
         // Then go through all the implemented interfaces, if any.
-        foreach (var interfaceType in obj.GetType().GetInterfaces())
+        foreach (var interfaceType in origType.GetInterfaces())
         {
-            if (_typeHandlers.TryGetValue(interfaceType, out var data))
-            {
-                var path = data.HandlePath(obj, relativePath);
+            if (!_typeHandlers.TryGetValue(interfaceType, out var data))
+                continue;
 
-                if (path != null)
-                    return path;
-            }
+            if (data.HandlePath(path, relativePath) is {} newPath)
+                return newPath;
         }
 
+        // Not handled by a custom type handler!
         return null;
     }
 }

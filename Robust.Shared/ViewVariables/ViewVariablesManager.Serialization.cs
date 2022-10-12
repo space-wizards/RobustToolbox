@@ -114,6 +114,7 @@ internal abstract partial class ViewVariablesManager
 
         using var writer = new StringWriter(new StringBuilder());
 
+        // Remove the three funny dots from the end of the string...
         stream.Save(new YamlNoDocEndDotsFix(new YamlMappingFix(new Emitter(writer))), false);
         return writer.ToString();
     }

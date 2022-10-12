@@ -53,6 +53,8 @@ public abstract class ViewVariablesPath
     /// </summary>
     public virtual Type InvokeReturnType { get; } = typeof(void);
 
+    #region Static helper methods
+
     /// <summary>
     ///     Creates a <see cref="ViewVariablesFakePath"/> given an object.
     /// </summary>
@@ -64,6 +66,28 @@ public abstract class ViewVariablesPath
     /// </summary>
     public static ViewVariablesFakePath FromGetter(Func<object?> getter, Type type)
         => new(getter, null, null, type);
+
+    /// <summary>
+    ///     Creates a <see cref="ViewVariablesFakePath"/> given a setter function.
+    /// </summary>
+    public static ViewVariablesFakePath FromSetter(Action<object?> setter, Type type)
+        => new(null, setter, null, type);
+
+    /// <summary>
+    ///     Creates a <see cref="ViewVariablesFakePath"/> given a function to be invoked.
+    /// </summary>
+    public static ViewVariablesFakePath FromInvoker(Func<object?, object?> invoker,
+        Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
+        => new(null, null, invoker, null, invokeParameterTypes, invokeOptionalParameters, invokeReturnType);
+
+    /// <summary>
+    ///     Creates a <see cref="ViewVariablesFakePath"/> given a function to be invoked.
+    /// </summary>
+    public static ViewVariablesFakePath FromInvoker(Action<object?> invoker,
+        Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
+        => new(null, null, invoker, null, invokeParameterTypes, invokeOptionalParameters, invokeReturnType);
+
+    #endregion
 }
 
 internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
@@ -287,11 +311,14 @@ public sealed class ViewVariablesFakePath : ViewVariablesPath
         return _invoker?.Invoke(parameters);
     }
 
-    public ViewVariablesFakePath WithSetter(Action<object?> setter)
-        => new(_getter, setter, _invoker, Type, InvokeParameterTypes, InvokeOptionalParameters, InvokeReturnType);
+    public ViewVariablesFakePath WithGetter(Func<object?> getter, Type? type = null)
+        => new(getter, _setter, _invoker, type ?? Type, InvokeParameterTypes, InvokeOptionalParameters, InvokeReturnType);
 
-    public ViewVariablesFakePath WithInvoker(Func<object?, object?> invoker, Type invokeReturnType,
-        Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0)
-        => new(_getter, _setter, invoker, Type, invokeParameterTypes ?? Array.Empty<Type>(), invokeOptionalParameters,
-            InvokeReturnType);
+    public ViewVariablesFakePath WithSetter(Action<object?> setter, Type? type = null)
+        => new(_getter, setter, _invoker, type ?? Type, InvokeParameterTypes, InvokeOptionalParameters, InvokeReturnType);
+
+    public ViewVariablesFakePath WithInvoker(Func<object?, object?> invoker,
+        Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
+        => new(_getter, _setter, invoker, Type, invokeParameterTypes, invokeOptionalParameters,
+            invokeReturnType);
 }

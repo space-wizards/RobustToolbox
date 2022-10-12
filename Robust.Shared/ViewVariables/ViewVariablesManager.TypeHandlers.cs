@@ -23,10 +23,8 @@ internal abstract partial class ViewVariablesManager
     {
         GetTypeHandler<EntityUid>()
             .AddHandler(EntityComponentHandler, EntityComponentList)
-            .AddPath("Delete",
-                uid => new ViewVariablesFakePath(null, null, _ => _entMan.DeleteEntity(uid)))
-            .AddPath("QueueDelete",
-                uid => new ViewVariablesFakePath(null, null, _ => _entMan.QueueDeleteEntity(uid)));
+            .AddPath("Delete", uid => ViewVariablesPath.FromInvoker(_ => _entMan.DeleteEntity(uid)))
+            .AddPath("QueueDelete", uid => ViewVariablesPath.FromInvoker(_ => _entMan.QueueDeleteEntity(uid)));
     }
 
     private ViewVariablesPath? EntityComponentHandler(EntityUid uid, string relativePath)

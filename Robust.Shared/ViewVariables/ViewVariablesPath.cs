@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Reflection;
 
 namespace Robust.Shared.ViewVariables;
@@ -51,6 +52,18 @@ public abstract class ViewVariablesPath
     ///     The type of the object returned by the <see cref="Invoke"/> method, or <see cref="Void"/> if none.
     /// </summary>
     public virtual Type InvokeReturnType { get; } = typeof(void);
+
+    /// <summary>
+    ///     Creates a <see cref="ViewVariablesFakePath"/> given an object.
+    /// </summary>
+    public static ViewVariablesFakePath FromObject(object obj)
+        => new(() => obj, null, null, obj.GetType());
+
+    /// <summary>
+    ///     Creates a <see cref="ViewVariablesFakePath"/> given a getter function.
+    /// </summary>
+    public static ViewVariablesFakePath FromGetter(Func<object?> getter, Type type)
+        => new(getter, null, null, type);
 }
 
 internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
@@ -205,9 +218,30 @@ public sealed class ViewVariablesInstancePath : ViewVariablesPath
     public override object? Invoke(object?[]? parameters) => null;
 }
 
+public sealed class ViewVariablesComponentPath : ViewVariablesPath
+{
+    public readonly object? Component;
+    public readonly EntityUid Owner;
+    public override Type Type => Component?.GetType() ?? typeof(void);
+
+    public ViewVariablesComponentPath(object? component, EntityUid owner)
+    {
+        Component = component;
+        Owner = owner;
+    }
+
+    public override object? Get()
+    {
+        return Component;
+    }
+
+    public override void Set(object? value) { }
+    public override object? Invoke(object?[]? parameters) => null;
+}
+
 public sealed class ViewVariablesFakePath : ViewVariablesPath
 {
-    public ViewVariablesFakePath(Func<object?>? getter, Action<object?>? setter, Func<object?, object?>? invoker,
+    public ViewVariablesFakePath(Func<object?>? getter, Action<object?>? setter, Func<object?, object?>? invoker = null,
         Type? type = null, Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0, Type? invokeReturnType = null)
     {
         _getter = getter;
@@ -234,6 +268,9 @@ public sealed class ViewVariablesFakePath : ViewVariablesPath
     private readonly Action<object?>? _setter;
     private readonly Func<object?, object?>? _invoker;
     public override Type Type { get; }
+    public override Type[] InvokeParameterTypes { get; }
+    public override uint InvokeOptionalParameters { get; }
+    public override Type InvokeReturnType { get; }
 
     public override object? Get()
     {
@@ -250,7 +287,11 @@ public sealed class ViewVariablesFakePath : ViewVariablesPath
         return _invoker?.Invoke(parameters);
     }
 
-    public override Type[] InvokeParameterTypes { get; }
-    public override uint InvokeOptionalParameters { get; }
-    public override Type InvokeReturnType { get; }
+    public ViewVariablesFakePath WithSetter(Action<object?> setter)
+        => new(_getter, setter, _invoker, Type, InvokeParameterTypes, InvokeOptionalParameters, InvokeReturnType);
+
+    public ViewVariablesFakePath WithInvoker(Func<object?, object?> invoker, Type invokeReturnType,
+        Type[]? invokeParameterTypes = null, uint invokeOptionalParameters = 0)
+        => new(_getter, _setter, invoker, Type, invokeParameterTypes ?? Array.Empty<Type>(), invokeOptionalParameters,
+            InvokeReturnType);
 }

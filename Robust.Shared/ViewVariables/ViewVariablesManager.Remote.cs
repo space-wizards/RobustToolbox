@@ -299,7 +299,7 @@ internal abstract partial class ViewVariablesManager
         }
 
         var enumerable = ListPath(req.Path, req.Options)
-            .OrderBy(p => p.StartsWith(req.Path))
+            .OrderByDescending(p => p.StartsWith(req.Path))
             .Take(Math.Min(MaxListPathResponseLength, req.Options.RemoteListLength))
             .ToArray();
 

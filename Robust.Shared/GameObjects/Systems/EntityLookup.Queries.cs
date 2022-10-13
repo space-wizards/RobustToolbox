@@ -33,11 +33,11 @@ public sealed partial class EntityLookupSystem
         var localAABB = invMatrix.TransformBox(worldAABB);
 
         lookup.Tree.QueryAabb(ref intersecting,
-            static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
-            {
-                intersecting.Add(value);
-                return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+        {
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private void AddEntitiesIntersecting(
@@ -53,11 +53,11 @@ public sealed partial class EntityLookupSystem
         var localAABB = invMatrix.TransformBox(worldBounds);
 
         lookup.Tree.QueryAabb(ref intersecting,
-            static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
-            {
-                intersecting.Add(value);
-                return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+        {
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
@@ -69,8 +69,7 @@ public sealed partial class EntityLookupSystem
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
-        var found = false;
-        var state = (ignored, found);
+        var state = (ignored, found: false);
 
         lookup.Tree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
         {
@@ -109,8 +108,7 @@ public sealed partial class EntityLookupSystem
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
-        var found = false;
-        var state = (ignored, found);
+        var state = (ignored, found: false);
 
         lookup.Tree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
         {
@@ -136,7 +134,7 @@ public sealed partial class EntityLookupSystem
             }
         }
 
-        return found;
+        return state.found;
     }
 
     private void RecursiveAdd(EntityUid uid, ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)

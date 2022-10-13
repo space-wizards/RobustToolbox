@@ -1388,7 +1388,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1>
+    public struct EntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : Component
     {
         private Dictionary<EntityUid, Component>.Enumerator _traitDict;
@@ -1428,12 +1428,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2>
+    public struct EntityQueryEnumerator<TComp1, TComp2> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
     {
@@ -1484,12 +1489,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3>
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
         where TComp3 : Component
@@ -1551,12 +1561,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
         where TComp3 : Component
@@ -1629,6 +1644,11 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     #endregion
@@ -1638,7 +1658,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1>
+    public struct AllEntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : Component
     {
         private Dictionary<EntityUid, Component>.Enumerator _traitDict;
@@ -1670,12 +1690,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
     {
@@ -1718,12 +1743,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
         where TComp3 : Component
@@ -1777,12 +1807,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
         }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
         where TComp1 : Component
         where TComp2 : Component
         where TComp3 : Component
@@ -1846,6 +1881,11 @@ namespace Robust.Shared.GameObjects
                 comp4 = (TComp4)comp4Obj;
                 return true;
             }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
         }
     }
 

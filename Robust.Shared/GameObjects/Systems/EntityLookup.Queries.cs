@@ -499,9 +499,12 @@ public sealed partial class EntityLookupSystem
                 return true;
             }, aabb, (flags & LookupFlags.Approximate) != 0x0);
 
-            foreach (var ent in grid.GetAnchoredEntities(index))
+            if ((flags & LookupFlags.Anchored) != 0x0)
             {
-                intersecting.Add(ent);
+                foreach (var ent in grid.GetAnchoredEntities(index))
+                {
+                    intersecting.Add(ent);
+                }
             }
         }
 

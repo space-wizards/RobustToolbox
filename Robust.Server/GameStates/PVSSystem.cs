@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
@@ -473,11 +474,12 @@ internal sealed partial class PVSSystem : EntitySystem
             var viewers = GetSessionViewers(session);
             viewerEntities[i] = viewers;
 
-            foreach (var eyeEuid in viewers)
+            for (var j = 0; j < viewers.Length; j++)
             {
+                var eyeEuid = viewers[j];
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
-                if(mapId == MapId.Nullspace) continue;
+                if (mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -574,10 +576,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         var previousIndices = _previousTrees.Keys.ToArray();
-        foreach (var index in previousIndices)
+        for (var i = 0; i < previousIndices.Length; i++)
         {
+            var index = previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
-            if(_reusedTrees.Contains(index)) continue;
+            if (_reusedTrees.Contains(index)) continue;
             var chunk = _previousTrees[index];
             if (chunk.HasValue)
             {
@@ -590,6 +593,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 _previousTrees.Remove(index);
             }
         }
+
         _previousTrees.EnsureCapacity(chunks.Count);
         for (int i = 0; i < chunks.Count; i++)
         {
@@ -643,9 +647,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public void ReturnToPool(HashSet<int>[] playerChunks)
     {
-        foreach (var playerChunk in playerChunks)
+        for (var i = 0; i < playerChunks.Length; i++)
         {
-            _playerChunkPool.Return(playerChunk);
+            _playerChunkPool.Return(playerChunks[i]);
         }
     }
 
@@ -809,7 +813,7 @@ internal sealed partial class PVSSystem : EntitySystem
             return null;
 
         var leftView = new List<EntityUid>();
-        foreach (var uid in lastSent.Keys)
+        foreach (var (uid, _) in lastSent)
         {
             if (!visibleEnts.ContainsKey(uid))
                 leftView.Add(uid);

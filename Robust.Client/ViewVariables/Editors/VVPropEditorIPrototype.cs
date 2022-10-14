@@ -96,7 +96,7 @@ namespace Robust.Client.ViewVariables.Editors
             if (_selector is not ViewVariablesSessionRelativeSelector selector
                 || _localValue is not ViewVariablesBlobMembers.PrototypeReferenceToken protoToken) return;
 
-            var vvm = IoCManager.Resolve<IViewVariablesManagerInternal>();
+            var vvm = IoCManager.Resolve<IClientViewVariablesManagerInternal>();
 
             if (!vvm.TryGetSession(selector.SessionId, out var session)) return;
 
@@ -116,7 +116,7 @@ namespace Robust.Client.ViewVariables.Editors
 
         private void OnInspectButtonPressed(BaseButton.ButtonEventArgs obj)
         {
-            var vvm = IoCManager.Resolve<IViewVariablesManager>();
+            var vvm = IoCManager.Resolve<IClientViewVariablesManager>();
 
             if(_selector != null)
                 vvm.OpenVV(_selector);

@@ -85,10 +85,10 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
-                if (value.X == 0 || value.Y == 0)
+                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
                 {
-                    // This has (probably) happened and can cripple clients on live builds. Otheriwse this'd just be a debug assert.
-                    Logger.Error($"Attempted to set layer sprite scale to zero for entity {entities.ToPrettyString(Owner)}");
+                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
                     return;
                 }
 
@@ -1585,10 +1585,10 @@ namespace Robust.Client.GameObjects
                 {
                     if (_scale.EqualsApprox(value)) return;
 
-                    if (value.X == 0 || value.Y == 0)
+                    if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
                     {
-                        // This has (probably) happened and can cripple clients on live builds. Otheriwse this'd just be a debug assert.
-                        Logger.Error($"Attempted to set layer sprite scale to zero for entity {_parent.entities.ToPrettyString(_parent.Owner)}");
+                        // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                        Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
                         return;
                     }
 

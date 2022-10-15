@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Mathematics;
+using BenchmarkDotNet.Parameters;
 using BenchmarkDotNet.Reports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -163,7 +164,10 @@ public class BenchmarkRun
 
     public string Name { get; set; } = string.Empty;
 
-    public string ParameterMapping { get; set; } = string.Empty;
+    public string? ParameterMapping { get; set; }
+
+    [Column(TypeName = "jsonb")]
+    public BenchmarkRunParameter[]? ParameterMappingJson { get; set; }
 
     [Column(TypeName = "jsonb")]
     public Statistics Statistics { get; set; } = default!;
@@ -171,27 +175,51 @@ public class BenchmarkRun
     public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)
     {
         var runDate = DateTime.UtcNow;
-        var name = summary.BenchmarksCases.First().FolderInfo;
 
         foreach (var benchmarkReport in summary.Reports)
         {
             var paramString = new StringBuilder();
-            var parameters = benchmarkReport.BenchmarkCase.Parameters.Items;
-            for (var i = 0; i < parameters.Count; i++)
+            var parametersItems = benchmarkReport.BenchmarkCase.Parameters.Items;
+            var runParameters = new BenchmarkRunParameter[parametersItems.Count];
+            for (var i = 0; i < parametersItems.Count; i++)
             {
-                var parameter = parameters[i];
-                paramString.Append($"{parameter.Name}={parameter.Value}");
-                if (i < parameters.Count - 1) paramString.Append(',');
+                runParameters[i] = new BenchmarkRunParameter(parametersItems[i]);
+                paramString.Append(runParameters[i].ToString());
+                if (i < parametersItems.Count - 1) paramString.Append(',');
+            }
+
+            if (benchmarkReport.ResultStatistics == null)
+            {
+                Console.WriteLine($"err: No statistics available for {benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo}!");
+                continue;
             }
 
             yield return new BenchmarkRun
             {
-                Name = name,
+                Name = benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo,
                 RunDate = runDate,
                 GitHash = gitHash,
-                ParameterMapping = paramString.ToString(),
-                Statistics = benchmarkReport.ResultStatistics ?? new Statistics()
+                ParameterMapping = runParameters.Length > 0 ? paramString.ToString() : null,
+                ParameterMappingJson = runParameters.Length > 0 ? runParameters : null,
+                Statistics = benchmarkReport.ResultStatistics
             };
         }
+    }
+}
+
+public struct BenchmarkRunParameter
+{
+    public string Name { get; set; } = string.Empty;
+    public object Value { get; set; } = default!;
+
+    public BenchmarkRunParameter(ParameterInstance instance)
+    {
+        Name = instance.Name;
+        Value = instance.Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name}={Value}";
     }
 }

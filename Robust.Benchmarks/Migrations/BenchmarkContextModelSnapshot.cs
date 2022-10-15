@@ -40,8 +40,10 @@ namespace Robust.Benchmarks.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ParameterMapping")
-                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<BenchmarkRunParameter[]>("ParameterMappingJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime>("RunDate")
                         .HasColumnType("timestamptz");

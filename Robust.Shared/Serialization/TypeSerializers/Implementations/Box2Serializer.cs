@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
@@ -26,10 +27,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{node.Value}'");
             }
 
-            var l = float.Parse(args[0], CultureInfo.InvariantCulture);
-            var b = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var r = float.Parse(args[2], CultureInfo.InvariantCulture);
-            var t = float.Parse(args[3], CultureInfo.InvariantCulture);
+            var l = Parse.Float(args[0]);
+            var b = Parse.Float(args[1]);
+            var r = Parse.Float(args[2]);
+            var t = Parse.Float(args[3]);
 
             return new Box2(l, b, r, t);
         }
@@ -45,10 +46,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
-            return float.TryParse(args[0], out _) &&
-                   float.TryParse(args[1], out _) &&
-                   float.TryParse(args[2], out _) &&
-                   float.TryParse(args[3], out _)
+            return Parse.TryFloat(args[0], out _) &&
+                   Parse.TryFloat(args[1], out _) &&
+                   Parse.TryFloat(args[2], out _) &&
+                   Parse.TryFloat(args[3], out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing values of Box2.");
         }

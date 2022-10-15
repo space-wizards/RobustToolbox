@@ -250,6 +250,8 @@ namespace Robust.UnitTesting
             private bool _isAlive = true;
             private Exception? _unhandledException;
 
+            public IDependencyCollection InstanceDependencyCollection => DependencyCollection;
+
             public virtual IntegrationOptions? Options { get; internal set; }
 
             /// <summary>

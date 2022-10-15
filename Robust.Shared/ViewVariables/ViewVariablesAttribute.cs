@@ -1,11 +1,12 @@
 using System;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.ViewVariables
 {
     /// <summary>
     ///     Attribute to make a property or field accessible to VV.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
     public sealed class ViewVariablesAttribute : Attribute
     {
         public readonly VVAccess Access = VVAccess.ReadOnly;
@@ -21,6 +22,7 @@ namespace Robust.Shared.ViewVariables
         }
     }
 
+    [Serializable, NetSerializable]
     public enum VVAccess : byte
     {
         /// <summary>
@@ -31,6 +33,6 @@ namespace Robust.Shared.ViewVariables
         /// <summary>
         ///     This property is read and writable.
         /// </summary>
-        ReadWrite,
+        ReadWrite = 1,
     }
 }

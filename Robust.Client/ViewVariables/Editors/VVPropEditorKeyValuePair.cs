@@ -9,7 +9,7 @@ namespace Robust.Client.ViewVariables.Editors
 {
     public sealed class VVPropEditorKeyValuePair : VVPropEditor
     {
-        [Dependency] private readonly IViewVariablesManagerInternal _viewVariables = default!;
+        [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariables = default!;
 
         private VVPropEditor? _propertyEditorK;
         private VVPropEditor? _propertyEditorV;

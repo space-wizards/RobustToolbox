@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
-        private readonly IViewVariablesManagerInternal _vvm;
+        private readonly IClientViewVariablesManagerInternal _vvm;
         private readonly IRobustSerializer _robustSerializer;
 
         private BoxContainer _memberList = default!;
@@ -27,7 +27,7 @@ namespace Robust.Client.ViewVariables.Traits
             instance.AddTab("Members", _memberList);
         }
 
-        public ViewVariablesTraitMembers(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
+        public ViewVariablesTraitMembers(IClientViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
         {
             _robustSerializer = robustSerializer;
             _vvm = vvm;

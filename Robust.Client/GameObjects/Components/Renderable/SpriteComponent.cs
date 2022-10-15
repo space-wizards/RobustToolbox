@@ -85,6 +85,13 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                if (value.X == 0 || value.Y == 0)
+                {
+                    // This has (probably) happened and can cripple clients on live builds. Otheriwse this'd just be a debug assert.
+                    Logger.Error($"Attempted to set layer sprite scale to zero for entity {entities.ToPrettyString(Owner)}");
+                    return;
+                }
+
                 _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
@@ -1577,6 +1584,13 @@ namespace Robust.Client.GameObjects
                 set
                 {
                     if (_scale.EqualsApprox(value)) return;
+
+                    if (value.X == 0 || value.Y == 0)
+                    {
+                        // This has (probably) happened and can cripple clients on live builds. Otheriwse this'd just be a debug assert.
+                        Logger.Error($"Attempted to set layer sprite scale to zero for entity {_parent.entities.ToPrettyString(_parent.Owner)}");
+                        return;
+                    }
 
                     _scale = value;
                     UpdateLocalMatrix();

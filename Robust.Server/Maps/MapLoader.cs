@@ -413,7 +413,7 @@ namespace Robust.Server.Maps
                         var type = typeNode.Value;
                         if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
                         {
-                            Logger.Error("Missing prototype for map: {0}", type);
+                            Logger.ErrorS("map", "Missing prototype for map: {0}", type);
                             fail = true;
                             reportedError.Add(type);
                         }
@@ -808,6 +808,7 @@ namespace Robust.Server.Maps
                     // If we're loading a map but not 'loading the map' then kill it
                     if (TargetMapUid == null && mapQuery.HasComponent(entity))
                     {
+                        Logger.InfoS("map", $"Deleting extra map entity: {_serverEntityManager.ToPrettyString(entity)}");
                         _serverEntityManager.DeleteEntity(entity);
                         Entities.RemoveSwap(i);
                         _entitiesToDeserialize.RemoveAt(i);
@@ -817,7 +818,7 @@ namespace Robust.Server.Maps
 
                     if (!query.TryGetComponent(entity, out var meta))
                     {
-                        Logger.Error($"Found deleted entity {entity} (original uid {_entitiesToDeserialize[i].Item2[0].Value}) on maploader!");
+                        Logger.Error("map", $"Found deleted entity {entity} (original uid {_entitiesToDeserialize[i].Item2[0].Value}) on maploader!");
                         failure = true;
                         continue;
                     }

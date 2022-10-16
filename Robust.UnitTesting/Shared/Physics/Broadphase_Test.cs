@@ -5,6 +5,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Physics;
@@ -54,6 +55,7 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var physicsSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
         var mapId = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId);
@@ -75,7 +77,7 @@ public sealed class Broadphase_Test
         var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
-        child2Body.CanCollide = false;
+        physicsSystem.SetCanCollide(child2Body, false);
         Assert.That(!child2Body.CanCollide);
         Assert.That(child2Body.Broadphase, Is.EqualTo(null));
 
@@ -101,6 +103,7 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+        var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
         var mapManager = sim.Resolve<IMapManager>();
 
         var mapId = mapManager.CreateMap();
@@ -121,7 +124,7 @@ public sealed class Broadphase_Test
         var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
-        child2Body.CanCollide = false;
+        physSystem.SetCanCollide(child2Body, false);
         Assert.That(!child2Body.CanCollide);
 
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));

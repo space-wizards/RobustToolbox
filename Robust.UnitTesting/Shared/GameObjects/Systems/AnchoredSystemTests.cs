@@ -7,6 +7,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -352,6 +353,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
@@ -361,7 +363,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
-            physComp.BodyType = BodyType.Dynamic;
+            physSystem.SetBodyType(physComp, BodyType.Dynamic);
 
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;

@@ -1,4 +1,5 @@
 using Lidgren.Network;
+using Robust.Shared.ViewVariables;
 using Robust.Shared.Serialization;
 
 #nullable disable
@@ -21,36 +22,18 @@ namespace Robust.Shared.Network.Messages
         /// <summary>
         ///     Reason for why the request was denied.
         /// </summary>
-        public DenyReason Reason { get; set; }
+        public ViewVariablesResponseCode Reason { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             RequestId = buffer.ReadUInt32();
-            Reason = (DenyReason)buffer.ReadUInt16();
+            Reason = (ViewVariablesResponseCode)buffer.ReadUInt16();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(RequestId);
             buffer.Write((ushort)Reason);
-        }
-
-        public enum DenyReason : ushort
-        {
-            /// <summary>
-            ///     Come back with admin access.
-            /// </summary>
-            NoAccess = 401,
-
-            /// <summary>
-            ///     Object pointing to by the selector does not exist.
-            /// </summary>
-            NoObject = 404,
-
-            /// <summary>
-            ///     Request was invalid or something.
-            /// </summary>
-            InvalidRequest = 400,
         }
     }
 }

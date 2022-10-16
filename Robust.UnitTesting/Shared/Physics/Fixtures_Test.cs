@@ -27,7 +27,7 @@ public sealed class Fixtures_Test
 
         var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
-        body.BodyType = BodyType.Dynamic;
+        physicsSystem.SetBodyType(body, BodyType.Dynamic);
         var fixture = new Fixture();
         fixturesSystem.CreateFixture(body, fixture);
 

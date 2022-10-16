@@ -33,6 +33,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var fixtureSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
             var jointSystem = entManager.EntitySysManager.GetEntitySystem<JointSystem>();
             var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
+            var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             var mapId = mapManager.CreateMap();
 
@@ -40,8 +41,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
             var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
-            body1.BodyType = BodyType.Dynamic;
-            body2.BodyType = BodyType.Dynamic;
+            physicsSystem.SetBodyType(body1, BodyType.Dynamic);
+            physicsSystem.SetBodyType(body2, BodyType.Dynamic);
 
             fixtureSystem.TryCreateFixture(body1, new Fixture(new PhysShapeCircle()
             {

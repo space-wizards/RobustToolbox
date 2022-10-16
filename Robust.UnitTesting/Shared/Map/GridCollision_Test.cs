@@ -6,6 +6,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -20,6 +21,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapManager = server.ResolveDependency<IMapManager>();
             var entManager = server.ResolveDependency<IEntityManager>();
+            var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             MapId mapId;
             IMapGrid? gridId1 = null;
@@ -40,8 +42,8 @@ namespace Robust.UnitTesting.Shared.Map
                 physics2 = entManager.GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static
                 // (given most other games would probably prefer them as static) hence we need to make them dynamic.
-                physics1.BodyType = BodyType.Dynamic;
-                physics2.BodyType = BodyType.Dynamic;
+                physSystem.SetBodyType(physics1, BodyType.Dynamic);
+                physSystem.SetBodyType(physics2, BodyType.Dynamic);
             });
 
             await server.WaitRunTicks(1);

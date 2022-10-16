@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static SDL2.SDL;
@@ -11,20 +12,13 @@ internal partial class Clyde
 {
     private sealed partial class Sdl2WindowingImpl
     {
-        private SDL_LogOutputFunction? _logOutputFunction;
-        private SDL_EventFilter? _eventWatch;
-
-        private void StoreCallbacks()
+        [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]
+        private static unsafe int EventWatch(void* userdata, SDL_Event* sdlevent)
         {
-            _logOutputFunction = LogOutputFunction;
-            _eventWatch = EventWatch;
-        }
+            var obj = (Sdl2WindowingImpl) GCHandle.FromIntPtr((IntPtr)userdata).Target!;
+            ref readonly var ev = ref *sdlevent;
 
-        private unsafe int EventWatch(IntPtr userdata, IntPtr sdlevent)
-        {
-            ref readonly var ev = ref *(SDL_Event*)sdlevent;
-
-            ProcessSdl2Event(in ev);
+            obj.ProcessSdl2Event(in ev);
 
             return 0;
         }

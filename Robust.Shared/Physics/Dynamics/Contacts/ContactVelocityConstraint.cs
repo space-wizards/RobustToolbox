@@ -43,9 +43,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public Vector2 Normal;
 
-        public Vector2[] NormalMass;
+        public System.Numerics.Vector4 NormalMass;
 
-        public Vector2[] K;
+        public System.Numerics.Vector4 K;
 
         public float InvMassA;
 

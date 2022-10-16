@@ -85,6 +85,13 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                {
+                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
+                    return;
+                }
+
                 _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
@@ -1577,6 +1584,13 @@ namespace Robust.Client.GameObjects
                 set
                 {
                     if (_scale.EqualsApprox(value)) return;
+
+                    if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                    {
+                        // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                        Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {_parent.entities.ToPrettyString(_parent.Owner)}. Scale: {value}");
+                        return;
+                    }
 
                     _scale = value;
                     UpdateLocalMatrix();

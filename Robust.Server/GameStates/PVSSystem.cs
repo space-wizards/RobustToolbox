@@ -809,7 +809,7 @@ internal sealed partial class PVSSystem : EntitySystem
             return null;
 
         var leftView = new List<EntityUid>();
-        foreach (var (uid, _) in lastSent)
+        foreach (var uid in lastSent.Keys)
         {
             if (!visibleEnts.ContainsKey(uid))
                 leftView.Add(uid);

@@ -29,6 +29,21 @@ Template for new versions:
 
 ## Master
 
+### New features
+
+* Added a method to pass in physics transforms for getting nearest point.
+
+### Bugfixes
+
+* Prevent singular sprite matrices.
+* Fix obsolete warnings in tests.
+
+### Other
+
+* Significantly reduce physics contact allocations.
+
+## 0.55.4.1
+
 ### Breaking changes
 
 * Removed `SI`, `SIoC`, `I`, `IoC`, `SE` and `CE` VV command prefixes.

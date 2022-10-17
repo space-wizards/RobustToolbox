@@ -170,30 +170,9 @@ internal abstract partial class ViewVariablesManager
             || relativePath.Contains('/'))
             return null;
 
-        var origType = obj.GetType();
-        var type = origType;
-
-        // First go through the inheritance chain, from current type to base types...
-        while (type != null)
+        foreach (var handler in GetAllTypeHandlers(obj.GetType()))
         {
-            if (_typeHandlers.TryGetValue(type, out var data))
-            {
-                var newPath = data.HandlePath(path, relativePath);
-
-                if (newPath != null)
-                    return newPath;
-            }
-
-            type = type.BaseType;
-        }
-
-        // Then go through all the implemented interfaces, if any.
-        foreach (var interfaceType in origType.GetInterfaces())
-        {
-            if (!_typeHandlers.TryGetValue(interfaceType, out var data))
-                continue;
-
-            if (data.HandlePath(path, relativePath) is {} newPath)
+            if (handler.HandlePath(path, relativePath) is {} newPath)
                 return newPath;
         }
 

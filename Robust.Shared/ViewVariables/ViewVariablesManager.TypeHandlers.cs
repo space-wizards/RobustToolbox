@@ -42,4 +42,29 @@ internal abstract partial class ViewVariablesManager
         return _entMan.GetComponents(uid)
             .Select(component => _compFact.GetComponentName(component.GetType()));
     }
+
+    private IEnumerable<ViewVariablesTypeHandler> GetAllTypeHandlers(Type origType)
+    {
+        var type = origType;
+
+        // First go through the inheritance chain, from current type to base types...
+        while (type != null)
+        {
+            if (_typeHandlers.TryGetValue(type, out var data))
+            {
+                yield return data;
+            }
+
+            type = type.BaseType;
+        }
+
+        // Then go through all the implemented interfaces, if any.
+        foreach (var interfaceType in origType.GetInterfaces())
+        {
+            if (!_typeHandlers.TryGetValue(interfaceType, out var data))
+                continue;
+
+            yield return data;
+        }
+    }
 }

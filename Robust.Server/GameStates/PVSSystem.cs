@@ -391,7 +391,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
 
-        foreach (var (_, visSet) in data.SentEntities)
+        foreach (var visSet in data.SentEntities.Values)
         {
             if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
@@ -451,10 +451,10 @@ internal sealed partial class PVSSystem : EntitySystem
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
         // Pool it because this will allocate a lot across ticks as we scale in players.
-        foreach (var (_, chunks) in _mapIndices)
+        foreach (var chunks in _mapIndices.Values)
             _mapChunkPool.Return(chunks);
 
-        foreach (var (_, chunks) in _gridIndices)
+        foreach (var chunks in _gridIndices.Values)
             _gridChunkPool.Return(chunks);
 
         _mapIndices.Clear();

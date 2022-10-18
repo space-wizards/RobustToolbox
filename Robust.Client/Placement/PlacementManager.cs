@@ -239,12 +239,12 @@ namespace Robust.Client.Placement
                             if (HandleDeletion(coords))
                                 return true;
 
-                            if (uid == EntityUid.Invalid)
+                            if (!uid.HasValue || uid.Value == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(uid);
+                            HandleDeletion(uid.Value);
                         }
                         else
                         {

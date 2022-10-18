@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             // For whatever reason, tests create and expect null-space to have a map entity, and it does on the client, but it
             // intentionally doesn't on the server??
             if (coordinates.MapId == MapId.Nullspace &&
-                mapXform == null) 
+                mapXform == null)
             {
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
@@ -400,7 +400,7 @@ namespace Robust.Shared.GameObjects
             return _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].ContainsKey(uid);
         }
 
-        public bool EntityExists(EntityUid? uid)
+        public bool EntityExists([NotNullWhen(true)] EntityUid? uid)
         {
             return uid.HasValue && EntityExists(uid.Value);
         }

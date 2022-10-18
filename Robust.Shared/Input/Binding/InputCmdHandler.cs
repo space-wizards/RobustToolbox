@@ -77,7 +77,7 @@ namespace Robust.Shared.Input.Binding
         }
     }
 
-    public delegate bool PointerInputCmdDelegate(ICommonSession? session, EntityCoordinates coords, EntityUid uid);
+    public delegate bool PointerInputCmdDelegate(ICommonSession? session, EntityCoordinates coords, EntityUid? uid);
 
     public delegate bool PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
@@ -116,9 +116,9 @@ namespace Robust.Shared.Input.Binding
             if (!(message is FullInputCmdMessage msg) || (_ignoreUp && msg.State != BoundKeyState.Down))
                 return false;
 
-            var handled = _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates,
+            var handled = _callback.Invoke(new PointerInputCmdArgs(session, msg.Coordinates,
                 msg.ScreenCoordinates, msg.Uid, msg.State, msg));
-            return handled.HasValue && handled.Value;
+            return handled;
         }
 
         public readonly struct PointerInputCmdArgs
@@ -126,12 +126,12 @@ namespace Robust.Shared.Input.Binding
             public readonly ICommonSession? Session;
             public readonly EntityCoordinates Coordinates;
             public readonly ScreenCoordinates ScreenCoordinates;
-            public readonly EntityUid EntityUid;
+            public readonly EntityUid? EntityUid;
             public readonly BoundKeyState State;
             public readonly FullInputCmdMessage OriginalMessage;
 
             public PointerInputCmdArgs(ICommonSession? session, EntityCoordinates coordinates,
-                ScreenCoordinates screenCoordinates, EntityUid entityUid, BoundKeyState state,
+                ScreenCoordinates screenCoordinates, EntityUid? entityUid, BoundKeyState state,
                 FullInputCmdMessage originalMessage)
             {
                 Session = session;
@@ -166,9 +166,9 @@ namespace Robust.Shared.Input.Binding
             switch (msg.State)
             {
                 case BoundKeyState.Up:
-                    return _disabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
+                    return _disabled.Invoke(session, msg.Coordinates, msg.Uid) == true;
                 case BoundKeyState.Down:
-                    return _enabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
+                    return _enabled.Invoke(session, msg.Coordinates, msg.Uid) == true;
             }
 
             //Client Sanitization: unknown key state, just ignore

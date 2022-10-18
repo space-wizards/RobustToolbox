@@ -232,7 +232,7 @@ public abstract partial class SharedTransformSystem
 
 
         SetGridId(component, component.FindGridEntityId(xformQuery));
-        component.RebuildMatrices();
+        component.MatricesDirty = true;
     }
 
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
@@ -485,7 +485,7 @@ public abstract partial class SharedTransformSystem
 
             if (rebuildMatrices)
             {
-                component.RebuildMatrices();
+                component.MatricesDirty = true;
             }
 
             Dirty(component);
@@ -791,7 +791,7 @@ public abstract partial class SharedTransformSystem
 
         if (!xform.DeferUpdates)
         {
-            xform.RebuildMatrices();
+            xform.MatricesDirty = true;
             var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
             RaiseLocalEvent(xform.Owner, ref moveEvent, true);
         }

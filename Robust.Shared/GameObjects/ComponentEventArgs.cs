@@ -44,9 +44,12 @@ namespace Robust.Shared.GameObjects
     {
         public readonly ComponentEventArgs BaseArgs;
 
-        public RemovedComponentEventArgs(ComponentEventArgs baseArgs)
+        public readonly bool Terminating;
+
+        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
         {
             BaseArgs = baseArgs;
+            Terminating = terminating;
         }
     }
 
@@ -54,9 +57,12 @@ namespace Robust.Shared.GameObjects
     {
         public readonly ComponentEventArgs BaseArgs;
 
-        public DeletedComponentEventArgs(ComponentEventArgs baseArgs)
+        public readonly bool Terminating;
+
+        public DeletedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
         {
             BaseArgs = baseArgs;
+            Terminating = terminating;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Robust.Shared.ViewVariables
         ///     For flexibility, these traits can be any object that the server/client need to understand each other.
         ///     At the moment though the only thing they're used with is <see cref="ViewVariablesTraits"/>.
         /// </summary>
-        /// <seealso cref="ViewVariablesManagerShared.TraitIdsFor" />
+        /// <seealso cref="ViewVariablesManager.TraitIdsFor" />
         public List<object> Traits { get; set; }
 
         /// <summary>

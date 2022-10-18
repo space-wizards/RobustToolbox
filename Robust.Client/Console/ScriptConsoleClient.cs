@@ -196,7 +196,7 @@ namespace Robust.Client.Console
         {
             private readonly ScriptConsoleClient _owner;
 
-            [field: Dependency] public override IViewVariablesManager vvm { get; } = default!;
+            [field: Dependency] public override IClientViewVariablesManager vvm { get; } = default!;
 
             public ScriptGlobalsImpl(ScriptConsoleClient owner)
             {
@@ -243,7 +243,7 @@ namespace Robust.Client.Console
     [PublicAPI]
     public abstract class ScriptGlobals : ScriptGlobalsShared
     {
-        public abstract IViewVariablesManager vvm { get; }
+        public abstract IClientViewVariablesManager vvm { get; }
 
         public abstract void vv(object a);
     }

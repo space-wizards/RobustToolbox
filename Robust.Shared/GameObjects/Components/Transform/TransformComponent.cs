@@ -30,8 +30,30 @@ namespace Robust.Shared.GameObjects
         [DataField("anchored")]
         internal bool _anchored;
 
+        internal bool MatricesDirty = false;
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
+
+        // these should just be system methods, but existing component functions like InvWorldMatrix still rely on
+        // getting these so those have to be fully ECS-ed first.
+        public Matrix3 LocalMatrix
+        {
+            get
+            {
+                if (MatricesDirty)
+                    RebuildMatrices();
+                return _localMatrix;
+            }
+        }
+        public Matrix3 InvLocalMatrix
+        {
+            get
+            {
+                if (MatricesDirty)
+                    RebuildMatrices();
+                return _invLocalMatrix;
+            }
+        }
 
         // used for lerping
 
@@ -85,14 +107,6 @@ namespace Robust.Shared.GameObjects
         [Access(typeof(SharedTransformSystem))]
         internal EntityUid? _gridUid = null;
 
-        [Obsolete("Use GridUid")]
-        public GridId GridID
-        {
-            get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)
-                ? grid.GridIndex
-                : GridId.Invalid;
-        }
-
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
@@ -132,7 +146,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!DeferUpdates)
                 {
-                    RebuildMatrices();
+                    MatricesDirty = true;
                     var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -219,12 +233,12 @@ namespace Robust.Shared.GameObjects
             {
                 var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                 var parent = _parent;
-                var myMatrix = _localMatrix;
+                var myMatrix = LocalMatrix;
 
                 while (parent.IsValid())
                 {
                     var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform._localMatrix;
+                    var parentMatrix = parentXform.LocalMatrix;
                     parent = parentXform.ParentUid;
 
                     Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
@@ -244,12 +258,12 @@ namespace Robust.Shared.GameObjects
             {
                 var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                 var parent = _parent;
-                var myMatrix = _invLocalMatrix;
+                var myMatrix = InvLocalMatrix;
 
                 while (parent.IsValid())
                 {
                     var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform._invLocalMatrix;
+                    var parentMatrix = parentXform.InvLocalMatrix;
                     parent = parentXform.ParentUid;
 
                     Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
@@ -374,7 +388,7 @@ namespace Robust.Shared.GameObjects
                 //  in regards to when to rebuild matrices.
                 // This may not in fact be the right thing.
                 if (changedParent || !DeferUpdates)
-                    RebuildMatrices();
+                    MatricesDirty = true;
 
                 Dirty(_entMan);
 
@@ -406,7 +420,7 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Local offset of this entity relative to its parent
-        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
+        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridUid"/> otherwise).
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -427,7 +441,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!DeferUpdates)
                 {
-                    RebuildMatrices();
+                    MatricesDirty = true;
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -548,7 +562,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            RebuildMatrices();
+            MatricesDirty = true;
 
             var moveEvent = new MoveEvent(Owner, _oldCoords ?? Coordinates, Coordinates, _oldLocalRotation ?? _localRotation, _localRotation, this, _gameTiming.ApplyingState);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
@@ -706,14 +720,14 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var worldMatrix = _localMatrix;
+            var worldMatrix = LocalMatrix;
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
-                var parentMatrix = xform._localMatrix;
+                var parentMatrix = xform.LocalMatrix;
                 Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
@@ -767,8 +781,8 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var invMatrix = _invLocalMatrix;
-            var worldMatrix = _localMatrix;
+            var invMatrix = InvLocalMatrix;
+            var worldMatrix = LocalMatrix;
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
@@ -776,11 +790,11 @@ namespace Robust.Shared.GameObjects
                 var xform = xformQuery.GetComponent(parent);
                 worldRot += xform.LocalRotation;
 
-                var parentMatrix = xform._localMatrix;
+                var parentMatrix = xform.LocalMatrix;
                 Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
-                var parentInvMatrix = xform._invLocalMatrix;
+                var parentInvMatrix = xform.InvLocalMatrix;
                 Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
@@ -792,19 +806,18 @@ namespace Robust.Shared.GameObjects
             return (worldPosition, worldRot, worldMatrix, invMatrix);
         }
 
-        internal void RebuildMatrices()
+        private void RebuildMatrices()
         {
-            // TODO maybe just add a matrix dirty bool, and rebuild only when needed? I.e., if a lone entity is just
-            // drifting through space, do things even usually need to access both the local & inverse-local matrices??
-            var pos = _localPosition;
+            MatricesDirty = false;
 
             if (!_parent.IsValid()) // Root Node
-                pos = Vector2.Zero;
+            {
+                _localMatrix = Matrix3.Identity;
+                _invLocalMatrix = Matrix3.Identity;
+            }
 
-            var rot = (float)_localRotation.Theta;
-
-            _localMatrix = Matrix3.CreateTransform(pos.X, pos.Y, rot);
-            _invLocalMatrix = Matrix3.CreateInverseTransform(pos.X, pos.Y, rot);
+            _localMatrix = Matrix3.CreateTransform(_localPosition, _localRotation);
+            _invLocalMatrix = Matrix3.CreateInverseTransform(_localPosition, _localRotation);
         }
 
         public string GetDebugString()

@@ -26,7 +26,7 @@ namespace Robust.Client.ViewVariables.Instances
         public ViewVariablesRemoteSession? Session { get; private set; }
         public object? Object { get; private set; }
 
-        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
+        public ViewVariablesInstanceObject(IClientViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
             : base(vvm, robustSerializer) { }
 
         public override void Initialize(DefaultWindow window, object obj)

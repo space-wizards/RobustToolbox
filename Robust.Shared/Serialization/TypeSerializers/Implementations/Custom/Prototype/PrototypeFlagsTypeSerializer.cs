@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
     [TypeSerializer]
     public sealed class PrototypeFlagsTypeSerializer<T>
         : ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>, ITypeSerializer<PrototypeFlags<T>, ValueDataNode>
-        where T : class, IPrototype
+        where T : struct, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

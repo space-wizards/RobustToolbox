@@ -2,7 +2,6 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -94,13 +93,13 @@ namespace Robust.Shared.GameObjects
             get
             {
                 if (_entityName == null)
-                    return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
+                    return _entityPrototype.HasValue ? _entityPrototype.Value.Name : string.Empty;
                 return _entityName;
             }
             set
             {
                 string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Name == newValue)
+                if (_entityPrototype.HasValue && _entityPrototype.Value.Name == newValue)
                     newValue = null;
 
                 if (_entityName == newValue)
@@ -120,13 +119,13 @@ namespace Robust.Shared.GameObjects
             get
             {
                 if (_entityDescription == null)
-                    return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
+                    return _entityPrototype.HasValue ? _entityPrototype.Value.Description : string.Empty;
                 return _entityDescription;
             }
             set
             {
                 string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Description == newValue)
+                if (_entityPrototype.HasValue && _entityPrototype.Value.Description == newValue)
                     newValue = null;
 
                 if(_entityDescription == newValue)

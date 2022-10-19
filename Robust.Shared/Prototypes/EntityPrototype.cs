@@ -7,13 +7,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
@@ -23,9 +19,9 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public readonly record struct EntityPrototype : IPrototype, IInheritingPrototype
     {
-        private ILocalizationManager _loc = default!;
+        private readonly ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
 
@@ -35,15 +31,14 @@ namespace Robust.Shared.Prototypes
 
         private const int DEFAULT_RANGE = 200;
 
-        [DataField("loc")]
-        private Dictionary<string, string>? _locPropertiesSet;
+        [DataField("loc")] private readonly Dictionary<string, string>? _locPropertiesSet;
 
         /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
         [IdDataFieldAttribute]
-        public string ID { get; private set; } = default!;
+        public string ID { get; } = default!;
 
         /// <summary>
         ///     The name set on this level of the prototype. This does NOT handle localization or inheritance.
@@ -52,15 +47,13 @@ namespace Robust.Shared.Prototypes
         /// <seealso cref="Name"/>
         [ViewVariables]
         [DataField("name")]
-        public string? SetName { get; private set; }
+        public string? SetName { get; }
 
         [ViewVariables]
         [DataField("description")]
-        public string? SetDesc { get; private set; }
+        public string? SetDesc { get; }
 
-        [ViewVariables]
-        [DataField("suffix")]
-        public string? SetSuffix { get; private set; }
+        [ViewVariables] [DataField("suffix")] public string? SetSuffix { get; }
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -89,7 +82,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("localizationId")]
-        public string? CustomLocalizationID { get; private set; }
+        public string? CustomLocalizationID { get; }
 
 
         /// <summary>
@@ -98,9 +91,9 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
-        public bool NoSpawn { get; private set; }
+        public bool NoSpawn { get; }
 
-        [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();
+        [DataField("placement")] private readonly EntityPlacementProperties PlacementProperties = new();
 
         /// <summary>
         /// The different mounting points on walls. (If any).
@@ -131,14 +124,14 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("save")]
-        public bool MapSavable { get; set; } = true;
+        public bool MapSavable { get; } = true;
 
         /// <summary>
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
         [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
-        public string[]? Parents { get; }
+        public string[]? Parents { get; } = Array.Empty<string>();
 
         [ViewVariables]
         [NeverPushInheritance]
@@ -158,10 +151,6 @@ namespace Robust.Shared.Prototypes
             Components.Add("Transform", new ComponentRegistryEntry(new TransformComponent(), new MappingDataNode()));
             // And a metadata component too!
             Components.Add("MetaData", new ComponentRegistryEntry(new MetaDataComponent(), new MappingDataNode()));
-        }
-
-        void ISerializationHooks.AfterDeserialization()
-        {
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
@@ -258,9 +247,9 @@ namespace Robust.Shared.Prototypes
                 defaultContext = new PrototypeSerializationContext(prototype);
             }*/
 
-            if (prototype != null)
+            if (prototype.HasValue)
             {
-                foreach (var (name, entry) in prototype.Components)
+                foreach (var (name, entry) in prototype.Value.Components)
                 {
                     var fullData = entry.Mapping;
 
@@ -275,7 +264,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var name in context.GetExtraComponentTypes())
                 {
-                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    if (prototype.HasValue && prototype.Value.Components.ContainsKey(name))
                     {
                         // This component also exists in the prototype.
                         // This means that the previous step already caught both the prototype data AND map data.
@@ -387,72 +376,5 @@ namespace Robust.Shared.Prototypes
                 }
             }
         }
-        /*private class PrototypeSerializationContext : YamlObjectSerializer.Context
-        {
-            readonly EntityPrototype? prototype;
-
-            public PrototypeSerializationContext(EntityPrototype? owner)
-            {
-                prototype = owner;
-            }
-
-            public override void SetCachedField<T>(string field, T value)
-            {
-                if (StackDepth != 0 || prototype?.CurrentDeserializingComponent == null)
-                {
-                    base.SetCachedField<T>(field, value);
-                    return;
-                }
-
-                if (!prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var fieldList))
-                {
-                    fieldList = new Dictionary<(string, Type), object?>();
-                    prototype.FieldCache[prototype.CurrentDeserializingComponent] = fieldList;
-                }
-
-                fieldList[(field, typeof(T))] = value;
-            }
-
-            public override bool TryGetCachedField<T>(string field, [MaybeNullWhen(false)] out T value)
-            {
-                if (StackDepth != 0 || prototype?.CurrentDeserializingComponent == null)
-                {
-                    return base.TryGetCachedField<T>(field, out value);
-                }
-
-                if (prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var dict))
-                {
-                    if (dict.TryGetValue((field, typeof(T)), out var theValue))
-                    {
-                        value = (T) theValue!;
-                        return true;
-                    }
-                }
-
-                value = default!;
-                return false;
-            }
-
-            public override void SetDataCache(string field, object value)
-            {
-                if (StackDepth != 0 || prototype == null)
-                {
-                    base.SetDataCache(field, value);
-                    return;
-                }
-
-                prototype.DataCache[field] = value;
-            }
-
-            public override bool TryGetDataCache(string field, out object? value)
-            {
-                if (StackDepth != 0 || prototype == null)
-                {
-                    return base.TryGetDataCache(field, out value);
-                }
-
-                return prototype.DataCache.TryGetValue(field, out value);
-            }
-        }*/
     }
 }

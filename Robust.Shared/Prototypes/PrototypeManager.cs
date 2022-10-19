@@ -43,7 +43,7 @@ namespace Robust.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        IEnumerable<T> EnumeratePrototypes<T>() where T : IPrototype;
+        IEnumerable<T> EnumeratePrototypes<T>() where T : struct, IPrototype;
 
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
@@ -65,7 +65,7 @@ namespace Robust.Shared.Prototypes
         /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
         /// </summary>
         IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
-            where T : IPrototype, IInheritingPrototype;
+            where T : struct, IPrototype, IInheritingPrototype;
 
         /// <summary>
         /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
@@ -78,7 +78,7 @@ namespace Robust.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        T Index<T>(string id) where T : IPrototype;
+        T Index<T>(string id) where T : struct, IPrototype;
 
         /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
@@ -91,9 +91,9 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
         /// </summary>
-        bool HasIndex<T>(string id) where T : IPrototype;
+        bool HasIndex<T>(string id) where T : struct, IPrototype;
 
-        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype;
+        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : struct, IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
         bool HasMapping<T>(string id);
@@ -146,7 +146,7 @@ namespace Robust.Shared.Prototypes
         /// <param name="variant">Identifier for the prototype variant, or null.</param>
         /// <typeparam name="T">The prototype in question.</typeparam>
         /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-        bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : IPrototype;
+        bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : struct, IPrototype;
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -204,7 +204,7 @@ namespace Robust.Shared.Prototypes
     /// Quick attribute to give the prototype its type string.
     /// To prevent needing to instantiate it because interfaces can't declare statics.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Struct)]
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
@@ -273,7 +273,7 @@ namespace Robust.Shared.Prototypes
             return _prototypeTypes.Keys;
         }
 
-        public IEnumerable<T> EnumeratePrototypes<T>() where T : IPrototype
+        public IEnumerable<T> EnumeratePrototypes<T>() where T : struct, IPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -304,7 +304,7 @@ namespace Robust.Shared.Prototypes
         }
 
         public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
-            where T : IPrototype, IInheritingPrototype
+            where T : struct, IPrototype, IInheritingPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -313,18 +313,18 @@ namespace Robust.Shared.Prototypes
 
             if(!TryIndex<T>(id, out var prototype))
                 yield break;
-            if (includeSelf) yield return prototype;
-            if (prototype.Parents == null) yield break;
+            if (includeSelf) yield return prototype.Value;
+            if (prototype.Value.Parents == null) yield break;
 
-            var queue = new Queue<string>(prototype.Parents);
+            var queue = new Queue<string>(prototype.Value.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
                 if(!TryIndex<T>(prototypeId, out var parent))
                     yield break;
-                yield return parent;
-                if (parent.Parents == null) continue;
+                yield return parent.Value;
+                if (parent.Value.Parents == null) continue;
 
-                foreach (var parentId in parent.Parents)
+                foreach (var parentId in parent.Value.Parents)
                 {
                     queue.Enqueue(parentId);
                 }
@@ -365,7 +365,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public T Index<T>(string id) where T : IPrototype
+        public T Index<T>(string id) where T : struct, IPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -487,7 +487,7 @@ namespace Robust.Shared.Prototypes
                 foreach (var entity in _entityManager.GetEntities())
                 {
                     var metaData = _entityManager.GetComponent<MetaDataComponent>(entity);
-                    if (metaData.EntityPrototype != null && metaData.EntityPrototype.ID == prototype)
+                    if (metaData.EntityPrototype.HasValue && metaData.EntityPrototype.Value.ID == prototype)
                     {
                         ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity(entity);
                     }
@@ -809,7 +809,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public bool HasIndex<T>(string id) where T : IPrototype
+        public bool HasIndex<T>(string id) where T : struct, IPrototype
         {
             if (!_prototypes.TryGetValue(typeof(T), out var index))
             {
@@ -819,7 +819,7 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
+        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : struct, IPrototype
         {
             var returned = TryIndex(typeof(T), id, out var proto);
             prototype = (T?)(proto ?? null);
@@ -893,7 +893,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : IPrototype
+        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : struct, IPrototype
         {
             return TryGetVariantFrom(typeof(T), out variant);
         }

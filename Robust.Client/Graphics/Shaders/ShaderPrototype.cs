@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, ISerializationHooks
+    public readonly struct ShaderPrototype : IPrototype, ISerializationHooks
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
@@ -22,7 +22,8 @@ namespace Robust.Client.Graphics
         [IdDataFieldAttribute]
         public string ID { get; } = default!;
 
-        private ShaderKind Kind;
+        [DataField("kind", true, required: true)]
+        private readonly ShaderKind Kind;
 
         // Source shader variables.
         private ShaderSourceResource? Source;
@@ -31,17 +32,9 @@ namespace Robust.Client.Graphics
         // Canvas shader variables.
         private ClydeHandle CompiledCanvasShader;
 
-        private ShaderInstance? _cachedInstance;
+        private readonly ShaderInstance? _cachedInstance;
 
-        private bool _stencilEnabled;
-        private int _stencilRef => StencilDataHolder?.StencilRef ?? 0;
-        private int _stencilReadMask => StencilDataHolder?.ReadMask ?? unchecked((int) uint.MaxValue);
-        private int _stencilWriteMask => StencilDataHolder?.WriteMask ?? unchecked((int) uint.MaxValue);
-        private StencilFunc _stencilFunc => StencilDataHolder?.StencilFunc ?? StencilFunc.Always;
-        private StencilOp _stencilOp => StencilDataHolder?.StencilOp ?? StencilOp.Keep;
-
-        [DataField("stencil")]
-        private StencilData? StencilDataHolder;
+        [DataField("stencil")] private readonly StencilData? StencilDataHolder;
 
         /// <summary>
         ///     Retrieves a ready-to-use instance of this shader.
@@ -82,14 +75,14 @@ namespace Robust.Client.Graphics
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (_stencilEnabled)
+            if (StencilDataHolder != null)
             {
                 instance.StencilTestEnabled = true;
-                instance.StencilRef = _stencilRef;
-                instance.StencilFunc = _stencilFunc;
-                instance.StencilOp = _stencilOp;
-                instance.StencilReadMask = _stencilReadMask;
-                instance.StencilWriteMask = _stencilWriteMask;
+                instance.StencilRef = StencilDataHolder.StencilRef;
+                instance.StencilFunc = StencilDataHolder.StencilFunc;
+                instance.StencilOp = StencilDataHolder.StencilOp;
+                instance.StencilReadMask = StencilDataHolder.ReadMask;
+                instance.StencilWriteMask = StencilDataHolder.WriteMask;
             }
 
             instance.MakeImmutable();
@@ -101,7 +94,6 @@ namespace Robust.Client.Graphics
             return Instance().Duplicate();
         }
 
-        [DataField("kind", readOnly: true, required: true)] private string _rawKind = default!;
         [DataField("path", readOnly: true)] private ResourcePath? path;
         [DataField("params", readOnly: true)] private Dictionary<string, string>? paramMapping;
         [DataField("light_mode", readOnly: true)] private string? rawMode;
@@ -109,10 +101,9 @@ namespace Robust.Client.Graphics
 
         void ISerializationHooks.AfterDeserialization()
         {
-            switch (_rawKind)
+            switch (Kind)
             {
-                case "source":
-                    Kind = ShaderKind.Source;
+                case ShaderKind.Source:
                     if (path == null) throw new InvalidOperationException();
                     Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path);
 
@@ -134,8 +125,7 @@ namespace Robust.Client.Graphics
                     }
                     break;
 
-                case "canvas":
-                    Kind = ShaderKind.Canvas;
+                case ShaderKind.Canvas:
                     var source = "";
 
                     if(rawMode != null)
@@ -183,12 +173,7 @@ namespace Robust.Client.Graphics
                     var preset = ShaderParser.Parse(source, _resourceCache);
                     CompiledCanvasShader = IoCManager.Resolve<IClydeInternal>().LoadShader(preset, $"canvas_preset_{ID}");
                     break;
-
-                default:
-                    throw new InvalidOperationException($"Invalid shader kind: '{_rawKind}'");
             }
-
-            if (StencilDataHolder != null) _stencilEnabled = true;
         }
 
         [DataDefinition]

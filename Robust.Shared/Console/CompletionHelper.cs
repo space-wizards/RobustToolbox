@@ -82,7 +82,7 @@ public static class CompletionHelper
     ///     Don't use this for prototypes types that likely have a large number of entries, like <see cref="EntityPrototype"/>.
     /// </remarks>
     public static IEnumerable<CompletionOption> PrototypeIDs<T>(bool sorted = true, IPrototypeManager? proto = null)
-        where T: class, IPrototype
+        where T : struct, IPrototype
     {
         IoCManager.Resolve(ref proto);
 

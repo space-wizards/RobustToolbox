@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
@@ -27,7 +26,7 @@ namespace Robust.Shared.Scripting
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
 
-        public IEnumerable<T> protos<T>() where T : class, IPrototype
+        public IEnumerable<T> protos<T>() where T : struct, IPrototype
         {
             return prot.EnumeratePrototypes<T>();
         }

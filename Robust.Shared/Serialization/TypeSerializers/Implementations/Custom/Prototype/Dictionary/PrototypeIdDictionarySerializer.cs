@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -14,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 {
 
     public sealed class AbstractPrototypeIdDictionarySerializer<TValue, TPrototype> : PrototypeIdDictionarySerializer<TValue,
-            TPrototype> where TPrototype : class, IPrototype, IInheritingPrototype
+        TPrototype> where TPrototype : struct, IPrototype, IInheritingPrototype
     {
         protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
             new AbstractPrototypeIdSerializer<TPrototype>();
@@ -25,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         ITypeSerializer<Dictionary<string, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<string, TValue>, MappingDataNode>,
         ITypeSerializer<IReadOnlyDictionary<string, TValue>, MappingDataNode>
-        where TPrototype : class, IPrototype
+        where TPrototype : struct, IPrototype
     {
         private readonly DictionarySerializer<string, TValue> _dictionarySerializer = new();
         protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();

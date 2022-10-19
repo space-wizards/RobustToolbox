@@ -10,13 +10,15 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public sealed class AbstractPrototypeIdListSerializer<T> : PrototypeIdListSerializer<T> where T : class, IPrototype, IInheritingPrototype
+    public sealed class AbstractPrototypeIdListSerializer<T> : PrototypeIdListSerializer<T>
+        where T : struct, IPrototype, IInheritingPrototype
     {
         protected override PrototypeIdSerializer<T> PrototypeSerializer => new AbstractPrototypeIdSerializer<T>();
     }
 
     [Virtual]
-    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
+    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode>
+        where T : struct, IPrototype
     {
         protected virtual PrototypeIdSerializer<T> PrototypeSerializer => new();
 

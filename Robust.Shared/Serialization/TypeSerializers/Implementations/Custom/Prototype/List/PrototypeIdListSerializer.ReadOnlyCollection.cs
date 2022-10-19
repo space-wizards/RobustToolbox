@@ -12,8 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
     public partial class PrototypeIdListSerializer<T> :
-        ITypeSerializer<IReadOnlyCollection<string>, SequenceDataNode>
-        where T : class, IPrototype
+        ITypeSerializer<IReadOnlyCollection<string>, SequenceDataNode> where T : struct, IPrototype
     {
         ValidationNode ITypeValidator<IReadOnlyCollection<string>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,

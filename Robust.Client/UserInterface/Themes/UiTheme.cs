@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Themes;
 
 [Prototype("uiTheme")]
-public readonly struct UITheme : IPrototype, IEquatable<UITheme>
+public readonly record struct UITheme : IPrototype
 { //this is used for ease of access
     public const string DefaultPath = "/Textures/Interface";
     public const string DefaultName = "Default";
@@ -54,16 +54,6 @@ public readonly struct UITheme : IPrototype, IEquatable<UITheme>
     {
         var color = ResolveColor(colorName) ?? defaultColor;
         return color;
-    }
-
-    public bool Equals(UITheme other)
-    {
-        return Equals(_path, other._path) && ID == other.ID && Equals(Colors, other.Colors);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is UITheme other && Equals(other);
     }
 
     public override int GetHashCode()

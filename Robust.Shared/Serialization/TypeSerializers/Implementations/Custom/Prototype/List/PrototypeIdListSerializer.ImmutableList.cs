@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -13,8 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
     public partial class PrototypeIdListSerializer<T> :
-        ITypeSerializer<ImmutableList<string>, SequenceDataNode>
-        where T : class, IPrototype
+        ITypeSerializer<ImmutableList<string>, SequenceDataNode> where T : struct, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

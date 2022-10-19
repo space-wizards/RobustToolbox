@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
@@ -11,7 +10,7 @@ namespace Robust.Shared.Utility
     /// </summary>
     /// <typeparam name="T">The prototype variant.</typeparam>
     public sealed class PrototypeFlags<T> : IReadOnlyPrototypeFlags<T>
-        where T : class, IPrototype
+        where T : struct, IPrototype
     {
         private readonly HashSet<string> _flags;
 
@@ -149,7 +148,7 @@ namespace Robust.Shared.Utility
     }
 
     public interface IReadOnlyPrototypeFlags<T> : IEnumerable<string>
-        where T : class, IPrototype
+        where T : struct, IPrototype
     {
         int Count { get; }
 

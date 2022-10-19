@@ -2,11 +2,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
-using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
@@ -59,7 +57,7 @@ namespace Robust.Shared.Localization
 
             foreach (var prototype in _prototype.EnumerateParents<EntityPrototype>(prototypeId, true))
             {
-                var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
+                var locId = prototype.CustomLocalizationID ?? $"ent-{prototypeId}";
 
                 if (TryGetMessage(locId, out var bundle, out var msg))
                 {
@@ -110,11 +108,11 @@ namespace Robust.Shared.Localization
                     }
                 }
 
-                name ??= prototype?.SetName;
-                desc ??= prototype?.SetDesc;
-                suffix ??= prototype?.SetSuffix;
+                name ??= prototype.SetName;
+                desc ??= prototype.SetDesc;
+                suffix ??= prototype.SetSuffix;
 
-                if (prototype?.LocProperties != null && prototype.LocProperties.Count != 0)
+                if (prototype.LocProperties.Count != 0)
                 {
                     foreach (var (attrib, value) in prototype.LocProperties)
                     {

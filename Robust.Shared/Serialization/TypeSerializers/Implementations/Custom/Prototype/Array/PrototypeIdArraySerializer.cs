@@ -10,7 +10,8 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 
-public sealed class AbstractPrototypeIdArraySerializer<TPrototype> : PrototypeIdArraySerializer<TPrototype> where TPrototype : class, IPrototype, IInheritingPrototype
+public sealed class AbstractPrototypeIdArraySerializer<TPrototype> : PrototypeIdArraySerializer<TPrototype>
+    where TPrototype : struct, IPrototype, IInheritingPrototype
 {
     protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
         new AbstractPrototypeIdSerializer<TPrototype>();
@@ -18,7 +19,7 @@ public sealed class AbstractPrototypeIdArraySerializer<TPrototype> : PrototypeId
 
 [Virtual]
 public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], SequenceDataNode>,
-    ITypeSerializer<string[], ValueDataNode> where TPrototype : class, IPrototype
+    ITypeSerializer<string[], ValueDataNode> where TPrototype : struct, IPrototype
 {
     protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 

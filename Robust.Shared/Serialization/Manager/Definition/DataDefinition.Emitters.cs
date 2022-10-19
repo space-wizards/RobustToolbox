@@ -298,15 +298,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Ldloca, 0);
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Unbox_Any, fieldType);
-
-                EmitSetField(generator, backingField);
-
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Box, type);
-                generator.Emit(OpCodes.Stind_Ref);
-
-                generator.Emit(OpCodes.Ret);
             }
             else
             {
@@ -315,11 +306,19 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Castclass, type);
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Unbox_Any, fieldType);
-
-                EmitSetField(generator, backingField.GetBackingField() ?? backingField);
-
-                generator.Emit(OpCodes.Ret);
             }
+
+            EmitSetField(generator, backingField.GetBackingField() ?? backingField);
+
+            if (type.IsValueType)
+            {
+                generator.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Ldloc_0);
+                generator.Emit(OpCodes.Box, type);
+                generator.Emit(OpCodes.Stind_Ref);
+            }
+
+            generator.Emit(OpCodes.Ret);
 
             return method.CreateDelegate<AssignField<T, object?>>();
         }

@@ -124,6 +124,11 @@ namespace Robust.Shared.Physics
             return new(quaternion2D.C * vector.X - quaternion2D.S * vector.Y, quaternion2D.S * vector.X + quaternion2D.C * vector.Y);
         }
 
+        public static Vector2 Mul(System.Numerics.Vector4 A, Vector2 v)
+        {
+            return new Vector2(A.X * v.X + A.Y * v.Y, A.Z * v.X + A.W * v.Y);
+        }
+
         public static Vector2 Mul(in Vector2[] A, in Vector2 v)
         {
             // A needing to be a 2 x 2 matrix

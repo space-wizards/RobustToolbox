@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.ViewVariables;
 
 public delegate ViewVariablesPath? HandleTypePath(ViewVariablesPath path, string relativePath);
-public delegate ViewVariablesPath? HandleTypePath<in T>(T? obj, string relativePath);
+public delegate ViewVariablesPath? HandleTypePathNullable<in T>(T? obj, string relativePath);
+public delegate ViewVariablesPath? HandleTypePathComponent<in TComp>(EntityUid uid, TComp comp, string relativePath);
+public delegate ViewVariablesPath? HandleTypePath<in T>(T obj, string relativePath);
 public delegate IEnumerable<string> ListTypeCustomPaths(ViewVariablesPath path);
-public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T? obj);
+public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T obj);
+public delegate IEnumerable<string> ListTypeCustomPathsNullable<in T>(T? obj);
+public delegate IEnumerable<string> ListTypeCustomPathsComponent<in TComp>(EntityUid uid, TComp comp);
 public delegate ViewVariablesPath? PathHandler(ViewVariablesPath path);
 public delegate ViewVariablesPath? PathHandler<in T>(T obj);
 public delegate ViewVariablesPath? PathHandlerNullable<in T>(T? obj);
@@ -42,10 +47,47 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
     public ViewVariablesTypeHandler<T> AddHandler(HandleTypePath<T> handle, ListTypeCustomPaths<T> list)
     {
         ViewVariablesPath? HandleWrapper(ViewVariablesPath path, string relativePath)
+            => path.Get() is not {} obj ? null : handle((T)obj, relativePath);
+
+        IEnumerable<string> ListWrapper(ViewVariablesPath path)
+            => path.Get() is not {} obj ? Enumerable.Empty<string>() : list((T)obj);
+
+        _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
+        return this;
+    }
+
+    /// <inheritdoc cref="AddHandler(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
+    /// <!-- The reason this isn't called "AddHandler" is because it'd cause many ambiguous invocations.-->
+    public ViewVariablesTypeHandler<T> AddHandlerNullable(HandleTypePathNullable<T> handle, ListTypeCustomPathsNullable<T> list)
+    {
+        ViewVariablesPath? HandleWrapper(ViewVariablesPath path, string relativePath)
             => handle((T?)path.Get(), relativePath);
 
         IEnumerable<string> ListWrapper(ViewVariablesPath path)
             => list((T?) path.Get());
+
+        _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
+        return this;
+    }
+
+    /// <inheritdoc cref="AddHandler(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
+    public ViewVariablesTypeHandler<T> AddHandler(HandleTypePathComponent<T> handle, ListTypeCustomPathsComponent<T> list)
+    {
+        ViewVariablesPath? HandleWrapper(ViewVariablesPath path, string relativePath)
+        {
+            if (path is not ViewVariablesComponentPath compPath || compPath.Get() is not T comp)
+                return null;
+
+            return handle(compPath.Owner, comp, relativePath);
+        }
+
+        IEnumerable<string> ListWrapper(ViewVariablesPath path)
+        {
+            if (path is not ViewVariablesComponentPath compPath || compPath.Get() is not T comp)
+                return Enumerable.Empty<string>();
+
+            return list(compPath.Owner, comp);
+        }
 
         _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
         return this;
@@ -65,28 +107,37 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
     /// <exception cref="ArgumentException">If the methods specified were not registered.</exception>
     public ViewVariablesTypeHandler<T> RemoveHandler(HandleTypePath<T> handle, ListTypeCustomPaths<T> list)
     {
-        for (var i = 0; i < _handlers.Count; i++)
-        {
-            var data = _handlers[i];
+        return RemoveHandlerInternal(handle, list, true);
+    }
 
-            if (data.OriginalHandle != handle || data.OriginalList != list)
-                continue;
+    /// <inheritdoc cref="RemoveHandler(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
+    public ViewVariablesTypeHandler<T> RemoveHandlerNullable(HandleTypePathNullable<T> handle, ListTypeCustomPathsNullable<T> list)
+    {
+        return RemoveHandlerInternal(handle, list, true);
+    }
 
-            _handlers.RemoveAt(i);
-            return this;
-        }
-
-        throw new ArgumentException("The specified arguments were not found in the list!");
+    /// <inheritdoc cref="RemoveHandler(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
+    public ViewVariablesTypeHandler<T> RemoveHandler(HandleTypePathComponent<T> handle, ListTypeCustomPathsComponent<T> list)
+    {
+        return RemoveHandlerInternal(handle, list, true);
     }
 
     /// <inheritdoc cref="RemoveHandler(Robust.Shared.ViewVariables.HandleTypePath{T},Robust.Shared.ViewVariables.ListTypeCustomPaths{T})"/>
     public ViewVariablesTypeHandler<T> RemoveHandler(HandleTypePath handle, ListTypeCustomPaths list)
     {
+        return RemoveHandlerInternal(handle, list);
+    }
+
+    private ViewVariablesTypeHandler<T> RemoveHandlerInternal(object handle, object list, bool originalCompare = false)
+    {
         for (var i = 0; i < _handlers.Count; i++)
         {
             var data = _handlers[i];
 
-            if (data.Handle != handle || data.List != list)
+            if (!originalCompare && (data.Handle != (HandleTypePath) handle || data.List != (ListTypeCustomPaths) list))
+                continue;
+
+            if (originalCompare && (data.OriginalHandle != handle || data.OriginalList != list))
                 continue;
 
             _handlers.RemoveAt(i);
@@ -225,11 +276,11 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
         public readonly HandleTypePath Handle;
         public readonly ListTypeCustomPaths List;
 
-        public readonly HandleTypePath<T>? OriginalHandle;
-        public readonly ListTypeCustomPaths<T>? OriginalList;
+        public readonly object? OriginalHandle;
+        public readonly object? OriginalList;
 
         public TypeHandlerData(HandleTypePath handle, ListTypeCustomPaths list,
-            HandleTypePath<T>? origHandle = null, ListTypeCustomPaths<T>? origList = null)
+            object? origHandle = null, object? origList = null)
         {
             Handle = handle;
             List = list;

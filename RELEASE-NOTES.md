@@ -31,7 +31,44 @@ Template for new versions:
 
 ### Breaking changes
 
-*None yet*
+* `CastShadows` moved to `SharedPointLightComponent` from clientside, now networked
+
+### New features
+
+* New type handler helpers added to V^3
+* Added pt-BR locale
+
+### Bugfixes
+
+* Fixed audio fallback coords
+
+### Other
+
+* Improved PVS performance by using `for` over `forEach`
+* Improved Vec2 inverse allocations
+
+## 0.55.5.0
+
+### New features
+
+* Added a method to pass in physics transforms for getting nearest point.
+
+### Bugfixes
+
+* Prevent singular sprite matrices.
+* Fix obsolete warnings in tests.
+
+### Other
+
+* Significantly reduce physics contact allocations.
+
+## 0.55.4.1
+
+### Breaking changes
+
+* Removed `SI`, `SIoC`, `I`, `IoC`, `SE` and `CE` VV command prefixes.
+  * `SI`, `SIoC`, `I` and `IoC` are replaced by VV paths under `/ioc/` and `/c/ioc/`.
+  * `SE` and `CE` are replaced by VV paths under `/system/` and `/c/system`.
 
 ### New features
 
@@ -40,6 +77,14 @@ Template for new versions:
   * `net.mtu_expand`
   * `net.mtu_expand_frequency`
   * `net.mtu_expand_fail_attempts`
+* Added a whole load of features to ViewVariables.
+  * Added VV Paths, which allow you to refer to an object by a path, e.g. `/entity/1234/Transform/WorldPosition`
+  * Added VV Domains, which allow you to add "handlers" for the top-most VV Path segment, e.g. `/entity` is a domain and so is `/player`...
+  * Added VV Type Handlers, which allow you to add "custom paths" under specific types, even dynamically!
+  * Added VV Path networking, which allows you to read/write/invoke paths remotely, both from server to client and from client to server.
+  * Added `vvread`, `vvwrite` and `vvinvoke` commands, which allow you to read, write and invoke VV paths.
+  * Added autocompletion to all VV commands.
+  * Please note that the VV GUI still remains the same. It will be updated to use these new features in the future.
 
 ### Bugfixes
 

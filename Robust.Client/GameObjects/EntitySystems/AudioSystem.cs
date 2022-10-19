@@ -105,6 +105,8 @@ namespace Robust.Client.GameObjects
             // Initial clearing pass
             try
             {
+                var metaQuery = GetEntityQuery<MetaDataComponent>();
+                var xformQuery = GetEntityQuery<TransformComponent>();
                 int streamIndexOut = 0;
                 foreach (var stream in _playingClydeStreams)
                 {
@@ -123,36 +125,36 @@ namespace Robust.Client.GameObjects
                     }
 
                     MapCoordinates? mapPos = null;
+
                     if (stream.TrackingCoordinates != null)
                     {
                         var coords = stream.TrackingCoordinates.Value;
-                        if (_mapManager.MapExists(coords.GetMapId(EntityManager)))
-                        {
-                            mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
-                        }
-                        else
+                        mapPos = coords.ToMap(EntityManager);
+
+                        if (!_mapManager.MapExists(mapPos.Value.MapId))
                         {
                             // Map no longer exists, delete stream.
                             StreamDone(stream);
                             continue;
                         }
                     }
-                    else if (stream.TrackingEntity != default)
+                    else if (stream.TrackingEntity.IsValid())
                     {
-                        if (EntityManager.Deleted(stream.TrackingEntity))
+                        if (!metaQuery.TryGetComponent(stream.TrackingEntity, out var meta) ||
+                            Deleted(stream.TrackingEntity, meta) ||
+                            !xformQuery.TryGetComponent(stream.TrackingEntity, out var xform))
                         {
                             StreamDone(stream);
                             continue;
                         }
 
-                        mapPos = EntityManager.GetComponent<TransformComponent>(stream.TrackingEntity).MapPosition;
+                        mapPos = xform.MapPosition;
                     }
 
-                    // TODO Remove when coordinates can't be NaN
-                    if (mapPos == null || !float.IsFinite(mapPos.Value.X) || !float.IsFinite(mapPos.Value.Y))
+                    if (mapPos == null || mapPos.Value.MapId == MapId.Nullspace)
                         mapPos = stream.TrackingFallbackCoordinates?.ToMap(EntityManager);
 
-                    if (mapPos != null)
+                    if (mapPos != null && mapPos.Value.MapId != MapId.Nullspace)
                     {
                         stream.MapCoordinatesTemporary = mapPos.Value;
                         // this has a map position so it's good to go to the other processes

@@ -61,7 +61,7 @@ public sealed partial class SpriteSystem
         }
 
         // Generate the icon and cache it in case it's ever needed again.
-        var result = GetPrototypeIcon(entityPrototype);
+        var result = GetPrototypeIcon(entityPrototype.Value);
         _cachedPrototypeIcons[prototype] = result;
 
         return result;

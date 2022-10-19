@@ -21,7 +21,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using TerraFX.Interop.Windows;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
@@ -746,7 +745,7 @@ namespace Robust.Client.GameObjects
                 if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
                 {
                     layer.ShaderPrototype = layerDatum.Shader;
-                    layer.Shader = prototype.Instance();
+                    layer.Shader = prototype.Value.Instance();
                 }
                 else
                 {
@@ -830,7 +829,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            LayerSetShader(layer, prototype.Instance(), shaderName);
+            LayerSetShader(layer, prototype.Value.Instance(), shaderName);
         }
 
         public void LayerSetShader(object layerKey, string shaderName)

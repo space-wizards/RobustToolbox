@@ -10,8 +10,8 @@ namespace Robust.Benchmarks.Serialization.Definitions
     ///     Arbitrarily large data definition for benchmarks.
     ///     Taken from content.
     /// </summary>
-    [Prototype("seed")]
-    public sealed class SeedDataDefinition : IPrototype
+    [DataDefinition]
+    public sealed class SeedDataDefinition
     {
         public const string Prototype = @"
 - type: seed

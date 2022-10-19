@@ -105,7 +105,7 @@ namespace Robust.Client.Utility
                         return SpriteComponent.GetFallbackState(resC);
                     }
 
-                    return SpriteComponent.GetPrototypeIcon(prototype, resC);
+                    return SpriteComponent.GetPrototypeIcon(prototype.Value, resC);
 
                 default:
                     throw new NotSupportedException();

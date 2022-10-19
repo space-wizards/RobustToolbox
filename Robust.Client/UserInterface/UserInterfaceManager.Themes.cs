@@ -46,8 +46,8 @@ internal partial class UserInterfaceManager
             Logger.Error("Could not find UI theme prototype for ID:"+ themeId);
             return;
         }
-        DefaultTheme = theme;
-        UpdateTheme(theme);
+        DefaultTheme = theme.Value;
+        UpdateTheme(theme.Value);
         _defaultOverriden = true;
     }
 

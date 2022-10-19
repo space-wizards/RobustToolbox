@@ -1,4 +1,3 @@
-using System;
 using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -142,7 +141,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
 
         [Prototype("circle")]
-        private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
+        private readonly record struct CircleTestPrototype : IPrototype, IInheritingPrototype
         {
             [IdDataField()]
             public string ID { get; } = default!;

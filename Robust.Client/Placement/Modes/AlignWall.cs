@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Map;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -21,10 +21,10 @@ namespace Robust.Client.Placement.Modes
 
             var nodes = new List<Vector2>();
 
-            if (pManager.CurrentPrototype!.MountingPoints != null)
+            if (pManager.CurrentPrototype.HasValue && pManager.CurrentPrototype.Value.MountingPoints != null)
             {
                 nodes.AddRange(
-                    pManager.CurrentPrototype.MountingPoints.Select(
+                    pManager.CurrentPrototype.Value.MountingPoints.Select(
                         current => new Vector2(MouseCoords.X, CurrentTile.Y + current)));
             }
             else

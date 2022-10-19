@@ -136,7 +136,7 @@ namespace Robust.Client.Placement
 
                 if (value != null)
                 {
-                    PlacementOffset = value.PlacementOffset;
+                    PlacementOffset = value.Value.PlacementOffset;
                 }
 
                 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
@@ -717,7 +717,7 @@ namespace Robust.Client.Placement
             }
             sc.NoRotation = noRot;
 
-            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
+            if (prototype.HasValue && prototype.Value.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
             {
                 sc.Scale = spriteComp.Scale;
             }

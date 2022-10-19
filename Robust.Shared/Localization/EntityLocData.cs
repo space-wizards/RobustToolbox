@@ -9,7 +9,7 @@ namespace Robust.Shared.Localization
     /// <param name="Desc">The localized description of the entity prototype.</param>
     /// <param name="Suffix">Editor-visible suffix of this entity prototype.</param>
     /// <param name="Attributes">Any extra attributes that can be used for localization, such as gender, proper, ...</param>
-    public record EntityLocData(
+    public readonly record struct EntityLocData(
         string Name,
         string Desc,
         string? Suffix,

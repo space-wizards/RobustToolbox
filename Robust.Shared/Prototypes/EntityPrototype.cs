@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
@@ -21,8 +22,6 @@ namespace Robust.Shared.Prototypes
     [Prototype("entity", -1)]
     public readonly record struct EntityPrototype : IPrototype, IInheritingPrototype
     {
-        private readonly ILocalizationManager _loc = default!;
-
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
         // As such, they should NOT be inherited to avoid confusing the system.
@@ -59,20 +58,23 @@ namespace Robust.Shared.Prototypes
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables]
-        public string Name => _loc.GetEntityData(ID).Name;
+        public string Name => _entityLocData.Name;
 
         /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
-        public string Description => _loc.GetEntityData(ID).Desc;
+        public string Description => _entityLocData.Desc;
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
         ///     to provide additional info without ruining the Name property itself.
         /// </summary>
         [ViewVariables]
-        public string? EditorSuffix => _loc.GetEntityData(ID).Suffix;
+        public string? EditorSuffix => _entityLocData.Suffix;
+
+        [IncludeDataField(customTypeSerializer: typeof(EntityLocDataSerializer))]
+        private readonly EntityLocData _entityLocData = default!;
 
         /// <summary>
         /// Fluent messageId used to lookup the entity's name and localization attributes.
@@ -148,7 +150,6 @@ namespace Robust.Shared.Prototypes
             Components.Add("Transform", new ComponentRegistryEntry(new TransformComponent(), new MappingDataNode()));
             // And a metadata component too!
             Components.Add("MetaData", new ComponentRegistryEntry(new MetaDataComponent(), new MappingDataNode()));
-            _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory? factory = null) where T : IComponent

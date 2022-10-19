@@ -43,7 +43,7 @@ namespace Robust.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype;
+        IEnumerable<T> EnumeratePrototypes<T>() where T : IPrototype;
 
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
@@ -64,7 +64,8 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
         /// </summary>
-        IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false) where T : class, IPrototype, IInheritingPrototype;
+        IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
+            where T : IPrototype, IInheritingPrototype;
 
         /// <summary>
         /// Returns an IEnumerable to iterate all parents of a prototype of a certain type.
@@ -77,7 +78,7 @@ namespace Robust.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        T Index<T>(string id) where T : class, IPrototype;
+        T Index<T>(string id) where T : IPrototype;
 
         /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
@@ -90,8 +91,9 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
         /// </summary>
-        bool HasIndex<T>(string id) where T : class, IPrototype;
-        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+        bool HasIndex<T>(string id) where T : IPrototype;
+
+        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
         bool HasMapping<T>(string id);
@@ -144,7 +146,7 @@ namespace Robust.Shared.Prototypes
         /// <param name="variant">Identifier for the prototype variant, or null.</param>
         /// <typeparam name="T">The prototype in question.</typeparam>
         /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-        bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype;
+        bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : IPrototype;
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -271,7 +273,7 @@ namespace Robust.Shared.Prototypes
             return _prototypeTypes.Keys;
         }
 
-        public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
+        public IEnumerable<T> EnumeratePrototypes<T>() where T : IPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -301,7 +303,8 @@ namespace Robust.Shared.Prototypes
             return EnumeratePrototypes(GetVariantType(variant));
         }
 
-        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)  where T : class, IPrototype, IInheritingPrototype
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
+            where T : IPrototype, IInheritingPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -362,7 +365,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public T Index<T>(string id) where T : class, IPrototype
+        public T Index<T>(string id) where T : IPrototype
         {
             if (!_hasEverBeenReloaded)
             {
@@ -472,7 +475,6 @@ namespace Robust.Shared.Prototypes
                 }
             }
 
-            //todo paul i hate it but i am not opening that can of worms in this refactor
             PrototypesReloaded?.Invoke(new PrototypesReloadedEventArgs(prototypes));
 
             // TODO filter by entity prototypes changed
@@ -807,7 +809,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public bool HasIndex<T>(string id) where T : class, IPrototype
+        public bool HasIndex<T>(string id) where T : IPrototype
         {
             if (!_prototypes.TryGetValue(typeof(T), out var index))
             {
@@ -817,10 +819,10 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
         {
             var returned = TryIndex(typeof(T), id, out var proto);
-            prototype = (proto ?? null) as T;
+            prototype = (T?)(proto ?? null);
             return returned;
         }
 
@@ -891,7 +893,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype
+        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : IPrototype
         {
             return TryGetVariantFrom(typeof(T), out variant);
         }

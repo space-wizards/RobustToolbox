@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface
         internal void ThemeUpdateRecursive()
         {
             var curTheme = IoCManager.Resolve<IUserInterfaceManager>().CurrentTheme;
-            if (Theme == curTheme) return; //don't update themes if the themes are up to date
+            if (Theme.Equals(curTheme)) return; //don't update themes if the themes are up to date
             Theme = curTheme;
             OnThemeUpdated();
             foreach (var child in Children)

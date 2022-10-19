@@ -28,7 +28,7 @@ internal partial class UserInterfaceManager
     //Try to set the current theme, if the theme is not found do nothing
     public void SetActiveTheme(string themeName)
     {
-        if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
+        if (!_themes.TryGetValue(themeName, out var theme) || theme.Equals(CurrentTheme)) return;
         CurrentTheme = theme;
     }
 
@@ -41,7 +41,7 @@ internal partial class UserInterfaceManager
             return;
         }
 
-        if (!_protoManager.TryIndex(themeId, out UITheme? theme))
+        if (!_protoManager.TryIndex<UITheme>(themeId, out var theme))
         {
             Logger.Error("Could not find UI theme prototype for ID:"+ themeId);
             return;
@@ -53,7 +53,7 @@ internal partial class UserInterfaceManager
 
     private void UpdateTheme(UITheme newTheme)
     {
-        if (newTheme == CurrentTheme) return; //do not update if the theme is unchanged
+        if (newTheme.Equals(CurrentTheme)) return; //do not update if the theme is unchanged
         CurrentTheme = newTheme;
         _userInterfaceManager.RootControl.ThemeUpdateRecursive();
     }

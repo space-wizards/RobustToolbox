@@ -30,6 +30,7 @@ namespace Robust.Shared.Localization
             // Conjugation
             AddCtxFunction(bundle, "CONJUGATE-BE", FuncConjugateBe);
             AddCtxFunction(bundle, "CONJUGATE-HAVE", FuncConjugateHave);
+            AddCtxFunction(bundle, "CONJUGATE-BASIC", FuncConjugateBasic);
 
             // Proper nouns
             AddCtxFunction(bundle, "PROPER", FuncProper);
@@ -240,6 +241,18 @@ namespace Robust.Shared.Localization
         private ILocValue FuncConjugateHave(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-conjugate-have", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the basic conjugated form of a verb. The first string argument is the base verb, the second string argument is the form
+        /// for he/she/it.
+        /// e.g. run -> he runs/she runs/they run/it runs
+        /// </summary>
+        private ILocValue FuncConjugateBasic(LocArgs args)
+        {
+            var first = ((LocValueString)args.Args[1]).Value;
+            var second = ((LocValueString)args.Args[2]).Value;
+            return new LocValueString(GetString("zzzz-conjugate-basic", ("ent", args.Args[0]), ("first", first), ("second", second)));
         }
 
         private ILocValue FuncAttrib(FluentBundle bundle, LocArgs args)

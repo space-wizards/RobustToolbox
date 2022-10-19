@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
-using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -15,8 +14,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
@@ -394,7 +391,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
 
-        foreach (var (_, visSet) in data.SentEntities)
+        foreach (var visSet in data.SentEntities.Values)
         {
             if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
@@ -454,10 +451,10 @@ internal sealed partial class PVSSystem : EntitySystem
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
         // Pool it because this will allocate a lot across ticks as we scale in players.
-        foreach (var (_, chunks) in _mapIndices)
+        foreach (var chunks in _mapIndices.Values)
             _mapChunkPool.Return(chunks);
 
-        foreach (var (_, chunks) in _gridIndices)
+        foreach (var chunks in _gridIndices.Values)
             _gridChunkPool.Return(chunks);
 
         _mapIndices.Clear();
@@ -473,11 +470,12 @@ internal sealed partial class PVSSystem : EntitySystem
             var viewers = GetSessionViewers(session);
             viewerEntities[i] = viewers;
 
-            foreach (var eyeEuid in viewers)
+            for (var j = 0; j < viewers.Length; j++)
             {
+                var eyeEuid = viewers[j];
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
-                if(mapId == MapId.Nullspace) continue;
+                if (mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -574,10 +572,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         var previousIndices = _previousTrees.Keys.ToArray();
-        foreach (var index in previousIndices)
+        for (var i = 0; i < previousIndices.Length; i++)
         {
+            var index = previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
-            if(_reusedTrees.Contains(index)) continue;
+            if (_reusedTrees.Contains(index)) continue;
             var chunk = _previousTrees[index];
             if (chunk.HasValue)
             {
@@ -590,6 +589,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 _previousTrees.Remove(index);
             }
         }
+
         _previousTrees.EnsureCapacity(chunks.Count);
         for (int i = 0; i < chunks.Count; i++)
         {
@@ -643,9 +643,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public void ReturnToPool(HashSet<int>[] playerChunks)
     {
-        foreach (var playerChunk in playerChunks)
+        for (var i = 0; i < playerChunks.Length; i++)
         {
-            _playerChunkPool.Return(playerChunk);
+            _playerChunkPool.Return(playerChunks[i]);
         }
     }
 

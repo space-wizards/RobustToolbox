@@ -29,6 +29,26 @@ Template for new versions:
 
 ## Master
 
+### Breaking changes
+
+* `CastShadows` moved to `SharedPointLightComponent` from clientside, now networked
+
+### New features
+
+* New type handler helpers added to V^3
+* Added pt-BR locale
+
+### Bugfixes
+
+* Fixed audio fallback coords
+
+### Other
+
+* Improved PVS performance by using `for` over `forEach`
+* Improved Vec2 inverse allocations
+
+## 0.55.5.0
+
 ### New features
 
 * Added a method to pass in physics transforms for getting nearest point.

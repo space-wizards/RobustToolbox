@@ -23,15 +23,11 @@ namespace Robust.Shared.Prototypes
     {
         private readonly ILocalizationManager _loc = default!;
 
-        private static readonly Dictionary<string, string> LocPropertiesDefault = new();
-
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
         // As such, they should NOT be inherited to avoid confusing the system.
 
         private const int DEFAULT_RANGE = 200;
-
-        [DataField("loc")] private readonly Dictionary<string, string>? _locPropertiesSet;
 
         /// <summary>
         /// The "in code name" of the object. Must be unique.
@@ -47,16 +43,17 @@ namespace Robust.Shared.Prototypes
         /// <seealso cref="Name"/>
         [ViewVariables]
         [DataField("name")]
-        public string? SetName { get; }
+        public string? SetName { get; } = null;
 
         [ViewVariables]
         [DataField("description")]
-        public string? SetDesc { get; }
+        public string? SetDesc { get; } = null;
 
-        [ViewVariables] [DataField("suffix")] public string? SetSuffix { get; }
+        [ViewVariables] [DataField("suffix")] public string? SetSuffix { get; } = null;
 
-        [ViewVariables]
-        public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
+        [DataField("loc")] private readonly Dictionary<string, string> _locPropertiesSet = new();
+
+        [ViewVariables] public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet;
 
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
@@ -82,7 +79,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("localizationId")]
-        public string? CustomLocalizationID { get; }
+        public string? CustomLocalizationID { get; } = null;
 
 
         /// <summary>
@@ -91,7 +88,7 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
-        public bool NoSpawn { get; }
+        public bool NoSpawn { get; } = false;
 
         [DataField("placement")] private readonly EntityPlacementProperties PlacementProperties = new();
 
@@ -136,7 +133,7 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [AbstractDataField]
-        public bool Abstract { get; }
+        public bool Abstract { get; } = false;
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.

@@ -270,7 +270,9 @@ namespace Robust.Server.Bql
 
                 var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
-                return metaData.EntityPrototype != null && prototypeManager.EnumerateParents<EntityPrototype>(metaData.EntityPrototype.ID).Any(x => x.Name == name) ^ isInverted;
+                return metaData.EntityPrototype.HasValue &&
+                       prototypeManager.EnumerateParents<EntityPrototype>(metaData.EntityPrototype.Value.ID)
+                           .Any(x => x.Name == name) ^ isInverted;
             });
         }
     }

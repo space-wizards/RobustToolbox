@@ -123,7 +123,7 @@ public sealed partial class SpriteSystem
             return;
 
         // Remove all changed prototypes from the cache, if they're there.
-        foreach (var (prototype, _) in changedSet.Modified)
+        foreach (var prototype in changedSet)
         {
             // Let's be lazy and not regenerate them until something needs them again.
             _cachedPrototypeIcons.Remove(prototype);

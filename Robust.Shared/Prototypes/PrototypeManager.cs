@@ -202,7 +202,7 @@ namespace Robust.Shared.Prototypes
     /// Quick attribute to give the prototype its type string.
     /// To prevent needing to instantiate it because interfaces can't declare statics.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
@@ -473,13 +473,7 @@ namespace Robust.Shared.Prototypes
             }
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
-            PrototypesReloaded?.Invoke(
-                new PrototypesReloadedEventArgs(
-                    prototypes
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.Where(x => _prototypes[g.Key].ContainsKey(x)).ToDictionary(a => a, a => _prototypes[g.Key][a])))));
+            PrototypesReloaded?.Invoke(new PrototypesReloadedEventArgs(prototypes));
 
             // TODO filter by entity prototypes changed
             if (!pushed.ContainsKey(typeof(EntityPrototype))) return;
@@ -1049,8 +1043,5 @@ namespace Robust.Shared.Prototypes
         }
     }
 
-    public sealed record PrototypesReloadedEventArgs(IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType)
-    {
-        public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);
-    }
+    public sealed record PrototypesReloadedEventArgs(IReadOnlyDictionary<Type, HashSet<string>> ByType);
 }

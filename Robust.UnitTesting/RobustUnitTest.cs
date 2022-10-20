@@ -87,24 +87,15 @@ namespace Robust.UnitTesting
             // and it was like this when I found it.
             systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
             systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
-            // All of the below will probably get nuked when anchoring moves to content.
-            systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<JointSystem>();
-            systems.LoadExtraSystemType<SharedGridTraversalSystem>();
-            systems.LoadExtraSystemType<DebugRayDrawingSystem>();
 
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
-                systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
-                systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
             }
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
                 systems.LoadExtraSystemType<PVSSystem>();
-                systems.LoadExtraSystemType<PhysicsSystem>();
-                systems.LoadExtraSystemType<BroadPhaseSystem>();
             }
 
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -141,11 +132,6 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
             {
                 compFactory.RegisterClass<EntityLookupComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
-            {
-                compFactory.RegisterClass<JointComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

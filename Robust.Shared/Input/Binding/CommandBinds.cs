@@ -36,8 +36,10 @@ namespace Robust.Shared.Input.Binding
         /// should usually be typeof(this) - same type as the calling class.</typeparam>
         public static void Unregister<TOwner>()
         {
-            var inputSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedInputSystem>();
-            Unregister<TOwner>(inputSystem.BindRegistry);
+            if (IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem<SharedInputSystem>(out var inputSystem))
+            {
+                Unregister<TOwner>(inputSystem.BindRegistry);
+            }
         }
 
         /// <summary>

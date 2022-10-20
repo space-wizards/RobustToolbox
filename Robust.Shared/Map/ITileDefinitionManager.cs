@@ -44,5 +44,7 @@ namespace Robust.Shared.Map
         /// <param name="src">The source tile (i.e. name of the alias).</param>
         /// <param name="dst">The destination tile (i.e. the actual concrete tile).</param>
         void AssignAlias(string src, string dst);
+
+        IReadOnlyDictionary<string, ushort> TileIds { get; }
     }
 }

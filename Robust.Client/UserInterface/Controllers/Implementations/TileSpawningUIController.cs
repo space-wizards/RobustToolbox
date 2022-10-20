@@ -104,7 +104,7 @@ public sealed class TileSpawningUIController : UIController
         var newObjInfo = new PlacementInformation
         {
             PlacementOption = "AlignTileAny",
-            TileType = definition.TileId,
+            TileType = _tiles.TileIds[definition.ID],
             Range = 400,
             IsTile = true
         };

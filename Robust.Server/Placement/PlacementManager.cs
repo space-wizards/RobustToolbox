@@ -298,7 +298,7 @@ namespace Robust.Server.Placement
                 MobUid = mob,
                 Range = range,
                 IsTile = true,
-                TileType = _tileDefinitionManager[tileType].TileId,
+                TileType = _tileDefinitionManager.TileIds[tileType],
                 PlacementOption = alignOption
             };
 

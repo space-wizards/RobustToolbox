@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -72,7 +71,7 @@ namespace Robust.Server.Maps
                     var variant = reader.ReadByte();
 
                     var defName = tileMap[id];
-                    id = tileDefinitionManager[defName].TileId;
+                    id = tileDefinitionManager.TileIds[defName];
 
                     var tile = new Tile(id, flags, variant);
                     chunk.SetTile(x, y, tile);

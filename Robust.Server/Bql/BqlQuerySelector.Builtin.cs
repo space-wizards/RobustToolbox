@@ -182,10 +182,10 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var tileDefinitionManager = IoCManager.Resolve<ITileDefinitionManager>();
-            var tileTy = tileDefinitionManager[(string) arguments[0]];
+            var tileId = tileDefinitionManager.TileIds[(string) arguments[0]];
 
             var map = IoCManager.Resolve<IMapManager>();
-            if (tileTy.TileId == 0)
+            if (tileId == 0)
             {
                 return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.GridUid is null) ^ isInverted);
             }
@@ -198,7 +198,7 @@ namespace Robust.Server.Bql
                     if (!map.TryGetGrid(transform.GridUid, out var grid))
                         return isInverted;
 
-                    return (grid.GetTileRef(transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;
+                    return (grid.GetTileRef(transform.Coordinates).Tile.TypeId == tileId) ^ isInverted;
 
                 });
             }

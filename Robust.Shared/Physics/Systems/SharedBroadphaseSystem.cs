@@ -232,7 +232,7 @@ namespace Robust.Shared.Physics.Systems
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
 
-                var transform = bodyQuery.GetComponent(grid.GridEntityId).GetTransform(xform);
+                var transform = _physicsSystem.GetPhysicsTransform(grid.GridEntityId, xformQuery: xformQuery);
                 gridsPool.Clear();
 
                 foreach (var colliding in _mapManager.FindGridsIntersecting(mapId, aabb, gridsPool, xformQuery, bodyQuery, true))
@@ -242,7 +242,7 @@ namespace Robust.Shared.Physics.Systems
                     var otherGrid = (MapGrid)colliding;
                     var otherGridBounds = colliding.WorldAABB;
                     var otherGridInvMatrix = colliding.InvWorldMatrix;
-                    var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
+                    var otherTransform = _physicsSystem.GetPhysicsTransform(colliding.GridEntityId, xformQuery: xformQuery);
 
                     // Get Grid2 AABB in grid1 ref
                     var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));
@@ -324,35 +324,35 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var broadphaseComp = broadphaseQuery.GetComponent(broadphase);
+            var proxyPairs = pairBuffer.GetOrNew(proxy);
+            var state = (proxyPairs, pairBuffer, proxy);
 
-            foreach (var other in broadphaseComp.Tree.QueryAabb(aabb))
+            broadphaseComp.Tree.QueryAabb(ref state, static (
+                ref (HashSet<FixtureProxy> proxyPairs, Dictionary<FixtureProxy, HashSet<FixtureProxy>> pairBuffer, FixtureProxy proxy) tuple,
+                in FixtureProxy other) =>
             {
                 DebugTools.Assert(other.Fixture.Body.CanCollide);
                 // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
 
-                // Do fast checks first and slower checks after (in ContactManager).
-                if (proxy == other ||
-                    proxy.Fixture.Body == other.Fixture.Body ||
-                    !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
+                if (tuple.proxy == other ||
+                    !ContactManager.ShouldCollide(tuple.proxy.Fixture, other.Fixture) ||
+                    tuple.proxy.Fixture.Body == other.Fixture.Body)
+                {
+                    return true;
+                }
 
                 // Don't add duplicates.
                 // Look it disgusts me but we can't do it Box2D's way because we're getting pairs
                 // with different broadphases so can't use Proxy sorting to skip duplicates.
-                // TODO: This needs to be better
-                if (pairBuffer.TryGetValue(other, out var existing) &&
-                    existing.Contains(proxy))
+                if (tuple.proxyPairs.Contains(other) ||
+                    tuple.pairBuffer.TryGetValue(other, out var otherPairs) && otherPairs.Contains(tuple.proxy))
                 {
-                    continue;
+                    return true;
                 }
 
-                if (!pairBuffer.TryGetValue(proxy, out var proxyExisting))
-                {
-                    proxyExisting = new HashSet<FixtureProxy>();
-                    pairBuffer[proxy] = proxyExisting;
-                }
-
-                proxyExisting.Add(other);
-            }
+                tuple.proxyPairs.Add(other);
+                return true;
+            }, aabb, true);
         }
 
         /// <summary>

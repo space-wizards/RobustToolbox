@@ -417,8 +417,8 @@ namespace Robust.Shared.Physics.Dynamics
                     var xformA = xformQuery.GetComponent(bodyA.Owner);
                     var xformB = xformQuery.GetComponent(bodyB.Owner);
 
-                    var gridABounds = fixtureA.Shape.ComputeAABB(bodyA.GetTransform(xformA), 0);
-                    var gridBBounds = fixtureB.Shape.ComputeAABB(bodyB.GetTransform(xformB), 0);
+                    var gridABounds = fixtureA.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyA.Owner, xformA, xformQuery), 0);
+                    var gridBBounds = fixtureB.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyB.Owner, xformB, xformQuery), 0);
 
                     if (!gridABounds.Intersects(gridBBounds))
                     {

@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
 #endif
 
         private DependencyCollection _systemDependencyCollection = default!;
-        private List<Type> _systemTypes = new();
+        private readonly List<Type> _systemTypes = new();
 
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
             "Amount of time spent processing each entity system", new HistogramConfiguration
@@ -347,6 +347,16 @@ namespace Robust.Shared.GameObjects
             }
 
             _extraLoadedTypes.Add(typeof(T));
+        }
+
+        public IEnumerable<Type> GetEntitySystemTypes()
+        {
+            return _systemTypes;
+        }
+
+        public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
+        {
+            return _systemDependencyCollection.TryResolveType(sysType, out system);
         }
 
         public object GetEntitySystem(Type sysType)

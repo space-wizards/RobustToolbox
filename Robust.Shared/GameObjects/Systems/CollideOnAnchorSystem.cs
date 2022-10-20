@@ -6,7 +6,7 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class CollideOnAnchorSystem : EntitySystem
     {
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
         {

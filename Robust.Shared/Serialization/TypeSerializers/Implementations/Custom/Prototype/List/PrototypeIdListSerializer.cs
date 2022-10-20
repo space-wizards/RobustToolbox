@@ -93,7 +93,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             List<string> value,
             IDependencyCollection dependencies,
             bool alwaysWrite,
-            ISerializationContext? context = null)
+            ISerializationContext? context)
         {
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }

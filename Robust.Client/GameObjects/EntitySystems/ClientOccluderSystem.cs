@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
                 occluderQuery.HasComponent(sender))
             {
                 var xform = EntityManager.GetComponent<TransformComponent>(sender);
-                if (!_mapManager.TryGetGrid(xform.GridID, out grid))
+                if (!_mapManager.TryGetGrid(xform.GridUid, out grid))
                     return;
 
                 var coords = xform.Coordinates;
@@ -122,13 +122,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(EntityUid sender, (EntityUid? grid, Vector2i pos)? lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (EntityUid grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
-        public (EntityUid? grid, Vector2i pos)? LastPosition { get; }
+        public (EntityUid grid, Vector2i pos)? LastPosition { get; }
         public EntityUid Sender { get; }
     }
 }

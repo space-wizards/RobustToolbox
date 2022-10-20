@@ -460,14 +460,16 @@ namespace Robust.Shared.Physics.Systems
                 MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
                 !_container.IsEntityInContainer(bodyAUid))
             {
-                _physics.WakeBody(bodyA);
+                _physics.SetCanCollide(bodyA, true);
+                _physics.SetAwake(bodyA, true);
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
                 MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
                 !_container.IsEntityInContainer(bodyBUid))
             {
-                _physics.WakeBody(bodyB);
+                _physics.SetCanCollide(bodyB, true);
+                _physics.SetAwake(bodyB, true);
             }
 
             if (!jointComponentA.Deleted)

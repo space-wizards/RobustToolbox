@@ -38,7 +38,6 @@ namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     #region Lifetime
@@ -56,7 +55,7 @@ public partial class SharedPhysicsSystem
         {
             if (component.BodyType != BodyType.Static)
             {
-                component.Awake = true;
+                SetAwake(component, true);
             }
         }
 
@@ -73,7 +72,7 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsInitialized(EntityUid uid)
     {
-        _fixtureSystem.OnPhysicsInit(uid);
+        _fixtures.OnPhysicsInit(uid);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -96,22 +95,22 @@ public partial class SharedPhysicsSystem
         if (args.Current is not PhysicsComponentState newState)
             return;
 
-        SetSleepingAllowed(component, newState.SleepingAllowed, false);
-        SetFixedRotation(component, newState.FixedRotation, false);
-        SetCanCollide(component, newState.CanCollide, false);
+        SetSleepingAllowed(component, newState.SleepingAllowed);
+        SetFixedRotation(component, newState.FixedRotation);
+        SetCanCollide(component, newState.CanCollide);
         component.BodyStatus = newState.Status;
 
         // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
-        SetLinearVelocity(component, newState.LinearVelocity, false);
-        SetAngularVelocity(component, newState.AngularVelocity, false);
-        SetBodyType(component, newState.BodyType);
-        SetFriction(component, newState.Friction, false);
-        SetLinearDamping(component, newState.LinearDamping, false);
-        SetAngularDamping(component, newState.AngularDamping, false);
-        component.Predict = false;
         Dirty(component);
+        SetLinearVelocity(component, newState.LinearVelocity);
+        SetAngularVelocity(component, newState.AngularVelocity);
+        SetBodyType(component, newState.BodyType);
+        SetFriction(component, newState.Friction);
+        SetLinearDamping(component, newState.LinearDamping);
+        SetAngularDamping(component, newState.AngularDamping);
+        component.Predict = false;
     }
 
     #endregion
@@ -236,10 +235,10 @@ public partial class SharedPhysicsSystem
 
         foreach (var (_, fixture) in fixtures.Fixtures)
         {
-            if (fixture.Mass <= 0.0f) continue;
+            if (fixture.Density <= 0.0f) continue;
 
-            var data = new MassData {Mass = fixture.Mass};
-            FixtureSystem.GetMassData(fixture.Shape, ref data);
+            var data = new MassData();
+            FixtureSystem.GetMassData(fixture.Shape, ref data, fixture.Density);
 
             body._mass += data.Mass;
             localCenter += data.Center * data.Mass;
@@ -377,12 +376,12 @@ public partial class SharedPhysicsSystem
         }
 
         if (updateSleepTime)
-            SetSleepTime(body, 0f);
+            SetSleepTime(body, 0);
 
         Dirty(body);
     }
 
-    public void SetBodyType(PhysicsComponent body, BodyType value, bool dirty = true)
+    public void SetBodyType(PhysicsComponent body, BodyType value)
     {
         if (body._bodyType == value)
             return;
@@ -410,9 +409,6 @@ public partial class SharedPhysicsSystem
 
         var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
         RaiseLocalEvent(body.Owner, ref ev, true);
-
-        if (dirty)
-            Dirty(body);
     }
 
     /// <summary>
@@ -510,6 +506,10 @@ public partial class SharedPhysicsSystem
     public void SetSleepTime(PhysicsComponent body, float value)
     {
         DebugTools.Assert(!float.IsNaN(value));
+
+        if (MathHelper.CloseToPercent(value, body._sleepTime))
+            return;
+
         body._sleepTime = value;
     }
 
@@ -528,12 +528,13 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
     {
         if (!Resolve(uid, ref xform))
             return new Transform();
 
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        xformQuery ??= GetEntityQuery<TransformComponent>();
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery.Value);
 
         return new Transform(worldPos, worldRot);
     }

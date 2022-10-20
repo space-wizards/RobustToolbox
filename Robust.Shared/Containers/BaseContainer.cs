@@ -275,6 +275,8 @@ namespace Robust.Shared.Containers
         {
             DebugTools.Assert(!Deleted);
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
+            var gotInsertedEvent = new EntGotInsertedIntoContainerMessage(toinsert, this);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gotInsertedEvent, true);
             Manager.Dirty(entMan);
         }
 

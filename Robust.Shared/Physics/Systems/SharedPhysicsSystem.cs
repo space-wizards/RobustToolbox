@@ -245,7 +245,8 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
-            _joints.ClearJoints(uid);
+            if (jointQuery.TryGetComponent(uid, out var joint))
+                _joints.ClearJoints(uid, joint);
 
             if (newMapId != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroadphase))
                 newBroadphase = parentBroadphase;

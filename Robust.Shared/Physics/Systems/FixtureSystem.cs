@@ -136,8 +136,10 @@ namespace Robust.Shared.Physics.Systems
             {
                 Density = density
             };
-            _physics.SetCollisionLayer(fixture, collisionLayer);
-            _physics.SetCollisionMask(fixture, collisionMask);
+            FixturesComponent? manager = null;
+
+            _physics.SetCollisionLayer(fixture, collisionLayer, manager);
+            _physics.SetCollisionMask(fixture, collisionMask, manager);
             CreateFixture(body, fixture);
         }
 
@@ -219,7 +221,7 @@ namespace Robust.Shared.Physics.Systems
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                _physics.ResetMassData(body);
+                _physics.ResetMassData(body, manager);
                 Dirty(manager);
             }
         }

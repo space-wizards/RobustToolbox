@@ -6,7 +6,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -16,7 +15,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
         [Dependency] private readonly MetaDataSystem _metaSys = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         // Needed on release no remove.
         // ReSharper disable once NotAccessedField.Local

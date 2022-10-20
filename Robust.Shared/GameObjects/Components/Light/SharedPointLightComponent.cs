@@ -37,6 +37,12 @@ namespace Robust.Shared.GameObjects
         [DataField("softness")]
         private float _softness = 1f;
 
+        /// <summary>
+        ///     Whether this pointlight should cast shadows
+        /// </summary>
+        [DataField("castShadows")]
+        public bool CastShadows = true;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool Enabled
         {

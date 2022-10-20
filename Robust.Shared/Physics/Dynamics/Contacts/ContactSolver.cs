@@ -21,13 +21,14 @@
 */
 
 using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
+using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -93,9 +94,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 {
                     var velocity = new ContactVelocityConstraint
                     {
-                        K = new Vector2[2],
+                        K = new Vector4(),
                         Points = new VelocityConstraintPoint[2],
-                        NormalMass = new Vector2[2],
+                        NormalMass = new Vector4(),
                     };
 
                     for (var j = 0; j < 2; j++)
@@ -152,11 +153,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.ContactIndex = i;
                 velocityConstraint.PointCount = pointCount;
 
-                for (var x = 0; x < 2; x++)
-                {
-                    velocityConstraint.K[x] = Vector2.Zero;
-                    velocityConstraint.NormalMass[x] = Vector2.Zero;
-                }
+                velocityConstraint.K = Vector4.Zero;
+                velocityConstraint.NormalMass = Vector4.Zero;
 
                 ref var positionConstraint = ref _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
@@ -338,9 +336,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     if (k11 * k11 < k_maxConditionNumber * (k11 * k22 - k12 * k12))
                     {
                         // K is safe to invert.
-                        velocityConstraint.K[0] = new Vector2(k11, k12);
-                        velocityConstraint.K[1] = new Vector2(k12, k22);
-                        velocityConstraint.NormalMass = velocityConstraint.K.Inverse();
+                        velocityConstraint.K = new Vector4(k11, k12, k12, k22);
+
+                        velocityConstraint.NormalMass = Vector4Helpers.Inverse(velocityConstraint.K);
                     }
                     else
                     {
@@ -588,7 +586,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         x.X = -cp1.NormalMass * b.X;
                         x.Y = 0.0f;
                         vn1 = 0.0f;
-                        vn2 = velocityConstraint.K[0].Y * x.X + b.Y;
+                        vn2 = velocityConstraint.K.Y * x.X + b.Y;
 
                         if (x.X >= 0.0f && vn2 >= 0.0f)
                         {
@@ -620,7 +618,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         //
                         x.X = 0.0f;
                         x.Y = -cp2.NormalMass * b.Y;
-                        vn1 = velocityConstraint.K[1].X * x.Y + b.X;
+                        vn1 = velocityConstraint.K.Z * x.Y + b.X;
                         vn2 = 0.0f;
 
                         if (x.Y >= 0.0f && vn1 >= 0.0f)

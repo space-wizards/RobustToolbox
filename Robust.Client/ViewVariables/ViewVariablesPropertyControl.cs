@@ -21,10 +21,10 @@ namespace Robust.Client.ViewVariables
 
         private readonly Label _bottomLabel;
 
-        private readonly IViewVariablesManagerInternal _viewVariablesManager;
+        private readonly IClientViewVariablesManagerInternal _viewVariablesManager;
         private readonly IRobustSerializer _robustSerializer;
 
-        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IRobustSerializer robustSerializer)
+        public ViewVariablesPropertyControl(IClientViewVariablesManagerInternal viewVars, IRobustSerializer robustSerializer)
         {
             MouseFilter = MouseFilterMode.Pass;
 

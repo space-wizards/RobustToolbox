@@ -6,7 +6,7 @@ namespace Robust.Server.ViewVariables
 {
     internal interface IViewVariablesSession
     {
-        IViewVariablesHost Host { get; }
+        IServerViewVariablesInternal Host { get; }
         IRobustSerializer RobustSerializer { get; }
         NetUserId PlayerUser { get; }
         object Object { get; }

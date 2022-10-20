@@ -118,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics
                 var contact = new Contact();
                 IoCManager.InjectDependencies(contact);
 #if DEBUG
-                contact._debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
 #endif
                 contact.Manifold = new Manifold
                 {

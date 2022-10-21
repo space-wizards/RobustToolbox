@@ -145,7 +145,7 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.Owner, ref manager))
+            if (!Resolve(body.Owner, ref manager, false))
             {
                 return null;
             }

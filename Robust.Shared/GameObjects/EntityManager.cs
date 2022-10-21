@@ -370,13 +370,6 @@ namespace Robust.Shared.GameObjects
             if (transform._children.Count != 0)
                 Logger.Error($"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
 
-            // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))
-            {
-                if(component.Running)
-                    component.LifeShutdown(this);
-            }
-
             // Dispose all my components, in a safe order so transform is available
             DisposeComponents(metadata.Owner);
 

@@ -2,7 +2,6 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -62,7 +61,6 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             SubscribeLocalEvent<MoveEvent>(OnMove);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(OnContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(OnContainerRemove);
@@ -99,7 +97,7 @@ namespace Robust.Shared.GameObjects
 
             if (lookup == null) return;
 
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+            var coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
             // If we're contained then LocalRotation should be 0 anyway.
             var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
@@ -114,25 +112,26 @@ namespace Robust.Shared.GameObjects
             // and any callers may potentially get duplicate entities that just changed state.
             if (args.Anchored)
             {
-                RemoveFromEntityTree(args.Entity);
+                RemoveFromEntityTree(args.Entity, args.Transform);
             }
             else if (!args.Detaching &&
                 TryComp(args.Entity, out MetaDataComponent? meta) &&
                 meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xformQuery = GetEntityQuery<TransformComponent>();
-                var xform = xformQuery.GetComponent(args.Entity);
+                var xform = args.Transform;
                 var lookup = GetLookup(args.Entity, xform, xformQuery);
 
                 if (lookup == null)
                     throw new InvalidOperationException();
 
-                var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
                 var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
+                var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+                var relativeRotation = rotation - lookupRotation;
                 DebugTools.Assert(coordinates.EntityId == lookup.Owner);
 
                 // If we're contained then LocalRotation should be 0 anyway.
-                var aabb = GetAABB(args.Entity, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+                var aabb = GetAABB(args.Entity, coordinates.Position, relativeRotation, xform, xformQuery);
                 AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
             }
             // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
@@ -222,12 +221,13 @@ namespace Robust.Shared.GameObjects
             // If nullspace or the likes.
             if (lookup == null) return;
 
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            DebugTools.Assert(coordinates.EntityId == lookup.Owner);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
+            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+            var relativeRotation = rotation - lookupRotation;
+            DebugTools.Assert(coordinates.EntityId == lookup.Owner);
 
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
 
             // Any child entities should be handled by their own OnEntityInit
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, false);
@@ -235,73 +235,67 @@ namespace Robust.Shared.GameObjects
 
         private void OnMove(ref MoveEvent args)
         {
-            UpdatePosition(args.Sender, args.Component);
-        }
+            var uid = args.Sender;
+            var xform = args.Component;
 
-        private void UpdatePosition(EntityUid uid, TransformComponent xform)
-        {
-            // Even if the entity is contained it may have children that aren't so we still need to update.
-            if (!CanMoveUpdate(uid)) return;
+            if (xform.GridUid == args.Sender)
+                return;
+
+            var meta = MetaData(args.Sender);
+            if (_container.IsEntityInContainer(args.Sender, meta) || meta.EntityLifeStage < EntityLifeStage.Initialized)
+            {
+                // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
+                // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
+                // removal parent-change. So if it is set here, this must mean we are getting inserted.
+                //
+                // However, this means that this method will still get run in full on container removal. Additionally,
+                // because not all container removals are guaranteed to result in a parent change, container removal
+                // events also need to add the entity to a tree. So if an entity gets ejected/teleported to some other
+                // grid this results in add-to-tree -> remove-from-tree -> add-to-tree.
+                //
+                // TODO IMPROVE CONTAINER REMOVAL HANDLING
+                return;
+            }
+
+            if (_mapManager.IsMap(uid))
+                return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var lookup = GetLookup(uid, xform, xformQuery);
 
-            if (lookup == null) return;
+            if (args.ParentChanged)
+                UpdateParent(uid, xform, lookup, xformQuery, args.OldPosition.EntityId);
+            else
+                UpdatePosition(uid, xform, lookup, xformQuery);
+        }
 
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+        private void UpdatePosition(EntityUid uid, TransformComponent xform, EntityLookupComponent? lookup, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (lookup == null)
+                return;
+
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
+            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+            var relativeRotation = rotation - lookupRotation;
+            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
         }
 
-        private bool CanMoveUpdate(EntityUid uid)
+        private void UpdateParent(EntityUid uid, TransformComponent xform, EntityLookupComponent? lookup, EntityQuery<TransformComponent> xformQuery, EntityUid oldParent)
         {
-            return !_mapManager.IsMap(uid) &&
-                     !_mapManager.IsGrid(uid) &&
-                     !_container.IsEntityInContainer(uid);
-        }
+            EntityLookupComponent? oldLookup = oldParent.IsValid() ? GetLookup(oldParent, xformQuery) : null;
 
-        private void OnParentChange(ref EntParentChangedMessage args)
-        {
-            var meta = MetaData(args.Entity);
-
-            // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
-            // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
-            // removal parent-change. So if it is set here, this must mean we are getting inserted.
-            //
-            // However, this means that this method will still get run in full on container removal. Additionally,
-            // because not all container removals are guaranteed to result in a parent change, container removal events
-            // also need to add the entity to a tree. So this generally results in:
-            // add-to-tree -> remove-from-tree -> add-to-tree.
-            // Though usually, `oldLookup == newLookup` for the last step. Its still shit though.
-            //
-            // TODO IMPROVE CONTAINER REMOVAL HANDLING
-
-            if (_container.IsEntityInContainer(args.Entity, meta))
-                return;
-
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
-                _mapManager.IsGrid(args.Entity) ||
-                _mapManager.IsMap(args.Entity)) return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = args.Transform;
-            EntityLookupComponent? oldLookup = null;
-
-            if (args.OldMapId != MapId.Nullspace && args.OldParent != null)
+            // If parent is the same then we just update the position as normal
+            if (oldLookup == lookup)
             {
-                oldLookup = GetLookup(args.OldParent.Value, xformQuery);
+                UpdatePosition(uid, xform, lookup, xformQuery);
+                return;
             }
-
-            var newLookup = GetLookup(args.Entity, xform, xformQuery);
-
-            // If parent is the same then no need to do anything as position should stay the same.
-            if (oldLookup == newLookup) return;
 
             RemoveFromEntityTree(oldLookup, xform, xformQuery);
 
-            if (newLookup != null)
-                AddToEntityTree(newLookup, xform, xformQuery, _transform.GetWorldRotation(newLookup.Owner, xformQuery));
+            if (lookup != null)
+                AddToEntityTree(lookup, xform, xformQuery, _transform.GetWorldRotation(lookup.Owner, xformQuery));
         }
 
         private void OnContainerRemove(EntRemovedFromContainerMessage ev)
@@ -334,9 +328,10 @@ namespace Robust.Shared.GameObjects
             Angle lookupRotation,
             bool recursive = true)
         {
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+            var relativeRotation = rotation - lookupRotation;
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABB(xform.Owner, coordinates.Position, relativeRotation, xform, xformQuery);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
         }
 
@@ -367,9 +362,10 @@ namespace Robust.Shared.GameObjects
                     if (conManager.ContainsEntity(child.Value)) continue;
 
                     var childXform = xformQuery.GetComponent(child.Value);
-                    var coordinates = _transform.GetMoverCoordinates(childXform.Coordinates, xformQuery);
+                    var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(childXform, xformQuery);
+                    var relativeRotation = rotation - lookupRotation;
                     // TODO: If we have 0 position and not contained can optimise these further, but future problem.
-                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupRotation);
+                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, relativeRotation);
                     AddToEntityTree(lookup, childXform, childAABB, xformQuery, lookupRotation);
                 }
             }
@@ -378,18 +374,18 @@ namespace Robust.Shared.GameObjects
                 while (childEnumerator.MoveNext(out var child))
                 {
                     var childXform = xformQuery.GetComponent(child.Value);
-                    var coordinates = _transform.GetMoverCoordinates(childXform.Coordinates, xformQuery);
+                    var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(childXform, xformQuery);
+                    var relativeRotation = rotation - lookupRotation;
                     // TODO: If we have 0 position and not contained can optimise these further, but future problem.
-                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupRotation);
+                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, relativeRotation);
                     AddToEntityTree(lookup, childXform, childAABB, xformQuery, lookupRotation);
                 }
             }
         }
 
-        private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
+        public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, bool recursive = true)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(uid);
             var lookup = GetLookup(uid, xform, xformQuery);
             RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
         }

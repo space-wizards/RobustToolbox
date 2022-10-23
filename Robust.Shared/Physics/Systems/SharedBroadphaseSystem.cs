@@ -17,7 +17,6 @@ namespace Robust.Shared.Physics.Systems
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedTransformSystem _xformSys = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private ISawmill _logger = default!;

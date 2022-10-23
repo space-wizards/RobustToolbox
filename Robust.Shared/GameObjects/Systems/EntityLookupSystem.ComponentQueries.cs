@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -15,7 +17,7 @@ public sealed partial class EntityLookupSystem
         HashSet<T> intersecting,
         Box2 worldAABB,
         LookupFlags flags,
-        EntityQuery<EntityLookupComponent> lookupQuery,
+        EntityQuery<BroadphaseComponent> lookupQuery,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<T> query) where T : Component
     {
@@ -24,14 +26,32 @@ public sealed partial class EntityLookupSystem
         var localAABB = invMatrix.TransformBox(worldAABB);
         var state = (intersecting, query);
 
-        lookup.Tree.QueryAabb(ref state, (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
-            {
-                if (!tuple.query.TryGetComponent(value, out var comp))
-                    return true;
-
-                tuple.intersecting.Add(comp);
+        lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+        {
+            if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+            tuple.intersecting.Add(comp);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+        lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+        {
+            if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                return true;
+
+            tuple.intersecting.Add(comp);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+        lookup.SundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+        {
+            if (!tuple.query.TryGetComponent(value, out var comp))
+                return true;
+
+            tuple.intersecting.Add(comp);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private void RecursiveAdd<T>(EntityUid uid, List<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component
@@ -114,7 +134,7 @@ public sealed partial class EntityLookupSystem
         else
         {
             var query = GetEntityQuery<T>();
-            var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+            var lookupQuery = GetEntityQuery<BroadphaseComponent>();
             // Get grid entities
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {

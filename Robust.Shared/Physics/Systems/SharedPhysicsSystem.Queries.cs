@@ -78,52 +78,6 @@ namespace Robust.Shared.Physics.Systems
             return state.found;
         }
 
-        [Obsolete("Use EntityLookup")]
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, bool approximate = true)
-        {
-            var broadphase = body.Broadphase;
-            if (broadphase == null || !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager))
-            {
-                return Array.Empty<PhysicsComponent>();
-            }
-
-            var entities = new List<PhysicsComponent>();
-
-            var state = (body, entities);
-
-            foreach (var (_, fixture) in manager.Fixtures)
-            {
-                foreach (var proxy in fixture.Proxies)
-                {
-                    broadphase.StaticTree.QueryAabb(ref state,
-                        (ref (PhysicsComponent body, List<PhysicsComponent> entities) state,
-                            in FixtureProxy other) =>
-                        {
-                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
-                            if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-                            if (!ShouldCollide(body, other.Fixture.Body)) return true;
-
-                            state.entities.Add(other.Fixture.Body);
-                            return true;
-                        }, proxy.AABB, approximate);
-
-                    broadphase.DynamicTree.QueryAabb(ref state,
-                        (ref (PhysicsComponent body, List<PhysicsComponent> entities) state,
-                            in FixtureProxy other) =>
-                        {
-                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
-                            if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-                            if (!ShouldCollide(body, other.Fixture.Body)) return true;
-
-                            state.entities.Add(other.Fixture.Body);
-                            return true;
-                        }, proxy.AABB, approximate);
-                }
-            }
-
-            return entities;
-        }
-
         /// <summary>
         ///     Get all the entities whose fixtures intersect the fixtures of the given entity. Basically a variant of
         ///     <see cref="GetCollidingEntities(PhysicsComponent, Vector2, bool)"/> that allows the user to specify
@@ -138,7 +92,14 @@ namespace Robust.Shared.Physics.Systems
         {
             var entities = new HashSet<EntityUid>();
 
-            if (!Resolve(uid, ref body, ref fixtureComp, false) || body.Broadphase == null)
+            if (!Resolve(uid, ref body, ref fixtureComp, false))
+                return entities;
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var broadphase = _lookup.GetBroadphase(uid, xformQuery.GetComponent(uid), broadQuery, xformQuery);
+
+            if (broadphase == null)
                 return entities;
 
             var state = (body, entities);
@@ -147,7 +108,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 foreach (var proxy in fixture.Proxies)
                 {
-                    body.Broadphase.StaticTree.QueryAabb(ref state,
+                    broadphase.StaticTree.QueryAabb(ref state,
                         (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
                             in FixtureProxy other) =>
                         {
@@ -158,7 +119,7 @@ namespace Robust.Shared.Physics.Systems
                             return true;
                         }, proxy.AABB, approximate);
 
-                    body.Broadphase.DynamicTree.QueryAabb(ref state,
+                    broadphase.DynamicTree.QueryAabb(ref state,
                         (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
                             in FixtureProxy other) =>
                         {

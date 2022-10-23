@@ -68,11 +68,9 @@ public sealed class Broadphase_Test
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
         var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
-        var parentBody = entManager.AddComponent<PhysicsComponent>(parent);
 
         var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);
-        var child1Body = entManager.AddComponent<PhysicsComponent>(child1);
 
         // Have a non-collidable child and check it doesn't get added too.
         var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
@@ -80,19 +78,18 @@ public sealed class Broadphase_Test
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
         physicsSystem.SetCanCollide(child2Body, false);
         Assert.That(!child2Body.CanCollide);
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(null));
 
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));
         Assert.That(child2Xform.ParentUid, Is.EqualTo(child1));
 
-        Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(gridBroadphase));
-        Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(gridBroadphase));
+        Assert.That(lookup.GetBroadphase(parent), Is.EqualTo(gridBroadphase));
+        Assert.That(lookup.GetBroadphase(child1), Is.EqualTo(gridBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         grid.SetTile(Vector2i.Zero, Tile.Empty);
-        Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.GetBroadphase(parent), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.GetBroadphase(child1), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
     }
 
     /// <summary>
@@ -134,7 +131,7 @@ public sealed class Broadphase_Test
 
         Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         xformSystem.DetachParentToNull(parentXform);
@@ -148,6 +145,6 @@ public sealed class Broadphase_Test
         parentXform.AttachParent(mapUid);
         Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
     }
 }

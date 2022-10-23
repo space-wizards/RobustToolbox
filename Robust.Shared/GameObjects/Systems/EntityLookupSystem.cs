@@ -46,7 +46,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace Robust.Shared.GameObjects
 
             var xformQuery = GetEntityQuery<TransformComponent>();
 
-            if (!xformQuery.Resolve(uid, ref xform) || xform.Anchored)
+            if (!xformQuery.Resolve(uid, ref xform))
                 return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
@@ -301,7 +300,8 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException();
             }
 
-            var mapTransform = _physics.GetPhysicsTransform(body.Owner, xform, xformQuery);
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
+            var mapTransform = new Transform(worldPos, worldRot);
             var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(lookup.Owner).GetWorldPositionRotationMatrixWithInv();
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
             var moveBuffer = Comp<SharedPhysicsMapComponent>(lookupXform.MapUid.Value).MoveBuffer;

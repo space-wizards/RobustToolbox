@@ -103,29 +103,37 @@ namespace Robust.Shared.Physics.Systems
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
                 var state = (moveBuffer, gridMoveBuffer);
 
-                // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
-                mapBroadphase.Tree.QueryAabb(ref state, static (ref (
-                        Dictionary<FixtureProxy, Box2> moveBuffer,
-                        Dictionary<FixtureProxy, Box2> gridMoveBuffer) tuple,
-                    in FixtureProxy value) =>
-                {
-                    // 99% of the time it's just going to be the broadphase (for now the grid) itself.
-                    // hence this body check makes this run significantly better.
-                    // Also check if it's not already on the movebuffer.
-                    if (tuple.moveBuffer.ContainsKey(value))
-                        return true;
-
-                    // To avoid updating during iteration.
-                    // Don't need to transform as it's already in map terms.
-                    tuple.gridMoveBuffer[value] = value.AABB;
-                    return true;
-                }, enlargedAABB, true);
+                QueryMapBroadphase(mapBroadphase.DynamicTree, ref state, enlargedAABB);
+                QueryMapBroadphase(mapBroadphase.StaticTree, ref state, enlargedAABB);
             }
 
             foreach (var (proxy, worldAABB) in gridMoveBuffer)
             {
                 moveBuffer[proxy] = worldAABB;
             }
+        }
+
+        private void QueryMapBroadphase(IBroadPhase broadPhase,
+            ref (Dictionary<FixtureProxy, Box2>, Dictionary<FixtureProxy, Box2>) state,
+            Box2 enlargedAABB)
+        {
+            // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
+            broadPhase.QueryAabb(ref state, static (ref (
+                    Dictionary<FixtureProxy, Box2> moveBuffer,
+                    Dictionary<FixtureProxy, Box2> gridMoveBuffer) tuple,
+                in FixtureProxy value) =>
+            {
+                // 99% of the time it's just going to be the broadphase (for now the grid) itself.
+                // hence this body check makes this run significantly better.
+                // Also check if it's not already on the movebuffer.
+                if (tuple.moveBuffer.ContainsKey(value))
+                    return true;
+
+                // To avoid updating during iteration.
+                // Don't need to transform as it's already in map terms.
+                tuple.gridMoveBuffer[value] = value.AABB;
+                return true;
+            }, enlargedAABB, true);
         }
 
         [Obsolete("Use the overload with SharedPhysicsMapComponent")]

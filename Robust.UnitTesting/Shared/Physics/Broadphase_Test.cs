@@ -36,13 +36,13 @@ public sealed class Broadphase_Test
         var mapBroadphase2 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId2));
         entManager.TickUpdate(0.016f, false);
 #pragma warning disable NUnit2046
-        Assert.That(mapBroadphase1.Tree.Count, Is.EqualTo(0));
+        Assert.That(mapBroadphase1.DynamicTree.Count, Is.EqualTo(0));
 #pragma warning restore NUnit2046
 
         xform.Coordinates = new EntityCoordinates(mapManager.GetMapEntityId(mapId2), Vector2.Zero);
         entManager.TickUpdate(0.016f, false);
 #pragma warning disable NUnit2046
-        Assert.That(mapBroadphase2.Tree.Count, Is.EqualTo(0));
+        Assert.That(mapBroadphase2.DynamicTree.Count, Is.EqualTo(0));
 #pragma warning restore NUnit2046
     }
 

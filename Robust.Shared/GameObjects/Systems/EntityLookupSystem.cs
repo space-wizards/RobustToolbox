@@ -29,17 +29,32 @@ namespace Robust.Shared.GameObjects
         Approximate = 1 << 0,
 
         /// <summary>
+        /// Should we query dynamic physics bodies.
+        /// </summary>
+        Dynamic = 1 << 1,
+
+        /// <summary>
+        /// Should we query static physics bodies.
+        /// </summary>
+        Static = 1 << 2,
+
+        /// <summary>
+        /// Should we query non-collidable physics bodies.
+        /// </summary>
+        Sundries = 1 << 3,
+
+        /// <summary>
         /// Also return entities from an anchoring query.
         /// </summary>
-        Anchored = 1 << 1,
+        [Obsolete("Use Static")]
+        Anchored = 1 << 4,
 
         /// <summary>
         /// Include entities that are currently in containers.
         /// </summary>
-        Contained = 1 << 2,
+        Contained = 1 << 5,
 
-        // TODO: Need Dynamic, Static, and Sundries
-        // Anchored needs killing
+        Uncontained = Dynamic | Static | Sundries,
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem
@@ -51,7 +66,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
         /// </summary>
-        public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Anchored;
+        public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
 
         private const int GrowthRate = 256;
 

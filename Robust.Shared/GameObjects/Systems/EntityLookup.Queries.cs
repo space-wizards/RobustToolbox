@@ -33,26 +33,35 @@ public sealed partial class EntityLookupSystem
         var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
         var localAABB = invMatrix.TransformBox(worldAABB);
 
-        lookup.DynamicTree.QueryAabb(ref intersecting,
-            static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            state.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            lookup.DynamicTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+                {
+                    state.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.StaticTree.QueryAabb(ref intersecting,
-            static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
-            state.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            lookup.StaticTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+                {
+                    state.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.SundriesTree.QueryAabb(ref intersecting,
-        static (ref HashSet<EntityUid> state, in EntityUid value) =>
+        if ((flags & LookupFlags.Sundries) != 0x0)
         {
-            state.Add(value);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            lookup.SundriesTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in EntityUid value) =>
+                {
+                    state.Add(value);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
     }
 
     private void AddEntitiesIntersecting(
@@ -65,28 +74,38 @@ public sealed partial class EntityLookupSystem
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
+        // We don't just use CalcBoundingBox because the transformed bounds might be tighter.
         var localAABB = invMatrix.TransformBox(worldBounds);
 
-        lookup.DynamicTree.QueryAabb(ref intersecting,
+        if ((flags & LookupFlags.Dynamic) != 0x0)
+        {
+            lookup.DynamicTree.QueryAabb(ref intersecting,
             static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
             {
                 state.Add(value.Fixture.Body.Owner);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.StaticTree.QueryAabb(ref intersecting,
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        {
+            lookup.StaticTree.QueryAabb(ref intersecting,
             static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
             {
                 state.Add(value.Fixture.Body.Owner);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.SundriesTree.QueryAabb(ref intersecting,
-            static (ref HashSet<EntityUid> state, in EntityUid value) =>
-            {
-                state.Add(value);
-                return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in EntityUid value) =>
+                {
+                    state.Add(value);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
@@ -100,48 +119,44 @@ public sealed partial class EntityLookupSystem
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
         var state = (ignored, found: false);
 
-        lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            if (tuple.ignored == value.Fixture.Body.Owner)
-                return true;
+            lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+            {
+                if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            if (tuple.ignored == value.Fixture.Body.Owner)
-                return true;
+            lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+            {
+                if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.SundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+        if ((flags & LookupFlags.Sundries) != 0x0)
         {
-            if (tuple.ignored == value)
-                return true;
+            lookup.SundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+            {
+                if (tuple.ignored == value)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
         if (state.found)
             return true;
-
-        if (!_mapManager.TryGetGrid(lookupUid, out var grid)) return false;
-
-        // TODO: Need a method that takes in local AABB.
-
-        if ((flags & LookupFlags.Anchored) != 0x0)
-        {
-            foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-            {
-                if (uid == ignored) continue;
-                return true;
-            }
-        }
 
         return false;
     }
@@ -157,47 +172,44 @@ public sealed partial class EntityLookupSystem
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
         var state = (ignored, found: false);
 
-        lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            if (tuple.ignored == value.Fixture.Body.Owner)
-                return true;
+            lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+            {
+                if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
-            if (tuple.ignored == value.Fixture.Body.Owner)
-                return true;
+            lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
+            {
+                if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        lookup.SundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+        if ((flags & LookupFlags.Sundries) != 0x0)
         {
-            if (tuple.ignored == value)
-                return true;
+            lookup.SundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+            {
+                if (tuple.ignored == value)
+                    return true;
 
-            tuple.found = true;
-            return false;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
         if (state.found)
             return true;
-
-        if (_mapManager.TryGetGrid(lookupUid, out var grid))
-        {
-            // TODO: Need a method that takes in local AABB.
-            if ((flags & LookupFlags.Anchored) != 0x0)
-            {
-                foreach (var _ in grid.GetAnchoredEntities(worldBounds))
-                {
-                    return true;
-                }
-            }
-        }
 
         return state.found;
     }
@@ -215,7 +227,8 @@ public sealed partial class EntityLookupSystem
 
     private void AddContained(HashSet<EntityUid> intersecting, LookupFlags flags, EntityQuery<TransformComponent> xformQuery)
     {
-        if ((flags & LookupFlags.Contained) == 0x0 || intersecting.Count == 0) return;
+        if ((flags & LookupFlags.Contained) == 0x0 || intersecting.Count == 0)
+            return;
 
         var conQuery = GetEntityQuery<ContainerManagerComponent>();
         var toAdd = new ValueList<EntityUid>();
@@ -361,15 +374,6 @@ public sealed partial class EntityLookupSystem
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox()))
         {
             AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
-
-            if ((flags & LookupFlags.Anchored) != 0x0)
-            {
-                foreach (var uid in grid.GetAnchoredEntities(worldBounds))
-                {
-                    if (Deleted(uid)) continue;
-                    intersecting.Add(uid);
-                }
-            }
         }
 
         // Get map entities
@@ -558,30 +562,31 @@ public sealed partial class EntityLookupSystem
         {
             var aabb = GetLocalBounds(index, tileSize);
 
-            lookup.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+            if ((flags & LookupFlags.Dynamic) != 0x0)
             {
-                state.Add(value.Fixture.Body.Owner);
-                return true;
-            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
-
-            lookup.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
-            {
-                state.Add(value.Fixture.Body.Owner);
-                return true;
-            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
-
-            lookup.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
-            {
-                intersecting.Add(value);
-                return true;
-            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
-
-            if ((flags & LookupFlags.Anchored) != 0x0)
-            {
-                foreach (var ent in grid.GetAnchoredEntities(index))
+                lookup.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
-                    intersecting.Add(ent);
-                }
+                    state.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+            {
+                lookup.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
+                {
+                    state.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            if ((flags & LookupFlags.Sundries) != 0x0)
+            {
+                lookup.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+                {
+                    intersecting.Add(value);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
         }
 
@@ -604,32 +609,33 @@ public sealed partial class EntityLookupSystem
 
         var state = (lookup.SundriesTree._b2Tree, intersecting);
 
-        lookup.DynamicTree.QueryAabb(ref state,
-            static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
-            {
-                tuple.intersecting.Add(value.Fixture.Body.Owner);
-                return true;
-            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
-
-        lookup.StaticTree.QueryAabb(ref state,
-            static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
-            {
-                tuple.intersecting.Add(value.Fixture.Body.Owner);
-                return true;
-            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
-
-        lookup.SundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            tuple.intersecting.Add(tuple._b2Tree.GetUserData(proxy));
-            return true;
-        }, aabb);
+            lookup.DynamicTree.QueryAabb(ref state,
+                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
+                {
+                    tuple.intersecting.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+        }
 
-        if ((flags & LookupFlags.Anchored) != 0x0)
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
-            foreach (var ent in grid.GetAnchoredEntities(gridIndices))
+            lookup.StaticTree.QueryAabb(ref state,
+                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
+                {
+                    tuple.intersecting.Add(value.Fixture.Body.Owner);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
             {
-                intersecting.Add(ent);
-            }
+                tuple.intersecting.Add(tuple._b2Tree.GetUserData(proxy));
+                return true;
+            }, aabb);
         }
 
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -647,16 +653,8 @@ public sealed partial class EntityLookupSystem
         var intersecting = new HashSet<EntityUid>();
 
         AddEntitiesIntersecting(gridId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
-
-        if ((flags & LookupFlags.Anchored) != 0x0)
-        {
-            foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-            {
-                intersecting.Add(uid);
-            }
-        }
-
         AddContained(intersecting, flags, xformQuery);
+
         return intersecting;
     }
 
@@ -669,17 +667,8 @@ public sealed partial class EntityLookupSystem
         var intersecting = new HashSet<EntityUid>();
 
         AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
-
-        if ((flags & LookupFlags.Anchored) != 0x0)
-        {
-            foreach (var uid in grid.GetAnchoredEntities(worldBounds))
-            {
-                if (Deleted(uid)) continue;
-                intersecting.Add(uid);
-            }
-        }
-
         AddContained(intersecting, flags, xformQuery);
+
         return intersecting;
     }
 
@@ -699,30 +688,31 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var localAABB = xformQuery.GetComponent(component.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
-        component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            intersecting.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
-        {
-            intersecting.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        component.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
-        {
-            intersecting.Add(value);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
-        {
-            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
+            component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(uid);
-            }
+                intersecting.Add(value.Fixture.Body.Owner);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        {
+            component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
+            {
+                intersecting.Add(value.Fixture.Body.Owner);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            component.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+            {
+                intersecting.Add(value);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
         AddContained(intersecting, flags, xformQuery);
@@ -734,30 +724,31 @@ public sealed partial class EntityLookupSystem
     {
         var intersecting = new HashSet<EntityUid>();
 
-        component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            intersecting.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
-        {
-            intersecting.Add(value.Fixture.Body.Owner);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        component.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
-        {
-            intersecting.Add(value);
-            return true;
-        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
-
-        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
-        {
-            foreach (var uid in grid.GetLocalAnchoredEntities(localAABB))
+            component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(uid);
-            }
+                intersecting.Add(value.Fixture.Body.Owner);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        {
+            component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
+            {
+                intersecting.Add(value.Fixture.Body.Owner);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            component.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+            {
+                intersecting.Add(value);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
         AddContained(intersecting, flags, GetEntityQuery<TransformComponent>());

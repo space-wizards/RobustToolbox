@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
@@ -20,6 +13,11 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Robust.Server.GameStates;
 
@@ -28,7 +26,6 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -352,6 +349,9 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
         }
+
+        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
         _entityPvsCollection.UpdateIndex(uid, coordinates);
 

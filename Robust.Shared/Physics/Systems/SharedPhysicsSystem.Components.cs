@@ -381,6 +381,12 @@ public partial class SharedPhysicsSystem
         Dirty(body);
     }
 
+    public void TrySetBodyType(EntityUid uid, BodyType value)
+    {
+        if (TryComp(uid, out PhysicsComponent? body))
+            SetBodyType(body, value);
+    }
+
     public void SetBodyType(PhysicsComponent body, BodyType value)
     {
         if (body._bodyType == value)

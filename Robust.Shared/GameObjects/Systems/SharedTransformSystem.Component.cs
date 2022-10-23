@@ -116,6 +116,10 @@ public abstract partial class SharedTransformSystem
 
         Dirty(xform);
         xform._anchored = false;
+
+        if (!xform.Initialized)
+            return;
+
         var ev = new AnchorStateChangedEvent(xform);
         RaiseLocalEvent(xform.Owner, ref ev, true);
     }
@@ -235,6 +239,33 @@ public abstract partial class SharedTransformSystem
 
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
+        // I hate this. Apparently some entities rely on this to perform their initialization logic. Those components
+        // should just do their own init logic, instead of wasting time raising this event on every entity that gets
+        // created.
+        if (component.Anchored)
+        {
+            DebugTools.Assert(component.ParentUid == component.GridUid && component.ParentUid.IsValid());
+            var anchorEv = new AnchorStateChangedEvent(component);
+            RaiseLocalEvent(uid, ref anchorEv, true);
+        }
+
+        // I hate this too. Once again, required for shit like containers because they CBF doing their own init logic
+        // and rely on parent changed messages instead.
+        var parent = new EntParentChangedMessage(uid, null, MapId.Nullspace, component);
+        RaiseLocalEvent(uid, ref parent, true);
+
+        // but most of all, I hate this:
+        if (component._anchored && TryComp(component.ParentUid, out IMapGridComponent? grid))
+        {
+            if (!grid.Grid.IsAnchored(component.Coordinates, uid))
+                AnchorEntity(component, grid.Grid);
+        }
+
+        // TODO figure out how many of the above are actually required.
+
+        // there should be no deferred events before startup has finished.
+        DebugTools.Assert(component._oldCoords == null && component._oldLocalRotation == null);
+
         var ev = new TransformStartupEvent(component);
         RaiseLocalEvent(uid, ref ev, true);
     }
@@ -323,15 +354,15 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     /// <param name="rotation">Final local rotation. If not specified, this will attempt to preserve world
     /// rotation.</param>
-    /// <param name="unanchor">Whether or not to unanchor the entity before moving. Note that if you set this to false,
-    /// you need to manually manage the grid lookup changes and ensure the final position is valid</param>
+    /// <param name="unanchor">Whether or not to unanchor the entity before moving. Note that this will still move the
+    /// entity even when false. If you set this to false, you need to manually manage the grid lookup changes and ensure
+    /// the final position is valid</param>
     public void SetCoordinates(TransformComponent xform, EntityCoordinates value, Angle? rotation = null, TransformComponent? newParent = null, bool unanchor = true)
     {
         // NOTE: This setter must be callable from before initialize.
 
         var oldPosition = xform.Coordinates;
         var oldRotation = xform._localRotation;
-        var oldAnchored = xform.Anchored;
 
         if (xform.Anchored && unanchor)
             Unanchor(xform);
@@ -340,6 +371,7 @@ public abstract partial class SharedTransformSystem
         Dirty(xform);
         xform.MatricesDirty = true;
         xform._localPosition = value.Position;
+
         if (rotation != null)
             xform._localRotation = rotation.Value;
 
@@ -372,11 +404,15 @@ public abstract partial class SharedTransformSystem
             if (rotation == null && xform.LifeStage == ComponentLifeStage.Running && oldParent != null)
                 xform._localRotation += GetWorldRotation(oldParent, xformQuery) - GetWorldRotation(newParent, xformQuery);
 
-            var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent?.Owner, oldMapId, xform);
-            RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+
+            if (xform.Initialized)
+            {
+                var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent?.Owner, oldMapId, xform);
+                RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+            }
         }
 
-        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred.
+        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred. If this changes, also need to relocate the `xform.MatricesDirty = true`
 
         if (!xform.Initialized)
             return;
@@ -508,7 +544,7 @@ public abstract partial class SharedTransformSystem
                 }
             }
 
-            if (oldAnchored != newState.Anchored)
+            if (oldAnchored != newState.Anchored && xform.Initialized)
             {
                 var ev = new AnchorStateChangedEvent(xform);
                 RaiseLocalEvent(xform.Owner, ref ev, true);
@@ -779,6 +815,9 @@ public abstract partial class SharedTransformSystem
         if (!xform.DeferUpdates)
         {
             xform.MatricesDirty = true;
+            if (!xform.Initialized)
+                return;
+
             var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
             RaiseLocalEvent(xform.Owner, ref moveEvent, true);
         }

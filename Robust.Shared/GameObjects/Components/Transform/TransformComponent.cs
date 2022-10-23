@@ -145,12 +145,12 @@ namespace Robust.Shared.GameObjects
                 _localRotation = value;
                 Dirty(_entMan);
 
-                if (!Initialized)
-                    return;
-
                 if (!DeferUpdates)
                 {
                     MatricesDirty = true;
+                    if (!Initialized)
+                        return;
+
                     var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -336,12 +336,12 @@ namespace Robust.Shared.GameObjects
                 _localPosition = value;
                 Dirty(_entMan);
 
-                if (!Initialized)
-                    return;
-
                 if (!DeferUpdates)
                 {
                     MatricesDirty = true;
+                    if (!Initialized)
+                        return;
+
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -444,7 +444,11 @@ namespace Robust.Shared.GameObjects
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridUid;
+                var parentXform = xformQuery.GetComponent(_parent);
+                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
+                    return parentXform.GridUid;
+                else
+                    return parentXform.FindGridEntityId(xformQuery);
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;

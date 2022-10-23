@@ -12,6 +12,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {
@@ -215,8 +216,15 @@ namespace Robust.Shared.GameObjects
             if (mapXform == null)
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
-            var coords = new EntityCoordinates(mapEnt, coordinates.Position);
-            _xforms.SetCoordinates(transform, coords, null, mapXform, unanchor: false);
+            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
+            {
+                _xforms.AnchorEntity(transform, grid, grid.TileIndicesFor(coordinates));
+            }
+            else
+            {
+                var coords = new EntityCoordinates(mapEnt, coordinates.Position);
+                _xforms.SetCoordinates(transform, coords, null, mapXform);
+            }
             return newEntity;
         }
 

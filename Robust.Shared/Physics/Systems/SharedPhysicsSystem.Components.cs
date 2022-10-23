@@ -46,12 +46,13 @@ public partial class SharedPhysicsSystem
     {
         var xform = Transform(uid);
 
-        if (component.CanCollide && _containerSystem.IsEntityInContainer(uid))
+
+        if (component.CanCollide && (_containerSystem.IsEntityInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
             SetCanCollide(component, false, false);
         }
 
-        if (component._canCollide && xform.MapID != MapId.Nullspace)
+        if (component._canCollide)
         {
             if (component.BodyType != BodyType.Static)
             {

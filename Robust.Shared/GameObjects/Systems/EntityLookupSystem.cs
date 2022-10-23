@@ -195,6 +195,12 @@ namespace Robust.Shared.GameObjects
             if (_mapManager.IsGrid(fixture.Body.Owner))
                 return;
 
+            if (fixture.ProxyCount == 0)
+            {
+                Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(fixture.Body.Owner)} that already has no proxies?");
+                return;
+            }
+
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var broadphase = GetBroadphase(fixture.Body.Owner, xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery);

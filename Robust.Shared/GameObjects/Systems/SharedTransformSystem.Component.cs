@@ -386,6 +386,11 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
         }
 
+        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred.
+
+        if (!xform.Initialized)
+            return;
+
         var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref moveEvent, true);
     }

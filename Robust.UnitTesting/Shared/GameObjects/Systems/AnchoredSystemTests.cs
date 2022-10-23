@@ -202,7 +202,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = new Vector2(99, 99);
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates = new EntityCoordinates(grid.GridEntityId, 99, 99); // make sure not to change parent, that would un-anchor
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
             Assert.That(calledCount, Is.EqualTo(0));

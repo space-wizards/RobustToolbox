@@ -50,6 +50,7 @@ namespace Robust.Shared.Physics.Systems
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<PhysicsComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
 
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
@@ -327,7 +328,17 @@ namespace Robust.Shared.Physics.Systems
             var proxyPairs = pairBuffer.GetOrNew(proxy);
             var state = (proxyPairs, pairBuffer, proxy);
 
-            broadphaseComp.Tree.QueryAabb(ref state, static (
+            QueryBroadphase(broadphaseComp.DynamicTree, ref state, aabb);
+
+            if ((proxy.Fixture.Body.BodyType & BodyType.Static) != 0x0)
+                return;
+
+            QueryBroadphase(broadphaseComp.StaticTree, ref state, aabb);
+        }
+
+        private void QueryBroadphase(IBroadPhase broadPhase, ref (HashSet<FixtureProxy>, Dictionary<FixtureProxy, HashSet<FixtureProxy>>, FixtureProxy) state, Box2 aabb)
+        {
+            broadPhase.QueryAabb(ref state, static (
                 ref (HashSet<FixtureProxy> proxyPairs, Dictionary<FixtureProxy, HashSet<FixtureProxy>> pairBuffer, FixtureProxy proxy) tuple,
                 in FixtureProxy other) =>
             {
@@ -458,13 +469,16 @@ namespace Robust.Shared.Physics.Systems
             if (body.Broadphase == null)
                 return;
 
+            var bodyType = body.BodyType;
+            var tree = (bodyType & BodyType.Static) != 0 ? body.Broadphase.StaticTree : body.Broadphase.DynamicTree;
+
             foreach (var (_, fixture) in manager.Fixtures)
             {
                 var proxyCount = fixture.ProxyCount;
                 for (var i = 0; i < proxyCount; i++)
                 {
                     var proxy = fixture.Proxies[i];
-                    body.Broadphase.Tree.RemoveProxy(proxy.ProxyId);
+                    tree.RemoveProxy(proxy.ProxyId);
                     proxy.ProxyId = DynamicTree.Proxy.Free;
                     moveBuffer?.Remove(proxy);
                 }
@@ -473,6 +487,68 @@ namespace Robust.Shared.Physics.Systems
             }
 
             body.Broadphase = null;
+        }
+
+        private void OnBodyTypeChange(EntityUid uid, PhysicsComponent component, ref PhysicsBodyTypeChangedEvent args)
+        {
+            if (!component.CanCollide || HasComp<IMapGridComponent>(uid))
+                return;
+
+            var broadphase = GetBroadphase(Transform(uid));
+
+            if (broadphase == null)
+                return;
+
+            var oldTree = GetBroadphase(component, broadphase, args.Old);
+            var newTree = GetBroadphase(component, broadphase, component.BodyType);
+
+            if (oldTree.Equals(newTree))
+                return;
+
+            RemoveProxies(component, oldTree);
+            AddProxies(component, newTree);
+        }
+
+        private IBroadPhase GetBroadphase(PhysicsComponent body, BroadphaseComponent broadphaseComponent, BodyType bodyType)
+        {
+            return body.BodyType == BodyType.Static ? broadphaseComponent.StaticTree : broadphaseComponent.DynamicTree;
+        }
+
+        private void RemoveProxies(PhysicsComponent body, IBroadPhase tree, FixturesComponent? manager = null)
+        {
+            if (!Resolve(body.Owner, ref manager))
+                return;
+
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    // Shouldn't need to touch movebuffer.
+                    var proxy = fixture.Proxies[i];
+                    tree.RemoveProxy(proxy.ProxyId);
+                }
+            }
+        }
+
+        private void AddProxies(PhysicsComponent body, IBroadPhase tree, FixturesComponent? manager = null)
+        {
+            if (!Resolve(body.Owner, ref manager))
+                return;
+
+            var transform = _physicsSystem.GetPhysicsTransform(body.Owner);
+
+            foreach (var (_, fixture) in manager.Fixtures)
+            {
+                var count = fixture.Shape.ChildCount;
+
+                for (var i = 0; i < count; i++)
+                {
+                    var bounds = fixture.Shape.ComputeAABB(transform, i);
+                    var proxy = new FixtureProxy(bounds, fixture, i);
+                    proxy.ProxyId = tree.AddProxy(ref proxy);
+                    fixture.Proxies[i] = proxy;
+                }
+            }
         }
 
         private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
@@ -638,6 +714,8 @@ namespace Robust.Shared.Physics.Systems
             var relativePos1 = new Transform(
                 broadphaseInvMatrix.Transform(transform1.Position),
                 transform1.Quaternion2D.Angle - broadphaseWorldRot);
+            var bodyType = fixture.Body.BodyType;
+            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -645,7 +723,7 @@ namespace Robust.Shared.Physics.Systems
                 var bounds = fixture.Shape.ComputeAABB(relativePos1, i);
                 proxy.AABB = bounds;
                 var displacement = Vector2.Zero;
-                broadphase.Tree.MoveProxy(proxy.ProxyId, bounds, displacement);
+                tree.MoveProxy(proxy.ProxyId, bounds, displacement);
 
                 var worldAABB = new Box2Rotated(bounds, broadphaseWorldRot, Vector2.Zero)
                     .CalcBoundingBox()
@@ -731,20 +809,20 @@ namespace Robust.Shared.Physics.Systems
             fixture.Proxies = proxies;
 
             var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.Owner);
-
             var (broadphaseWorldPosition, broadphaseWorldRotation, broadphaseInvMatrix) = broadphaseXform.GetWorldPositionRotationInvMatrix();
-
             var localPos = broadphaseInvMatrix.Transform(worldPos);
 
             var transform = new Transform(localPos, worldRot - broadphaseWorldRotation);
             var mapId = broadphaseXform.MapID;
+            var bodyType = fixture.Body.BodyType;
+            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var bounds = fixture.Shape.ComputeAABB(transform, i);
                 var proxy = new FixtureProxy(bounds, fixture, i);
                 DebugTools.Assert(fixture.Body.CanCollide);
-                proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
+                proxy.ProxyId = tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
 
                 var worldAABB = new Box2Rotated(bounds, broadphaseWorldRotation, Vector2.Zero)
@@ -770,11 +848,13 @@ namespace Robust.Shared.Physics.Systems
             var proxyCount = fixture.ProxyCount;
             TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(map), out var physicsMap);
             var moveBuffer = physicsMap?.MoveBuffer;
+            var bodyType = fixture.Body.BodyType;
+            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
-                broadphase.Tree.RemoveProxy(proxy.ProxyId);
+                tree.RemoveProxy(proxy.ProxyId);
                 proxy.ProxyId = DynamicTree.Proxy.Free;
                 moveBuffer?.Remove(proxy);
             }
@@ -799,8 +879,8 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
         {
-            var capacity = (int) Math.Max(MinimumBroadphaseCapacity, Math.Ceiling(EntityManager.GetComponent<TransformComponent>(component.Owner).ChildCount / (float) MinimumBroadphaseCapacity) * MinimumBroadphaseCapacity);
-            component.Tree = new DynamicTreeBroadPhase(capacity);
+            component.DynamicTree = new DynamicTreeBroadPhase();
+            component.StaticTree = new DynamicTreeBroadPhase();
         }
 
         #endregion

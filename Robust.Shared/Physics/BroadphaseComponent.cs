@@ -8,6 +8,14 @@ namespace Robust.Shared.Physics
     [RegisterComponent]
     public sealed class BroadphaseComponent : Component
     {
-        internal IBroadPhase Tree = default!;
+        /// <summary>
+        /// Stores all non-static bodies.
+        /// </summary>
+        internal IBroadPhase DynamicTree = default!;
+
+        /// <summary>
+        /// Stores all static bodies.
+        /// </summary>
+        internal IBroadPhase StaticTree = default!;
     }
 }

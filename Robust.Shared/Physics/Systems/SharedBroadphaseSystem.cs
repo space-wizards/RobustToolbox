@@ -516,8 +516,8 @@ namespace Robust.Shared.Physics.Systems
             if (broadphase == null)
                 return;
 
-            var oldTree = GetBroadphase(component, broadphase, args.Old);
-            var newTree = GetBroadphase(component, broadphase, component.BodyType);
+            var oldTree = GetBroadphaseTree(component, broadphase, args.Old);
+            var newTree = GetBroadphaseTree(component, broadphase, component.BodyType);
 
             if (oldTree.Equals(newTree))
                 return;
@@ -526,7 +526,7 @@ namespace Robust.Shared.Physics.Systems
             AddProxies(component, newTree);
         }
 
-        private IBroadPhase GetBroadphase(PhysicsComponent body, BroadphaseComponent broadphaseComponent, BodyType bodyType)
+        private IBroadPhase GetBroadphaseTree(PhysicsComponent body, BroadphaseComponent broadphaseComponent, BodyType bodyType)
         {
             return body.BodyType == BodyType.Static ? broadphaseComponent.StaticTree : broadphaseComponent.DynamicTree;
         }
@@ -731,8 +731,7 @@ namespace Robust.Shared.Physics.Systems
             var relativePos1 = new Transform(
                 broadphaseInvMatrix.Transform(transform1.Position),
                 transform1.Quaternion2D.Angle - broadphaseWorldRot);
-            var bodyType = fixture.Body.BodyType;
-            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
+            var tree = GetBroadphaseTree(fixture.Body, broadphase, fixture.Body.BodyType);
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -831,8 +830,7 @@ namespace Robust.Shared.Physics.Systems
 
             var transform = new Transform(localPos, worldRot - broadphaseWorldRotation);
             var mapId = broadphaseXform.MapID;
-            var bodyType = fixture.Body.BodyType;
-            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
+            var tree = GetBroadphaseTree(fixture.Body, broadphase, fixture.Body.BodyType);
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -865,8 +863,7 @@ namespace Robust.Shared.Physics.Systems
             var proxyCount = fixture.ProxyCount;
             TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(map), out var physicsMap);
             var moveBuffer = physicsMap?.MoveBuffer;
-            var bodyType = fixture.Body.BodyType;
-            var tree = (bodyType & BodyType.Static) != 0 ? broadphase.StaticTree : broadphase.DynamicTree;
+            var tree = GetBroadphaseTree(fixture.Body, broadphase, fixture.Body.BodyType);
 
             for (var i = 0; i < proxyCount; i++)
             {

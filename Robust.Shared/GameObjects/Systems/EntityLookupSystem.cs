@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -38,6 +39,7 @@ namespace Robust.Shared.GameObjects
     public sealed partial class EntityLookupSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -115,7 +117,10 @@ namespace Robust.Shared.GameObjects
             // and any callers may potentially get duplicate entities that just changed state.
             if (args.Anchored)
             {
-                RemoveFromEntityTree(args.Entity);
+                if (_timing.ApplyingState)
+                    return; // already handled directly by transform state logic.
+
+                RemoveFromEntityTree(args.Entity, args.Transform);
             }
             else if (!args.Detaching &&
                 TryComp(args.Entity, out MetaDataComponent? meta) &&
@@ -236,6 +241,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnMove(ref MoveEvent args)
         {
+            if (args.Component.Anchored)
+                return;
+
             UpdatePosition(args.Sender, args.Component);
         }
 
@@ -387,10 +395,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
+        public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, bool recursive = true)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(uid);
             var lookup = GetLookup(uid, xform, xformQuery);
             RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
         }

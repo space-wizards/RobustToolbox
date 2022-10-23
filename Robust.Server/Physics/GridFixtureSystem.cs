@@ -318,7 +318,7 @@ namespace Robust.Server.Physics
                                 if (entXform.ParentUid != mapGrid.GridEntityId ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                                entXform.AttachParent(splitXform);
+                                _xformSystem.SetParent(entXform, splitXform.Owner, xformQuery, splitXform);
                             }
                         }
 

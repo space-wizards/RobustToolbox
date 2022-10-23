@@ -780,6 +780,8 @@ namespace Robust.Server.Maps
                 if (_loadOptions is null || _loadOptions.TransformMatrix.EqualsApprox(Matrix3.Identity))
                     return;
 
+                var xformSys = _serverEntityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+
                 foreach (var entity in Entities)
                 {
                     if (!_xformQuery!.Value.TryGetComponent(entity, out var transform) ||
@@ -787,7 +789,7 @@ namespace Robust.Server.Maps
 
                     var off = _loadOptions.TransformMatrix.Transform(transform.Coordinates.Position);
 
-                    transform.Coordinates = transform.Coordinates.WithPosition(off);
+                    xformSys.SetCoordinates(transform, transform.Coordinates.WithPosition(off));
                     transform.WorldRotation += _loadOptions.Rotation;
                 }
             }

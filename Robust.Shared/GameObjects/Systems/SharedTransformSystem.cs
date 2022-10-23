@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
 
                 var transform = Transform(entity);
                 if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
-                    transform.AttachParent(mapTransform);
+                    SetParent(transform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 

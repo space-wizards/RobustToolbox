@@ -30,6 +30,10 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly ISerializationManager _serManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
 
+        // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
+        // positions on spawn....
+        private SharedTransformSystem _xforms = default!;
+
         #endregion Dependencies
 
         /// <inheritdoc />
@@ -99,6 +103,7 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Initialize();
             Started = true;
             _eventBus.CalcOrdering();
+            _xforms = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
         }
 
         public virtual void Shutdown()
@@ -181,7 +186,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                GetComponent<TransformComponent>(newEntity).Coordinates = coordinates;
+                _xforms.SetCoordinates(newEntity, coordinates);
             }
 
             return newEntity;
@@ -210,13 +215,8 @@ namespace Robust.Shared.GameObjects
             if (mapXform == null)
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
-            transform.AttachParent(mapXform);
-
-            // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
-            var oldAnchored = transform.Anchored;
-            transform.Anchored = false;
-            transform.WorldPosition = coordinates.Position;
-            transform.Anchored = oldAnchored;
+            var coords = new EntityCoordinates(mapEnt, coordinates.Position);
+            _xforms.SetCoordinates(transform, coords, null, mapXform, unanchor: false);
             return newEntity;
         }
 

@@ -77,17 +77,18 @@ namespace Robust.Shared.GameObjects
         private OccluderTreeComponent? GetOccluderTree(OccluderComponent component)
         {
             var entity = component.Owner;
+            var xformQuery = GetEntityQuery<TransformComponent>();
 
-            if (EntityManager.Deleted(entity) || EntityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
+            if (!xformQuery.TryGetComponent(entity, out var xform) || xform.MapID == MapId.Nullspace)
+                return null;
 
-            var parent = EntityManager.GetComponent<TransformComponent>(entity).Parent;
-
-            while (true)
+            var query = GetEntityQuery<OccluderTreeComponent>();
+            while (xform.ParentUid.IsValid())
             {
-                if (parent == null) break;
+                if (query.TryGetComponent(xform.ParentUid, out var comp))
+                    return comp;
 
-                if (EntityManager.TryGetComponent(parent.Owner, out OccluderTreeComponent? comp)) return comp;
-                parent = parent.Parent;
+                xform = xformQuery.GetComponent(xform.ParentUid);
             }
 
             return null;

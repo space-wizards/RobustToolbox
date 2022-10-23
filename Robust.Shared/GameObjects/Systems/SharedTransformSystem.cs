@@ -132,8 +132,10 @@ namespace Robust.Shared.GameObjects
             if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
                 SetGridId(xform, xform.FindGridEntityId(xformQuery));
 
+            DebugTools.Assert(xform.ParentUid.IsValid());
+
             // Is the entity directly parented to the grid?
-            if (xform.GridUid == xform.ParentUid || _mapManager.IsMap(xform.ParentUid))
+            if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
             // Is the entity directly parented to the map?
@@ -145,7 +147,7 @@ namespace Robust.Shared.GameObjects
             var worldPos = GetWorldPosition(xform, xformQuery);
 
             return xform.GridUid == null
-                ? new EntityCoordinates(mapId ?? default, worldPos)
+                ? new EntityCoordinates(mapId ?? xform.ParentUid, worldPos)
                 : new EntityCoordinates(xform.GridUid.Value, xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
@@ -156,13 +158,14 @@ namespace Robust.Shared.GameObjects
         {
             var parentUid = coordinates.EntityId;
             var parentXform = xformQuery.GetComponent(parentUid);
+            DebugTools.Assert(parentUid.IsValid());
 
             // GriddUid is only set after init.
             if (parentXform.LifeStage < ComponentLifeStage.Initialized && parentXform.GridUid == null)
                 SetGridId(parentXform, parentXform.FindGridEntityId(xformQuery));
 
             // Is the entity directly parented to the grid?
-            if (parentXform.GridUid == parentUid || _mapManager.IsMap(parentUid))
+            if (parentXform.GridUid == parentUid)
                 return coordinates;
 
             // Is the entity directly parented to the map?
@@ -174,7 +177,7 @@ namespace Robust.Shared.GameObjects
             var worldPos = GetWorldMatrix(parentXform, xformQuery).Transform(coordinates.Position);
 
             return parentXform.GridUid == null
-                ? new EntityCoordinates(mapId ?? default, worldPos)
+                ? new EntityCoordinates(mapId ?? parentUid, worldPos)
                 : new EntityCoordinates(parentXform.GridUid.Value, xformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
@@ -187,8 +190,10 @@ namespace Robust.Shared.GameObjects
             if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
                 SetGridId(xform, xform.FindGridEntityId(xformQuery));
 
+            DebugTools.Assert(xform.ParentUid.IsValid());
+
             // Is the entity directly parented to the grid?
-            if (xform.GridUid == xform.ParentUid || _mapManager.IsMap(xform.ParentUid))
+            if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, xformQuery));
 
             // Is the entity directly parented to the map?
@@ -199,7 +204,7 @@ namespace Robust.Shared.GameObjects
             var (pos, worldRot) = GetWorldPositionRotation(xform, xformQuery);
 
             var coords = xform.GridUid == null
-                ? new EntityCoordinates(mapId ?? default, pos)
+                ? new EntityCoordinates(mapId ?? xform.ParentUid, pos)
                 : new EntityCoordinates(xform.GridUid.Value, xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
 
             return (coords, worldRot);

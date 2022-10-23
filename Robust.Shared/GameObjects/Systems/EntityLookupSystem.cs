@@ -471,14 +471,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (body.BodyType == BodyType.Static)
-            {
-                // TODO: DO the add proxies here
-            }
-            else
-            {
-                // TODO: Do the remove proxies here.
-            }
+            AddBroadTree(body, broadphase, body.BodyType);
         }
 
         private void RemoveTree(EntityUid uid, BroadphaseComponent broadphase, PhysicsComponent? body = null)
@@ -489,14 +482,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (body.BodyType == BodyType.Static)
-            {
-                // TODO: DO the add proxies here
-            }
-            else
-            {
-                // TODO: Do the remove proxies here.
-            }
+            RemoveBroadTree(body, broadphase, body.BodyType);
         }
 
         private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)

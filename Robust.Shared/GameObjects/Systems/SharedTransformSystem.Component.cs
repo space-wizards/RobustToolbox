@@ -71,11 +71,15 @@ public abstract partial class SharedTransformSystem
         if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
             physicsComponent.BodyType = BodyType.Static;
 
+        var wasAnchored = xform._anchored;
         xform._anchored = true;
         Dirty(xform);
 
-        var ev = new AnchorStateChangedEvent(xform);
-        RaiseLocalEvent(xform.Owner, ref ev, true);
+        if (!wasAnchored && xform.Initialized)
+        {
+            var ev = new AnchorStateChangedEvent(xform);
+            RaiseLocalEvent(xform.Owner, ref ev, true);
+        }
 
         // anchor snapping
         var pos = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
@@ -231,20 +235,6 @@ public abstract partial class SharedTransformSystem
 
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
-        // Re-Anchor the entity if needed.
-        if (component._anchored && TryComp(component.ParentUid, out IMapGridComponent? grid))
-        {
-            if (!grid.Grid.IsAnchored(component.Coordinates, uid))
-                AnchorEntity(component, grid.Grid);
-        }
-        else
-        {
-            component._anchored = false;
-        }
-
-        // Keep the cached matrices in sync with the fields.
-        Dirty(component);
-
         var ev = new TransformStartupEvent(component);
         RaiseLocalEvent(uid, ref ev, true);
     }

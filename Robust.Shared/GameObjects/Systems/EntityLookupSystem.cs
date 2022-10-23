@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
     public enum LookupFlags : byte
     {
         None = 0,
+
         /// <summary>
         /// Should we use the approximately intersecting entities or check tighter bounds.
         /// </summary>
@@ -36,8 +37,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         Contained = 1 << 2,
         // IncludeGrids = 1 << 2,
-        // IncludePhysics (whenever it gets split off)
-        // Include maps
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem

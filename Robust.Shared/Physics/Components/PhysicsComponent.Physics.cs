@@ -24,17 +24,13 @@
 
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Components
@@ -53,9 +49,6 @@ namespace Robust.Shared.Physics.Components
         ///     Has this body been added to an island previously in this tick.
         /// </summary>
         public bool Island { get; set; }
-
-        [ViewVariables]
-        internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.

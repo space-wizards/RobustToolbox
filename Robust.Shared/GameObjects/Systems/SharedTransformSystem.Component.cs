@@ -351,7 +351,7 @@ public abstract partial class SharedTransformSystem
         xform.MatricesDirty = true;
         xform._localPosition = value.Position;
         if (rotation != null)
-            xform.LocalRotation = rotation.Value;
+            xform._localRotation = rotation.Value;
 
         // Perform parent change logic
         if (value.EntityId != xform._parent)

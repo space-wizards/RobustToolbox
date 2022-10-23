@@ -139,6 +139,8 @@ namespace Robust.Shared.GameObjects
         {
             component.DynamicTree = new DynamicTreeBroadPhase();
             component.StaticTree = new DynamicTreeBroadPhase();
+            component.SundriesTree = new DynamicTree<EntityUid>(
+                (in EntityUid value) => GetTreeAABB(value, component.Owner));
         }
 
         private Box2 GetTreeAABB(EntityUid entity, EntityUid tree)
@@ -165,6 +167,10 @@ namespace Robust.Shared.GameObjects
 
         internal void CreateProxies(Fixture fixture, Vector2 worldPos, Angle worldRot)
         {
+            // TODO: Grids on broadphasecomponent
+            if (_mapManager.IsGrid(fixture.Body.Owner))
+                return;
+
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xform = xformQuery.GetComponent(fixture.Body.Owner);
@@ -175,28 +181,33 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException();
             }
 
-            var mapTransform = _physics.GetPhysicsTransform(fixture.Body.Owner, xform, xformQuery);
+            var mapTransform = new Transform(worldPos, worldRot);
             var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
             var moveBuffer = Comp<SharedPhysicsMapComponent>(xform.MapUid.Value).MoveBuffer;
             var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+            DebugTools.Assert(fixture.ProxyCount == 0);
 
-            AddProxies(fixture, tree, broadphaseTransform, mapTransform, moveBuffer);
+            AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, moveBuffer);
         }
 
         internal void DestroyProxies(Fixture fixture, TransformComponent xform)
         {
+            if (_mapManager.IsGrid(fixture.Body.Owner))
+                return;
+
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var broadphase = GetBroadphase(fixture.Body.Owner, xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery);
 
-            if (broadphase == null)
+            if (broadphase == null || xform.MapUid == null)
             {
                 throw new InvalidOperationException();
             }
 
             var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
-            DestroyProxies(fixture, tree);
+            var moveBuffer = Comp<SharedPhysicsMapComponent>(xform.MapUid.Value).MoveBuffer;
+            DestroyProxies(fixture, tree, moveBuffer);
         }
 
         #endregion
@@ -205,9 +216,13 @@ namespace Robust.Shared.GameObjects
 
         private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
+            if (HasComp<IMapGridComponent>(ev.Body.Owner))
+                return;
+
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var broadphase = GetBroadphase(ev.Body.Owner, xformQuery.GetComponent(ev.Body.Owner), broadQuery, xformQuery);
+            var xform = xformQuery.GetComponent(ev.Body.Owner);
+            var broadphase = GetBroadphase(ev.Body.Owner, xform, broadQuery, xformQuery);
 
             if (broadphase == null)
                 return;
@@ -215,7 +230,7 @@ namespace Robust.Shared.GameObjects
             if (ev.CanCollide)
             {
                 RemoveSundriesTree(ev.Body.Owner, broadphase);
-                AddBroadTree(ev.Body, broadphase, ev.Body.BodyType);
+                AddBroadTree(ev.Body, broadphase, ev.Body.BodyType, xform: xform);
             }
             else
             {
@@ -246,35 +261,42 @@ namespace Robust.Shared.GameObjects
             if (!Resolve(body.Owner, ref manager))
                 return;
 
+            if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform) || lookupXform.MapUid == null)
+            {
+                throw new InvalidOperationException();
+            }
+
             var tree = bodyType == BodyType.Static ? lookup.StaticTree : lookup.DynamicTree;
+            var moveBuffer = Comp<SharedPhysicsMapComponent>(lookupXform.MapUid.Value).MoveBuffer;
 
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                DestroyProxies(fixture, tree);
+                DestroyProxies(fixture, tree, moveBuffer);
             }
         }
 
-        private void DestroyProxies(Fixture fixture, IBroadPhase tree)
+        private void DestroyProxies(Fixture fixture, IBroadPhase tree, Dictionary<FixtureProxy, Box2> moveBuffer)
         {
             for (var i = 0; i < fixture.ProxyCount; i++)
             {
-                tree.RemoveProxy(fixture.Proxies[i].ProxyId);
+                var proxy = fixture.Proxies[i];
+                tree.RemoveProxy(proxy.ProxyId);
+                moveBuffer.Remove(proxy);
             }
 
             fixture.ProxyCount = 0;
             fixture.Proxies = Array.Empty<FixtureProxy>();
         }
 
-        private void AddBroadTree(PhysicsComponent body, BroadphaseComponent lookup, BodyType bodyType, FixturesComponent? manager = null)
+        private void AddBroadTree(PhysicsComponent body, BroadphaseComponent lookup, BodyType bodyType, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager))
+            if (!Resolve(body.Owner, ref manager, ref xform))
                 return;
 
             var tree = bodyType == BodyType.Static ? lookup.StaticTree : lookup.DynamicTree;
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(body.Owner);
 
-            if (xform.MapUid == null)
+            if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform) || lookupXform.MapUid == null)
             {
                 throw new InvalidOperationException();
             }
@@ -282,34 +304,52 @@ namespace Robust.Shared.GameObjects
             var mapTransform = _physics.GetPhysicsTransform(body.Owner, xform, xformQuery);
             var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(lookup.Owner).GetWorldPositionRotationMatrixWithInv();
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
-            var moveBuffer = Comp<SharedPhysicsMapComponent>(xform.MapUid.Value).MoveBuffer;
+            var moveBuffer = Comp<SharedPhysicsMapComponent>(lookupXform.MapUid.Value).MoveBuffer;
 
             foreach (var (_, fixture) in manager.Fixtures)
             {
-                AddProxies(fixture, tree, broadphaseTransform, mapTransform, moveBuffer);
+                AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, moveBuffer);
             }
         }
 
-        private void AddProxies(
+        private void AddOrMoveProxies(
             Fixture fixture,
             IBroadPhase tree,
             Transform broadphaseTransform,
             Transform mapTransform,
             Dictionary<FixtureProxy, Box2> moveBuffer)
         {
+            DebugTools.Assert(fixture.Body.CanCollide);
+
+            // Moving
+            if (fixture.ProxyCount > 0)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
+                    var proxy = fixture.Proxies[i];
+                    tree.MoveProxy(proxy.ProxyId, bounds, Vector2.Zero);
+                    proxy.AABB = bounds;
+                    moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+                }
+
+                return;
+            }
+
             var count = fixture.Shape.ChildCount;
-            var proxies = fixture.Proxies;
-            Array.Resize(ref proxies, count);
+            var proxies = new FixtureProxy[count];
 
             for (var i = 0; i < count; i++)
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
                 var proxy = new FixtureProxy(bounds, fixture, i);
                 proxy.ProxyId = tree.AddProxy(ref proxy);
+                proxy.AABB = bounds;
                 proxies[i] = proxy;
                 moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
             }
 
+            fixture.Proxies = proxies;
             fixture.ProxyCount = count;
         }
 
@@ -422,7 +462,11 @@ namespace Robust.Shared.GameObjects
 
             if (args.OldMapId != MapId.Nullspace && xformQuery.TryGetComponent(args.OldParent, out var parentXform))
             {
-                oldLookup = GetBroadphase(args.OldParent.Value, parentXform, broadQuery, xformQuery);
+                // If the old parent has a broadphase return that, otherwise return the parent's broadphase.
+                if (!broadQuery.TryGetComponent(args.OldParent.Value, out oldLookup))
+                {
+                    oldLookup = GetBroadphase(args.OldParent.Value, parentXform, broadQuery, xformQuery);
+                }
             }
 
             var newLookup = GetBroadphase(args.Entity, xform, broadQuery, xformQuery);
@@ -485,7 +529,7 @@ namespace Robust.Shared.GameObjects
             // If entity is in nullspace then no point keeping track of data structure.
             if (lookup == null) return;
 
-            AddTree(xform.Owner, lookup, aabb);
+            AddTree(xform.Owner, lookup, aabb, xform: xform);
 
             var childEnumerator = xform.ChildEnumerator;
 
@@ -519,7 +563,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddTree(EntityUid uid, BroadphaseComponent broadphase, Box2 aabb, PhysicsComponent? body = null)
+        private void AddTree(EntityUid uid, BroadphaseComponent broadphase, Box2 aabb, PhysicsComponent? body = null, TransformComponent? xform = null)
         {
             if (!Resolve(uid, ref body, false) || !body.CanCollide)
             {
@@ -527,7 +571,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            AddBroadTree(body, broadphase, body.BodyType);
+            AddBroadTree(body, broadphase, body.BodyType, xform: xform);
         }
 
         private void RemoveTree(EntityUid uid, BroadphaseComponent broadphase, PhysicsComponent? body = null)
@@ -539,15 +583,6 @@ namespace Robust.Shared.GameObjects
             }
 
             RemoveBroadTree(body, broadphase, body.BodyType);
-        }
-
-        private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
-        {
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(uid);
-            var lookup = GetBroadphase(uid, xform, broadQuery, xformQuery);
-            RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
         }
 
         /// <summary>
@@ -583,6 +618,13 @@ namespace Robust.Shared.GameObjects
             return GetBroadphase(xform.Owner, xform, broadQuery, xformQuery);
         }
 
+        public BroadphaseComponent? GetBroadphase(EntityUid uid)
+        {
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            return GetBroadphase(uid, xformQuery.GetComponent(uid), broadQuery, xformQuery);
+        }
+
         public BroadphaseComponent? GetBroadphase(EntityUid uid, TransformComponent xform, EntityQuery<BroadphaseComponent> broadQuery, EntityQuery<TransformComponent> xformQuery)
         {
             if (xform.MapID == MapId.Nullspace) return null;
@@ -593,7 +635,9 @@ namespace Robust.Shared.GameObjects
 
             while (parent.IsValid())
             {
-                if (broadQuery.TryGetComponent(parent, out var comp)) return comp;
+                if (broadQuery.TryGetComponent(parent, out var comp))
+                    return comp;
+
                 parent = xformQuery.GetComponent(parent).ParentUid;
             }
 

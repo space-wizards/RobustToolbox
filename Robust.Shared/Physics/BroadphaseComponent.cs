@@ -11,16 +11,16 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Stores all non-static bodies.
         /// </summary>
-        internal IBroadPhase DynamicTree = default!;
+        public IBroadPhase DynamicTree = default!;
 
         /// <summary>
         /// Stores all static bodies.
         /// </summary>
-        internal IBroadPhase StaticTree = default!;
+        public IBroadPhase StaticTree = default!;
 
         /// <summary>
         /// Stores all entities not in another tree.
         /// </summary>
-        internal DynamicTree<EntityUid> SundriesTree = default!;
+        public DynamicTree<EntityUid> SundriesTree = default!;
     }
 }

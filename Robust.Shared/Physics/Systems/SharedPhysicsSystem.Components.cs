@@ -424,10 +424,12 @@ public partial class SharedPhysicsSystem
         if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
             return false;
 
+        // Need to do this before SetAwake to avoid double-changing it.
+        body._canCollide = value;
+
         if (!value)
             SetAwake(body, false);
 
-        body._canCollide = value;
         var ev = new CollisionChangeEvent(body, value);
         RaiseLocalEvent(ref ev);
 

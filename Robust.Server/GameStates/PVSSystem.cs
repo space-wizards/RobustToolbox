@@ -312,6 +312,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
+        // GriddUid is only set after init.
+        if (ev.Component.LifeStage < ComponentLifeStage.Initialized && ev.Component.GridUid == null)
+            _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
+
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if (ev.Component.GridUid == ev.Sender || !ev.Component.ParentUid.IsValid())
             return;

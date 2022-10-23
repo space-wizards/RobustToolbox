@@ -9,6 +9,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
+using TerraFX.Interop.Windows;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -232,7 +233,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid = mapMan.GetMapEntityId(TestMapId);
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, mapMan.GetMapEntityId(TestMapId));
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
@@ -258,7 +259,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid = grid.GridEntityId;
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.GridEntityId);
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));

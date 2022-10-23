@@ -415,6 +415,12 @@ public abstract partial class SharedTransformSystem
         return xformQuery.GetComponent(xform.ParentUid);
     }
 
+    public void SetParent(EntityUid uid, EntityUid parent)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        SetParent(query.GetComponent(uid), parent, query);
+    }
+
     public void SetParent(TransformComponent xform, EntityUid parent, TransformComponent? parentXform = null)
     {
         SetParent(xform, parent, GetEntityQuery<TransformComponent>(), parentXform);

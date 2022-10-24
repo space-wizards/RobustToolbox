@@ -99,28 +99,35 @@ public abstract partial class SharedTransformSystem
 
     public void Unanchor(TransformComponent xform)
     {
+        if (!xform._anchored)
+            return;
+
         Dirty(xform);
         xform._anchored = false;
-        var wasAnchored = xform._anchored;
+        _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
+
+        if (xform.LifeStage < ComponentLifeStage.Initialized)
+            return;
 
         if (TryComp(xform.GridUid, out IMapGridComponent? grid))
+        {
+            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+        }
+        else if (xform.Initialized)
         {
             //HACK: Client grid pivot causes this.
             //TODO: make grid components the actual grid
 
-            // I have NFI what the comment above is on about, but this doesn't seem good.
-            Logger.Warning("Missing grid while unanchoring");
-            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+            // I have NFI what the comment above is on about, but this doesn't seem good, so lets log an error if it happens.
+            Logger.Error($"Missing grid while unanchoring {ToPrettyString(xform.Owner)}");
         }
 
-        _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
+        if (!xform.Running)
+            return;
 
-        if (wasAnchored && xform.Running)
-        {
-            var ev = new AnchorStateChangedEvent(xform);
-            RaiseLocalEvent(xform.Owner, ref ev, true);
-        }
+        var ev = new AnchorStateChangedEvent(xform);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
     }
 
     #endregion
@@ -262,29 +269,33 @@ public abstract partial class SharedTransformSystem
             component._anchored = false;
     }
 
-    private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
+    private void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
     {
         // TODO PERFORMANCE remove AnchorStateChangedEvent and EntParentChangedMessage events here.
 
         // I hate this. Apparently some entities rely on this to perform their initialization logic (e.g., power
         // receivers or lights?). Those components should just do their own init logic, instead of wasting time raising
         // this event on every entity that gets created.
-        if (component.Anchored)
+        if (xform.Anchored)
         {
-            DebugTools.Assert(component.ParentUid == component.GridUid && component.ParentUid.IsValid());
-            var anchorEv = new AnchorStateChangedEvent(component);
+            DebugTools.Assert(xform.ParentUid == xform.GridUid && xform.ParentUid.IsValid());
+            var anchorEv = new AnchorStateChangedEvent(xform);
             RaiseLocalEvent(uid, ref anchorEv, true);
         }
 
         // I hate this too. Once again, required for shit like containers because they CBF doing their own init logic
         // and rely on parent changed messages instead. Might also be used by broadphase stuff?
-        var parent = new EntParentChangedMessage(uid, null, MapId.Nullspace, component);
-        RaiseLocalEvent(uid, ref parent, true);
+        var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
+        RaiseLocalEvent(uid, ref parentEv, true);
+
+        /*// And I also hate this. Apparently entity lookups depend on this. They should use transform startup, and not rely on move.
+        var moveEv = new MoveEvent(uid, xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(uid, ref moveEv, true);*/
 
         // there should be no deferred events before startup has finished.
-        DebugTools.Assert(component._oldCoords == null && component._oldLocalRotation == null);
+        DebugTools.Assert(xform._oldCoords == null && xform._oldLocalRotation == null);
 
-        var ev = new TransformStartupEvent(component);
+        var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
     }
 

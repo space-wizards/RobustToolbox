@@ -184,7 +184,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                _xforms.SetCoordinates(newEntity, coordinates);
+                _xforms.SetCoordinates(GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;

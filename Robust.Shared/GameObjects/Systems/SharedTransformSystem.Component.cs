@@ -105,7 +105,11 @@ public abstract partial class SharedTransformSystem
 
         if (TryComp(xform.GridUid, out IMapGridComponent? grid))
         {
-            Logger.Error("Missing grid while unanchoring");
+            //HACK: Client grid pivot causes this.
+            //TODO: make grid components the actual grid
+
+            // I have NFI what the comment above is on about, but this doesn't seem good.
+            Logger.Warning("Missing grid while unanchoring");
             var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
             grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
         }

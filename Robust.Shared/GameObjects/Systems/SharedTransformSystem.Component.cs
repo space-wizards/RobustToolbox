@@ -1,17 +1,15 @@
-using System;
-using System.Runtime.CompilerServices;
-using System.Xml.Schema;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using YamlDotNet.Core.Tokens;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.GameObjects;
 
@@ -19,6 +17,7 @@ public abstract partial class SharedTransformSystem
 {
     [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
     [IoC.Dependency] private readonly EntityLookupSystem _lookup = default!;
+    [IoC.Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     #region Anchoring
 
@@ -67,21 +66,19 @@ public abstract partial class SharedTransformSystem
         if (!grid.AddToSnapGridCell(tileIndices, xform.Owner))
             return false;
 
-        // Mark as static first to avoid the velocity change on parent change.
-        if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-            physicsComponent.BodyType = BodyType.Static;
-
         var wasAnchored = xform._anchored;
         xform._anchored = true;
-        Dirty(xform);
 
-        if (!wasAnchored && xform.Initialized)
+        // Mark as static before doing position changes, to avoid the velocity change on parent change.
+        _physics.TrySetBodyType(xform.Owner, BodyType.Static);
+
+        if (!wasAnchored && xform.Running)
         {
             var ev = new AnchorStateChangedEvent(xform);
             RaiseLocalEvent(xform.Owner, ref ev, true);
         }
 
-        // anchor snapping
+        // Anchor snapping. Note that set coordiantes will dirty the component for us.
         var pos = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
         SetCoordinates(xform, pos, unanchor: false);
 
@@ -102,26 +99,24 @@ public abstract partial class SharedTransformSystem
 
     public void Unanchor(TransformComponent xform)
     {
-        //HACK: Client grid pivot causes this.
-        //TODO: make grid components the actual grid
-        if(!TryComp(xform.GridUid, out IMapGridComponent? grid))
-            return;
-
-        var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-        grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
-        if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-        {
-            physicsComponent.BodyType = BodyType.Dynamic;
-        }
-
         Dirty(xform);
         xform._anchored = false;
+        var wasAnchored = xform._anchored;
 
-        if (!xform.Initialized)
-            return;
+        if (TryComp(xform.GridUid, out IMapGridComponent? grid))
+        {
+            Logger.Error("Missing grid while unanchoring");
+            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+        }
 
-        var ev = new AnchorStateChangedEvent(xform);
-        RaiseLocalEvent(xform.Owner, ref ev, true);
+        _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
+
+        if (wasAnchored && xform.Running)
+        {
+            var ev = new AnchorStateChangedEvent(xform);
+            RaiseLocalEvent(xform.Owner, ref ev, true);
+        }
     }
 
     #endregion
@@ -232,16 +227,44 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-
         SetGridId(component, component.FindGridEntityId(xformQuery));
         component.MatricesDirty = true;
+
+        if (!component._anchored)
+            return;
+
+        IMapGrid? grid;
+
+        // First try find grid via parent:
+        if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out IMapGridComponent? gridComp))
+        {
+            grid = gridComp.Grid;
+        }
+        else
+        {
+            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordiantes)
+            // in that case, we attempt to attach to a grid.
+            var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
+            _mapManager.TryFindGridAt(pos, out grid);
+        }
+
+        if (grid == null)
+        {
+            Unanchor(component);
+            return;
+        }
+
+        if (!AnchorEntity(component, grid))
+            component._anchored = false;
     }
 
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
-        // I hate this. Apparently some entities rely on this to perform their initialization logic. Those components
-        // should just do their own init logic, instead of wasting time raising this event on every entity that gets
-        // created.
+        // TODO PERFORMANCE remove AnchorStateChangedEvent and EntParentChangedMessage events here.
+
+        // I hate this. Apparently some entities rely on this to perform their initialization logic (e.g., power
+        // receivers or lights?). Those components should just do their own init logic, instead of wasting time raising
+        // this event on every entity that gets created.
         if (component.Anchored)
         {
             DebugTools.Assert(component.ParentUid == component.GridUid && component.ParentUid.IsValid());
@@ -250,18 +273,9 @@ public abstract partial class SharedTransformSystem
         }
 
         // I hate this too. Once again, required for shit like containers because they CBF doing their own init logic
-        // and rely on parent changed messages instead.
+        // and rely on parent changed messages instead. Might also be used by broadphase stuff?
         var parent = new EntParentChangedMessage(uid, null, MapId.Nullspace, component);
         RaiseLocalEvent(uid, ref parent, true);
-
-        // but most of all, I hate this:
-        if (component._anchored && TryComp(component.ParentUid, out IMapGridComponent? grid))
-        {
-            if (!grid.Grid.IsAnchored(component.Coordinates, uid))
-                AnchorEntity(component, grid.Grid);
-        }
-
-        // TODO figure out how many of the above are actually required.
 
         // there should be no deferred events before startup has finished.
         DebugTools.Assert(component._oldCoords == null && component._oldLocalRotation == null);
@@ -400,13 +414,12 @@ public abstract partial class SharedTransformSystem
             xform.ChangeMapId(newParent.MapID, xformQuery);
             SetGridId(xform, xform.FindGridEntityId(xformQuery), xformQuery);
 
-            // preserve world rotation
-            if (rotation == null && xform.LifeStage == ComponentLifeStage.Running && oldParent != null)
-                xform._localRotation += GetWorldRotation(oldParent, xformQuery) - GetWorldRotation(newParent, xformQuery);
-
-
             if (xform.Initialized)
             {
+                // preserve world rotation
+                if (rotation == null && oldParent != null)
+                    xform._localRotation += GetWorldRotation(oldParent, xformQuery) - GetWorldRotation(newParent, xformQuery);
+
                 var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent?.Owner, oldMapId, xform);
                 RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
             }
@@ -529,7 +542,7 @@ public abstract partial class SharedTransformSystem
 
                 // Add to any new grid lookups. Normal entity lookups will either have been handled by the move event,
                 // or by the following AnchorStateChangedEvent
-                if (xform._anchored)
+                if (xform._anchored && xform.Initialized)
                 {
                     if (xform.ParentUid == xform.GridUid && TryComp(xform.GridUid, out IMapGridComponent? newGrid))
                     {

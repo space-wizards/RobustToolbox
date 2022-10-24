@@ -213,15 +213,18 @@ namespace Robust.Shared.GameObjects
             if (mapXform == null)
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
+            EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
             {
-                _xforms.AnchorEntity(transform, grid, grid.TileIndicesFor(coordinates));
+                coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
+                _xforms.SetCoordinates(transform, coords, unanchor: false);
             }
             else
             {
-                var coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(transform, coords, null, mapXform);
+                coords = new EntityCoordinates(mapEnt, coordinates.Position);
+                _xforms.SetCoordinates(transform, coords, null, mapXform, unanchor: false);
             }
+
             return newEntity;
         }
 

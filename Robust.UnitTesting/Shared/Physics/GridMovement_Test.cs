@@ -26,6 +26,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
         var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
+        var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
 
         await server.WaitAssertion(() =>
         {
@@ -39,21 +40,21 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
-            onGridBody.BodyType = BodyType.Dynamic;
+            physSystem.SetBodyType(onGridBody, BodyType.Dynamic);
             var shapeA = new PolygonShape();
-            shapeA.SetAsBox(-0.5f, 0.5f);
+            shapeA.SetAsBox(0.5f, 0.5f);
             var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
-            fixtureA.CollisionMask = 1;
+            physSystem.SetCollisionMask(fixtureA, 1);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.GridEntityId));
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
-            offGridBody.BodyType = BodyType.Dynamic;
+            physSystem.SetBodyType(offGridBody, BodyType.Dynamic);
             var shapeB = new PolygonShape();
-            shapeB.SetAsBox(-0.5f, 0.5f);
+            shapeB.SetAsBox(0.5f, 0.5f);
             var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
-            fixtureB.CollisionLayer = 1;
+            physSystem.SetCollisionLayer(fixtureB, 1);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.GridEntityId)));
 

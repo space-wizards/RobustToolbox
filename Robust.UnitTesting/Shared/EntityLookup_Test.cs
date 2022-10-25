@@ -12,6 +12,25 @@ namespace Robust.UnitTesting.Shared
     [TestFixture, TestOf(typeof(EntityLookupSystem))]
     public sealed class EntityLookupTest
     {
+        [Test]
+        public void AnyIntersecting()
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+
+            var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
+
+            var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+            Assert.That(lookup.AnyEntitiesIntersecting(mapId, theMapSpotBeingUsed));
+            mapManager.DeleteMap(mapId);
+        }
+
         /// <summary>
         /// If we don't pass an anchor flag do we still return an anchored entity
         /// </summary>
@@ -43,7 +62,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, LookupFlags.None).ToList(), Is.Empty);
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid.Index);
+            mapManager.DeleteGrid(grid.GridEntityId);
             mapManager.DeleteMap(mapId);
         }
 
@@ -84,7 +103,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid.Index);
+            mapManager.DeleteGrid(grid.GridEntityId);
             mapManager.DeleteMap(mapId);
         }
     }

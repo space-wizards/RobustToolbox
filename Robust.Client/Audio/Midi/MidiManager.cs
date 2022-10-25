@@ -181,7 +181,7 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
-        _broadPhaseSystem = EntitySystem.Get<SharedPhysicsSystem>();
+        _broadPhaseSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
         FluidsynthInitialized = true;
     }
 

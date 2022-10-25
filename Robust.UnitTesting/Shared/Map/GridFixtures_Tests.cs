@@ -6,6 +6,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -23,6 +24,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -57,7 +59,7 @@ namespace Robust.UnitTesting.Shared.Map
                 grid.SetTile(new Vector2i(0, -1), new Tile(1));
                 Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
-                gridBody.LinearVelocity = Vector2.One;
+                physSystem.SetLinearVelocity(gridBody, Vector2.One);
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
             });
         }

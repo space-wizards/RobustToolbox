@@ -75,6 +75,7 @@ namespace Robust.Server.GameObjects
 
             // We add the actor component.
             actor = EntityManager.AddComponent<ActorComponent>(uid);
+            EntityManager.EnsureComponent<EyeComponent>(uid);
             actor.PlayerSession = player;
             player.SetAttachedEntity(actor.Owner);
 

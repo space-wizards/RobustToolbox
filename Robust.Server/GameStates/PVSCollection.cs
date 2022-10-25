@@ -23,7 +23,7 @@ public interface IPVSCollection
     ///     Adds a player session to the collection. Returns false if the player was already present.
     /// </summary>
     public bool AddPlayer(ICommonSession session);
-    public void AddGrid(GridId gridId);
+    public void AddGrid(EntityUid gridId);
     public void AddMap(MapId mapId);
 
     /// <summary>
@@ -31,7 +31,7 @@ public interface IPVSCollection
     /// </summary>
     public bool RemovePlayer(ICommonSession session);
 
-    public void RemoveGrid(GridId gridId);
+    public void RemoveGrid(EntityUid gridId);
 
     public void RemoveMap(MapId mapId);
 
@@ -67,7 +67,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which gridchunk, indexed by <see cref="Vector2i"/>.
     /// </summary>
-    private readonly Dictionary<GridId, Dictionary<Vector2i, HashSet<TIndex>>> _gridChunkContents = new();
+    private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<TIndex>>> _gridChunkContents = new();
 
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent.
@@ -190,7 +190,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);
 
-    public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
+    public bool TryGetChunk(EntityUid gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
 
     public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
@@ -262,7 +262,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     }
 
     /// <inheritdoc />
-    public void AddGrid(GridId gridId) => _gridChunkContents[gridId] = new();
+    public void AddGrid(EntityUid gridId) => _gridChunkContents[gridId] = new();
 
     /// <inheritdoc />
     public void AddMap(MapId mapId) => _mapChunkContents[mapId] = new();
@@ -286,7 +286,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     }
 
     /// <inheritdoc />
-    public void RemoveGrid(GridId gridId)
+    public void RemoveGrid(EntityUid gridId)
     {
         foreach (var (_, indices) in _gridChunkContents[gridId])
         {
@@ -399,8 +399,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
-        var gridId = coordinates.GetGridId(_entityManager);
-        if (gridId != GridId.Invalid)
+        var gridIdOpt = coordinates.GetGridUid(_entityManager);
+        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
@@ -414,8 +414,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
     {
-        var gridId = coordinates.GetGridId(_entityManager);
-        if (gridId != GridId.Invalid)
+        var gridIdOpt = coordinates.GetGridUid(_entityManager);
+        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             return new GridChunkLocation(gridId, gridIndices);
@@ -433,7 +433,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="gridId">The id of the grid.</param>
     /// <param name="chunkIndices">The indices of the chunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices, bool removeFromOverride = false)
+    public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -509,13 +509,13 @@ public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable
 
 public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable<GridChunkLocation>
 {
-    public GridChunkLocation(GridId gridId, Vector2i chunkIndices)
+    public GridChunkLocation(EntityUid gridId, Vector2i chunkIndices)
     {
         GridId = gridId;
         ChunkIndices = chunkIndices;
     }
 
-    public GridId GridId { get; init; }
+    public EntityUid GridId { get; init; }
     public Vector2i ChunkIndices { get; init; }
 
     public bool Equals(GridChunkLocation other)

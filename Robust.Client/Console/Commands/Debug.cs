@@ -187,7 +187,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = EntitySystem.Get<DebugDrawingSystem>();
+            var mgr = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugDrawingSystem>();
             mgr.DebugPositions = !mgr.DebugPositions;
         }
     }
@@ -297,12 +297,11 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            string gridId = args[0];
             string indices = args[1];
 
-            if (!int.TryParse(args[0], out var id))
+            if (!EntityUid.TryParse(args[0], out var gridUid))
             {
-                shell.WriteError($"{args[0]} is not a valid integer.");
+                shell.WriteError($"{args[0]} is not a valid entity UID.");
                 return;
             }
 
@@ -313,14 +312,11 @@ namespace Robust.Client.Console.Commands
             }
 
             var mapMan = IoCManager.Resolve<IMapManager>();
-
-            if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
+            if (mapMan.TryGetGrid(gridUid, out var grid))
             {
-                foreach (var entity in
-                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetAnchoredEntities(
-                        new Vector2i(
-                            int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
-                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
+                foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
+                    int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
+                    int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
                     shell.WriteLine(entity.ToString());
                 }
@@ -437,22 +433,20 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!int.TryParse(args[0], out var id))
+            if (!EntityUid.TryParse(args[0], out var gridUid))
             {
-                shell.WriteLine($"{args[0]} is not a valid integer.");
+                shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
             var mapManager = IoCManager.Resolve<IMapManager>();
-
-            if (mapManager.TryGetGrid(gridId, out var grid))
+            if (mapManager.TryGetGrid(gridUid, out var grid))
             {
-                shell.WriteLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
+                shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }
             else
             {
-                shell.WriteError($"No grid exists with id {id}");
+                shell.WriteError($"No grid exists with id {gridUid}");
             }
         }
     }

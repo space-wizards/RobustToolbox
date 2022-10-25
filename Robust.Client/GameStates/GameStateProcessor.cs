@@ -152,7 +152,7 @@ namespace Robust.Client.GameStates
             return applyNextState;
         }
 
-        public void UpdateFullRep(GameState state)
+        public void UpdateFullRep(GameState state, IEntityManager entMan)
         {
             // Note: the most recently received server state currently doesn't include pvs-leave messages (detaching
             // transform to null-space). This is because a client should never predict an entity being moved back from
@@ -181,14 +181,16 @@ namespace Robust.Client.GameStates
 
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
-                    if (change.Deleted)
-                    {
-                        compData.Remove(change.NetID);
-                    }
-                    else if (change.State is not null)
-                    {
-                        compData[change.NetID] = change.State;
-                    }
+                    compData[change.NetID] = change.State;
+                }
+
+                if (entityState.NetComponents == null)
+                    continue;
+
+                foreach (var key in compData.Keys)
+                {
+                    if (!entityState.NetComponents.Contains(key))
+                        compData.Remove(key);
                 }
             }
         }

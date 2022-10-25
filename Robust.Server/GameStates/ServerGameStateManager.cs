@@ -166,7 +166,6 @@ namespace Robust.Server.GameStates
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
-                _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.Cleanup(_playerManager.ServerSessions);
@@ -229,7 +228,7 @@ namespace Robust.Server.GameStates
                 0, players.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
                 () => _threadResourcesPool.Get(),
-                (i, loop, resource) =>
+                (i, _, resource) =>
                 {
                     try
                     {
@@ -269,8 +268,15 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(fromTick, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage),
-                    entStates, playerStates, deletions, mapData);
+
+                var state = new GameState(
+                    fromTick,
+                    _gameTiming.CurTick,
+                    Math.Max(lastInputCommand, lastSystemMessage),
+                    entStates,
+                    playerStates,
+                    deletions,
+                    mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
@@ -310,7 +316,6 @@ namespace Robust.Server.GameStates
             if (oldestAck > _lastOldestAck)
             {
                 _lastOldestAck = oldestAck;
-                _entityManager.CullDeletionHistory(oldestAck);
                 _pvs.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }

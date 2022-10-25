@@ -36,7 +36,7 @@ namespace Robust.Client.ViewVariables.Editors
 
         private void ButtonOnOnPressed(BaseButton.ButtonEventArgs obj)
         {
-            var vvm = IoCManager.Resolve<IViewVariablesManager>();
+            var vvm = IoCManager.Resolve<IClientViewVariablesManager>();
             if (_selector != null)
             {
                 vvm.OpenVV(_selector);

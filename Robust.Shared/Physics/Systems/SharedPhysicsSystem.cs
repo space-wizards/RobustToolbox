@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
@@ -89,7 +90,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
         {
-            component.CanCollide = false;
+            SetCanCollide(component, false);
             DebugTools.Assert(!component.Awake);
         }
 
@@ -128,6 +129,10 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
         {
+            // THis entity might be getting deleted before ever having been initialized.
+            if (component.ContactManager == null)
+                return;
+
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
             component.ContactManager.Shutdown();
         }
@@ -211,7 +216,7 @@ namespace Robust.Shared.Physics.Systems
             EntityQuery<JointComponent> jointQuery,
             EntityQuery<BroadphaseComponent> broadQuery)
         {
-            EntityUid? uid = xform.Owner;
+            var uid = xform.Owner;
 
             DebugTools.Assert(!Deleted(uid));
 
@@ -233,7 +238,7 @@ namespace Robust.Shared.Physics.Systems
                 DebugTools.Assert(body.Contacts.Count == 0);
 
                 // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
-                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
+                if (!MapManager.IsGrid(uid) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
                 {
                     // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
                     _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);
@@ -241,7 +246,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             if (jointQuery.TryGetComponent(uid, out var joint))
-                _joints.ClearJoints(joint);
+                _joints.ClearJoints(uid, joint);
 
             if (newMapId != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroadphase))
                 newBroadphase = parentBroadphase;
@@ -263,7 +268,7 @@ namespace Robust.Shared.Physics.Systems
             if (!EntityManager.EntityExists(ev.EntityUid)) return;
             // Yes this ordering matters
             var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
-            collideComp.BodyType = BodyType.Static;
+            SetBodyType(collideComp, BodyType.Static);
             EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 

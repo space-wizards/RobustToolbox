@@ -1,6 +1,7 @@
 using Robust.Client.Debugging;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
@@ -9,7 +10,7 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "physics";
         public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
-        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / joints / shapeinfo / shapes>";
+        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / distance / joints / shapeinfo / shapes>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -19,7 +20,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var system = EntitySystem.Get<DebugPhysicsSystem>();
+            var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugPhysicsSystem>();
 
             switch (args[0])
             {
@@ -34,6 +35,9 @@ namespace Robust.Client.Console.Commands
                     break;
                 case "contactpoints":
                     system.Flags ^= PhysicsDebugFlags.ContactPoints;
+                    break;
+                case "distance":
+                    system.Flags ^= PhysicsDebugFlags.Distance;
                     break;
                 case "joints":
                     system.Flags ^= PhysicsDebugFlags.Joints;
@@ -62,6 +66,7 @@ namespace Robust.Client.Console.Commands
                 "com",
                 "contactnormals",
                 "contactpoints",
+                "distance",
                 "joints",
                 "shapeinfo",
                 "shapes",

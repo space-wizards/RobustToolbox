@@ -230,9 +230,9 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-
-        SetGridId(component, component.FindGridEntityId(xformQuery));
-        component.RebuildMatrices();
+        if (component.GridUid == null)
+            SetGridId(component, component.FindGridEntityId(xformQuery));
+        component.MatricesDirty = true;
     }
 
     private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
@@ -265,7 +265,6 @@ public abstract partial class SharedTransformSystem
     public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
         if (xform._gridUid == gridId) return;
-
 
         DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
 
@@ -473,7 +472,7 @@ public abstract partial class SharedTransformSystem
 
             if (rebuildMatrices)
             {
-                component.RebuildMatrices();
+                component.MatricesDirty = true;
             }
 
             Dirty(component);
@@ -734,7 +733,7 @@ public abstract partial class SharedTransformSystem
 
         if (!xform.DeferUpdates)
         {
-            xform.RebuildMatrices();
+            xform.MatricesDirty = true;
             var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
             RaiseLocalEvent(xform.Owner, ref moveEvent, true);
         }

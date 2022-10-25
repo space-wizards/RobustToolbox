@@ -12,6 +12,23 @@ public abstract partial class SharedPhysicsSystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     /// <summary>
+    /// Gets the linear velocity of a particular body at the specified point.
+    /// </summary>
+    public Vector2 GetLinearVelocity(
+        EntityUid uid,
+        Vector2 point,
+        PhysicsComponent? component = null,
+        TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref component, ref xform))
+            return Vector2.Zero;
+
+        var velocity = component.LinearVelocity;
+        var angVelocity = xform.LocalRotation.RotateVec(Vector2.Cross(component.AngularVelocity, point - component.LocalCenter));
+        return velocity + angVelocity;
+    }
+
+    /// <summary>
     ///     This is the total rate of change of the entity's map-position, resulting from the linear and angular
     ///     velocities of this entity and any parents.
     /// </summary>
@@ -172,8 +189,8 @@ public abstract partial class SharedPhysicsSystem
         if (args.OldParent is not EntityUid { Valid: true } parent)
         {
             // no previous parent --> simple
-            physics.LinearVelocity += physics.LinearVelocity - newLinear;
-            physics.AngularVelocity += physics.AngularVelocity - newAngular;
+            SetLinearVelocity(physics, physics.LinearVelocity - newLinear);
+            SetAngularVelocity(physics, physics.AngularVelocity - newAngular);
             return;
         }
 
@@ -208,7 +225,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Finally we can update the Velocities. linear velocity is already in terms of map-coordinates, so no
         // world-rotation is required
-        physics.LinearVelocity += oldLinear - newLinear;
-        physics.AngularVelocity += oldAngular - newAngular;
+        SetLinearVelocity(physics, oldLinear - newLinear);
+        SetAngularVelocity(physics, oldAngular - newAngular);
     }
 }

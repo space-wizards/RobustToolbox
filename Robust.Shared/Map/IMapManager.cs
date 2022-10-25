@@ -8,6 +8,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
+    public delegate bool GridCallback(IMapGrid grid);
+
+    public delegate bool GridCallback<TState>(IMapGrid grid, ref TState state);
+
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
@@ -92,19 +96,12 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapId);
 
-        [Obsolete("Use overload without GridId parameter instead")]
         // ReSharper disable once MethodOverloadWithOptionalParameter
-        IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
+        IMapGrid CreateGrid(MapId currentMapId, ushort chunkSize = 16);
         IMapGrid CreateGrid(MapId currentMapId, in GridCreateOptions options);
         IMapGrid CreateGrid(MapId currentMapId);
-        [Obsolete("Use EntityUids instead")]
-        IMapGrid GetGrid(GridId gridId);
         IMapGrid GetGrid(EntityUid gridId);
-        [Obsolete("Use EntityUids instead")]
-        bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out IMapGrid? grid);
-        [Obsolete("Use EntityUids instead")]
-        bool GridExists(GridId gridId);
         bool GridExists([NotNullWhen(true)] EntityUid? euid);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
@@ -133,6 +130,10 @@ namespace Robust.Shared.Map
 
         void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
 
+        void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
+
+        void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback);
+
         /// <summary>
         /// Returns the grids intersecting this AABB.
         /// </summary>
@@ -150,8 +151,7 @@ namespace Robust.Shared.Map
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
-        [Obsolete("Delete the grid's entity instead")]
-        void DeleteGrid(GridId gridId);
+        void DeleteGrid(EntityUid euid);
 
         /// <summary>
         ///     A tile is being modified.
@@ -190,10 +190,6 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        [Obsolete("Use EntityUids instead")]
-        EntityUid GetGridEuid(GridId id);
-        [Obsolete("Use EntityUids instead")]
-        IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
 
         //
@@ -211,10 +207,6 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsGridPaused(IMapGrid grid);
-
-        [Pure]
-        [Obsolete("Use EntityUids instead")]
-        bool IsGridPaused(GridId gridId);
 
         [Pure]
         bool IsGridPaused(EntityUid gridId);

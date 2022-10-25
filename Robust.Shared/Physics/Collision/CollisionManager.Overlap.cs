@@ -14,7 +14,6 @@ internal sealed partial class CollisionManager
     /// <returns></returns>
     public bool TestOverlap(IPhysShape shapeA, int childIndexA, IPhysShape shapeB, int childIndexB, in Transform xfA, in Transform xfB)
     {
-        // TODO: Make this a struct.
         var input = new DistanceInput();
 
         input.ProxyA.Set(shapeA, childIndexA);

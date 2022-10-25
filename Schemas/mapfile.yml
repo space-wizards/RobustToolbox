@@ -16,6 +16,7 @@ entity:
   type: str(required=False)
   components: list(comp())
 grid:
+  uid: int(required=False) # TODO make this required once all map files have been updated.
   settings:
     chunksize: int()
     tilesize: int()
@@ -64,7 +65,8 @@ grid:
 #   32: plating
 #   33: plating
 # grids:
-# - settings:
+# - uid: 0
+#   settings:
 #     chunksize: 16
 #     tilesize: 1
 #   chunks:

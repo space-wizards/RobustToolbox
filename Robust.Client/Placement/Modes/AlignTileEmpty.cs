@@ -17,11 +17,11 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var tileSize = 1f;
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
 
-            if (gridId.IsValid())
+            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
+                var mapGrid = pManager.MapManager.GetGrid(gridId);
                 CurrentTile = mapGrid.GetTileRef(MouseCoords);
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }

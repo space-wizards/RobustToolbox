@@ -25,6 +25,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server
 {
@@ -67,7 +68,8 @@ namespace Robust.Server
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-            IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
+            IoCManager.Register<IViewVariablesManager, ServerViewVariablesManager>();
+            IoCManager.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();

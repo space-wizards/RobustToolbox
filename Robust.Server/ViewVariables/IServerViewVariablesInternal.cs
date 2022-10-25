@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
 {
-    internal interface IViewVariablesHost
+    internal interface IServerViewVariablesInternal : IViewVariablesManager
     {
         void Initialize();
 

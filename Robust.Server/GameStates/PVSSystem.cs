@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Microsoft.Extensions.ObjectPool;
-using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -15,12 +9,15 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Robust.Server.GameStates;
 
@@ -29,7 +26,6 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -122,7 +118,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
-        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -135,24 +130,14 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
-    private void OnParentChange(ref EntParentChangedMessage ev)
-    {
-        if (ev.Transform.GridUid == ev.Entity || _mapManager.IsMap(ev.Entity)) return;
-
-        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
-        // Should still be at its old location as moveevent is called after.
-        var coordinates = _transform.GetMoverCoordinates(ev.Transform);
-        var index = _entityPvsCollection.GetChunkIndex(coordinates);
-        _entityPvsCollection.MarkDirty(index);
-    }
-
     /// <summary>
-    ///     Marks an entity's current chunk as drity.
+    ///     Marks an entity's current chunk as dirty.
     /// </summary>
     internal void MarkDirty(EntityUid uid)
     {
-        var xform = Transform(uid);
-        var coordinates = _transform.GetMoverCoordinates(xform);
+        var query = GetEntityQuery<TransformComponent>();
+        var xform = query.GetComponent(uid);
+        var coordinates = _transform.GetMoverCoordinates(xform, query);
         _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
     }
 
@@ -327,16 +312,38 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
+        // GriddUid is only set after init.
+        if (ev.Component.LifeStage < ComponentLifeStage.Initialized && ev.Component.GridUid == null)
+            _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
+
+        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        if (ev.Component.GridUid == ev.Sender || !ev.Component.ParentUid.IsValid())
+            return;
+
         var xformQuery = GetEntityQuery<TransformComponent>();
-        var coordinates = _transform.GetMoverCoordinates(ev.Component);
+
+        if (ev.ParentChanged)
+        {
+            // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+            var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
+            var oldIndex = _entityPvsCollection.GetChunkIndex(oldCoordinates);
+            _entityPvsCollection.MarkDirty(oldIndex);
+        }
+
+        var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ref TransformStartupEvent args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
+
+        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        if (component.GridUid == uid || _mapManager.IsMap(uid))
+            return;
+
         var xformQuery = GetEntityQuery<TransformComponent>();
-        var coordinates = _transform.GetMoverCoordinates(component);
+        var coordinates = _transform.GetMoverCoordinates(component, xformQuery);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
 
@@ -344,13 +351,13 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
-            coordinates = _transform.GetMoverCoordinates(xform);
+            coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
         }
 
-        _entityPvsCollection.UpdateIndex(uid, coordinates);
-
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
+        DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+
+        _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         var children = xform.ChildEnumerator;
 
@@ -394,7 +401,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (data.LastAcked != null)
             _visSetPool.Return(data.LastAcked);
 
-        foreach (var (_, visSet) in data.SentEntities)
+        foreach (var visSet in data.SentEntities.Values)
         {
             if (visSet != data.LastAcked)
                 _visSetPool.Return(visSet);
@@ -407,20 +414,19 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         foreach (var pvsCollection in _pvsCollections)
         {
-            pvsCollection.RemoveGrid(ev.GridId);
+            pvsCollection.RemoveGrid(ev.EntityUid);
         }
     }
 
     private void OnGridCreated(GridInitializeEvent ev)
     {
-        var gridId = ev.GridId;
+        var gridId = ev.EntityUid;
         foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
         }
 
-        var euid = _mapManager.GetGridEuid(gridId);
-        _entityPvsCollection.UpdateIndex(euid);
+        _entityPvsCollection.UpdateIndex(gridId);
     }
 
     private void OnMapDestroyed(MapChangedEvent e)
@@ -455,10 +461,10 @@ internal sealed partial class PVSSystem : EntitySystem
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
         // Pool it because this will allocate a lot across ticks as we scale in players.
-        foreach (var (_, chunks) in _mapIndices)
+        foreach (var chunks in _mapIndices.Values)
             _mapChunkPool.Return(chunks);
 
-        foreach (var (_, chunks) in _gridIndices)
+        foreach (var chunks in _gridIndices.Values)
             _gridChunkPool.Return(chunks);
 
         _mapIndices.Clear();
@@ -474,11 +480,12 @@ internal sealed partial class PVSSystem : EntitySystem
             var viewers = GetSessionViewers(session);
             viewerEntities[i] = viewers;
 
-            foreach (var eyeEuid in viewers)
+            for (var j = 0; j < viewers.Length; j++)
             {
+                var eyeEuid = viewers[j];
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
-                if(mapId == MapId.Nullspace) continue;
+                if (mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -534,7 +541,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value);
+                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
                         var entry = (visMask, chunkLocation);
 
                         if (gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -575,10 +582,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         var previousIndices = _previousTrees.Keys.ToArray();
-        foreach (var index in previousIndices)
+        for (var i = 0; i < previousIndices.Length; i++)
         {
+            var index = previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
-            if(_reusedTrees.Contains(index)) continue;
+            if (_reusedTrees.Contains(index)) continue;
             var chunk = _previousTrees[index];
             if (chunk.HasValue)
             {
@@ -591,6 +599,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 _previousTrees.Remove(index);
             }
         }
+
         _previousTrees.EnsureCapacity(chunks.Count);
         for (int i = 0; i < chunks.Count; i++)
         {
@@ -644,9 +653,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public void ReturnToPool(HashSet<int>[] playerChunks)
     {
-        foreach (var playerChunk in playerChunks)
+        for (var i = 0; i < playerChunks.Length; i++)
         {
-            _playerChunkPool.Return(playerChunk);
+            _playerChunkPool.Return(playerChunks[i]);
         }
     }
 
@@ -1055,6 +1064,9 @@ internal sealed partial class PVSSystem : EntitySystem
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
 
+        bool sendCompList = meta.LastComponentRemoved > fromTick;
+        HashSet<ushort>? netComps = sendCompList ? new() : null;
+
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
             if (!component.NetSyncEnabled)
@@ -1066,37 +1078,29 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-            // "not different from entity creation".
-            // i.e. when the client spawns the entity and loads the entity prototype,
-            // the data it deserializes from the prototype SHOULD be equal
-            // to what the component state / ComponentChange would send.
-            // As such, we can avoid sending this data in this case since the client "already has it".
-
-            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-            var addState = component.CreationTick != GameTick.Zero && component.CreationTick > fromTick;
-            var changedState = component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick > fromTick;
-
-            if (!(addState || changedState))
-                continue;
-
             if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
                 continue;
+
+            if (component.LastModifiedTick <= fromTick)
+            {
+                if (sendCompList && (!component.SessionSpecific || EntityManager.CanGetComponentState(bus, component, player)))
+                    netComps!.Add(netId);
+                continue;
+            }
 
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = changedState ? EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null) : null;
-            changed.Add(ComponentChange.Added(netId, state, component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
+
+            if (sendCompList)
+                netComps!.Add(netId);
         }
 
-        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, fromTick))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
-        return new EntityState(entityUid, changed.ToArray(), meta.EntityLastModifiedTick);
+        return entState;
     }
 
     /// <summary>
@@ -1106,6 +1110,8 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
+
+        HashSet<ushort> netComps = new();
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -1118,15 +1124,13 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(ComponentChange.Added(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            netComps.Add(netId);
         }
 
-        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, GameTick.Zero))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
+        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
-        return new EntityState(entityUid, changed.ToArray(), meta.EntityLastModifiedTick);
+        return entState;
     }
 
     private EntityUid[] GetSessionViewers(ICommonSession session)

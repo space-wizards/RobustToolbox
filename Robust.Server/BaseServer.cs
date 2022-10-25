@@ -328,7 +328,7 @@ namespace Robust.Server
             _playerManager.Initialize(MaxPlayers);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
             IoCManager.Resolve<IPlacementManager>().Initialize();
-            IoCManager.Resolve<IViewVariablesHost>().Initialize();
+            IoCManager.Resolve<IServerViewVariablesInternal>().Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);

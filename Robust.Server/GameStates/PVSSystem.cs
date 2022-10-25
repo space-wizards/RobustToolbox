@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
@@ -18,6 +13,11 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Robust.Server.GameStates;
 
@@ -26,7 +26,6 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -119,7 +118,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
-        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -132,24 +130,14 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
-    private void OnParentChange(ref EntParentChangedMessage ev)
-    {
-        if (ev.Transform.GridUid == ev.Entity || _mapManager.IsMap(ev.Entity)) return;
-
-        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
-        // Should still be at its old location as moveevent is called after.
-        var coordinates = _transform.GetMoverCoordinates(ev.Transform);
-        var index = _entityPvsCollection.GetChunkIndex(coordinates);
-        _entityPvsCollection.MarkDirty(index);
-    }
-
     /// <summary>
-    ///     Marks an entity's current chunk as drity.
+    ///     Marks an entity's current chunk as dirty.
     /// </summary>
     internal void MarkDirty(EntityUid uid)
     {
-        var xform = Transform(uid);
-        var coordinates = _transform.GetMoverCoordinates(xform);
+        var query = GetEntityQuery<TransformComponent>();
+        var xform = query.GetComponent(uid);
+        var coordinates = _transform.GetMoverCoordinates(xform, query);
         _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
     }
 
@@ -324,16 +312,38 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
+        // GriddUid is only set after init.
+        if (ev.Component.LifeStage < ComponentLifeStage.Initialized && ev.Component.GridUid == null)
+            _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
+
+        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        if (ev.Component.GridUid == ev.Sender || !ev.Component.ParentUid.IsValid())
+            return;
+
         var xformQuery = GetEntityQuery<TransformComponent>();
-        var coordinates = _transform.GetMoverCoordinates(ev.Component);
+
+        if (ev.ParentChanged)
+        {
+            // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+            var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
+            var oldIndex = _entityPvsCollection.GetChunkIndex(oldCoordinates);
+            _entityPvsCollection.MarkDirty(oldIndex);
+        }
+
+        var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ref TransformStartupEvent args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
+
+        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        if (component.GridUid == uid || _mapManager.IsMap(uid))
+            return;
+
         var xformQuery = GetEntityQuery<TransformComponent>();
-        var coordinates = _transform.GetMoverCoordinates(component);
+        var coordinates = _transform.GetMoverCoordinates(component, xformQuery);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
 
@@ -341,13 +351,13 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
-            coordinates = _transform.GetMoverCoordinates(xform);
+            coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
         }
 
-        _entityPvsCollection.UpdateIndex(uid, coordinates);
-
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
+        DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+
+        _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         var children = xform.ChildEnumerator;
 

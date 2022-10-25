@@ -7,13 +7,11 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class ClientSpawnCommand : IConsoleCommand
+    internal sealed class ClientSpawnCommand : LocalizedCommands
     {
-        public string Command => "cspawn";
-        public string Description => "Spawns a client-side entity with specific type at your feet.";
-        public string Help => "cspawn <entity type>";
+        public override string Command => "cspawn";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var controlled = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
             if (controlled == EntityUid.Invalid)

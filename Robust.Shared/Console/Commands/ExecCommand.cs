@@ -8,15 +8,13 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class ExecCommand : IConsoleCommand
+    internal sealed class ExecCommand : LocalizedCommands
     {
         private static readonly Regex CommentRegex = new Regex(@"^\s*#");
 
-        public string Command => "exec";
-        public string Description => Loc.GetString("cmd-exec-desc");
-        public string Help => Loc.GetString("cmd-exec-help");
+        public override string Command => "exec";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var res = IoCManager.Resolve<IResourceManager>();
 

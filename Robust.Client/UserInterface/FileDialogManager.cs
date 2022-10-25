@@ -388,13 +388,11 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public sealed class OpenFileCommand : IConsoleCommand
+    public sealed class OpenFileCommand : LocalizedCommands
     {
-        public string Command => "testopenfile";
-        public string Description => "";
-        public string Help => "";
+        public override string Command => "testopenfile";
 
-        public async void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var stream = await IoCManager.Resolve<IFileDialogManager>().OpenFile();
             stream?.Dispose();

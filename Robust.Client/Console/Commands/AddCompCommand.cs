@@ -6,13 +6,11 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddCompCommand : IConsoleCommand
+    internal sealed class AddCompCommand : LocalizedCommands
     {
-        public string Command => "addcompc";
-        public string Description => "Adds a component to an entity on the client";
-        public string Help => "addcompc <uid> <componentName>";
+        public override string Command => "addcompc";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
 
             if (args.Length != 2)
@@ -36,13 +34,11 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    internal sealed class RemoveCompCommand : IConsoleCommand
+    internal sealed class RemoveCompCommand : LocalizedCommands
     {
-        public string Command => "rmcompc";
-        public string Description => "Removes a component from an entity.";
-        public string Help => "rmcompc <uid> <componentName>";
+        public override string Command => "rmcompc";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

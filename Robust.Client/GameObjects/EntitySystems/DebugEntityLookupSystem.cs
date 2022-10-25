@@ -11,12 +11,11 @@ using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class DebugEntityLookupCommand : IConsoleCommand
+public sealed class DebugEntityLookupCommand : LocalizedCommands
 {
-    public string Command => "togglelookup";
-    public string Description => "Shows / hides entitylookup bounds via an overlay";
-    public string Help => $"{Command}";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "togglelookup";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         EntitySystem.Get<DebugEntityLookupSystem>().Enabled ^= true;
     }

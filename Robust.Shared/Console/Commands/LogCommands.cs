@@ -5,16 +5,10 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class LogSetLevelCommand : IConsoleCommand
+internal sealed class LogSetLevelCommand : LocalizedCommands
 {
-    public string Command => "loglevel";
-    public string Description => "Changes the log level for a provided sawmill.";
-
-    public string Help => "Usage: loglevel <sawmill> <level>"
-                          + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
-                          + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
-
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "loglevel";
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)
         {
@@ -64,17 +58,11 @@ internal sealed class LogSetLevelCommand : IConsoleCommand
     }
 }
 
-internal sealed class TestLog : IConsoleCommand
+internal sealed class TestLog : LocalizedCommands
 {
-    public string Command => "testlog";
-    public string Description => "Writes a test log to a sawmill.";
+    public override string Command => "testlog";
 
-    public string Help => "Usage: testlog <sawmill> <level> <message>"
-                          + "\n    sawmill: A label prefixing the logged message."
-                          + "\n    level: The log level. Must match one of the values of the LogLevel enum."
-                          + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
-
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 3)
         {

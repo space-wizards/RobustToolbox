@@ -8,13 +8,11 @@ using Robust.Shared.Map;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class SpawnCommand : IConsoleCommand
+    public sealed class SpawnCommand : LocalizedCommands
     {
-        public string Command => "spawn";
-        public string Description => "Spawns an entity with specific type.";
-        public string Help => "spawn <prototype> OR spawn <prototype> <relative entity ID> OR spawn <prototype> <x> <y>";
+        public override string Command => "spawn";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             var ent = IoCManager.Resolve<IServerEntityManager>();

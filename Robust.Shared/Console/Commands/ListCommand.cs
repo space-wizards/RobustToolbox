@@ -4,15 +4,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class ListCommands : IConsoleCommand
+internal sealed class ListCommands : LocalizedCommands
 {
-    public string Command => "list";
+    public override string Command => "list";
 
-    public string Description => Loc.GetString("cmd-list-desc");
-
-    public string Help => Loc.GetString("cmd-list-help");
-
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var filter = "";
         if (args.Length == 1)

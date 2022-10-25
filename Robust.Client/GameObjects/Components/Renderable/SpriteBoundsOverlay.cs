@@ -10,12 +10,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class ShowSpriteBBCommand : IConsoleCommand
+    public sealed class ShowSpriteBBCommand : LocalizedCommands
     {
-        public string Command => "showspritebb";
-        public string Description => "Toggle whether sprite bounds are shown";
-        public string Help => $"{Command}";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "showspritebb";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             EntitySystem.Get<SpriteBoundsSystem>().Enabled ^= true;
         }

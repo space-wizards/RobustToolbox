@@ -9,14 +9,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Configuration
 {
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class CVarCommand : IConsoleCommand
+    internal sealed class CVarCommand : LocalizedCommands
     {
-        public string Command => "cvar";
-        public string Description => Loc.GetString("cmd-cvar-desc");
+        public override string Command => "cvar";
 
-        public string Help => Loc.GetString("cmd-cvar-help");
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length is < 1 or > 2)
             {

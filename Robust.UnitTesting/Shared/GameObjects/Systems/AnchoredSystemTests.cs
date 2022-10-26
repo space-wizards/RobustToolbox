@@ -304,17 +304,19 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.EntityManager.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var xform1 = entMan.GetComponent<TransformComponent>(ent1);
+            var tileIndices = grid.TileIndicesFor(xform1.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            Assert.That(xform1.Anchored);
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.Owner);
+            var containerMan = entMan.AddComponent<ContainerManagerComponent>(grid.Owner);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(xform1.Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));

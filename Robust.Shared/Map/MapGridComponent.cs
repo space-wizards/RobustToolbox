@@ -108,13 +108,16 @@ namespace Robust.Shared.Map
         protected override void Initialize()
         {
             base.Initialize();
-            var xform = _entMan.GetComponent<TransformComponent>(Owner);
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(Owner);
             var mapId = xform.MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
                 xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
+
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(xform, Owner, xformQuery);
         }
 
         /// <inheritdoc />

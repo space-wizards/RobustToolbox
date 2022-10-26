@@ -31,6 +31,62 @@ Template for new versions:
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+## 0.56.1.0
+
+### New features
+
+* Update pt-BR locale with more localizations
+* Separated PVS entity budget into an entity creation budget and a pvs-entry budget.
+
+### Bugfixes
+
+* Fix VV type handler removal.
+* System errors during component removal should no longer result in undeletable entities.
+
+### Other
+
+* The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
+* Improved Box2Serializer
+* Removed uses IEnumerables from EntityLookupSystem. 
+* Optimized client entity spawning by 15%.
+* Modified how the rendering tree handles entity movement.
+* Improved grid enumeration allocs.
+* Fixed a bunch of build warnings (see #3329 and #3289 for details)
+
+## 0.56.0.2
+
+### Bugfixes
+
+* Rename \_lib.ftl to \_engine_lib.ftl to avoid overwriting
+
+## 0.56.0.1
+
+### Bugfixes
+
+* Fix instantiation of data records containing value types
+
+## 0.56.0.0
+
+### Breaking changes
+
 * `CastShadows` moved to `SharedPointLightComponent` from clientside, now networked
 
 ### New features
@@ -85,10 +141,6 @@ Template for new versions:
   * Added `vvread`, `vvwrite` and `vvinvoke` commands, which allow you to read, write and invoke VV paths.
   * Added autocompletion to all VV commands.
   * Please note that the VV GUI still remains the same. It will be updated to use these new features in the future.
-
-### Bugfixes
-
-*None yet*
 
 ### Other
 

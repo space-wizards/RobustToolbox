@@ -95,35 +95,9 @@ namespace Robust.Server.Maps
             var gridNode = new ValueDataNode();
             root.Add("tiles", gridNode);
 
-            gridNode.Value = SerializeTiles(value);
+            gridNode.Value = MapGridComponent.SerializeTiles(value);
 
             return root;
-        }
-
-        private static string SerializeTiles(MapChunk chunk)
-        {
-            // number of bytes written per tile, because sizeof(Tile) is useless.
-            const int structSize = 4;
-
-            var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
-            var barr = new byte[nTiles];
-
-            using (var stream = new MemoryStream(barr))
-            using (var writer = new BinaryWriter(stream))
-            {
-                for (ushort y = 0; y < chunk.ChunkSize; y++)
-                {
-                    for (ushort x = 0; x < chunk.ChunkSize; x++)
-                    {
-                        var tile = chunk.GetTile(x, y);
-                        writer.Write(tile.TypeId);
-                        writer.Write((byte)tile.Flags);
-                        writer.Write(tile.Variant);
-                    }
-                }
-            }
-
-            return Convert.ToBase64String(barr);
         }
 
         public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target, bool skipHook,

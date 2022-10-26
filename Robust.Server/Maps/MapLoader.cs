@@ -948,7 +948,25 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var entry = _serializationManager.WriteValue(grid, context: this);
+                    var entry = (MappingDataNode) _serializationManager.WriteValue(grid, context: this);
+                    // Temporary shitcode alert
+                    var settingsNode = new MappingDataNode();
+                    settingsNode.Add("chunksize", grid.ChunkSize.ToString());
+                    settingsNode.Add("tilesize", grid.TileSize.ToString());
+                    entry.Add("settings", settingsNode);
+
+                    var chunksNode = new SequenceDataNode();
+
+                    foreach (var chunk in grid.GetMapChunks())
+                    {
+                        var chunkNode = new MappingDataNode();
+                        chunkNode.Add("ind", _serializationManager.WriteValue(chunk.Key));
+                        chunkNode.Add("tiles", MapGridComponent.SerializeTiles(chunk.Value));
+                        
+                        chunksNode.Add(chunkNode);
+                    }
+
+                    entry.Add("chunks", chunksNode);
                     grids.Add(entry);
                 }
             }

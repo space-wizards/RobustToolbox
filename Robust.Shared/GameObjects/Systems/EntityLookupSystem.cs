@@ -149,6 +149,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridAdd(GridAddEvent ev)
         {
+            // Remove the grid from the map tree.
+            RemoveFromEntityTree(ev.EntityUid);
             EntityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }
 

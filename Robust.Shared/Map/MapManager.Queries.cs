@@ -20,6 +20,44 @@ internal partial class MapManager
         return FindGridsIntersecting(mapId, aabb, approx);
     }
 
+    public void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback)
+    {
+        if (!_gridTrees.TryGetValue(mapId, out var gridTree))
+            return;
+
+        var state = (gridTree, callback);
+
+        gridTree.Query(ref state, static (ref (
+                B2DynamicTree<MapGrid> gridTree,
+                GridCallback callback) tuple,
+                DynamicTree.Proxy proxy) =>
+        {
+            var data = tuple.gridTree.GetUserData(proxy);
+            tuple.callback(data!);
+            return true;
+        }, worldAABB);
+    }
+
+    public void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback)
+    {
+        if (!_gridTrees.TryGetValue(mapId, out var gridTree))
+            return;
+
+        var state2 = (state, gridTree, callback);
+
+        gridTree.Query(ref state2, static (ref (
+                TState state,
+                B2DynamicTree<MapGrid> gridTree,
+                GridCallback<TState> callback) tuple,
+            DynamicTree.Proxy proxy) =>
+        {
+            var data = tuple.gridTree.GetUserData(proxy);
+            return tuple.callback(data!, ref tuple.state);
+        }, worldAABB);
+
+        state = state2.state;
+    }
+
     public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
     {
         if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<IMapGrid>();
@@ -110,19 +148,21 @@ internal partial class MapManager
     {
         // Need to enlarge the AABB by at least the grid shrinkage size.
         var aabb = new Box2(worldPos - 0.5f, worldPos + 0.5f);
-        var intersectingGrids = FindGridsIntersecting(mapId, aabb, grids, xformQuery, bodyQuery, true);
 
-        foreach (var gridInter in intersectingGrids)
+        grid = null;
+        var state = (grid, worldPos, xformQuery);
+
+        FindGridsIntersectingApprox(mapId, aabb, ref state, static (IMapGrid iGrid, ref (IMapGrid? grid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery) tuple) =>
         {
-            var mapGrid = (MapGrid) gridInter;
+            var mapGrid = (MapGrid) iGrid;
 
             // Turn the worldPos into a localPos and work out the relevant chunk we need to check
             // This is much faster than iterating over every chunk individually.
             // (though now we need some extra calcs up front).
 
             // Doesn't use WorldBounds because it's just an AABB.
-            var matrix = xformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix;
-            var localPos = matrix.Transform(worldPos);
+            var matrix = tuple.xformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix;
+            var localPos = matrix.Transform(tuple.worldPos);
 
             // NOTE:
             // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure
@@ -130,19 +170,20 @@ internal partial class MapManager
             var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
             var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
 
-            if (!mapGrid.HasChunk(chunkIndices)) continue;
+            if (!mapGrid.HasChunk(chunkIndices)) return true;
 
             var chunk = mapGrid.GetChunk(chunkIndices);
             Vector2i indices = chunk.GridTileToChunkTile(tile);
             var chunkTile = chunk.GetTile((ushort)indices.X, (ushort)indices.Y);
 
-            if (chunkTile.IsEmpty) continue;
-            grid = mapGrid;
-            return true;
-        }
+            if (chunkTile.IsEmpty) return true;
 
-        grid = null;
-        return false;
+            tuple.grid = mapGrid;
+            return false;
+        });
+
+        grid = state.grid;
+        return grid != null;
     }
 
     /// <summary>

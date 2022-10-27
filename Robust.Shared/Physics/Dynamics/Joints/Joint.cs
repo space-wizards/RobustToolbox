@@ -166,14 +166,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 _collideConnected = value;
 
                 if (!_collideConnected)
-                    EntitySystem.Get<SharedJointSystem>().FilterContactsForJoint(this);
+                    IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedJointSystem>().FilterContactsForJoint(this);
 
                 Dirty();
             }
         }
 
-        [DataField("collideConnected")]
-        protected bool _collideConnected = true;
+        [DataField("collideConnected")] protected bool _collideConnected = true;
 
         /// <summary>
         ///     The Breakpoint simply indicates the maximum Value the JointError can be before it breaks.

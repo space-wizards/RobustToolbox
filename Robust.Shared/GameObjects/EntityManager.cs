@@ -28,7 +28,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ISerializationManager _serManager = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
 
         #endregion Dependencies
@@ -201,7 +200,7 @@ namespace Robust.Shared.GameObjects
             // For whatever reason, tests create and expect null-space to have a map entity, and it does on the client, but it
             // intentionally doesn't on the server??
             if (coordinates.MapId == MapId.Nullspace &&
-                mapXform == null) 
+                mapXform == null)
             {
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
@@ -369,13 +368,6 @@ namespace Robust.Shared.GameObjects
 
             if (transform._children.Count != 0)
                 Logger.Error($"Failed to delete all children of entity: {ToPrettyString(metadata.Owner)}");
-
-            // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[metadata.Owner]))
-            {
-                if(component.Running)
-                    component.LifeShutdown(this);
-            }
 
             // Dispose all my components, in a safe order so transform is available
             DisposeComponents(metadata.Owner);

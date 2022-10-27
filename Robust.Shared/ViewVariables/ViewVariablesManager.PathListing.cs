@@ -76,7 +76,8 @@ internal abstract partial class ViewVariablesManager
 
         var type = obj.GetType();
 
-        if (_typeHandlers.TryGetValue(type, out var typeData))
+        // List paths from type handler, taking into account base types.
+        foreach (var typeData in GetAllTypeHandlers(type))
         {
             paths.AddRange(typeData.ListPath(resolved));
         }

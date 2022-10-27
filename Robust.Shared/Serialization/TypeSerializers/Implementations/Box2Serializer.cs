@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -15,22 +16,31 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
     {
+        private static void NextOrThrow(ref SpanSplitExtensions.Enumerator<char> enumerator, string value)
+        {
+            if (!enumerator.MoveNext())
+                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{value}'");
+        }
+
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null, Box2 value = default)
         {
-            var args = node.Value.Split(',');
+            var nodeValue = node.Value;
+            var args = nodeValue.AsSpan().Split(',').GetEnumerator();
+            NextOrThrow(ref args, nodeValue);
 
-            if (args.Length != 4)
-            {
-                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{node.Value}'");
-            }
+            var l = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
 
-            var l = Parse.Float(args[0]);
-            var b = Parse.Float(args[1]);
-            var r = Parse.Float(args[2]);
-            var t = Parse.Float(args[3]);
+            var b = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
+
+            var r = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
+
+            var t = Parse.Float(args.Current);
 
             return new Box2(l, b, r, t);
         }

@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -29,12 +29,15 @@ public sealed partial class EntityLookupSystem
         EntityQuery<TransformComponent> xformQuery)
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
+        var localAABB = invMatrix.TransformBox(worldAABB);
 
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        lookup.Tree.QueryAabb(ref intersecting,
+        static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
         {
-            intersecting.Add(ent);
-        }
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private void AddEntitiesIntersecting(
@@ -46,12 +49,15 @@ public sealed partial class EntityLookupSystem
         EntityQuery<TransformComponent> xformQuery)
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
+        var localAABB = invMatrix.TransformBox(worldBounds);
 
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        lookup.Tree.QueryAabb(ref intersecting,
+        static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
         {
-            intersecting.Add(ent);
-        }
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
@@ -63,12 +69,19 @@ public sealed partial class EntityLookupSystem
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
+        var state = (ignored, found: false);
 
-        foreach (var uid in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        lookup.Tree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
         {
-            if (uid == ignored) continue;
+            if (tuple.ignored == value)
+                return true;
+
+            tuple.found = true;
+            return false;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+        if (state.found)
             return true;
-        }
 
         if (!_mapManager.TryGetGrid(lookupUid, out var grid)) return false;
 
@@ -95,15 +108,18 @@ public sealed partial class EntityLookupSystem
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
-        var found = false;
+        var state = (ignored, found: false);
 
-        lookup.Tree._b2Tree.Query(ref found, static (ref bool state, DynamicTree.Proxy _) =>
+        lookup.Tree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
         {
-            state = true;
-            return false;
-        }, localAABB);
+            if (tuple.ignored == value)
+                return true;
 
-        if (found)
+            tuple.found = true;
+            return false;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+        if (state.found)
             return true;
 
         if (_mapManager.TryGetGrid(lookupUid, out var grid))
@@ -118,10 +134,10 @@ public sealed partial class EntityLookupSystem
             }
         }
 
-        return found;
+        return state.found;
     }
 
-    private void RecursiveAdd(EntityUid uid, List<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
+    private void RecursiveAdd(EntityUid uid, ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
@@ -134,10 +150,10 @@ public sealed partial class EntityLookupSystem
 
     private void AddContained(HashSet<EntityUid> intersecting, LookupFlags flags, EntityQuery<TransformComponent> xformQuery)
     {
-        if ((flags & LookupFlags.Contained) == 0x0) return;
+        if ((flags & LookupFlags.Contained) == 0x0 || intersecting.Count == 0) return;
 
         var conQuery = GetEntityQuery<ContainerManagerComponent>();
-        var toAdd = new List<EntityUid>();
+        var toAdd = new ValueList<EntityUid>();
 
         foreach (var uid in intersecting)
         {
@@ -477,10 +493,11 @@ public sealed partial class EntityLookupSystem
         {
             var aabb = GetLocalBounds(index, tileSize);
 
-            lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
+            lookup.Tree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
             {
-                intersecting.Add(data);
-            });
+                intersecting.Add(value);
+                return true;
+            }, aabb, (flags & LookupFlags.Approximate) != 0x0);
 
             if ((flags & LookupFlags.Anchored) != 0x0)
             {
@@ -508,10 +525,13 @@ public sealed partial class EntityLookupSystem
         var aabb = GetLocalBounds(gridIndices, tileSize);
         var intersecting = new HashSet<EntityUid>();
 
-        lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
+        var state = (lookup.Tree._b2Tree, intersecting);
+
+        lookup.Tree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
         {
-            intersecting.Add(data);
-        });
+            tuple.intersecting.Add(tuple._b2Tree.GetUserData(proxy));
+            return true;
+        }, aabb);
 
         if ((flags & LookupFlags.Anchored) != 0x0)
         {
@@ -588,10 +608,11 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var localAABB = xformQuery.GetComponent(component.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        component.Tree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
         {
-            intersecting.Add(uid);
-        }
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
 
         if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {
@@ -606,14 +627,15 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityLookupComponent component, ref Box2 localAABB, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityLookupComponent component, Box2 localAABB, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
 
-        foreach (var uid in component.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        component.Tree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
         {
-            intersecting.Add(uid);
-        }
+            intersecting.Add(value);
+            return true;
+        }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
 
         if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.TryGetGrid(component.Owner, out var grid))
         {

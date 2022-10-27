@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using static Robust.Client.Animations.AnimationPlaybackShared;
 
 namespace Robust.Client.GameObjects
@@ -29,7 +30,7 @@ namespace Robust.Client.GameObjects
         /// </param>
         public void Play(Animation animation, string key)
         {
-            EntitySystem.Get<AnimationPlayerSystem>().AddComponent(this);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AnimationPlayerSystem>().AddComponent(this);
             var playback = new AnimationPlayback(animation);
 
             PlayingAnimations.Add(key, playback);

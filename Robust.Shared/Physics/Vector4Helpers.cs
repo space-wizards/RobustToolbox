@@ -26,29 +26,21 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
-    internal static class Vector2Helpers
+    internal static class Vector4Helpers
     {
-        public static Vector2[] Inverse(this Vector2[] matrix)
+        public static System.Numerics.Vector4 Inverse(System.Numerics.Vector4 matrix)
         {
-            DebugTools.Assert(matrix.Length == 2);
-            float a = matrix[0].X, b = matrix[1].X, c = matrix[0].Y, d = matrix[1].Y;
+            float a = matrix.X, b = matrix.Z, c = matrix.Y, d = matrix.W;
             float det = a * d - b * c;
             if (det != 0.0f)
             {
                 det = 1.0f / det;
             }
 
-            Vector2[] result = new Vector2[2];
-            result[0].X = det * d;
-            result[0].Y = -det * c;
-
-            result[1].X = -det * b;
-            result[1].Y = det * a;
-
-            return result;
+            return new System.Numerics.Vector4(det * d, -det * c, -det * b, det * a);
         }
 
-        public static Vector2[] Inverse(Span<Vector2> matrix)
+        public static void Inverse(Span<Vector2> matrix)
         {
             DebugTools.Assert(matrix.Length == 2);
             float a = matrix[0].X, b = matrix[1].X, c = matrix[0].Y, d = matrix[1].Y;
@@ -58,14 +50,11 @@ namespace Robust.Shared.Physics
                 det = 1.0f / det;
             }
 
-            Vector2[] result = new Vector2[2];
-            result[0].X = det * d;
-            result[0].Y = -det * c;
+            matrix[0].X = det * d;
+            matrix[0].Y = -det * c;
 
-            result[1].X = -det * b;
-            result[1].Y = det * a;
-
-            return result;
+            matrix[1].X = -det * b;
+            matrix[1].Y = det * a;
         }
     }
 }

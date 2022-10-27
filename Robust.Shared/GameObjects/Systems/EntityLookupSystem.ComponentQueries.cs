@@ -20,32 +20,18 @@ public sealed partial class EntityLookupSystem
         EntityQuery<T> query) where T : Component
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
+        var localAABB = invMatrix.TransformBox(worldAABB);
+        var state = (intersecting, query);
 
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
-        {
-            if (!query.TryGetComponent(ent, out var comp)) continue;
-            intersecting.Add(comp);
-        }
-    }
+        lookup.Tree.QueryAabb(ref state, (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
 
-    private void AddComponentsIntersecting<T>(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2Rotated worldBounds,
-        LookupFlags flags,
-        EntityQuery<EntityLookupComponent> lookupQuery,
-        EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<T> query) where T : Component
-    {
-        var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
-
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
-        {
-            if (!query.TryGetComponent(ent, out var comp)) continue;
-            intersecting.Add(ent);
-        }
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
     }
 
     private void RecursiveAdd<T>(EntityUid uid, List<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component

@@ -512,30 +512,26 @@ namespace Robust.Shared.GameObjects
             if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
+            if (component.Deleted)
+                return;
+
 #if EXCEPTION_TOLERANCE
             try
             {
 #endif
-            if (!component.Deleted)
+            // these two components are required on all entities and cannot be removed.
+            if (!terminating && component is TransformComponent or MetaDataComponent)
             {
-                // these two components are required on all entities and cannot be removed.
-                if (!terminating && component is TransformComponent or MetaDataComponent)
-                {
-                    DebugTools.Assert("Tried to remove a protected component.");
-                    return;
-                }
-
-                if (component.Running)
-                    component.LifeShutdown(this);
-
-                if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity(this); // Sets delete
-
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
-                ComponentRemoved?.Invoke(eventArgs);
-                _eventBus.OnComponentRemoved(eventArgs);
-
+                DebugTools.Assert("Tried to remove a protected component.");
+                return;
             }
+
+            if (component.Running)
+                component.LifeShutdown(this);
+
+            if (component.LifeStage != ComponentLifeStage.PreAdd)
+                component.LifeRemoveFromEntity(this); // Sets delete
+
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -544,7 +540,9 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
+            ComponentRemoved?.Invoke(eventArgs);
+            _eventBus.OnComponentRemoved(eventArgs);
             DeleteComponent(component, terminating);
         }
 
@@ -571,10 +569,6 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(this);
 
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner), false);
-                ComponentRemoved?.Invoke(eventArgs);
-                _eventBus.OnComponentRemoved(eventArgs);
-
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -583,6 +577,9 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner), false);
+                ComponentRemoved?.Invoke(eventArgs);
+                _eventBus.OnComponentRemoved(eventArgs);
 
                 DeleteComponent(component, false);
             }

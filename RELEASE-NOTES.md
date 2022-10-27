@@ -49,6 +49,13 @@ Template for new versions:
 
 *None yet*
 
+## 0.56.1.1
+
+### Bugfixes
+
+* Fix PVS sometimes not sending an entity's parents.
+* Fix velocity preservation on parenting changes.
+
 ## 0.56.1.0
 
 ### New features

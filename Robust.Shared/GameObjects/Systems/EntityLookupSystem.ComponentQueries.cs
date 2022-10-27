@@ -50,6 +50,18 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
+
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>

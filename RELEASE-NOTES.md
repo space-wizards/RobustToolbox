@@ -31,6 +31,93 @@ Template for new versions:
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+## 0.57.0.1
+
+### Bugfixes
+
+* Fixed entity lookup bug that was causing crashes.  
+
+### 0.57.0.0
+
+### Breaking changes
+
+* EntityLookupComponent has been merged into BroadphaseComponent. The data that was previously stored in this tree is now stored across the 3 trees on BroadphaseComponent.
+
+### New features
+
+* EntityLookup has had its flags updated to reflect the merge of EntityLookupComponent and BroadphaseComponent, with the new flags reflecting each tree: Dynamic, Static, and Sundries. Dynamic and Static store physics bodies that are collidable and Sundries stores everything else (apart from grids).
+
+### Internal
+
+* EntityLookup and Broadphase have had their data de-duplicated, dropping the AABBs stored on the server by half. This also means MoveEvent updates will be much faster.
+* PVS mover updates has had their performance improved slightly.
+* Physics LinkedList nodes for contacts will no longer be re-made for every contact and will just be cleared when re-used.
+* Sprite / Light dynamictree allocations on the client have been dropped by using static lambdas.
+* The physics contact buffer for each FixtureProxy is now pooled.
+
+## 0.56.1.1
+
+### Bugfixes
+
+* Fix PVS sometimes not sending an entity's parents.
+* Fix velocity preservation on parenting changes.
+
+## 0.56.1.0
+
+### New features
+
+* Update pt-BR locale with more localizations
+* Separated PVS entity budget into an entity creation budget and a pvs-entry budget.
+
+### Bugfixes
+
+* Fix VV type handler removal.
+* System errors during component removal should no longer result in undeletable entities.
+
+### Other
+
+* The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
+* Improved Box2Serializer
+* Removed uses IEnumerables from EntityLookupSystem. 
+* Optimized client entity spawning by 15%.
+* Modified how the rendering tree handles entity movement.
+* Improved grid enumeration allocs.
+* Fixed a bunch of build warnings (see #3329 and #3289 for details)
+
+## 0.56.0.2
+
+### Bugfixes
+
+* Rename \_lib.ftl to \_engine_lib.ftl to avoid overwriting
+
+## 0.56.0.1
+
+### Bugfixes
+
+* Fix instantiation of data records containing value types
+
+## 0.56.0.0
+
+### Breaking changes
+
 * `CastShadows` moved to `SharedPointLightComponent` from clientside, now networked
 
 ### New features
@@ -85,10 +172,6 @@ Template for new versions:
   * Added `vvread`, `vvwrite` and `vvinvoke` commands, which allow you to read, write and invoke VV paths.
   * Added autocompletion to all VV commands.
   * Please note that the VV GUI still remains the same. It will be updated to use these new features in the future.
-
-### Bugfixes
-
-*None yet*
 
 ### Other
 

@@ -51,6 +51,7 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
         private SharedTransformSystem _transform = default!;
 
@@ -163,6 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -262,17 +264,17 @@ namespace Robust.Shared.Physics.Dynamics
             bodyB = fixtureB.Body;
 
             // Insert into world
-            contact.MapNode = _activeContacts.AddLast(contact);
+            _activeContacts.AddLast(contact.MapNode);
 
             // Connect to body A
             DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Add(fixtureB, contact);
-            contact.BodyANode = bodyA.Contacts.AddLast(contact);
+            bodyA.Contacts.AddLast(contact.BodyANode);
 
             // Connect to body B
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Add(fixtureA, contact);
-            contact.BodyBNode = bodyB.Contacts.AddLast(contact);
+            bodyB.Contacts.AddLast(contact.BodyBNode);
         }
 
         /// <summary>
@@ -314,22 +316,18 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Remove from the world
-            DebugTools.Assert(contact.MapNode != null);
-            _activeContacts.Remove(contact.MapNode!);
-            contact.MapNode = null;
+            _activeContacts.Remove(contact.MapNode);
 
             // Remove from body 1
             DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Remove(fixtureB);
             DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
-            bodyA.Contacts.Remove(contact.BodyANode!);
-            contact.BodyANode = null;
+            bodyA.Contacts.Remove(contact.BodyANode);
 
             // Remove from body 2
             DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Remove(fixtureA);
-            bodyB.Contacts.Remove(contact.BodyBNode!);
-            contact.BodyBNode = null;
+            bodyB.Contacts.Remove(contact.BodyBNode);
 
             // Insert into the pool.
             _contactPool.Return(contact);
@@ -435,8 +433,9 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
-                var broadphaseA = bodyA.Broadphase;
-                var broadphaseB = bodyB.Broadphase;
+                var broadQuery = _entityManager.GetEntityQuery<BroadphaseComponent>();
+                var broadphaseA = _lookup.GetBroadphase(bodyA.Owner, xformQuery.GetComponent(bodyA.Owner), broadQuery, xformQuery);
+                var broadphaseB = _lookup.GetBroadphase(bodyB.Owner, xformQuery.GetComponent(bodyB.Owner), broadQuery, xformQuery);
                 var overlap = false;
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace

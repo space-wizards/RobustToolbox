@@ -110,10 +110,10 @@ namespace Robust.Shared.GameObjects
 
             if (lookup == null) return;
 
-            var coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+            var relativeRotation = rotation - lookupRotation;
+            var aabb = GetAABB(xform.Owner, coordinates.Position, relativeRotation, xform, xformQuery);
 
             // TODO: Only container children need updating so could manually do this slightly better.
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
@@ -216,6 +216,46 @@ namespace Robust.Shared.GameObjects
             DestroyProxies(fixture, tree, moveBuffer);
         }
 
+        #endregion
+
+
+        #region Entity Updating
+        private void UpdatePosition(EntityUid uid, TransformComponent xform, BroadphaseComponent? lookup, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (lookup == null)
+                return;
+
+            var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
+            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+            var relativeRotation = rotation - lookupRotation;
+            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
+            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
+        }
+
+        private void UpdateParent(EntityUid uid,
+            TransformComponent xform,
+            BroadphaseComponent? lookup,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<BroadphaseComponent> broadQuery,
+            EntityUid oldParent)
+        {
+            BroadphaseComponent? oldLookup = oldParent.IsValid()
+                ? GetBroadphase(oldParent, xformQuery.GetComponent(oldParent), broadQuery, xformQuery)
+                : null;
+
+            // If lookup remained unchanged we just update the position as normal
+            if (oldLookup == lookup)
+            {
+                UpdatePosition(uid, xform, lookup, xformQuery);
+                return;
+            }
+
+            RemoveFromEntityTree(oldLookup, xform, xformQuery);
+
+            // TODO combine get-broadphase and get-worldrot
+            if (lookup != null)
+                AddToEntityTree(lookup, xform, xformQuery, _transform.GetWorldRotation(lookup.Owner, xformQuery));
+        }
         #endregion
 
         #region Entity events
@@ -443,43 +483,6 @@ namespace Robust.Shared.GameObjects
                 UpdateParent(uid, xform, lookup, xformQuery, broadQuery, args.OldPosition.EntityId);
             else
                 UpdatePosition(uid, xform, lookup, xformQuery);
-        }
-
-        private void UpdatePosition(EntityUid uid, TransformComponent xform, BroadphaseComponent? lookup, EntityQuery<TransformComponent> xformQuery)
-        {
-            if (lookup == null)
-                return;
-
-            var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
-            var relativeRotation = rotation - lookupRotation;
-            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
-        }
-
-        private void UpdateParent(EntityUid uid,
-            TransformComponent xform,
-            BroadphaseComponent? lookup,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<BroadphaseComponent> broadQuery,
-            EntityUid oldParent)
-        {
-            BroadphaseComponent? oldLookup = oldParent.IsValid()
-                ? GetBroadphase(oldParent, xformQuery.GetComponent(oldParent), broadQuery, xformQuery)
-                : null;
-
-            // If lookup remained unchanged we just update the position as normal
-            if (oldLookup == lookup)
-            {
-                UpdatePosition(uid, xform, lookup, xformQuery);
-                return;
-            }
-
-            RemoveFromEntityTree(oldLookup, xform, xformQuery);
-
-            // TODO combine get-broadphase and get-worldrot
-            if (lookup != null)
-                AddToEntityTree(lookup, xform, xformQuery, _transform.GetWorldRotation(lookup.Owner, xformQuery));
         }
 
         private void OnContainerRemove(EntRemovedFromContainerMessage ev)

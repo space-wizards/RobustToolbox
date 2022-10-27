@@ -134,10 +134,10 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
         {
             var data = _handlers[i];
 
-            if (!originalCompare && (data.Handle != (HandleTypePath) handle || data.List != (ListTypeCustomPaths) list))
+            if (!originalCompare && !(handle.Equals(data.Handle) && list.Equals(data.List)))
                 continue;
 
-            if (originalCompare && (data.OriginalHandle != handle || data.OriginalList != list))
+            if (originalCompare && !(handle.Equals(data.OriginalHandle) && list.Equals(data.OriginalList)))
                 continue;
 
             _handlers.RemoveAt(i);

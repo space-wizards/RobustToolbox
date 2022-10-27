@@ -538,14 +538,18 @@ namespace Robust.Shared.GameObjects
                 return null;
             }
 
-            if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
+            if (_entMan.HasComponent<IMapGridComponent>(Owner))
             {
                 return Owner;
             }
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridUid;
+                var parentXform = xformQuery.GetComponent(_parent);
+                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
+                    return parentXform.GridUid;
+                else
+                    return parentXform.FindGridEntityId(xformQuery);
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
@@ -862,6 +866,8 @@ namespace Robust.Shared.GameObjects
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
+
+        public bool ParentChanged => NewPosition.EntityId == OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.

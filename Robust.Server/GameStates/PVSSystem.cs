@@ -906,13 +906,18 @@ internal sealed partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
-        //did we already get added?
-        if (toSend.ContainsKey(uid)) return true;
-
         var parent = transQuery.GetComponent(uid).ParentUid;
         if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, lastSeen, metaQuery, transQuery, fromTick,
                 ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget))
             return false;
+
+        //did we already get added?
+        if (toSend.ContainsKey(uid)) return true;
+        // Note that we check this AFTER adding parents. This is because while this entity may already have been added
+        // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
+        // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
+        // send the new parents, which may otherwise be delayed because of the PVS budget..
+
 
         // TODO PERFORMANCE.
         // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this

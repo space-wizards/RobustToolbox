@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
 
             // TODO: Only container children need updating so could manually do this slightly better.
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
@@ -415,7 +415,7 @@ namespace Robust.Shared.GameObjects
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
 
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
 
             // Any child entities should be handled by their own OnEntityInit
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, false);
@@ -436,7 +436,7 @@ namespace Robust.Shared.GameObjects
             var xform = args.Component;
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(args.Sender, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(args.Sender, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
         }
 
@@ -532,7 +532,7 @@ namespace Robust.Shared.GameObjects
         {
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
         }
 

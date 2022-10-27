@@ -326,8 +326,11 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
             var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
-            var oldIndex = _entityPvsCollection.GetChunkIndex(oldCoordinates);
-            _entityPvsCollection.MarkDirty(oldIndex);
+            var indices = PVSCollection<EntityUid>.GetChunkIndices(oldCoordinates.Position);
+            if (ev.Component.GridUid != null)
+                _entityPvsCollection.MarkDirty(new GridChunkLocation(ev.Component.GridUid.Value, indices));
+            else
+                _entityPvsCollection.MarkDirty(new MapChunkLocation(ev.Component.MapID, indices));
         }
 
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
@@ -354,13 +357,21 @@ internal sealed partial class PVSSystem : EntitySystem
             coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
         }
 
-        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        // since elements are cached grid-/map-relative, we don't need to update a given grids/maps children
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-        _entityPvsCollection.UpdateIndex(uid, coordinates);
+        var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
+        if (xform.GridUid != null)
+            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices);
+        else
+            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices);
 
         var children = xform.ChildEnumerator;
 
+        // TODO PERFORMANCE
+        // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
+        // coordiantes.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
+        // directly.
         while (children.MoveNext(out var child))
         {
             UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
@@ -903,6 +914,10 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget))
             return false;
 
+        // TODO PERFORMANCE.
+        // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
+        // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
+        // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
         var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
         AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, entered);

@@ -20,13 +20,14 @@ public sealed class TextEdit : Control
 {
     private readonly RenderBox _renderBox;
 
-    public LineBreakBias CursorBias { get; set; }
-    private int _cursorPosition;
-
-    private float? _horizontalCursorPos;
+    private CursorPos _cursorPosition;
 
     // TODO: Track cursor bias on selection start.
-    private int _selectionStart;
+    private CursorPos _selectionStart;
+
+    // Cached last horizontal cursor position for vertical cursor movement.
+    // Conceptually, moving the cursor up/down across "keeps" the horizontal position as much as possible.
+    private float? _horizontalCursorPos;
 
     private ValueList<int> _lineBreaks;
 
@@ -53,30 +54,30 @@ public sealed class TextEdit : Control
         MouseFilter = MouseFilterMode.Stop;
     }
 
-    public int CursorPosition
+    public CursorPos CursorPosition
     {
         get => _cursorPosition;
         set
         {
-            var clamped = MathHelper.Clamp(value, 0, TextLength);
+            var clamped = MathHelper.Clamp(value.Index, 0, TextLength);
             if (TextLength != 0 && TextLength != clamped && !Rope.TryGetRuneAt(TextRope, clamped, out _))
                 throw new ArgumentException("Cannot set cursor inside surrogate pair.");
 
-            _cursorPosition = clamped;
+            _cursorPosition = value with { Index = clamped };
             _selectionStart = _cursorPosition;
         }
     }
 
-    public int SelectionStart
+    public CursorPos SelectionStart
     {
         get => _selectionStart;
         set
         {
-            var clamped = MathHelper.Clamp(value, 0, TextLength);
+            var clamped = MathHelper.Clamp(value.Index, 0, TextLength);
             if (TextLength != 0 && TextLength != clamped && !Rope.TryGetRuneAt(TextRope, clamped, out _))
                 throw new ArgumentException("Cannot set cursor inside surrogate pair.");
 
-            _selectionStart = clamped;
+            _selectionStart = value with { Index = clamped };
         }
     }
 
@@ -90,10 +91,10 @@ public sealed class TextEdit : Control
         }
     }
 
-    public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
-    public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
+    public CursorPos SelectionLower => CursorPos.Min(_selectionStart, _cursorPosition);
+    public CursorPos SelectionUpper => CursorPos.Max(_selectionStart, _cursorPosition);
 
-    public int SelectionLength => Math.Abs(_selectionStart - _cursorPosition);
+    public int SelectionLength => Math.Abs(_selectionStart.Index - _cursorPosition.Index);
 
     // TODO: cache
     public int TextLength => (int)Rope.CalcTotalLength(TextRope);
@@ -133,7 +134,7 @@ public sealed class TextEdit : Control
             var selectFlag = (moveType & MoveType.SelectFlag) != 0;
             var newPos = CalcKeyMove(moveType & MoveType.ActionMask, selectFlag, out var keepH);
 
-            (_cursorPosition, CursorBias) = newPos;
+            _cursorPosition = newPos;
 
             if (!selectFlag)
                 _selectionStart = _cursorPosition;
@@ -153,13 +154,13 @@ public sealed class TextEdit : Control
                 var selectStart = _selectionStart;
                 if (_selectionStart != _cursorPosition)
                 {
-                    TextRope = Rope.Delete(oldText, SelectionLower, SelectionLength);
+                    TextRope = Rope.Delete(oldText, SelectionLower.Index, SelectionLength);
                     _cursorPosition = SelectionLower;
                     changed = true;
                 }
-                else if (_cursorPosition != 0)
+                else if (_cursorPosition.Index != 0)
                 {
-                    var remPos = _cursorPosition - 1;
+                    var remPos = _cursorPosition.Index - 1;
                     var remAmt = 1;
                     // If this is a low surrogate remove two chars to remove the whole pair.
                     if (char.IsLowSurrogate(Rope.Index(oldText, remPos)))
@@ -169,7 +170,7 @@ public sealed class TextEdit : Control
                     }
 
                     TextRope = Rope.Delete(oldText, remPos, remAmt);
-                    _cursorPosition -= remAmt;
+                    _cursorPosition.Index -= remAmt;
                     changed = true;
                 }
 
@@ -193,17 +194,17 @@ public sealed class TextEdit : Control
                 var changed = false;
                 if (_selectionStart != _cursorPosition)
                 {
-                    TextRope = Rope.Delete(TextRope, SelectionLower, SelectionLength);
+                    TextRope = Rope.Delete(TextRope, SelectionLower.Index, SelectionLength);
                     _cursorPosition = SelectionLower;
                     changed = true;
                 }
-                else if (_cursorPosition < TextLength)
+                else if (_cursorPosition.Index < TextLength)
                 {
                     var remAmt = 1;
-                    if (char.IsHighSurrogate(Rope.Index(TextRope, _cursorPosition)))
+                    if (char.IsHighSurrogate(Rope.Index(TextRope, _cursorPosition.Index)))
                         remAmt = 2;
 
-                    TextRope = Rope.Delete(TextRope, _cursorPosition, remAmt);
+                    TextRope = Rope.Delete(TextRope, _cursorPosition.Index, remAmt);
                     changed = true;
                 }
 
@@ -229,8 +230,8 @@ public sealed class TextEdit : Control
         }
         else if (args.Function == EngineKeyFunctions.TextSelectAll)
         {
-            _cursorPosition = TextLength;
-            _selectionStart = 0;
+            _cursorPosition = new CursorPos(TextLength, LineBreakBias.Bottom);
+            _selectionStart = new CursorPos(0, LineBreakBias.Top);
 
             InvalidateHorizontalCursorPos();
 
@@ -244,7 +245,7 @@ public sealed class TextEdit : Control
             // Find closest cursor position under mouse.
             var index = GetIndexAtPos(args.RelativePosition);
 
-            (_cursorPosition, CursorBias) = index;
+            _cursorPosition = index;
 
             if (args.Function != EngineKeyFunctions.TextCursorSelect)
             {
@@ -262,10 +263,10 @@ public sealed class TextEdit : Control
         [Pure]
         int ShiftCursorLeft()
         {
-            if (_cursorPosition == 0)
-                return _cursorPosition;
+            if (_cursorPosition.Index == 0)
+                return _cursorPosition.Index;
 
-            var pos = _cursorPosition - 1;
+            var pos = _cursorPosition.Index - 1;
 
             if (char.IsLowSurrogate(Rope.Index(TextRope, pos)))
                 pos -= 1;
@@ -276,10 +277,10 @@ public sealed class TextEdit : Control
         [Pure]
         int ShiftCursorRight()
         {
-            if (_cursorPosition == TextLength)
-                return _cursorPosition;
+            if (_cursorPosition.Index == TextLength)
+                return _cursorPosition.Index;
 
-            var pos = _cursorPosition + 1;
+            var pos = _cursorPosition.Index + 1;
 
             // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
             // (Because yes, I did myself too a week after writing it)
@@ -298,7 +299,7 @@ public sealed class TextEdit : Control
             if (_horizontalCursorPos != null)
                 return;
 
-            _horizontalCursorPos = GetHorizontalPositionAtIndex(_cursorPosition, CursorBias);
+            _horizontalCursorPos = GetHorizontalPositionAtIndex(_cursorPosition);
         }
 
         // NOTE: Much to my dismay, this isn't a pure function. It calls CacheHorizontalCursorPos().
@@ -312,15 +313,14 @@ public sealed class TextEdit : Control
                 {
                     if (_selectionStart != _cursorPosition && !select)
                     {
-                        // TODO: Bias comes from selection start bias.
-                        return new CursorPos(SelectionLower, LineBreakBias.Bottom);
+                        return SelectionLower;
                     }
 
-                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
+                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition);
 
-                    if (CursorBias == LineBreakBias.Bottom && _cursorPosition == lineStart)
+                    if (_cursorPosition.Bias == LineBreakBias.Bottom && _cursorPosition.Index == lineStart)
                     {
-                        return new CursorPos(_cursorPosition, LineBreakBias.Top);
+                        return _cursorPosition with { Bias = LineBreakBias.Top };
                     }
 
                     var newPos = ShiftCursorLeft();
@@ -334,32 +334,31 @@ public sealed class TextEdit : Control
                 {
                     if (_selectionStart != _cursorPosition && !select)
                     {
-                        // TODO: Bias comes from selection start bias.
-                        return new CursorPos(SelectionUpper, LineBreakBias.Top);
+                        return SelectionUpper;
                     }
 
-                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
-                    if (CursorBias == LineBreakBias.Top
-                        && _cursorPosition == lineEnd
-                        && _cursorPosition != TextLength
-                        && Rope.Index(TextRope, _cursorPosition) != '\n')
+                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition);
+                    if (_cursorPosition.Bias == LineBreakBias.Top
+                        && _cursorPosition.Index == lineEnd
+                        && _cursorPosition.Index != TextLength
+                        && Rope.Index(TextRope, _cursorPosition.Index) != '\n')
                     {
-                        return new CursorPos(_cursorPosition, LineBreakBias.Bottom);
+                        return _cursorPosition with { Bias = LineBreakBias.Bottom };
                     }
 
                     return new CursorPos(ShiftCursorRight(), LineBreakBias.Top);
                 }
                 case MoveType.LeftWord:
                 {
-                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition);
-                    var pos = _cursorPosition + TextEditShared.PrevWordPosition(runes.GetEnumerator());
+                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition.Index);
+                    var pos = _cursorPosition.Index + TextEditShared.PrevWordPosition(runes.GetEnumerator());
 
                     return new CursorPos(pos, LineBreakBias.Bottom);
                 }
                 case MoveType.RightWord:
                 {
-                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition);
-                    var pos = _cursorPosition + TextEditShared.NextWordPosition(runes.GetEnumerator());
+                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
+                    var pos = _cursorPosition.Index + TextEditShared.NextWordPosition(runes.GetEnumerator());
 
                     return new CursorPos(pos, LineBreakBias.Bottom);
                 }
@@ -368,7 +367,7 @@ public sealed class TextEdit : Control
                     CacheHorizontalCursorPos();
 
                     // TODO: From selection lower, not cursor pos.
-                    var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+                    var (line, _, _) = GetLineForIndex(_cursorPosition);
 
                     if (line == 0)
                     {
@@ -384,20 +383,20 @@ public sealed class TextEdit : Control
                 {
                     CacheHorizontalCursorPos();
 
-                    var (line, _, _) = GetLineForIndex(_cursorPosition, CursorBias);
+                    var (line, _, _) = GetLineForIndex(_cursorPosition);
 
                     // TODO: Isn't this off-by-one.
                     if (line == _lineBreaks.Count - 1)
                     {
                         // On the last line already, move to the end of it.
-                        return new CursorPos(_cursorPosition, LineBreakBias.Top);
+                        return _cursorPosition with { Bias = LineBreakBias.Top };
                     }
 
                     return GetIndexAtHorizontalPos(line + 1, _horizontalCursorPos!.Value);
                 }
                 case MoveType.Begin:
                 {
-                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition, CursorBias);
+                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition);
                     if (Rope.Index(TextRope, lineStart) == '\n')
                         lineStart += 1;
 
@@ -405,7 +404,7 @@ public sealed class TextEdit : Control
                 }
                 case MoveType.End:
                 {
-                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition, CursorBias);
+                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition);
                     return new CursorPos(lineEnd, LineBreakBias.Top);
                 }
                 default:
@@ -474,7 +473,7 @@ public sealed class TextEdit : Control
 
             var index = GetIndexAtPos(_lastMouseSelectPos);
 
-            (_cursorPosition, CursorBias) = index;
+            _cursorPosition = index;
         }
 
         EnsureLineBreaksUpdated();
@@ -504,8 +503,8 @@ public sealed class TextEdit : Control
     public void InsertAtCursor(string text)
     {
         // Strip newlines.
-        var lower = SelectionLower;
-        var upper = SelectionUpper;
+        var lower = SelectionLower.Index;
+        var upper = SelectionUpper.Index;
 
         var (left, mid) = Rope.Split(TextRope, lower);
         var (_, right) = Rope.Split(mid, upper - lower);
@@ -517,7 +516,7 @@ public sealed class TextEdit : Control
         //    return;
         //}
 
-        _selectionStart = _cursorPosition = lower + text.Length;
+        _selectionStart = _cursorPosition = new CursorPos(lower + text.Length, LineBreakBias.Top);
         // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
         // _updatePseudoClass();
     }
@@ -654,20 +653,20 @@ public sealed class TextEdit : Control
         return new CursorPos(index, index == textIdx ? LineBreakBias.Bottom : LineBreakBias.Top);
     }
 
-    private float GetHorizontalPositionAtIndex(int index, LineBreakBias bias)
+    private float GetHorizontalPositionAtIndex(CursorPos pos)
     {
         EnsureLineBreaksUpdated();
 
         var hPos = 0;
         var font = GetFont();
 
-        var (_, lineStart, _) = GetLineForIndex(index, bias);
+        var (_, lineStart, _) = GetLineForIndex(pos);
         using var runeEnumerator = Rope.EnumerateRunes(TextRope, lineStart).GetEnumerator();
 
         var i = lineStart;
         while (true)
         {
-            if (i >= index)
+            if (i >= pos.Index)
                 break;
 
             if (!runeEnumerator.MoveNext())
@@ -683,9 +682,9 @@ public sealed class TextEdit : Control
         return hPos;
     }
 
-    private (int lineIdx, int lineStart, int lineEnd) GetLineForIndex(int index, LineBreakBias bias)
+    private (int lineIdx, int lineStart, int lineEnd) GetLineForIndex(CursorPos pos)
     {
-        DebugTools.Assert(index >= 0);
+        DebugTools.Assert(pos.Index >= 0);
 
         EnsureLineBreaksUpdated();
 
@@ -696,7 +695,7 @@ public sealed class TextEdit : Control
         for (i = 0; i < _lineBreaks.Count; i++)
         {
             var lineIdx = _lineBreaks[i];
-            if (bias == LineBreakBias.Bottom ? (lineIdx > index) : (lineIdx >= index))
+            if (pos.Bias == LineBreakBias.Bottom ? (lineIdx > pos.Index) : (lineIdx >= pos.Index))
             {
                 if (i == 0)
                 {
@@ -797,7 +796,7 @@ public sealed class TextEdit : Control
                 CheckDrawCursors(LineBreakBias.Bottom);
 
                 var color = Color.White;
-                if (count >= _master.SelectionLower && count < _master.SelectionUpper)
+                if (count >= _master.SelectionLower.Index && count < _master.SelectionUpper.Index)
                     color = Color.Red;
 
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
@@ -812,7 +811,7 @@ public sealed class TextEdit : Control
             // Draw cursor bias
             if (_master.DebugOverlay)
             {
-                var arrow = _master.CursorBias == LineBreakBias.Bottom ? ArrowDown : ArrowUp;
+                var arrow = _master.CursorPosition.Bias == LineBreakBias.Bottom ? ArrowDown : ArrowUp;
                 foreach (var (to, from) in arrow)
                 {
                     var offset = new Vector2(0, drawBox.Bottom - ArrowSize.Y);
@@ -835,10 +834,10 @@ public sealed class TextEdit : Control
                         Color.Yellow);
                 }
 
-                if (_master._cursorPosition == count
+                if (_master._cursorPosition.Index == count
                     && _master.HasKeyboardFocus()
                     && _master._blink.CurrentlyLit
-                    && _master.CursorBias == bias)
+                    && _master.CursorPosition.Bias == bias)
                 {
                     handle.DrawRect(
                         new UIBox2(
@@ -852,13 +851,72 @@ public sealed class TextEdit : Control
         }
     }
 
-    public enum LineBreakBias
+    /// <summary>
+    /// Specifies which line the cursor is positioned at when on a word-wrapping break.
+    /// </summary>
+    public enum LineBreakBias : byte
     {
-        Top,
-        Bottom
+        // @formatter:off
+        Top    = 0,
+        Bottom = 1
+        // @formatter:on
     }
 
-    public record struct CursorPos(int Index, LineBreakBias Bias);
+    /// <summary>
+    /// Stores the necessary data for a position in the cursor of the text.
+    /// </summary>
+    /// <param name="Index">The index of the cursor in the text contents.</param>
+    /// <param name="Bias">Which direction to bias the cursor to </param>
+    public record struct CursorPos(int Index, LineBreakBias Bias) : IComparable<CursorPos>
+    {
+        public static CursorPos Min(CursorPos a, CursorPos b)
+        {
+            var cmp = a.CompareTo(b);
+            if (cmp < 0)
+                return a;
+
+            return b;
+        }
+
+        public static CursorPos Max(CursorPos a, CursorPos b)
+        {
+            var cmp = a.CompareTo(b);
+            if (cmp > 0)
+                return a;
+
+            return b;
+        }
+
+        public int CompareTo(CursorPos other)
+        {
+            var indexComparison = Index.CompareTo(other.Index);
+            if (indexComparison != 0)
+                return indexComparison;
+
+            // If two positions are at the same index, the one with bias top is considered earlier.
+            return ((byte)Bias).CompareTo((byte)other.Bias);
+        }
+
+        public static bool operator <(CursorPos left, CursorPos right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+
+        public static bool operator >(CursorPos left, CursorPos right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+
+        public static bool operator <=(CursorPos left, CursorPos right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >=(CursorPos left, CursorPos right)
+        {
+            return left.CompareTo(right) >= 0;
+        }
+    }
 
     [Flags]
     private enum MoveType

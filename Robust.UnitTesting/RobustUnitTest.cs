@@ -109,11 +109,6 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MetaDataComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
-            {
-                compFactory.RegisterClass<EntityLookupComponent>();
-            }
-
             if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
             {
                 compFactory.RegisterClass<PhysicsMapComponent>();
@@ -127,11 +122,6 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
             {
                 compFactory.RegisterClass<FixturesComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
-            {
-                compFactory.RegisterClass<EntityLookupComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

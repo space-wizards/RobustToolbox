@@ -190,6 +190,7 @@ namespace Robust.Shared.GameObjects
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         [ViewVariables]
+        [Obsolete("Use ParentUid and query the parent TransformComponent")]
         public TransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);

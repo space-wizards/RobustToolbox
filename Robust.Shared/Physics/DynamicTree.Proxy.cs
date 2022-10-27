@@ -12,11 +12,7 @@ namespace Robust.Shared.Physics
 
             private readonly int _value;
 
-            public static Proxy Free
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => new(-1);
-            }
+            public readonly static Proxy Free = new(-1);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Proxy(int v) => _value = v;

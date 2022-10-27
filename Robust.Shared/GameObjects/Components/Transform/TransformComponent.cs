@@ -87,7 +87,7 @@ namespace Robust.Shared.GameObjects
 
         internal bool _mapIdInitialized;
 
-        // TODO: Cache this. Please.
+        // TODO: Cache this.
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>

@@ -106,6 +106,8 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
+
+            // TODO combine mover-coordinate fetching with BroadphaseComponent fetching. They're kinda the same thing.
             var lookup = GetBroadphase(uid, xform, broadQuery, xformQuery);
 
             if (lookup == null) return;
@@ -239,9 +241,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<BroadphaseComponent> broadQuery,
             EntityUid oldParent)
         {
-            BroadphaseComponent? oldLookup = oldParent.IsValid()
-                ? GetBroadphase(oldParent, xformQuery.GetComponent(oldParent), broadQuery, xformQuery)
-                : null;
+            BroadphaseComponent? oldLookup = null;
+            if (oldParent.IsValid()
+                && !broadQuery.TryGetComponent(oldParent, out oldLookup)
+                && xformQuery.TryGetComponent(oldParent, out var parentXform))
+            {
+                oldLookup = GetBroadphase(oldParent, parentXform, broadQuery, xformQuery);
+            }
 
             // If lookup remained unchanged we just update the position as normal
             if (oldLookup == lookup)
@@ -252,7 +258,6 @@ namespace Robust.Shared.GameObjects
 
             RemoveFromEntityTree(oldLookup, xform, xformQuery);
 
-            // TODO combine get-broadphase and get-worldrot
             if (lookup != null)
                 AddToEntityTree(lookup, xform, xformQuery, _transform.GetWorldRotation(lookup.Owner, xformQuery));
         }
@@ -450,10 +455,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnMove(ref MoveEvent args)
         {
-            var uid = args.Sender;
-            var xform = args.Component;
-
-            if (xform.GridUid == args.Sender)
+            if (args.Component.GridUid == args.Sender)
                 return;
 
             var meta = MetaData(args.Sender);
@@ -472,7 +474,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (_mapManager.IsMap(uid))
+            if (_mapManager.IsMap(args.Sender))
                 return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
@@ -480,9 +482,9 @@ namespace Robust.Shared.GameObjects
             var lookup = GetBroadphase(args.Sender, args.Component, broadQuery, xformQuery);
 
             if (args.ParentChanged)
-                UpdateParent(uid, xform, lookup, xformQuery, broadQuery, args.OldPosition.EntityId);
+                UpdateParent(args.Sender, args.Component, lookup, xformQuery, broadQuery, args.OldPosition.EntityId);
             else
-                UpdatePosition(uid, xform, lookup, xformQuery);
+                UpdatePosition(args.Sender, args.Component, lookup, xformQuery);
         }
 
         private void OnContainerRemove(EntRemovedFromContainerMessage ev)
@@ -517,9 +519,9 @@ namespace Robust.Shared.GameObjects
             Angle lookupRotation,
             bool recursive = true)
         {
+            // TODO combine mover-coordinate fetching with BroadphaseComponent fetching. They're kinda the same thing.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
             var relativeRotation = rotation - lookupRotation;
-            // If we're contained then LocalRotation should be 0 anyway.
             var aabb = GetAABB(xform.Owner, coordinates.Position, relativeRotation, xform, xformQuery);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
         }

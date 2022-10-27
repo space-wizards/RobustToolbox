@@ -49,6 +49,12 @@ Template for new versions:
 
 *None yet*
 
+## 0.57.0.1
+
+### Bugfixes
+
+* Fixed entity lookup bug that was causing crashes.  
+
 ### 0.57.0.0
 
 ### Breaking changes

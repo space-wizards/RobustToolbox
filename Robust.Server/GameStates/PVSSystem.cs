@@ -902,9 +902,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
-        // Note that we check this AFTER adding parents. This is because while this entity may already added to the
-        // toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported to
-        // follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
+        // Note that we check this AFTER adding parents. This is because while this entity may already have been added
+        // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
+        // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget..
 
         var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);

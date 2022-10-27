@@ -338,6 +338,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 var oldPosition = Coordinates;
+                var oldRotation = LocalRotation;
                 _localPosition = value.Position;
                 var changedParent = false;
 
@@ -379,7 +380,10 @@ namespace Robust.Shared.GameObjects
 
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
-                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+                    {
+                        oldRotation = _localRotation;
+                        _localRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+                    }
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
@@ -398,9 +402,9 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if (!oldPosition.Equals(Coordinates))
+                        if (!oldPosition.Equals(Coordinates) || !oldRotation.Equals(_localRotation))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                         }
                     }
@@ -408,6 +412,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     _oldCoords ??= oldPosition;
+                    _oldLocalRotation ??= oldRotation;
                 }
             }
         }

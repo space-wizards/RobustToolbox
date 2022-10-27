@@ -13,11 +13,12 @@ namespace Robust.Shared.GameObjects
 
         public readonly float Softness;
         public readonly bool Enabled;
+        public readonly bool CastShadows;
 
         public readonly float Radius;
         public readonly Vector2 Offset;
 
-        public PointLightComponentState(bool enabled, Color color, float radius, Vector2 offset, float energy, float softness)
+        public PointLightComponentState(bool enabled, Color color, float radius, Vector2 offset, float energy, float softness, bool castShadows)
         {
             Enabled = enabled;
             Color = color;
@@ -25,6 +26,7 @@ namespace Robust.Shared.GameObjects
             Offset = offset;
             Energy = energy;
             Softness = softness;
+            CastShadows = castShadows;
         }
     }
 }

@@ -118,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics
                 var contact = new Contact();
                 IoCManager.InjectDependencies(contact);
 #if DEBUG
-                contact._debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
 #endif
                 contact.Manifold = new Manifold
                 {
@@ -262,17 +262,17 @@ namespace Robust.Shared.Physics.Dynamics
             bodyB = fixtureB.Body;
 
             // Insert into world
-            contact.MapNode = _activeContacts.AddLast(contact);
+            _activeContacts.AddLast(contact.MapNode);
 
             // Connect to body A
             DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Add(fixtureB, contact);
-            contact.BodyANode = bodyA.Contacts.AddLast(contact);
+            bodyA.Contacts.AddLast(contact.BodyANode);
 
             // Connect to body B
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Add(fixtureA, contact);
-            contact.BodyBNode = bodyB.Contacts.AddLast(contact);
+            bodyB.Contacts.AddLast(contact.BodyBNode);
         }
 
         /// <summary>
@@ -307,29 +307,25 @@ namespace Robust.Shared.Physics.Dynamics
             if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
             {
                 if (bodyA.CanCollide)
-                    contact.FixtureA.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureA.Body, true);
 
                 if (bodyB.CanCollide)
-                    contact.FixtureB.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureB.Body, true);
             }
 
             // Remove from the world
-            DebugTools.Assert(contact.MapNode != null);
-            _activeContacts.Remove(contact.MapNode!);
-            contact.MapNode = null;
+            _activeContacts.Remove(contact.MapNode);
 
             // Remove from body 1
             DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Remove(fixtureB);
             DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
-            bodyA.Contacts.Remove(contact.BodyANode!);
-            contact.BodyANode = null;
+            bodyA.Contacts.Remove(contact.BodyANode);
 
             // Remove from body 2
             DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Remove(fixtureA);
-            bodyB.Contacts.Remove(contact.BodyBNode!);
-            contact.BodyBNode = null;
+            bodyB.Contacts.Remove(contact.BodyBNode);
 
             // Insert into the pool.
             _contactPool.Return(contact);
@@ -417,8 +413,8 @@ namespace Robust.Shared.Physics.Dynamics
                     var xformA = xformQuery.GetComponent(bodyA.Owner);
                     var xformB = xformQuery.GetComponent(bodyB.Owner);
 
-                    var gridABounds = fixtureA.Shape.ComputeAABB(bodyA.GetTransform(xformA), 0);
-                    var gridBBounds = fixtureB.Shape.ComputeAABB(bodyB.GetTransform(xformB), 0);
+                    var gridABounds = fixtureA.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyA.Owner, xformA, xformQuery), 0);
+                    var gridBBounds = fixtureB.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyB.Owner, xformB, xformQuery), 0);
 
                     if (!gridABounds.Intersects(gridBBounds))
                     {
@@ -574,8 +570,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                bodyA.Awake = true;
-                bodyB.Awake = true;
+                _physics.SetAwake(bodyA, true);
+                _physics.SetAwake(bodyB, true);
             }
 
             ArrayPool<bool>.Shared.Return(wake);

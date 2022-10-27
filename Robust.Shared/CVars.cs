@@ -168,10 +168,20 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
+        /// This limits the number of new entities that can be sent to a client in a single game state. This exists to
+        /// avoid stuttering on the client when it has to spawn a bunch of entities in a single tick. If ever entity
+        /// spawning isn't hot garbage, this can be increased.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+
+        /// <summary>
+        /// This limits the number of entities that can re-enter a client's view in a single game state. This exists to
+        /// avoid stuttering on the client when it has to update the transform of a bunch (700+) of entities in a single
+        /// tick. Ideally this would just be handled client-side somehow.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSEntityEnterBudget =
+            CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// The amount of pvs-exiting entities that a client will process in a single tick.

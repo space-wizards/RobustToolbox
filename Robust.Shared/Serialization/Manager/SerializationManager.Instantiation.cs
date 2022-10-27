@@ -61,7 +61,10 @@ public partial class SerializationManager
             }
             else if (parameterType.IsValueType)
             {
-                generator.Emit(OpCodes.Initobj);
+                var local = generator.DeclareLocal(parameterType);
+                generator.Emit(OpCodes.Ldloca_S, local);
+                generator.Emit(OpCodes.Initobj, parameterType);
+                generator.Emit(OpCodes.Ldloc_0, local);
             }
             else
             {

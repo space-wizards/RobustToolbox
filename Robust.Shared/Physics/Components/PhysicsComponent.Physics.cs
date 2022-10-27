@@ -427,11 +427,7 @@ namespace Robust.Shared.Physics.Components
         ///     Current momentum of the entity in kilogram meters per second
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Momentum
-        {
-            get => LinearVelocity * Mass;
-            set => LinearVelocity = value / Mass;
-        }
+        public Vector2 Momentum => LinearVelocity * Mass;
 
         /// <summary>
         ///     The current status of the object

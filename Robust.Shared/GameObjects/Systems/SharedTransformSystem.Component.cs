@@ -230,8 +230,8 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-
-        SetGridId(component, component.FindGridEntityId(xformQuery));
+        if (component.GridUid == null)
+            SetGridId(component, component.FindGridEntityId(xformQuery));
         component.MatricesDirty = true;
     }
 
@@ -265,7 +265,6 @@ public abstract partial class SharedTransformSystem
     public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
         if (xform._gridUid == gridId) return;
-
 
         DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
 

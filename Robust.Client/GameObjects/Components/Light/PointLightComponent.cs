@@ -103,12 +103,6 @@ namespace Robust.Client.GameObjects
             set => _visibleNested = value;
         }
 
-        /// <summary>
-        ///     Whether this pointlight should cast shadows
-        /// </summary>
-        [DataField("castShadows")]
-        public bool CastShadows = true;
-
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
         [DataField("autoRot")]

@@ -75,7 +75,7 @@ namespace Robust.Shared.GameObjects
         {
             var grid = _mapManager.GetGrid(gridId);
             var gridUid = grid.GridEntityId;
-            var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
+            var mapTransform = Transform(_mapManager.GetMapEntityId(Transform(grid.GridEntityId).MapID));
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
             foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices, LookupFlags.Anchored).ToList())

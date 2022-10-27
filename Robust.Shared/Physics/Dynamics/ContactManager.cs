@@ -51,6 +51,7 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
         private SharedTransformSystem _transform = default!;
 
@@ -163,6 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -431,8 +433,9 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
-                var broadphaseA = bodyA.Broadphase;
-                var broadphaseB = bodyB.Broadphase;
+                var broadQuery = _entityManager.GetEntityQuery<BroadphaseComponent>();
+                var broadphaseA = _lookup.GetBroadphase(bodyA.Owner, xformQuery.GetComponent(bodyA.Owner), broadQuery, xformQuery);
+                var broadphaseB = _lookup.GetBroadphase(bodyB.Owner, xformQuery.GetComponent(bodyB.Owner), broadQuery, xformQuery);
                 var overlap = false;
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace

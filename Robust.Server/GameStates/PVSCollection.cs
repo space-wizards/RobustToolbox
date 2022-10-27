@@ -54,7 +54,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector2i GetChunkIndices(Vector2 coordinates)
+    public static Vector2i GetChunkIndices(Vector2 coordinates)
     {
         return (coordinates / PVSSystem.ChunkSize).Floored();
     }
@@ -127,7 +127,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         _changedIndices.EnsureCapacity(_locationChangeBuffer.Count);
 
-        foreach (var (key, loc) in _locationChangeBuffer)
+        foreach (var key in _locationChangeBuffer.Keys)
         {
             _changedIndices.Add(key);
         }

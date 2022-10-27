@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -12,8 +10,9 @@ using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -67,21 +66,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
 
-        private const int GrowthRate = 256;
-
-        private const float PointEnlargeRange = .00001f / 2;
-
-        /// <summary>
-        /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
-        /// 1 EntityLookupComponent at a time (hence it may overlap without another lookup).
-        /// </summary>
-        private float _lookupEnlargementRange;
-
         public override void Initialize()
         {
             base.Initialize();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);

@@ -309,12 +309,6 @@ public abstract partial class SharedTransformSystem
         xform.LocalPosition = value;
     }
 
-    //For Substepping
-    public virtual void SetLocalPositionCacheNoLerp(TransformComponent xform, Vector2 value)
-    {
-        xform.LocalPosition = value;
-    }
-
     #endregion
 
     #region Local Rotation
@@ -326,12 +320,6 @@ public abstract partial class SharedTransformSystem
     }
 
     public virtual void SetLocalRotation(TransformComponent xform, Angle value)
-    {
-        xform.LocalRotation = value;
-    }
-
-    //For Substepping
-    public virtual void SetLocalRotationCacheNoLerp(TransformComponent xform, Angle value)
     {
         xform.LocalRotation = value;
     }
@@ -619,21 +607,6 @@ public abstract partial class SharedTransformSystem
         SetLocalPosition(component, newPos);
     }
 
-    //For Substepping
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionCacheNoLerp(TransformComponent component, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
-    {
-        if (!component._parent.IsValid())
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-            return;
-        }
-
-        // world coords to parent coords
-        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
-        SetLocalPositionCacheNoLerp(component, newPos);
-    }
-
     #endregion
 
     #region World Rotation
@@ -696,15 +669,6 @@ public abstract partial class SharedTransformSystem
         SetLocalRotation(component, component.LocalRotation + diff);
     }
 
-    //For Substepping
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldRotationCacheNoLerp(TransformComponent component, Angle angle, EntityQuery<TransformComponent> xformQuery)
-    {
-        var current = GetWorldRotation(component, xformQuery);
-        var diff = angle - current;
-        SetLocalRotationCacheNoLerp(component, component.LocalRotation + diff);
-    }
-
     #endregion
 
     #region Set Position+Rotation
@@ -739,27 +703,6 @@ public abstract partial class SharedTransformSystem
         var newLocalRot = component.LocalRotation + worldRot - curWorldRot;
 
         SetLocalPositionRotation(component, newLocalPos, newLocalRot);
-    }
-
-    //For substepping
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotationCacheNoLerp(TransformComponent component, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
-    {
-        if (!component._parent.IsValid())
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-            return;
-        }
-
-        // world coords to parent coords
-        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
-        SetLocalPositionCacheNoLerp(component, newPos);
-
-        //GrabPos
-        var current = GetWorldRotation(component, xformQuery);
-        var diff = worldRot - current;
-
-        SetWorldPositionRotationCacheNoLerp(component, newPos, component.LocalRotation + diff, xformQuery);
     }
 
     /// <summary>
@@ -799,14 +742,6 @@ public abstract partial class SharedTransformSystem
             xform._oldCoords ??= oldPosition;
             xform._oldLocalRotation ??= oldRotation;
         }
-    }
-
-    //For Substepping
-    public virtual void SetLocalPositionRotationNoLerp(TransformComponent xform, Vector2 pos, Angle rot)
-    {
-        xform.LocalPosition = pos;
-
-        xform.LocalRotation = rot;
     }
 
     #endregion

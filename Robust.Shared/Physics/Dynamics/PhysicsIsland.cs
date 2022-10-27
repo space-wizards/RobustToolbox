@@ -528,8 +528,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     // Don't lerp for this so Substepping can lerp properly
                     transform.DeferUpdates = true;
-                    //_transform.SetWorldPositionCacheNoLerp(transform, bodyPos, xforms);
-                    //_transform.SetWorldRotationCacheNoLerp(transform, angle, xforms);
                     _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
                     transform.RebuildMatrices();
                     var broadphase = _entityManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();

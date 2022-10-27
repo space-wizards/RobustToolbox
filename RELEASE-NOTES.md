@@ -49,6 +49,30 @@ Template for new versions:
 
 *None yet*
 
+## 0.57.0.1
+
+### Bugfixes
+
+* Fixed entity lookup bug that was causing crashes.  
+
+### 0.57.0.0
+
+### Breaking changes
+
+* EntityLookupComponent has been merged into BroadphaseComponent. The data that was previously stored in this tree is now stored across the 3 trees on BroadphaseComponent.
+
+### New features
+
+* EntityLookup has had its flags updated to reflect the merge of EntityLookupComponent and BroadphaseComponent, with the new flags reflecting each tree: Dynamic, Static, and Sundries. Dynamic and Static store physics bodies that are collidable and Sundries stores everything else (apart from grids).
+
+### Internal
+
+* EntityLookup and Broadphase have had their data de-duplicated, dropping the AABBs stored on the server by half. This also means MoveEvent updates will be much faster.
+* PVS mover updates has had their performance improved slightly.
+* Physics LinkedList nodes for contacts will no longer be re-made for every contact and will just be cleared when re-used.
+* Sprite / Light dynamictree allocations on the client have been dropped by using static lambdas.
+* The physics contact buffer for each FixtureProxy is now pooled.
+
 ## 0.56.1.1
 
 ### Bugfixes

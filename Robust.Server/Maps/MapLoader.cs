@@ -646,7 +646,7 @@ namespace Robust.Server.Maps
                     // is bad for slothcoin because a bunch of components are only added
                     // to the grid during its initialisation hence you get exceptions
                     // hence this 1 snowflake thing.
-                    _serverEntityManager.EnsureComponent<EntityLookupComponent>(grid.GridEntityId);
+                    _serverEntityManager.EnsureComponent<BroadphaseComponent>(grid.GridEntityId);
                 }
             }
 

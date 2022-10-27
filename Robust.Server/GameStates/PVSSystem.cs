@@ -918,7 +918,6 @@ internal sealed partial class PVSSystem : EntitySystem
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget..
 
-
         // TODO PERFORMANCE.
         // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
         // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this

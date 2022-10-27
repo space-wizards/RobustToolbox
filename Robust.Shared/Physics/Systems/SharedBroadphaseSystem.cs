@@ -90,7 +90,8 @@ namespace Robust.Shared.Physics.Systems
             MapId mapId,
             HashSet<IMapGrid> movedGrids,
             Dictionary<FixtureProxy, Box2> gridMoveBuffer,
-            EntityQuery<BroadphaseComponent> broadQuery)
+            EntityQuery<BroadphaseComponent> broadQuery,
+            EntityQuery<TransformComponent> xformQuery)
         {
             // None moved this tick
             if (movedGrids.Count == 0) return;
@@ -103,8 +104,10 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var grid in movedGrids)
             {
-                DebugTools.Assert(grid.ParentMapId == mapId);
-                var worldAABB = grid.WorldAABB;
+                var xform = xformQuery.GetComponent(grid.GridEntityId);
+
+                DebugTools.Assert(xform.MapID == mapId);
+                var worldAABB = xform.WorldMatrix.TransformBox(grid.LocalAABB);
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
                 var state = (moveBuffer, gridMoveBuffer);
 
@@ -156,7 +159,7 @@ namespace Robust.Shared.Physics.Systems
             var xformQuery = GetEntityQuery<TransformComponent>();
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(component, mapId, movedGrids, gridMoveBuffer, broadphaseQuery);
+            FindGridContacts(component, mapId, movedGrids, gridMoveBuffer, broadphaseQuery, xformQuery);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -240,10 +243,10 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var grid in movedGrids)
             {
-                DebugTools.Assert(grid.ParentMapId == mapId);
+                var xform = xformQuery.GetComponent(grid.GridEntityId);
+                DebugTools.Assert(xform.MapID == mapId);
 
                 var mapGrid = (MapGrid)grid;
-                var xform = xformQuery.GetComponent(grid.GridEntityId);
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);
 
@@ -257,11 +260,15 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var colliding in _mapManager.FindGridsIntersecting(mapId, aabb, gridsPool, xformQuery, bodyQuery, true))
                 {
-                    if (grid == colliding) continue;
+                    if (grid == colliding ||
+                        !xformQuery.TryGetComponent(colliding.GridEntityId, out var collidingXform))
+                    {
+                        continue;
+                    }
 
-                    var otherGrid = (MapGrid)colliding;
-                    var otherGridBounds = colliding.WorldAABB;
-                    var otherGridInvMatrix = colliding.InvWorldMatrix;
+                    var otherGrid = (MapGrid) colliding;
+                    var (_, _, otherGridMatrix, otherGridInvMatrix) =  collidingXform.GetWorldPositionRotationMatrixWithInv();
+                    var otherGridBounds = otherGridMatrix.TransformBox(colliding.LocalAABB);
                     var otherTransform = _physicsSystem.GetPhysicsTransform(colliding.GridEntityId, xformQuery: xformQuery);
 
                     // Get Grid2 AABB in grid1 ref

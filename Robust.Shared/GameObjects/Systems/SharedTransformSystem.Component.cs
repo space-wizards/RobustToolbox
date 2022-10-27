@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -16,6 +17,7 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class SharedTransformSystem
 {
     [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+    [IoC.Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     #region Anchoring
 
@@ -67,7 +69,7 @@ public abstract partial class SharedTransformSystem
         {
             // Mark as static first to avoid the velocity change on parent change.
             if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-                physicsComponent.BodyType = BodyType.Static;
+                _physics.SetBodyType(physicsComponent, BodyType.Static);
 
             // anchor snapping
             // Internally it will do the parent update; doing it separately just triggers a redundant move.
@@ -115,9 +117,7 @@ public abstract partial class SharedTransformSystem
         var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
         grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
         if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-        {
-            physicsComponent.BodyType = BodyType.Dynamic;
-        }
+            _physics.SetBodyType(physicsComponent, BodyType.Dynamic);
 
         xform.SetAnchored(false);
     }

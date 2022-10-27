@@ -414,7 +414,8 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="manager">The fixture component of the body</param>
         internal void UpdateBroadphase(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
         {
-            SynchronizeFixtures(body, worldPos, worldRot, manager);
+            if (manager != null)
+                SynchronizeFixtures(body, worldPos, worldRot, manager);
         }
 
         private void RecursiveBroadphaseUpdate(

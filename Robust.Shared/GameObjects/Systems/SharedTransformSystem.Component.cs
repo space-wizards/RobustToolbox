@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
@@ -830,11 +831,15 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
+        // TODO replace this with just setting the xform's entity coordinates.
+
         oldConcrete ??= xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
-        xform._parent = EntityUid.Invalid;
+        var oldPos = xform.Coordinates;
+        var oldRot = xform.LocalRotation;
         var oldMap = xform.MapID;
+        xform._parent = EntityUid.Invalid;
 
         // aaaaaaaaaaaaaaaa
         ChangeMapId(xform, MapId.Nullspace, xformQuery, metaQuery);
@@ -844,6 +849,9 @@ public abstract partial class SharedTransformSystem
 
         var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent, oldMap, xform);
         RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+
+        var ev = new MoveEvent(xform.Owner, oldPos, default, oldRot, default, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
         Dirty(xform);
     }
     #endregion

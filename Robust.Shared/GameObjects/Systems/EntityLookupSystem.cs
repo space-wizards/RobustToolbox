@@ -423,23 +423,20 @@ namespace Robust.Shared.GameObjects
 
         private void OnMove(ref MoveEvent args)
         {
-            UpdatePosition(args.Sender, args.Component);
-        }
-
-        private void UpdatePosition(EntityUid uid, TransformComponent xform)
-        {
             // Even if the entity is contained it may have children that aren't so we still need to update.
-            if (!CanMoveUpdate(uid)) return;
+            if (!CanMoveUpdate(args.Sender))
+                return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var lookup = GetBroadphase(uid, xform, broadQuery, xformQuery);
+            var lookup = GetBroadphase(args.Sender, args.Component, broadQuery, xformQuery);
 
             if (lookup == null) return;
 
+            var xform = args.Component;
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
+            var aabb = GetAABB(args.Sender, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
         }
 

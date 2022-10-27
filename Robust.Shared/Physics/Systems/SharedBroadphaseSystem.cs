@@ -178,7 +178,7 @@ namespace Robust.Shared.Physics.Systems
                 var proxyBody = proxy.Fixture.Body;
                 DebugTools.Assert(!proxyBody.Deleted);
 
-                var state = (this, proxy, worldAABB, pairBuffer, xformQuery, broadphaseQuery);
+                var state = (this, proxy, worldAABB, _pairBuffer, xformQuery, broadphaseQuery);
 
                 // Get every broadphase we may be intersecting.
                 _mapManager.FindGridsIntersectingApprox(mapId, worldAABB.Enlarged(_broadphaseExpand), ref state,
@@ -194,7 +194,7 @@ namespace Robust.Shared.Physics.Systems
                         return true;
                     });
 
-                FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), pairBuffer, xformQuery, broadphaseQuery);
+                FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), _pairBuffer, xformQuery, broadphaseQuery);
             }
 
             foreach (var (proxyA, proxies) in _pairBuffer)

@@ -105,6 +105,9 @@ namespace Robust.Shared.GameObjects
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
 
+            // also ensure that no parent is in a container.
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid, meta, xform, null, xformQuery));
+
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
             // TODO combine mover-coordinate fetching with BroadphaseComponent fetching. They're kinda the same thing.
@@ -115,7 +118,7 @@ namespace Robust.Shared.GameObjects
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
             var relativeRotation = rotation - lookupRotation;
-            var aabb = GetAABB(xform.Owner, coordinates.Position, relativeRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, relativeRotation;
 
             // TODO: Only container children need updating so could manually do this slightly better.
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
@@ -141,6 +144,8 @@ namespace Robust.Shared.GameObjects
         {
             component.DynamicTree = new DynamicTreeBroadPhase();
             component.StaticTree = new DynamicTreeBroadPhase();
+            component.StaticSundriesTree = new DynamicTree<EntityUid>(
+                (in EntityUid value) => GetTreeAABB(value, component.Owner));
             component.SundriesTree = new DynamicTree<EntityUid>(
                 (in EntityUid value) => GetTreeAABB(value, component.Owner));
         }
@@ -230,7 +235,7 @@ namespace Robust.Shared.GameObjects
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
             var relativeRotation = rotation - lookupRotation;
-            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
         }
 
@@ -270,9 +275,23 @@ namespace Robust.Shared.GameObjects
             if (HasComp<IMapGridComponent>(ev.Body.Owner))
                 return;
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Body.Owner);
+
+            if (!ev.CanCollide && _container.IsEntityOrParentInContainer(ev.Body.Owner, null, xform, null, xformQuery))
+            {
+                // getting inserted, skip sundries insertion and just let container insertion handle tree removal.
+
+                // TODO: for whatever fucking cursed reason, this is currently required.
+                // FIX THIS, this is a hotfix
+                var b = GetBroadphase(ev.Body.Owner, xform, GetEntityQuery<BroadphaseComponent>(), xformQuery);
+                if (b != null)
+                    RemoveBroadTree(ev.Body, b, ev.Body.BodyType);
+
+                return;
+            }
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var broadphase = GetBroadphase(ev.Body.Owner, xform, broadQuery, xformQuery);
 
             if (broadphase == null)
@@ -280,31 +299,48 @@ namespace Robust.Shared.GameObjects
 
             if (ev.CanCollide)
             {
-                RemoveSundriesTree(ev.Body.Owner, broadphase);
+                RemoveSundriesTree(ev.Body.Owner, broadphase, ev.Body.BodyType);
                 AddBroadTree(ev.Body, broadphase, ev.Body.BodyType, xform: xform);
             }
             else
             {
                 RemoveBroadTree(ev.Body, broadphase, ev.Body.BodyType);
-                AddSundriesTree(ev.Body.Owner, broadphase);
+                AddSundriesTree(ev.Body.Owner, broadphase, ev.Body.BodyType);
             }
         }
 
         private void OnBodyTypeChange(EntityUid uid, PhysicsComponent component, ref PhysicsBodyTypeChangedEvent args)
         {
-            if (!component.CanCollide || HasComp<IMapGridComponent>(uid))
+            // only matters if we swapped from static to non-static.
+            if (args.Old != BodyType.Static && args.New != BodyType.Static)
                 return;
 
-            var broadphase = GetBroadphase(Transform(uid));
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(uid);
+
+            if (xform.GridUid == uid)
+                return;
+
+            // fun fact: container insertion tries to update the fucking lookups like 3 or more times, each time iterating through all of its parents.
+            if (_container.IsEntityOrParentInContainer(uid, null, xform, null, xformQuery))
+                return;
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var broadphase = GetBroadphase(uid, xform, broadQuery, xformQuery);
 
             if (broadphase == null)
                 return;
 
-            if (args.Old != BodyType.Static && args.New != BodyType.Static)
-                return;
-
-            RemoveBroadTree(component, broadphase, args.Old);
-            AddBroadTree(component, broadphase, component.BodyType);
+            if (component.CanCollide)
+            {
+                RemoveBroadTree(component, broadphase, args.Old);
+                AddBroadTree(component, broadphase, component.BodyType);
+            }
+            else
+            {
+                RemoveSundriesTree(uid, broadphase, args.Old);
+                AddSundriesTree(uid, broadphase, component.BodyType);
+            }    
         }
 
         private void RemoveBroadTree(PhysicsComponent body, BroadphaseComponent lookup, BodyType bodyType, FixturesComponent? manager = null)
@@ -346,6 +382,8 @@ namespace Robust.Shared.GameObjects
 
             var tree = bodyType == BodyType.Static ? lookup.StaticTree : lookup.DynamicTree;
             var xformQuery = GetEntityQuery<TransformComponent>();
+
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform, null, xformQuery));
 
             if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform) || lookupXform.MapUid == null)
             {
@@ -405,29 +443,30 @@ namespace Robust.Shared.GameObjects
             fixture.ProxyCount = count;
         }
 
-        private void AddSundriesTree(EntityUid uid, BroadphaseComponent lookup)
+        private void AddSundriesTree(EntityUid uid, BroadphaseComponent lookup, BodyType bodyType)
         {
-            var tree = lookup.SundriesTree;
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
+            var tree = bodyType == BodyType.Static ? lookup.StaticSundriesTree : lookup.SundriesTree;
             tree.Add(uid);
         }
 
-        private void RemoveSundriesTree(EntityUid uid, BroadphaseComponent lookup)
+        private void RemoveSundriesTree(EntityUid uid, BroadphaseComponent lookup, BodyType bodyType)
         {
-            var tree = lookup.SundriesTree;
+            var tree = bodyType == BodyType.Static ? lookup.StaticSundriesTree : lookup.SundriesTree;
             tree.Remove(uid);
         }
 
         private void OnEntityInit(EntityUid uid)
         {
-            if (_container.IsEntityInContainer(uid))
-                return;
-
             var xformQuery = GetEntityQuery<TransformComponent>();
 
             if (!xformQuery.TryGetComponent(uid, out var xform))
             {
                 return;
             }
+
+            if (_container.IsEntityOrParentInContainer(uid, null, xform, null, xformQuery))
+                return;
 
             if (_mapManager.IsMap(uid) ||
                 _mapManager.IsGrid(uid))
@@ -446,8 +485,7 @@ namespace Robust.Shared.GameObjects
             var relativeRotation = rotation - lookupRotation;
             DebugTools.Assert(coordinates.EntityId == lookup.Owner);
 
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(uid, coordinates.Position, relativeRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
 
             // Any child entities should be handled by their own OnEntityInit
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, false);
@@ -458,12 +496,20 @@ namespace Robust.Shared.GameObjects
             if (args.Component.GridUid == args.Sender)
                 return;
 
-            var meta = MetaData(args.Sender);
-            if (_container.IsEntityInContainer(args.Sender, meta) || meta.EntityLifeStage < EntityLifeStage.Initialized)
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var meta = metaQuery.GetComponent(args.Sender);
+
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized)
+                return;
+
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            if (_container.IsEntityOrParentInContainer(args.Sender, meta, args.Component, metaQuery, xformQuery))
             {
-                // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
-                // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
-                // removal parent-change. So if it is set here, this must mean we are getting inserted.
+                // This move might be due to a parent change as a result of getting inserted into a container. In that
+                // case, we will just let the container insert event handle that. Note that the in-container flag gets
+                // set BEFORE insert parent change, and gets unset before the container removal parent-change. So if it
+                // is set here, this must mean we are getting inserted.
                 //
                 // However, this means that this method will still get run in full on container removal. Additionally,
                 // because not all container removals are guaranteed to result in a parent change, container removal
@@ -478,7 +524,6 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
             var lookup = GetBroadphase(args.Sender, args.Component, broadQuery, xformQuery);
 
             if (args.ParentChanged)
@@ -502,12 +547,19 @@ namespace Robust.Shared.GameObjects
         private void OnContainerInsert(EntInsertedIntoContainerMessage ev)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            BroadphaseComponent? lookup;
 
-            if (ev.OldParent == EntityUid.Invalid || !xformQuery.TryGetComponent(ev.OldParent, out var oldXform))
+            if (ev.OldParent == EntityUid.Invalid)
                 return;
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var lookup = GetBroadphase(ev.OldParent, oldXform, broadQuery, xformQuery);
+            if (!broadQuery.TryGetComponent(ev.OldParent, out lookup))
+            {
+                if (!xformQuery.TryGetComponent(ev.OldParent, out var parentXform))
+                    return;
+
+                lookup = GetBroadphase(ev.OldParent, parentXform, broadQuery, xformQuery);
+            }
 
             RemoveFromEntityTree(lookup, xformQuery.GetComponent(ev.Entity), xformQuery);
         }
@@ -522,7 +574,7 @@ namespace Robust.Shared.GameObjects
             // TODO combine mover-coordinate fetching with BroadphaseComponent fetching. They're kinda the same thing.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
             var relativeRotation = rotation - lookupRotation;
-            var aabb = GetAABB(xform.Owner, coordinates.Position, relativeRotation, xform, xformQuery);
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, relativeRotation);
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
         }
 
@@ -577,7 +629,10 @@ namespace Robust.Shared.GameObjects
         {
             if (!Resolve(uid, ref body, false) || !body.CanCollide)
             {
-                broadphase.SundriesTree.AddOrUpdate(uid, aabb);
+                if (body?.BodyType == BodyType.Static)
+                    broadphase.StaticSundriesTree.AddOrUpdate(uid, aabb);
+                else
+                    broadphase.SundriesTree.AddOrUpdate(uid, aabb);
                 return;
             }
 
@@ -588,7 +643,10 @@ namespace Robust.Shared.GameObjects
         {
             if (!Resolve(uid, ref body, false) || !body.CanCollide)
             {
-                broadphase.SundriesTree.Remove(uid);
+                if (body?.BodyType == BodyType.Static)
+                    broadphase.StaticSundriesTree.Remove(uid);
+                else
+                    broadphase.SundriesTree.Remove(uid);
                 return;
             }
 

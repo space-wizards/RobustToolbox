@@ -584,7 +584,7 @@ namespace Robust.Shared.Physics
                 indexNode.Aabb = child1Node.Aabb.Union(child2Node.Aabb);
 
                 if (index == indexNode.Parent)
-                    throw new Exception($"Infinite loop in {nameof(B2DynamicTree)}.{nameof(Balance)}.");
+                    throw new Exception($"Infinite loop in B2DynamicTree.Balance(). Trace: {Environment.StackTrace}");
 
                 index = indexNode.Parent;
             }

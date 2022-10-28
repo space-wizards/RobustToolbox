@@ -498,6 +498,13 @@ namespace Robust.Shared.GameObjects
 
         private void OnMove(ref MoveEvent args)
         {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            // TODO remove this check after #3368 gets merged
+            if (args.Component.LifeStage < ComponentLifeStage.Initialized && args.Component.GridUid == null)
+                _transform.SetGridId(args.Component, args.Component.FindGridEntityId(xformQuery));
+
+            // Is this a grid?
             if (args.Component.GridUid == args.Sender)
                 return;
             DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
@@ -507,8 +514,6 @@ namespace Robust.Shared.GameObjects
 
             if (meta.EntityLifeStage < EntityLifeStage.Initialized)
                 return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
 
             if (_container.IsEntityOrParentInContainer(args.Sender, meta, args.Component, metaQuery, xformQuery))
             {

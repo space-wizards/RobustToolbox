@@ -49,11 +49,17 @@ Template for new versions:
 
 *None yet*
 
+## 0.57.0.2 and 0.57.0.3
+
+### Bugfixes
+
+* Fixed more entity-lookup bugs.
+
 ## 0.57.0.1
 
 ### Bugfixes
 
-* Fixed entity lookup bug that was causing crashes.  
+* Fixed entity lookup bug that was causing crashes.
 
 ### 0.57.0.0
 

@@ -250,12 +250,21 @@ namespace Robust.Shared.GameObjects
         {
             BroadphaseComponent? oldLookup = null;
             if (oldParent.IsValid()
-                && oldParent != uid // implies null-space
-                && !broadQuery.TryGetComponent(oldParent, out oldLookup)
-                && xformQuery.TryGetComponent(oldParent, out var parentXform))
+                && oldParent != uid // implies the entity was in null-space
+                && xformQuery.TryGetComponent(oldParent, out var parentXform)
+                && parentXform.MapID != MapId.Nullspace // see comment below
+                && !broadQuery.TryGetComponent(oldParent, out oldLookup))
             {
                 oldLookup = GetBroadphase(oldParent, parentXform, broadQuery, xformQuery);
             }
+
+            // Note that the parentXform.MapID != MapId.Nullspace is required because currently grids are not allowed to
+            // ever enter null-space. If they are in null-space, we assume that the grid is being deleted, as otherwise
+            // RemoveFromEntityTree() will explode. This may eventually have to change if we stop universally sending
+            // all grids to all players (i.e., out-of view grids will need to get sent to null-space)
+            //
+            // This also means the queries above can be reverted (check broadQuery, then xformQuery, as this will
+            // generally save a component lookup.
 
             // If lookup remained unchanged we just update the position as normal
             if (oldLookup == lookup)
@@ -353,15 +362,22 @@ namespace Robust.Shared.GameObjects
             if (!Resolve(body.Owner, ref manager))
                 return;
 
-            if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform) || lookupXform.MapUid == null)
+            if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform))
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Lookup does not exist?");
+            }
+
+            var map = lookupXform.MapUid;
+            if (map == null)
+            {
+                // See the comments in UpdateParent()
+                throw new NotSupportedException("Nullspace lookups are not supported.");
             }
 
             var tree = bodyType == BodyType.Static ? lookup.StaticTree : lookup.DynamicTree;
-            var moveBuffer = Comp<SharedPhysicsMapComponent>(lookupXform.MapUid.Value).MoveBuffer;
+            var moveBuffer = Comp<SharedPhysicsMapComponent>(map.Value).MoveBuffer;
 
-            foreach (var (_, fixture) in manager.Fixtures)
+            foreach (var fixture in manager.Fixtures.Values)
             {
                 DestroyProxies(fixture, tree, moveBuffer);
             }

@@ -116,7 +116,7 @@ public abstract partial class SharedTransformSystem
         var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
         grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
         if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-            _physics.SetBodyType(physicsComponent, BodyType.Dynamic);
+            physicsComponent.BodyType = BodyType.Dynamic;
 
         xform.SetAnchored(false);
     }

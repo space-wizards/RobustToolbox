@@ -50,7 +50,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
             {

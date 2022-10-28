@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -15,36 +17,61 @@ public sealed partial class EntityLookupSystem
         HashSet<T> intersecting,
         Box2 worldAABB,
         LookupFlags flags,
-        EntityQuery<EntityLookupComponent> lookupQuery,
+        EntityQuery<BroadphaseComponent> lookupQuery,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<T> query) where T : Component
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, xformQuery);
+        var localAABB = invMatrix.TransformBox(worldAABB);
+        var state = (intersecting, query);
 
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            if (!query.TryGetComponent(ent, out var comp)) continue;
-            intersecting.Add(comp);
+            lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+            {
+                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                    return true;
+
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
-    }
 
-    private void AddComponentsIntersecting<T>(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2Rotated worldBounds,
-        LookupFlags flags,
-        EntityQuery<EntityLookupComponent> lookupQuery,
-        EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<T> query) where T : Component
-    {
-        var lookup = lookupQuery.GetComponent(lookupUid);
-        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
-
-        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
-            if (!query.TryGetComponent(ent, out var comp)) continue;
-            intersecting.Add(ent);
+            lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+            {
+                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                    return true;
+
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
+
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
+
+                tuple.intersecting.Add(comp);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
     }
 
@@ -110,7 +137,7 @@ public sealed partial class EntityLookupSystem
     // Like .Queries but works with components
     #region Box2
 
-    public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags =  DefaultFlags) where T : Component
+    public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags) where T : Component
     {
         if (mapId == MapId.Nullspace) return new HashSet<T>();
 
@@ -121,27 +148,18 @@ public sealed partial class EntityLookupSystem
         {
             foreach (var (comp, xform) in EntityQuery<T, TransformComponent>(true))
             {
-                if (xform.MapID != mapId || (xform.Anchored && (flags & LookupFlags.Anchored) == 0x0) || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
+                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
                 intersecting.Add(comp);
             }
         }
         else
         {
             var query = GetEntityQuery<T>();
-            var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+            var lookupQuery = GetEntityQuery<BroadphaseComponent>();
             // Get grid entities
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
                 AddComponentsIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
-
-                if ((flags & LookupFlags.Anchored) != 0x0)
-                {
-                    foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-                    {
-                        if (!query.TryGetComponent(uid, out var comp)) continue;
-                        intersecting.Add(comp);
-                    }
-                }
             }
 
             // Get map entities

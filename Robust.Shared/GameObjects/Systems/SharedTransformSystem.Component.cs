@@ -4,7 +4,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -238,7 +237,9 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-        SetGridId(component, component.FindGridEntityId(xformQuery));
+        if (component.GridUid == null)
+            SetGridId(component, component.FindGridEntityId(xformQuery));
+
         component.MatricesDirty = true;
 
         if (!component._anchored)
@@ -530,9 +531,10 @@ public abstract partial class SharedTransformSystem
 
             // If anchoring, we remove will from the entity tree in this function, rather than lookup system event
             // handlers. This avoids redundant lookup changes.
+            // TODO update with lookup changes
             if (newState.Anchored && !xform.Anchored)
             {
-                _lookup.RemoveFromEntityTree(uid, xform);
+                //_lookup.RemoveFromEntityTree(uid, xform);
             }
 
             // update actual position data, if required
@@ -942,11 +944,15 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
+        // TODO replace this with just setting the xform's entity coordinates.
+
         oldConcrete ??= xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
-        xform._parent = EntityUid.Invalid;
+        var oldPos = xform.Coordinates;
+        var oldRot = xform.LocalRotation;
         var oldMap = xform.MapID;
+        xform._parent = EntityUid.Invalid;
 
         // aaaaaaaaaaaaaaaa
         ChangeMapId(xform, MapId.Nullspace, xformQuery, metaQuery);
@@ -956,6 +962,9 @@ public abstract partial class SharedTransformSystem
 
         var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent, oldMap, xform);
         RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+
+        var ev = new MoveEvent(xform.Owner, oldPos, default, oldRot, default, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
         Dirty(xform);
     }
     #endregion

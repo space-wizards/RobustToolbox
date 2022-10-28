@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         [ViewVariables]
-        [Obsolete("Use ParentUid instead.")]
+        [Obsolete("Use ParentUid and query the parent TransformComponent")]
         public TransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
@@ -437,7 +437,7 @@ namespace Robust.Shared.GameObjects
                 return null;
             }
 
-            if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
+            if (_entMan.HasComponent<IMapGridComponent>(Owner))
             {
                 return Owner;
             }
@@ -742,6 +742,8 @@ namespace Robust.Shared.GameObjects
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
+
+        public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.

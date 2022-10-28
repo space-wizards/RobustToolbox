@@ -46,12 +46,13 @@ public partial class SharedPhysicsSystem
     {
         var xform = Transform(uid);
 
-        if (component.CanCollide && _containerSystem.IsEntityInContainer(uid))
+
+        if (component.CanCollide && (_containerSystem.IsEntityOrParentInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
             SetCanCollide(component, false, false);
         }
 
-        if (component._canCollide && xform.MapID != MapId.Nullspace)
+        if (component._canCollide)
         {
             if (component.BodyType != BodyType.Static)
             {
@@ -430,10 +431,12 @@ public partial class SharedPhysicsSystem
         if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
             return false;
 
+        // Need to do this before SetAwake to avoid double-changing it.
+        body._canCollide = value;
+
         if (!value)
             SetAwake(body, false);
 
-        body._canCollide = value;
         var ev = new CollisionChangeEvent(body, value);
         RaiseLocalEvent(ref ev);
 

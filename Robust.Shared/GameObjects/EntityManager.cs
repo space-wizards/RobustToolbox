@@ -333,7 +333,7 @@ namespace Robust.Shared.GameObjects
         {
             var transform = xformQuery.GetComponent(metadata.Owner);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            var ev = new EntityTerminatingEvent(metadata.Owner);
+            var ev = new EntityTerminatingEvent();
             EventBus.RaiseLocalEvent(metadata.Owner, ref ev);
 
             foreach (var child in transform._children)

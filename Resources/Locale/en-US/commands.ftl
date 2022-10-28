@@ -170,7 +170,7 @@ cmd-gridtc-desc = Gets the tile count of a grid.
 cmd-gridtc-help = Usage: gridtc <gridId>
 
 
-# Client site commands
+# Client-side commands
 cmd-guidump-desc = Dump GUI tree to /guidump.txt in user data.
 cmd-guidump-help = Usage: guidump
 

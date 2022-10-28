@@ -126,7 +126,8 @@ namespace Robust.Shared.GameObjects
 
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
 
 
             var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -416,9 +417,10 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(coordinates.EntityId == lookup.Owner);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
 
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetAABBNoContainer(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
 
             // Any child entities should be handled by their own OnEntityInit
             AddToEntityTree(lookup, xform, aabb, xformQuery, metaQuery, contQuery, lookupRotation, false);
@@ -439,9 +441,9 @@ namespace Robust.Shared.GameObjects
             var xform = args.Component;
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(args.Sender, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();
+            var aabb = GetAABBNoContainer(args.Sender, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation);
             AddToEntityTree(lookup, xform, aabb, xformQuery, metaQuery, contQuery, lookupRotation);
         }
 
@@ -536,10 +538,10 @@ namespace Robust.Shared.GameObjects
             bool recursive = true)
         {
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();
-            AddToEntityTree(lookup, xform, aabb, xformQuery, metaQuery, contQuery, lookupRotation, recursive);
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
+            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
         }
 
         private void AddToEntityTree(

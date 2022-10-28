@@ -529,14 +529,6 @@ public abstract partial class SharedTransformSystem
             var newParentId = newState.ParentID;
             var oldAnchored = xform.Anchored;
 
-            // If anchoring, we remove will from the entity tree in this function, rather than lookup system event
-            // handlers. This avoids redundant lookup changes.
-            // TODO update with lookup changes
-            if (newState.Anchored && !xform.Anchored)
-            {
-                //_lookup.RemoveFromEntityTree(uid, xform);
-            }
-
             // update actual position data, if required
             if (!xform.LocalPosition.EqualsApprox(newState.LocalPosition)
                 || !xform.LocalRotation.EqualsApprox(newState.Rotation)
@@ -584,7 +576,6 @@ public abstract partial class SharedTransformSystem
             xform._prevRotation = newState.Rotation;
             xform._noLocalRotation = newState.NoLocalRotation;
 
-            DebugTools.Assert(!xform.ParentUid.IsClientSide(), "Transform received a state, but is still parented to a client entity.");
             DebugTools.Assert(xform.ParentUid == newState.ParentID, "Transform state failed to set parent");
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }

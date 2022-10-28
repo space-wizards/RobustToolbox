@@ -493,5 +493,17 @@ cmd-scene-help = Usage: scene <className>
 cmd-szr_stats-desc = Report serializer statistics.
 cmd-szr_stats-help = Usage: szr_stats
 
-cmd-hwid-desc = Returns the current HWID.
+cmd-hwid-desc = Returns the current HWID (HardWare ID).
 cmd-hwid-help = Usage: hwid
+
+cmd-vvread-desc = Retrieve a path's value using VV (View Variables).
+cmd-vvread-desc = Usage: vvread <path>
+
+cmd-vvwrite-desc = Modify a path's value using VV (View Variables).
+cmd-vvwrite-desc = Usage: vvwrite <path>
+
+cmd-vv-desc = Opens View Variables (VV).
+cmd-vv-desc = Usage: vv <path|entity ID|guihover>
+
+cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
+cmd-vvinvoke-desc = Usage: vvinvoke <path> [arguments...]

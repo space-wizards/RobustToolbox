@@ -3,11 +3,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.ViewVariables.Commands;
 
-public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand, IConsoleCommand
+public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand
 {
     public override string Command => "vvinvoke";
-    public override string Description => "Invoke/Call a path with arguments using VV.";
-    public override string Help => $"{Command} <path> [arguments...]";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

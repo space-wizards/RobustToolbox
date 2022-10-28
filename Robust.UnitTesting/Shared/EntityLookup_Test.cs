@@ -3,6 +3,8 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared
@@ -54,7 +56,6 @@ namespace Robust.UnitTesting.Shared
             // Setup and check it actually worked
             var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, flags: LookupFlags.None).ToList().Count, Is.EqualTo(1));
 
             var xform = entManager.GetComponent<TransformComponent>(dummy);
 
@@ -62,11 +63,9 @@ namespace Robust.UnitTesting.Shared
             xform.Anchored = true;
             Assert.That(xform.Anchored);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, flags: LookupFlags.None).ToList().Count, Is.EqualTo(0));
 
             xform.Anchored = false;
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, flags: LookupFlags.None).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
             mapManager.DeleteGrid(grid.GridEntityId);

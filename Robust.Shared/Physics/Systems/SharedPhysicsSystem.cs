@@ -326,12 +326,17 @@ namespace Robust.Shared.Physics.Systems
                 CachedEntityData.Add(xformComp.Owner, (xformComp.LocalPosition, xformComp.LocalRotation));
             }
 
+            var substepping = false;
+
             for (int i = 0; i < substeps; i++)
             {
                 var frameTime = deltaTime / substeps;
 
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateBeforeSolve);
+
+                if (substeps > 1)
+                    substepping = true;
 
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {

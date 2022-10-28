@@ -487,7 +487,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates)
+        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates, bool substepping)
         {
             foreach (var (joint, error) in _brokenJoints)
             {
@@ -526,17 +526,10 @@ stored in a single array since multiple arrays lead to multiple misses.
                     var transform = xforms.GetComponent(body.Owner);
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
-                    // Don't lerp for this so Substepping can lerp properly
+                    // Apparantly lerping works with substepping here
                     transform.DeferUpdates = true;
-                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
+                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms, substepping);
                     transform.RebuildMatrices();
-                    var broadphase = _entityManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
-                    if (!_entityManager.TryGetComponent<FixturesComponent>(transform.Owner, out var manager))
-                    {
-                        return;
-                    }
-                    broadphase.UpdateBroadphase(body, transform.WorldPosition, (float)transform.WorldRotation.Theta, manager);
-
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position

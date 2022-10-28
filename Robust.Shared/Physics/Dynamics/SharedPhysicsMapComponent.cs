@@ -39,8 +39,8 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
+        internal SharedPhysicsSystem Physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
@@ -79,7 +79,7 @@ namespace Robust.Shared.Physics.Dynamics
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
             {
-                _physics.WakeBody(body);
+                Physics.WakeBody(body);
             }
 
             var xform = xformQuery.GetComponent(uid);
@@ -161,7 +161,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         /// <param name="frameTime"></param>
         /// <param name="prediction"></param>
-        public void Step(float frameTime, bool prediction)
+        public void Step(float frameTime, bool prediction, bool substepping = false)
         {
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
@@ -180,7 +180,7 @@ namespace Robust.Shared.Physics.Dynamics
                 ContactManager.PreSolve(frameTime);
 
             // Integrate velocities, solve velocity constraints, and do integration.
-            Solve(frameTime, dtRatio, invDt, prediction);
+            Solve(frameTime, dtRatio, invDt, prediction, substepping);
 
             // TODO: SolveTOI
 
@@ -219,7 +219,7 @@ namespace Robust.Shared.Physics.Dynamics
             _deferredUpdates.Clear();
         }
 
-        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
         {
             _islandManager.InitializePools();
 
@@ -356,7 +356,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            SolveIslands(frameTime, dtRatio, invDt, prediction);
+            SolveIslands(frameTime, dtRatio, invDt, prediction, substepping);
             Cleanup(frameTime);
         }
 
@@ -387,7 +387,7 @@ namespace Robust.Shared.Physics.Dynamics
             _joints.Clear();
         }
 
-        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
         {
             var islands = _islandManager.GetActive;
             // Islands are already pre-sorted
@@ -408,7 +408,7 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                island.UpdateBodies(_deferredUpdates);
+                island.UpdateBodies(_deferredUpdates, substepping);
                 island.SleepBodies(prediction, frameTime);
             }
         }

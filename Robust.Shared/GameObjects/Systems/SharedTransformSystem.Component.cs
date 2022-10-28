@@ -674,20 +674,20 @@ public abstract partial class SharedTransformSystem
     #region Set Position+Rotation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
+    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery, bool substepping)
     {
         var component = xformQuery.GetComponent(uid);
-        SetWorldPositionRotation(component, worldPos, worldRot, xformQuery);
+        SetWorldPositionRotation(component, worldPos, worldRot, xformQuery, substepping);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, bool substepping)
     {
-        SetWorldPositionRotation(component, worldPos, worldRot, GetEntityQuery<TransformComponent>());
+        SetWorldPositionRotation(component, worldPos, worldRot, GetEntityQuery<TransformComponent>(), substepping);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery, bool substepping)
     {
         if (!component._parent.IsValid())
         {
@@ -702,14 +702,14 @@ public abstract partial class SharedTransformSystem
         var newLocalPos = component.LocalPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
         var newLocalRot = component.LocalRotation + worldRot - curWorldRot;
 
-        SetLocalPositionRotation(component, newLocalPos, newLocalRot);
+        SetLocalPositionRotation(component, newLocalPos, newLocalRot, substepping);
     }
 
     /// <summary>
     ///     Simultaneously set the position and rotation. This is better than setting individually, as it reduces the number of move events and matrix rebuilding operations.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot)
+    public virtual void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot, bool substepping)
     {
         if (!xform._parent.IsValid())
         {

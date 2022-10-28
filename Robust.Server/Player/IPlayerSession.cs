@@ -47,6 +47,11 @@ namespace Robust.Server.Player
         int ViewSubscriptionCount { get; }
 
         /// <summary>
+        /// Returns all viewer-entities registered to the current session.
+        /// </summary>
+        EntityUid[] GetSessionViewers();
+
+        /// <summary>
         ///     Persistent data for this player.
         /// </summary>
         IPlayerData Data { get; }

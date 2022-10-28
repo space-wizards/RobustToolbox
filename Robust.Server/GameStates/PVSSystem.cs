@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
@@ -13,11 +18,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Robust.Server.GameStates;
 
@@ -69,15 +69,12 @@ internal sealed partial class PVSSystem : EntitySystem
         = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
             new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
 
-    private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
-        = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
-
     private readonly ObjectPool<Dictionary<EntityUid, MetaDataComponent>> _chunkCachePool =
         new DefaultObjectPool<Dictionary<EntityUid, MetaDataComponent>>(
             new DictPolicy<EntityUid, MetaDataComponent>(), MaxVisPoolSize);
 
-    private readonly ObjectPool<HashSet<int>> _playerChunkPool =
-        new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
+    private readonly ObjectPool<List<int>> _playerChunkPool =
+        new DefaultObjectPool<List<int>>(new ListPolicy<int>(), MaxVisPoolSize);
 
     private readonly ObjectPool<RobustTree<EntityUid>> _treePool =
         new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>(), MaxVisPoolSize);
@@ -451,9 +448,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
-    public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
+    public (List<(uint, IChunkIndexLocation)> , List<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
-        var playerChunks = new HashSet<int>[sessions.Length];
+        var playerChunks = new List<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
@@ -477,8 +474,7 @@ internal sealed partial class PVSSystem : EntitySystem
             var session = sessions[i];
             playerChunks[i] = _playerChunkPool.Get();
 
-            var viewers = GetSessionViewers(session);
-            viewerEntities[i] = viewers;
+            var viewers = viewerEntities[i] = session.GetSessionViewers();
 
             for (var j = 0; j < viewers.Length; j++)
             {
@@ -581,10 +577,8 @@ internal sealed partial class PVSSystem : EntitySystem
             _reusedTrees.Add(chunks[i]);
         }
 
-        var previousIndices = _previousTrees.Keys.ToArray();
-        for (var i = 0; i < previousIndices.Length; i++)
+        foreach (var index in _previousTrees.Keys)
         {
-            var index = previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
             if (_reusedTrees.Contains(index)) continue;
             var chunk = _previousTrees[index];
@@ -651,7 +645,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return false;
     }
 
-    public void ReturnToPool(HashSet<int>[] playerChunks)
+    public void ReturnToPool(List<int>[] playerChunks)
     {
         for (var i = 0; i < playerChunks.Length; i++)
         {
@@ -691,7 +685,7 @@ internal sealed partial class PVSSystem : EntitySystem
     public (List<EntityState>? updates, List<EntityUid>? deletions, List<EntityUid>? leftPvs, GameTick fromTick) CalculateEntityStates(IPlayerSession session,
         GameTick fromTick, GameTick toTick,
         (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache,
-        HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery,
+        List<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery,
         EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
@@ -1145,40 +1139,6 @@ internal sealed partial class PVSSystem : EntitySystem
         var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
-    }
-
-    private EntityUid[] GetSessionViewers(ICommonSession session)
-    {
-        if (session.Status != SessionStatus.InGame)
-            return Array.Empty<EntityUid>();
-
-        var viewers = _uidSetPool.Get();
-
-        if (session.AttachedEntity != null)
-        {
-            // Fast path
-            if (session is IPlayerSession { ViewSubscriptionCount: 0 })
-            {
-                _uidSetPool.Return(viewers);
-                return new[] { session.AttachedEntity.Value };
-            }
-
-            viewers.Add(session.AttachedEntity.Value);
-        }
-
-        // This is awful, but we're not gonna add the list of view subscriptions to common session.
-        if (session is IPlayerSession playerSession)
-        {
-            foreach (var uid in playerSession.ViewSubscriptions)
-            {
-                viewers.Add(uid);
-            }
-        }
-
-        var viewerArray = viewers.ToArray();
-
-        _uidSetPool.Return(viewers);
-        return viewerArray;
     }
 
     // Read Safe

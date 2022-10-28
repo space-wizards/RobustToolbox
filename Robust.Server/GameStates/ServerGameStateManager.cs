@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -17,12 +18,11 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
-using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Players;
 
 namespace Robust.Server.GameStates
 {
@@ -187,7 +187,7 @@ namespace Robust.Server.GameStates
             //todo paul oh my god make this less shit
             EntityQuery<MetaDataComponent> metadataQuery = default!;
             EntityQuery<TransformComponent> transformQuery = default!;
-            HashSet<int>[] playerChunks = default!;
+            List<int>[] playerChunks = default!;
             EntityUid[][] viewerEntities = default!;
             (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache = default!;
 

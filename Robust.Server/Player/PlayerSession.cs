@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -40,6 +41,40 @@ namespace Robust.Server.Player
 
         [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
         public int ViewSubscriptionCount => _viewSubscriptions.Count;
+
+        /// <inheritdoc />
+        public EntityUid[] GetSessionViewers()
+        {
+            if (Status != SessionStatus.InGame)
+                return Array.Empty<EntityUid>();
+
+            if (AttachedEntity != null)
+            {
+                var count = ViewSubscriptions.Count(x => x != AttachedEntity.Value)+1;
+
+                var viewers = new EntityUid[count];
+
+                viewers[0] = AttachedEntity.Value;
+
+                var i = 1;
+                foreach (var uid in ViewSubscriptions)
+                {
+                    if(uid == AttachedEntity.Value) continue;
+                    viewers[i++] = uid;
+                }
+
+                return viewers;
+            }
+            else
+            {
+                if (ViewSubscriptionCount == 0)
+                    return Array.Empty<EntityUid>();
+
+                var viewers = new EntityUid[ViewSubscriptionCount];
+                _viewSubscriptions.CopyTo(viewers);
+                return viewers;
+            }
+        }
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 

@@ -248,6 +248,7 @@ namespace Robust.Shared.GameObjects
         {
             BroadphaseComponent? oldLookup = null;
             if (oldParent.IsValid()
+                && oldParent != uid // implies null-space
                 && !broadQuery.TryGetComponent(oldParent, out oldLookup)
                 && xformQuery.TryGetComponent(oldParent, out var parentXform))
             {

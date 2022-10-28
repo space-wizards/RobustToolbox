@@ -541,7 +541,7 @@ namespace Robust.Shared.GameObjects
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();
             var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation);
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
+            AddToEntityTree(lookup, xform, aabb, xformQuery, metaQuery, contQuery, lookupRotation, recursive);
         }
 
         private void AddToEntityTree(

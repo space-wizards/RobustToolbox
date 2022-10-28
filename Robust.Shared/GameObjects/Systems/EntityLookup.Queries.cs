@@ -53,7 +53,7 @@ public sealed partial class EntityLookupSystem
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> state, in EntityUid value) =>
@@ -107,7 +107,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> state, in EntityUid value) =>
@@ -163,7 +163,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
             {
@@ -228,7 +228,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
             {
@@ -624,7 +624,7 @@ public sealed partial class EntityLookupSystem
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
 
-            if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+            if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
             {
                 lookup.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
                 {
@@ -682,7 +682,7 @@ public sealed partial class EntityLookupSystem
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
             {
@@ -768,7 +768,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             component.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
             {
@@ -813,7 +813,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Sundries & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             component.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
             {

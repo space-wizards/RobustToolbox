@@ -53,6 +53,8 @@ namespace Robust.Shared.GameObjects
         Contained = 1 << 5,
 
         Uncontained = Dynamic | Static | Sundries,
+
+        StaticSundries = Static | Sundries,
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem

@@ -333,11 +333,8 @@ namespace Robust.Shared.GameObjects
         {
             var transform = xformQuery.GetComponent(metadata.Owner);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            var ev = new EntityTerminatingEvent(metadata.Owner);
-
-            // TODO: consider making this a meta-data flag?
-            // veeeery few entities make use of this event.
-            EventBus.RaiseLocalEvent(metadata.Owner, ref ev, false);
+            var ev = new EntityTerminatingEvent();
+            EventBus.RaiseLocalEvent(metadata.Owner, ref ev);
 
             foreach (var child in transform._children)
             {

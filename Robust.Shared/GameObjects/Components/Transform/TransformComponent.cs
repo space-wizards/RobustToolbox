@@ -91,7 +91,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
-        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
+        public EntityUid? MapUid
+        {
+            get
+            {
+                var id = _mapManager.GetMapEntityId(MapID);
+                return id.IsValid() ? id : null;
+            }
+        }
 
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.

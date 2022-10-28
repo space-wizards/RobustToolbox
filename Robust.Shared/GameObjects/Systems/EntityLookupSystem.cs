@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -13,8 +10,9 @@ using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -119,6 +117,9 @@ namespace Robust.Shared.GameObjects
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
 
+            // also ensure that no parent is in a container.
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid, meta, xform, null, xformQuery));
+
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var lookup = GetBroadphase(uid, xform, broadQuery, xformQuery);
 
@@ -153,6 +154,8 @@ namespace Robust.Shared.GameObjects
         {
             component.DynamicTree = new DynamicTreeBroadPhase();
             component.StaticTree = new DynamicTreeBroadPhase();
+            component.StaticSundriesTree = new DynamicTree<EntityUid>(
+                (in EntityUid value) => GetTreeAABB(value, component.Owner));
             component.SundriesTree = new DynamicTree<EntityUid>(
                 (in EntityUid value) => GetTreeAABB(value, component.Owner));
         }
@@ -239,9 +242,23 @@ namespace Robust.Shared.GameObjects
             if (HasComp<IMapGridComponent>(ev.Body.Owner))
                 return;
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Body.Owner);
+
+            if (!ev.CanCollide && _container.IsEntityOrParentInContainer(ev.Body.Owner, null, xform, null, xformQuery))
+            {
+                // getting inserted, skip sundries insertion and just let container insertion handle tree removal.
+
+                // TODO: for whatever fucking cursed reason, this is currently required.
+                // FIX THIS, this is a hotfix
+                var b = GetBroadphase(ev.Body.Owner, xform, GetEntityQuery<BroadphaseComponent>(), xformQuery);
+                if (b != null)
+                    RemoveBroadTree(ev.Body, b, ev.Body.BodyType);
+
+                return;
+            }
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var broadphase = GetBroadphase(ev.Body.Owner, xform, broadQuery, xformQuery);
 
             if (broadphase == null)
@@ -249,31 +266,48 @@ namespace Robust.Shared.GameObjects
 
             if (ev.CanCollide)
             {
-                RemoveSundriesTree(ev.Body.Owner, broadphase);
+                RemoveSundriesTree(ev.Body.Owner, broadphase, ev.Body.BodyType);
                 AddBroadTree(ev.Body, broadphase, ev.Body.BodyType, xform: xform);
             }
             else
             {
                 RemoveBroadTree(ev.Body, broadphase, ev.Body.BodyType);
-                AddSundriesTree(ev.Body.Owner, broadphase);
+                AddSundriesTree(ev.Body.Owner, broadphase, ev.Body.BodyType);
             }
         }
 
         private void OnBodyTypeChange(EntityUid uid, PhysicsComponent component, ref PhysicsBodyTypeChangedEvent args)
         {
-            if (!component.CanCollide || HasComp<IMapGridComponent>(uid))
+            // only matters if we swapped from static to non-static.
+            if (args.Old != BodyType.Static && args.New != BodyType.Static)
                 return;
 
-            var broadphase = GetBroadphase(Transform(uid));
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(uid);
+
+            if (xform.GridUid == uid)
+                return;
+
+            // fun fact: container insertion tries to update the fucking lookups like 3 or more times, each time iterating through all of its parents.
+            if (_container.IsEntityOrParentInContainer(uid, null, xform, null, xformQuery))
+                return;
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var broadphase = GetBroadphase(uid, xform, broadQuery, xformQuery);
 
             if (broadphase == null)
                 return;
 
-            if (args.Old != BodyType.Static && args.New != BodyType.Static)
-                return;
-
-            RemoveBroadTree(component, broadphase, args.Old);
-            AddBroadTree(component, broadphase, component.BodyType);
+            if (component.CanCollide)
+            {
+                RemoveBroadTree(component, broadphase, args.Old);
+                AddBroadTree(component, broadphase, component.BodyType);
+            }
+            else
+            {
+                RemoveSundriesTree(uid, broadphase, args.Old);
+                AddSundriesTree(uid, broadphase, component.BodyType);
+            }    
         }
 
         private void RemoveBroadTree(PhysicsComponent body, BroadphaseComponent lookup, BodyType bodyType, FixturesComponent? manager = null)
@@ -315,6 +349,8 @@ namespace Robust.Shared.GameObjects
 
             var tree = bodyType == BodyType.Static ? lookup.StaticTree : lookup.DynamicTree;
             var xformQuery = GetEntityQuery<TransformComponent>();
+
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform, null, xformQuery));
 
             if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform) || lookupXform.MapUid == null)
             {
@@ -374,29 +410,30 @@ namespace Robust.Shared.GameObjects
             fixture.ProxyCount = count;
         }
 
-        private void AddSundriesTree(EntityUid uid, BroadphaseComponent lookup)
+        private void AddSundriesTree(EntityUid uid, BroadphaseComponent lookup, BodyType bodyType)
         {
-            var tree = lookup.SundriesTree;
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
+            var tree = bodyType == BodyType.Static ? lookup.StaticSundriesTree : lookup.SundriesTree;
             tree.Add(uid);
         }
 
-        private void RemoveSundriesTree(EntityUid uid, BroadphaseComponent lookup)
+        private void RemoveSundriesTree(EntityUid uid, BroadphaseComponent lookup, BodyType bodyType)
         {
-            var tree = lookup.SundriesTree;
+            var tree = bodyType == BodyType.Static ? lookup.StaticSundriesTree : lookup.SundriesTree;
             tree.Remove(uid);
         }
 
         private void OnEntityInit(EntityUid uid)
         {
-            if (_container.IsEntityInContainer(uid))
-                return;
-
             var xformQuery = GetEntityQuery<TransformComponent>();
 
             if (!xformQuery.TryGetComponent(uid, out var xform))
             {
                 return;
             }
+
+            if (_container.IsEntityOrParentInContainer(uid, null, xform, null, xformQuery))
+                return;
 
             if (_mapManager.IsMap(uid) ||
                 _mapManager.IsGrid(uid))
@@ -449,7 +486,10 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(ref EntParentChangedMessage args)
         {
-            var meta = MetaData(args.Entity);
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var meta = metaQuery.GetComponent(args.Entity);
+            var xform = args.Transform;
 
             // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
             // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
@@ -463,7 +503,7 @@ namespace Robust.Shared.GameObjects
             //
             // TODO IMPROVE CONTAINER REMOVAL HANDLING
 
-            if (_container.IsEntityInContainer(args.Entity, meta))
+            if (_container.IsEntityOrParentInContainer(args.Entity, meta, xform, metaQuery, xformQuery))
                 return;
 
             if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
@@ -473,9 +513,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xform = args.Transform;
             BroadphaseComponent? oldLookup = null;
 
             if (args.OldMapId != MapId.Nullspace && xformQuery.TryGetComponent(args.OldParent, out var parentXform))
@@ -513,12 +551,19 @@ namespace Robust.Shared.GameObjects
         private void OnContainerInsert(EntInsertedIntoContainerMessage ev)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            BroadphaseComponent? lookup;
 
-            if (ev.OldParent == EntityUid.Invalid || !xformQuery.TryGetComponent(ev.OldParent, out var oldXform))
+            if (ev.OldParent == EntityUid.Invalid)
                 return;
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var lookup = GetBroadphase(ev.OldParent, oldXform, broadQuery, xformQuery);
+            if (!broadQuery.TryGetComponent(ev.OldParent, out lookup))
+            {
+                if (!xformQuery.TryGetComponent(ev.OldParent, out var parentXform))
+                    return;
+
+                lookup = GetBroadphase(ev.OldParent, parentXform, broadQuery, xformQuery);
+            }
 
             RemoveFromEntityTree(lookup, xformQuery.GetComponent(ev.Entity), xformQuery);
         }
@@ -585,7 +630,10 @@ namespace Robust.Shared.GameObjects
         {
             if (!Resolve(uid, ref body, false) || !body.CanCollide)
             {
-                broadphase.SundriesTree.AddOrUpdate(uid, aabb);
+                if (body?.BodyType == BodyType.Static)
+                    broadphase.StaticSundriesTree.AddOrUpdate(uid, aabb);
+                else
+                    broadphase.SundriesTree.AddOrUpdate(uid, aabb);
                 return;
             }
 
@@ -596,7 +644,10 @@ namespace Robust.Shared.GameObjects
         {
             if (!Resolve(uid, ref body, false) || !body.CanCollide)
             {
-                broadphase.SundriesTree.Remove(uid);
+                if (body?.BodyType == BodyType.Static)
+                    broadphase.StaticSundriesTree.Remove(uid);
+                else
+                    broadphase.SundriesTree.Remove(uid);
                 return;
             }
 

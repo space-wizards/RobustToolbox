@@ -3,6 +3,7 @@
 # Native libraries are not included.
 
 import os
+from platform import platform
 import shutil
 import subprocess
 import sys
@@ -30,7 +31,8 @@ p = os.path.join
 PLATFORM_WINDOWS = "windows"
 PLATFORM_LINUX = "linux"
 PLATFORM_LINUX_ARM64 = "linux-arm64"
-PLATFORM_MACOS = "mac"
+PLATFORM_MACOS = "mac-intel"
+PLATFORM_MACOS_ARM64 = "mac-apple-silicon"
 
 IGNORED_RESOURCES = {
     ".gitignore",
@@ -60,11 +62,13 @@ IGNORED_FILES_WINDOWS = {
 
 IGNORED_FILES_MACOS = {
     "libe_sqlite3.dylib",
+    "libfluidsynth.2.dylib",
     "libfreetype.6.dylib",
     "libglfw.3.dylib",
     "Robust.Client",
     "libswnfd.dylib",
     "zstd.dylib",
+    "libzstd.dylib",
     "libsodium.dylib",
 }
 
@@ -84,7 +88,7 @@ def main() -> None:
     parser.add_argument("--platform",
                         "-p",
                         action="store",
-                        choices=[PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX],
+                        choices=[PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX, PLATFORM_MACOS_ARM64],
                         nargs="*",
                         help="Which platform to build for. If not provided, all platforms will be built")
 
@@ -97,7 +101,7 @@ def main() -> None:
     skip_build = args.skip_build
 
     if not platforms:
-        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX]
+        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX, PLATFORM_MACOS_ARM64]
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +
@@ -124,8 +128,12 @@ def main() -> None:
     if PLATFORM_MACOS in platforms:
         if not skip_build:
             wipe_bin()
-        build_macos(skip_build)
+        build_macos(PLATFORM_MACOS, skip_build)
 
+    if PLATFORM_MACOS_ARM64 in platforms:
+        if not skip_build:
+            wipe_bin()
+        build_macos(PLATFORM_MACOS_ARM64, skip_build)
 
 def wipe_bin():
     print(Fore.BLUE + Style.DIM +
@@ -156,23 +164,24 @@ def build_windows(skip_build: bool) -> None:
     # Cool we're done.
     client_zip.close()
 
-def build_macos(skip_build: bool) -> None:
-    print(Fore.GREEN + "Building project for macOS x64..." + Style.RESET_ALL)
+def build_macos(platform_name: str, skip_build: bool) -> None:
+    arch_directory_name = "osx-x64" if platform_name == PLATFORM_MACOS else "osx-arm64"
+
+    print(Fore.GREEN + f"Building project for ${platform_name} (${arch_directory_name})..." + Style.RESET_ALL)
 
     if not skip_build:
-        publish_client("osx-x64", "MacOS")
+        publish_client(arch_directory_name, "MacOS")
 
-    print(Fore.GREEN + "Packaging macOS x64 client..." + Style.RESET_ALL)
+    print(Fore.GREEN + f"Packaging ${platform_name} (${arch_directory_name}) client..." + Style.RESET_ALL)
     # Client has to go in an app bundle.
-    client_zip = zipfile.ZipFile(p("release", "Robust.Client_osx-x64.zip"), "a",
+    client_zip = zipfile.ZipFile(p("release", f"Robust.Client_${platform_name}.zip"), "a",
                                  compression=zipfile.ZIP_DEFLATED)
 
     contents = p("Space Station 14.app", "Contents", "Resources")
     copy_dir_into_zip(p("BuildFiles", "Mac", "Space Station 14.app"), "Space Station 14.app", client_zip)
-    copy_dir_into_zip(p("bin", "Client", "osx-x64", "publish"), contents, client_zip, IGNORED_FILES_MACOS)
+    copy_dir_into_zip(p("bin", "Client", arch_directory_name, "publish"), contents, client_zip, IGNORED_FILES_MACOS)
     copy_resources(p(contents, "Resources"), client_zip)
     client_zip.close()
-
 
 def build_linux(skip_build: bool) -> None:
     # Run a full build.
@@ -231,7 +240,7 @@ def publish_client(runtime: str, target_os: str) -> None:
         "-c", "Release",
         f"/p:TargetOS={target_os}",
         "/p:FullRelease=True"
-    ]
+]
 
     subprocess.run(base + ["Robust.Client/Robust.Client.csproj"], check=True)
 

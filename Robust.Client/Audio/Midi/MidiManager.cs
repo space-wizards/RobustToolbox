@@ -103,6 +103,12 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
 
+    // explicitly look for version 2 where possible, or the fluidsynth module will just pick up anything called 'libfluidsynth'
+    // and we're incompatible with v3.
+    private const string DefaultLibrary = "fluidsynth";
+    private const string LinuxLibrary =  "libfluidsynth.2.so";
+    private const string OsxLibrary = "libfluidsynth.2.dylib";
+
     private const float MaxDistanceForOcclusion = 1000;
 
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
@@ -148,6 +154,8 @@ internal sealed partial class MidiManager : IMidiManager
             _resourceManager.UserData.Rename(CustomSoundfontDirectory, CustomSoundfontDirectory.WithName(CustomSoundfontDirectory.Filename + ".old"));
             _resourceManager.UserData.CreateDir(CustomSoundfontDirectory);
         }
+
+        DllMapHelper.RegisterExplicitMap(typeof(NFluidsynth.Logger).Assembly, DefaultLibrary, LinuxLibrary, OsxLibrary);
 
         try
         {

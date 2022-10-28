@@ -872,7 +872,7 @@ namespace Robust.Shared.GameObjects
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
 
-        public bool ParentChanged => NewPosition.EntityId == OldPosition.EntityId;
+        public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.

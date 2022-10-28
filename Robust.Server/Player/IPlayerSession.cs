@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
@@ -41,10 +40,6 @@ namespace Robust.Server.Player
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();
-
-        IReadOnlySet<EntityUid> ViewSubscriptions { get; }
-
-        int ViewSubscriptionCount { get; }
 
         /// <summary>
         /// Returns all viewer-entities registered to the current session.

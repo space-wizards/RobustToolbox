@@ -39,25 +39,22 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
-        public int ViewSubscriptionCount => _viewSubscriptions.Count;
-
         /// <inheritdoc />
         public EntityUid[] GetSessionViewers()
         {
             if (Status != SessionStatus.InGame)
                 return Array.Empty<EntityUid>();
 
-            if (AttachedEntity != null)
+            if (AttachedEntity.HasValue)
             {
-                var count = ViewSubscriptions.Count(x => x != AttachedEntity.Value)+1;
+                var count = _viewSubscriptions.Count(x => x != AttachedEntity.Value)+1;
 
                 var viewers = new EntityUid[count];
 
                 viewers[0] = AttachedEntity.Value;
 
                 var i = 1;
-                foreach (var uid in ViewSubscriptions)
+                foreach (var uid in _viewSubscriptions)
                 {
                     if(uid == AttachedEntity.Value) continue;
                     viewers[i++] = uid;
@@ -67,10 +64,10 @@ namespace Robust.Server.Player
             }
             else
             {
-                if (ViewSubscriptionCount == 0)
+                if (_viewSubscriptions.Count == 0)
                     return Array.Empty<EntityUid>();
 
-                var viewers = new EntityUid[ViewSubscriptionCount];
+                var viewers = new EntityUid[_viewSubscriptions.Count];
                 _viewSubscriptions.CopyTo(viewers);
                 return viewers;
             }

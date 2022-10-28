@@ -15,8 +15,10 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Robust.Server.GameStates;
@@ -317,8 +319,13 @@ internal sealed partial class PVSSystem : EntitySystem
             _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if (ev.Component.GridUid == ev.Sender || !ev.Component.ParentUid.IsValid())
+        if (ev.Component.GridUid == ev.Sender)
             return;
+        DebugTools.Assert(!_mapManager.IsGrid(ev.Sender));
+
+        if (ev.Component.MapUid == ev.Sender)
+            return;
+        DebugTools.Assert(!_mapManager.IsMap(ev.Sender));
 
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -342,8 +349,13 @@ internal sealed partial class PVSSystem : EntitySystem
         // use Startup because GridId is not set during the eventbus init yet!
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if (component.GridUid == uid || _mapManager.IsMap(uid))
+        if (component.GridUid == uid)
             return;
+        DebugTools.Assert(!_mapManager.IsGrid(uid));
+
+        if (component.MapUid == uid)
+            return;
+        DebugTools.Assert(!_mapManager.IsMap(uid));
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component, xformQuery);

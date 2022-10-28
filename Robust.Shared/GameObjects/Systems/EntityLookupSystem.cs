@@ -275,12 +275,13 @@ namespace Robust.Shared.GameObjects
 
         private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
-            if (HasComp<IMapGridComponent>(ev.Body.Owner))
-                return;
-
             var xformQuery = GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Body.Owner);
 
+            if (xform.GridUid == ev.Body.Owner)
+                return;
+            DebugTools.Assert(!_mapManager.IsGrid(ev.Body.Owner));
+            
             if (!ev.CanCollide && _container.IsEntityOrParentInContainer(ev.Body.Owner, null, xform, null, xformQuery))
             {
                 // getting inserted, skip sundries insertion and just let container insertion handle tree removal.
@@ -323,6 +324,7 @@ namespace Robust.Shared.GameObjects
 
             if (xform.GridUid == uid)
                 return;
+            DebugTools.Assert(!_mapManager.IsGrid(uid));
 
             // fun fact: container insertion tries to update the fucking lookups like 3 or more times, each time iterating through all of its parents.
             if (_container.IsEntityOrParentInContainer(uid, null, xform, null, xformQuery))
@@ -498,6 +500,7 @@ namespace Robust.Shared.GameObjects
         {
             if (args.Component.GridUid == args.Sender)
                 return;
+            DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
 
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var meta = metaQuery.GetComponent(args.Sender);
@@ -523,8 +526,9 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (_mapManager.IsMap(args.Sender))
+            if (args.Component.MapUid == args.Sender)
                 return;
+            DebugTools.Assert(!_mapManager.IsMap(args.Sender));
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var lookup = GetBroadphase(args.Sender, args.Component, broadQuery, xformQuery);

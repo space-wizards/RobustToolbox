@@ -790,8 +790,11 @@ public abstract partial class SharedTransformSystem
         var meta = metaQuery.GetComponent(xform.Owner);
         _metaSys.SetEntityPaused(xform.Owner, mapPaused, meta);
 
-        xform.MapID = newMapId;
-        xform.UpdateChildMapIdsRecursive(xform.MapID, mapPaused, xformQuery, metaQuery, _metaSys);
+        // Map entities retain their map Uids
+        if (xform.Owner != xform.MapUid)
+            xform.MapID = newMapId;
+
+        xform.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, _metaSys);
     }
 
     public void DetachParentToNull(TransformComponent xform)
@@ -844,7 +847,7 @@ public abstract partial class SharedTransformSystem
         // aaaaaaaaaaaaaaaa
         ChangeMapId(xform, MapId.Nullspace, xformQuery, metaQuery);
 
-        if (xform.GridUid != null)
+        if (xform.GridUid != null && xform.GridUid != xform.Owner)
             SetGridId(xform, null, xformQuery);
 
         var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent, oldMap, xform);

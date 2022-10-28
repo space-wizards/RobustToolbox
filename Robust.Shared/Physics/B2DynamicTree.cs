@@ -583,10 +583,8 @@ namespace Robust.Shared.Physics
                 indexNode.Height = Math.Max(child1Node.Height, child2Node.Height) + 1;
                 indexNode.Aabb = child1Node.Aabb.Union(child2Node.Aabb);
 
-#if DEBUG
                 if (index == indexNode.Parent)
                     throw new Exception($"Infinite loop in B2DynamicTree.Balance(). Trace: {Environment.StackTrace}");
-#endif
 
                 index = indexNode.Parent;
             }

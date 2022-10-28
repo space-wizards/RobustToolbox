@@ -340,7 +340,7 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
                 {
-                    comp.Step(frameTime, prediction);
+                    comp.Step(frameTime, prediction, substepping);
 
                     _physicsManager.ClearTransforms();
                 }

@@ -186,11 +186,12 @@ public abstract partial class SharedPhysicsSystem
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
 
         // for the old velocities, we need to re-implement this function while using the old parent and old local position:
-        if (args.OldParent is not EntityUid { Valid: true } parent)
+        if (args.OldParent is not { Valid: true } parent)
         {
             // no previous parent --> simple
-            SetLinearVelocity(physics, physics.LinearVelocity - newLinear);
-            SetAngularVelocity(physics, physics.AngularVelocity - newAngular);
+            // Old velocity + (old velocity - new velocity)
+            SetLinearVelocity(physics, physics._linearVelocity * 2 - newLinear);
+            SetAngularVelocity(physics, physics._angularVelocity * 2 - newAngular);
             return;
         }
 
@@ -225,7 +226,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Finally we can update the Velocities. linear velocity is already in terms of map-coordinates, so no
         // world-rotation is required
-        SetLinearVelocity(physics, oldLinear - newLinear);
-        SetAngularVelocity(physics, oldAngular - newAngular);
+        SetLinearVelocity(physics, physics._linearVelocity + oldLinear - newLinear);
+        SetAngularVelocity(physics, physics._angularVelocity + oldAngular - newAngular);
     }
 }

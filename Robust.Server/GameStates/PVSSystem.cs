@@ -326,8 +326,11 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
             var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
-            var oldIndex = _entityPvsCollection.GetChunkIndex(oldCoordinates);
-            _entityPvsCollection.MarkDirty(oldIndex);
+            var indices = PVSCollection<EntityUid>.GetChunkIndices(oldCoordinates.Position);
+            if (ev.Component.GridUid != null)
+                _entityPvsCollection.MarkDirty(new GridChunkLocation(ev.Component.GridUid.Value, indices));
+            else
+                _entityPvsCollection.MarkDirty(new MapChunkLocation(ev.Component.MapID, indices));
         }
 
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
@@ -354,13 +357,21 @@ internal sealed partial class PVSSystem : EntitySystem
             coordinates = _transform.GetMoverCoordinates(xform, xformQuery);
         }
 
-        // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
+        // since elements are cached grid-/map-relative, we don't need to update a given grids/maps children
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-        _entityPvsCollection.UpdateIndex(uid, coordinates);
+        var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
+        if (xform.GridUid != null)
+            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices);
+        else
+            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices);
 
         var children = xform.ChildEnumerator;
 
+        // TODO PERFORMANCE
+        // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
+        // coordiantes.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
+        // directly.
         while (children.MoveNext(out var child))
         {
             UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
@@ -695,8 +706,10 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
-        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
-        var entitiesSent = 0;
+        var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
+        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityEnterBudget);
+        var newEntityCount = 0;
+        var enteredEntityCount = 0;
         var sessionData = _playerVisibleSets[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
         var lastAcked = sessionData.LastAcked;
@@ -708,14 +721,21 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
+        // Iterate over visible chunks and add entities.
+        // TODO reorder chunks and allow early termination?
+        // Previously this iteration terminated early whenever the PVS budget was full. However, if this iteration
+        // iterates over new chunks first, then this can lead to a situation where previously seen entities in currently
+        // still visible chunks are never added to visibleEnts, and therefore get treated as if they had left PVS.
+        // Currently this is fixed by just not exiting the iteration early, but it is probably better to just ensure
+        // that new chunks are always the last to be iterated over.
         foreach (var i in chunkIndices)
         {
             var cache = chunkCache[i];
             if(!cache.HasValue) continue;
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, fromTick,
-                        ref entitiesSent, cache.Value.metadata, in enteredEntityBudget);
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, lastSeen, cache.Value.metadata, fromTick,
+                        ref newEntityCount, ref enteredEntityCount,  in newEntityBudget, in enteredEntityBudget);
             }
         }
 
@@ -723,8 +743,8 @@ internal sealed partial class PVSSystem : EntitySystem
         while (globalEnumerator.MoveNext())
         {
             var uid = globalEnumerator.Current;
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, fromTick,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
+            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, mQuery, tQuery, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
         globalEnumerator.Dispose();
 
@@ -732,23 +752,23 @@ internal sealed partial class PVSSystem : EntitySystem
         while (localEnumerator.MoveNext())
         {
             var uid = localEnumerator.Current;
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, fromTick,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
+            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, mQuery, tQuery, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
         localEnumerator.Dispose();
 
         foreach (var viewerEntity in viewerEntities)
         {
-            RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, fromTick,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
+            RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, lastSeen, mQuery, tQuery, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
 
         var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
-            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, fromTick,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
+            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, mQuery, tQuery, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
 
         var entityStates = new List<EntityState>();
@@ -829,14 +849,17 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool RecursivelyAddTreeNode(in EntityUid nodeIndex,
+    private void RecursivelyAddTreeNode(in EntityUid nodeIndex,
         RobustTree<EntityUid> tree,
         Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
         Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
-        GameTick fromTick,
-        ref int totalEnteredEntities,
+        Dictionary<EntityUid, GameTick> lastSeen,
         Dictionary<EntityUid, MetaDataComponent> metaDataCache,
+        GameTick fromTick,
+        ref int newEntityCount,
+        ref int enteredEntityCount,
+        in int newEntityBudget,
         in int enteredEntityBudget)
     {
         //are we valid?
@@ -847,28 +870,22 @@ internal sealed partial class PVSSystem : EntitySystem
         // on different chunks (this is especially common with direct grid children)
         if (nodeIndex.IsValid() && !toSend.ContainsKey(nodeIndex))
         {
-            //are we new?
-            var (entered, budgetFull) = ProcessEntry(in nodeIndex, lastAcked, lastSent,
-                ref totalEnteredEntities, in enteredEntityBudget);
+            var (entered, shouldAdd) = ProcessEntry(in nodeIndex, lastAcked, lastSent, lastSeen,
+                ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-            AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
-
-            if (budgetFull) return true;
+            if (shouldAdd)
+                AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
         }
 
         var node = tree[nodeIndex];
-        //our children are important regardless! iterate them!
-        if(node.Children != null)
-        {
-            foreach (var child in node.Children)
-            {
-                if (RecursivelyAddTreeNode(in child, tree, lastAcked, lastSent, toSend, fromTick,
-                    ref totalEnteredEntities, metaDataCache, in enteredEntityBudget))
-                    return true;
-            }
-        }
+        if (node.Children == null)
+            return;
 
-        return false;
+        foreach (var child in node.Children)
+        {
+            RecursivelyAddTreeNode(in child, tree, lastAcked, lastSent, toSend, lastSeen, metaDataCache, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget);
+        }
     }
 
     public bool RecursivelyAddOverride(
@@ -876,42 +893,56 @@ internal sealed partial class PVSSystem : EntitySystem
         Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
         Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
-        GameTick fromTick,
-        ref int totalEnteredEntities,
+        Dictionary<EntityUid, GameTick> lastSeen,
         EntityQuery<MetaDataComponent> metaQuery,
         EntityQuery<TransformComponent> transQuery,
+        GameTick fromTick,
+        ref int newEntityCount,
+        ref int enteredEntityCount,
+        in int newEntityBudget,
         in int enteredEntityBudget)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
-        //did we already get added?
-        if (toSend.ContainsKey(uid)) return true;
-
         var parent = transQuery.GetComponent(uid).ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, fromTick,
-                ref totalEnteredEntities, metaQuery, transQuery, in enteredEntityBudget))
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, lastSeen, metaQuery, transQuery, fromTick,
+                ref newEntityCount, ref enteredEntityCount, in newEntityBudget, in enteredEntityBudget))
             return false;
 
-        var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent,
-            ref totalEnteredEntities, in enteredEntityBudget);
+        //did we already get added?
+        if (toSend.ContainsKey(uid)) return true;
+        // Note that we check this AFTER adding parents. This is because while this entity may already have been added
+        // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
+        // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
+        // send the new parents, which may otherwise be delayed because of the PVS budget..
+
+        // TODO PERFORMANCE.
+        // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
+        // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
+        // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
+        var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
         AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, entered);
         return true;
     }
 
-    private (bool entering, bool budgetFull) ProcessEntry(in EntityUid uid,
+    private (bool Entered, bool ShouldAdd) ProcessEntry(in EntityUid uid,
         Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
         Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
-        ref int totalEnteredEntities, in int enteredEntityBudget)
+        Dictionary<EntityUid, GameTick> lastSeen,
+        ref int newEntityCount,
+        ref int enteredEntityCount,
+        in int newEntityBudget,
+        in int enteredEntityBudget)
     {
         var enteredSinceLastSent = lastSent == null || !lastSent.ContainsKey(uid);
 
         var entered = enteredSinceLastSent || // OR, entered since last ack:
                         lastAcked == null || !lastAcked.ContainsKey(uid);
 
-        // If the entity is entering, but we already sent this entering entity, in the last message, we won't add it to
+        // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
         // their requested budget. However this can cause issues if a packet gets dropped, because a player may create
         // 2x or more times the normal entity creation budget.
@@ -920,13 +951,15 @@ internal sealed partial class PVSSystem : EntitySystem
         // rate.
         if (enteredSinceLastSent)
         {
-            // TODO: should we separate this budget into "entered-but-seen" and "completely-new"?
-            // completely new entities are significantly more intensive for both server sending and client processing.
-            if (totalEnteredEntities++ >= enteredEntityBudget)
-                return (entered, true);
+            if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
+                return (entered, false);
+
+            enteredEntityCount++;
+            if (!lastSeen.ContainsKey(uid))
+                newEntityCount++;
         }
 
-        return (entered, false);
+        return (entered, true);
     }
 
     private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, bool entered)

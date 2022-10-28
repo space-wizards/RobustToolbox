@@ -542,45 +542,54 @@ namespace Robust.Client.Graphics.Clyde
             var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
-            var state = (this, worldAABB, count: 0, shadowCastingCount: 0);
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
                 var bounds = xformSystem.GetInvWorldMatrix(comp.Owner, xforms).TransformBox(worldBounds);
 
-                comp.LightTree.QueryAabb(ref state,
-                    (ref (Clyde clyde, Box2 worldAABB, int count, int shadowCastingCount) state,
-                        in ComponentTreeEntry<PointLightComponent> value) =>
+                comp.LightTree.QueryAabb(ref state, static (ref (
+                    Clyde clyde,
+                    int count,
+                    int shadowCastingCount,
+                    TransformSystem xformSystem,
+                    EntityQuery<TransformComponent> xforms,
+                    Box2 worldAABB) state,
+                    in ComponentTreeEntry<PointLightComponent> value) =>
+                {
+                    ref var count = ref state.count;
+                    ref var shadowCount = ref state.shadowCastingCount;
+
+                    if (count >= LightsToRenderListSize)
                     {
-                        if (state.count >= LightsToRenderListSize)
-                        {
-                            // There are too many lights to fit in the static memory.
-                            return false;
-                        }
+                        // There are too many lights to fit in the static memory.
+                        return false;
+                    }
 
-                        var (light, transform) = value;
+                    var (light, transform) = value;
 
-                        if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y))
-                            return true;
-
-                        var lightPos = xformSystem.GetWorldMatrix(transform, xforms).Transform(light.Offset);
-                        var circle = new Circle(lightPos, light.Radius);
-
-                        // If the light doesn't touch anywhere the camera can see, it doesn't matter.
-                        if (!circle.Intersects(state.worldAABB))
-                        {
-                            return true;
-                        }
-
-                        // If the light is a shadow casting light, keep a separate track of that
-                        if (light.CastShadows) state.shadowCastingCount++;
-
-                        float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
-                        state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
-
+                    if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y))
                         return true;
-                    }, bounds);
+
+                    var lightPos = state.xformSystem.GetWorldMatrix(transform, state.xforms).Transform(light.Offset);
+                    var circle = new Circle(lightPos, light.Radius);
+
+                    // If the light doesn't touch anywhere the camera can see, it doesn't matter.
+                    if (!circle.Intersects(state.worldAABB))
+                    {
+                        return true;
+                    }
+
+                    // If the light is a shadow casting light, keep a separate track of that
+                    if (light.CastShadows)
+                        shadowCount++;
+
+                    float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
+                    state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared);
+
+                    return true;
+                }, bounds);
             }
 
             if (state.shadowCastingCount > _maxLightsPerScene)

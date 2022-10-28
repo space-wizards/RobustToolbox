@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
             var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
             var relativeRotation = rotation - lookupRotation;
-            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, relativeRotation;
+            var aabb = GetAABBNoContainer(xform.Owner, coordinates.Position, relativeRotation);
 
             // TODO: Only container children need updating so could manually do this slightly better.
             AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);

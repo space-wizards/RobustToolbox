@@ -17,7 +17,6 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class SharedTransformSystem
 {
     [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-    [IoC.Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     #region Anchoring
 
@@ -69,7 +68,7 @@ public abstract partial class SharedTransformSystem
         {
             // Mark as static first to avoid the velocity change on parent change.
             if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-                _physics.SetBodyType(physicsComponent, BodyType.Static);
+                physicsComponent.BodyType = BodyType.Static;
 
             // anchor snapping
             // Internally it will do the parent update; doing it separately just triggers a redundant move.

@@ -11,10 +11,10 @@ public abstract class LocalizedCommands : IConsoleCommand
     public abstract string Command { get; }
 
     /// <inheritdoc />
-    public string Description => _loc.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
+    public virtual string Description => _loc.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
 
     /// <inheritdoc />
-    public string Help => _loc.TryGetString($"cmd-{Command}-help", out var val) ? val : "";
+    public virtual string Help => _loc.TryGetString($"cmd-{Command}-help", out var val) ? val : "";
 
     public abstract void Execute(IConsoleShell shell, string argStr, string[] args);
 }

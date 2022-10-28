@@ -190,6 +190,7 @@ namespace Robust.Shared.GameObjects
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         [ViewVariables]
+        [Obsolete("Use ParentUid and query the parent TransformComponent")]
         public TransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
@@ -337,6 +338,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 var oldPosition = Coordinates;
+                var oldRotation = LocalRotation;
                 _localPosition = value.Position;
                 var changedParent = false;
 
@@ -378,7 +380,10 @@ namespace Robust.Shared.GameObjects
 
                     // preserve world rotation
                     if (LifeStage == ComponentLifeStage.Running)
-                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+                    {
+                        oldRotation = _localRotation;
+                        _localRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+                    }
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
@@ -397,9 +402,9 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if (!oldPosition.Equals(Coordinates))
+                        if (!oldPosition.Equals(Coordinates) || !oldRotation.Equals(_localRotation))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                         }
                     }
@@ -407,6 +412,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     _oldCoords ??= oldPosition;
+                    _oldLocalRotation ??= oldRotation;
                 }
             }
         }
@@ -537,14 +543,18 @@ namespace Robust.Shared.GameObjects
                 return null;
             }
 
-            if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
+            if (_entMan.HasComponent<IMapGridComponent>(Owner))
             {
                 return Owner;
             }
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridUid;
+                var parentXform = xformQuery.GetComponent(_parent);
+                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
+                    return parentXform.GridUid;
+                else
+                    return parentXform.FindGridEntityId(xformQuery);
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
@@ -861,6 +871,8 @@ namespace Robust.Shared.GameObjects
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
+
+        public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.

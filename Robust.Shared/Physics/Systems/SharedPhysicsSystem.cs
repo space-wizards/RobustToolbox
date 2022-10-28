@@ -45,9 +45,9 @@ namespace Robust.Shared.Physics.Systems
             });
 
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly IManifoldManager _collision = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -91,7 +91,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
         {
-            component.CanCollide = false;
+            SetCanCollide(component, false);
             DebugTools.Assert(!component.Awake);
         }
 
@@ -168,8 +168,6 @@ namespace Robust.Shared.Physics.Systems
             if (args.OldMapId != xform.MapID)
                 return;
 
-            _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
-
             if (body != null)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
@@ -195,9 +193,7 @@ namespace Robust.Shared.Physics.Systems
                 oldMoveBuffer = oldMap.MoveBuffer;
             }
 
-            var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
-
-            RecursiveMapUpdate(xform, body, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+            RecursiveMapUpdate(xform, body, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
         }
 
         /// <summary>
@@ -207,7 +203,6 @@ namespace Robust.Shared.Physics.Systems
             TransformComponent xform,
             PhysicsComponent? body,
             MapId newMapId,
-            BroadphaseComponent? newBroadphase,
             SharedPhysicsMapComponent? newMap,
             SharedPhysicsMapComponent? oldMap,
             Dictionary<FixtureProxy, Box2>? oldMoveBuffer,
@@ -217,7 +212,7 @@ namespace Robust.Shared.Physics.Systems
             EntityQuery<JointComponent> jointQuery,
             EntityQuery<BroadphaseComponent> broadQuery)
         {
-            EntityUid? uid = xform.Owner;
+            var uid = xform.Owner;
 
             DebugTools.Assert(!Deleted(uid));
 
@@ -237,20 +232,10 @@ namespace Robust.Shared.Physics.Systems
                 if (oldMap != null)
                     DestroyContacts(body, oldMap); // This can modify body.Awake
                 DebugTools.Assert(body.Contacts.Count == 0);
-
-                // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
-                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
-                {
-                    // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
-                    _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);
-                }
             }
 
             if (jointQuery.TryGetComponent(uid, out var joint))
-                _joints.ClearJoints(joint);
-
-            if (newMapId != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroadphase))
-                newBroadphase = parentBroadphase;
+                _joints.ClearJoints(uid, joint);
 
             var childEnumerator = xform.ChildEnumerator;
             while (childEnumerator.MoveNext(out var child))
@@ -258,7 +243,7 @@ namespace Robust.Shared.Physics.Systems
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+                    RecursiveMapUpdate(childXform, childBody, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
 
             }
@@ -269,7 +254,7 @@ namespace Robust.Shared.Physics.Systems
             if (!EntityManager.EntityExists(ev.EntityUid)) return;
             // Yes this ordering matters
             var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
-            collideComp.BodyType = BodyType.Static;
+            SetBodyType(collideComp, BodyType.Static);
             EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 

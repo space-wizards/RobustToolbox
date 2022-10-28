@@ -2,9 +2,13 @@
 
 ## generic
 
+cmd-invalid-arg-number-error = Número inválido de argumentos.
+
 cmd-parse-failure-integer = {$arg} não é um inteiro válido.
 cmd-parse-failure-float = {$arg} não é um float válido.
 cmd-parse-failure-bool = {$arg} não é um booleano válido.
+cmd-parse-failure-uid = {$arg} não é um UID de entidade válido.
+cmd-parse-failure-entity-exist = UID {$arg} não corresponde a uma entidade existente.
 
 
 ## 'help' command
@@ -146,6 +150,8 @@ cmd-hint-loadmap-x-position = [x-position]
 cmd-hint-loadmap-y-position = [y-position]
 cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
+
+cmd-hint-savebp-id = <Grid EntityID>
 
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.

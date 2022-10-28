@@ -249,7 +249,6 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
-            compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();

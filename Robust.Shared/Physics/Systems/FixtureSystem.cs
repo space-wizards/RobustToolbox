@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Robust.Shared.Collections;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -19,8 +18,7 @@ namespace Robust.Shared.Physics.Systems
     /// </summary>
     public sealed partial class FixtureSystem : EntitySystem
     {
-        [Dependency] private readonly SharedContainerSystem _containers = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
@@ -51,10 +49,9 @@ namespace Robust.Shared.Physics.Systems
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
             _physics.DestroyContacts(body, xform.MapID, xform);
-            _broadphaseSystem.RemoveBody(body, component);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
-            body.CanCollide = false;
+            _physics.SetCanCollide(body, false);
         }
         #region Public
 
@@ -87,14 +84,10 @@ namespace Robust.Shared.Physics.Systems
             manager.Fixtures.Add(fixture.ID, fixture);
             fixture.Body = body;
 
-            // TODO: Assert world locked
-            // Broadphase should be set in the future TM
-            // Should only happen for nullspace / initializing entities
-            if (body.Broadphase != null)
+            if (body.CanCollide)
             {
                 var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-
-                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
+                _lookup.CreateProxies(fixture, worldPos, worldRot);
             }
 
             // Supposed to be wrapped in density but eh
@@ -132,11 +125,14 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density, int collisionLayer, int collisionMask)
         {
-            var fixture = new Fixture(body, shape) {
-                Density = density,
-                CollisionLayer = collisionLayer,
-                CollisionMask = collisionMask
+            var fixture = new Fixture(body, shape)
+            {
+                Density = density
             };
+            FixturesComponent? manager = null;
+
+            _physics.SetCollisionLayer(fixture, collisionLayer, manager);
+            _physics.SetCollisionMask(fixture, collisionMask, manager);
             CreateFixture(body, fixture);
         }
 
@@ -145,7 +141,7 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.Owner, ref manager))
+            if (!Resolve(body.Owner, ref manager, false))
             {
                 return null;
             }
@@ -210,15 +206,15 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
-            if (body.Broadphase != null)
+            if (body.CanCollide)
             {
-                _broadphaseSystem.DestroyProxies(body.Broadphase, fixture, xform.MapID);
+                _lookup.DestroyProxies(fixture, xform);
             }
 
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData(manager);
+                _physics.ResetMassData(body, manager);
                 Dirty(manager);
             }
         }
@@ -259,20 +255,7 @@ namespace Robust.Shared.Physics.Systems
 
                 // Make sure all the right stuff is set on the body
                 FixtureUpdate(component, body, false);
-
-                if (body.CanCollide)
-                {
-                    DebugTools.Assert(!_containers.IsEntityInContainer(uid));
-                    _broadphaseSystem.AddBody(body, component);
-                }
             }
-            /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
-            else
-            {
-                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponuid)}"
-            }
-            */
-
         }
 
         private void OnGetState(EntityUid uid, FixturesComponent component, ref ComponentGetState args)
@@ -371,7 +354,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (computeProperties)
             {
-                physics.ResetMassData(component);
+                _physics.ResetMassData(physics, component);
             }
         }
 

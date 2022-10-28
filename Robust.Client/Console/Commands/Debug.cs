@@ -179,7 +179,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = EntitySystem.Get<DebugDrawingSystem>();
+            var mgr = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugDrawingSystem>();
             mgr.DebugPositions = !mgr.DebugPositions;
         }
     }

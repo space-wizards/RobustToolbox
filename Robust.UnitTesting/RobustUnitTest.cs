@@ -5,17 +5,20 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Server.Containers;
+using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -106,11 +109,6 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MetaDataComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
-            {
-                compFactory.RegisterClass<EntityLookupComponent>();
-            }
-
             if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
             {
                 compFactory.RegisterClass<PhysicsMapComponent>();
@@ -124,11 +122,6 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
             {
                 compFactory.RegisterClass<FixturesComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
-            {
-                compFactory.RegisterClass<EntityLookupComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

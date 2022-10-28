@@ -1,6 +1,7 @@
 using Robust.Client.Debugging;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
@@ -17,7 +18,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var system = EntitySystem.Get<DebugPhysicsSystem>();
+            var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugPhysicsSystem>();
 
             switch (args[0])
             {

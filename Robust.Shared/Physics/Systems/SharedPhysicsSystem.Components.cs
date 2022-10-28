@@ -46,16 +46,17 @@ public partial class SharedPhysicsSystem
     {
         var xform = Transform(uid);
 
-        if (component.CanCollide && _containerSystem.IsEntityInContainer(uid))
+
+        if (component.CanCollide && (_containerSystem.IsEntityOrParentInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
             SetCanCollide(component, false, false);
         }
 
-        if (component._canCollide && xform.MapID != MapId.Nullspace)
+        if (component._canCollide)
         {
             if (component.BodyType != BodyType.Static)
             {
-                component.Awake = true;
+                SetAwake(component, true);
             }
         }
 
@@ -95,21 +96,21 @@ public partial class SharedPhysicsSystem
         if (args.Current is not PhysicsComponentState newState)
             return;
 
-        component.SleepingAllowed = newState.SleepingAllowed;
-        component.FixedRotation = newState.FixedRotation;
-        component.CanCollide = newState.CanCollide;
+        SetSleepingAllowed(component, newState.SleepingAllowed);
+        SetFixedRotation(component, newState.FixedRotation);
+        SetCanCollide(component, newState.CanCollide);
         component.BodyStatus = newState.Status;
 
         // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
         Dirty(component);
-        component.LinearVelocity = newState.LinearVelocity;
-        component.AngularVelocity = newState.AngularVelocity;
-        component.BodyType = newState.BodyType;
-        component.Friction = newState.Friction;
-        component.LinearDamping = newState.LinearDamping;
-        component.AngularDamping = newState.AngularDamping;
+        SetLinearVelocity(component, newState.LinearVelocity);
+        SetAngularVelocity(component, newState.AngularVelocity);
+        SetBodyType(component, newState.BodyType);
+        SetFriction(component, newState.Friction);
+        SetLinearDamping(component, newState.LinearDamping);
+        SetAngularDamping(component, newState.AngularDamping);
         component.Predict = false;
     }
 
@@ -376,7 +377,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (updateSleepTime)
-            body.SleepTime = 0.0f;
+            SetSleepTime(body, 0);
 
         Dirty(body);
     }
@@ -424,10 +425,12 @@ public partial class SharedPhysicsSystem
         if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
             return false;
 
+        // Need to do this before SetAwake to avoid double-changing it.
+        body._canCollide = value;
+
         if (!value)
             SetAwake(body, false);
 
-        body._canCollide = value;
         var ev = new CollisionChangeEvent(body, value);
         RaiseLocalEvent(ref ev);
 

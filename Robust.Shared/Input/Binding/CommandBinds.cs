@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Input.Binding
 {
@@ -35,7 +36,7 @@ namespace Robust.Shared.Input.Binding
         /// should usually be typeof(this) - same type as the calling class.</typeparam>
         public static void Unregister<TOwner>()
         {
-            if (EntitySystem.TryGet<SharedInputSystem>(out var inputSystem))
+            if (IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem<SharedInputSystem>(out var inputSystem))
             {
                 Unregister<TOwner>(inputSystem.BindRegistry);
             }
@@ -165,7 +166,7 @@ namespace Robust.Shared.Input.Binding
             /// should usually be typeof(this) - same type as the calling class.</typeparam>
             public CommandBinds Register<TOwner>()
             {
-                return Register<TOwner>(EntitySystem.Get<SharedInputSystem>().BindRegistry);
+                return Register<TOwner>(IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedInputSystem>().BindRegistry);
             }
         }
     }

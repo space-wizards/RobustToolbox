@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
+        [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
         private HashSet<ISpriteComponent> _manualUpdate = new();
@@ -73,20 +74,23 @@ namespace Robust.Client.GameObjects
             }
 
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            var spriteState = (frameTime, _manualUpdate);
 
             foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
+                var invMatrix = _transform.GetInvWorldMatrix(comp.Owner, xforms);
+                var bounds = invMatrix.TransformBox(pvsBounds);
 
-                comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in ComponentTreeEntry<SpriteComponent> value) =>
+                comp.SpriteTree.QueryAabb(ref spriteState, static (ref (
+                    float frameTime,
+                    HashSet<ISpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     if (value.Component.IsInert)
-                    {
                         return true;
-                    }
 
-                    if (!_manualUpdate.Contains(value.Component))
-                        value.Component.FrameUpdate(state);
+                    if (!tuple._manualUpdate.Contains(value.Component))
+                        value.Component.FrameUpdate(tuple.frameTime);
+
                     return true;
                 }, bounds, true);
             }

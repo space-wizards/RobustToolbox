@@ -1,0 +1,29 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Target
+    Name="OutOfSourceTreeResources"
+    Condition="'$(BuildPrefix)'!=''"
+    AfterTargets="AfterCompile"
+    Outputs="$(RobustBuildPrefix)\..\Resources;$(RobustBuildPrefix)\..\Schemas;$(ContentBuildPrefix)\..\Resources">
+    <ItemGroup>
+      <!--MSB3025 Copy task won't accept directory as input to symlink-->
+      <RobustResourcesPath Include="$(MSBuildThisFileDirectory)..\Resources\**\*"/>
+      <RobustSchemasPath Include="$(MSBuildThisFileDirectory)..\Schemas\**\*"/>
+      <ContentResourcesPath Include="$(MSBuildThisFileDirectory)..\..\Resources\**\*"/>
+    </ItemGroup>
+    <PropertyGroup Condition="'$(UseSymbolicLinksIfPossible)'==''">
+      <UseSymbolicLinksIfPossible>true</UseSymbolicLinksIfPossible>
+    </PropertyGroup>
+    <Copy
+      SourceFiles="@(RobustResourcesPath)"
+      DestinationFiles="@(RobustResourcesPath->'$(RobustBuildPrefix)\..\Resources\%(RecursiveDir)%(Filename)%(Extension)')"
+      UseSymbolicLinksIfPossible="$(UseSymbolicLinksIfPossible)"/>
+    <Copy
+      SourceFiles="@(RobustSchemasPath)"
+      DestinationFiles="@(RobustSchemasPath->'$(RobustBuildPrefix)\..\Schemas\%(RecursiveDir)%(Filename)%(Extension)')"
+      UseSymbolicLinksIfPossible="$(UseSymbolicLinksIfPossible)"/>
+    <Copy
+      SourceFiles="@(ContentResourcesPath)"
+      DestinationFiles="@(ContentResourcesPath->'$(ContentBuildPrefix)\..\Resources\%(RecursiveDir)%(Filename)%(Extension)')"
+      UseSymbolicLinksIfPossible="$(UseSymbolicLinksIfPossible)"/>
+  </Target>
+</Project>

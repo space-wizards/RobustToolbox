@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Common.props" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
       <IsPackable>false</IsPackable>
       <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-      <OutputPath>../bin/Benchmarks</OutputPath>
+      <OutputPath>$(RobustBuildPrefix)\Benchmarks</OutputPath>
       <OutputType>Exe</OutputType>
       <NoWarn>RA0003</NoWarn>
   </PropertyGroup>

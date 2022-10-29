@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Common.props" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -6,7 +7,7 @@
     <OutputType>WinExe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <NoWarn>NU1701</NoWarn>
-    <OutputPath>../bin/Client</OutputPath>
+    <OutputPath>$(RobustBuildPrefix)\Client</OutputPath>
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
   <ItemGroup>

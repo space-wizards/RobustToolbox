@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Common.props" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -51,4 +52,5 @@
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
+  <Import Project="..\MSBuild\Robust.OutOfSourceTree.targets" />
 </Project>

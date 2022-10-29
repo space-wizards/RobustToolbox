@@ -1,3 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Engine.props" />
+  <Import Project="..\MSBuild\Robust.Common.props" />
 </Project>

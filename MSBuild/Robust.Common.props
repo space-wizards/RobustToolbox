@@ -1,0 +1,10 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup Condition="'$(BuildPrefix)'==''">
+    <RobustBuildPrefix>..\bin</RobustBuildPrefix>
+    <ContentBuildPrefix>..\bin</ContentBuildPrefix>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BuildPrefix)'!=''">
+    <RobustBuildPrefix>$(BuildPrefix)\Content\RobustToolbox\bin</RobustBuildPrefix>
+    <ContentBuildPrefix>$(BuildPrefix)\Content\bin</ContentBuildPrefix>
+  </PropertyGroup>
+</Project>

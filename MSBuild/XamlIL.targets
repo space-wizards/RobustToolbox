@@ -27,9 +27,13 @@
   </PropertyGroup>
 
   <UsingTask
-    Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
+    Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true And $(BuildPrefix) == ''"
     TaskName="CompileRobustXamlTask"
     AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(RobustInjectorsConfiguration)\netstandard2.0\Robust.Client.Injectors.dll"/>
+  <UsingTask
+    Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true And $(BuildPrefix) != ''"
+    TaskName="CompileRobustXamlTask"
+    AssemblyFile="$(BuildPrefix)\Robust.Client.Injectors\bin\$(Configuration)\netstandard2.0\Robust.Client.Injectors.dll"/>
   <Target
     Name="CompileRobustXaml"
     Condition="Exists('@(IntermediateAssembly)')"

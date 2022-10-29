@@ -679,7 +679,7 @@ namespace Robust.Shared.GameObjects
             var invMatrix = InvLocalMatrix;
             var worldMatrix = LocalMatrix;
 
-            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            // By doing these all at once we can avoid multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
                 var xform = xformQuery.GetComponent(parent);

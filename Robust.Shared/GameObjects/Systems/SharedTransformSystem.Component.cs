@@ -494,10 +494,10 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == parent || !xformQuery.Resolve(parent, ref parentXform))
             return;
 
-        var invMatrix = GetInvWorldMatrix(parentXform, xformQuery);
+        var (_, parRot, parInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
         var (pos, rot) = GetWorldPositionRotation(xform, xformQuery);
-        var newPos = invMatrix.Transform(pos);
-        var newRot = xform._localRotation + rot - GetWorldRotation(parentXform, xformQuery);
+        var newPos = parInvMatrix.Transform(pos);
+        var newRot = rot - parRot;
 
         SetCoordinates(xform, new EntityCoordinates(parent, newPos), newRot, parentXform);
     }

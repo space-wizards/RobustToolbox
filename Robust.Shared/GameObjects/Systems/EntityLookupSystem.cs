@@ -150,23 +150,18 @@ namespace Robust.Shared.GameObjects
             return treeXform.InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
         }
 
-        internal void CreateProxies(Fixture fixture, Vector2 worldPos, Angle worldRot)
+        internal void CreateProxies(TransformComponent xform, Fixture fixture)
         {
-            // TODO: Grids on broadphasecomponent
-            if (_mapManager.IsGrid(fixture.Body.Owner))
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xform = xformQuery.GetComponent(fixture.Body.Owner);
 
             if (!TryComp(xform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException();
-            
-            if (!TryFindBroadphase(xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery, out var broadphase))
-                throw new InvalidOperationException();
 
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
             var mapTransform = new Transform(worldPos, worldRot);
+
             var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
             var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
@@ -175,28 +170,19 @@ namespace Robust.Shared.GameObjects
             AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
         }
 
-        internal void DestroyProxies(Fixture fixture, TransformComponent xform)
+        internal void DestroyProxies(Fixture fixture, TransformComponent xform, SharedPhysicsMapComponent physicsMap)
         {
-            if (_mapManager.IsGrid(fixture.Body.Owner))
-                return;
-
             if (fixture.ProxyCount == 0)
             {
                 Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(fixture.Body.Owner)} that already has no proxies?");
                 return;
             }
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-
-            if (!TryComp(xform.MapUid, out SharedPhysicsMapComponent? physMap))
-                throw new InvalidOperationException();
-            
-            if (!TryFindBroadphase(xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery, out var broadphase))
-                throw new InvalidOperationException();
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
 
             var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
-            DestroyProxies(fixture, tree, physMap.MoveBuffer);
+            DestroyProxies(fixture, tree, physicsMap.MoveBuffer);
         }
 
         #endregion

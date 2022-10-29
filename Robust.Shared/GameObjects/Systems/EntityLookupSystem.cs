@@ -84,7 +84,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(OnMove);
 
             SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
-            SubscribeLocalEvent<TransformComponent, CollisionChangeEvent>(OnPhysicsUpdate);
+            SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
         }
@@ -190,9 +190,10 @@ namespace Robust.Shared.GameObjects
 
         #region Entity events
 
-        private void OnPhysicsUpdate(EntityUid uid, TransformComponent xform, ref CollisionChangeEvent ev)
+        private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
-            UpdatePhysicsBroadphase(uid, xform, ev.Body);
+            var xform = Transform(ev.Body.Owner);
+            UpdatePhysicsBroadphase(ev.Body.Owner, xform, ev.Body);
 
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState

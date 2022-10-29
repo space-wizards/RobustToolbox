@@ -273,6 +273,7 @@ internal partial class MapManager
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
                 mapComp.WorldMap = actualId;
+                EntityManager.Dirty(mapComp);
                 EntityManager.InitializeComponents(newEnt);
                 EntityManager.StartComponents(newEnt);
                 Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt}");

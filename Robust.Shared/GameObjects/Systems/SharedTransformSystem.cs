@@ -103,7 +103,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (aabb.Contains(xform.LocalPosition))
-                    xform.AttachParent(mapTransform);
+                    SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 

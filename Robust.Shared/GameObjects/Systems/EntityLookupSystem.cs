@@ -128,7 +128,6 @@ namespace Robust.Shared.GameObjects
             // TODO: Only container children need updating so could manually do this slightly better.
             AddToEntityTree(lookup, xform, aabb, xformQuery, metaQuery, contQuery, lookupRotation);
         }
-
         #region DynamicTree
 
         private void OnMapChange(MapChangedEvent ev)
@@ -517,10 +516,6 @@ namespace Robust.Shared.GameObjects
         private void OnMove(ref MoveEvent args)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-
-            // TODO remove this check after #3368 gets merged
-            if (args.Component.LifeStage < ComponentLifeStage.Initialized && args.Component.GridUid == null)
-                _transform.SetGridId(args.Component, args.Component.FindGridEntityId(xformQuery));
 
             // Is this a grid?
             if (args.Component.GridUid == args.Sender)

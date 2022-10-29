@@ -173,7 +173,7 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(map2, false);
 
         // Act
-        xform.ParentUid = mapMan.GetMapEntityId(map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -201,7 +201,7 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(map2, true);
 
         // Act
-        xform.ParentUid = mapMan.GetMapEntityId(map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);

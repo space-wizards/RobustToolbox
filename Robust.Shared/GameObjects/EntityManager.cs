@@ -1,17 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -29,6 +27,10 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ISerializationManager _serManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
+
+        // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
+        // positions on spawn....
+        private SharedTransformSystem _xforms = default!;
 
         #endregion Dependencies
 
@@ -99,6 +101,7 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Initialize();
             Started = true;
             _eventBus.CalcOrdering();
+            _xforms = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
         }
 
         public virtual void Shutdown()
@@ -181,7 +184,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                GetComponent<TransformComponent>(newEntity).Coordinates = coordinates;
+                _xforms.SetCoordinates(GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;
@@ -210,13 +213,18 @@ namespace Robust.Shared.GameObjects
             if (mapXform == null)
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
-            transform.AttachParent(mapXform);
+            EntityCoordinates coords;
+            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
+            {
+                coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
+                _xforms.SetCoordinates(transform, coords, unanchor: false);
+            }
+            else
+            {
+                coords = new EntityCoordinates(mapEnt, coordinates.Position);
+                _xforms.SetCoordinates(transform, coords, null, mapXform);
+            }
 
-            // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
-            var oldAnchored = transform.Anchored;
-            transform.Anchored = false;
-            transform.WorldPosition = coordinates.Position;
-            transform.Anchored = oldAnchored;
             return newEntity;
         }
 

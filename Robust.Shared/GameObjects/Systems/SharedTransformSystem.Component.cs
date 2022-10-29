@@ -289,10 +289,6 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        /*// And I also hate this. Apparently entity lookups depend on this. They should use transform startup, and not rely on move.
-        var moveEv = new MoveEvent(uid, xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEv, true);*/
-
         // there should be no deferred events before startup has finished.
         DebugTools.Assert(xform._oldCoords == null && xform._oldLocalRotation == null);
 
@@ -390,6 +386,13 @@ public abstract partial class SharedTransformSystem
     public void SetCoordinates(TransformComponent xform, EntityCoordinates value, Angle? rotation = null, TransformComponent? newParent = null, bool unanchor = true)
     {
         // NOTE: This setter must be callable from before initialize.
+
+        if (xform.ParentUid == value.EntityId
+            && xform._localPosition.EqualsApprox(value.Position)
+            && (rotation == null || MathHelper.CloseTo(rotation.Value.Theta, xform._localRotation.Theta)))
+        {
+            return;
+        }
 
         var oldPosition = xform.Coordinates;
         var oldRotation = xform._localRotation;
@@ -564,6 +567,10 @@ public abstract partial class SharedTransformSystem
                         xform._anchored = false;
                     }
                 }
+            }
+            else
+            {
+                xform.Anchored = newState.Anchored;
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

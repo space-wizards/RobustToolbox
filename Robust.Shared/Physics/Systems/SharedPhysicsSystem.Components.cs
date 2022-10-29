@@ -229,7 +229,7 @@ public partial class SharedPhysicsSystem
         body.InvI = 0.0f;
         body._localCenter = Vector2.Zero;
 
-        if (!Resolve(body.Owner, ref fixtures))
+        if (!Resolve(body.Owner, ref fixtures, false))
             return;
 
         var localCenter = Vector2.Zero;

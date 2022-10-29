@@ -11,7 +11,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {

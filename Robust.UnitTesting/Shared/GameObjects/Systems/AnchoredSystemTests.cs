@@ -9,7 +9,6 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
-using TerraFX.Interop.Windows;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 

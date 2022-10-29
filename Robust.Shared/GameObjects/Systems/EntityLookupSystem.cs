@@ -10,7 +10,6 @@ using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -61,7 +60,6 @@ namespace Robust.Shared.GameObjects
     public sealed partial class EntityLookupSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 

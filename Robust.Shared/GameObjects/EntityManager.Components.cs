@@ -265,7 +265,7 @@ namespace Robust.Shared.GameObjects
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException("Entity is not valid.", nameof(uid));
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 

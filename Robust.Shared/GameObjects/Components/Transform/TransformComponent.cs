@@ -91,7 +91,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
-        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
+        public EntityUid? MapUid
+        {
+            get
+            {
+                var id = _mapManager.GetMapEntityId(MapID);
+                return id.IsValid() ? id : null;
+            }
+        }
 
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
@@ -872,7 +879,7 @@ namespace Robust.Shared.GameObjects
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
 
-        public bool ParentChanged => NewPosition.EntityId == OldPosition.EntityId;
+        public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.

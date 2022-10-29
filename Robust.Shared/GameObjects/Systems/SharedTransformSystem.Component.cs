@@ -929,6 +929,9 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
+        // Before making any changes to physics or transforms, remove from the current broadphase
+        _lookup.RemoveFromEntityTree(xform.Owner, xform, xformQuery);
+
         // Stop any active lerps
         xform._nextPosition = null;
         xform._nextRotation = null;

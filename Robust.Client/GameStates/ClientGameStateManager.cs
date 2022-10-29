@@ -28,6 +28,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.GameStates
 {
@@ -662,6 +663,7 @@ namespace Robust.Client.GameStates
 
             // Detach entities to null space
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
 
@@ -692,7 +694,7 @@ namespace Robust.Client.GameStates
                 foreach (var (entity, data) in toApply)
                 {
                     HandleEntityState(entity, _entities.EventBus, data.curState,
-                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
+                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs, lookupSys);
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
@@ -871,7 +873,8 @@ namespace Robust.Client.GameStates
         }
 
         private void HandleEntityState(EntityUid uid, IEventBus bus, EntityState? curState,
-            EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
+            EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs,
+            EntityLookupSystem lookup)
         {
             var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
@@ -970,6 +973,11 @@ namespace Robust.Client.GameStates
 #endif
                 }
             }
+
+            // It is possible this entity does not yet know that it is inside of a container, so this might be wasteful.
+            // Maybe it is better to move this outside of the apply-state loop?
+            if (enteringPvs)
+                lookup.AddToEntityTree(uid);
         }
 
         #region Debug Commands

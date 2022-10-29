@@ -980,7 +980,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
-            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: {rep}");
+            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
             return;
         }
 

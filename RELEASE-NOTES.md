@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
 
 ### Other
 
@@ -102,7 +102,7 @@ Template for new versions:
 
 * The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
 * Improved Box2Serializer
-* Removed uses IEnumerables from EntityLookupSystem. 
+* Removed uses IEnumerables from EntityLookupSystem.
 * Optimized client entity spawning by 15%.
 * Modified how the rendering tree handles entity movement.
 * Improved grid enumeration allocs.

@@ -73,6 +73,7 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
 
+            SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnTerminateBroadphase);
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
@@ -85,6 +86,15 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
+        }
+
+        private void OnTerminateBroadphase(EntityUid uid, BroadphaseComponent component, ref EntityTerminatingEvent args)
+        {
+            // The broadphase entity terminating and all of its children are about to get detached. Instead of updating
+            // the broad-phase as that happens, we will just remove it. In principle, some of the null-space checks
+            // already effectively stop that, but again someday the client might send grids to null-space and we can't
+            // use those anymore.
+            RemComp(uid, component);
         }
 
         public override void Shutdown()

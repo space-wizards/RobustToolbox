@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {
@@ -192,6 +193,12 @@ namespace Robust.Shared.GameObjects
         private void OnPhysicsUpdate(EntityUid uid, TransformComponent xform, ref CollisionChangeEvent ev)
         {
             UpdatePhysicsBroadphase(uid, xform, ev.Body);
+
+            // ensure that the cached broadphase is correct.
+            DebugTools.Assert(_timing.ApplyingState
+                || xform.Broadphase == null
+                || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
+                && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
         }
 
         private void OnBodyTypeChange(EntityUid uid, TransformComponent xform, ref PhysicsBodyTypeChangedEvent args)
@@ -226,7 +233,7 @@ namespace Robust.Shared.GameObjects
             // remove from the old broadphase
             var fixtures = Comp<FixturesComponent>(uid);
             if (old.CanCollide)
-                RemoveBroadTree(fixtures, broadphase, old.Static);
+                RemoveBroadTree(broadphase, fixtures, old.Static);
             else
                 (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
             
@@ -234,10 +241,10 @@ namespace Robust.Shared.GameObjects
             if (body.CanCollide)
                 AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);
             else
-                AddSundriesTree(uid, xform, broadphase, body.BodyType == BodyType.Static);
+                AddSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
         }
 
-        private void RemoveBroadTree(FixturesComponent manager, BroadphaseComponent lookup, bool staticBody)
+        private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
         {
             if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform))
             {
@@ -278,7 +285,7 @@ namespace Robust.Shared.GameObjects
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadphaseXform = xformQuery.GetComponent(broadUid);
 
-            if (!TryComp(broadUid, out SharedPhysicsMapComponent? physMap))
+            if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
             AddPhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
@@ -355,11 +362,11 @@ namespace Robust.Shared.GameObjects
             fixture.ProxyCount = count;
         }
 
-        private void AddSundriesTree(EntityUid uid, TransformComponent xform, BroadphaseComponent broadphase, bool staticBody, Box2? aabb = null)
+        private void AddSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
         {
             DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
-            DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, false, staticBody));
-            xform.Broadphase ??= new(broadphase.Owner, false, staticBody);
+            DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, false, staticBody));
+            xform.Broadphase ??= new(broadUid, false, staticBody);
             (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Add(uid, aabb);
         }
 
@@ -555,7 +562,7 @@ namespace Robust.Shared.GameObjects
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
                 var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
-                AddSundriesTree(uid, xform, broadphase, body?.BodyType == BodyType.Static, aabb);
+                AddSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
             }
             else
             {
@@ -651,7 +658,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 DebugTools.Assert(xform.Broadphase == new BroadphaseData(broadUid, body.CanCollide, body.BodyType == BodyType.Static));
-                RemoveBroadTree(fixturesQuery.GetComponent(uid), broadphase, body.BodyType == BodyType.Static);
+                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), body.BodyType == BodyType.Static);
             }
 
             xform.Broadphase = null;

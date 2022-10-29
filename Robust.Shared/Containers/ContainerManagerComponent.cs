@@ -6,6 +6,8 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -22,6 +24,7 @@ namespace Robust.Shared.Containers
     public sealed class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         [ViewVariables]
         [DataField("containers")]
@@ -131,30 +134,25 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public void ForceRemove(EntityUid entity)
-        {
-            foreach (var container in Containers.Values)
-            {
-                if (container.Contains(entity))
-                {
-                    container.ForceRemove(entity);
-                    return;
-                }
-            }
-        }
-
-        /// <inheritdoc />
         public void InternalContainerShutdown(IContainer container)
         {
             Containers.Remove(container.ID);
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid entity)
+        public bool Remove(EntityUid toremove,
+            TransformComponent? xform = null,
+            MetaDataComponent? meta = null,
+            bool reparent = true,
+            bool addToBroadphase = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null)
         {
             foreach (var containers in Containers.Values)
             {
-                if (containers.Contains(entity)) return containers.Remove(entity);
+                if (containers.Contains(toremove))
+                    return containers.Remove(toremove, _entMan, xform, meta, reparent, addToBroadphase, force, destination, localRotation);
             }
 
             return true; // If we don't contain the entity, it will always be removed

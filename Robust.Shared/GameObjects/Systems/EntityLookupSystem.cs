@@ -219,13 +219,13 @@ namespace Robust.Shared.GameObjects
 
             if (xform.Broadphase is not { } old)
                 return; // entity is not on any broadphase
-
+/*
             if (_timing.ApplyingState)
             {
                 _deferredUpdates.Add(uid);
                 return;
             }
-
+*/
             xform.Broadphase = null;
 
             if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
@@ -399,12 +399,13 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
         {
+/*
             if (_timing.ApplyingState)
             {
                 _deferredTreeChanges.Add(uid);
                 return;
             }
-
+*/
             if (!TryGetCurrentBroadphase(xform, out var oldBroadphase))
                 return; // If the entity was not already in a broadphase, parent changes will not automatically add it.
 
@@ -433,7 +434,7 @@ namespace Robust.Shared.GameObjects
                 if (!TryComp(oldBroadphaseXform.MapUid, out SharedPhysicsMapComponent? oldPhysMap))
                 {
                     throw new InvalidOperationException(
-                        $"Oldd broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(oldBroadphase.Owner)}");
+                        $"Old broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(oldBroadphase.Owner)}");
                 }
 
                 RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, oldBroadphaseXform, oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
@@ -468,12 +469,13 @@ namespace Robust.Shared.GameObjects
 
         public void FindAndAddToEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
+/*
             if (_timing.ApplyingState)
             {
                 _deferredAdditions.Add(uid);
                 return;
             }
-
+*/
             var xformQuery = GetEntityQuery<TransformComponent>();
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
@@ -490,12 +492,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void UpdateEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
+/*
             if (_timing.ApplyingState)
             {
                 _deferredUpdates.Add(uid);
                 return;
             }
-
+*/
             var xformQuery = GetEntityQuery<TransformComponent>();
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
@@ -599,12 +602,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
+/*
             if (_timing.ApplyingState)
             {
                 _deferredRemoval.Add(uid);
                 return;
             }
-
+*/
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
@@ -723,7 +727,7 @@ namespace Robust.Shared.GameObjects
             EntityQuery<TransformComponent> xformQuery,
             [NotNullWhen(true)] out BroadphaseComponent? broadphase)
         {
-            if (xform.MapID == MapId.Nullspace)
+            if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform, null, xformQuery))
             {
                 broadphase = null;
                 return false;

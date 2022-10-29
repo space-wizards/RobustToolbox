@@ -664,6 +664,7 @@ namespace Robust.Client.GameStates
             // Detach entities to null space
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
+            var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
@@ -694,6 +695,9 @@ namespace Robust.Client.GameStates
                 {
                     HandleEntityState(entity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
+
+                    if (data.EnteringPvs)
+                        lookupSys.FindAndAddToEntityTree(entity);
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
@@ -709,7 +713,7 @@ namespace Robust.Client.GameStates
             // Update entity trees.
             using (_prof.Group("Update entity trees"))
             {
-                var count = _entitySystemManager.GetEntitySystem<EntityLookupSystem>().ProcessDeferredUpdates();
+                var count = lookupSys.ProcessDeferredUpdates();
                 _prof.WriteValue("Updates", ProfData.Int32(count.Updates)); // update position in the same tree
                 _prof.WriteValue("Changes", ProfData.Int32(count.Changes)); // remove from one tree, add to another)
                 _prof.WriteValue("Insertions", ProfData.Int32(count.Insertions));
@@ -805,7 +809,7 @@ namespace Robust.Client.GameStates
                             (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                             containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            container.ForceRemove(ent, _entities, meta);
+                            container.Remove(ent, _entities, xform, meta, false, false, true);
                         }
 
                         meta._flags |= MetaDataFlags.Detached;

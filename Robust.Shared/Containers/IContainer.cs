@@ -123,7 +123,7 @@ namespace Robust.Shared.Containers
         /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
         /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
         /// container, the grid, or the map.</param>
-        /// <param name="destination">Optional final local rotation after removal. Avoids redundant move events.</param>
+        /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
         bool Remove(
             EntityUid toremove,
             IEntityManager? entMan = null,

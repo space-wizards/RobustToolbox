@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Containers
 {
@@ -22,12 +24,25 @@ namespace Robust.Shared.Containers
             where T : IContainer;
 
         /// <summary>
-        /// Attempts to remove <paramref name="entity" /> contained inside the owning entity,
-        /// finding the container containing it automatically, if it is actually contained.
+        /// Attempts to remove the entity from some container on this entity.
         /// </summary>
-        /// <param name="entity">The entity to remove.</param>
-        /// <returns>True if the entity was successfuly removed.</returns>
-        bool Remove(EntityUid entity);
+        /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
+        /// destination is not null</param>
+        /// <param name="addToBroadphase">If false, this entity will not get re-added to broadphases after removal
+        /// Useful if the entity is about to move or be re-inserted into another container.</param>
+        /// <param name="force">If true, this will not perform can-remove checks.</param>
+        /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
+        /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
+        /// container, the grid, or the map.</param>
+        /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
+        bool Remove(EntityUid toremove,
+            TransformComponent? xform = null,
+            MetaDataComponent? meta = null,
+            bool reparent = true,
+            bool addToBroadphase = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null);
 
         /// <summary>
         /// Gets the container with the specified ID.
@@ -62,8 +77,6 @@ namespace Robust.Shared.Containers
         bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out IContainer? container);
 
         bool ContainsEntity(EntityUid entity);
-
-        void ForceRemove(EntityUid entity);
 
         /// <summary>
         /// DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown" /> instead.

@@ -240,7 +240,7 @@ namespace Robust.Shared.Containers
             meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
 
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
-            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating);
+            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
             DebugTools.Assert(xform.Broadphase == null);
             DebugTools.Assert(!xform.Anchored);
 

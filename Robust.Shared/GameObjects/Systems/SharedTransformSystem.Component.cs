@@ -921,11 +921,10 @@ public abstract partial class SharedTransformSystem
     public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
     {
         var oldParent = xform._parent;
-
-        // Even though they may already be in nullspace we may want to deparent them anyway
         if (!oldParent.IsValid())
         {
             DebugTools.Assert(!xform.Anchored);
+            DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
             return;
         }
 
@@ -972,6 +971,7 @@ public abstract partial class SharedTransformSystem
         var ev = new MoveEvent(xform.Owner, oldPos, default, oldRot, default, xform, _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref ev, true);
         Dirty(xform);
+        DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
     }
     #endregion
 }

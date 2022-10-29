@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -101,15 +102,22 @@ namespace Robust.Shared.Containers
             return containerManager.ContainsEntity(containedUid);
         }
 
-        public void RemoveEntity(EntityUid uid, EntityUid containedUid, bool force = false, ContainerManagerComponent? containerManager = null)
+        public void RemoveEntity(
+            EntityUid uid,
+            EntityUid toremove,
+            ContainerManagerComponent? containerManager = null,
+            TransformComponent? containedXform = null,
+            MetaDataComponent? containedMeta = null,
+            bool reparent = true,
+            bool addToBroadphase = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
+            if (!Resolve(uid, ref containerManager) || !Resolve(toremove, ref containedMeta, ref containedXform))
                 return;
 
-            if (force)
-                containerManager.ForceRemove(containedUid);
-            else
-                containerManager.Remove(containedUid);
+            containerManager.Remove(toremove, containedXform, containedMeta, reparent, addToBroadphase, force, destination, localRotation);
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)
@@ -429,16 +437,11 @@ namespace Robust.Shared.Containers
 
         #endregion
 
-        // Eject entities from their parent container if the parent change is done by the transform only.
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
-            var oldParentEntity = message.OldParent;
-
-            if (oldParentEntity == null || !EntityManager.EntityExists(oldParentEntity!.Value))
-                return;
-
-            if (EntityManager.TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
-                containerManager.ForceRemove(message.Entity);
+            // Eject entities from their parent container if the parent change is done via setting the transform.
+            if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
+                containerManager.Remove(message.Entity, reparent: false, force: true);
         }
     }
 }

@@ -653,13 +653,15 @@ public sealed partial class EntityLookupSystem
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-
         var lookup = Comp<BroadphaseComponent>(grid.GridEntityId);
         var tileSize = grid.TileSize;
-
         var aabb = GetLocalBounds(gridIndices, tileSize);
-        var intersecting = new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(lookup, aabb, flags);
+    }
 
+    public HashSet<EntityUid> GetEntitiesIntersecting(BroadphaseComponent lookup, Box2 aabb, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
         var state = (lookup.SundriesTree._b2Tree, intersecting);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)

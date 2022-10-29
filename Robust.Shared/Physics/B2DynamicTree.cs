@@ -1112,7 +1112,6 @@ namespace Robust.Shared.Physics
             throw new InvalidOperationException(msg);
         }
 
-
         private IEnumerable<(Proxy, Node)> DebugAllocatedNodesEnumerable
         {
             get

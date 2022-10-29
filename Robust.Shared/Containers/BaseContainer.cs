@@ -207,6 +207,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(toremove));
             DebugTools.Assert(xform == null || xform.Owner == toremove);
+            DebugTools.Assert(entMan.GetComponent<MetaDataComponent>(Owner).EntityLifeStage < EntityLifeStage.Terminating);
 
             if (!CanRemove(toremove, entMan)) return false;
             InternalRemove(toremove, entMan, meta);

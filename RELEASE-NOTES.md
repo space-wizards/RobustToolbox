@@ -49,6 +49,12 @@ Template for new versions:
 
 *None yet*
 
+## 0.57.0.4
+
+### Bugfixes
+
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
+
 ## 0.57.0.2 and 0.57.0.3
 
 ### Bugfixes

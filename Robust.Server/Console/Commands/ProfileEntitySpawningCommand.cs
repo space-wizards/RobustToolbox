@@ -4,6 +4,7 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands;
 
@@ -39,6 +40,9 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
                 return;
         }
 
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
         MeasureProfiler.StartCollectingData();
 
         for (var i = 0; i < amount; i++)
@@ -47,7 +51,8 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
         }
 
         MeasureProfiler.SaveData();
-        shell.WriteLine($"Server: Profiled spawning {amount} entities");
+
+        shell.WriteLine($"Server: Profiled spawning {amount} entities in {stopwatch.Elapsed.TotalMilliseconds:N3} ms");
     }
 }
 #endif

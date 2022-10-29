@@ -164,17 +164,17 @@ def build_windows(skip_build: bool) -> None:
     # Cool we're done.
     client_zip.close()
 
-def build_macos(platform_name: str, skip_build: bool) -> None:
-    arch_directory_name = "osx-x64" if platform_name == PLATFORM_MACOS else "osx-arm64"
+def build_macos(publish_name: str, skip_build: bool) -> None:
+    arch_directory_name = "osx-x64" if publish_name == PLATFORM_MACOS else "osx-arm64"
 
-    print(Fore.GREEN + f"Building project for ${platform_name} (${arch_directory_name})..." + Style.RESET_ALL)
+    print(Fore.GREEN + f"Building project for {publish_name} ({arch_directory_name})..." + Style.RESET_ALL)
 
     if not skip_build:
         publish_client(arch_directory_name, "MacOS")
 
-    print(Fore.GREEN + f"Packaging ${platform_name} (${arch_directory_name}) client..." + Style.RESET_ALL)
+    print(Fore.GREEN + f"Packaging {publish_name} ({arch_directory_name}) client..." + Style.RESET_ALL)
     # Client has to go in an app bundle.
-    client_zip = zipfile.ZipFile(p("release", f"Robust.Client_${platform_name}.zip"), "a",
+    client_zip = zipfile.ZipFile(p("release", f"Robust.Client_{publish_name}.zip"), "a",
                                  compression=zipfile.ZIP_DEFLATED)
 
     contents = p("Space Station 14.app", "Contents", "Resources")

@@ -9,6 +9,7 @@ using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -60,9 +61,9 @@ namespace Robust.Shared.GameObjects
     public sealed partial class EntityLookupSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-
 
         /// <summary>
         /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
@@ -161,7 +162,7 @@ namespace Robust.Shared.GameObjects
 
             if (!TryComp(xform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException();
-
+            
             if (!TryFindBroadphase(xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery, out var broadphase))
                 throw new InvalidOperationException();
 
@@ -190,7 +191,7 @@ namespace Robust.Shared.GameObjects
 
             if (!TryComp(xform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException();
-
+            
             if (!TryFindBroadphase(xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery, out var broadphase))
                 throw new InvalidOperationException();
 
@@ -224,6 +225,12 @@ namespace Robust.Shared.GameObjects
 
             if (xform.Broadphase is not { } old)
                 return; // entity is not on any broadphase
+
+            if (_timing.ApplyingState)
+            {
+                _deferredUpdates.Add(uid);
+                return;
+            }
 
             xform.Broadphase = null;
 
@@ -377,7 +384,7 @@ namespace Robust.Shared.GameObjects
 
             // TODO can this just be done implicitly via transform startup?
             // or do things need to be in trees for other component startup logic?
-            AddToEntityTree(uid);
+            FindAndAddToEntityTree(uid);
         }
 
         private void OnMove(ref MoveEvent args)
@@ -398,6 +405,12 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredTreeChanges.Add(uid);
+                return;
+            }
+
             if (!TryGetCurrentBroadphase(xform, out var oldBroadphase))
                 return; // If the entity was not already in a broadphase, parent changes will not automatically add it.
 
@@ -438,8 +451,8 @@ namespace Robust.Shared.GameObjects
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();
 
-            var broadphaseXform = xformQuery.GetComponent(newBroadphase.Owner);
-            if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
+            var newBroadphaseXform = xformQuery.GetComponent(newBroadphase.Owner);
+            if (!TryComp(newBroadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
             {
                 throw new InvalidOperationException(
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
@@ -448,7 +461,7 @@ namespace Robust.Shared.GameObjects
             AddToEntityTree(
                 newBroadphase.Owner,
                 newBroadphase,
-                broadphaseXform,
+                newBroadphaseXform,
                 physMap,
                 uid,
                 xform,
@@ -459,8 +472,14 @@ namespace Robust.Shared.GameObjects
                 fixturesQuery);
         }
 
-        internal void AddToEntityTree(EntityUid uid, TransformComponent? xform = null)
+        public void FindAndAddToEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredAdditions.Add(uid);
+                return;
+            }
+
             var xformQuery = GetEntityQuery<TransformComponent>();
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
@@ -473,18 +492,24 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Variant of <see cref="AddToEntityTree(EntityUid, TransformComponent?)"/> that just re-adds the entity to the current tree (updates positions).
+        ///     Variant of <see cref="FindAndAddToEntityTree(EntityUid, TransformComponent?)"/> that just re-adds the entity to the current tree (updates positions).
         /// </summary>
-        internal void UpdateEntityTree(EntityUid uid, TransformComponent? xform = null)
+        public void UpdateEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredUpdates.Add(uid);
+                return;
+            }
+
             var xformQuery = GetEntityQuery<TransformComponent>();
             if (!xformQuery.Resolve(uid, ref xform))
                 return;
 
-            if (!TryGetCurrentBroadphase(xform, out var broadpase))
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
-            AddToEntityTree(broadpase, uid, xform, xformQuery);
+            AddToEntityTree(broadphase, uid, xform, xformQuery);
         }
 
         private void AddToEntityTree(
@@ -578,8 +603,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Recursively iterates through this entity's children and removes them from the BroadphaseComponent.
         /// </summary>
-        internal void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredRemoval.Add(uid);
+                return;
+            }
+
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
@@ -725,7 +756,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the AABB of an entity with the supplied position and angle. Tries to consider if the entity is in a container.
         /// </summary>
-        internal Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        public Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             // If we're in a container then we just use the container's bounds.
             if (_container.TryGetOuterContainer(uid, xform, out var container, xformQuery))
@@ -739,7 +770,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the AABB of an entity with the supplied position and angle without considering containers.
         /// </summary>
-        private Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
+        public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
             if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
             {

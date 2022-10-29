@@ -271,7 +271,7 @@ namespace Robust.Shared.Containers
             if (addToBroadphase)
             {
                 // Container ECS when.
-                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().AddToEntityTree(toRemove, xform);
+                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform);
             }
 
             // Raise container events (after re-parenting and internal remove).

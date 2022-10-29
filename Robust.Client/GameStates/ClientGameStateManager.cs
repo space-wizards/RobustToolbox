@@ -663,7 +663,6 @@ namespace Robust.Client.GameStates
 
             // Detach entities to null space
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-            var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
 
@@ -694,7 +693,7 @@ namespace Robust.Client.GameStates
                 foreach (var (entity, data) in toApply)
                 {
                     HandleEntityState(entity, _entities.EventBus, data.curState,
-                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs, lookupSys);
+                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
@@ -706,6 +705,16 @@ namespace Robust.Client.GameStates
             // Initialize and start the newly created entities.
             if (toCreate.Count > 0)
                 InitializeAndStart(toCreate);
+
+            // Update entity trees.
+            using (_prof.Group("Update entity trees"))
+            {
+                var count = _entitySystemManager.GetEntitySystem<EntityLookupSystem>().ProcessDeferredUpdates();
+                _prof.WriteValue("Updates", ProfData.Int32(count.Updates)); // update position in the same tree
+                _prof.WriteValue("Changes", ProfData.Int32(count.Changes)); // remove from one tree, add to another)
+                _prof.WriteValue("Insertions", ProfData.Int32(count.Insertions));
+                _prof.WriteValue("Removals", ProfData.Int32(count.Removal));
+            }
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
@@ -873,8 +882,7 @@ namespace Robust.Client.GameStates
         }
 
         private void HandleEntityState(EntityUid uid, IEventBus bus, EntityState? curState,
-            EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs,
-            EntityLookupSystem lookup)
+            EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
         {
             var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
@@ -973,11 +981,6 @@ namespace Robust.Client.GameStates
 #endif
                 }
             }
-
-            // It is possible this entity does not yet know that it is inside of a container, so this might be wasteful.
-            // Maybe it is better to move this outside of the apply-state loop?
-            if (enteringPvs)
-                lookup.AddToEntityTree(uid);
         }
 
         #region Debug Commands

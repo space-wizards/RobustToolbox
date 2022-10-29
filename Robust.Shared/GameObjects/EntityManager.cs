@@ -338,8 +338,6 @@ namespace Robust.Shared.GameObjects
             try
             {
                 var ev = new EntityTerminatingEvent();
-                // TODO: consider making this a meta-data flag?
-                // veeeery few entities make use of this event.
                 EventBus.RaiseLocalEvent(uid, ref ev);
             }
             catch (Exception e)

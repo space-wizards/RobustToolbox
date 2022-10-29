@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -11,6 +8,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -29,6 +29,15 @@ namespace Robust.Shared.GameObjects
         [DataField("noRot")] internal bool _noLocalRotation;
         [DataField("anchored")]
         internal bool _anchored;
+
+        /// <summary>
+        ///     The broadphase that this entity is currently stored on, if any.
+        /// </summary>
+        /// <remarks>
+        ///     Maybe this should be moved to its own component eventually, but at least currently comps are not structs
+        ///     and this data is required whenever any entity moves, so this will just save a component lookup.
+        /// </remarks>
+        internal BroadphaseData? Broadphase;
 
         internal bool MatricesDirty = false;
         private Matrix3 _localMatrix = Matrix3.Identity;
@@ -828,5 +837,13 @@ namespace Robust.Shared.GameObjects
             Grid = grid;
             TilePos = tilePos;
         }
+    }
+
+    /// <summary>
+    ///     Data used to store information about the broad-phase that any given entity is currently on.
+    /// </summary>
+    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
+    {
+        // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }
 }

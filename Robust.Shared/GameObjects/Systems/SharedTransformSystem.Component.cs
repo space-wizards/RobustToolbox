@@ -96,14 +96,16 @@ public abstract partial class SharedTransformSystem
             && AnchorEntity(xform, grid, grid.TileIndicesFor(xform.Coordinates));
     }
 
-    public void Unanchor(TransformComponent xform)
+    public void Unanchor(TransformComponent xform, bool setPhysics = true)
     {
         if (!xform._anchored)
             return;
 
         Dirty(xform);
         xform._anchored = false;
-        _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
+
+        if (setPhysics)
+            _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
 
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;

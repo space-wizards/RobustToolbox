@@ -18,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls;
 /// </summary>
 public sealed class TextEdit : Control
 {
+    [Dependency] private readonly IClipboardManager _clipboard = null!;
+
     public const string StylePropertyStyleBox = "stylebox";
     public const string StylePropertyCursorColor = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
@@ -51,6 +53,8 @@ public sealed class TextEdit : Control
 
     public TextEdit()
     {
+        IoCManager.InjectDependencies(this);
+
         AddChild(_renderBox = new RenderBox(this));
 
         CanKeyboardFocus = true;
@@ -102,6 +106,8 @@ public sealed class TextEdit : Control
 
     // TODO: cache
     public int TextLength => (int)Rope.CalcTotalLength(TextRope);
+
+    public System.Range SelectionRange => (SelectionLower.Index)..(SelectionUpper.Index);
 
     private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
     {
@@ -259,6 +265,54 @@ public sealed class TextEdit : Control
             InvalidateHorizontalCursorPos();
 
             args.Handle();
+        }
+        else if (args.Function == EngineKeyFunctions.TextCopy)
+        {
+            var range = SelectionRange;
+            var text = Rope.CollapseSubstring(TextRope, range);
+            if (text.Length != 0)
+            {
+                _clipboard.SetText(text);
+            }
+
+            args.Handle();
+        }
+        else if (args.Function == EngineKeyFunctions.TextCut)
+        {
+            if (Editable || SelectionLower != SelectionUpper)
+            {
+                var range = SelectionRange;
+                var text = Rope.CollapseSubstring(TextRope, range);
+                if (text.Length != 0)
+                {
+                    _clipboard.SetText(text);
+                }
+
+                InsertAtCursor("");
+            }
+
+            args.Handle();
+        }
+        else if (args.Function == EngineKeyFunctions.TextPaste)
+        {
+            if (Editable)
+            {
+                async void DoPaste()
+                {
+                    var text = await _clipboard.GetText();
+                    InsertAtCursor(text);
+                }
+
+                DoPaste();
+            }
+
+            args.Handle();
+        }
+        else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+        {
+            ReleaseKeyboardFocus();
+            args.Handle();
+            return;
         }
 
         // Reset this so the cursor is always visible immediately after a keybind is pressed.

@@ -259,12 +259,13 @@ public sealed partial class SerializationManager
             return RegisterSerializer(type, CreateSerializer(type));
         }
 
+        //todo paul serv3 is there a better way than comparing names here?
         private void RegisterSerializerInterface(Type type)
         {
             if (!type.IsGenericType)
                 throw new InvalidOperationException();
             var genericTypeNode = typeof(BaseSerializerInterfaces.ITypeNodeInterface<,>);
-            var genericNodeInterface = typeof(BaseSerializerInterfaces.ITypeInterface<>);
+            var genericType = typeof(BaseSerializerInterfaces.ITypeInterface<>);
             var genericParams = type.GetGenericArguments();
             foreach (var @interface in type.GetInterfaces())
             {
@@ -274,20 +275,20 @@ public sealed partial class SerializationManager
                     var genericInterfaceParams = genericInterface.GetGenericArguments();
                     for (int i = 0; i < genericParams.Length; i++)
                     {
-                        if (genericParams[i] != genericInterfaceParams[i])
+                        if (genericParams[i].Name != genericInterfaceParams[i].Name)
                             throw new InvalidOperationException();
                     }
-                    _typeInterfaces.Add(type);
+                    _typeNodeInterfaces.Add(type);
                 }
-                else if (genericInterface.HasSameMetadataDefinitionAs(genericNodeInterface))
+                else if (genericInterface.HasSameMetadataDefinitionAs(genericType))
                 {
                     var genericInterfaceParams = genericInterface.GetGenericArguments();
                     for (int i = 0; i < genericParams.Length; i++)
                     {
-                        if (genericParams[i] != genericInterfaceParams[i])
+                        if (genericParams[i].Name != genericInterfaceParams[i].Name)
                             throw new InvalidOperationException();
                     }
-                    _typeNodeInterfaces.Add(type);
+                    _typeInterfaces.Add(type);
                 }
             }
         }

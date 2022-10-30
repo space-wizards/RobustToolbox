@@ -89,6 +89,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public EntityUid CreateNewMapEntity(MapId mapId)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif

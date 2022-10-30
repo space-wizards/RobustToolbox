@@ -377,15 +377,12 @@ namespace Robust.Shared.GameObjects
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
             if (transform.ParentUid != EntityUid.Invalid)
             {
-                    xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
-
+                xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
             }
 
             foreach (var child in transform._children)
             {
-
-                    RecursiveDeleteEntity(metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
-
+                RecursiveDeleteEntity(metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
             }
 
             if (transform._children.Count != 0)

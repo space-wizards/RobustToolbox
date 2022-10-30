@@ -146,9 +146,9 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
             DebugTools.Assert(transform.LocalRotation == Angle.Zero);
             DebugTools.Assert(transform.Broadphase == null);
-            DebugTools.Assert(!physicsQuery.TryGetComponent(toInsert, out var phys) || !phys.Awake);
+            DebugTools.Assert(!physicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide));
 
-            Manager.Dirty(entMan);
+            entMan.Dirty(Manager);
             return true;
         }
 
@@ -244,17 +244,17 @@ namespace Robust.Shared.Containers
             if (!force && !CanRemove(toRemove, entMan))
                 return false;
 
-            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
-            DebugTools.Assert(xform.Broadphase == null);
-            DebugTools.Assert(!xform.Anchored);
-            DebugTools.Assert(!(entMan.GetComponentOrNull<PhysicsComponent>(toRemove)?.CanCollide ?? false));
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
-
             if (force && !Contains(toRemove))
             {
                 DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
                 return false;
             }
+
+            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
+            DebugTools.Assert(xform.Broadphase == null);
+            DebugTools.Assert(!xform.Anchored);
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
+            DebugTools.Assert(!entMan.TryGetComponent(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
 
             // Unset flag (before parent change events are raised).
             meta.Flags &= ~MetaDataFlags.InContainer;
@@ -287,7 +287,7 @@ namespace Robust.Shared.Containers
             entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toRemove, this), true);
             entMan.EventBus.RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, this), false);
 
-            Manager.Dirty(entMan);
+            entMan.Dirty(Manager);
             return true;
         }
 
@@ -327,10 +327,10 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public void Shutdown(IEntityManager? entMan = null)
         {
-            Manager.Containers.Remove(ID);
-            Deleted = true;
             IoCManager.Resolve(ref entMan);
             InternalShutdown(entMan);
+            Manager.Containers.Remove(ID);
+            Deleted = true;
         }
 
         /// <inheritdoc />

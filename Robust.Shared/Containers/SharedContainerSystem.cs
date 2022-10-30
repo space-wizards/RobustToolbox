@@ -439,7 +439,8 @@ namespace Robust.Shared.Containers
 
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
-            // TODO this should check metadata flags.
+            if ((MetaData(message.Entity).Flags & MetaDataFlags.InContainer) == 0)
+                return;
 
             // Eject entities from their parent container if the parent change is done via setting the transform.
             if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))

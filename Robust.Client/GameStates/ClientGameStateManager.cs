@@ -330,15 +330,6 @@ namespace Robust.Client.GameStates
                 return;
             }
 
-            // Update entity trees.
-            using (_prof.Group("Update entity trees"))
-            {
-                var counts = _entitySystemManager.GetEntitySystem<EntityLookupSystem>().ProcessDeferredUpdates();
-                _prof.WriteValue("Updates", ProfData.Int32(counts.Updates)); // update position in the same tree
-                _prof.WriteValue("Changes", ProfData.Int32(counts.Changes)); // remove from one tree, add to another)
-                _prof.WriteValue("Removals", ProfData.Int32(counts.Removals));
-            }
-
             // remove old pending inputs
             while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedInput)
             {

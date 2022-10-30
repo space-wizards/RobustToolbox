@@ -49,6 +49,12 @@ Template for new versions:
 
 *None yet*
 
+## 0.58.1.0
+
+### Other
+
+* Physics collision changed and body type changed events no longer get raised before initialisation
+
 ## 0.58.0.0
 
 ### Breaking changes

@@ -204,7 +204,7 @@ namespace Robust.Shared.Physics.Systems
                     physicsMap.ContactManager.Destroy(contact);
                 }
 
-                if (body.CanCollide)
+                if (body.CanCollide && xform.GridUid != xform.Owner)
                 {
                     _lookup.DestroyProxies(fixture, xform, physicsMap);
                 }

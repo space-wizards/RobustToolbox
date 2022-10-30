@@ -846,6 +846,9 @@ public sealed class TextEdit : Control
 
             var count = 0;
 
+            var selectionLower = _master.SelectionLower;
+            var selectionUpper = _master.SelectionUpper;
+
             int? selectStartPos = null;
             int? selectEndPos = null;
             var selecting = false;
@@ -922,15 +925,13 @@ public sealed class TextEdit : Control
                         Color.White);
                 }
 
-                if (_master.SelectionLower.Index == count
-                    && _master.SelectionLower.Bias == bias)
+                if (selectionLower.Index == count && selectionLower.Bias == bias)
                 {
                     selecting = true;
                     selectStartPos = (int)baseLine.X;
                 }
 
-                if (_master.SelectionUpper.Index == count
-                    & _master.SelectionUpper.Bias == bias)
+                if (selectionUpper.Index == count & selectionUpper.Bias == bias)
                 {
                     selecting = false;
                     selectEndPos = (int)baseLine.X;

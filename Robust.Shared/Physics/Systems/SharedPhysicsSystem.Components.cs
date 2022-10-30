@@ -353,10 +353,10 @@ public partial class SharedPhysicsSystem
 
     public void SetAwake(PhysicsComponent body, bool value, bool updateSleepTime = true)
     {
-        if (body._awake == value || !body.CanCollide)
+        if (body._awake == value)
             return;
-
-        if (value && body.BodyType == BodyType.Static)
+        
+        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
             return;
 
         body._awake = value;

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -9,6 +10,8 @@ namespace Robust.Shared.Containers
 {
     public abstract class SharedContainerSystem : EntitySystem
     {
+        [Dependency] private readonly SharedTransformSystem _xforms = default!;
+
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -364,11 +367,16 @@ namespace Robust.Shared.Containers
                 else
                     container.Remove(entity);
 
-                if (moveTo.HasValue)
-                    Transform(entity).Coordinates = moveTo.Value;
+                if (moveTo.HasValue || attachToGridOrMap)
+                {
+                    var xform = Transform(entity);
 
-                if (attachToGridOrMap)
-                    Transform(entity).AttachToGridOrMap();
+                    if (moveTo.HasValue)
+                        _xforms.SetCoordinates(xform, moveTo.Value);
+
+                    if (attachToGridOrMap)
+                        xform.AttachToGridOrMap();
+                }
             }
         }
 
@@ -387,8 +395,8 @@ namespace Robust.Shared.Containers
 
         public void AttachParentToContainerOrGrid(TransformComponent transform)
         {
-            if (transform.Parent == null
-                || !TryGetContainingContainer(transform.Parent.Owner, out var container)
+            if (!transform.ParentUid.IsValid()
+                || !TryGetContainingContainer(transform.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
                 transform.AttachToGridOrMap();
         }
@@ -397,7 +405,7 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (Transform(container.Owner).Parent != null
+            if (Transform(container.Owner).ParentUid.IsValid()
                 && TryGetContainingContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 

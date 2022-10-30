@@ -47,7 +47,7 @@ public partial class SharedPhysicsSystem
         var xform = Transform(uid);
 
 
-        if (component.CanCollide && (_containerSystem.IsEntityInContainer(uid) || xform.MapID == MapId.Nullspace))
+        if (component.CanCollide && (_containerSystem.IsEntityOrParentInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
             SetCanCollide(component, false, false);
         }
@@ -229,7 +229,7 @@ public partial class SharedPhysicsSystem
         body.InvI = 0.0f;
         body._localCenter = Vector2.Zero;
 
-        if (!Resolve(body.Owner, ref fixtures))
+        if (!Resolve(body.Owner, ref fixtures, false))
             return;
 
         var localCenter = Vector2.Zero;
@@ -380,6 +380,12 @@ public partial class SharedPhysicsSystem
             SetSleepTime(body, 0);
 
         Dirty(body);
+    }
+
+    public void TrySetBodyType(EntityUid uid, BodyType value)
+    {
+        if (TryComp(uid, out PhysicsComponent? body))
+            SetBodyType(body, value);
     }
 
     public void SetBodyType(PhysicsComponent body, BodyType value)

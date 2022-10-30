@@ -53,6 +53,16 @@ public sealed partial class EntityLookupSystem
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in EntityUid value) =>
+                {
+                    state.Add(value);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree.QueryAabb(ref intersecting,
@@ -97,6 +107,16 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> state, in EntityUid value) =>
+                {
+                    state.Add(value);
+                    return true;
+                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+        
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree.QueryAabb(ref intersecting,
@@ -131,11 +151,23 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & LookupFlags.Dynamic) != 0x0)
+        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
                 if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
+
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+            {
+                if (tuple.ignored == value)
                     return true;
 
                 tuple.found = true;
@@ -189,6 +221,18 @@ public sealed partial class EntityLookupSystem
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
                 if (tuple.ignored == value.Fixture.Body.Owner)
+                    return true;
+
+                tuple.found = true;
+                return false;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
+            {
+                if (tuple.ignored == value)
                     return true;
 
                 tuple.found = true;
@@ -580,6 +624,15 @@ public sealed partial class EntityLookupSystem
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
 
+            if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+            {
+                lookup.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+                {
+                    intersecting.Add(value);
+                    return true;
+                }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
             if ((flags & LookupFlags.Sundries) != 0x0)
             {
                 lookup.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
@@ -600,13 +653,15 @@ public sealed partial class EntityLookupSystem
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-
         var lookup = Comp<BroadphaseComponent>(grid.GridEntityId);
         var tileSize = grid.TileSize;
-
         var aabb = GetLocalBounds(gridIndices, tileSize);
-        var intersecting = new HashSet<EntityUid>();
+        return GetEntitiesIntersecting(lookup, aabb, flags);
+    }
 
+    public HashSet<EntityUid> GetEntitiesIntersecting(BroadphaseComponent lookup, Box2 aabb, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
         var state = (lookup.SundriesTree._b2Tree, intersecting);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -627,6 +682,15 @@ public sealed partial class EntityLookupSystem
                     tuple.intersecting.Add(value.Fixture.Body.Owner);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
+            {
+                tuple.intersecting.Add(tuple._b2Tree.GetUserData(proxy));
+                return true;
+            }, aabb);
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -706,6 +770,15 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            component.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+            {
+                intersecting.Add(value);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             component.SundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
@@ -738,6 +811,15 @@ public sealed partial class EntityLookupSystem
             component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
                 intersecting.Add(value.Fixture.Body.Owner);
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            component.StaticSundriesTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in EntityUid value) =>
+            {
+                intersecting.Add(value);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }

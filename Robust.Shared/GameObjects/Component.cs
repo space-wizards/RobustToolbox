@@ -222,6 +222,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete]
         public void Dirty(IEntityManager? entManager = null)
         {
             IoCManager.Resolve(ref entManager);

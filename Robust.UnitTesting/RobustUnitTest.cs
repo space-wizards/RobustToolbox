@@ -85,17 +85,30 @@ namespace Robust.UnitTesting
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
             // and it was like this when I found it.
-            systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
-            systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+
+            systems.LoadExtraSystemType<SharedGridTraversalSystem>();
+            systems.LoadExtraSystemType<FixtureSystem>();
 
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
+                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
             }
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
                 systems.LoadExtraSystemType<PVSSystem>();
+                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<BroadPhaseSystem>();
+                systems.LoadExtraSystemType<JointSystem>();
+                systems.LoadExtraSystemType<PhysicsSystem>();
+                systems.LoadExtraSystemType<DebugRayDrawingSystem>();
             }
 
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -122,6 +135,11 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
             {
                 compFactory.RegisterClass<FixturesComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
+            {
+                compFactory.RegisterClass<JointComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

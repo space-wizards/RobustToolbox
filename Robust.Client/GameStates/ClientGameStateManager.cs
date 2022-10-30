@@ -330,6 +330,15 @@ namespace Robust.Client.GameStates
                 return;
             }
 
+            // Update entity trees.
+            using (_prof.Group("Update entity trees"))
+            {
+                var counts = _entitySystemManager.GetEntitySystem<EntityLookupSystem>().ProcessDeferredUpdates();
+                _prof.WriteValue("Updates", ProfData.Int32(counts.Updates)); // update position in the same tree
+                _prof.WriteValue("Changes", ProfData.Int32(counts.Changes)); // remove from one tree, add to another)
+                _prof.WriteValue("Removals", ProfData.Int32(counts.Removals));
+            }
+
             // remove old pending inputs
             while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedInput)
             {
@@ -709,16 +718,6 @@ namespace Robust.Client.GameStates
             // Initialize and start the newly created entities.
             if (toCreate.Count > 0)
                 InitializeAndStart(toCreate);
-
-            // Update entity trees.
-            using (_prof.Group("Update entity trees"))
-            {
-                var count = lookupSys.ProcessDeferredUpdates();
-                _prof.WriteValue("Updates", ProfData.Int32(count.Updates)); // update position in the same tree
-                _prof.WriteValue("Changes", ProfData.Int32(count.Changes)); // remove from one tree, add to another)
-                _prof.WriteValue("Insertions", ProfData.Int32(count.Insertions));
-                _prof.WriteValue("Removals", ProfData.Int32(count.Removal));
-            }
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));

@@ -1,11 +1,10 @@
 using Robust.Shared.Containers;
+using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Robust.Shared.GameObjects;
 
@@ -13,23 +12,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
 {
     // This logic could just be client-side but I CBF creating client/sever variants. The server should never run this code anyways.
 
-    private readonly HashSet<EntityUid> _deferredUpdates = new();
-    private readonly HashSet<EntityUid> _deferredTreeChanges = new();
-    private readonly HashSet<EntityUid> _deferredAdditions = new();
-    private readonly HashSet<EntityUid> _deferredRemoval = new();
+    private readonly HashSet<EntityUid> _deferredBroadChanges = new(); // update broadphase (or just tree)
+    private readonly HashSet<EntityUid> _deferredRemoval = new(); // remove from a broadphase
+    private readonly HashSet<EntityUid> _deferredUpdates = new(); // Update position
 
-    public (int Updates, int Changes, int Insertions, int Removal) ProcessDeferredUpdates()
+    public (int Updates, int Changes, int Removals) ProcessDeferredUpdates()
     {
-        _deferredUpdates.ExceptWith(_deferredTreeChanges);
-        _deferredUpdates.ExceptWith(_deferredAdditions);
+        _deferredRemoval.ExceptWith(_deferredBroadChanges);
+        _deferredUpdates.ExceptWith(_deferredBroadChanges);
         _deferredUpdates.ExceptWith(_deferredRemoval);
-
-        _deferredTreeChanges.UnionWith(_deferredAdditions.Intersect(_deferredRemoval));
-        _deferredAdditions.ExceptWith(_deferredTreeChanges);
-        _deferredRemoval.ExceptWith(_deferredTreeChanges);
-
-        DebugTools.Assert(_deferredUpdates.Intersect(_deferredAdditions).Count() == 0);
-        DebugTools.Assert(_deferredTreeChanges.Intersect(_deferredAdditions).Count() == 0);
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -39,18 +30,23 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
         var updates = _deferredUpdates.Count;
-        var changes = _deferredTreeChanges.Count;
-        var insertions = _deferredAdditions.Count;
-        var removal = _deferredRemoval.Count;
+        var changes = _deferredBroadChanges.Count;
+        var removals = _deferredRemoval.Count;
         try
         {
             foreach (var uid in _deferredUpdates)
             {
-                var xform = xformQuery.GetComponent(uid);
+                if (!xformQuery.TryGetComponent(uid, out var xform))
+                    continue;
+
                 if (!TryGetCurrentBroadphase(xform, out var broadphase))
                     continue;
 
                 var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
+
+                if (broadphaseXform.MapID != MapId.Nullspace)
+                    continue;
+
                 if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 {
                     throw new InvalidOperationException(
@@ -72,24 +68,31 @@ public sealed partial class EntityLookupSystem : EntitySystem
                     fixturesQuery);
             }
 
-            foreach (var uid in _deferredTreeChanges)
+            foreach (var uid in _deferredBroadChanges)
             {
-                var xform = xformQuery.GetComponent(uid);
-                if (!TryGetCurrentBroadphase(xform, out var oldBroadphase))
+                if (!xformQuery.TryGetComponent(uid, out var xform))
                     continue;
 
+                TryGetCurrentBroadphase(xform, out var oldBroadphase);
+
+                // TODO separate change-tree from change-broadphase
+                // i.e., if just changing can-collide, we can avoid this call altogether.
                 TryFindBroadphase(xform, broadQuery, xformQuery, out var newBroadphase);
 
                 if (oldBroadphase != null && oldBroadphase != newBroadphase)
                 {
                     var oldBroadphaseXform = xformQuery.GetComponent(oldBroadphase.Owner);
-                    if (!TryComp(oldBroadphaseXform.MapUid, out SharedPhysicsMapComponent? oldPhysMap))
-                    {
-                        throw new InvalidOperationException(
-                            $"Oldd broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(oldBroadphase.Owner)}");
-                    }
 
-                    RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, oldBroadphaseXform, oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+                    if (oldBroadphaseXform.MapID != MapId.Nullspace)
+                    {
+                        if (!TryComp(oldBroadphaseXform.MapUid, out SharedPhysicsMapComponent? oldPhysMap))
+                        {
+                            throw new InvalidOperationException(
+                                $"Oldd broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(oldBroadphase.Owner)}");
+                        }
+
+                        RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, oldBroadphaseXform, oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+                    }
                 }
 
                 if (newBroadphase == null)
@@ -116,40 +119,18 @@ public sealed partial class EntityLookupSystem : EntitySystem
                     fixturesQuery);
             }
 
-            foreach (var uid in _deferredAdditions)
-            {
-                var xform = xformQuery.GetComponent(uid);
-                if (!TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
-                    continue;
-
-                var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
-                if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
-                {
-                    throw new InvalidOperationException(
-                        $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
-                }
-
-                AddToEntityTree(
-                    broadphase.Owner,
-                    broadphase,
-                    broadphaseXform,
-                    physMap,
-                    uid,
-                    xform,
-                    xformQuery,
-                    metaQuery,
-                    contQuery,
-                    physicsQuery,
-                    fixturesQuery);
-            }
-
             foreach (var uid in _deferredRemoval)
             {
-                var xform = xformQuery.GetComponent(uid);
+                if (!xformQuery.TryGetComponent(uid, out var xform))
+                    continue;
+
                 if (!TryGetCurrentBroadphase(xform, out var broadphase))
                     continue;
 
                 var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
+                if (broadphaseXform.MapID != MapId.Nullspace)
+                    continue;
+
                 if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 {
                     throw new InvalidOperationException(
@@ -161,17 +142,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
         }
         catch
         {
-            _deferredTreeChanges.Clear();
-            _deferredAdditions.Clear();
+            _deferredBroadChanges.Clear();
             _deferredUpdates.Clear();
             _deferredRemoval.Clear();
             throw;
         }
 
-        _deferredTreeChanges.Clear();
-        _deferredAdditions.Clear();
+        _deferredBroadChanges.Clear();
         _deferredUpdates.Clear();
         _deferredRemoval.Clear();
-        return (updates, changes, insertions, removal);
+        return (updates, changes, removals);
     }
 }

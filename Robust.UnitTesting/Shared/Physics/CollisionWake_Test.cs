@@ -87,7 +87,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(false));
 
-                xform.Coordinates = Vector2.One * 2f;
+                xform.LocalPosition = Vector2.One * 2f;
                 xform.AttachParent(mapManager.GetMapEntityId(mapId));
             });
 

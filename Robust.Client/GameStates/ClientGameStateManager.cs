@@ -28,7 +28,6 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.GameStates
 {

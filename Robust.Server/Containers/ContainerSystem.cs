@@ -1,38 +1,15 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
-namespace Robust.Server.Containers;
-
-public sealed class ContainerSystem : SharedContainerSystem
+namespace Robust.Server.Containers
 {
-
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-
-    public override void Initialize()
+    public sealed class ContainerSystem : SharedContainerSystem
     {
-        base.Initialize();
-        SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartup);
-    }
-
-    private void OnStartup(EntityUid uid, ContainerManagerComponent component, ComponentStartup args)
-    {
-        var query = GetEntityQuery<MetaDataComponent>();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        foreach (var cont in component.Containers.Values)
+        protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
         {
-            foreach (var ent in cont.ContainedEntities)
-            {
-                var meta = query.GetComponent(ent);
-
-                //DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
-
-                // TODO remove all this just have the above assert all wrapped in an #if DEBUG
-                // this is just here cause I CBF updating all maps.
-
-                meta.Flags |= MetaDataFlags.InContainer;
-                _lookup.RemoveFromEntityTree(ent, xformQuery.GetComponent(ent), xformQuery);
-            }
+            Logger.Error($"Missing entity for container {ToPrettyString(uid)}. Missing uid: {missing}");
+            //cont.InternalRemove(ent);
         }
     }
 }

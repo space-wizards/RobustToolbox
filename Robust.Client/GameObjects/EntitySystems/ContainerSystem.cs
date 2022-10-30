@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Player;
+using Robust.Client.ViewVariables;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -33,6 +34,11 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
+        }
+
+        protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
+        {
+            DebugTools.Assert(ExpectedEntities.TryGetValue(missing, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(missing));
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)

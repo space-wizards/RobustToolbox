@@ -122,8 +122,7 @@ namespace Robust.Shared.Containers
             // because the insertion may not result in a parent change. This could alternatively be done via a
             // got-inserted event, but really that event should run after the entity was actually inserted (so that
             // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
-            if (physics == null)
-                physicsQuery.TryGetComponent(toInsert, out physics);
+            physicsQuery.Resolve(toInsert, ref physics, false);
             RecursivelyUpdatePhysics(transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
 
             // Attach to new parent
@@ -152,7 +151,7 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        private void RecursivelyUpdatePhysics(TransformComponent xform,
+        internal void RecursivelyUpdatePhysics(TransformComponent xform,
             PhysicsComponent? physics,
             SharedPhysicsSystem physicsSys,
             SharedJointSystem jointSys,

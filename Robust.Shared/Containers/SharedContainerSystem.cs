@@ -5,13 +5,19 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
-    public abstract class SharedContainerSystem : EntitySystem
+    public abstract partial class SharedContainerSystem : EntitySystem
     {
         [Dependency] private readonly SharedTransformSystem _xforms = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly SharedJointSystem _joint = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -19,6 +25,7 @@ namespace Robust.Shared.Containers
             base.Initialize();
             
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.

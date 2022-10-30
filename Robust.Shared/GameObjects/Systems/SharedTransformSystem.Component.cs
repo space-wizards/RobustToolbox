@@ -414,10 +414,18 @@ public abstract partial class SharedTransformSystem
         if (value.EntityId != xform._parent)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            newParent ??= xformQuery.GetComponent(value.EntityId);
-            DebugTools.Assert(newParent.Owner == value.EntityId);
 
-            DebugTools.Assert(value.EntityId != xform.Owner, $"Can't parent a {nameof(TransformComponent)} to itself.");
+            if (!xformQuery.Resolve(value.EntityId, ref newParent))
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(xform.Owner)} to non-existent entity {value.EntityId}");
+            }
+
+            if (value.EntityId == xform.Owner)
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(xform.Owner)}");
+            }
 
             if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
             {
@@ -519,6 +527,7 @@ public abstract partial class SharedTransformSystem
 
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
+        DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
         args.State = new TransformComponentState(
             component.LocalPosition,
             component.LocalRotation,

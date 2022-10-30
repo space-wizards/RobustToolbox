@@ -15,10 +15,8 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Robust.Server.GameStates;
@@ -787,6 +785,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var (uid, visiblity) in visibleEnts)
         {
+            // if an entity is visible, its parents should always be visible. This currently sometimes fails.
+            DebugTools.Assert((tQuery.GetComponent(uid).ParentUid is not { Valid: true} parent) || visibleEnts.ContainsKey(parent),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}. Parent: {ToPrettyString(parent)}");
+
             if (sessionData.RequestedFull)
             {
                 entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid)));

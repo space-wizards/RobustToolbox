@@ -61,19 +61,14 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        OnPhysicsInitialized(uid);
+        var fixtures = EntityManager.EnsureComponent<FixturesComponent>(uid);
+        _fixtures.OnPhysicsInit(uid, fixtures);
 
-        // Issue the event for stuff that needs it.
-        if (component._canCollide)
-        {
-            var ev = new CollisionChangeEvent(component, true);
-            RaiseLocalEvent(ref ev);
-        }
-    }
+        if (fixtures.FixtureCount == 0)
+            component._canCollide = false;
 
-    private void OnPhysicsInitialized(EntityUid uid)
-    {
-        _fixtures.OnPhysicsInit(uid);
+        var ev = new CollisionChangeEvent(component, component.CanCollide);
+        RaiseLocalEvent(ref ev);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -430,6 +425,8 @@ public partial class SharedPhysicsSystem
         // If we're recursively in a container then never set this.
         if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
             return false;
+
+        DebugTools.Assert(!value || Comp<FixturesComponent>(body.Owner).FixtureCount > 0);
 
         // Need to do this before SetAwake to avoid double-changing it.
         body._canCollide = value;

@@ -212,11 +212,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             if (updates)
-            {
                 FixtureUpdate(manager, body);
-                _physics.ResetMassData(body, manager);
-                Dirty(manager);
-            }
         }
 
         #endregion
@@ -227,9 +223,8 @@ namespace Robust.Shared.Physics.Systems
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        internal void OnPhysicsInit(EntityUid uid)
+        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component)
         {
-            var component = EntityManager.EnsureComponent<FixturesComponent>(uid);
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
             foreach (var fixture in component.SerializedFixtures)
@@ -437,6 +432,9 @@ namespace Robust.Shared.Physics.Systems
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
+            if (component.FixtureCount == 0)
+                _physics.SetCanCollide(body, false);
+
             if (dirty)
                 Dirty(component);
         }

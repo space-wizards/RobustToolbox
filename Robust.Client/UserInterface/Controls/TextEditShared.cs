@@ -116,7 +116,7 @@ internal static class TextEditShared
     internal struct CursorBlink
     {
         private const float BlinkTime = 1.3f;
-        private const float BlinkStartTime = BlinkTime * -0.1f;
+        private const float BlinkStartTime = BlinkTime * -0.2f;
         private const float HalfBlinkTime = BlinkTime / 2;
 
         public float Opacity;
@@ -124,7 +124,7 @@ internal static class TextEditShared
 
         public void Reset()
         {
-            Timer = BlinkStartTime + BlinkStartTime;
+            Timer = BlinkTime + BlinkStartTime;
 
             UpdateOpacity();
         }

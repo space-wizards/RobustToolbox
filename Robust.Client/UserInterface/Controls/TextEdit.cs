@@ -18,11 +18,15 @@ namespace Robust.Client.UserInterface.Controls;
 /// </summary>
 public sealed class TextEdit : Control
 {
+    public const string StylePropertyStyleBox = "stylebox";
+    public const string StylePropertyCursorColor = "cursor-color";
+    public const string StylePropertySelectionColor = "selection-color";
+    public const string StyleClassLineEditNotEditable = "notEditable";
+    public const string StylePseudoClassPlaceholder = "placeholder";
+
     private readonly RenderBox _renderBox;
 
     private CursorPos _cursorPosition;
-
-    // TODO: Track cursor bias on selection start.
     private CursorPos _selectionStart;
 
     // Cached last horizontal cursor position for vertical cursor movement.
@@ -599,6 +603,12 @@ public sealed class TextEdit : Control
                 return (TextLength, TextLength);
             }
 
+            if (line < 0)
+            {
+                // Above the first line, clamp.
+                return (0, 0);
+            }
+
             return (
                 line == 0 ? 0 : _lineBreaks[line - 1],
                 _lineBreaks.Count == line ? TextLength : _lineBreaks[line]
@@ -782,6 +792,10 @@ public sealed class TextEdit : Control
 
             var count = 0;
 
+            int? selectStartPos = null;
+            int? selectEndPos = null;
+            var selecting = false;
+
             foreach (var rune in Rope.EnumerateRunes(_master.TextRope))
             {
                 CheckDrawCursors(LineBreakBias.Top);
@@ -789,16 +803,21 @@ public sealed class TextEdit : Control
                 if (lineBreakIndex < _master._lineBreaks.Count
                     && _master._lineBreaks[lineBreakIndex] == count)
                 {
+                    // Line break
+                    // Check to handle
+
+                    PostDrawLine();
+
                     baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(scale));
                     lineBreakIndex += 1;
+
+                    selectStartPos = selecting ? 0 : null;
+                    selectEndPos = null;
                 }
 
                 CheckDrawCursors(LineBreakBias.Bottom);
 
                 var color = Color.White;
-                if (count >= _master.SelectionLower.Index && count < _master.SelectionUpper.Index)
-                    color = Color.Red;
-
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
 
                 count += rune.Utf16SequenceLength;
@@ -807,6 +826,7 @@ public sealed class TextEdit : Control
             // Also draw cursor if it's at the very end.
             CheckDrawCursors(LineBreakBias.Bottom);
             CheckDrawCursors(LineBreakBias.Top);
+            PostDrawLine();
 
             // Draw cursor bias
             if (_master.DebugOverlay)
@@ -837,7 +857,7 @@ public sealed class TextEdit : Control
                 if (_master._cursorPosition.Index == count
                     && _master.HasKeyboardFocus()
                     && _master._blink.CurrentlyLit
-                    && _master.CursorPosition.Bias == bias)
+                    && _master._cursorPosition.Bias == bias)
                 {
                     handle.DrawRect(
                         new UIBox2(
@@ -847,6 +867,39 @@ public sealed class TextEdit : Control
                             baseLine.Y + descent),
                         Color.White);
                 }
+
+                if (_master.SelectionLower.Index == count
+                    && _master.SelectionLower.Bias == bias)
+                {
+                    selecting = true;
+                    selectStartPos = (int)baseLine.X;
+                }
+
+                if (_master.SelectionUpper.Index == count
+                    & _master.SelectionUpper.Bias == bias)
+                {
+                    selecting = false;
+                    selectEndPos = (int)baseLine.X;
+                }
+            }
+
+            void PostDrawLine()
+            {
+                if (selectStartPos == null)
+                    return;
+
+                var rect = new UIBox2(
+                    selectStartPos.Value,
+                    baseLine.Y - height + descent,
+                    selectEndPos ?? baseLine.X,
+                    baseLine.Y + descent
+                );
+
+                var color = _master.StylePropertyDefault(
+                    StylePropertySelectionColor,
+                    Color.CornflowerBlue.WithAlpha(0.25f));
+
+                handle.DrawRect(rect, color);
             }
         }
     }

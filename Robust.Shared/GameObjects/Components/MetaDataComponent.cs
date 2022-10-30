@@ -160,7 +160,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
-        [ViewVariables]
+        [DataField("flags")]
         public MetaDataFlags Flags
         {
             get => _flags;
@@ -168,9 +168,6 @@ namespace Robust.Shared.GameObjects
             {
                 // In container and detached to null are mutually exclusive flags.
                 DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
-
-                Logger.Info($"Setting flag for {Owner} to {value}");
-
                 _flags = value;
             }
         }

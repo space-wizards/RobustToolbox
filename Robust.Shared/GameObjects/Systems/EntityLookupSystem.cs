@@ -286,6 +286,9 @@ namespace Robust.Shared.GameObjects
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadphaseXform = xformQuery.GetComponent(broadUid);
 
+            if (broadphaseXform.MapID == MapId.Nullspace)
+                return;
+
             if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
@@ -616,6 +619,9 @@ namespace Robust.Shared.GameObjects
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
             var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
+            if (broadphaseXform.MapID == MapId.Nullspace)
+                return;
+
             if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
             {
                 throw new InvalidOperationException(

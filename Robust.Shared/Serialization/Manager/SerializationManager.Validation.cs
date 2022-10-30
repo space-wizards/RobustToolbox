@@ -35,7 +35,7 @@ public sealed partial class SerializationManager
 
             if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeValidator<,>), key.type, key.node, out var serializer))
             {
-                var serializerConst = Expression.Constant(serializer);
+                var serializerConst = Expression.Constant(serializer, typeof(ITypeValidator<,>).MakeGenericType(key.type, key.node));
                 var depConst = Expression.Constant(manager.DependencyCollection);
 
                 call = Expression.Call(

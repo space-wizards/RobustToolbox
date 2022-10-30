@@ -106,6 +106,7 @@ public sealed partial class SerializationManager
                         instanceParam,
                         nameof(CreateCopyInternal),
                         new[] {t},
+                        sourceParam,
                         contextParam,
                         skipHookParam);
                 }

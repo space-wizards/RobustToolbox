@@ -214,7 +214,7 @@ public sealed partial class SerializationManager
 
         public object? RegisterSerializer(Type type)
         {
-            if (type.IsGenericType)
+            if (type.IsGenericTypeDefinition)
             {
                 var typeArguments = type.GetGenericArguments();
                 foreach (var @interface in type.GetInterfaces())

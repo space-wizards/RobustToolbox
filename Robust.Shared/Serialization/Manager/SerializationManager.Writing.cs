@@ -38,14 +38,14 @@ public sealed partial class SerializationManager
                     var depCollection = Expression.Constant(manager.DependencyCollection);
                     call = Expression.Call(
                         serializerConst,
-                        "Write",
-                        Type.EmptyTypes,
+                        typeof(ITypeWriter<>).MakeGenericType(t).GetMethod("Write")!,
                         instanceParam,
                         Expression.Convert(objParam, t),
                         depCollection,
                         alwaysWriteParam,
                         contextParam
                     );
+
                 }
                 else if (t.IsEnum)
                 {
@@ -134,7 +134,10 @@ public sealed partial class SerializationManager
 
         if (definition == null)
         {
-            throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
+            if (!typeof(T).IsAbstract && !typeof(T).IsInterface || !TryGetDefinition(value.GetType(), out definition))
+            {
+                throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
+            }
         }
 
         if (definition.CanCallWith(value) != true)

@@ -237,18 +237,18 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(entMan.EntityExists(toRemove));
             DebugTools.Assert(xform == null || xform.Owner == toRemove);
             DebugTools.Assert(meta == null || meta.Owner == toRemove);
-            DebugTools.Assert(!(entMan.GetComponentOrNull<PhysicsComponent>(toRemove)?.CanCollide ?? false));
 
             xform ??= entMan.GetComponent<TransformComponent>(toRemove);
             meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
 
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
+            if (!force && !CanRemove(toRemove, entMan))
+                return false;
+
             DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
             DebugTools.Assert(xform.Broadphase == null);
             DebugTools.Assert(!xform.Anchored);
-
-            if (!force && !CanRemove(toRemove, entMan))
-                return false;
+            DebugTools.Assert(!(entMan.GetComponentOrNull<PhysicsComponent>(toRemove)?.CanCollide ?? false));
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
 
             if (force && !Contains(toRemove))
             {
@@ -328,6 +328,7 @@ namespace Robust.Shared.Containers
         public void Shutdown(IEntityManager? entMan = null)
         {
             Manager.Containers.Remove(ID);
+            Deleted = true;
             IoCManager.Resolve(ref entMan);
             InternalShutdown(entMan);
         }

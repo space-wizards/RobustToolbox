@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
                     continue;
 
                 EmptyContainer(container, true);
-                container.Shutdown();
+                container.Shutdown(EntityManager);
                 toDelete.Add(id);
             }
 

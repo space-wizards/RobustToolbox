@@ -1,7 +1,9 @@
 using System;
 using JetBrains.Annotations;
+using NetSerializer;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -166,6 +168,9 @@ namespace Robust.Shared.GameObjects
             {
                 // In container and detached to null are mutually exclusive flags.
                 DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
+
+                Logger.Info($"Setting flag for {Owner} to {value}");
+
                 _flags = value;
             }
         }

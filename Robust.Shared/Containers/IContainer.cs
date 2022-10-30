@@ -54,11 +54,6 @@ namespace Robust.Shared.Containers
         string ID { get; }
 
         /// <summary>
-        /// The container manager owning this container.
-        /// </summary>
-        IContainerManager Manager { get; }
-
-        /// <summary>
         /// Prevents light from escaping the container, from ex. a flashlight.
         /// </summary>
         bool OccludesLight { get; set; }
@@ -111,7 +106,6 @@ namespace Robust.Shared.Containers
         /// <returns>True if the entity can be removed, false otherwise.</returns>
         bool CanRemove(EntityUid toremove, IEntityManager? entMan = null);
 
-
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
@@ -150,6 +144,6 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Clears the container and marks it as deleted.
         /// </summary>
-        void Shutdown();
+        void Shutdown(IEntityManager? entMan = null);
     }
 }

@@ -77,10 +77,5 @@ namespace Robust.Shared.Containers
         bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out IContainer? container);
 
         bool ContainsEntity(EntityUid entity);
-
-        /// <summary>
-        /// DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown" /> instead.
-        /// </summary>
-        void InternalContainerShutdown(IContainer container);
     }
 }

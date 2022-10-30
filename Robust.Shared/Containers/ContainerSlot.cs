@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
@@ -73,32 +74,35 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
         {
-            if (contained == ContainedEntity)
-                return true;
-            return false;
+            if (contained != ContainedEntity)
+                return false;
+
+
+            var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
+            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
+
+            return true;
         }
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
+            DebugTools.Assert(ContainedEntity == null);
             ContainedEntity = toInsert;
         }
 
         /// <inheritdoc />
         protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
         {
+            DebugTools.Assert(ContainedEntity == toRemove);
             ContainedEntity = null;
         }
 
         /// <inheritdoc />
-        public override void Shutdown()
+        protected override void InternalShutdown(IEntityManager entMan)
         {
-            base.Shutdown();
-
             if (ContainedEntity is {} contained)
-            {
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(contained);
-            }
+                entMan.DeleteEntity(contained);
         }
     }
 }

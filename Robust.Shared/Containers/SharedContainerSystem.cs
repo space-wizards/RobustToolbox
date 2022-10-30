@@ -17,7 +17,7 @@ namespace Robust.Shared.Containers
         public override void Initialize()
         {
             base.Initialize();
-
+            
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
         }
 
@@ -439,6 +439,8 @@ namespace Robust.Shared.Containers
 
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
+            // TODO this should check metadata flags.
+
             // Eject entities from their parent container if the parent change is done via setting the transform.
             if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
                 containerManager.Remove(message.Entity, reparent: false, force: true);

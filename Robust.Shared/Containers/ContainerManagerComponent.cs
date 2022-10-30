@@ -49,9 +49,9 @@ namespace Robust.Shared.Containers
             base.OnRemove();
 
             // IContainer.Shutdown modifies the _containers collection
-            foreach (var container in Containers.Values.ToArray())
+            foreach (var container in Containers.Values)
             {
-                container.Shutdown();
+                container.Shutdown(_entMan);
             }
 
             Containers.Clear();
@@ -131,12 +131,6 @@ namespace Robust.Shared.Containers
             }
 
             return false;
-        }
-
-        /// <inheritdoc />
-        public void InternalContainerShutdown(IContainer container)
-        {
-            Containers.Remove(container.ID);
         }
 
         /// <inheritdoc />

@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -319,16 +320,17 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// <inheritdoc />
             public override bool Contains(EntityUid contained)
             {
-                return _containerList.Contains(contained);
+                if (!_containerList.Contains(contained))
+                    return false;
+
+                var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
+                DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
+                return true;
             }
 
             /// <inheritdoc />
-            public override void Shutdown()
+            protected override void InternalShutdown(IEntityManager entMan)
             {
-                base.Shutdown();
-
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
                 foreach (var entity in _containerList)
                 {
                     entMan.DeleteEntity(entity);

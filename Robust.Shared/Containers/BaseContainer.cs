@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -36,7 +38,7 @@ namespace Robust.Shared.Containers
         public string ID { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
-        public IContainerManager Manager { get; internal set; } = default!; // Make sure you set me in init
+        public ContainerManagerComponent Manager { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -105,6 +107,7 @@ namespace Robust.Shared.Containers
             }
 
             // Update metadata first, so that parent change events can check IsInContainer.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
             meta.Flags |= MetaDataFlags.InContainer;
 
             // Remove the entity and any children from broadphases.
@@ -247,6 +250,12 @@ namespace Robust.Shared.Containers
             if (!force && !CanRemove(toRemove, entMan))
                 return false;
 
+            if (force && !Contains(toRemove))
+            {
+                DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
+                return false;
+            }
+
             // Unset flag (before parent change events are raised).
             meta.Flags &= ~MetaDataFlags.InContainer;
             
@@ -316,11 +325,15 @@ namespace Robust.Shared.Containers
         public abstract bool Contains(EntityUid contained);
 
         /// <inheritdoc />
-        public virtual void Shutdown()
+        public void Shutdown(IEntityManager? entMan = null)
         {
-            Manager.InternalContainerShutdown(this);
-            Deleted = true;
+            Manager.Containers.Remove(ID);
+            IoCManager.Resolve(ref entMan);
+            InternalShutdown(entMan);
         }
+
+        /// <inheritdoc />
+        protected abstract void InternalShutdown(IEntityManager entMan);
 
         /// <summary>
         /// Implement to store the reference in whatever form you want

@@ -113,9 +113,20 @@ internal static class TextEditShared
         Whitespace
     }
 
+    /// <summary>
+    /// Helper type for the cursor blink animation.
+    /// </summary>
     internal struct CursorBlink
     {
+        /// <summary>
+        /// The total length of the animation.
+        /// </summary>
         private const float BlinkTime = 1.3f;
+
+        // Because of the animation curves used, there is a plateau on either end of the animation.
+        // 0 or t/2 in the animation, and you are exactly in the middle of this plateau.
+        // Now, when we reset the blink (i.e. when the user presses a button),
+        // we want this plateau to stay for a bit longer. So we offset it by this start time in that case.
         private const float BlinkStartTime = BlinkTime * -0.2f;
         private const float HalfBlinkTime = BlinkTime / 2;
 
@@ -125,7 +136,6 @@ internal static class TextEditShared
         public void Reset()
         {
             Timer = BlinkTime + BlinkStartTime;
-
             UpdateOpacity();
         }
 
@@ -140,10 +150,18 @@ internal static class TextEditShared
             if (Timer >= BlinkTime)
                 Timer %= BlinkTime;
 
-            if (Timer > HalfBlinkTime)
-                Opacity = Easings.InOutQuint((Timer - HalfBlinkTime) * (1 / HalfBlinkTime));
-            else
+            // Manually implement the animation function with easings. The math isn't thaaaaaaaat bad right?
+
+            if (Timer < HalfBlinkTime)
+            {
+                // First half: cursor is dimming.
                 Opacity = 1 - Easings.InOutQuint(Timer * (1 / HalfBlinkTime));
+            }
+            else
+            {
+                // Second half: cursor is brightening again.
+                Opacity = Easings.InOutQuint((Timer - HalfBlinkTime) * (1 / HalfBlinkTime));
+            }
         }
     }
 }

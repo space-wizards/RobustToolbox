@@ -141,6 +141,8 @@ public sealed class TextEdit : Control
         if (args.Handled)
             return;
 
+        var doCursorVisible = true;
+
         if (MoveTypeMap.TryGetValue(args.Function, out var moveType))
         {
             var selectFlag = (moveType & MoveType.SelectFlag) != 0;
@@ -267,6 +269,8 @@ public sealed class TextEdit : Control
             InvalidateHorizontalCursorPos();
 
             args.Handle();
+
+            doCursorVisible = false;
         }
         else if (args.Function == EngineKeyFunctions.TextCopy)
         {
@@ -301,14 +305,17 @@ public sealed class TextEdit : Control
             {
                 async void DoPaste()
                 {
+                    // Happens asynchronously, be aware
                     var text = await _clipboard.GetText();
                     InsertAtCursor(text);
+                    EnsureCursorVisible();
                 }
 
                 DoPaste();
             }
 
             args.Handle();
+            doCursorVisible = false;
         }
         else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
         {
@@ -317,8 +324,14 @@ public sealed class TextEdit : Control
             return;
         }
 
-        // Reset this so the cursor is always visible immediately after a keybind is pressed.
-        _blink.Reset();
+        if (args.Handled)
+        {
+            // Reset this so the cursor is always visible immediately after a keybind is pressed.
+            _blink.Reset();
+
+            if (doCursorVisible)
+                EnsureCursorVisible();
+        }
 
         [Pure]
         int ShiftCursorLeft()
@@ -518,6 +531,8 @@ public sealed class TextEdit : Control
     {
         base.FrameUpdate(args);
 
+        EnsureLineBreaksUpdated();
+
         _blink.FrameUpdate(args);
 
         if (_mouseSelectingText)
@@ -525,24 +540,20 @@ public sealed class TextEdit : Control
             //var style = _getStyleBox();
             var contentBox = PixelSizeBox;
 
-            /*
-            if (_lastMouseSelectPos < contentBox.Left)
-            {
-                _drawOffset = Math.Max(0, _drawOffset - (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay));
-            }
-            else if (_lastMousePosition > contentBox.Right)
-            {
-                // Will get clamped inside rendering code.
-                _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
-            }
-            */
-
             var index = GetIndexAtPos(_lastMouseSelectPos);
 
             _cursorPosition = index;
-        }
 
-        EnsureLineBreaksUpdated();
+            // Only move scrollbar when the cursor is dragging above/below the text control.
+            if (_lastMouseSelectPos.Y < contentBox.Top)
+            {
+                EnsureCursorVisible();
+            }
+            else if (_lastMouseSelectPos.Y > contentBox.Bottom)
+            {
+                EnsureCursorVisible();
+            }
+        }
     }
 
     [Pure]
@@ -629,10 +640,15 @@ public sealed class TextEdit : Control
         }
 
         // Update scroll bar max size.
-        var lineCount = _lineBreaks.Count + 1;
+        var lineCount = GetLineCount();
         _scrollBar.MaxValue = Math.Max(_scrollBar.Page, lineCount * font.GetLineHeight(scale));
 
         _lineUpdateQueued = false;
+    }
+
+    private int GetLineCount()
+    {
+        return _lineBreaks.Count + 1;
     }
 
     private CursorPos GetIndexAtPos(Vector2 position)
@@ -642,6 +658,7 @@ public sealed class TextEdit : Control
         var contentBox = PixelSizeBox;
 
         var clickPos = position * UIScale;
+        clickPos.Y += _scrollBar.Value;
 
         var _drawOffset = Vector2.Zero;
 
@@ -816,6 +833,49 @@ public sealed class TextEdit : Control
     private float GetScrollSpeed()
     {
         return OutputPanel.GetScrollSpeed(GetFont(), UIScale);
+    }
+
+    private void EnsureCursorVisible()
+    {
+        EnsureLineBreaksUpdated();
+
+        var font = GetFont();
+
+        var scrollOffset = _scrollBar.Value;
+        var (cursorLine, _, _) = GetLineForIndex(_cursorPosition);
+
+        var cursorMargin = font.GetLineHeight(UIScale) * 1.5f;
+        var (lineT, lineB) = GetBoundsOfLine(cursorLine);
+
+        // Give the cursor some margin so it's not *right* up at the visible edge.
+        lineT -= cursorMargin;
+        lineB += cursorMargin;
+
+        // Vertical boundaries of the vertical section of text.
+        var visibleT = scrollOffset;
+        var visibleB = scrollOffset + PixelSize.Y;
+
+        // Make the scroll bar move to a position where the cursor is visible within margin.
+
+        if (lineT < visibleT)
+        {
+            // Part of the line is ABOVE the visible region, move scrollbar UP.
+
+            _scrollBar.ValueTarget = lineT;
+        }
+        else if (lineB > visibleB)
+        {
+            // Part of the line is BELOW the visible region, move scrollbar DOWN.
+
+            _scrollBar.ValueTarget = lineB - PixelHeight;
+        }
+    }
+
+    private (float start, float end) GetBoundsOfLine(int line)
+    {
+        var font = GetFont();
+        var lineHeight = font.GetLineHeight(UIScale);
+        return (lineHeight * line, lineHeight * (line + 1));
     }
 
     private sealed class RenderBox : Control

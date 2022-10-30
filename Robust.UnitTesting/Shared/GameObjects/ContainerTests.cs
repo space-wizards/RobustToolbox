@@ -301,7 +301,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 container.Insert(containeeEnt);
 
                 // save the map
-                var mapLoader = IoCManager.Resolve<IMapLoader>();
+                var mapLoader = entMan.EntitySysManager.GetEntitySystem<MapManagerSystem>();
 
                 mapLoader.SaveMap(mapIdOne, "container_test.yml");
                 mapManager.DeleteMap(mapIdOne);

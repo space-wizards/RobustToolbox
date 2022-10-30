@@ -53,26 +53,6 @@ namespace Robust.Server.Maps
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
-        public void SaveGrid(EntityUid gridId, string yamlPath)
-        {
-            var grid = _mapManager.GetGrid(gridId);
-
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
-            context.RegisterGrid(grid);
-            var root = context.Serialize();
-            var document = new YamlDocument(root);
-
-            var resPath = new ResourcePath(yamlPath).ToRootedPath();
-            _resMan.UserData.CreateDir(resPath.Directory);
-
-            using var writer = _resMan.UserData.OpenWriteText(resPath);
-
-            var stream = new YamlStream();
-            stream.Add(document);
-            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-        }
-
-        /// <inheritdoc />
         public (IReadOnlyList<EntityUid> entities, EntityUid? gridId) LoadGrid(MapId mapId, string path)
         {
             return LoadGrid(mapId, path, DefaultLoadOptions);
@@ -154,32 +134,6 @@ namespace Robust.Server.Maps
                     metaSystem.SetEntityPaused(entity, true, meta);
                 }
             }
-        }
-
-        /// <inheritdoc />
-        public void SaveMap(MapId mapId, string yamlPath)
-        {
-            Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
-            context.MapId = mapId;
-
-            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
-            {
-                context.RegisterGrid(grid);
-            }
-
-            var document = new YamlDocument(context.Serialize());
-
-            var resPath = new ResourcePath(yamlPath).ToRootedPath();
-            _resMan.UserData.CreateDir(resPath.Directory);
-
-            using var writer = _resMan.UserData.OpenWriteText(resPath);
-
-            var stream = new YamlStream();
-            stream.Add(document);
-            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-
-            Logger.InfoS("map", "Save completed!");
         }
 
         public (IReadOnlyList<EntityUid> entities, IReadOnlyList<EntityUid> gridIds) LoadMap(MapId mapId, string path)
@@ -873,196 +827,6 @@ namespace Robust.Server.Maps
                 GridIDMap.Add(grid.GridEntityId, GridIDMap.Count);
             }
 
-            public YamlNode Serialize()
-            {
-                WriteMetaSection();
-                WriteTileMapSection();
-                PopulateEntityList();
-                WriteGridSection();
-                WriteEntitySection();
-
-                return RootNode.ToYaml();
-            }
-
-            private void WriteMetaSection()
-            {
-                var meta = new MappingDataNode();
-                RootNode.Add("meta", meta);
-                meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
-                // TODO: Make these values configurable.
-                meta.Add("name", "DemoStation");
-                meta.Add("author", "Space-Wizards");
-
-                //TODO: MapId is null when saveBP is used, another reason this jumbled mess needs to be rewritten
-                var isPostInit = MapId is not null && _mapManager.IsMapInitialized(MapId.Value);
-
-                //TODO: This is a workaround to make SaveBP function
-                foreach (var grid in Grids)
-                {
-                    if (_mapManager.IsMapInitialized(grid.ParentMapId))
-                    {
-                        isPostInit = true;
-                        break;
-                    }
-                }
-
-                meta.Add("postmapinit", isPostInit ? "true" : "false");
-            }
-
-            private void WriteTileMapSection()
-            {
-                var tileMap = new MappingDataNode();
-                RootNode.Add("tilemap", tileMap);
-                foreach (var tileDefinition in _tileDefinitionManager)
-                {
-                    tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.ID);
-                }
-            }
-
-            private void WriteGridSection()
-            {
-                var grids = new SequenceDataNode();
-                RootNode.Add("grids", grids);
-
-                int index = 0;
-                foreach (var grid in Grids)
-                {
-                    _serverEntityManager.GetComponent<MapGridComponent>(grid.GridEntityId).GridIndex = index;
-                    var entry = _serializationManager.WriteValue(grid, context: this);
-                    grids.Add(entry);
-                    index++;
-                }
-            }
-
-            private void PopulateEntityList()
-            {
-                var withoutUid = new HashSet<EntityUid>();
-                var saveCompQuery = _serverEntityManager.GetEntityQuery<MapSaveIdComponent>();
-                var transformCompQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
-                var metaCompQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
-                foreach (var entity in _serverEntityManager.GetEntities())
-                {
-                    var currentTransform = transformCompQuery.GetComponent(entity);
-                    if (MapId != null && currentTransform.MapID != MapId) continue;
-                    if (MapId == null && (!(currentTransform.GridUid is EntityUid gridId) || !GridIDMap.ContainsKey(gridId))) continue;
-
-                    var currentEntity = entity;
-
-                    // Don't serialize things parented to un savable things.
-                    // For example clothes inside a person.
-                    while (currentEntity.IsValid())
-                    {
-                        if (metaCompQuery.GetComponent(currentEntity).EntityPrototype?.MapSavable == false) break;
-                        currentEntity = transformCompQuery.GetComponent(currentEntity).ParentUid;
-                    }
-
-                    if (currentEntity.IsValid()) continue;
-
-                    Entities.Add(entity);
-
-                    if (!saveCompQuery.TryGetComponent(entity, out var mapSaveComp) ||
-                        !UidEntityMap.TryAdd(mapSaveComp.Uid, entity))
-                    {
-                        // If the id was already saved before, or has no save component we need to find a new id for this entity
-                        withoutUid.Add(entity);
-                    }
-                }
-
-                var uidCounter = 0;
-                foreach (var entity in withoutUid)
-                {
-                    while (UidEntityMap.ContainsKey(uidCounter))
-                    {
-                        // Find next available UID.
-                        uidCounter += 1;
-                    }
-
-                    UidEntityMap.Add(uidCounter, entity);
-                    uidCounter += 1;
-                }
-
-                // Build a reverse lookup
-                EntityUidMap.EnsureCapacity(UidEntityMap.Count);
-                foreach(var (saveId, mapId) in UidEntityMap)
-                {
-                    EntityUidMap.Add(mapId, saveId);
-                }
-            }
-
-            private void WriteEntitySection()
-            {
-                var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var compFactory = IoCManager.Resolve<IComponentFactory>();
-                var metaQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
-                var entities = new SequenceDataNode();
-                RootNode.Add("entities", entities);
-
-                var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
-                foreach (var (saveId, entityUid) in UidEntityMap.OrderBy(e=>e.Key))
-                {
-                    CurrentWritingEntity = entityUid;
-                    var mapping = new MappingDataNode
-                    {
-                        {"uid", saveId.ToString(CultureInfo.InvariantCulture)}
-                    };
-
-                    var md = metaQuery.GetComponent(entityUid);
-
-                    Dictionary<string, MappingDataNode>? cache = null;
-                    if (md.EntityPrototype is {} prototype)
-                    {
-                        mapping.Add("type", prototype.ID);
-                        if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
-                        {
-                            prototypeCompCache[prototype.ID] = cache =  new Dictionary<string, MappingDataNode>();
-                            foreach (var (compType, comp) in prototype.Components)
-                            {
-                                cache.Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
-                            }
-                        }
-                    }
-
-                    var components = new SequenceDataNode();
-
-                    // See engine#636 for why the Distinct() call.
-                    foreach (var component in _serverEntityManager.GetComponents(entityUid))
-                    {
-                        if (component is MapSaveIdComponent)
-                            continue;
-
-                        var compType = component.GetType();
-                        var compName = compFactory.GetComponentName(compType);
-                        CurrentWritingComponent = compName;
-                        var compMapping = serializationManager.WriteValueAs<MappingDataNode>(compType, component, context: this);
-
-                        if (cache != null && cache.TryGetValue(compName, out var protMapping))
-                        {
-                            // This will NOT recursively call Except() on the values of the mapping. It will only remove
-                            // key-value pairs if both the keys and values are equal.
-                            compMapping = compMapping.Except(protMapping);
-                            if(compMapping == null) continue;
-                        }
-
-                        // Don't need to write it if nothing was written! Note that if this entity has no associated
-                        // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
-                        // information that needs to be written.
-                        if (compMapping.Children.Count != 0 || md.EntityPrototype == null)
-                        {
-                            compMapping.Add("type", new ValueDataNode(compName));
-                            // Something actually got written!
-                            components.Add(compMapping);
-                        }
-                    }
-
-                    if (components.Count != 0)
-                    {
-                        mapping.Add("components", components);
-                    }
-
-                    entities.Add(mapping);
-                }
-            }
-
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
             MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
                 MappingDataNode? protoData)
@@ -1087,13 +851,6 @@ namespace Robust.Server.Maps
             public IEnumerable<string> GetExtraComponentTypes()
             {
                 return CurrentReadingEntityComponents!.Keys;
-            }
-
-            [Virtual]
-            public class MapLoadException : Exception
-            {
-                public MapLoadException(string? message)
-                    : base(message) { }
             }
 
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,

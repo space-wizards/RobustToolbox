@@ -75,11 +75,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveGridCommand : IConsoleCommand
+    public sealed class SaveCommand : IConsoleCommand
     {
-        public string Command => "savegrid";
-        public string Description => "Serializes a grid to disk.";
-        public string Help => "savegrid <gridID> <Path>";
+        public string Command => "save";
+        public string Description => "Serializes an entity and its children to disk.";
+        public string Help => "save <entityUiD> <Path>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -89,22 +89,22 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridId))
+            if (!EntityUid.TryParse(args[0], out var uid))
             {
                 shell.WriteError("Not a valid entity ID.");
                 return;
             }
 
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
             // no saving default grid
-            if (!mapManager.TryGetGrid(gridId, out var grid))
+            if (!entManager.EntityExists(uid))
             {
                 shell.WriteError("That grid does not exist.");
                 return;
             }
 
-            IoCManager.Resolve<IMapLoader>().SaveGrid(gridId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapManagerSystem>().Save(uid, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -266,7 +266,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            IoCManager.Resolve<IMapLoader>().SaveMap(mapId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapManagerSystem>().SaveMap(mapId, args[1]);
             shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }

@@ -27,6 +27,7 @@ public sealed class TextEdit : Control
     public const string StylePseudoClassPlaceholder = "placeholder";
 
     private readonly RenderBox _renderBox;
+    private readonly VScrollBar _scrollBar;
 
     private CursorPos _cursorPosition;
     private CursorPos _selectionStart;
@@ -56,6 +57,7 @@ public sealed class TextEdit : Control
         IoCManager.InjectDependencies(this);
 
         AddChild(_renderBox = new RenderBox(this));
+        AddChild(_scrollBar = new VScrollBar { HorizontalAlignment = HAlignment.Right });
 
         CanKeyboardFocus = true;
         KeyboardFocusOnClick = true;
@@ -501,6 +503,10 @@ public sealed class TextEdit : Control
     {
         var size = base.ArrangeOverride(finalSize);
 
+        // var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
+
+        _scrollBar.Page = size.Y * UIScale;
+
         UpdateLineBreaks((int)(size.X * UIScale));
 
         return size;
@@ -619,6 +625,10 @@ public sealed class TextEdit : Control
                 // Height += font.GetLineHeight(uiScale);
             }
         }
+
+        // Update scroll bar max size.
+        var lineCount = _lineBreaks.Count + 1;
+        _scrollBar.MaxValue = Math.Max(_scrollBar.Page, lineCount * font.GetLineHeight(scale));
 
         _lineUpdateQueued = false;
     }
@@ -790,6 +800,22 @@ public sealed class TextEdit : Control
         _lastMouseSelectPos = args.RelativePosition;
     }
 
+    protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
+    {
+        base.MouseWheel(args);
+
+        if (MathHelper.CloseToPercent(0, args.Delta.Y))
+            return;
+
+        _scrollBar.ValueTarget -= GetScrollSpeed() * args.Delta.Y;
+    }
+
+    [System.Diagnostics.Contracts.Pure]
+    private float GetScrollSpeed()
+    {
+        return OutputPanel.GetScrollSpeed(GetFont(), UIScale);
+    }
+
     private sealed class RenderBox : Control
     {
         private static readonly (Vector2, Vector2)[] ArrowUp =
@@ -837,8 +863,9 @@ public sealed class TextEdit : Control
                     Color.Purple);
             }
 
+            var scrollOffset = -_master._scrollBar.Value;
             var scale = UIScale;
-            var baseLine = new Vector2(0, font.GetAscent(scale));
+            var baseLine = new Vector2(0, scrollOffset + font.GetAscent(scale));
             var height = font.GetLineHeight(scale);
             var descent = font.GetDescent(scale);
 

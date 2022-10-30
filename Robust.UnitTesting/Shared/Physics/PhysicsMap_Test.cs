@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
@@ -24,6 +25,7 @@ public sealed class PhysicsMap_Test
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+        var fixtureSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<FixtureSystem>();
 
         var mapId = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
@@ -39,7 +41,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(parentBody, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(parentBody, false);
-
+        fixtureSystem.CreateFixture(parentBody, new Fixture(parentBody, new PhysShapeCircle { Radius = 0.5f }));
         physSystem.WakeBody(parentBody);
         Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
 
@@ -48,6 +50,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(childBody, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(childBody, false);
+        fixtureSystem.CreateFixture(childBody, new Fixture(childBody, new PhysShapeCircle { Radius = 0.5f }));
         physSystem.WakeBody(childBody);
 
         Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));

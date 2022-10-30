@@ -47,6 +47,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.SetCollisionMask(fixtureA, 1);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.GridEntityId));
+            physSystem.WakeBody(onGridBody);
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
@@ -57,6 +58,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.SetCollisionLayer(fixtureB, 1);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.GridEntityId)));
+            physSystem.WakeBody(offGridBody);
 
             // Alright just a quick validation then we start the actual damn test.
 

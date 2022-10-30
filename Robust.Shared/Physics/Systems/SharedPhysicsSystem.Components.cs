@@ -33,12 +33,14 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly IMapManager _mapMan = default!;
 
     #region Lifetime
 
@@ -351,7 +353,7 @@ public partial class SharedPhysicsSystem
 
     public void SetAwake(PhysicsComponent body, bool value, bool updateSleepTime = true)
     {
-        if (body._awake == value)
+        if (body._awake == value || !body.CanCollide)
             return;
 
         if (value && body.BodyType == BodyType.Static)
@@ -413,20 +415,34 @@ public partial class SharedPhysicsSystem
         RaiseLocalEvent(body.Owner, ref ev, true);
     }
 
+
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
     /// </summary>
     /// <returns>CanCollide</returns>
-    public bool SetCanCollide(PhysicsComponent body, bool value, bool dirty = true)
+    /// <param name="force">Bypasses fixture and container checks</param>
+    public bool SetCanCollide(PhysicsComponent body, bool value, bool dirty = true, FixturesComponent? fixtures = null, bool force = false)
     {
         if (body._canCollide == value)
             return value;
 
-        // If we're recursively in a container then never set this.
-        if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
-            return false;
+        if (value)
+        {
+            if (!force)
+            {
+                // If we're recursively in a container then never set this.
+                if (_containerSystem.IsEntityOrParentInContainer(body.Owner))
+                    return false;
 
-        DebugTools.Assert(!value || Comp<FixturesComponent>(body.Owner).FixtureCount > 0);
+                if (Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount == 0 && !_mapMan.IsGrid(body.Owner))
+                    return false;
+            }
+            else
+            {
+                DebugTools.Assert(!_containerSystem.IsEntityOrParentInContainer(body.Owner));
+                DebugTools.Assert((Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount > 0) || _mapMan.IsGrid(body.Owner));
+            }
+        }
 
         // Need to do this before SetAwake to avoid double-changing it.
         body._canCollide = value;
@@ -522,10 +538,11 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Tries to enable the body and also set it awake.
     /// </summary>
+    /// <param name="force">Bypasses fixture and container checks</param>
     /// <returns>true if the body is collidable and awake</returns>
-    public bool WakeBody(PhysicsComponent body)
+    public bool WakeBody(PhysicsComponent body, FixturesComponent? fixtures = null, bool force = false)
     {
-        if (!SetCanCollide(body, true))
+        if (!SetCanCollide(body, true, fixtures: fixtures, force: force))
             return false;
 
         SetAwake(body, true);

@@ -11,6 +11,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems
 {
@@ -204,8 +205,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        _physicsSystem.WakeBody(proxyABody);
-                        _physicsSystem.WakeBody(otherBody);
+                        _physicsSystem.WakeBody(proxyABody, force: true);
+                        _physicsSystem.WakeBody(otherBody, force: true);
                     }
 
                     contactManager.AddPair(proxyA, other);

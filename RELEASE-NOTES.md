@@ -49,6 +49,26 @@ Template for new versions:
 
 *None yet*
 
+## 0.58.0.0
+
+### Breaking changes
+
+* Some TransformComponent functions have been moved to the system.
+* Container insert, remove, and shutdown function arguments and functionality has changed.
+* Physics entities without fixtures now automatically disable collision.
+
+### New features
+
+* Added command to profile entity spawning
+
+### Bugfixes
+
+* EntityLookup/BroadphaseComponent tracking has been overhauled, which should hopefully fix various broadphase bugs.
+
+### Other
+
+* Component.Owner is now marked as obsolete.
+
 ## 0.57.0.4
 
 ### Bugfixes

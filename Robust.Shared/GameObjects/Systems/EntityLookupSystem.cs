@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Components;
@@ -63,6 +64,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -649,24 +651,29 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
+            if (xform.Broadphase.Value.Uid != broadUid)
             {
-                if (body?.BodyType == BodyType.Static)
+                // This may happen when the client has deferred broadphase updates, where maybe an entity from one
+                // broadphase was parented to one from another.
+                DebugTools.Assert(_netMan.IsClient);
+                broadUid = xform.Broadphase.Value.Uid;
+                broadphaseXform = xformQuery.GetComponent(broadUid);
+                if (broadphaseXform.MapID == MapId.Nullspace)
+                    return;
+
+                if (!TryComp(broadphaseXform.MapUid, out physicsMap))
                 {
-                    DebugTools.Assert(xform.Broadphase == new BroadphaseData(broadUid, false, true));
-                    broadphase.StaticSundriesTree.Remove(uid);
-                }
-                else
-                {
-                    DebugTools.Assert(xform.Broadphase == new BroadphaseData(broadUid, false, false));
-                    broadphase.SundriesTree.Remove(uid);
+                    throw new InvalidOperationException(
+                        $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadUid)}");
                 }
             }
+
+            if (xform.Broadphase.Value.CanCollide)
+                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), xform.Broadphase.Value.Static);
+            else if (xform.Broadphase.Value.Static)
+                broadphase.StaticSundriesTree.Remove(uid);
             else
-            {
-                DebugTools.Assert(xform.Broadphase == new BroadphaseData(broadUid, body.CanCollide, body.BodyType == BodyType.Static));
-                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), body.BodyType == BodyType.Static);
-            }
+                broadphase.SundriesTree.Remove(uid);
 
             xform.Broadphase = null;
             if (!recursive)

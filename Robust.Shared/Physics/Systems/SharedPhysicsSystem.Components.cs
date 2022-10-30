@@ -411,8 +411,11 @@ public partial class SharedPhysicsSystem
 
         _broadphase.RegenerateContacts(body);
 
-        var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
-        RaiseLocalEvent(body.Owner, ref ev, true);
+        if (body.Initialized)
+        {
+            var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
+            RaiseLocalEvent(body.Owner, ref ev, true);
+        }
     }
 
 
@@ -450,8 +453,11 @@ public partial class SharedPhysicsSystem
         if (!value)
             SetAwake(body, false);
 
-        var ev = new CollisionChangeEvent(body, value);
-        RaiseLocalEvent(ref ev);
+        if (body.Initialized)
+        {
+            var ev = new CollisionChangeEvent(body, value);
+            RaiseLocalEvent(ref ev);
+        }
 
         if (dirty)
             Dirty(body);

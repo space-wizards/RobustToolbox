@@ -44,7 +44,7 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     }
 
     [MustUseReturnValue]
-    public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
+    public TimeSpan CreateCopy(ISerializationManager serializationManager, TimeSpan source,
         bool skipHook,
         ISerializationContext? context = null)
     {

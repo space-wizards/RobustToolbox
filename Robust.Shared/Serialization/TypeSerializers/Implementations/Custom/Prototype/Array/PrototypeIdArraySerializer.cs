@@ -46,13 +46,6 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
         return serializationManager.WriteValue(value, alwaysWrite, context);
     }
 
-    public string[] Copy(ISerializationManager serializationManager, string[] source, string[] target, bool skipHook,
-        ISerializationContext? context = null)
-    {
-        serializationManager.Copy(source, ref target, context, skipHook);
-        return target;
-    }
-
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null) =>
         PrototypeSerializer.Validate(serializationManager, node, dependencies, context);

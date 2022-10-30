@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public ulong Copy(ISerializationManager serializationManager, ulong source, ulong target, bool skipHook,
+        public ulong CreateCopy(ISerializationManager serializationManager, ulong source, bool skipHook,
             ISerializationContext? context = null)
         {
             return source;

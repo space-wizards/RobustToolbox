@@ -1,10 +1,7 @@
 using System;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -159,19 +156,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target, bool skipHook,
+        public Texture CreateCopy(ISerializationManager serializationManager, Texture source, bool skipHook,
             ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
-        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source, EntityPrototype target,
+        public EntityPrototype CreateCopy(ISerializationManager serializationManager, EntityPrototype source,
             bool skipHook, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target, bool skipHook,
+        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source, bool skipHook,
             ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
@@ -196,19 +193,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             };
         }
 
-        public SpriteSpecifier Copy(ISerializationManager serializationManager, SpriteSpecifier source, SpriteSpecifier target,
+        public SpriteSpecifier CreateCopy(ISerializationManager serializationManager, SpriteSpecifier source,
             bool skipHook, ISerializationContext? context = null)
         {
             return source switch
             {
                 Rsi rsi
-                    => new Rsi(rsi.RsiPath, rsi.RsiState),
+                    => CreateCopy(serializationManager, rsi, skipHook, context),
 
                 Texture texture
-                    => new Texture(texture.TexturePath),
+                    => CreateCopy(serializationManager, texture, skipHook, context),
 
                 EntityPrototype entityPrototype
-                    => new EntityPrototype(entityPrototype.EntityPrototypeId),
+                    => CreateCopy(serializationManager, entityPrototype, skipHook, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };

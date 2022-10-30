@@ -41,7 +41,7 @@ public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
         return new ValueDataNode(serializationManager.ReflectionManager.GetEnumReference(value));
     }
 
-    public Enum Copy(ISerializationManager serializationManager, Enum source, Enum target, bool skipHook,
+    public Enum CreateCopy(ISerializationManager serializationManager, Enum source, bool skipHook,
         ISerializationContext? context = null)
     {
         return source;

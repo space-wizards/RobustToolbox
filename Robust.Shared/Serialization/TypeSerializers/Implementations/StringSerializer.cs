@@ -35,7 +35,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public string Copy(ISerializationManager serializationManager, string source, string target,
+        public string CreateCopy(ISerializationManager serializationManager, string source,
             bool skipHook,
             ISerializationContext? context = null)
         {

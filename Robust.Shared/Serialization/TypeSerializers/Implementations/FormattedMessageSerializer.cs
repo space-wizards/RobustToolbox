@@ -38,8 +38,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public FormattedMessage Copy(ISerializationManager serializationManager, FormattedMessage source,
-            FormattedMessage target, bool skipHook, ISerializationContext? context = null)
+        public FormattedMessage CreateCopy(ISerializationManager serializationManager, FormattedMessage source,
+            bool skipHook, ISerializationContext? context = null)
         {
             return new(source);
         }

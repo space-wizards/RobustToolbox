@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
@@ -292,10 +291,7 @@ namespace Robust.Server.Maps
             public IReadOnlyDictionary<ushort, string>? TileMap => _tileMap;
             private Dictionary<ushort, string>? _tileMap;
 
-            public Dictionary<(Type, Type), object> TypeReaders { get; }
-            public Dictionary<Type, object> TypeWriters { get; }
-            public Dictionary<Type, object> TypeCopiers => TypeWriters;
-            public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
+            public SerializationManager.SerializerProvider SerializerProvider { get; }
 
             public bool MapIsPostInit { get; private set; }
 
@@ -311,14 +307,8 @@ namespace Robust.Server.Maps
                 _componentFactory = componentFactory;
 
                 RootNode = new MappingDataNode();
-                TypeWriters = new Dictionary<Type, object>()
-                {
-                    {typeof(EntityUid), this}
-                };
-                TypeReaders = new Dictionary<(Type, Type), object>()
-                {
-                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
-                };
+                SerializerProvider = new();
+                SerializerProvider.RegisterSerializer(this);
             }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
@@ -338,14 +328,8 @@ namespace Robust.Server.Maps
                 RootNode = node;
                 TargetMap = targetMapId;
                 _prototypeManager = prototypeManager;
-                TypeWriters = new Dictionary<Type, object>()
-                {
-                    {typeof(EntityUid), this}
-                };
-                TypeReaders = new Dictionary<(Type, Type), object>()
-                {
-                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
-                };
+                SerializerProvider = new();
+                SerializerProvider.RegisterSerializer(this);
             }
 
             // Deserialization
@@ -755,7 +739,7 @@ namespace Robust.Server.Maps
                             datanode.Remove("type");
                             var value = ((ValueDataNode)compData["type"]).Value;
                             var compType = _componentFactory.GetRegistration(value).Type;
-                            if (prototype?.Components?.TryGetValue(value, out var protData) == true)
+                            if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                             {
                                 datanode =
                                     _serializationManager.PushCompositionWithGenericNode(
@@ -1149,14 +1133,6 @@ namespace Robust.Server.Maps
                 {
                     return entity;
                 }
-            }
-
-            [MustUseReturnValue]
-            public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
-                bool skipHook,
-                ISerializationContext? context = null)
-            {
-                return new((int) source);
             }
         }
 

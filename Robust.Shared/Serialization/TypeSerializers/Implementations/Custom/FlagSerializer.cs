@@ -60,7 +60,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return sequenceNode;
         }
 
-        public int Copy(ISerializationManager serializationManager, int source, int target, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
             ISerializationContext? context = null)
         {
             return source;

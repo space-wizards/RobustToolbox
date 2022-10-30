@@ -80,12 +80,5 @@ namespace Robust.Client.Serialization
             mapping.Add("type", new ValueDataNode(value.GetType().Name));
             return mapping;
         }
-
-        public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
-            AppearanceVisualizer target, bool skipHook, ISerializationContext? context = null)
-        {
-            serializationManager.Copy(source, ref target, context);
-            return target;
-        }
     }
 }

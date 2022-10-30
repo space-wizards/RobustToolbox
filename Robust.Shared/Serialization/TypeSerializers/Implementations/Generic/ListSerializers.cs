@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
@@ -17,7 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<List<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
-        ITypeSerializer<ImmutableList<T>, SequenceDataNode>
+        ITypeSerializer<ImmutableList<T>, SequenceDataNode>,
+        ITypeCopier<List<T>>
     {
         private DataNode WriteInternal(ISerializationManager serializationManager, IEnumerable<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
@@ -171,81 +171,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list.ToImmutable();
         }
 
-        [MustUseReturnValue]
-        private TList CopyInternal<TList>(ISerializationManager serializationManager, IEnumerable<T> source, TList target, ISerializationContext? context = null) where TList : IList<T>
-        {
-            target.Clear();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                target.Add(elementCopy);
-            }
-
-            return target;
-        }
-
-        [MustUseReturnValue]
-        public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target,
-            bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target, bool skipHook,
             ISerializationContext? context = null)
         {
-            return CopyInternal(serializationManager, source, target, context);
-        }
-
-        [MustUseReturnValue]
-        public IReadOnlyList<T> Copy(ISerializationManager serializationManager, IReadOnlyList<T> source,
-            IReadOnlyList<T> target, bool skipHook, ISerializationContext? context = null)
-        {
-            if (target is List<T> targetList)
+            target.Clear();
+            foreach (var val in source)
             {
-                return CopyInternal(serializationManager, source, targetList);
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
-
-            var list = new List<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                list.Add(elementCopy);
-            }
-
-            return list;
-        }
-
-        [MustUseReturnValue]
-        public IReadOnlyCollection<T> Copy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
-            IReadOnlyCollection<T> target, bool skipHook, ISerializationContext? context = null)
-        {
-            if (target is List<T> targetList)
-            {
-                return CopyInternal(serializationManager, source, targetList, context);
-            }
-
-            var list = new List<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                list.Add(elementCopy);
-            }
-
-            return list;
-        }
-
-        [MustUseReturnValue]
-        public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
-            ImmutableList<T> target, bool skipHook, ISerializationContext? context = null)
-        {
-            var builder = ImmutableList.CreateBuilder<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                builder.Add(elementCopy);
-            }
-
-            return builder.ToImmutable();
         }
     }
 }

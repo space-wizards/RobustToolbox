@@ -55,7 +55,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                                      $"{value.Z.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector3 Copy(ISerializationManager serializationManager, Vector3 source, Vector3 target,
+        public Vector3 CreateCopy(ISerializationManager serializationManager, Vector3 source,
             bool skipHook,
             ISerializationContext? context = null)
         {

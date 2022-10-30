@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,7 +18,7 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>
+    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>, ITypeCopier<ComponentRegistry>
     {
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -169,19 +168,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return compSequence;
         }
 
-        [MustUseReturnValue]
-        public ComponentRegistry Copy(ISerializationManager serializationManager, ComponentRegistry source,
-            ComponentRegistry target, bool skipHook, ISerializationContext? context = null)
+        public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
+            bool skipHook, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
             foreach (var (id, component) in source)
             {
-                target.Add(id, serializationManager.Copy(component, context)!);
+                target.Add(id, serializationManager.CreateCopy(component, context));
             }
-
-            return target;
         }
 
         public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,

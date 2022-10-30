@@ -78,7 +78,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Box2 Copy(ISerializationManager serializationManager, Box2 source, Box2 target,
+        public Box2 CreateCopy(ISerializationManager serializationManager, Box2 source,
             bool skipHook,
             ISerializationContext? context = null)
         {

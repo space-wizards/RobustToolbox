@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -115,27 +114,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationContext? context = null)
         {
             return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public Dictionary<string, TValue> Copy(ISerializationManager serializationManager,
-            Dictionary<string, TValue> source, Dictionary<string, TValue> target, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
-        }
-
-        public SortedDictionary<string, TValue> Copy(ISerializationManager serializationManager,
-            SortedDictionary<string, TValue> source, SortedDictionary<string, TValue> target,
-            bool skipHook, ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
-        }
-
-        public IReadOnlyDictionary<string, TValue> Copy(ISerializationManager serializationManager,
-            IReadOnlyDictionary<string, TValue> source,
-            IReadOnlyDictionary<string, TValue> target, bool skipHook, ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
         }
     }
 }

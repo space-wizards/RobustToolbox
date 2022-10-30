@@ -1,4 +1,3 @@
-using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -42,7 +41,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target,
+        public MapId CreateCopy(ISerializationManager serializationManager, MapId source,
             bool skipHook,
             ISerializationContext? context = null)
         {

@@ -1,10 +1,8 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -54,12 +52,6 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
 
-        ValidationNode ValidateNodeWith(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null);
-
-        ValidationNode ValidateNodeWith<TType, TSerializer, TNode>(TNode node, ISerializationContext? context = null)
-            where TSerializer : ITypeValidator<TType, TNode>
-            where TNode : DataNode;
-
         #endregion
 
         #region Read
@@ -85,9 +77,6 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default);
-
-        object? ReadWithTypeSerializer(Type type, Type serializer, DataNode node,
-            ISerializationContext? context = null, bool skipHook = false, object? value = null);
 
         #endregion
 
@@ -122,9 +111,6 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
 
-        DataNode WriteWithTypeSerializer(Type type, Type serializer, object? value, bool alwaysWrite = false,
-            ISerializationContext? context = null);
-
         #endregion
 
         #region Copy
@@ -138,7 +124,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false);
+        void CopyTo(object source, ref object? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Copies the values of one object into another.
@@ -150,7 +136,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false);
+        void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -160,7 +146,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false);
+        object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -171,11 +157,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false);
-
-        [MustUseReturnValue]
-        object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
-            ISerializationContext? context = null, bool skipHook = false);
+        T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false);
 
         #endregion
 
@@ -204,6 +186,44 @@ namespace Robust.Shared.Serialization.Manager
             // ReSharper disable once CoVariantArrayConversion
             return (TNode) PushComposition(type, parents, child, context);
         }
+
+        #endregion
+
+        #region CustomSerializers
+
+        public object? ReadWithCustomSerializer(
+            Type type,
+            Type serializer,
+            DataNode node,
+            ISerializationContext? context = null,
+            bool skipHook = false,
+            object? value = null);
+
+        public DataNode WriteWithCustomSerializer(
+            Type type,
+            Type serializer,
+            object? value,
+            ISerializationContext? context = null,
+            bool alwaysWrite = false);
+
+        public void CopyToWithCustomSerializer(
+            Type serializer,
+            object source,
+            ref object target,
+            bool skipHook = false,
+            ISerializationContext? context = null);
+
+        [MustUseReturnValue]
+        public object CreateCopyWithCustomSerializer(
+            Type serializer,
+            object source,
+            bool skipHook = false,
+            ISerializationContext? context = null);
+
+        public ValidationNode ValidateWithCustomSerializer(
+            Type serializer,
+            DataNode node,
+            ISerializationContext? context = null);
 
         #endregion
     }

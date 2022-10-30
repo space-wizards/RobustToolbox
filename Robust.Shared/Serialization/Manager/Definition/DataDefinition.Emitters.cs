@@ -53,7 +53,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             _ => throw new InvalidOperationException()
                         })
                     {
-                        result = serializationManager.ReadWithTypeSerializer(type,
+                        result = serializationManager.ReadWithCustomSerializer(type,
                             fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
                     }
                     else
@@ -128,8 +128,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     DataNode node;
                     if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                     {
-                        node = manager.WriteWithTypeSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
-                            value, alwaysWrite, context);
+                        node = manager.WriteWithCustomSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
+                            value, context, alwaysWrite);
                     }
                     else
                     {
@@ -161,9 +161,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
         // TODO Serialization: add skipHook
         private CopyDelegateSignature EmitCopyDelegate()
         {
-            object CopyDelegate(
+            void CopyDelegate(
                 object source,
-                object target,
+                ref object target,
                 ISerializationManager manager,
                 ISerializationContext? context)
             {
@@ -174,32 +174,40 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var sourceValue = accessor(ref source);
                     var targetValue = accessor(ref target);
 
-                    object? copy;
                     if (sourceValue != null &&
                         targetValue != null &&
                         !TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
                     {
-                        copy = manager.Copy(sourceValue, context);
+                        manager.CopyTo(sourceValue, ref targetValue, context);
                     }
                     else
                     {
-                        if (field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                        if (sourceValue == null)
                         {
-                            copy = manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
-                                targetValue,
-                                context);
+                            targetValue = null;
                         }
                         else
                         {
-                            copy = targetValue;
-                            manager.Copy(sourceValue, ref copy, context);
+                            if (targetValue != null && field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                            {
+                                manager.CopyToWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                                    ref targetValue, context: context);
+                            }
+                            else if (targetValue == null && field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
+                            {
+                                targetValue = manager.CreateCopyWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                                    context: context);
+
+                            }
+                            else
+                            {
+                                manager.CopyTo(sourceValue, ref targetValue, context);
+                            }
                         }
                     }
 
-                    FieldAssigners[i](ref target, copy);
+                    FieldAssigners[i](ref target, targetValue);
                 }
-
-                return target;
             }
 
             return CopyDelegate;

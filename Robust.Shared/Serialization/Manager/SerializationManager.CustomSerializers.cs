@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
+        //todo paul serv3 find a non-hardcoded way for this
+
         private delegate object? ReadSerializerDelegate(
             DataNode node,
             ISerializationContext? context = null,
@@ -22,26 +23,46 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool alwaysWrite = false);
 
-        private delegate object CopySerializerDelegate(
+        private delegate void CopyToSerializerDelegate(
             object source,
             ref object target,
             bool skipHook,
             ISerializationContext? context = null);
 
-        private readonly Dictionary<Type, object> _customTypeSerializers = new();
+        private delegate object CreateCopySerializerDelegate(
+            object source,
+            bool skipHook,
+            ISerializationContext? context = null);
+
+        private delegate ValidationNode ValidateSerializerDelegate(
+            DataNode node,
+            ISerializationContext? context = null);
+
+        private readonly ConcurrentDictionary<Type, object> _customTypeSerializers = new();
 
         private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ReadSerializerDelegate>
-            _readSerializerDelegates = new();
+            _customReadSerializerDelegates = new();
 
         private readonly ConcurrentDictionary<(Type value, Type serializer), WriteSerializerDelegate>
-            _writeSerializerDelegates = new();
+            _customWriteSerializerDelegates = new();
 
-        private readonly ConcurrentDictionary<(Type common, Type source, Type target, Type serializer), CopySerializerDelegate>
-            _copySerializerDelegates = new();
+        private readonly ConcurrentDictionary<(Type common, Type source, Type target, Type serializer), CopyToSerializerDelegate>
+            _customCopyToSerializerDelegates = new();
 
-        private ReadSerializerDelegate GetOrCreateReadSerializerDelegate(Type value, Type node, Type serializer)
+        private readonly ConcurrentDictionary<(Type source, Type serializer), CreateCopySerializerDelegate>
+            _customCreateCopySerializerDelegates = new();
+
+        private readonly ConcurrentDictionary<Type, ValidateSerializerDelegate>
+            _customValidateSerializerDelegates = new();
+
+        private object GetOrCreateCustomTypeSerializer(Type type)
         {
-            return _readSerializerDelegates.GetOrAdd((value, node, serializer), static (tuple, instance) =>
+            return _customTypeSerializers.GetOrAdd(type, CreateSerializer);
+        }
+
+        private ReadSerializerDelegate GetOrCreateReadCustomSerializerDelegate(Type value, Type node, Type serializer)
+        {
+            return _customReadSerializerDelegates.GetOrAdd((value, node, serializer), static (tuple, instance) =>
             {
                 var instanceParam = Expression.Constant(instance);
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
@@ -49,14 +70,21 @@ namespace Robust.Shared.Serialization.Manager
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var valueParam = Expression.Parameter(typeof(object), "value");
 
+                var serializerInstance = instance.GetOrCreateCustomTypeSerializer(tuple.serializer);
+                var serializerConstant = Expression.Constant(serializerInstance);
+
+                var dependencyConst = Expression.Constant(instance.DependencyCollection);
+
                 var call = Expression.Call(
+                    serializerConstant,
+                    "Read",
+                    Type.EmptyTypes,
                     instanceParam,
-                    nameof(ReadWithSerializer),
-                    new[] {tuple.value, tuple.node, tuple.serializer},
-                    Expression.Convert(nodeParam, tuple.node),
-                    contextParam,
+                    nodeParam,
+                    dependencyConst,
                     skipHookParam,
-                    valueParam);
+                    contextParam,
+                    Expression.Convert(valueParam, tuple.value));
 
                 return Expression.Lambda<ReadSerializerDelegate>(
                     Expression.Convert(call, typeof(object)),
@@ -67,22 +95,29 @@ namespace Robust.Shared.Serialization.Manager
             }, this);
         }
 
-        private WriteSerializerDelegate GetOrCreateWriteSerializerDelegate(Type value, Type serializer)
+        private WriteSerializerDelegate GetOrCreateWriteCustomSerializerDelegate(Type value, Type serializer)
         {
-            return _writeSerializerDelegates.GetOrAdd((value, serializer), static (tuple, instance) =>
+            return _customWriteSerializerDelegates.GetOrAdd((value, serializer), static (tuple, instance) =>
             {
                 var instanceParam = Expression.Constant(instance);
                 var valueParam = Expression.Parameter(typeof(object), "value");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
 
+                var serializerInstance = instance.GetOrCreateCustomTypeSerializer(tuple.serializer);
+                var serializerConstant = Expression.Constant(serializerInstance);
+
+                var dependencyConst = Expression.Constant(instance.DependencyCollection);
+
                 var call = Expression.Call(
+                    serializerConstant,
+                    "Write",
+                    Type.EmptyTypes,
                     instanceParam,
-                    nameof(WriteWithSerializer),
-                    new[] {tuple.value, tuple.serializer},
-                    Expression.Convert(valueParam, tuple.value),
-                    contextParam,
-                    alwaysWriteParam);
+                    valueParam,
+                    dependencyConst,
+                    alwaysWriteParam,
+                    contextParam);
 
                 return Expression.Lambda<WriteSerializerDelegate>(
                     call,
@@ -92,117 +127,151 @@ namespace Robust.Shared.Serialization.Manager
             }, this);
         }
 
-        private CopySerializerDelegate GetOrCreateCopySerializerDelegate(Type common, Type source, Type target, Type serializer)
+        private CopyToSerializerDelegate GetOrCreateCopyToCustomSerializerDelegate(Type common, Type source, Type target, Type serializer)
         {
-            return _copySerializerDelegates.GetOrAdd((common, source, target, serializer), (_, tuple) =>
+            return _customCopyToSerializerDelegates.GetOrAdd((common, source, target, serializer), static (_, tuple) =>
             {
-                var instanceParam = Expression.Constant(this);
+                var instanceParam = Expression.Constant(tuple.manager);
                 var sourceParam = Expression.Parameter(typeof(object), "source");
                 var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
-                var targetCastVariable = Expression.Variable(tuple.target, "targetCastVariable");
+                var serializerInstance = tuple.manager.GetOrCreateCustomTypeSerializer(tuple.serializer);
+                var serializerConstant = Expression.Constant(serializerInstance);
 
                 var call = Expression.Call(
+                    serializerConstant,
+                    "CopyTo",
+                    Type.EmptyTypes,
                     instanceParam,
-                    nameof(CopyWithSerializer),
-                    new[] {tuple.common, tuple.source, tuple.target, tuple.serializer},
-                    Expression.Convert(sourceParam, tuple.source),
-                    targetCastVariable,
+                    sourceParam,
+                    targetParam,
                     skipHookParam,
                     contextParam);
 
-                var block = Expression.Block(
-                    new[] {targetCastVariable},
-                    Expression.Assign(
-                        targetCastVariable,
-                        Expression.Convert(targetParam, tuple.target)),
-                    Expression.Convert(call, typeof(object)));
-
-                return Expression.Lambda<CopySerializerDelegate>(
-                    block,
+                return Expression.Lambda<CopyToSerializerDelegate>(
+                    call,
                     sourceParam,
                     targetParam,
                     skipHookParam,
                     contextParam).Compile();
-            }, (common, source, target, serializer));
+            }, (common, source, target, serializer, manager: this));
         }
 
-        private object? ReadWithSerializerRaw(
+        private CreateCopySerializerDelegate GetOrCreateCreateCopyCustomSerializerDelegate(Type source, Type serializer)
+        {
+            return _customCreateCopySerializerDelegates.GetOrAdd((source, serializer), static (_, tuple) =>
+            {
+                var instanceParam = Expression.Constant(tuple.manager);
+                var sourceParam = Expression.Parameter(typeof(object), "source");
+                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+
+                var serializerInstance = tuple.manager.GetOrCreateCustomTypeSerializer(tuple.serializer);
+                var serializerConstant = Expression.Constant(serializerInstance);
+
+                var call = Expression.Call(
+                    serializerConstant,
+                    "CreateCopy",
+                    Type.EmptyTypes,
+                    instanceParam,
+                    sourceParam,
+                    skipHookParam,
+                    contextParam);
+
+                return Expression.Lambda<CreateCopySerializerDelegate>(
+                    Expression.Convert(call, typeof(object)),
+                    sourceParam,
+                    skipHookParam,
+                    contextParam).Compile();
+            }, (source, serializer, manager: this));
+        }
+
+        private ValidateSerializerDelegate GetOrCreateValidateCustomSerializerDelegate(Type serializer)
+        {
+            return _customValidateSerializerDelegates.GetOrAdd(serializer, static (serializerType, manager) =>
+            {
+                var instanceParam = Expression.Constant(manager);
+                var dependencyConst = Expression.Constant(manager.DependencyCollection);
+
+                var nodeParam = Expression.Parameter(typeof(DataNode), "node");
+                var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+
+                var serializerInstance = manager.GetOrCreateCustomTypeSerializer(serializerType);
+                var serializerConstant = Expression.Constant(serializerInstance);
+
+                var call = Expression.Call(
+                    serializerConstant,
+                    "Validate",
+                    Type.EmptyTypes,
+                    instanceParam,
+                    nodeParam,
+                    dependencyConst,
+                    contextParam);
+
+                return Expression.Lambda<ValidateSerializerDelegate>(
+                    call,
+                    nodeParam,
+                    contextParam).Compile();
+            }, this);
+        }
+
+        public object? ReadWithCustomSerializer(
             Type type,
-            DataNode node,
             Type serializer,
+            DataNode node,
             ISerializationContext? context = null,
             bool skipHook = false,
             object? value = null)
         {
-            return GetOrCreateReadSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
+            return GetOrCreateReadCustomSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
         }
 
-        private T ReadWithSerializer<T, TNode, TSerializer>(
-            TNode node,
-            ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = default)
-            where TSerializer : ITypeReader<T, TNode>
-            where TNode : DataNode
-        {
-            var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (T)value);
-        }
-
-        private DataNode WriteWithSerializerRaw(
+        public DataNode WriteWithCustomSerializer(
             Type type,
             Type serializer,
-            object value,
+            object? value,
             ISerializationContext? context = null,
             bool alwaysWrite = false)
         {
-            return GetOrCreateWriteSerializerDelegate(type, serializer)(value, context, alwaysWrite);
+            if (value == null) return NullNode();
+
+            return GetOrCreateWriteCustomSerializerDelegate(type, serializer)(value, context, alwaysWrite);
         }
 
-        private DataNode WriteWithSerializer<T, TSerializer>(
-            T value,
-            ISerializationContext? context = null,
-            bool alwaysWrite = false)
-            where TSerializer : ITypeWriter<T>
-        {
-            var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Write(this, value, DependencyCollection, alwaysWrite, context);
-        }
-
-        private object CopyWithSerializerRaw(Type serializer, object source, ref object target, bool skipHook, ISerializationContext? context = null)
+        public void CopyToWithCustomSerializer(
+            Type serializer,
+            object source,
+            ref object target,
+            bool skipHook = false,
+            ISerializationContext? context = null)
         {
             var sourceType = source.GetType();
-            var targetType = target.GetType();
-            if(!TypeHelpers.TrySelectCommonType(sourceType, targetType, out var commonType))
-                throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
+            var targetType = source.GetType();
+            if (!TypeHelpers.TrySelectCommonType(sourceType, targetType, out var common))
+                throw new ArgumentException();
 
-            return GetOrCreateCopySerializerDelegate(commonType, sourceType, targetType, serializer)(source, ref target, skipHook, context);
+            GetOrCreateCopyToCustomSerializerDelegate(common, sourceType, targetType, serializer)(source,
+                ref target, skipHook, context);
         }
 
-        private TCommon CopyWithSerializer<TCommon, TSource, TTarget, TSerializer>(
-            TSource source,
-            ref TTarget target,
-            bool skipHook,
+        [MustUseReturnValue]
+        public object CreateCopyWithCustomSerializer(
+            Type serializer,
+            object source,
+            bool skipHook = false,
             ISerializationContext? context = null)
-            where TSource : TCommon
-            where TTarget : TCommon
-            where TSerializer : ITypeCopier<TCommon>
         {
-            var serializer = (ITypeCopier<TCommon>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Copy(this, source, target, skipHook, context);
+            return GetOrCreateCreateCopyCustomSerializerDelegate(source.GetType(), serializer)(source, skipHook, context);
         }
 
-        private ValidationNode ValidateWithSerializer<T, TNode, TSerializer>(
-            TNode node,
-            ISerializationContext? context)
-            where TNode : DataNode
-            where TSerializer : ITypeValidator<T, TNode>
+        public ValidationNode ValidateWithCustomSerializer(
+            Type serializer,
+            DataNode node,
+            ISerializationContext? context = null)
         {
-            var serializer = (ITypeValidator<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Validate(this, node, DependencyCollection, context);
+            return GetOrCreateValidateCustomSerializerDelegate(serializer)(node, context);
         }
     }
 }

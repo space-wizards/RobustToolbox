@@ -11,9 +11,6 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
@@ -257,7 +254,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, entry) in prototype.Components)
                 {
-                    var fullData = context?.TryGetComponent(name, out var data) == true ? data : entry.Component;
+                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
                     EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
@@ -304,8 +301,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            // TODO use this value to support struct components
-            serManager.Copy(data, ref component, context);
+            serManager.CopyTo(data, ref component, context);
         }
 
         public override string ToString()

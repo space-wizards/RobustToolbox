@@ -42,7 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Color Copy(ISerializationManager serializationManager, Color source, Color target,
+        public Color CreateCopy(ISerializationManager serializationManager, Color source,
             bool skipHook,
             ISerializationContext? context = null)
         {

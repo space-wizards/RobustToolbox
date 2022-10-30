@@ -110,28 +110,16 @@ entitiesImmutableList:
         {
             var validSequence = new SequenceDataNode(TestEntityId);
 
-            var validations = Serialization.ValidateNodeWith<
-                List<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(validSequence);
+            var validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), validSequence);
             Assert.True(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                IReadOnlyList<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(validSequence);
+            validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), validSequence);
             Assert.True(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                IReadOnlyCollection<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(validSequence);
+            validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), validSequence);
             Assert.True(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                ImmutableList<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(validSequence);
+            validations = Serialization.ValidateWithCustomSerializer( typeof(PrototypeIdListSerializer<EntityPrototype>), validSequence);
             Assert.True(validations.Valid);
         }
 
@@ -140,28 +128,16 @@ entitiesImmutableList:
         {
             var invalidSequence = new SequenceDataNode(TestInvalidEntityId);
 
-            var validations = Serialization.ValidateNodeWith<
-                List<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(invalidSequence);
+            var validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), invalidSequence);
             Assert.False(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                IReadOnlyList<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(invalidSequence);
+            validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), invalidSequence);
             Assert.False(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                IReadOnlyCollection<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(invalidSequence);
+            validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), invalidSequence);
             Assert.False(validations.Valid);
 
-            validations = Serialization.ValidateNodeWith<
-                ImmutableList<string>,
-                PrototypeIdListSerializer<EntityPrototype>,
-                SequenceDataNode>(invalidSequence);
+            validations = Serialization.ValidateWithCustomSerializer(typeof(PrototypeIdListSerializer<EntityPrototype>), invalidSequence);
             Assert.False(validations.Valid);
         }
     }

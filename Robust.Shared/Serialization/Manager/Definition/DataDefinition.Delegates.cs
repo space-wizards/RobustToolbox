@@ -19,9 +19,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             bool alwaysWrite,
             object?[] defaultValues);
 
-        private delegate object CopyDelegateSignature(
+        private delegate void CopyDelegateSignature(
             object source,
-            object target,
+            ref object target,
             ISerializationManager serializationManager,
             ISerializationContext? context);
 

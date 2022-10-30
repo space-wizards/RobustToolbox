@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
+        public TimeSpan CreateCopy(ISerializationManager serializationManager, TimeSpan source,
             bool skipHook,
             ISerializationContext? context = null)
         {

@@ -50,7 +50,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValueDataNode(value.FullName ?? value.Name);
         }
 
-        public Type Copy(ISerializationManager serializationManager, Type source, Type target, bool skipHook,
+        public Type CreateCopy(ISerializationManager serializationManager, Type source, bool skipHook,
             ISerializationContext? context = null)
         {
             return source;

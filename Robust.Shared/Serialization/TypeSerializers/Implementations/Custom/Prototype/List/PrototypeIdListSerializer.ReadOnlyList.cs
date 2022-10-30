@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -22,17 +21,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationContext? context)
         {
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        [MustUseReturnValue]
-        IReadOnlyList<string> ITypeCopier<IReadOnlyList<string>>.Copy(
-            ISerializationManager serializationManager,
-            IReadOnlyList<string> source,
-            IReadOnlyList<string> target,
-            bool skipHook,
-            ISerializationContext? context)
-        {
-            return new List<string>(source);
         }
 
         IReadOnlyList<string> ITypeReader<IReadOnlyList<string>, SequenceDataNode>.Read(

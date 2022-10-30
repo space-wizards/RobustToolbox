@@ -52,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                                      $"{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector2i Copy(ISerializationManager serializationManager, Vector2i source, Vector2i target,
+        public Vector2i CreateCopy(ISerializationManager serializationManager, Vector2i source,
             bool skipHook,
             ISerializationContext? context = null)
         {

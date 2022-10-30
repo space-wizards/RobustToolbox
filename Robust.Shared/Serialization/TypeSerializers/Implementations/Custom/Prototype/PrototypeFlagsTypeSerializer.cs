@@ -32,7 +32,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(value, context));
+                list.Add(serializationManager.ValidateWithCustomSerializer(typeof(PrototypeIdSerializer<T>), value,
+                    context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -65,7 +66,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new SequenceDataNode(value.ToArray());
         }
 
-        public PrototypeFlags<T> Copy(ISerializationManager serializationManager, PrototypeFlags<T> source, PrototypeFlags<T> target,
+        public PrototypeFlags<T> CreateCopy(ISerializationManager serializationManager, PrototypeFlags<T> source,
             bool skipHook, ISerializationContext? context = null)
         {
             return new PrototypeFlags<T>(source);
@@ -74,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(node, context);
+            return serializationManager.ValidateWithCustomSerializer(typeof(PrototypeIdSerializer<T>), node, context);
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,

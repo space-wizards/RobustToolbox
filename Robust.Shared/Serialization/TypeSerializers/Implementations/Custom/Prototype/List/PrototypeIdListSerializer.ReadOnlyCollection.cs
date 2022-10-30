@@ -57,15 +57,5 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
-
-        IReadOnlyCollection<string> ITypeCopier<IReadOnlyCollection<string>>.Copy(
-            ISerializationManager serializationManager,
-            IReadOnlyCollection<string> source,
-            IReadOnlyCollection<string> target,
-            bool skipHook,
-            ISerializationContext? context)
-        {
-            return new List<string>(source);
-        }
     }
 }

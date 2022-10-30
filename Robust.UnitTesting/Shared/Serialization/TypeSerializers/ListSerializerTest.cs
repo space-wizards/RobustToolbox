@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var node = new SequenceDataNode("A", "E");
 
-            var result = Serialization.ReadWithTypeSerializer(typeof(List<string>), typeof(ListSerializers<string>), node);
+            var result = Serialization.ReadWithCustomSerializer(typeof(List<string>), typeof(ListSerializers<string>), node);
             var list = (List<string>?) result;
 
             Assert.NotNull(list);
@@ -53,7 +53,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var list = new List<string> {"A", "E"};
 
-            var node = (SequenceDataNode) Serialization.WriteWithTypeSerializer(typeof(List<string>), typeof(ListSerializers<string>), list);
+            var node = (SequenceDataNode) Serialization.WriteWithCustomSerializer(typeof(List<string>), typeof(ListSerializers<string>), list);
 
             Assert.That(node.Sequence.Count, Is.EqualTo(2));
             Assert.That(node.Cast<ValueDataNode>(0).Value, Is.EqualTo("A"));
@@ -69,20 +69,21 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             Assert.IsNotEmpty(source);
             Assert.IsEmpty(target);
 
-            var copy = (List<string>?) Serialization.CopyWithTypeSerializer(typeof(ListSerializers<string>), source, target);
+            var tempCast = (object)target;
+            Serialization.CopyToWithCustomSerializer(typeof(ListSerializers<string>), source, ref tempCast);
 
-            Assert.NotNull(copy);
+            Assert.NotNull(source);
 
-            Assert.IsNotEmpty(copy!);
+            Assert.IsNotEmpty(source);
             Assert.IsNotEmpty(target);
 
-            Assert.That(copy, Is.EqualTo(target));
+            Assert.That(source, Is.EqualTo(target));
 
-            Assert.That(copy!.Count, Is.EqualTo(2));
+            Assert.That(source.Count, Is.EqualTo(2));
             Assert.That(target.Count, Is.EqualTo(2));
 
-            Assert.That(copy, Does.Contain("A"));
-            Assert.That(copy, Does.Contain("E"));
+            Assert.That(source, Does.Contain("A"));
+            Assert.That(source, Does.Contain("E"));
 
             Assert.That(target, Does.Contain("A"));
             Assert.That(target, Does.Contain("E"));

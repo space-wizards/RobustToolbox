@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -51,7 +50,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
-        public ImmutableList<string> Copy(ISerializationManager serializationManager, ImmutableList<string> source, ImmutableList<string> target,
+        public ImmutableList<string> CreateCopy(ISerializationManager serializationManager,
+            ImmutableList<string> source,
             bool skipHook, ISerializationContext? context = null)
         {
             return ImmutableList.CreateRange(source);

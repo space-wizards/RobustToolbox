@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public ushort Copy(ISerializationManager serializationManager, ushort source, ushort target, bool skipHook,
+        public ushort CreateCopy(ISerializationManager serializationManager, ushort source, bool skipHook,
             ISerializationContext? context = null)
         {
             return source;

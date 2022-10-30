@@ -57,7 +57,7 @@ public partial class SerializationManager
 
             Expression expression;
 
-            if (instance.TryGetTypeInheritanceHandler(value, nodeType, out var handler))
+            if (instance._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeInheritanceHandler<,>), value, nodeType, out var handler))
             {
                 var readerType = typeof(ITypeInheritanceHandler<,>).MakeGenericType(value, nodeType);
                 var readerConst = Expression.Constant(handler, readerType);

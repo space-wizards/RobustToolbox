@@ -24,12 +24,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
             public readonly (bool Value, bool Sequence, bool Mapping) Reader;
             public readonly bool Writer;
             public readonly bool Copier;
+            public readonly bool CopyCreator;
 
-            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier)
+            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier, bool copyCreator)
             {
                 Reader = reader;
                 Writer = writer;
                 Copier = copier;
+                CopyCreator = copyCreator;
             }
         }
 
@@ -83,6 +85,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var reader = (false, false, false);
                     var writer = false;
                     var copier = false;
+                    var copyCreator = false;
                     foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
                     {
                         var genericTypedef = @interface.GetGenericTypeDefinition();
@@ -98,6 +101,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
                             {
                                 copier = true;
+                            }
+                        }
+                        else if (genericTypedef == typeof(ITypeCopyCreator<>))
+                        {
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                            {
+                                copyCreator = true;
                             }
                         }
                         else if (genericTypedef == typeof(ITypeReader<,>))
@@ -124,7 +134,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
-                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier);
+                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator);
                 }
             }
 
@@ -165,13 +175,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return _serialize(obj, serialization, context, alwaysWrite, DefaultValues);
         }
 
-        public object Copy(
+        public void CopyTo(
             object source,
-            object target,
+            ref object target,
             ISerializationManager serialization,
             ISerializationContext? context)
         {
-            return _copy(source, target, serialization, context);
+            _copy(source, ref target, serialization, context);
         }
 
         public ValidationNode Validate(
@@ -203,8 +213,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
                 ValidationNode valValidated = field.Attribute.CustomTypeSerializer != null
-                    ? serialization.ValidateNodeWith(field.FieldType,
-                        field.Attribute.CustomTypeSerializer, val, context)
+                    ? serialization.ValidateWithCustomSerializer(field.Attribute.CustomTypeSerializer, val, context)
                     : serialization.ValidateNode(field.FieldType, val, context);
 
                 validatedMapping.Add(keyValidated, valValidated);

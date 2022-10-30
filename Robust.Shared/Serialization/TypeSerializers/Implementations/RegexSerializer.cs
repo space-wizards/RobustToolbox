@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target,
+        public Regex CreateCopy(ISerializationManager serializationManager, Regex source,
             bool skipHook,
             ISerializationContext? context = null)
         {

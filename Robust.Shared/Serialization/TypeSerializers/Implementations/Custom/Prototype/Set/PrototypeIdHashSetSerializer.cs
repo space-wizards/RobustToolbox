@@ -72,7 +72,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new SequenceDataNode(list);
         }
 
-        public HashSet<string> Copy(ISerializationManager serializationManager, HashSet<string> source, HashSet<string> target, bool skipHook, ISerializationContext? context = null)
+        public HashSet<string> CreateCopy(ISerializationManager serializationManager, HashSet<string> source,
+            bool skipHook, ISerializationContext? context = null)
         {
             return new(source);
         }

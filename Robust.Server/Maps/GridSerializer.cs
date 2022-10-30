@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -127,7 +126,7 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target, bool skipHook,
+        public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, bool skipHook,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();
@@ -212,7 +211,7 @@ namespace Robust.Server.Maps
             return gridn;
         }
 
-        public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target, bool skipHook,
+        public MapGrid CreateCopy(ISerializationManager serializationManager, MapGrid source, bool skipHook,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();

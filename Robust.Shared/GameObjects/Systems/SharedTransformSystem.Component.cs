@@ -96,14 +96,16 @@ public abstract partial class SharedTransformSystem
             && AnchorEntity(xform, grid, grid.TileIndicesFor(xform.Coordinates));
     }
 
-    public void Unanchor(TransformComponent xform)
+    public void Unanchor(TransformComponent xform, bool setPhysics = true)
     {
         if (!xform._anchored)
             return;
 
         Dirty(xform);
         xform._anchored = false;
-        _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
+
+        if (setPhysics)
+            _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
 
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;
@@ -412,10 +414,18 @@ public abstract partial class SharedTransformSystem
         if (value.EntityId != xform._parent)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            newParent ??= xformQuery.GetComponent(value.EntityId);
-            DebugTools.Assert(newParent.Owner == value.EntityId);
 
-            DebugTools.Assert(value.EntityId != xform.Owner, $"Can't parent a {nameof(TransformComponent)} to itself.");
+            if (!xformQuery.Resolve(value.EntityId, ref newParent))
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(xform.Owner)} to non-existent entity {value.EntityId}");
+            }
+
+            if (value.EntityId == xform.Owner)
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(xform.Owner)}");
+            }
 
             if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
             {
@@ -517,6 +527,7 @@ public abstract partial class SharedTransformSystem
 
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
+        DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
         args.State = new TransformComponentState(
             component.LocalPosition,
             component.LocalRotation,
@@ -919,13 +930,15 @@ public abstract partial class SharedTransformSystem
     public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
     {
         var oldParent = xform._parent;
-
-        // Even though they may already be in nullspace we may want to deparent them anyway
         if (!oldParent.IsValid())
         {
             DebugTools.Assert(!xform.Anchored);
+            DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
             return;
         }
+
+        // Before making any changes to physics or transforms, remove from the current broadphase
+        _lookup.RemoveFromEntityTree(xform.Owner, xform, xformQuery);
 
         // Stop any active lerps
         xform._nextPosition = null;
@@ -967,6 +980,7 @@ public abstract partial class SharedTransformSystem
         var ev = new MoveEvent(xform.Owner, oldPos, default, oldRot, default, xform, _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref ev, true);
         Dirty(xform);
+        DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
     }
     #endregion
 }

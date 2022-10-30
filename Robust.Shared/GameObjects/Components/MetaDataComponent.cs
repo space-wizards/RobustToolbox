@@ -1,14 +1,13 @@
-using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
 
 namespace Robust.Shared.GameObjects
 {
@@ -158,7 +157,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
-        [ViewVariables]
+        [DataField("flags")]
         public MetaDataFlags Flags
         {
             get => _flags;

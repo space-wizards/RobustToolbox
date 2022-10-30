@@ -86,8 +86,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (body.CanCollide)
             {
-                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-                _lookup.CreateProxies(fixture, worldPos, worldRot);
+                _lookup.CreateProxies(xform, fixture);
             }
 
             // Supposed to be wrapped in density but eh
@@ -204,11 +203,11 @@ namespace Robust.Shared.Physics.Systems
                 {
                     physicsMap.ContactManager.Destroy(contact);
                 }
-            }
 
-            if (body.CanCollide)
-            {
-                _lookup.DestroyProxies(fixture, xform);
+                if (body.CanCollide && xform.GridUid != xform.Owner)
+                {
+                    _lookup.DestroyProxies(fixture, xform, physicsMap);
+                }
             }
 
             if (updates)

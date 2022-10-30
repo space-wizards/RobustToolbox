@@ -210,7 +210,6 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
-
             if (updates)
             {
                 FixtureUpdate(manager, body);

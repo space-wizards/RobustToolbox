@@ -15,7 +15,6 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {

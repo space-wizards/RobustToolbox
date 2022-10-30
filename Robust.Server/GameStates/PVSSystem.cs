@@ -786,8 +786,8 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var (uid, visiblity) in visibleEnts)
         {
             // if an entity is visible, its parents should always be visible. This currently sometimes fails.
-            DebugTools.Assert((tQuery.GetComponent(uid).ParentUid is not { Valid: true} parent) || visibleEnts.ContainsKey(parent),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}. Parent: {ToPrettyString(parent)}");
+            DebugTools.Assert((tQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) || visibleEnts.ContainsKey(parent),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
 
             if (sessionData.RequestedFull)
             {

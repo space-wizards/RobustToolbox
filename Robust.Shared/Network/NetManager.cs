@@ -903,8 +903,16 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            entry.Callback!.Invoke(instance);
-
+            // Logger.DebugS("net", $"RECV: {instance.GetType().Name}");
+            try
+            {
+                entry.Callback!.Invoke(instance);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
+            }
 
             return true;
         }

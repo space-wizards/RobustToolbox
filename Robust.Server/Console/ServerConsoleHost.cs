@@ -93,6 +93,8 @@ namespace Robust.Server.Console
 
         private void ExecuteInShell(IConsoleShell shell, string command)
         {
+            try
+            {
                 var args = new List<string>();
                 CommandParsing.ParseArguments(command, args);
 
@@ -115,6 +117,13 @@ namespace Robust.Server.Console
                     AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
                     conCmd.Execute(shell, command, cmdArgs);
                 }
+            }
+            catch (Exception e)
+            {
+                LogManager.GetSawmill(SawmillName)
+                    .Error($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+            }
         }
 
         private bool ShellCanExecute(IConsoleShell shell, string cmdName)

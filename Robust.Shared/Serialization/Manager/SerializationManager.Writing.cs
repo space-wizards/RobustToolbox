@@ -77,16 +77,12 @@ public sealed partial class SerializationManager
                 }
                 else
                 {
-                    if (!manager.TryGetDefinition(t, out var dataDef))
-                    {
-                        throw new InvalidOperationException($"No data definition found for type {t} when writing");
-                    }
-
-                    var defConst = Expression.Constant(dataDef);
+                    manager.TryGetDefinition(t, out var dataDef);
+                    var defConst = Expression.Constant(dataDef, typeof(DataDefinition));
 
                     call = Expression.Call(
                         instanceParam,
-                        nameof(WriteDataDefinition),
+                        nameof(WriteValueInternal),
                         new[] { t },
                         objParam,
                         defConst,
@@ -125,12 +121,22 @@ public sealed partial class SerializationManager
         return sequenceNode;
     }
 
-    private DataNode WriteDataDefinition<T>(
+    private DataNode WriteValueInternal<T>(
         object value,
-        DataDefinition definition,
+        DataDefinition? definition,
         bool alwaysWrite,
         ISerializationContext? context)
     {
+        if(context != null && context.SerializerProvider.TryGetTypeSerializer<ITypeWriter<T>, T>(out var writer))
+        {
+            return writer.Write(this, (T)value, DependencyCollection, alwaysWrite, context);
+        }
+
+        if (definition == null)
+        {
+            throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
+        }
+
         if (definition.CanCallWith(value) != true)
         {
             throw new ArgumentException($"Supplied value does not fit with data definition of {typeof(T)}.");

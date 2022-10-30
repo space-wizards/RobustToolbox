@@ -52,17 +52,13 @@ public sealed partial class SerializationManager
                 }
                 else
                 {
-                    if (!tuple.manager.TryGetDefinition(t, out var dataDef))
-                    {
-                        throw new InvalidOperationException($"No data definition found for type {t} when copying");
-                    }
-
-                    var dataDefConst = Expression.Constant(dataDef);
+                    tuple.manager.TryGetDefinition(t, out var dataDef);
+                    var dataDefConst = Expression.Constant(dataDef, typeof(DataDefinition));
 
                     call = Expression.Call(
                         instanceParam,
                         nameof(CopyToInternal),
-                        new[] {t},
+                        new[] { t },
                         Expression.Convert(sourceParam, t),
                         Expression.Convert(targetParam, t),
                         dataDefConst,
@@ -137,8 +133,7 @@ public sealed partial class SerializationManager
         DataDefinition? definition,
         ISerializationManager serializationManager,
         bool skipHook,
-        ISerializationContext? context = null)
-        where TCommon : notnull
+        ISerializationContext? context)
     {
         if (context != null &&
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
@@ -183,8 +178,8 @@ public sealed partial class SerializationManager
             throw new ArgumentException($"No data definition found for type {typeof(TCommon)} with node type when running copyto");
         }
 
-        var targetObj = (object)target;
-        definition.CopyTo(source, ref targetObj, serializationManager, context);
+        var targetObj = (object)target!;
+        definition.CopyTo(source!, ref targetObj, serializationManager, context);
     }
 
     //todo paul serv3 make common type checking more sane

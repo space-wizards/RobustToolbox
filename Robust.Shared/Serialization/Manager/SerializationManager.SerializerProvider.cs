@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
@@ -85,7 +86,7 @@ public sealed partial class SerializationManager
                 typeNodeSerializers.TryGetValue((objectType, nodeType), out serializer))
                 return true;
 
-            if (_genericTypeNodeSerializers.TryGetValue(interfaceType, out var genericTypeNodeSerializers))
+            if (_genericTypeNodeSerializers.TryGetValue(interfaceType, out var genericTypeNodeSerializers) && objectType.IsGenericType)
             {
                 var typeDef = objectType.GetGenericTypeDefinition();
                 foreach (var (key, val) in genericTypeNodeSerializers)
@@ -138,7 +139,7 @@ public sealed partial class SerializationManager
                 typeSerializers.TryGetValue(objectType, out serializer))
                 return true;
 
-            if (_genericTypeSerializers.TryGetValue(interfaceType, out var genericTypeSerializers))
+            if (_genericTypeSerializers.TryGetValue(interfaceType, out var genericTypeSerializers) && objectType.IsGenericType)
             {
                 var typeDef = objectType.GetGenericTypeDefinition();
                 foreach (var (key, val) in genericTypeSerializers)
@@ -183,13 +184,15 @@ public sealed partial class SerializationManager
         {
             foreach (var @interface in type.GetInterfaces())
             {
+                if(!@interface.IsGenericType) continue;
+
                 foreach (var typeInterface in _typeInterfaces)
                 {
                     if (@interface.GetGenericTypeDefinition().HasSameMetadataDefinitionAs(typeInterface))
                     {
                         var arguments = @interface.GetGenericArguments();
                         if (arguments.Length != 1)
-                            throw new InvalidOperationException();
+                            throw new InvalidGenericParameterCountException();
                         _typeSerializers.GetOrNew(typeInterface).Add(arguments[0], obj);
                     }
                 }
@@ -200,7 +203,7 @@ public sealed partial class SerializationManager
                     {
                         var arguments = @interface.GetGenericArguments();
                         if (arguments.Length != 2)
-                            throw new InvalidOperationException();
+                            throw new InvalidGenericParameterCountException();
                         _typeNodeSerializers.GetOrNew(typeInterface).Add((arguments[0], arguments[1]), obj);
                     }
                 }
@@ -222,12 +225,12 @@ public sealed partial class SerializationManager
                         {
                             var arguments = @interface.GetGenericArguments();
                             if (arguments.Length != 1)
-                                throw new InvalidOperationException();
+                                throw new InvalidGenericParameterCountException();
                             var objArguments = arguments[0].GetGenericArguments();
                             for (int i = 0; i < typeArguments.Length; i++)
                             {
                                 if (typeArguments[i] != objArguments[i])
-                                    throw new InvalidOperationException();
+                                    throw new GenericParameterMismatchException();
                             }
 
                             _genericTypeSerializers.GetOrNew(typeInterface).Add(arguments[0], type);
@@ -240,12 +243,12 @@ public sealed partial class SerializationManager
                         {
                             var arguments = @interface.GetGenericArguments();
                             if (arguments.Length != 2)
-                                throw new InvalidOperationException();
+                                throw new InvalidGenericParameterCountException();
                             var objArguments = arguments[0].GetGenericArguments();
                             for (int i = 0; i < typeArguments.Length; i++)
                             {
                                 if (typeArguments[i] != objArguments[i])
-                                    throw new InvalidOperationException();
+                                    throw new GenericParameterMismatchException();
                             }
 
                             _genericTypeNodeSerializers.GetOrNew(typeInterface).Add((arguments[0], arguments[1]), type);
@@ -262,8 +265,8 @@ public sealed partial class SerializationManager
         //todo paul serv3 is there a better way than comparing names here?
         private void RegisterSerializerInterface(Type type)
         {
-            if (!type.IsGenericType)
-                throw new InvalidOperationException();
+            if (!type.IsGenericTypeDefinition)
+                throw new ArgumentException("Only generic type definitions can be signed up as interfaces", nameof(type));
             var genericTypeNode = typeof(BaseSerializerInterfaces.ITypeNodeInterface<,>);
             var genericType = typeof(BaseSerializerInterfaces.ITypeInterface<>);
             var genericParams = type.GetGenericArguments();
@@ -276,7 +279,7 @@ public sealed partial class SerializationManager
                     for (int i = 0; i < genericParams.Length; i++)
                     {
                         if (genericParams[i].Name != genericInterfaceParams[i].Name)
-                            throw new InvalidOperationException();
+                            throw new GenericParameterMismatchException();
                     }
                     _typeNodeInterfaces.Add(type);
                 }
@@ -286,7 +289,7 @@ public sealed partial class SerializationManager
                     for (int i = 0; i < genericParams.Length; i++)
                     {
                         if (genericParams[i].Name != genericInterfaceParams[i].Name)
-                            throw new InvalidOperationException();
+                            throw new GenericParameterMismatchException();
                     }
                     _typeInterfaces.Add(type);
                 }

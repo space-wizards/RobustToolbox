@@ -220,11 +220,17 @@ namespace Robust.Shared.GameObjects
 
             if (xform.Broadphase is not { } old)
                 return; // entity is not on any broadphase
-            
+
             xform.Broadphase = null;
 
             if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
                 return; // broadphase probably got deleted.
+
+            if (_timing.ApplyingState)
+            {
+                _deferredUpdates.Add(uid);
+                return;
+            }
 
             // remove from the old broadphase
             var fixtures = Comp<FixturesComponent>(uid);
@@ -397,6 +403,12 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredBroadChanges.Add(uid);
+                return;
+            }
+
             if (!TryGetCurrentBroadphase(xform, out var oldBroadphase))
                 return; // If the entity was not already in a broadphase, parent changes will not automatically add it.
 
@@ -579,6 +591,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
+            if (_timing.ApplyingState)
+            {
+                _deferredRemoval.Add(uid);
+                return;
+            }
+
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 

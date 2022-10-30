@@ -28,6 +28,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.GameStates
 {
@@ -327,6 +328,15 @@ namespace Robust.Client.GameStates
                 // Failed to process even a single tick. Chances are the tick buffer is empty, either because of
                 // networking issues or because the server is dead. This will functionally freeze the client-side simulation.
                 return;
+            }
+
+            // Update entity trees.
+            using (_prof.Group("Update entity trees"))
+            {
+                var counts = _entitySystemManager.GetEntitySystem<EntityLookupSystem>().ProcessDeferredUpdates();
+                _prof.WriteValue("Updates", ProfData.Int32(counts.Updates)); // update position in the same tree
+                _prof.WriteValue("Changes", ProfData.Int32(counts.Changes)); // remove from one tree, add to another)
+                _prof.WriteValue("Removals", ProfData.Int32(counts.Removals));
             }
 
             // remove old pending inputs

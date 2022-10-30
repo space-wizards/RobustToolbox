@@ -61,7 +61,7 @@ internal static class StringEnumerateHelpers
         public SubstringReverseRuneEnumerator(string source, int startChar)
         {
             _source = source;
-            _nextChar = startChar - (char.IsLowSurrogate(source, startChar - 1) ? 2 : 1);
+            _nextChar = startChar - (source != "" && char.IsLowSurrogate(source, startChar - 1) ? 2 : 1);
             _current = default;
         }
 

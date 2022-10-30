@@ -446,11 +446,13 @@ public sealed class TextEdit : Control
                     var (line, _, _) = GetLineForIndex(_cursorPosition);
 
                     // TODO: Isn't this off-by-one.
-                    if (line == _lineBreaks.Count - 1)
+                    if (line == _lineBreaks.Count)
                     {
                         // On the last line already, move to the end of it.
-                        return _cursorPosition with { Bias = LineBreakBias.Top };
+                        return new CursorPos(TextLength, LineBreakBias.Top);
                     }
+
+                    keepHorizontalCursorPos = true;
 
                     return GetIndexAtHorizontalPos(line + 1, _horizontalCursorPos!.Value);
                 }

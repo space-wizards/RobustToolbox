@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -114,25 +115,35 @@ internal static class TextEditShared
 
     internal struct CursorBlink
     {
-        private const float BlinkTime = 0.5f;
+        private const float BlinkTime = 1.3f;
+        private const float BlinkStartTime = BlinkTime * -0.1f;
+        private const float HalfBlinkTime = BlinkTime / 2;
 
-        public bool CurrentlyLit;
+        public float Opacity;
         public float Timer;
 
         public void Reset()
         {
-            CurrentlyLit = true;
-            Timer = BlinkTime;
+            Timer = BlinkStartTime + BlinkStartTime;
+
+            UpdateOpacity();
         }
 
         public void FrameUpdate(FrameEventArgs args)
         {
-            Timer -= args.DeltaSeconds;
-            if (Timer <= 0)
-            {
-                Timer += BlinkTime;
-                CurrentlyLit = !CurrentlyLit;
-            }
+            Timer += args.DeltaSeconds;
+            UpdateOpacity();
+        }
+
+        private void UpdateOpacity()
+        {
+            if (Timer >= BlinkTime)
+                Timer %= BlinkTime;
+
+            if (Timer > HalfBlinkTime)
+                Opacity = Easings.InOutQuint((Timer - HalfBlinkTime) * (1 / HalfBlinkTime));
+            else
+                Opacity = 1 - Easings.InOutQuint(Timer * (1 / HalfBlinkTime));
         }
     }
 }

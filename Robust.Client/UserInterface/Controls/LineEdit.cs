@@ -904,17 +904,16 @@ namespace Robust.Client.UserInterface.Controls
                             color);
                     }
 
-                    if (_master._blink.CurrentlyLit)
-                    {
-                        var color = _master.StylePropertyDefault(
-                            StylePropertyCursorColor,
-                            Color.White);
+                    var cursorColor = _master.StylePropertyDefault(
+                        StylePropertyCursorColor,
+                        Color.White);
 
-                        handle.DrawRect(
-                            new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
-                                contentBox.Bottom),
-                            color);
-                    }
+                    cursorColor.A *= _master._blink.Opacity;
+
+                    handle.DrawRect(
+                        new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
+                            contentBox.Bottom),
+                        cursorColor);
                 }
             }
         }

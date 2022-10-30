@@ -20,10 +20,10 @@ public sealed class TextEdit : Control
 {
     [Dependency] private readonly IClipboardManager _clipboard = null!;
 
-    public const string StylePropertyStyleBox = "stylebox";
-    public const string StylePropertyCursorColor = "cursor-color";
+    public const string StylePropertyStyleBox       = "stylebox";
+    public const string StylePropertyCursorColor    = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
-    public const string StyleClassLineEditNotEditable = "notEditable";
+    public const string StylePseudoClassNotEditable = "notEditable";
     public const string StylePseudoClassPlaceholder = "placeholder";
 
     private readonly RenderBox _renderBox;
@@ -41,8 +41,6 @@ public sealed class TextEdit : Control
     private bool _lineUpdateQueued;
     private Rope.Node _textRope = Rope.Leaf.Empty;
 
-    public bool Editable { get; set; } = true;
-
     private bool _mouseSelectingText;
     private Vector2 _lastMouseSelectPos;
 
@@ -51,6 +49,7 @@ public sealed class TextEdit : Control
     private Vector2? _lastDebugMousePos;
 
     private TextEditShared.CursorBlink _blink;
+    private bool _editable = true;
 
     public TextEdit()
     {
@@ -62,6 +61,7 @@ public sealed class TextEdit : Control
         CanKeyboardFocus = true;
         KeyboardFocusOnClick = true;
         MouseFilter = MouseFilterMode.Stop;
+        DefaultCursorShape = CursorShape.IBeam;
     }
 
     public CursorPos CursorPosition
@@ -98,6 +98,25 @@ public sealed class TextEdit : Control
         {
             _textRope = value;
             QueueLineBreakUpdate();
+        }
+    }
+
+    public bool Editable
+    {
+        get => _editable;
+        set
+        {
+            _editable = value;
+            if (_editable)
+            {
+                DefaultCursorShape = CursorShape.IBeam;
+                RemoveStylePseudoClass(StylePseudoClassNotEditable);
+            }
+            else
+            {
+                DefaultCursorShape = CursorShape.Arrow;
+                AddStylePseudoClass(StylePseudoClassNotEditable);
+            }
         }
     }
 
@@ -511,6 +530,7 @@ public sealed class TextEdit : Control
             return;
 
         InsertAtCursor(args.AsRune.ToString());
+        _blink.Reset();
         // OnTextTyped?.Invoke(args);
     }
 
@@ -1002,16 +1022,21 @@ public sealed class TextEdit : Control
 
                 if (_master._cursorPosition.Index == count
                     && _master.HasKeyboardFocus()
-                    && _master._blink.CurrentlyLit
                     && _master._cursorPosition.Bias == bias)
                 {
+                    var cursorColor = _master.StylePropertyDefault(
+                        StylePropertyCursorColor,
+                        Color.White);
+
+                    cursorColor.A *= _master._blink.Opacity;
+
                     handle.DrawRect(
                         new UIBox2(
                             baseLine.X,
                             baseLine.Y - height + descent,
                             baseLine.X + 1,
                             baseLine.Y + descent),
-                        Color.White);
+                        cursorColor);
                 }
 
                 if (selectionLower.Index == count && selectionLower.Bias == bias)

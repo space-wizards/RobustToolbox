@@ -370,28 +370,14 @@ namespace Robust.Shared.Containers
         /// Attempts to remove all entities in a container.
         /// </summary>
         public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
-            bool attachToGridOrMap = false)
+            bool attachToGridOrMap = false, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+            var query = entMan.GetEntityQuery<TransformComponent>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if (Deleted(entity))
-                    continue;
-
-                if (force)
-                    container.ForceRemove(entity);
-                else
-                    container.Remove(entity);
-
-                if (moveTo.HasValue || attachToGridOrMap)
-                {
-                    var xform = Transform(entity);
-
-                    if (moveTo.HasValue)
-                        _xforms.SetCoordinates(xform, moveTo.Value);
-
-                    if (attachToGridOrMap)
-                        xform.AttachToGridOrMap();
-                }
+                if (query.TryGetComponent(entity, out var xform))
+                    container.Remove(entity, entMan, xform, null, attachToGridOrMap, true, force, moveTo);
             }
         }
 
@@ -446,12 +432,13 @@ namespace Robust.Shared.Containers
 
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
-            if ((MetaData(message.Entity).Flags & MetaDataFlags.InContainer) == 0)
+            var meta = MetaData(message.Entity);
+            if ((meta.Flags & MetaDataFlags.InContainer) == 0)
                 return;
 
             // Eject entities from their parent container if the parent change is done via setting the transform.
             if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
-                containerManager.Remove(message.Entity, reparent: false, force: true);
+                containerManager.Remove(message.Entity, message.Transform, meta,  reparent: false, force: true);
         }
     }
 }

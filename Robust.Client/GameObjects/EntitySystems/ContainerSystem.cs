@@ -1,24 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Robust.Client.Player;
-using Robust.Client.ViewVariables;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
     public sealed class ContainerSystem : SharedContainerSystem
     {
+        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
@@ -64,8 +63,8 @@ namespace Robust.Client.GameObjects
                 if (cast.Containers.ContainsKey(id))
                     continue;
 
-                EmptyContainer(container, true);
-                container.Shutdown(EntityManager);
+                EmptyContainer(container, true, null, false, EntityManager);
+                container.Shutdown(EntityManager, _netMan);
                 toDelete.Add(id);
             }
 

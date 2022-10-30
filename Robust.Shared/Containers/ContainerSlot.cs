@@ -99,10 +99,15 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalShutdown(IEntityManager entMan)
+        protected override void InternalShutdown(IEntityManager entMan, bool isClient)
         {
-            if (ContainedEntity is {} contained)
-                entMan.DeleteEntity(contained);
+            if (ContainedEntity is not { } entity)
+                return;
+
+            if (!isClient)
+                entMan.DeleteEntity(entity);
+            else if (entMan.EntityExists(entity))
+                Remove(entity, entMan, reparent: false, addToBroadphase: true, force: true);
         }
     }
 }

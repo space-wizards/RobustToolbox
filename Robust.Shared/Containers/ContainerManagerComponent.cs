@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -24,6 +25,7 @@ namespace Robust.Shared.Containers
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         [ViewVariables]
         [DataField("containers")]
@@ -47,10 +49,9 @@ namespace Robust.Shared.Containers
         {
             base.OnRemove();
 
-            // IContainer.Shutdown modifies the _containers collection
             foreach (var container in Containers.Values)
             {
-                container.Shutdown(_entMan);
+                container.Shutdown(_entMan, _netMan);
             }
 
             Containers.Clear();

@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -127,7 +128,7 @@ namespace Robust.Shared.Containers
 
             // Attach to new parent
             var oldParent = transform.ParentUid;
-            xformSys.SetCoordinates(transform, new Map.EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
+            xformSys.SetCoordinates(transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
 
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
@@ -324,16 +325,16 @@ namespace Robust.Shared.Containers
         public abstract bool Contains(EntityUid contained);
 
         /// <inheritdoc />
-        public void Shutdown(IEntityManager? entMan = null)
+        public void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            InternalShutdown(entMan);
+            IoCManager.Resolve(ref entMan, ref netMan);
+            InternalShutdown(entMan, netMan.IsClient);
             Manager.Containers.Remove(ID);
             Deleted = true;
         }
 
         /// <inheritdoc />
-        protected abstract void InternalShutdown(IEntityManager entMan);
+        protected abstract void InternalShutdown(IEntityManager entMan, bool isClient);
 
         /// <summary>
         /// Implement to store the reference in whatever form you want

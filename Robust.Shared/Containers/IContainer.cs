@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -144,6 +145,6 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Clears the container and marks it as deleted.
         /// </summary>
-        void Shutdown(IEntityManager? entMan = null);
+        void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null);
     }
 }

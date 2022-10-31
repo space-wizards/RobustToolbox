@@ -9,6 +9,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
 using System.Collections.Generic;
 
 namespace Robust.Shared.Containers
@@ -289,11 +290,9 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        /// <inheritdoc />
+        [Obsolete("use force option in Remove()")]
         public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
-        {
-            Remove(toRemove, entMan, null, meta, false, true);
-        }
+            => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
 
         /// <inheritdoc />
         public virtual bool CanRemove(EntityUid toRemove, IEntityManager? entMan = null)

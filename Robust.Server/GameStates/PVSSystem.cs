@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Robust.Server.GameStates;
@@ -321,23 +322,19 @@ internal sealed partial class PVSSystem : EntitySystem
             return;
         DebugTools.Assert(!_mapManager.IsGrid(ev.Sender));
 
-        if (ev.Component.MapUid == ev.Sender)
-            return;
+        if (!ev.Component.ParentUid.IsValid())
+        {
+            // This entity is either a map, terminating, or a rare null-space entity.
+            if (Terminating(ev.Sender))
+                return;
+
+            if (ev.Component.MapUid == ev.Sender)
+                return;
+        }
+
         DebugTools.Assert(!_mapManager.IsMap(ev.Sender));
 
         var xformQuery = GetEntityQuery<TransformComponent>();
-
-        if (ev.ParentChanged)
-        {
-            // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
-            var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
-            var indices = PVSCollection<EntityUid>.GetChunkIndices(oldCoordinates.Position);
-            if (ev.Component.GridUid != null)
-                _entityPvsCollection.MarkDirty(new GridChunkLocation(ev.Component.GridUid.Value, indices));
-            else
-                _entityPvsCollection.MarkDirty(new MapChunkLocation(ev.Component.MapID, indices));
-        }
-
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }

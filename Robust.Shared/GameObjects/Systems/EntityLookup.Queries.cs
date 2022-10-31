@@ -367,7 +367,7 @@ public sealed partial class EntityLookupSystem
         {
             AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
-            if ((flags & LookupFlags.Anchored) != 0x0)
+            if ((flags & (LookupFlags.Anchored | LookupFlags.Static)) != 0x0)
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                 {
@@ -480,7 +480,7 @@ public sealed partial class EntityLookupSystem
 
         if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var intersecting = GetEntitiesInRange(mapPos, range, flags).ToHashSet();
+        var intersecting = GetEntitiesInRange(mapPos, range, flags);
         intersecting.Remove(uid);
         return intersecting;
     }
@@ -495,7 +495,7 @@ public sealed partial class EntityLookupSystem
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
         var bounds = GetAABBNoContainer(uid, worldPos, worldRot);
 
-        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags).ToHashSet();
+        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags);
         intersecting.Remove(uid);
         return intersecting;
     }

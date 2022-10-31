@@ -214,13 +214,24 @@ public sealed partial class SerializationManager
             copier.CopyTo(this, source, ref commonTarget, skipHook, context);
         }
 
-        if (ShouldReturnSource(typeof(TCommon)))
+        Type type;
+        if (typeof(TCommon).IsAbstract || typeof(TCommon).IsInterface)
+        {
+            type = source.GetType();
+            definition ??= GetDefinition(source.GetType());
+        }
+        else
+        {
+            type = typeof(TCommon);
+        }
+
+        if (ShouldReturnSource(type))
         {
             target = source;
             return;
         }
 
-        if (typeof(TCommon).IsArray)
+        if (type.IsArray)
         {
             var sourceArray = (source as Array)!;
             var targetArray = (target as Array)!;
@@ -247,8 +258,7 @@ public sealed partial class SerializationManager
 
         if (definition == null)
         {
-            if(!TryGetDefinition(source.GetType(), out definition))
-                throw new ArgumentException($"No data definition found for type {typeof(TCommon)} when running CopyTo");
+            throw new ArgumentException($"No data definition found for type {type} when running CopyTo");
         }
 
         var targetObj = (object)target!;
@@ -314,7 +324,11 @@ public sealed partial class SerializationManager
             return;
         }
 
+        if(source is ISerializationHooks hooks)
+            hooks.BeforeSerialization();
         GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context, skipHook);
+        if(target is ISerializationHooks hookres)
+            hookres.AfterDeserialization();
     }
 
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)

@@ -94,15 +94,14 @@ namespace Robust.Shared.GameObjects
                 if (!xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
 
+                if (!aabb.Contains(xform.LocalPosition))
+                    continue;
+
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
-                {
                     DetachParentToNull(xform, xformQuery, metaQuery, gridXform);
-                    continue;
-                }
-
-                if (aabb.Contains(xform.LocalPosition))
+                else
                     SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }

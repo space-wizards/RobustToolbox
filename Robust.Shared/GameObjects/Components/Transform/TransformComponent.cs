@@ -37,6 +37,7 @@ namespace Robust.Shared.GameObjects
         ///     Maybe this should be moved to its own component eventually, but at least currently comps are not structs
         ///     and this data is required whenever any entity moves, so this will just save a component lookup.
         /// </remarks>
+        [ViewVariables]
         internal BroadphaseData? Broadphase;
 
         internal bool MatricesDirty = false;

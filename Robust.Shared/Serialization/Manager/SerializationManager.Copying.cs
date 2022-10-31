@@ -20,13 +20,12 @@ public sealed partial class SerializationManager
         bool skipHook,
         ISerializationContext? context = null);
 
-    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, CopyToDelegate>> _copyToDelegates = new();
-    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, CreateCopyDelegate>> _createCopyDelegates = new();
+    private readonly ConcurrentDictionary<Type, CopyToDelegate> _copyToDelegates = new();
+    private readonly ConcurrentDictionary<Type, CreateCopyDelegate> _createCopyDelegates = new();
 
     private CopyToDelegate GetOrCreateCopyToDelegate(Type commonType, Type sourceType, Type targetType)
     {
         return _copyToDelegates
-            .GetOrAdd(commonType, _ => new ConcurrentDictionary<Type, CopyToDelegate>())
             .GetOrAdd(commonType, static (t, tuple) =>
             {
                 var instanceParam = Expression.Constant(tuple.manager);
@@ -86,7 +85,6 @@ public sealed partial class SerializationManager
     private CreateCopyDelegate GetOrCreateCreateCopyDelegate(Type sourceType)
     {
         return _createCopyDelegates
-            .GetOrAdd(sourceType, _ => new ConcurrentDictionary<Type, CreateCopyDelegate>())
             .GetOrAdd(sourceType, static (t, tuple) =>
             {
                 var instanceParam = Expression.Constant(tuple.manager);
@@ -237,9 +235,7 @@ public sealed partial class SerializationManager
         //todo paul serv3 more?
         var type = typeof(T);
         if (ShouldReturnSource(type))
-        {
             return source;
-        }
 
         var isRecord = GetDefinition(type)?.IsRecord ?? false;
         var target = (T) GetOrCreateInstantiator(type, isRecord)();
@@ -250,7 +246,8 @@ public sealed partial class SerializationManager
 
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
     {
-        if (source == null) return null;
+        if (source == null)
+            return null;
 
         return GetOrCreateCreateCopyDelegate(source.GetType())(source, skipHook, context);
     }

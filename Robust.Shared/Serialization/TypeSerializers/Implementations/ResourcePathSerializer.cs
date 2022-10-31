@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
+    public sealed class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>, ITypeCopyCreator<ResourcePath>
     {
         public ResourcePath Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

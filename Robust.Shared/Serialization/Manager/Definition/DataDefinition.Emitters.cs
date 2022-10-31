@@ -174,37 +174,36 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var sourceValue = accessor(ref source);
                     var targetValue = accessor(ref target);
 
-                    if (sourceValue != null &&
-                        targetValue != null &&
-                        !TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
+                    if (targetValue == null || sourceValue == null)
                     {
-                        manager.CopyTo(sourceValue, ref targetValue, context);
+                        targetValue = manager.CreateCopy(sourceValue, context);
+                    }
+                    else if (field.Attribute.CustomTypeSerializer != null)
+                    {
+                        if (FieldInterfaceInfos[i].Copier)
+                        {
+                            manager.CopyToWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                                ref targetValue, context: context);
+                        }
+                        else if (FieldInterfaceInfos[i].CopyCreator)
+                        {
+                            targetValue = manager.CreateCopyWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                                context: context);
+                        }
                     }
                     else
                     {
-                        if (sourceValue == null)
+                        if (TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
                         {
-                            targetValue = null;
+                            manager.CopyTo(sourceValue, ref targetValue, context);
                         }
                         else
                         {
-                            if (targetValue != null && field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
-                            {
-                                manager.CopyToWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
-                                    ref targetValue, context: context);
-                            }
-                            else if (targetValue == null && field.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
-                            {
-                                targetValue = manager.CreateCopyWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
-                                    context: context);
-
-                            }
-                            else
-                            {
-                                manager.CopyTo(sourceValue, ref targetValue, context);
-                            }
+                            targetValue = manager.CreateCopy(sourceValue, context);
                         }
                     }
+
+
 
                     FieldAssigners[i](ref target, targetValue);
                 }

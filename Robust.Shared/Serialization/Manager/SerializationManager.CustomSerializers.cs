@@ -185,7 +185,7 @@ namespace Robust.Shared.Serialization.Manager
                     serializerConstant,
                     typeof(ITypeCopyCreator<>).MakeGenericType(tuple.source).GetMethod("CreateCopy")!,
                     instanceParam,
-                    sourceParam,
+                    Expression.Convert(sourceParam, tuple.source),
                     skipHookParam,
                     contextParam);
 

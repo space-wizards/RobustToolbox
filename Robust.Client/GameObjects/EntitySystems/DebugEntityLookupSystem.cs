@@ -92,6 +92,12 @@ public sealed class EntityLookupOverlay : Overlay
                 return true;
             }, lookupAABB);
 
+            lookup.StaticSundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
+            {
+                state.Add(value);
+                return true;
+            }, lookupAABB);
+
             lookup.SundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
             {
                 state.Add(value);

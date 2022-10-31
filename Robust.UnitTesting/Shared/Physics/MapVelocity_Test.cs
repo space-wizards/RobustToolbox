@@ -1,12 +1,11 @@
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using System.Threading.Tasks;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -22,6 +21,10 @@ namespace Robust.UnitTesting.Shared.Physics
   - type: Physics
     bodyType: Dynamic
   - type: Fixtures
+    fixtures:
+    - shape:
+        !type:PhysShapeCircle
+        radius: 0.35
 ";
         [Test]
         public async Task TestMapVelocities()

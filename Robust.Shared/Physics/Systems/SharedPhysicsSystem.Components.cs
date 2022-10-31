@@ -33,12 +33,14 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly IMapManager _mapMan = default!;
 
     #region Lifetime
 
@@ -47,7 +49,7 @@ public partial class SharedPhysicsSystem
         var xform = Transform(uid);
 
 
-        if (component.CanCollide && (_containerSystem.IsEntityInContainer(uid) || xform.MapID == MapId.Nullspace))
+        if (component.CanCollide && (_containerSystem.IsEntityOrParentInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
             SetCanCollide(component, false, false);
         }
@@ -61,19 +63,14 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        OnPhysicsInitialized(uid);
+        var fixtures = EntityManager.EnsureComponent<FixturesComponent>(uid);
+        _fixtures.OnPhysicsInit(uid, fixtures);
 
-        // Issue the event for stuff that needs it.
-        if (component._canCollide)
-        {
-            var ev = new CollisionChangeEvent(component, true);
-            RaiseLocalEvent(ref ev);
-        }
-    }
+        if (fixtures.FixtureCount == 0)
+            component._canCollide = false;
 
-    private void OnPhysicsInitialized(EntityUid uid)
-    {
-        _fixtures.OnPhysicsInit(uid);
+        var ev = new CollisionChangeEvent(component, component.CanCollide);
+        RaiseLocalEvent(ref ev);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -229,7 +226,7 @@ public partial class SharedPhysicsSystem
         body.InvI = 0.0f;
         body._localCenter = Vector2.Zero;
 
-        if (!Resolve(body.Owner, ref fixtures))
+        if (!Resolve(body.Owner, ref fixtures, false))
             return;
 
         var localCenter = Vector2.Zero;
@@ -358,8 +355,8 @@ public partial class SharedPhysicsSystem
     {
         if (body._awake == value)
             return;
-
-        if (value && body.BodyType == BodyType.Static)
+        
+        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
             return;
 
         body._awake = value;
@@ -380,6 +377,12 @@ public partial class SharedPhysicsSystem
             SetSleepTime(body, 0);
 
         Dirty(body);
+    }
+
+    public void TrySetBodyType(EntityUid uid, BodyType value)
+    {
+        if (TryComp(uid, out PhysicsComponent? body))
+            SetBodyType(body, value);
     }
 
     public void SetBodyType(PhysicsComponent body, BodyType value)
@@ -408,22 +411,41 @@ public partial class SharedPhysicsSystem
 
         _broadphase.RegenerateContacts(body);
 
-        var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
-        RaiseLocalEvent(body.Owner, ref ev, true);
+        if (body.Initialized)
+        {
+            var ev = new PhysicsBodyTypeChangedEvent(body.Owner, body._bodyType, oldType, body);
+            RaiseLocalEvent(body.Owner, ref ev, true);
+        }
     }
+
 
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
     /// </summary>
     /// <returns>CanCollide</returns>
-    public bool SetCanCollide(PhysicsComponent body, bool value, bool dirty = true)
+    /// <param name="force">Bypasses fixture and container checks</param>
+    public bool SetCanCollide(PhysicsComponent body, bool value, bool dirty = true, FixturesComponent? fixtures = null, bool force = false)
     {
         if (body._canCollide == value)
             return value;
 
-        // If we're recursively in a container then never set this.
-        if (value && _containerSystem.IsEntityOrParentInContainer(body.Owner))
-            return false;
+        if (value)
+        {
+            if (!force)
+            {
+                // If we're recursively in a container then never set this.
+                if (_containerSystem.IsEntityOrParentInContainer(body.Owner))
+                    return false;
+
+                if (Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount == 0 && !_mapMan.IsGrid(body.Owner))
+                    return false;
+            }
+            else
+            {
+                DebugTools.Assert(!_containerSystem.IsEntityOrParentInContainer(body.Owner));
+                DebugTools.Assert((Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount > 0) || _mapMan.IsGrid(body.Owner));
+            }
+        }
 
         // Need to do this before SetAwake to avoid double-changing it.
         body._canCollide = value;
@@ -431,8 +453,11 @@ public partial class SharedPhysicsSystem
         if (!value)
             SetAwake(body, false);
 
-        var ev = new CollisionChangeEvent(body, value);
-        RaiseLocalEvent(ref ev);
+        if (body.Initialized)
+        {
+            var ev = new CollisionChangeEvent(body, value);
+            RaiseLocalEvent(ref ev);
+        }
 
         if (dirty)
             Dirty(body);
@@ -519,10 +544,11 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Tries to enable the body and also set it awake.
     /// </summary>
+    /// <param name="force">Bypasses fixture and container checks</param>
     /// <returns>true if the body is collidable and awake</returns>
-    public bool WakeBody(PhysicsComponent body)
+    public bool WakeBody(PhysicsComponent body, FixturesComponent? fixtures = null, bool force = false)
     {
-        if (!SetCanCollide(body, true))
+        if (!SetCanCollide(body, true, fixtures: fixtures, force: force))
             return false;
 
         SetAwake(body, true);

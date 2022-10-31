@@ -1,22 +1,22 @@
-using System;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
     [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+    [IoC.Dependency] private readonly EntityLookupSystem _lookup = default!;
+    [IoC.Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     #region Anchoring
 
@@ -62,26 +62,26 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
     {
-        var result = grid.AddToSnapGridCell(tileIndices, xform.Owner);
+        if (!grid.AddToSnapGridCell(tileIndices, xform.Owner))
+            return false;
 
-        if (result)
+        var wasAnchored = xform._anchored;
+        xform._anchored = true;
+
+        // Mark as static before doing position changes, to avoid the velocity change on parent change.
+        _physics.TrySetBodyType(xform.Owner, BodyType.Static);
+
+        if (!wasAnchored && xform.Running)
         {
-            // Mark as static first to avoid the velocity change on parent change.
-            if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-                physicsComponent.BodyType = BodyType.Static;
-
-            // anchor snapping
-            // Internally it will do the parent update; doing it separately just triggers a redundant move.
-            xform.Coordinates = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
-            xform.SetAnchored(result);
+            var ev = new AnchorStateChangedEvent(xform);
+            RaiseLocalEvent(xform.Owner, ref ev, true);
         }
 
-        return result;
-    }
+        // Anchor snapping. Note that set coordiantes will dirty the component for us.
+        var pos = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
+        SetCoordinates(xform, pos, unanchor: false);
 
-    public bool AnchorEntity(TransformComponent xform, IMapGridComponent component)
-    {
-        return AnchorEntity(xform, component.Grid);
+        return true;
     }
 
     public bool AnchorEntity(TransformComponent xform, IMapGrid grid)
@@ -92,33 +92,43 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(TransformComponent xform)
     {
-        if (!_mapManager.TryGetGrid(xform.GridUid, out var grid))
-        {
-            return false;
-        }
-
-        var tileIndices = grid.TileIndicesFor(xform.Coordinates);
-        return AnchorEntity(xform, grid, tileIndices);
+        return _mapManager.TryGetGrid(xform.GridUid, out var grid)
+            && AnchorEntity(xform, grid, grid.TileIndicesFor(xform.Coordinates));
     }
 
-    public void Unanchor(TransformComponent xform)
+    public void Unanchor(TransformComponent xform, bool setPhysics = true)
     {
-        //HACK: Client grid pivot causes this.
-        //TODO: make grid components the actual grid
-        if(xform.GridUid == null)
+        if (!xform._anchored)
             return;
 
-        UnanchorEntity(xform, Comp<IMapGridComponent>(xform.GridUid.Value));
-    }
+        Dirty(xform);
+        xform._anchored = false;
 
-    public void UnanchorEntity(TransformComponent xform, IMapGridComponent grid)
-    {
-        var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-        grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
-        if (TryComp<PhysicsComponent>(xform.Owner, out var physicsComponent))
-            physicsComponent.BodyType = BodyType.Dynamic;
+        if (setPhysics)
+            _physics.TrySetBodyType(xform.Owner, BodyType.Dynamic);
 
-        xform.SetAnchored(false);
+        if (xform.LifeStage < ComponentLifeStage.Initialized)
+            return;
+
+        if (TryComp(xform.GridUid, out IMapGridComponent? grid))
+        {
+            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+        }
+        else if (xform.Initialized)
+        {
+            //HACK: Client grid pivot causes this.
+            //TODO: make grid components the actual grid
+
+            // I have NFI what the comment above is on about, but this doesn't seem good, so lets log an error if it happens.
+            Logger.Error($"Missing grid while unanchoring {ToPrettyString(xform.Owner)}");
+        }
+
+        if (!xform.Running)
+            return;
+
+        var ev = new AnchorStateChangedEvent(xform);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
     }
 
     #endregion
@@ -231,26 +241,60 @@ public abstract partial class SharedTransformSystem
 
         if (component.GridUid == null)
             SetGridId(component, component.FindGridEntityId(xformQuery));
-        component.MatricesDirty = true;
-    }
 
-    private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
-    {
-        // Re-Anchor the entity if needed.
-        if (component._anchored && _mapManager.TryFindGridAt(component.MapPosition, out var grid))
+        component.MatricesDirty = true;
+
+        if (!component._anchored)
+            return;
+
+        IMapGrid? grid;
+
+        // First try find grid via parent:
+        if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out IMapGridComponent? gridComp))
         {
-            if (!grid.IsAnchored(component.Coordinates, uid))
-            {
-                AnchorEntity(component, grid);
-            }
+            grid = gridComp.Grid;
         }
         else
+        {
+            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordiantes)
+            // in that case, we attempt to attach to a grid.
+            var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
+            _mapManager.TryFindGridAt(pos, out grid);
+        }
+
+        if (grid == null)
+        {
+            Unanchor(component);
+            return;
+        }
+
+        if (!AnchorEntity(component, grid))
             component._anchored = false;
+    }
 
-        // Keep the cached matrices in sync with the fields.
-        Dirty(component);
+    private void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
+    {
+        // TODO PERFORMANCE remove AnchorStateChangedEvent and EntParentChangedMessage events here.
 
-        var ev = new TransformStartupEvent(component);
+        // I hate this. Apparently some entities rely on this to perform their initialization logic (e.g., power
+        // receivers or lights?). Those components should just do their own init logic, instead of wasting time raising
+        // this event on every entity that gets created.
+        if (xform.Anchored)
+        {
+            DebugTools.Assert(xform.ParentUid == xform.GridUid && xform.ParentUid.IsValid());
+            var anchorEv = new AnchorStateChangedEvent(xform);
+            RaiseLocalEvent(uid, ref anchorEv, true);
+        }
+
+        // I hate this too. Once again, required for shit like containers because they CBF doing their own init logic
+        // and rely on parent changed messages instead. Might also be used by broadphase stuff?
+        var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
+        RaiseLocalEvent(uid, ref parentEv, true);
+
+        // there should be no deferred events before startup has finished.
+        DebugTools.Assert(xform._oldCoords == null && xform._oldLocalRotation == null);
+
+        var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
     }
 
@@ -263,7 +307,8 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
-        if (xform._gridUid == gridId) return;
+        if (xform._gridUid == gridId)
+            return;
 
         DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
 
@@ -325,6 +370,101 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
+    #region Coordinates
+
+    public void SetCoordinates(EntityUid uid, EntityCoordinates value)
+    {
+        SetCoordinates(Transform(uid), value);
+    }
+
+    /// <summary>
+    ///     This sets the local position and parent of an entity.
+    /// </summary>
+    /// <param name="rotation">Final local rotation. If not specified, this will attempt to preserve world
+    /// rotation.</param>
+    /// <param name="unanchor">Whether or not to unanchor the entity before moving. Note that this will still move the
+    /// entity even when false. If you set this to false, you need to manually manage the grid lookup changes and ensure
+    /// the final position is valid</param>
+    public void SetCoordinates(TransformComponent xform, EntityCoordinates value, Angle? rotation = null, TransformComponent? newParent = null, bool unanchor = true)
+    {
+        // NOTE: This setter must be callable from before initialize.
+
+        if (xform.ParentUid == value.EntityId
+            && xform._localPosition.EqualsApprox(value.Position)
+            && (rotation == null || MathHelper.CloseTo(rotation.Value.Theta, xform._localRotation.Theta)))
+        {
+            return;
+        }
+
+        var oldPosition = xform.Coordinates;
+        var oldRotation = xform._localRotation;
+
+        if (xform.Anchored && unanchor)
+            Unanchor(xform);
+
+        // Set new values
+        Dirty(xform);
+        xform.MatricesDirty = true;
+        xform._localPosition = value.Position;
+
+        if (rotation != null)
+            xform._localRotation = rotation.Value;
+
+        // Perform parent change logic
+        if (value.EntityId != xform._parent)
+        {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            if (!xformQuery.Resolve(value.EntityId, ref newParent))
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(xform.Owner)} to non-existent entity {value.EntityId}");
+            }
+
+            if (value.EntityId == xform.Owner)
+            {
+                QueueDel(xform.Owner);
+                throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(xform.Owner)}");
+            }
+
+            if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
+            {
+                Logger.Error($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(xform.Owner)}, new parent: {ToPrettyString(value.EntityId)}");
+                QueueDel(xform.Owner);
+                return;
+            }
+
+            var oldParent = xform._parent.IsValid() ? xformQuery.GetComponent(xform._parent) : null;
+            oldParent?._children.Remove(xform.Owner);
+            newParent._children.Add(xform.Owner);
+
+            xform._parent = value.EntityId;
+            var oldMapId = xform.MapID;
+            xform.ChangeMapId(newParent.MapID, xformQuery);
+            SetGridId(xform, xform.FindGridEntityId(xformQuery), xformQuery);
+
+            if (xform.Initialized)
+            {
+                // preserve world rotation
+                if (rotation == null && oldParent != null)
+                    xform._localRotation += GetWorldRotation(oldParent, xformQuery) - GetWorldRotation(newParent, xformQuery);
+
+                var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent?.Owner, oldMapId, xform);
+                RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+            }
+        }
+
+        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred. If this changes, also need to relocate the `xform.MatricesDirty = true`
+
+        if (!xform.Initialized)
+            return;
+
+        var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref moveEvent, true);
+    }
+
+    #endregion
+
     #region Parent
 
     public TransformComponent? GetParent(EntityUid uid)
@@ -348,30 +488,29 @@ public abstract partial class SharedTransformSystem
         return xformQuery.GetComponent(xform.ParentUid);
     }
 
-    /* TODO: Need to peel out relevant bits of AttachParent e.g. children updates.
-    public void SetParent(TransformComponent xform, EntityUid parent, bool move = true)
+    public void SetParent(EntityUid uid, EntityUid parent)
     {
-        if (xform.ParentUid == parent) return;
-
-        if (!parent.IsValid())
-        {
-            xform.AttachToGridOrMap();
-            return;
-        }
-
-        if (xform.Anchored)
-        {
-            xform.Anchored = false;
-        }
-
-        if (move)
-            xform.AttachParent(parent);
-        else
-            xform._parent = parent;
-
-        Dirty(xform);
+        var query = GetEntityQuery<TransformComponent>();
+        SetParent(query.GetComponent(uid), parent, query);
     }
-    */
+
+    public void SetParent(TransformComponent xform, EntityUid parent, TransformComponent? parentXform = null)
+    {
+        SetParent(xform, parent, GetEntityQuery<TransformComponent>(), parentXform);
+    }
+
+    public void SetParent(TransformComponent xform, EntityUid parent, EntityQuery<TransformComponent> xformQuery, TransformComponent? parentXform = null)
+    {
+        if (xform.ParentUid == parent || !xformQuery.Resolve(parent, ref parentXform))
+            return;
+
+        var (_, parRot, parInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+        var (pos, rot) = GetWorldPositionRotation(xform, xformQuery);
+        var newPos = parInvMatrix.Transform(pos);
+        var newRot = rot - parRot;
+
+        SetCoordinates(xform, new EntityCoordinates(parent, newPos), newRot, parentXform);
+    }
 
     #endregion
 
@@ -388,6 +527,7 @@ public abstract partial class SharedTransformSystem
 
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
+        DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
         args.State = new TransformComponentState(
             component.LocalPosition,
             component.LocalRotation,
@@ -396,97 +536,78 @@ public abstract partial class SharedTransformSystem
             component.Anchored);
     }
 
-    internal void OnHandleState(EntityUid uid, TransformComponent component, ref ComponentHandleState args)
+    internal void OnHandleState(EntityUid uid, TransformComponent xform, ref ComponentHandleState args)
     {
         if (args.Current is TransformComponentState newState)
         {
             var newParentId = newState.ParentID;
-            var rebuildMatrices = false;
+            var oldAnchored = xform.Anchored;
 
-            // Update to new parent.
-            // if the new one isn't valid (e.g. PVS) then we'll just return early after yeeting them to nullspace.
-            if (component.ParentUid != newParentId)
+            // update actual position data, if required
+            if (!xform.LocalPosition.EqualsApprox(newState.LocalPosition)
+                || !xform.LocalRotation.EqualsApprox(newState.Rotation)
+                || xform.ParentUid != newParentId)
             {
-                if (!newParentId.IsValid())
+                // remove from any old grid lookups
+                if (xform.Anchored && TryComp(xform.ParentUid, out IMapGridComponent? grid))
                 {
-                    DetachParentToNull(component);
+                    var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
+                    grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
                 }
-                else
+
+                // Set anchor state true during the move event unless the entity wasn't and isn't being anchored. This avoids unnecessary entity lookup changes.
+                xform._anchored |= newState.Anchored;
+
+                // Update the action position, rotation, and parent (and hence also map, grid, etc).
+                SetCoordinates(xform, new EntityCoordinates(newParentId, newState.LocalPosition), newState.Rotation, unanchor: false);
+
+                xform._anchored = newState.Anchored;
+
+                // Add to any new grid lookups. Normal entity lookups will either have been handled by the move event,
+                // or by the following AnchorStateChangedEvent
+                if (xform._anchored && xform.Initialized)
                 {
-                    if (!Exists(newParentId))
+                    if (xform.ParentUid == xform.GridUid && TryComp(xform.GridUid, out IMapGridComponent? newGrid))
                     {
-#if !EXCEPTION_TOLERANCE
-                        throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
-#else
-                        _logger.Error($"Unable to find new parent {newParentId}! Deleting {ToPrettyString(uid)}");
-                        QueueDel(uid);
-                        return;
-#endif
+                        var tileIndices = newGrid.Grid.TileIndicesFor(xform.Coordinates);
+                        newGrid.Grid.AddToSnapGridCell(tileIndices, xform.Owner);
                     }
-
-                    component.AttachParent(Transform(newParentId));
+                    else
+                    {
+                        DebugTools.Assert("New transform state coordinates are incompatible with anchoring.");
+                        xform._anchored = false;
+                    }
                 }
-
-                rebuildMatrices = true;
-            }
-
-            if (!component.LocalPosition.EqualsApprox(newState.LocalPosition) || !component.LocalRotation.EqualsApprox(newState.Rotation))
-            {
-                var oldPos = component.Coordinates;
-                component._localPosition = newState.LocalPosition;
-                var oldRot = component.LocalRotation;
-                component._localRotation = newState.Rotation;
-
-                var ev = new MoveEvent(uid, oldPos, component.Coordinates, oldRot, component.LocalRotation, component, _gameTiming.ApplyingState);
-                DeferMoveEvent(ref ev);
-
-                rebuildMatrices = true;
-            }
-
-            component._prevPosition = newState.LocalPosition;
-            component._prevRotation = newState.Rotation;
-
-            // Anchored currently does a TryFindGridAt internally which may fail in particularly... violent situations.
-            if (newState.Anchored && !component.Anchored)
-            {
-                DebugTools.Assert(component.GridUid != null);
-                var iGrid = Comp<MapGridComponent>(component.GridUid!.Value);
-                AnchorEntity(component, iGrid);
-                DebugTools.Assert(component.Anchored);
             }
             else
             {
-                component.Anchored = newState.Anchored;
+                xform.Anchored = newState.Anchored;
             }
 
-            component._noLocalRotation = newState.NoLocalRotation;
-
-            // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.
-            // If this assert fails, the code above that sets the parent is broken.
-            DebugTools.Assert(!component.ParentUid.IsClientSide(), "Transform received a state, but is still parented to a client entity.");
-
-            // Whatever happened on the client, these should still be correct
-            DebugTools.Assert(component.ParentUid == newState.ParentID);
-            DebugTools.Assert(component.Anchored == newState.Anchored);
-
-            if (rebuildMatrices)
+            if (oldAnchored != newState.Anchored && xform.Initialized)
             {
-                component.MatricesDirty = true;
+                var ev = new AnchorStateChangedEvent(xform);
+                RaiseLocalEvent(xform.Owner, ref ev, true);
             }
+            
+            xform._prevPosition = newState.LocalPosition;
+            xform._prevRotation = newState.Rotation;
+            xform._noLocalRotation = newState.NoLocalRotation;
 
-            Dirty(component);
+            DebugTools.Assert(xform.ParentUid == newState.ParentID, "Transform state failed to set parent");
+            DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
         if (args.Next is TransformComponentState nextTransform)
         {
-            component._nextPosition = nextTransform.LocalPosition;
-            component._nextRotation = nextTransform.Rotation;
-            component.LerpParent = nextTransform.ParentID;
-            ActivateLerp(component);
+            xform._nextPosition = nextTransform.LocalPosition;
+            xform._nextRotation = nextTransform.Rotation;
+            xform.LerpParent = nextTransform.ParentID;
+            ActivateLerp(xform);
         }
         else
         {
-            DeactivateLerp(component);
+            DeactivateLerp(xform);
         }
     }
 
@@ -733,6 +854,9 @@ public abstract partial class SharedTransformSystem
         if (!xform.DeferUpdates)
         {
             xform.MatricesDirty = true;
+            if (!xform.Initialized)
+                return;
+
             var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
             RaiseLocalEvent(xform.Owner, ref moveEvent, true);
         }
@@ -788,8 +912,11 @@ public abstract partial class SharedTransformSystem
         var meta = metaQuery.GetComponent(xform.Owner);
         _metaSys.SetEntityPaused(xform.Owner, mapPaused, meta);
 
-        xform.MapID = newMapId;
-        xform.UpdateChildMapIdsRecursive(xform.MapID, mapPaused, xformQuery, metaQuery, _metaSys);
+        // Map entities retain their map Uids
+        if (xform.Owner != xform.MapUid)
+            xform.MapID = newMapId;
+
+        xform.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, _metaSys);
     }
 
     public void DetachParentToNull(TransformComponent xform)
@@ -803,13 +930,15 @@ public abstract partial class SharedTransformSystem
     public void DetachParentToNull(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldConcrete = null)
     {
         var oldParent = xform._parent;
-
-        // Even though they may already be in nullspace we may want to deparent them anyway
         if (!oldParent.IsValid())
         {
             DebugTools.Assert(!xform.Anchored);
+            DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
             return;
         }
+
+        // Before making any changes to physics or transforms, remove from the current broadphase
+        _lookup.RemoveFromEntityTree(xform.Owner, xform, xformQuery);
 
         // Stop any active lerps
         xform._nextPosition = null;
@@ -829,21 +958,29 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);
         }
 
+        // TODO replace this with just setting the xform's entity coordinates.
+
         oldConcrete ??= xformQuery.GetComponent(oldParent);
         oldConcrete._children.Remove(xform.Owner);
 
-        xform._parent = EntityUid.Invalid;
+        var oldPos = xform.Coordinates;
+        var oldRot = xform.LocalRotation;
         var oldMap = xform.MapID;
+        xform._parent = EntityUid.Invalid;
 
         // aaaaaaaaaaaaaaaa
         ChangeMapId(xform, MapId.Nullspace, xformQuery, metaQuery);
 
-        if (xform.GridUid != null)
+        if (xform.GridUid != null && xform.GridUid != xform.Owner)
             SetGridId(xform, null, xformQuery);
 
         var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent, oldMap, xform);
         RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
+
+        var ev = new MoveEvent(xform.Owner, oldPos, default, oldRot, default, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref ev, true);
         Dirty(xform);
+        DebugTools.Assert((MetaData(xform.Owner).Flags & MetaDataFlags.InContainer) == 0x0);
     }
     #endregion
 }

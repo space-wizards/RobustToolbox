@@ -71,12 +71,6 @@ namespace Robust.Shared.Physics.Systems
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
 
-            SubscribeLocalEvent<MapChangedEvent>(ev =>
-            {
-                if (ev.Created)
-                    OnMapAdded(ref ev);
-            });
-
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
@@ -272,8 +266,6 @@ namespace Robust.Shared.Physics.Systems
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
-
-        protected abstract void OnMapAdded(ref MapChangedEvent eventArgs);
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {

@@ -727,13 +727,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
-        // Iterate over visible chunks and add entities.
-        // TODO reorder chunks and allow early termination?
-        // Previously this iteration terminated early whenever the PVS budget was full. However, if this iteration
-        // iterates over new chunks first, then this can lead to a situation where previously seen entities in currently
-        // still visible chunks are never added to visibleEnts, and therefore get treated as if they had left PVS.
-        // Currently this is fixed by just not exiting the iteration early, but it is probably better to just ensure
-        // that new chunks are always the last to be iterated over.
+        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop0in less visible.
         foreach (var i in chunkIndices)
         {
             var cache = chunkCache[i];
@@ -781,7 +775,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var (uid, visiblity) in visibleEnts)
         {
-            // if an entity is visible, its parents should always be visible. This currently sometimes fails.
+            // if an entity is visible, its parents should always be visible.
             DebugTools.Assert((tQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) || visibleEnts.ContainsKey(parent),
                 $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
 
@@ -883,8 +877,10 @@ internal sealed partial class PVSSystem : EntitySystem
             var (entered, shouldAdd) = ProcessEntry(in nodeIndex, lastAcked, lastSent, lastSeen,
                 ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-            if (shouldAdd)
-                AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
+            if (!shouldAdd)
+                return;
+
+            AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
         }
 
         var node = tree[nodeIndex];

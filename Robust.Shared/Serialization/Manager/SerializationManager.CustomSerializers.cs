@@ -84,7 +84,13 @@ namespace Robust.Shared.Serialization.Manager
                     dependencyConst,
                     skipHookParam,
                     contextParam,
-                    Expression.Convert(valueParam, tuple.value));
+                    !tuple.value.IsValueType
+                        ? Expression.Convert(valueParam, tuple.value)
+                        : Expression.Call(
+                            instanceParam,
+                            nameof(GetValueOrDefault),
+                            new[] { tuple.value },
+                            valueParam));
 
                 return Expression.Lambda<ReadSerializerDelegate>(
                     Expression.Convert(call, typeof(object)),

@@ -162,7 +162,7 @@ public sealed partial class SerializationManager
             var targetArray = (target as Array)!;
 
             Array newArray;
-            if(sourceArray.Length == targetArray.Length)
+            if (sourceArray.Length == targetArray.Length)
             {
                 newArray = targetArray;
             }
@@ -183,7 +183,7 @@ public sealed partial class SerializationManager
 
         if (definition == null)
         {
-            throw new ArgumentException($"No data definition found for type {typeof(TCommon)} with node type when running copyto");
+            throw new ArgumentException($"No data definition found for type {typeof(TCommon)} when running CopyTo");
         }
 
         var targetObj = (object)target!;

@@ -17,7 +17,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
         ITypeSerializer<SpriteSpecifier, MappingDataNode>,
-        ITypeSerializer<SpriteSpecifier, ValueDataNode>
+        ITypeSerializer<SpriteSpecifier, ValueDataNode>,
+        ITypeCopyCreator<SpriteSpecifier>,
+        ITypeCopyCreator<Rsi>,
+        ITypeCopyCreator<Texture>
     {
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,

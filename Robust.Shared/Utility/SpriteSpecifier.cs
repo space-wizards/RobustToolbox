@@ -1,5 +1,4 @@
 using System;
-using Linguini.Syntax.Ast;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -37,6 +36,13 @@ namespace Robust.Shared.Utility
             public readonly ResourcePath RsiPath;
             public readonly string RsiState;
 
+            // For serialization
+            private Rsi()
+            {
+                RsiPath = default!;
+                RsiState = default!;
+            }
+
             public Rsi(ResourcePath rsiPath, string rsiState)
             {
                 RsiPath = rsiPath;
@@ -58,6 +64,12 @@ namespace Robust.Shared.Utility
         public sealed class Texture : SpriteSpecifier
         {
             public readonly ResourcePath TexturePath;
+
+            // For serialization
+            private Texture()
+            {
+                TexturePath = default!;
+            }
 
             public Texture(ResourcePath texturePath)
             {

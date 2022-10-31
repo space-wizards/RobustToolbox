@@ -20,7 +20,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeSerializer<SpriteSpecifier, ValueDataNode>,
         ITypeCopyCreator<SpriteSpecifier>,
         ITypeCopyCreator<Rsi>,
-        ITypeCopyCreator<Texture>
+        ITypeCopyCreator<Texture>,
+        ITypeCopier<Rsi>,
+        ITypeCopier<Texture>
     {
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
@@ -212,6 +214,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };
+        }
+
+        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            target.RsiPath = source.RsiPath;
+            target.RsiState = source.RsiState;
+        }
+
+        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            target.TexturePath = source.TexturePath;
         }
     }
 }

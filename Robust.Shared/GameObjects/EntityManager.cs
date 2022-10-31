@@ -222,7 +222,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(transform, coords, null, mapXform);
+                _xforms.SetCoordinates(transform, coords, null, newParent: mapXform);
             }
 
             return newEntity;

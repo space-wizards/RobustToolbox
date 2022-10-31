@@ -77,8 +77,7 @@ public sealed partial class SerializationManager
                 }
                 else
                 {
-                    manager.TryGetDefinition(t, out var dataDef);
-                    var defConst = Expression.Constant(dataDef, typeof(DataDefinition));
+                    var defConst = Expression.Constant(manager.GetDefinition(t), typeof(DataDefinition));
 
                     call = Expression.Call(
                         instanceParam,

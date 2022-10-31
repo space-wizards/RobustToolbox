@@ -9,35 +9,69 @@ namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
 {
-    public delegate void CopyToDelegate(
+    private delegate void CopyToBoxingDelegate(
             object source,
             ref object target,
             bool skipHook,
             ISerializationContext? context = null);
 
-    private delegate object CreateCopyDelegate(
-        object source,
-        bool skipHook,
-        ISerializationContext? context = null);
+    private delegate void CopyToGenericDelegate<T>(
+        T source,
+        ref T target,
+        ISerializationContext? context = null,
+        bool skipHook = false);
 
-    private readonly ConcurrentDictionary<Type, CopyToDelegate> _copyToDelegates = new();
-    private readonly ConcurrentDictionary<Type, CreateCopyDelegate> _createCopyDelegates = new();
+    private readonly ConcurrentDictionary<Type, object> _copyToGenericDelegates = new();
+    private readonly ConcurrentDictionary<Type, CopyToBoxingDelegate> _copyToBoxingDelegates = new();
 
-    private CopyToDelegate GetOrCreateCopyToDelegate(Type commonType, Type sourceType, Type targetType)
+    private CopyToBoxingDelegate GetOrCreateCopyToBoxingDelegate(Type commonType)
     {
-        return _copyToDelegates
-            .GetOrAdd(commonType, static (t, tuple) =>
+        return _copyToBoxingDelegates.GetOrAdd(commonType, static (type, manager) =>
+        {
+            var managerConst = Expression.Constant(manager);
+            var sourceParam = Expression.Parameter(typeof(object), "source");
+            var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
+            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+
+            var targetVar = Expression.Variable(type);
+
+            var block = Expression.Block(
+                new[] { targetVar },
+                Expression.Assign(targetVar, Expression.Convert(targetParam, type)),
+                Expression.Call(
+                    managerConst,
+                    nameof(CopyTo),
+                    new[] { type },
+                    Expression.Convert(sourceParam, type),
+                    targetVar,
+                    contextParam,
+                    skipHookParam),
+                Expression.Assign(targetParam, Expression.Convert(targetVar, typeof(object))));
+
+            return Expression.Lambda<CopyToBoxingDelegate>(
+                block,
+                sourceParam,
+                targetParam,
+                skipHookParam,
+                contextParam).Compile();
+        }, this);
+    }
+
+    private CopyToGenericDelegate<T> GetOrCreateCopyToGenericDelegate<T>()
+    {
+        return (CopyToGenericDelegate<T>) _copyToGenericDelegates
+            .GetOrAdd(typeof(T), static (t, manager) =>
             {
-                var instanceParam = Expression.Constant(tuple.manager);
-                var sourceParam = Expression.Parameter(typeof(object), "source");
-                var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
+                var instanceParam = Expression.Constant(manager);
+                var sourceParam = Expression.Parameter(t, "source");
+                var targetParam = Expression.Parameter(t.MakeByRefType(), "target");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                 Expression call;
-                var targetVar = Expression.Variable(t);
 
-                if (tuple.manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopier<>), t, out var copier))
+                if (manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopier<>), t, out var copier))
                 {
                     var copierConstant = Expression.Constant(copier, typeof(ITypeCopier<>).MakeGenericType(t));
 
@@ -45,83 +79,114 @@ public sealed partial class SerializationManager
                         copierConstant,
                         typeof(ITypeCopier<>).MakeGenericType(t).GetMethod("CopyTo")!,
                         instanceParam,
-                        Expression.Convert(sourceParam, t),
-                        targetVar,
+                        sourceParam,
+                        targetParam,
                         skipHookParam,
                         contextParam);
                 }
                 else
                 {
-                    tuple.manager.TryGetDefinition(t, out var dataDef);
-                    var dataDefConst = Expression.Constant(dataDef, typeof(DataDefinition));
+                    var dataDefConst = Expression.Constant(manager.GetDefinition(t), typeof(DataDefinition));
 
                     call = Expression.Call(
                         instanceParam,
                         nameof(CopyToInternal),
                         new[] { t },
-                        Expression.Convert(sourceParam, t),
-                        targetVar,
+                        sourceParam,
+                        targetParam,
                         dataDefConst,
                         instanceParam,
                         skipHookParam,
                         contextParam);
                 }
 
-                call = Expression.Block(
-                    new[] { targetVar },
-                    Expression.Assign(targetVar, Expression.Convert(targetParam, t)),
-                    call,
-                    Expression.Assign(targetParam, Expression.Convert(targetVar, typeof(object))));
-
-                return Expression.Lambda<CopyToDelegate>(
+                return Expression.Lambda<CopyToGenericDelegate<T>>(
                     call,
                     sourceParam,
                     targetParam,
-                    skipHookParam,
-                    contextParam).Compile();
-            }, (sourceType, targetType, manager: this));
+                    contextParam,
+                    skipHookParam).Compile();
+            }, this);
     }
 
-    private CreateCopyDelegate GetOrCreateCreateCopyDelegate(Type sourceType)
+    private delegate object CreateCopyBoxingDelegate(
+        object source,
+        bool skipHook,
+        ISerializationContext? context = null);
+
+    private delegate T CreateCopyGenericDelegate<T>(
+        T source,
+        bool skipHook,
+        ISerializationContext? context = null);
+
+    private readonly ConcurrentDictionary<Type, object> _createCopyGenericDelegates = new();
+    private readonly ConcurrentDictionary<Type, CreateCopyBoxingDelegate> _createCopyBoxingDelegates = new();
+
+    private CreateCopyBoxingDelegate GetOrCreateCreateCopyBoxingDelegate(Type commonType)
     {
-        return _createCopyDelegates
-            .GetOrAdd(sourceType, static (t, tuple) =>
+        return _createCopyBoxingDelegates.GetOrAdd(commonType, static (type, manager) =>
+        {
+            var managerConst = Expression.Constant(manager);
+            var sourceParam = Expression.Parameter(typeof(object), "source");
+            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+
+            return Expression.Lambda<CreateCopyBoxingDelegate>(
+                Expression.Convert(Expression.Call(
+                    managerConst,
+                    nameof(CreateCopy),
+                    new[] { type },
+                    Expression.Convert(sourceParam, type),
+                    contextParam,
+                    skipHookParam), typeof(object)),
+                sourceParam,
+                skipHookParam,
+                contextParam).Compile();
+        }, this);
+    }
+
+    private CreateCopyGenericDelegate<T> GetOrCreateCreateCopyGenericDelegate<T>()
+    {
+        return (CreateCopyGenericDelegate<T>)_createCopyGenericDelegates
+            .GetOrAdd(typeof(T), static (type, manager) =>
             {
-                var instanceParam = Expression.Constant(tuple.manager);
-                var sourceParam = Expression.Parameter(typeof(object), "source");
+                var instanceParam = Expression.Constant(manager);
+                var sourceParam = Expression.Parameter(type, "source");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                 Expression call;
-                if (tuple.manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopyCreator<>), t, out var rawCopier))
+                if (manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopyCreator<>), type, out var rawCopier))
                 {
-                    var copierConst = Expression.Constant(rawCopier, typeof(ITypeCopyCreator<>).MakeGenericType(t));
+                    var serializerType = typeof(ITypeCopyCreator<>).MakeGenericType(type);
+                    var copierConst = Expression.Constant(rawCopier, serializerType);
                     call = Expression.Call(
                         copierConst,
-                        "CreateCopy",
-                        null,
+                        typeof(ITypeCopyCreator<>).MakeGenericType(type).GetMethod("CreateCopy")!,
                         instanceParam,
-                        Expression.Convert(sourceParam, t),
+                        sourceParam,
                         skipHookParam,
                         contextParam);
                 }
                 else
                 {
+                    var dataDefConst = Expression.Constant(manager.GetDefinition(type), typeof(DataDefinition));
                     call = Expression.Call(
                         instanceParam,
                         nameof(CreateCopyInternal),
-                        new[] {t},
-                        Expression.Convert(sourceParam, t),
+                        new[] {type},
+                        sourceParam,
                         contextParam,
-                        skipHookParam);
+                        skipHookParam,
+                        dataDefConst);
                 }
 
-                return Expression.Lambda<CreateCopyDelegate>(
-                    Expression.Convert(call, typeof(object)),
+                return Expression.Lambda<CreateCopyGenericDelegate<T>>(
+                    call,
                     sourceParam,
                     skipHookParam,
                     contextParam).Compile();
-            }, (sourceType, manager: this));
+            }, this);
     }
 
     private bool ShouldReturnSource(Type type)
@@ -140,6 +205,7 @@ public sealed partial class SerializationManager
         ISerializationManager serializationManager,
         bool skipHook,
         ISerializationContext? context)
+        where TCommon : notnull
     {
         if (context != null &&
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
@@ -181,16 +247,45 @@ public sealed partial class SerializationManager
 
         if (definition == null)
         {
-            throw new ArgumentException($"No data definition found for type {typeof(TCommon)} when running CopyTo");
+            if(!TryGetDefinition(source.GetType(), out definition))
+                throw new ArgumentException($"No data definition found for type {typeof(TCommon)} when running CopyTo");
         }
 
         var targetObj = (object)target!;
         definition.CopyTo(source!, ref targetObj, serializationManager, context);
     }
 
-    //todo paul serv3 make common type checking more sane
-    public void CopyTo(object source, ref object? target, ISerializationContext? context = null, bool skipHook = false)
+    private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook, DataDefinition? definition) where T : notnull
     {
+        Type type;
+        if (typeof(T).IsAbstract || typeof(T).IsInterface)
+        {
+            type = source.GetType();
+            definition ??= GetDefinition(source.GetType());
+        }
+        else
+        {
+            type = typeof(T);
+        }
+
+        if (ShouldReturnSource(type))
+            return source;
+
+        var isRecord = definition?.IsRecord ?? false;
+        var target = (T) GetOrCreateInstantiator(type, isRecord)();
+
+        CopyTo(source, ref target, context, skipHook);
+        return target!;
+    }
+
+    public void CopyTo(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false)
+    {
+        if (source == null)
+        {
+            target = null;
+            return;
+        }
+
         if (target == null)
         {
             target = CreateCopy(source, context, skipHook);
@@ -202,13 +297,7 @@ public sealed partial class SerializationManager
             throw new InvalidOperationException($"Could not find common type in Copy for types {source.GetType()} and {target.GetType()}!");
         }
 
-        GetOrCreateCopyToDelegate(commonType, source.GetType(), target.GetType())(source, ref target, skipHook,
-            context);
-
-        if (!skipHook && target is ISerializationHooks afterHooks)
-        {
-            afterHooks.AfterDeserialization();
-        }
+        GetOrCreateCopyToBoxingDelegate(commonType)(source, ref target, skipHook, context);
     }
 
     public void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false)
@@ -225,23 +314,7 @@ public sealed partial class SerializationManager
             return;
         }
 
-        var tempCast = (object?)target;
-        CopyTo(source, ref tempCast, context, skipHook);
-        target = (T) tempCast!;
-    }
-
-    private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook)
-    {
-        //todo paul serv3 more?
-        var type = typeof(T);
-        if (ShouldReturnSource(type))
-            return source;
-
-        var isRecord = GetDefinition(type)?.IsRecord ?? false;
-        var target = (T) GetOrCreateInstantiator(type, isRecord)();
-
-        CopyTo(source, ref target, context, skipHook);
-        return target!;
+        GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context, skipHook);
     }
 
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
@@ -249,11 +322,13 @@ public sealed partial class SerializationManager
         if (source == null)
             return null;
 
-        return GetOrCreateCreateCopyDelegate(source.GetType())(source, skipHook, context);
+        return GetOrCreateCreateCopyBoxingDelegate(source.GetType())(source, skipHook, context);
     }
 
     public T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false)
     {
-        return (T)CreateCopy((object?)source, context, skipHook)!;
+        if (source == null) return default!;
+
+        return GetOrCreateCreateCopyGenericDelegate<T>()(source, skipHook, context);
     }
 }

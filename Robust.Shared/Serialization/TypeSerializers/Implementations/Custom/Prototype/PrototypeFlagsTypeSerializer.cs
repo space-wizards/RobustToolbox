@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(serializationManager.ValidateWithCustomSerializer(typeof(PrototypeIdSerializer<T>), value,
+                list.Add(serializationManager.ValidateWithCustomSerializer(typeof(string), typeof(PrototypeIdSerializer<T>), value,
                     context));
             }
 
@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return serializationManager.ValidateWithCustomSerializer(typeof(PrototypeIdSerializer<T>), node, context);
+            return serializationManager.ValidateWithCustomSerializer(typeof(string), typeof(PrototypeIdSerializer<T>), node, context);
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,

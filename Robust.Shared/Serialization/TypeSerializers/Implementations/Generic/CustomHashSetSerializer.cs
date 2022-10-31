@@ -44,7 +44,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         var list = new List<ValidationNode>();
         foreach (var elem in node.Sequence)
         {
-            list.Add(serializationManager.ValidateWithCustomSerializer(typeof(TCustomSerializer), elem, context));
+            list.Add(serializationManager.ValidateWithCustomSerializer(typeof(T), typeof(TCustomSerializer), elem, context));
         }
 
         return new ValidatedSequenceNode(list);

@@ -221,6 +221,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null);
 
         public ValidationNode ValidateWithCustomSerializer(
+            Type type,
             Type serializer,
             DataNode node,
             ISerializationContext? context = null);

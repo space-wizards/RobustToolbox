@@ -36,17 +36,18 @@ public sealed partial class SerializationManager
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                 Expression call;
+                var targetVar = Expression.Variable(t);
+
                 if (tuple.manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopier<>), t, out var copier))
                 {
                     var copierConstant = Expression.Constant(copier, typeof(ITypeCopier<>).MakeGenericType(t));
 
                     call = Expression.Call(
                         copierConstant,
-                        "CopyTo",
-                        Type.EmptyTypes,
+                        typeof(ITypeCopier<>).MakeGenericType(t).GetMethod("CopyTo")!,
                         instanceParam,
-                        sourceParam,
-                        targetParam,
+                        Expression.Convert(sourceParam, t),
+                        targetVar,
                         skipHookParam,
                         contextParam);
                 }
@@ -60,12 +61,18 @@ public sealed partial class SerializationManager
                         nameof(CopyToInternal),
                         new[] { t },
                         Expression.Convert(sourceParam, t),
-                        Expression.Convert(targetParam, t),
+                        targetVar,
                         dataDefConst,
                         instanceParam,
                         skipHookParam,
                         contextParam);
                 }
+
+                call = Expression.Block(
+                    new[] { targetVar },
+                    Expression.Assign(targetVar, Expression.Convert(targetParam, t)),
+                    call,
+                    Expression.Assign(targetParam, Expression.Convert(targetVar, typeof(object))));
 
                 return Expression.Lambda<CopyToDelegate>(
                     call,
@@ -106,13 +113,13 @@ public sealed partial class SerializationManager
                         instanceParam,
                         nameof(CreateCopyInternal),
                         new[] {t},
-                        sourceParam,
+                        Expression.Convert(sourceParam, t),
                         contextParam,
                         skipHookParam);
                 }
 
                 return Expression.Lambda<CreateCopyDelegate>(
-                    call,
+                    Expression.Convert(call, typeof(object)),
                     sourceParam,
                     skipHookParam,
                     contextParam).Compile();

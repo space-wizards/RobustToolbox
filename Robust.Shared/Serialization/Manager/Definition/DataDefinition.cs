@@ -213,7 +213,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
                 ValidationNode valValidated = field.Attribute.CustomTypeSerializer != null
-                    ? serialization.ValidateWithCustomSerializer(field.Attribute.CustomTypeSerializer, val, context)
+                    ? serialization.ValidateWithCustomSerializer(field.FieldType, field.Attribute.CustomTypeSerializer, val, context)
                     : serialization.ValidateNode(field.FieldType, val, context);
 
                 validatedMapping.Add(keyValidated, valValidated);

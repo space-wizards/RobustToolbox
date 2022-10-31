@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
@@ -52,7 +53,7 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConcurrentDictionary<(Type source, Type serializer), CreateCopySerializerDelegate>
             _customCreateCopySerializerDelegates = new();
 
-        private readonly ConcurrentDictionary<Type, ValidateSerializerDelegate>
+        private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ValidateSerializerDelegate>
             _customValidateSerializerDelegates = new();
 
         private object GetOrCreateCustomTypeSerializer(Type type)
@@ -77,10 +78,9 @@ namespace Robust.Shared.Serialization.Manager
 
                 var call = Expression.Call(
                     serializerConstant,
-                    "Read",
-                    Type.EmptyTypes,
+                    typeof(ITypeReader<,>).MakeGenericType(tuple.value, tuple.node).GetMethod("Read")!,
                     instanceParam,
-                    nodeParam,
+                    Expression.Convert(nodeParam, tuple.node),
                     dependencyConst,
                     skipHookParam,
                     contextParam,
@@ -111,10 +111,9 @@ namespace Robust.Shared.Serialization.Manager
 
                 var call = Expression.Call(
                     serializerConstant,
-                    "Write",
-                    Type.EmptyTypes,
+                    typeof(ITypeWriter<>).MakeGenericType(tuple.value).GetMethod("Write")!,
                     instanceParam,
-                    valueParam,
+                    Expression.Convert(valueParam, tuple.value),
                     dependencyConst,
                     alwaysWriteParam,
                     contextParam);
@@ -140,15 +139,20 @@ namespace Robust.Shared.Serialization.Manager
                 var serializerInstance = tuple.manager.GetOrCreateCustomTypeSerializer(tuple.serializer);
                 var serializerConstant = Expression.Constant(serializerInstance);
 
-                var call = Expression.Call(
-                    serializerConstant,
-                    "CopyTo",
-                    Type.EmptyTypes,
-                    instanceParam,
-                    sourceParam,
-                    targetParam,
-                    skipHookParam,
-                    contextParam);
+
+                var targetVar = Expression.Variable(tuple.common);
+                var call = Expression.Block(
+                    new[] { targetVar },
+                    Expression.Assign(targetVar, Expression.Convert(targetParam, tuple.common)),
+                    Expression.Call(
+                        serializerConstant,
+                        typeof(ITypeCopier<>).MakeGenericType(tuple.common).GetMethod("CopyTo")!,
+                        instanceParam,
+                        Expression.Convert(sourceParam, tuple.common),
+                        targetVar,
+                        skipHookParam,
+                        contextParam),
+                    Expression.Assign(targetParam, Expression.Convert(targetVar, typeof(object))));
 
                 return Expression.Lambda<CopyToSerializerDelegate>(
                     call,
@@ -173,8 +177,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 var call = Expression.Call(
                     serializerConstant,
-                    "CreateCopy",
-                    Type.EmptyTypes,
+                    typeof(ITypeCopyCreator<>).MakeGenericType(tuple.source).GetMethod("CreateCopy")!,
                     instanceParam,
                     sourceParam,
                     skipHookParam,
@@ -188,9 +191,9 @@ namespace Robust.Shared.Serialization.Manager
             }, (source, serializer, manager: this));
         }
 
-        private ValidateSerializerDelegate GetOrCreateValidateCustomSerializerDelegate(Type serializer)
+        private ValidateSerializerDelegate GetOrCreateValidateCustomSerializerDelegate(Type type, Type nodeType, Type serializer)
         {
-            return _customValidateSerializerDelegates.GetOrAdd(serializer, static (serializerType, manager) =>
+            return _customValidateSerializerDelegates.GetOrAdd((type, nodeType, serializer), static (types, manager) =>
             {
                 var instanceParam = Expression.Constant(manager);
                 var dependencyConst = Expression.Constant(manager.DependencyCollection);
@@ -198,15 +201,14 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
-                var serializerInstance = manager.GetOrCreateCustomTypeSerializer(serializerType);
+                var serializerInstance = manager.GetOrCreateCustomTypeSerializer(types.serializer);
                 var serializerConstant = Expression.Constant(serializerInstance);
 
                 var call = Expression.Call(
                     serializerConstant,
-                    "Validate",
-                    Type.EmptyTypes,
+                    typeof(ITypeValidator<,>).MakeGenericType(types.value, types.node).GetMethod("Validate")!,
                     instanceParam,
-                    nodeParam,
+                    Expression.Convert(nodeParam, types.node),
                     dependencyConst,
                     contextParam);
 
@@ -267,11 +269,12 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         public ValidationNode ValidateWithCustomSerializer(
+            Type type,
             Type serializer,
             DataNode node,
             ISerializationContext? context = null)
         {
-            return GetOrCreateValidateCustomSerializerDelegate(serializer)(node, context);
+            return GetOrCreateValidateCustomSerializerDelegate(type, node.GetType(), serializer)(node, context);
         }
     }
 }

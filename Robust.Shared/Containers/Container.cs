@@ -64,7 +64,7 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         protected override void InternalShutdown(IEntityManager entMan, bool isClient)
         {
-            foreach (var entity in _containerList)
+            foreach (var entity in _containerList.ToArray())
             {
                 if (!isClient)
                     entMan.DeleteEntity(entity);

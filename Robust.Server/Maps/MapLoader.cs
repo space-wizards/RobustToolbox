@@ -489,7 +489,7 @@ namespace Robust.Server.Maps
                     gridFixtures.EnsureGrid(grid.GridEntityId);
                     gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
-                    fixtures.SerializedFixtures.Clear();
+                    fixtures.SerializedFixtureData = null;
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
@@ -9,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -21,6 +24,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 
 namespace Robust.Server.Maps;
 
@@ -43,13 +47,7 @@ public sealed partial class MapManagerSystem
 
     #region Public
 
-    public bool TryLoadGrid(MapId mapId, string path, out EntityUid? gridUid, MapLoadOptions? options = null)
-    {
-        options ??= DefaultLoadOptions;
-        throw new NotImplementedException();
-    }
-
-    public bool TryLoadMap(MapId mapId, string path, out IReadOnlyList<EntityUid> gridUids,
+    public bool TryLoad(MapId mapId, string path, [NotNullWhen(true)] out IReadOnlyList<EntityUid>? gridUids,
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
@@ -64,7 +62,22 @@ public sealed partial class MapManagerSystem
             return false;
         }
 
-        throw new NotImplementedException();
+        var resPath = new ResourcePath(path).ToRootedPath();
+
+        if (!TryGetReader(resPath, out var reader))
+        {
+            return false;
+        }
+
+        using (reader)
+        {
+            _logLoader.Info($"Loading Map: {resPath}");
+
+            var data = new MapData(reader, options);
+            Deserialize(data);
+        }
+
+        return true;
     }
 
     public void Save(EntityUid uid, string ymlPath)
@@ -106,6 +119,192 @@ public sealed partial class MapManagerSystem
         }
 
         Save(_mapManager.GetMapEntityId(mapId), ymlPath);
+    }
+
+    #endregion
+
+    #region Loading
+
+    private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
+    {
+        // try user
+        if (!_resourceManager.UserData.Exists(resPath))
+        {
+            _logLoader.Info($"No user map found: {resPath}");
+
+            // fallback to content
+            if (_resourceManager.TryContentFileRead(resPath, out var contentReader))
+            {
+                reader = new StreamReader(contentReader);
+            }
+            else
+            {
+                _logLoader.Error($"No map found: {resPath}");
+                reader = null;
+                return false;
+            }
+        }
+        else
+        {
+            reader = _resourceManager.UserData.OpenText(resPath);
+        }
+
+        return true;
+    }
+
+    private void Deserialize(MapData data)
+    {
+        // Verify that prototypes for all the entities exist
+        if (!VerifyEntitiesExist(data))
+            return;
+
+        // First we load map meta data like version.
+        if (!ReadMetaSection(data))
+            return;
+
+        // Tile map
+        ReadTileMapSection(data);
+
+        // Alloc entities / build entity hierarchy
+        AllocEntities(data);
+
+        // From hierarchy work out root node, if it's an existing map or new one.
+
+        // Then, go hierarchically in order and do the entity things.
+        // 1. Allocate
+        // 2. Load
+        // 3. Reset net ticks
+        // 4. apply map transforms
+        // 5. initialize
+        // 6. Startup
+        // 7. MapInitEvent
+    }
+
+    private bool VerifyEntitiesExist(MapData data)
+    {
+        _stopwatch.Restart();
+        var fail = false;
+        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+        var reportedError = new HashSet<string>();
+
+        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        {
+            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            {
+                var type = typeNode.Value;
+                if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
+                {
+                    Logger.ErrorS("map", "Missing prototype for map: {0}", type);
+                    fail = true;
+                    reportedError.Add(type);
+                }
+            }
+        }
+
+        _logLoader.Debug($"Verified entities in {_stopwatch.Elapsed}");
+
+        if (fail)
+        {
+            _logLoader.Error("Found missing prototypes in map file. Missing prototypes have been dumped to logs.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ReadMetaSection(MapData data)
+    {
+        var meta = data.RootMappingNode.Get<MappingDataNode>("meta");
+        var ver = meta.Get<ValueDataNode>("format").AsInt();
+        if (ver != MapFormatVersion)
+        {
+            _logLoader.Error($"Cannot handle this map file version, found {ver} and require {MapFormatVersion}");
+            return false;
+        }
+
+        if (meta.TryGet<ValueDataNode>("postmapinit", out var mapInitNode))
+        {
+            data.MapIsPostInit = mapInitNode.AsBool();
+        }
+        else
+        {
+            data.MapIsPostInit = true;
+        }
+
+        return true;
+    }
+
+    private void ReadTileMapSection(MapData data)
+    {
+        _stopwatch.Restart();
+
+        // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
+        var tileMap = data.RootMappingNode.Get<MappingDataNode>("tilemap");
+        data.TileMap = new Dictionary<ushort, string>(tileMap.Count);
+
+        foreach (var (key, value) in tileMap.Children)
+        {
+            var tileId = (ushort) ((ValueDataNode)key).AsInt();
+            var tileDefName = ((ValueDataNode)value).Value;
+            data.TileMap.Add(tileId, tileDefName);
+        }
+
+        _logLoader.Debug($"Read tilemap in {_stopwatch.Elapsed}");
+    }
+
+    private void AllocEntities(MapData data)
+    {
+        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+        data.Entities.EnsureCapacity(entities.Count);
+        data.UidEntityMap.EnsureCapacity(entities.Count);
+        data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
+        // Build the scene graph / transform hierarchy to know the order to startup entities.
+        // This also allows us to swap out the root node up front if necessary.
+        var hierarchy = new Dictionary<EntityUid, EntityUid>();
+        var sEntityManager = (IServerEntityManagerInternal) EntityManager;
+
+        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        {
+            string? type = null;
+            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            {
+                type = typeNode.Value;
+            }
+
+            // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
+            // "uid" node, then defaulting to Entities.Count will error.
+            var uid = data.Entities.Count;
+
+            if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
+            {
+                uid = uidNode.AsInt();
+            }
+
+            var entity = sEntityManager.AllocEntity(type);
+            data.Entities.Add(entity);
+            data.UidEntityMap.Add(uid, entity);
+            data.EntitiesToDeserialize.Add((entity, entityDef));
+
+            if (data.Options.StoreMapUids)
+            {
+                var comp = sEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                comp.Uid = uid;
+            }
+        }
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        foreach (var entity in data.Entities)
+        {
+            if (xformQuery.TryGetComponent(entity, out var xform))
+            {
+                hierarchy[entity] = xform.ParentUid;
+            }
+            else
+            {
+                hierarchy[entity] = EntityUid.Invalid;
+            }
+        }
     }
 
     #endregion
@@ -347,6 +546,11 @@ public sealed partial class MapManagerSystem
         }
     }
 
+    private sealed class MapDeserializationContext
+    {
+
+    }
+
     private sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
         ITypeSerializer<EntityUid, ValueDataNode>
     {
@@ -360,9 +564,10 @@ public sealed partial class MapManagerSystem
         public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
 
         // Run-specific data
-        private Dictionary<string, MappingDataNode>? _currentReadingEntityComponents;
+        public Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
         public string? CurrentWritingComponent;
         public EntityUid? CurrentWritingEntity;
+
         private Dictionary<int, EntityUid> _uidEntityMap = new();
         private Dictionary<EntityUid, int> _entityUidMap = new();
 
@@ -390,7 +595,7 @@ public sealed partial class MapManagerSystem
 
         public void Clear()
         {
-            _currentReadingEntityComponents?.Clear();
+            CurrentReadingEntityComponents?.Clear();
             CurrentWritingComponent = null;
             CurrentWritingEntity = null;
         }
@@ -399,13 +604,13 @@ public sealed partial class MapManagerSystem
         MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
             MappingDataNode? protoData)
         {
-            if (_currentReadingEntityComponents == null)
+            if (CurrentReadingEntityComponents == null)
             {
                 throw new InvalidOperationException();
             }
 
 
-            if (_currentReadingEntityComponents.TryGetValue(componentName, out var mapping))
+            if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
             {
                 if (protoData == null) return mapping.Copy();
 
@@ -418,7 +623,7 @@ public sealed partial class MapManagerSystem
 
         public IEnumerable<string> GetExtraComponentTypes()
         {
-            return _currentReadingEntityComponents!.Keys;
+            return CurrentReadingEntityComponents!.Keys;
         }
 
         ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -485,6 +690,50 @@ public sealed partial class MapManagerSystem
             ISerializationContext? context = null)
         {
             return new((int)source);
+        }
+    }
+
+    /// <summary>
+    ///     Does basic pre-deserialization checks on map file load.
+    ///     For example, let's not try to use maps with multiple grids as blueprints, shall we?
+    /// </summary>
+    private sealed class MapData
+    {
+        public YamlStream Stream { get; }
+
+        public YamlNode RootNode => Stream.Documents[0].RootNode;
+
+        public MappingDataNode RootMappingNode { get; }
+
+        public bool MapIsPostInit;
+        public readonly MapLoadOptions Options;
+
+        // Loading data
+        public Dictionary<ushort, string>? TileMap;
+        public readonly List<EntityUid> Entities = new();
+        public readonly Dictionary<int, EntityUid> UidEntityMap = new();
+        public readonly List<(EntityUid, MappingDataNode)> EntitiesToDeserialize = new();
+
+        public MapData(TextReader reader, MapLoadOptions options)
+        {
+            var stream = new YamlStream();
+            stream.Load(reader);
+
+            if (stream.Documents.Count < 1)
+            {
+                throw new InvalidDataException("Stream has no YAML documents.");
+            }
+
+            // Kinda wanted to just make this print a warning and pick [0] but screw that.
+            // What is this, a hug box?
+            if (stream.Documents.Count > 1)
+            {
+                throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
+            }
+
+            Stream = stream;
+            RootMappingNode = RootNode.ToDataNodeCast<MappingDataNode>();
+            Options = options;
         }
     }
 }

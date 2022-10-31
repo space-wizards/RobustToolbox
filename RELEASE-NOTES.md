@@ -49,6 +49,13 @@ Template for new versions:
 
 *None yet*
 
+## 0.58.1.1
+
+### Bugfixes
+
+* Fixed some container shutdown errors
+* Fixed LookupFlags.Static not acting as a full replacement for LookupFlags.Anchored
+
 ## 0.58.1.0
 
 ### Other

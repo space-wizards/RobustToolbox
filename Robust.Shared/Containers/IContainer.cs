@@ -131,8 +131,7 @@ namespace Robust.Shared.Containers
             Angle? localRotation = null);
 
         [Obsolete("use force option in Remove()")]
-        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
-            => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
+        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null);
 
         /// <summary>
         /// Checks if the entity is contained in this container.

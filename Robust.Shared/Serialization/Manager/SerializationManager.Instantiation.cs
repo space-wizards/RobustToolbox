@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Robust.Shared.Serialization.Manager;
@@ -32,7 +33,18 @@ public partial class SerializationManager
 
     private static void CreateClassInstantiator(ILGenerator generator, Type type)
     {
-        var constructor = type.GetConstructor(Type.EmptyTypes);
+        if (type.IsArray)
+        {
+            generator.Emit(OpCodes.Ldc_I4_0);
+            generator.Emit(OpCodes.Newarr, type.GetElementType()!);
+            generator.Emit(OpCodes.Ret);
+            return;
+        }
+
+        var constructor = type.GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            Type.EmptyTypes);
+
         if (constructor == null)
             throw new ArgumentException($"Could not find an empty constructor for non-record class {type}");
 

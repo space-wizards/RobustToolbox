@@ -100,10 +100,10 @@ public sealed partial class SerializationManager
                     var copierConst = Expression.Constant(rawCopier, typeof(ITypeCopyCreator<>).MakeGenericType(t));
                     call = Expression.Call(
                         copierConst,
-                        "CopyTo",
-                        Array.Empty<Type>(),
+                        "CreateCopy",
+                        null,
                         instanceParam,
-                        sourceParam,
+                        Expression.Convert(sourceParam, t),
                         skipHookParam,
                         contextParam);
                 }
@@ -235,12 +235,14 @@ public sealed partial class SerializationManager
     private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook)
     {
         //todo paul serv3 more?
-        if (ShouldReturnSource(typeof(T)))
+        var type = typeof(T);
+        if (ShouldReturnSource(type))
         {
             return source;
         }
 
-        var target = (T)Activator.CreateInstance(typeof(T))!;
+        var isRecord = GetDefinition(type)?.IsRecord ?? false;
+        var target = (T) GetOrCreateInstantiator(type, isRecord)();
 
         CopyTo(source, ref target, context, skipHook);
         return target!;

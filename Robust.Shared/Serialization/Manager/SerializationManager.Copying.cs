@@ -324,8 +324,10 @@ public sealed partial class SerializationManager
             return;
         }
 
-        if(source is ISerializationHooks hooks)
-            hooks.BeforeSerialization();
+        //this should be here but is commented out bc it breaks atmos. it should work for now bc nothing relies on this
+        //im keeping it commented out bc i plan on nuking hooks next anyways
+        //if(source is ISerializationHooks hooks)
+        //    hooks.BeforeSerialization();
         GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context, skipHook);
         if(target is ISerializationHooks hookres)
             hookres.AfterDeserialization();

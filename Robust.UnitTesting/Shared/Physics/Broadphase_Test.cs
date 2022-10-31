@@ -90,15 +90,6 @@ public sealed class Broadphase_Test
     }
 
     /// <summary>
-    /// If we update an entity are its trees correctly updated.
-    /// </summary>
-    [Test]
-    public void TestBroadphaseTree()
-    {
-
-    }
-
-    /// <summary>
     /// If we change a grid's map does it still remain not on the general broadphase.
     /// </summary>
     /// <remarks>

@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
 
 ### Other
 
@@ -48,6 +48,45 @@ Template for new versions:
 ### Internal
 
 *None yet*
+
+## 0.58.1.1
+
+### Bugfixes
+
+* Fixed some container shutdown errors
+* Fixed LookupFlags.Static not acting as a full replacement for LookupFlags.Anchored
+
+## 0.58.1.0
+
+### Other
+
+* Physics collision changed and body type changed events no longer get raised before initialisation
+
+## 0.58.0.0
+
+### Breaking changes
+
+* Some TransformComponent functions have been moved to the system.
+* Container insert, remove, and shutdown function arguments and functionality has changed.
+* Physics entities without fixtures now automatically disable collision.
+
+### New features
+
+* Added command to profile entity spawning
+
+### Bugfixes
+
+* EntityLookup/BroadphaseComponent tracking has been overhauled, which should hopefully fix various broadphase bugs.
+
+### Other
+
+* Component.Owner is now marked as obsolete.
+
+## 0.57.0.4
+
+### Bugfixes
+
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
 
 ## 0.57.0.2 and 0.57.0.3
 
@@ -102,7 +141,7 @@ Template for new versions:
 
 * The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
 * Improved Box2Serializer
-* Removed uses IEnumerables from EntityLookupSystem. 
+* Removed uses IEnumerables from EntityLookupSystem.
 * Optimized client entity spawning by 15%.
 * Modified how the rendering tree handles entity movement.
 * Improved grid enumeration allocs.

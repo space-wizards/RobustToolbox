@@ -13,8 +13,11 @@ public abstract partial class SharedPhysicsSystem
     /// <returns></returns>
     internal bool ShouldCollide(PhysicsComponent body, PhysicsComponent other)
     {
-        if ((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
-            (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0)
+        if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
+            (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
+            // Kinematic controllers can't collide.
+            (body.BodyType == BodyType.KinematicController &&
+             other.BodyType == BodyType.KinematicController))
         {
             return false;
         }

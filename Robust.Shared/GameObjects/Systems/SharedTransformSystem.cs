@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -61,6 +62,7 @@ namespace Robust.Shared.GameObjects
             if(e.NewTile.Tile != Tile.Empty)
                 return;
 
+            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
             DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
         }
 
@@ -73,21 +75,35 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            var grid = _mapManager.GetGrid(gridId);
-            var gridUid = grid.GridEntityId;
-            var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+                return;
+
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            if (!xformQuery.TryGetComponent(_mapManager.GetMapEntityId(grid.ParentMapId), out var mapTransform))
+                return;
+
+            if (!xformQuery.TryGetComponent(gridId, out var gridXform))
+                return;
+
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices, LookupFlags.Uncontained).ToList())
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
+                if (!xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
+                    continue;
+
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
+                {
+                    DetachParentToNull(xform, xformQuery, metaQuery, gridXform);
                     continue;
+                }
 
-                var transform = Transform(entity);
-                if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
-                    transform.AttachParent(mapTransform);
+                if (aabb.Contains(xform.LocalPosition))
+                    SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 

@@ -459,7 +459,14 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentImmediate(comp, uid, true);
+                try
+                {
+                    RemoveComponentImmediate(comp, uid, true);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Caught exception while trying to remove component from entity '{ToPrettyString(uid)}'");
+                }
             }
 
             // DisposeComponents means the entity is getting deleted.
@@ -507,7 +514,8 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
         {
-            if (component == null) throw new ArgumentNullException(nameof(component));
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
 
             if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");

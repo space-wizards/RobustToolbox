@@ -88,18 +88,15 @@ namespace Robust.Shared.Physics.Systems
             int collisionMask,
             bool approximate = true,
             PhysicsComponent? body = null,
-            FixturesComponent? fixtureComp = null)
+            FixturesComponent? fixtureComp = null,
+            TransformComponent? xform = null)
         {
             var entities = new HashSet<EntityUid>();
 
-            if (!Resolve(uid, ref body, ref fixtureComp, false))
+            if (!Resolve(uid, ref body, ref fixtureComp, ref xform, false))
                 return entities;
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var broadphase = _lookup.GetBroadphase(uid, xformQuery.GetComponent(uid), broadQuery, xformQuery);
-
-            if (broadphase == null)
+            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
                 return entities;
 
             var state = (body, entities);

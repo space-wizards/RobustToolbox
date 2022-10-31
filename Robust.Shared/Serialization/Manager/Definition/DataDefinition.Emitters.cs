@@ -190,6 +190,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             targetValue = manager.CreateCopyWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
                                 context: context);
                         }
+                        else if (TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
+                        {
+                            manager.CopyTo(sourceValue, ref targetValue, context);
+                        }
+                        else
+                        {
+                            targetValue = manager.CreateCopy(sourceValue, context);
+                        }
                     }
                     else
                     {
@@ -202,8 +210,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             targetValue = manager.CreateCopy(sourceValue, context);
                         }
                     }
-
-
 
                     FieldAssigners[i](ref target, targetValue);
                 }

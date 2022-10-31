@@ -157,7 +157,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         var textEdit = new TextEdit();
         TabContainer.SetTabTitle(textEdit, "TextEdit");
 
-        var rope = new Rope.Branch(new Rope.Leaf(""), null);
+        var lipsumRope = new Rope.Branch(Rope.Leaf.Empty, null);
 
         var startIndex = 0;
         while (true)
@@ -165,14 +165,21 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             var nextIndex = Lipsum.IndexOf(' ', startIndex);
             var str = nextIndex == -1 ? Lipsum[startIndex..] : Lipsum[startIndex..(nextIndex+1)];
 
-            rope = new Rope.Branch(rope, new Rope.Leaf(str));
-            if (rope.Depth > 250)
-                rope = (Rope.Branch)Rope.Rebalance(rope);
+            lipsumRope = new Rope.Branch(lipsumRope, new Rope.Leaf(str));
+            if (lipsumRope.Depth > 250)
+                lipsumRope = (Rope.Branch)Rope.Rebalance(lipsumRope);
 
             if (nextIndex == -1)
                 break;
 
             startIndex = nextIndex + 1;
+        }
+
+        var rope = new Rope.Branch(lipsumRope, null);
+
+        for (var i = 0; i < 10; i++)
+        {
+            rope = new Rope.Branch(rope, lipsumRope);
         }
 
         rope = (Rope.Branch) Rope.Rebalance(rope);

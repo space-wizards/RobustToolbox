@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
@@ -175,8 +176,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationContext? context = null)
         {
             target.Clear();
-            foreach (var val in source)
+            target.EnsureCapacity(source.Count);
+
+            var sourceSpan = CollectionsMarshal.AsSpan(source);
+            for (var i = 0; i < sourceSpan.Length; i++)
             {
+                ref var val = ref sourceSpan[i];
                 target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
         }

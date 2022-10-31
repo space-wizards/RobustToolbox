@@ -103,6 +103,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationContext? context = null)
         {
             target.Clear();
+            target.EnsureCapacity(source.Count);
+
             foreach (var val in source)
             {
                 target.Add(serializationManager.CreateCopy(val, context, skipHook));

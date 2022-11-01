@@ -138,7 +138,7 @@ internal partial class MapManager
         var xform = args.Component;
         var aabb = GetWorldAABB(grid, xform);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[grid.ParentMapId].Add(grid);
+        _movedGrids[xform.MapID].Add(grid);
     }
 
     private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)

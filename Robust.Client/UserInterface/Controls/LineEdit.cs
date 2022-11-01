@@ -163,6 +163,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool IgnoreNext { get; set; }
 
+        private (int start, int length)? _imeData;
+
+
         // TODO:
         // I decided to not implement the entire LineEdit API yet,
         // since most of it won't be used yet (if at all).
@@ -171,6 +174,7 @@ namespace Robust.Client.UserInterface.Controls
         // Second future me reporting, thanks again.
         // Third future me is here to say thanks.
         // Fourth future me is here to continue the tradition.
+        // Fifth future me is unsure what this is even about but continues to be grateful.
 
         public LineEdit()
         {
@@ -297,6 +301,59 @@ namespace Robust.Client.UserInterface.Controls
 
             InsertAtCursor(args.AsRune.ToString());
             OnTextTyped?.Invoke(args);
+        }
+
+        protected internal override void TextEditing(GUITextEditingEventArgs args)
+        {
+            base.TextEditing(args);
+
+            if (!Editable)
+                return;
+
+            // TODO: yeah so uh this ignores all the valid checks and everything like that.
+            // Uh....
+
+            var ev = args.Event;
+            var startChars = ev.GetStartChars();
+
+            // Just break an active composition and build it anew to handle in-progress ones.
+            AbortIme();
+
+            if (ev.Text != "")
+            {
+                if (_selectionStart != _cursorPosition)
+                {
+                    // Delete active text selection.
+                    InsertAtCursor("");
+                }
+
+                var startPos = _cursorPosition;
+                _text = _text[..startPos] + ev.Text + _text[startPos..];
+
+                _selectionStart = _cursorPosition = startPos + startChars;
+                _imeData = (startPos, ev.Text.Length);
+
+                _updatePseudoClass();
+            }
+        }
+
+        private void AbortIme(bool delete = true)
+        {
+            if (!_imeData.HasValue)
+                return;
+
+            if (delete)
+            {
+                var (imeStart, imeLength) = _imeData.Value;
+
+                _text = _text.Remove(imeStart, imeLength);
+
+                _selectionStart = _cursorPosition = imeStart;
+
+                _updatePseudoClass();
+            }
+
+            _imeData = null;
         }
 
         public event Action<LineEditBackspaceEventArgs>? OnBackspace;
@@ -710,7 +767,7 @@ namespace Robust.Client.UserInterface.Controls
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
 
             _clyde.StopTextInput();
-            // AbortIme(delete: false);
+            AbortIme(delete: false);
         }
 
         [Pure]
@@ -813,7 +870,8 @@ namespace Robust.Client.UserInterface.Controls
                 var font = _master._getFont();
                 var renderedTextColor = _master._getFontColor();
 
-                var offsetY = (contentBox.Height - font.GetHeight(UIScale)) / 2;
+                var uiScale = UIScale;
+                var offsetY = (contentBox.Height - font.GetHeight(uiScale)) / 2;
 
                 var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder! : _master._text;
                 DebugTools.AssertNotNull(renderedText);
@@ -825,9 +883,22 @@ namespace Robust.Client.UserInterface.Controls
                 var posX = 0;
                 var actualCursorPosition = 0;
                 var actualSelectionStartPosition = 0;
+
+                var actualImeStartPosition = 0;
+                var actualImeEndPosition = 0;
+
+                var imeStartIndex = -1;
+                var imeEndIndex = -1;
+
+                if (_master._imeData.HasValue)
+                {
+                    (imeStartIndex, var length) = _master._imeData.Value;
+                    imeEndIndex = imeStartIndex + length;
+                }
+
                 foreach (var chr in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, uiScale, out var metrics))
                     {
                         count += 1;
                         continue;
@@ -848,6 +919,16 @@ namespace Robust.Client.UserInterface.Controls
                     if (count == _master._selectionStart)
                     {
                         actualSelectionStartPosition = posX;
+                    }
+
+                    if (count == imeStartIndex)
+                    {
+                        actualImeStartPosition = posX;
+                    }
+
+                    if (count == imeEndIndex)
+                    {
+                        actualImeEndPosition = posX;
                     }
                 }
 
@@ -875,12 +956,12 @@ namespace Robust.Client.UserInterface.Controls
                 actualSelectionStartPosition -= drawOffset;
 
                 // Actually render.
-                var baseLine = (-drawOffset, offsetY + font.GetAscent(UIScale)) +
+                var baseLine = (-drawOffset, offsetY + font.GetAscent(uiScale)) +
                                contentBox.TopLeft;
 
                 foreach (var rune in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
                     {
                         continue;
                     }
@@ -894,7 +975,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Make sure we're not off the left edge of the box.
                     if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
                     {
-                        font.DrawChar(handle, rune, baseLine, UIScale, renderedTextColor);
+                        font.DrawChar(handle, rune, baseLine, uiScale, renderedTextColor);
                     }
 
                     baseLine += (metrics.Advance, 0);
@@ -927,6 +1008,31 @@ namespace Robust.Client.UserInterface.Controls
                         new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
                             contentBox.Bottom),
                         cursorColor);
+
+                    {
+                        // Update IME position.
+                        var imeBox = new UIBox2(
+                            actualCursorPosition,
+                            contentBox.Top,
+                            contentBox.Right,
+                            contentBox.Bottom);
+
+                        _master._clyde.SetTextInputRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
+                    }
+                }
+
+                // Draw IME underline if necessary.
+                if (_master._imeData.HasValue)
+                {
+                    var y = baseLine.Y + font.GetDescent(uiScale);
+                    var rect = new UIBox2(
+                        actualImeStartPosition,
+                        y - 1,
+                        actualImeEndPosition,
+                        y
+                    );
+
+                    handle.DrawRect(rect, renderedTextColor);
                 }
             }
         }

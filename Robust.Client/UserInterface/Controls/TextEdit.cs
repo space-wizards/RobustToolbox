@@ -408,7 +408,7 @@ public sealed class TextEdit : Control
                         return SelectionLower;
                     }
 
-                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition);
+                    var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
 
                     if (_cursorPosition.Bias == LineBreakBias.Bottom && _cursorPosition.Index == lineStart)
                     {
@@ -429,7 +429,7 @@ public sealed class TextEdit : Control
                         return SelectionUpper;
                     }
 
-                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition);
+                    var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
                     if (_cursorPosition.Bias == LineBreakBias.Top
                         && _cursorPosition.Index == lineEnd
                         && _cursorPosition.Index != TextLength
@@ -459,7 +459,7 @@ public sealed class TextEdit : Control
                     CacheHorizontalCursorPos();
 
                     // TODO: From selection lower, not cursor pos.
-                    var (line, _, _) = GetLineForIndex(_cursorPosition);
+                    var (line, _, _) = GetLineForCursorPos(_cursorPosition);
 
                     if (line == 0)
                     {
@@ -475,7 +475,7 @@ public sealed class TextEdit : Control
                 {
                     CacheHorizontalCursorPos();
 
-                    var (line, _, _) = GetLineForIndex(_cursorPosition);
+                    var (line, _, _) = GetLineForCursorPos(_cursorPosition);
 
                     // TODO: Isn't this off-by-one.
                     if (line == _lineBreaks.Count)
@@ -490,7 +490,7 @@ public sealed class TextEdit : Control
                 }
                 case MoveType.Begin:
                 {
-                    var (_, lineStart, _) = GetLineForIndex(_cursorPosition);
+                    var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
                     if (Rope.Index(TextRope, lineStart) == '\n')
                         lineStart += 1;
 
@@ -498,7 +498,7 @@ public sealed class TextEdit : Control
                 }
                 case MoveType.End:
                 {
-                    var (_, _, lineEnd) = GetLineForIndex(_cursorPosition);
+                    var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
                     return new CursorPos(lineEnd, LineBreakBias.Top);
                 }
                 default:
@@ -773,7 +773,7 @@ public sealed class TextEdit : Control
         var hPos = 0;
         var font = GetFont();
 
-        var (_, lineStart, _) = GetLineForIndex(pos);
+        var (_, lineStart, _) = GetLineForCursorPos(pos);
         using var runeEnumerator = Rope.EnumerateRunes(TextRope, lineStart).GetEnumerator();
 
         var i = lineStart;
@@ -795,7 +795,7 @@ public sealed class TextEdit : Control
         return hPos;
     }
 
-    private (int lineIdx, int lineStart, int lineEnd) GetLineForIndex(CursorPos pos)
+    private (int lineIdx, int lineStart, int lineEnd) GetLineForCursorPos(CursorPos pos)
     {
         DebugTools.Assert(pos.Index >= 0);
 
@@ -822,6 +822,23 @@ public sealed class TextEdit : Control
 
         // Position is on last line.
         return (_lineBreaks.Count, _lineBreaks[^1], TextLength);
+    }
+
+    private int GetStartOfLine(int lineIndex)
+    {
+        if (lineIndex <= 0)
+        {
+            // First line: start of text
+            return 0;
+        }
+
+        if (lineIndex > _lineBreaks.Count)
+        {
+            // Past the last line: just put it at text end so nothing happens I guess.
+            return TextLength;
+        }
+
+        return _lineBreaks[lineIndex - 1];
     }
 
     protected internal override void MouseExited()
@@ -862,7 +879,7 @@ public sealed class TextEdit : Control
         var font = GetFont();
 
         var scrollOffset = _scrollBar.Value;
-        var (cursorLine, _, _) = GetLineForIndex(_cursorPosition);
+        var (cursorLine, _, _) = GetLineForCursorPos(_cursorPosition);
 
         var cursorMargin = font.GetLineHeight(UIScale) * 1.5f;
         var (lineT, lineB) = GetBoundsOfLine(cursorLine);
@@ -946,23 +963,36 @@ public sealed class TextEdit : Control
             }
 
             var scrollOffset = -_master._scrollBar.Value;
+
             var scale = UIScale;
             var baseLine = new Vector2(0, scrollOffset + font.GetAscent(scale));
             var height = font.GetLineHeight(scale);
             var descent = font.GetDescent(scale);
 
-            var lineBreakIndex = 0;
+            var viewT = -scrollOffset;
 
-            var count = 0;
+            var startLineIndex = (int)(viewT / height);
+            var startIdx = _master.GetStartOfLine(startLineIndex);
+
+            var lineBreakIndex = startLineIndex;
+            var count = startIdx;
 
             var selectionLower = _master.SelectionLower;
             var selectionUpper = _master.SelectionUpper;
+
+            baseLine.Y += startLineIndex * height;
 
             int? selectStartPos = null;
             int? selectEndPos = null;
             var selecting = false;
 
-            foreach (var rune in Rope.EnumerateRunes(_master.TextRope))
+            if (selectionLower.Index < startIdx && selectionUpper.Index > startIdx)
+            {
+                selecting = true;
+                selectStartPos = 0;
+            }
+
+            foreach (var rune in Rope.EnumerateRunes(_master.TextRope, startIdx))
             {
                 CheckDrawCursors(LineBreakBias.Top);
 
@@ -974,11 +1004,17 @@ public sealed class TextEdit : Control
 
                     PostDrawLine();
 
-                    baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(scale));
+                    baseLine = new Vector2(drawBox.Left, baseLine.Y + height);
                     lineBreakIndex += 1;
 
                     selectStartPos = selecting ? 0 : null;
                     selectEndPos = null;
+
+                    if (baseLine.Y - height > drawBox.Height)
+                    {
+                        // Past the bottom of the visible area of the screen: no need to render anything else.
+                        break;
+                    }
                 }
 
                 CheckDrawCursors(LineBreakBias.Bottom);

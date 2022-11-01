@@ -103,18 +103,52 @@ public static class Rope
         }
     }
 
-    // TODO: Actually start at the position instead of skipping like a worse linked list thanks.
     public static IEnumerable<Rune> EnumerateRunes(Node node, long startPos)
     {
         var pos = 0L;
-        foreach (var rune in EnumerateRunes(node))
+
+        // Phase 1: skip over whole leaves that are before the start position.
+        // TODO: Ideally we would navigate the binary tree properly instead of starting from the far left.
+
+        // ReSharper disable once GenericEnumeratorNotDisposed
+        var leaves = CollectLeaves(node).GetEnumerator();
+        while (leaves.MoveNext())
         {
-            if (pos >= startPos)
+            var leaf = leaves.Current;
+            if (pos + leaf.Weight >= startPos)
+            {
+                goto startLeafFound;
+            }
+
+            pos += leaf.Weight;
+        }
+
+        // Didn't find a starting leaf, must mean that startPos >= text length. Oh well?
+        yield break;
+
+        startLeafFound:
+
+        // Phase 2: start halfway through the current leaf.
+        {
+            foreach (var rune in leaves.Current.Text.EnumerateRunes())
+            {
+                if (pos >= startPos)
+                {
+                    yield return rune;
+                }
+
+                pos += rune.Utf16SequenceLength;
+            }
+        }
+
+        // Phase 3: just return everything from here on out.
+        while (leaves.MoveNext())
+        {
+            var leaf = leaves.Current;
+            foreach (var rune in leaf.Text.EnumerateRunes())
             {
                 yield return rune;
             }
-
-            pos += rune.Utf16SequenceLength;
         }
     }
 

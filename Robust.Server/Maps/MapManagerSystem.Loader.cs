@@ -399,14 +399,13 @@ public sealed partial class MapManagerSystem
     {
         _stopwatch.Restart();
 
-        // There's x scenarios
+        // There's 3 scenarios
         // 1. We're loading a map file onto an existing map. In this case dump the map file map and use the existing map
         // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
         // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
 
         var rootNode = data.InitOrder[0];
         var xformQuery = GetEntityQuery<TransformComponent>();
-        // TODO: Need to do this after alloc but before load.
         // We just need to cache the old mapuid and point to the new mapuid.
 
         if (HasComp<MapComponent>(rootNode))

@@ -47,7 +47,6 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             _logger = Logger.GetSawmill("gsplit");
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
@@ -78,9 +77,10 @@ namespace Robust.Server.Physics
                 _nodes[uid] = new Dictionary<Vector2i, ChunkNodeGroup>();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        protected override void OnGridInit(GridInitializeEvent ev)
         {
             EnsureGrid(ev.EntityUid);
+            base.OnGridInit(ev);
         }
 
         private void OnGridRemoval(GridRemovalEvent ev)

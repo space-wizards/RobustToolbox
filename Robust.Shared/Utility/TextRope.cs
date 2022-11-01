@@ -23,6 +23,12 @@ public static class Rope
         267914296, 433494437, 701408733, 1134903170, 1836311903
     };
 
+    /// <summary>
+    /// Calculate the total text length of the rope given.
+    /// </summary>
+    /// <remarks>
+    /// For a balanced tree, this is O(log n).
+    /// </remarks>
     public static long CalcTotalLength(Node? node)
     {
         return node switch
@@ -34,6 +40,9 @@ public static class Rope
     }
 
     // TODO: Move to struct enumerator with managed stack memory.
+    /// <summary>
+    /// Enumerate all leaves in the rope from left to right.
+    /// </summary>
     public static IEnumerable<Leaf> CollectLeaves(Node node)
     {
         var stack = new Stack<Branch>();
@@ -63,6 +72,9 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Enumerate all leaves in the rope from right to left.
+    /// </summary>
     public static IEnumerable<Leaf> CollectLeavesReverse(Node node)
     {
         var stack = new Stack<Branch>();
@@ -92,6 +104,9 @@ public static class Rope
     }
 
     // TODO: Move to struct enumerator with managed stack memory.
+    /// <summary>
+    /// Enumerate all text runes in the rope from left to right.
+    /// </summary>
     public static IEnumerable<Rune> EnumerateRunes(Node node)
     {
         foreach (var leaf in CollectLeaves(node))
@@ -103,6 +118,9 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Enumerate all text runes in the rope from left to right, starting at the specified position.
+    /// </summary>
     public static IEnumerable<Rune> EnumerateRunes(Node node, long startPos)
     {
         var pos = 0L;
@@ -152,11 +170,13 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Enumerate all the runes in the rope, from right to left.
+    /// </summary>
     public static IEnumerable<Rune> EnumerateRunesReverse(Node node)
     {
         foreach (var leaf in CollectLeavesReverse(node))
         {
-            // TODO: God forgive my LINQ sins
             var enumerator = new StringEnumerateHelpers.SubstringReverseRuneEnumerator(leaf.Text, leaf.Text.Length);
             while (enumerator.MoveNext())
             {
@@ -165,6 +185,9 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Enumerate all text runes in the rope from right to left, starting at the specified position.
+    /// </summary>
     public static IEnumerable<Rune> EnumerateRunesReverse(Node node, long endPos)
     {
         var pos = CalcTotalLength(node);
@@ -182,6 +205,9 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Check whether the rope is sufficiently balanced to avoid bad performance.
+    /// </summary>
     public static bool IsBalanced(Node node)
     {
         var depth = node.Depth;
@@ -191,6 +217,9 @@ public static class Rope
         return FibonacciSequence[depth + 2] <= node.Weight;
     }
 
+    /// <summary>
+    /// Ensure the rope is balanced to ensure decent performance on various operations.
+    /// </summary>
     public static Node Rebalance(Node node)
     {
         if (IsBalanced(node))
@@ -198,20 +227,26 @@ public static class Rope
 
         var leaves = CollectLeaves(node).ToArray();
         return Merge(leaves);
+
+        static Node Merge(ReadOnlySpan<Leaf> leaves)
+        {
+            if (leaves.Length == 1)
+                return leaves[0];
+
+            if (leaves.Length == 2)
+                return new Branch(leaves[0], leaves[1]);
+
+            var mid = leaves.Length / 2;
+            return new Branch(Merge(leaves[..mid]), Merge(leaves[mid..]));
+        }
     }
 
-    private static Node Merge(ReadOnlySpan<Leaf> leaves)
-    {
-        if (leaves.Length == 1)
-            return leaves[0];
-
-        if (leaves.Length == 2)
-            return new Branch(leaves[0], leaves[1]);
-
-        var mid = leaves.Length / 2;
-        return new Branch(Merge(leaves[..mid]), Merge(leaves[mid..]));
-    }
-
+    /// <summary>
+    /// Get a <see langword="char" /> at the specified index in the rope.
+    /// </summary>
+    /// <remarks>
+    /// For a balanced tree, this is O(log n).
+    /// </remarks>
     public static char Index(Node rope, long index)
     {
         switch (rope)
@@ -233,27 +268,46 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Splice text into a rope.
+    /// </summary>
+    /// <param name="rope">The rope to splice text into.</param>
+    /// <param name="index">The position the inserted text should start at.</param>
+    /// <param name="value">The text to insert.</param>
+    /// <returns>The new rope containing the spliced data.</returns>
     public static Node Insert(Node rope, long index, string value)
     {
         var (left, right) = Split(rope, index);
         return Concat(left, Concat(new Leaf(value), right));
     }
 
+    /// <summary>
+    /// Join two ropes together.
+    /// </summary>
     public static Node Concat(Node left, Node right)
     {
         return new Branch(left, right);
     }
 
+    /// <summary>
+    /// Join a rope with a string.
+    /// </summary>
     public static Node Concat(Node left, string right)
     {
         return Concat(left, new Leaf(right));
     }
 
+    /// <summary>
+    /// Join a string with a rope.
+    /// </summary>
     public static Node Concat(string left, Node right)
     {
         return Concat(new Leaf(left), right);
     }
 
+    /// <summary>
+    /// Split a rope into two at a certain index.
+    /// </summary>
     public static (Node left, Node right) Split(Node rope, long index)
     {
         switch (rope)

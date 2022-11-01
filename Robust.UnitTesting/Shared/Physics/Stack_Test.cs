@@ -86,6 +86,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 physSystem.SetHard(verticalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, verticalFixture);
+                physSystem.WakeBody(ground);
 
                 var xs = new[]
                 {
@@ -118,6 +119,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         physSystem.SetHard(fixture, true);
 
                         fixtureSystem.CreateFixture(box, fixture);
+                        physSystem.WakeBody(box);
 
                         bodies[j * rowCount + i] = box;
                     }
@@ -201,6 +203,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 physSystem.SetHard(verticalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, verticalFixture);
+                physSystem.WakeBody(ground);
 
                 var xs = new[]
                 {
@@ -229,6 +232,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         physSystem.SetHard(fixture, true);
 
                         fixtureSystem.CreateFixture(circle, fixture);
+                        physSystem.WakeBody(circle);
 
                         bodies[j * rowCount + i] = circle;
                     }

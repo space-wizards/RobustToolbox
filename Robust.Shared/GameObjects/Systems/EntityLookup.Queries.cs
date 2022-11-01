@@ -116,7 +116,7 @@ public sealed partial class EntityLookupSystem
                     return true;
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
-        
+
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree.QueryAabb(ref intersecting,
@@ -367,7 +367,7 @@ public sealed partial class EntityLookupSystem
         {
             AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
-            if ((flags & LookupFlags.Anchored) != 0x0)
+            if ((flags & (LookupFlags.Anchored | LookupFlags.Static)) != 0x0)
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                 {
@@ -480,7 +480,7 @@ public sealed partial class EntityLookupSystem
 
         if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var intersecting = GetEntitiesInRange(mapPos, range, flags).ToHashSet();
+        var intersecting = GetEntitiesInRange(mapPos, range, flags);
         intersecting.Remove(uid);
         return intersecting;
     }
@@ -495,7 +495,7 @@ public sealed partial class EntityLookupSystem
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
         var bounds = GetAABBNoContainer(uid, worldPos, worldRot);
 
-        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags).ToHashSet();
+        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags);
         intersecting.Remove(uid);
         return intersecting;
     }
@@ -662,28 +662,28 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(BroadphaseComponent lookup, Box2 aabb, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
-        var state = (lookup.SundriesTree._b2Tree, intersecting);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
         {
-            lookup.DynamicTree.QueryAabb(ref state,
-                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
+            lookup.DynamicTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
                 {
-                    tuple.intersecting.Add(value.Fixture.Body.Owner);
+                    intersecting.Add(value.Fixture.Body.Owner);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
 
         if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
         {
-            lookup.StaticTree.QueryAabb(ref state,
-                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, in FixtureProxy value) =>
+            lookup.StaticTree.QueryAabb(ref intersecting,
+                static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
                 {
-                    tuple.intersecting.Add(value.Fixture.Body.Owner);
+                    intersecting.Add(value.Fixture.Body.Owner);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        var state = (lookup.StaticSundriesTree._b2Tree, intersecting);
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>
@@ -693,6 +693,7 @@ public sealed partial class EntityLookupSystem
             }, aabb);
         }
 
+        state = (lookup.SundriesTree._b2Tree, intersecting);
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree._b2Tree.Query(ref state, static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting) tuple, DynamicTree.Proxy proxy) =>

@@ -25,7 +25,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnAnchor(EntityUid uid, CollideOnAnchorComponent component, ref AnchorStateChangedEvent args)
         {
-            SetCollide(uid, component, args.Anchored);
+            if (!args.Detaching)
+                SetCollide(uid, component, args.Anchored);
         }
 
         private void SetCollide(EntityUid uid, CollideOnAnchorComponent component, bool anchored)

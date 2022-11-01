@@ -1,10 +1,10 @@
-using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using System.Threading.Tasks;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -20,6 +20,10 @@ namespace Robust.UnitTesting.Shared.Physics
   - type: Physics
     bodyType: Dynamic
   - type: Fixtures
+    fixtures:
+    - shape:
+        !type:PhysShapeCircle
+        radius: 0.35
   - type: CollisionWake
 ";
 
@@ -52,8 +56,11 @@ namespace Robust.UnitTesting.Shared.Physics
                 var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);
                 xform = entManager.GetComponent<TransformComponent>(entityOne);
+                Assert.That(xform.ParentUid == mapManager.GetMapEntityId(mapId));
+
                 var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
                 entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo);
+                Assert.That(entManager.GetComponent<TransformComponent>(entityTwo).ParentUid == grid.GridEntityId);
 
             });
 

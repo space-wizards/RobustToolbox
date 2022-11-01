@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -16,6 +15,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
+            SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
             SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
 
@@ -24,6 +24,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
         }
+
+        protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
 
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
         {

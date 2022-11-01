@@ -49,6 +49,54 @@ Template for new versions:
 
 *None yet*
 
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
+
+## 0.58.1.1
+
+### Bugfixes
+
+* Fixed some container shutdown errors
+* Fixed LookupFlags.Static not acting as a full replacement for LookupFlags.Anchored
+
+## 0.58.1.0
+
+### Other
+
+* Physics collision changed and body type changed events no longer get raised before initialisation
+
+## 0.58.0.0
+
+### Breaking changes
+
+* Some TransformComponent functions have been moved to the system.
+* Container insert, remove, and shutdown function arguments and functionality has changed.
+* Physics entities without fixtures now automatically disable collision.
+
+### New features
+
+* Added command to profile entity spawning
+
+### Bugfixes
+
+* EntityLookup/BroadphaseComponent tracking has been overhauled, which should hopefully fix various broadphase bugs.
+
+### Other
+
+* Component.Owner is now marked as obsolete.
+
 ## 0.57.0.4
 
 ### Bugfixes

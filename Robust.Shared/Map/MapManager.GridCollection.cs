@@ -74,8 +74,10 @@ internal partial class MapManager
     public void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid)
     {
         _grids.Add(mapGrid.GridEntityId);
+        var xform = EntityManager.GetComponent<TransformComponent>(gridComponent.Owner);
+
         Logger.InfoS("map", $"Binding grid {mapGrid.GridEntityId} to entity {gridComponent.Owner}");
-        OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.GridEntityId);
+        OnGridCreated?.Invoke(xform.MapID, mapGrid.GridEntityId);
     }
 
     public GridEnumerator GetAllGridsEnumerator()
@@ -148,11 +150,6 @@ internal partial class MapManager
             .Select(c => c.Grid);
     }
 
-    public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
-    {
-        enumerator = new FindGridsEnumerator(EntityManager, GetAllGrids().Cast<MapGrid>().GetEnumerator(), mapId, worldAabb, approx);
-    }
-
     public virtual void DeleteGrid(EntityUid euid)
     {
 #if DEBUG
@@ -189,8 +186,9 @@ internal partial class MapManager
     public void TrueGridDelete(MapGrid grid)
     {
         grid.Deleting = true;
+        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
 
-        var mapId = grid.ParentMapId;
+        var mapId = xform.MapID;
 
         _grids.Remove(grid.GridEntityId);
 

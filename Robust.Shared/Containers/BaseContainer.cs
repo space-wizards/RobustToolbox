@@ -114,6 +114,11 @@ namespace Robust.Shared.Containers
             // This is done before changing can collide to avoid unecceary updates.
             // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
             lookupSys.RemoveFromEntityTree(toinsert, transform, transformQuery);
+            DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
+
+            // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
+            var old = transform.Broadphase;
+            transform.Broadphase = BroadphaseData.Invalid;
 
             // Unanchor the entity (without changing physics body types).
             xformSys.Unanchor(transform, false);
@@ -128,6 +133,7 @@ namespace Robust.Shared.Containers
             // Attach to new parent
             var oldParent = transform.ParentUid;
             xformSys.SetCoordinates(transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
+            transform.Broadphase = old;
 
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
@@ -144,7 +150,6 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(!transform.Anchored);
             DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
             DebugTools.Assert(transform.LocalRotation == Angle.Zero);
-            DebugTools.Assert(transform.Broadphase == null);
             DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || (!phys.Awake && !phys.CanCollide));
 
             entMan.Dirty(Manager);
@@ -225,7 +230,6 @@ namespace Robust.Shared.Containers
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
             bool reparent = true,
-            bool addToBroadphase = true,
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
@@ -250,18 +254,19 @@ namespace Robust.Shared.Containers
             }
 
             DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
-            DebugTools.Assert(xform.Broadphase == null);
+            DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
             DebugTools.Assert(!xform.Anchored);
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
             DebugTools.Assert(!entMan.TryGetComponent(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
 
             // Unset flag (before parent change events are raised).
             meta.Flags &= ~MetaDataFlags.InContainer;
-            
+
             // Implementation specific remove logic
             InternalRemove(toRemove, entMan);
 
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0);
+            var oldParent = xform.ParentUid;
 
             if (destination != null)
             {
@@ -276,15 +281,18 @@ namespace Robust.Shared.Containers
                     entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
             }
 
-            if (addToBroadphase)
+            // Add to new broadphase
+            if (xform.ParentUid == oldParent // move event should already have handled it
+                && xform.Broadphase == null) // broadphase explicitly invalid?
             {
-                // Container ECS when.
                 entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform);
             }
 
             // Raise container events (after re-parenting and internal remove).
             entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toRemove, this), true);
             entMan.EventBus.RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, this), false);
+
+            DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
 
             entMan.Dirty(Manager);
             return true;

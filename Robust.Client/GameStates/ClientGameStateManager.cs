@@ -25,6 +25,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -664,7 +666,7 @@ namespace Robust.Client.GameStates
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -687,6 +689,11 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            var contQuery = _entities.GetEntityQuery<ContainerManagerComponent>();
+            var physicsQuery = _entities.GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = _entities.GetEntityQuery<FixturesComponent>();
+            var broadQuery = _entities.GetEntityQuery<BroadphaseComponent>();
+
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
@@ -695,8 +702,14 @@ namespace Robust.Client.GameStates
                     HandleEntityState(entity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
 
-                    if (data.EnteringPvs)
-                        lookupSys.FindAndAddToEntityTree(entity);
+                    if (!data.EnteringPvs)
+                        continue;
+
+                    // re-add to broadphase.
+                    var xform = xforms.GetComponent(entity);
+                    DebugTools.Assert(xform.Broadphase != null && !xform.Broadphase.Value.IsValid());
+                    xform.Broadphase = null;
+                    lookupSys.FindAndAddToEntityTree(entity, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);                    
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
@@ -754,7 +767,13 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }
 
-        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys, ContainerSystem containerSys)
+        private List<EntityUid> ProcessPvsDeparture(
+            GameTick toTick,
+            EntityQuery<MetaDataComponent> metas,
+            EntityQuery<TransformComponent> xforms,
+            SharedTransformSystem xformSys,
+            ContainerSystem containerSys,
+            EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
             var detached = new List<EntityUid>();
@@ -798,7 +817,9 @@ namespace Robust.Client.GameStates
                             (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                             containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            container.Remove(ent, _entities, xform, meta, false, false, true);
+                            lookupSys.RemoveFromEntityTree(ent, xform, xforms);
+                            xform.Broadphase = BroadphaseData.Invalid;
+                            container.Remove(ent, _entities, xform, meta, false, true);
                         }
 
                         meta._flags |= MetaDataFlags.Detached;

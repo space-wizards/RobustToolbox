@@ -964,6 +964,7 @@ public abstract partial class SharedTransformSystem
 
         // Before making any changes to physics or transforms, remove from the current broadphase
         _lookup.RemoveFromEntityTree(xform.Owner, xform, xformQuery);
+        xform.Broadphase = BroadphaseData.Invalid;
 
         // Stop any active lerps
         xform._nextPosition = null;

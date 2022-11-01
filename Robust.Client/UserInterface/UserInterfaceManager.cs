@@ -14,6 +14,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -46,6 +47,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -84,6 +86,8 @@ namespace Robust.Client.UserInterface
         private readonly Queue<Control> _arrangeUpdateQueue = new();
         private Stylesheet? _stylesheet;
 
+        private ISawmill _sawmillUI = default!;
+
         public void Initialize()
         {
             _dependencies = new DependencyCollection(_rootDependencies);
@@ -116,6 +120,7 @@ namespace Robust.Client.UserInterface
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _initThemes();
         }
+
         public void PostInitialize()
         {
             _initializeScreens();
@@ -123,9 +128,13 @@ namespace Robust.Client.UserInterface
         }
         private void _initializeCommon()
         {
+            _sawmillUI = _logManager.GetSawmill("ui");
+
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
+
             _clyde.DestroyWindow += WindowDestroyed;
+            _clyde.OnWindowFocused += ClydeOnWindowFocused;
 
             MainViewport = new MainViewportContainer(_eyeManager)
             {

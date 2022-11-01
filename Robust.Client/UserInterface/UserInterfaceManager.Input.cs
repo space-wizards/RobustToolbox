@@ -41,6 +41,8 @@ internal partial class UserInterfaceManager
     private Control? _suppliedTooltip;
     private const float TooltipDelay = 1;
 
+    private WindowRoot? _focusedRoot;
+
     private static (Control control, Vector2 rel)? MouseFindControlAtPos(Control control, Vector2 position)
     {
         for (var i = control.ChildCount - 1; i >= 0; i--)

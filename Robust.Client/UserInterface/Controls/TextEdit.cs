@@ -21,11 +21,13 @@ public sealed class TextEdit : Control
     [Dependency] private readonly IClipboardManager _clipboard = null!;
     [Dependency] private readonly IClyde _clyde = null!;
 
+    // @formatter:off
     public const string StylePropertyStyleBox       = "stylebox";
     public const string StylePropertyCursorColor    = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
     public const string StylePseudoClassPlaceholder = "placeholder";
+    // @formatter:on
 
     private readonly RenderBox _renderBox;
     private readonly VScrollBar _scrollBar;
@@ -52,7 +54,7 @@ public sealed class TextEdit : Control
     private TextEditShared.CursorBlink _blink;
     private bool _editable = true;
 
-    private (int start, int length)? _imeData;
+    private (CursorPos start, int length)? _imeData;
 
     public TextEdit()
     {
@@ -548,37 +550,42 @@ public sealed class TextEdit : Control
         var ev = args.Event;
         var startChars = ev.GetStartChars();
 
-        if (_imeData.HasValue)
+        // Just break an active composition and build it anew to handle in-progress ones.
+        AbortIme();
+
+        if (ev.Text != "")
         {
-            // Already have an active IME composition, have to replace it.
-            var (imeStart, imeLength) = _imeData.Value;
-
-            TextRope = Rope.ReplaceSubstring(TextRope, imeStart, imeLength, ev.Text);
-
-            _selectionStart = _cursorPosition = new CursorPos(imeStart + startChars, LineBreakBias.Top);
-
-            if (ev.Text != "")
-                _imeData = (imeStart, ev.Text.Length);
-            else
-                _imeData = null;
-        }
-        else if (ev.Text != "")
-        {
-            // Starting a new IME composition.
             if (_selectionStart != _cursorPosition)
             {
-                // Delete active selection.
+                // Delete active text selection.
                 InsertAtCursor("");
             }
 
-            var startPos = _cursorPosition.Index;
-            TextRope = Rope.Insert(TextRope, startPos, ev.Text);
+            var startPos = _cursorPosition;
+            TextRope = Rope.Insert(TextRope, startPos.Index, ev.Text);
 
-            _selectionStart = _cursorPosition = new CursorPos(startPos + startChars, LineBreakBias.Top);
+            _selectionStart = _cursorPosition = new CursorPos(startPos.Index + startChars, LineBreakBias.Top);
             _imeData = (startPos, ev.Text.Length);
         }
 
         EnsureCursorVisible();
+    }
+
+    private void AbortIme(bool delete = true)
+    {
+        if (!_imeData.HasValue)
+            return;
+
+        if (delete)
+        {
+            var (imeStart, imeLength) = _imeData.Value;
+
+            TextRope = Rope.Delete(TextRope, imeStart.Index, imeLength);
+
+            _selectionStart = _cursorPosition = imeStart;
+        }
+
+        _imeData = null;
     }
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
@@ -1064,8 +1071,8 @@ public sealed class TextEdit : Control
                 CheckDrawCursors(LineBreakBias.Bottom);
 
                 var color = Color.White;
-                if (_master._imeData.HasValue && count >= _master._imeData.Value.start && count <=
-                    (_master._imeData.Value.start + _master._imeData.Value.length))
+                if (_master._imeData.HasValue && count >= _master._imeData.Value.start.Index && count <=
+                    (_master._imeData.Value.start.Index + _master._imeData.Value.length))
                     color = Color.Yellow;
 
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
@@ -1170,10 +1177,11 @@ public sealed class TextEdit : Control
     {
         base.KeyboardFocusEntered();
 
+        _blink.Reset();
+
         if (Editable)
         {
             _clyde.StartTextInput();
-            _clyde.SetTextInputRect(PixelSizeBox.Translated(GlobalPixelPosition));
         }
     }
 
@@ -1182,6 +1190,7 @@ public sealed class TextEdit : Control
         base.KeyboardFocusExited();
 
         _clyde.StopTextInput();
+        AbortIme(delete: false);
     }
 
     /// <summary>

@@ -18,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LineEdit : Control
     {
+        [Dependency] private readonly IClyde _clyde = default!;
+
         private const float MouseScrollDelay = 0.001f;
 
         public const string StylePropertyStyleBox = "stylebox";
@@ -172,6 +174,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public LineEdit()
         {
+            IoCManager.InjectDependencies(this);
+
             MouseFilter = MouseFilterMode.Stop;
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
@@ -692,12 +696,21 @@ namespace Robust.Client.UserInterface.Controls
             // Reset this so the cursor is always visible immediately after gaining focus..
             _blink.Reset();
             OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
+
+            if (Editable)
+            {
+                _clyde.StartTextInput();
+            }
         }
 
         protected internal override void KeyboardFocusExited()
         {
             base.KeyboardFocusExited();
+
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
+
+            _clyde.StopTextInput();
+            // AbortIme(delete: false);
         }
 
         [Pure]

@@ -433,9 +433,8 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
-                var broadQuery = _entityManager.GetEntityQuery<BroadphaseComponent>();
-                var broadphaseA = _lookup.GetBroadphase(bodyA.Owner, xformQuery.GetComponent(bodyA.Owner), broadQuery, xformQuery);
-                var broadphaseB = _lookup.GetBroadphase(bodyB.Owner, xformQuery.GetComponent(bodyB.Owner), broadQuery, xformQuery);
+                var broadphaseA = _lookup.GetCurrentBroadphase(xformQuery.GetComponent(bodyA.Owner));
+                var broadphaseB = _lookup.GetCurrentBroadphase(xformQuery.GetComponent(bodyB.Owner));
                 var overlap = false;
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace

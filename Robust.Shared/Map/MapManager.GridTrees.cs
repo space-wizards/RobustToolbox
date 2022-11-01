@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -103,7 +104,7 @@ internal partial class MapManager
     {
         var aabb = GetWorldAABB(grid);
         var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
-
+        DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
         grid.MapProxy = proxy;
 
         _movedGrids[mapId].Add(grid);
@@ -147,7 +148,10 @@ internal partial class MapManager
 
         // oh boy
         // Want gridinit to handle this hence specialcase those situations.
-        if (lifestage < EntityLifeStage.Initialized) return;
+        // oh boy oh boy, its even worse now.
+        // transform now raises parent change events on startup, because container code is a POS.
+        if (lifestage < EntityLifeStage.Initialized || args.Transform.LifeStage == ComponentLifeStage.Starting)
+            return;
 
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = args.Transform.MapID;
@@ -161,6 +165,7 @@ internal partial class MapManager
             RemoveGrid(aGrid, args.OldMapId);
         }
 
+        DebugTools.Assert(aGrid.MapProxy == DynamicTree.Proxy.Free);
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
             newMovedGrids.Add(component.Grid);

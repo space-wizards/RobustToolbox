@@ -11,6 +11,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems
 {
@@ -207,8 +208,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        _physicsSystem.WakeBody(proxyABody);
-                        _physicsSystem.WakeBody(otherBody);
+                        _physicsSystem.WakeBody(proxyABody, force: true);
+                        _physicsSystem.WakeBody(otherBody, force: true);
                     }
 
                     contactManager.AddPair(proxyA, other);
@@ -326,9 +327,7 @@ namespace Robust.Shared.Physics.Systems
 
             // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
             Box2 aabb;
-            var proxyBroad = _lookup.GetBroadphase(proxy.Fixture.Body.Owner, xform, broadphaseQuery, xformQuery);
-
-            if (proxyBroad == null)
+            if (!_lookup.TryGetCurrentBroadphase(xform, out var proxyBroad))
             {
                 _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
                 DebugTools.Assert(false);
@@ -394,22 +393,18 @@ namespace Robust.Shared.Physics.Systems
             }, aabb, true);
         }
 
-        public void RegenerateContacts(PhysicsComponent body)
+        public void RegenerateContacts(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)
         {
             _physicsSystem.DestroyContacts(body);
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
+            if (!Resolve(body.Owner, ref xform, ref fixtures))
+                return;
 
-            var broadphase = _lookup.GetBroadphase(body.Owner, xformQuery.GetComponent(body.Owner), broadQuery, xformQuery);
+            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
 
-            if (broadphase != null)
+            foreach (var fixture in fixtures.Fixtures.Values)
             {
-                var mapId = EntityManager.GetComponent<TransformComponent>(body.Owner).MapID;
-
-                foreach (var fixture in EntityManager.GetComponent<FixturesComponent>(body.Owner).Fixtures.Values)
-                {
-                    TouchProxies(mapId, broadphase, fixture);
-                }
+                TouchProxies(xform.MapID, broadphase, fixture);
             }
         }
 
@@ -433,7 +428,7 @@ namespace Robust.Shared.Physics.Systems
             physicsMap.MoveBuffer[proxy] = aabb;
         }
 
-        public void Refilter(Fixture fixture)
+        public void Refilter(Fixture fixture, TransformComponent? xform = null)
         {
             // TODO: Call this method whenever collisionmask / collisionlayer changes
             // TODO: This should never becalled when body is null.
@@ -448,14 +443,13 @@ namespace Robust.Shared.Physics.Systems
                 contact.Flags |= ContactFlags.Filter;
             }
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var broadphase = _lookup.GetBroadphase(fixture.Body.Owner, xformQuery.GetComponent(fixture.Body.Owner), broadQuery, xformQuery);
+            if (!Resolve(fixture.Body.Owner, ref xform))
+                return;
 
-            // If nullspace or whatever ignore it.
-            if (broadphase == null) return;
+            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
 
-            TouchProxies(Transform(fixture.Body.Owner).MapID, broadphase, fixture);
+            TouchProxies(xform.MapID, broadphase, fixture);
         }
 
         // TODO: The below is slow and should just query the map's broadphase directly. The problem is that

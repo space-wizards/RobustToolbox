@@ -317,22 +317,23 @@ internal sealed partial class PVSSystem : EntitySystem
             _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if (ev.Component.GridUid == ev.Sender || !ev.Component.ParentUid.IsValid())
+        if (ev.Component.GridUid == ev.Sender)
             return;
+        DebugTools.Assert(!_mapManager.IsGrid(ev.Sender));
 
-        var xformQuery = GetEntityQuery<TransformComponent>();
-
-        if (ev.ParentChanged)
+        if (!ev.Component.ParentUid.IsValid())
         {
-            // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
-            var oldCoordinates = _transform.GetMoverCoordinates(ev.OldPosition, xformQuery);
-            var indices = PVSCollection<EntityUid>.GetChunkIndices(oldCoordinates.Position);
-            if (ev.Component.GridUid != null)
-                _entityPvsCollection.MarkDirty(new GridChunkLocation(ev.Component.GridUid.Value, indices));
-            else
-                _entityPvsCollection.MarkDirty(new MapChunkLocation(ev.Component.MapID, indices));
+            // This entity is either a map, terminating, or a rare null-space entity.
+            if (Terminating(ev.Sender))
+                return;
+
+            if (ev.Component.MapUid == ev.Sender)
+                return;
         }
 
+        DebugTools.Assert(!_mapManager.IsMap(ev.Sender));
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
@@ -342,8 +343,13 @@ internal sealed partial class PVSSystem : EntitySystem
         // use Startup because GridId is not set during the eventbus init yet!
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if (component.GridUid == uid || _mapManager.IsMap(uid))
+        if (component.GridUid == uid)
             return;
+        DebugTools.Assert(!_mapManager.IsGrid(uid));
+
+        if (component.MapUid == uid)
+            return;
+        DebugTools.Assert(!_mapManager.IsMap(uid));
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component, xformQuery);
@@ -721,13 +727,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
-        // Iterate over visible chunks and add entities.
-        // TODO reorder chunks and allow early termination?
-        // Previously this iteration terminated early whenever the PVS budget was full. However, if this iteration
-        // iterates over new chunks first, then this can lead to a situation where previously seen entities in currently
-        // still visible chunks are never added to visibleEnts, and therefore get treated as if they had left PVS.
-        // Currently this is fixed by just not exiting the iteration early, but it is probably better to just ensure
-        // that new chunks are always the last to be iterated over.
+        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop0in less visible.
         foreach (var i in chunkIndices)
         {
             var cache = chunkCache[i];
@@ -775,6 +775,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var (uid, visiblity) in visibleEnts)
         {
+            // if an entity is visible, its parents should always be visible.
+            DebugTools.Assert((tQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) || visibleEnts.ContainsKey(parent),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
+
             if (sessionData.RequestedFull)
             {
                 entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid)));
@@ -873,8 +877,10 @@ internal sealed partial class PVSSystem : EntitySystem
             var (entered, shouldAdd) = ProcessEntry(in nodeIndex, lastAcked, lastSent, lastSeen,
                 ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-            if (shouldAdd)
-                AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
+            if (!shouldAdd)
+                return;
+
+            AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
         }
 
         var node = tree[nodeIndex];
@@ -968,7 +974,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
-            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: {rep}");
+            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
             return;
         }
 

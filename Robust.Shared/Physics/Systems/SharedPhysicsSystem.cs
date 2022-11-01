@@ -64,7 +64,7 @@ namespace Robust.Shared.Physics.Systems
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
 
-            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
@@ -243,13 +243,16 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void HandleGridInit(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
-            if (!EntityManager.EntityExists(ev.EntityUid)) return;
-            // Yes this ordering matters
-            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
-            SetBodyType(collideComp, BodyType.Static);
-            EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
+            var guid = ev.EntityUid;
+
+            if (!EntityManager.EntityExists(guid) || HasComp<PhysicsComponent>(guid))
+                return;
+
+            var body = AddComp<PhysicsComponent>(guid);
+            SetCanCollide(body, true);
+            SetBodyType(body, BodyType.Static);
         }
 
         public override void Shutdown()

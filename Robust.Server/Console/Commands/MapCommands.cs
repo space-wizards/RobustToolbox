@@ -382,7 +382,7 @@ namespace Robust.Server.Console.Commands
                 loadOptions.StoreMapUids = storeUids;
             }
 
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapManagerSystem>().TryLoad(mapId, args[1], out _, loadOptions);
 
             if (mapManager.MapExists(mapId))
                 shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));

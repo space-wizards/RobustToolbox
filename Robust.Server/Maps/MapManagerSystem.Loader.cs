@@ -69,15 +69,23 @@ public sealed partial class MapManagerSystem
             return false;
         }
 
+        bool result;
+
         using (reader)
         {
             _logLoader.Info($"Loading Map: {resPath}");
 
-            var data = new MapData(reader, options);
-            Deserialize(data);
+            var data = new MapData(mapId, reader, options);
+            result = Deserialize(data);
         }
 
-        return true;
+        _context.Clear();
+
+#if DEBUG
+        DebugTools.Assert(result);
+#endif
+
+        return result;
     }
 
     public void Save(EntityUid uid, string ymlPath)
@@ -152,32 +160,43 @@ public sealed partial class MapManagerSystem
         return true;
     }
 
-    private void Deserialize(MapData data)
+    private bool Deserialize(MapData data)
     {
         // Verify that prototypes for all the entities exist
         if (!VerifyEntitiesExist(data))
-            return;
+            return false;
 
         // First we load map meta data like version.
         if (!ReadMetaSection(data))
-            return;
+            return false;
 
         // Tile map
         ReadTileMapSection(data);
 
-        // Alloc entities / build entity hierarchy
+        // Alloc entities
         AllocEntities(data);
 
-        // From hierarchy work out root node, if it's an existing map or new one.
+        // Load the prototype data onto entities, e.g. transform parents, etc.
+        LoadEntities(data);
+
+        // Build the scene graph / transform hierarchy to know the order to startup entities.
+        // This also allows us to swap out the root node up front if necessary.
+        BuildEntityHierarchy(data);
+
+        // From hierarchy work out root node; if we're loading onto an existing map then see if we need to swap out
+        // the root from the yml.
+        SwapRootNode(data);
 
         // Then, go hierarchically in order and do the entity things.
-        // 1. Allocate
-        // 2. Load
+        StartupEntities(data);
+
         // 3. Reset net ticks
         // 4. apply map transforms
         // 5. initialize
         // 6. Startup
         // 7. MapInitEvent
+
+        return true;
     }
 
     private bool VerifyEntitiesExist(MapData data)
@@ -255,12 +274,10 @@ public sealed partial class MapManagerSystem
     private void AllocEntities(MapData data)
     {
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>());
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
-        // Build the scene graph / transform hierarchy to know the order to startup entities.
-        // This also allows us to swap out the root node up front if necessary.
-        var hierarchy = new Dictionary<EntityUid, EntityUid>();
         var sEntityManager = (IServerEntityManagerInternal) EntityManager;
 
         foreach (var entityDef in entities.Cast<MappingDataNode>())
@@ -291,19 +308,182 @@ public sealed partial class MapManagerSystem
                 comp.Uid = uid;
             }
         }
+    }
 
+    private void LoadEntities(MapData mapData)
+    {
+        var sEntityManager = (IServerEntityManagerInternal)EntityManager;
+        var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+        foreach (var (entity, data) in mapData.EntitiesToDeserialize)
+        {
+            _context.CurrentReadingEntityComponents.Clear();
+
+            if (data.TryGet("components", out SequenceDataNode? componentList))
+            {
+                foreach (var compData in componentList.Cast<MappingDataNode>())
+                {
+                    var datanode = compData.Copy();
+                    datanode.Remove("type");
+                    var value = ((ValueDataNode)compData["type"]).Value;
+                    _context.CurrentReadingEntityComponents[value] = datanode;
+                }
+            }
+
+            sEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, _context);
+        }
+    }
+
+    private void BuildEntityHierarchy(MapData mapData)
+    {
+        _stopwatch.Restart();
+        var hierarchy = new Dictionary<EntityUid, EntityUid>();
         var xformQuery = GetEntityQuery<TransformComponent>();
 
-        foreach (var entity in data.Entities)
+        foreach (var ent in mapData.Entities)
         {
-            if (xformQuery.TryGetComponent(entity, out var xform))
+            if (xformQuery.TryGetComponent(ent, out var xform))
             {
-                hierarchy[entity] = xform.ParentUid;
+                hierarchy[ent] = xform.ParentUid;
             }
             else
             {
-                hierarchy[entity] = EntityUid.Invalid;
+                hierarchy[ent] = EntityUid.Invalid;
             }
+        }
+
+        mapData.InitOrder = new List<EntityUid>(mapData.Entities.Count);
+        var added = new HashSet<EntityUid>(mapData.Entities.Count);
+
+        while (hierarchy.Count > 0)
+        {
+            var enumerator = hierarchy.GetEnumerator();
+            enumerator.MoveNext();
+            var (current, parent) = enumerator.Current;
+            BuildTopology(hierarchy, added, mapData.InitOrder, current, parent);
+            enumerator.Dispose();
+        }
+
+        _logLoader.Debug($"Built entity hierarchy for {mapData.Entities.Count} in {_stopwatch.Elapsed}");
+    }
+
+    private void BuildTopology(Dictionary<EntityUid, EntityUid> hierarchy, HashSet<EntityUid> added, List<EntityUid> initOrder, EntityUid current, EntityUid parent)
+    {
+        if (!added.Contains(parent) && hierarchy.TryGetValue(parent, out var parentValue))
+        {
+            current = parent;
+            parent = parentValue;
+            BuildTopology(hierarchy, added, initOrder, current, parent);
+        }
+
+        added.Add(current);
+        initOrder.Add(current);
+        hierarchy.Remove(current);
+    }
+
+    private void SwapRootNode(MapData data)
+    {
+        var rootNode = data.InitOrder[0];
+
+        if (HasComp<MapComponent>(rootNode))
+        {
+            // If map exists swap out
+            if (_mapManager.MapExists(data.TargetMap))
+            {
+                data.InitOrder[0] = _mapManager.GetMapEntityId(data.TargetMap);
+
+                // TODO: Swap everything with that as its parent.
+
+                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
+            }
+            else if (data.Options.LoadMap)
+            {
+                _logLoader.Warning($"Loading map file with a root node onto an existing map!");
+            }
+        }
+    }
+
+    private void StartupEntities(MapData data)
+    {
+        DebugTools.Assert(data.Entities.Count == data.InitOrder.Count);
+        var metaQuery = GetEntityQuery<MetaDataComponent>();
+        var rootEntity = data.InitOrder[0];
+
+        // If the root node is a map that's already existing don't bother with it.
+        if (MetaData(rootEntity).EntityLifeStage < EntityLifeStage.Initialized)
+        {
+            StartupEntity(rootEntity, metaQuery.GetComponent(rootEntity));
+        }
+
+        // TODO: For anything that's a root entity apply the transform adjustments.
+        for (var i = 1; i < data.InitOrder.Count; i++)
+        {
+            var entity = data.InitOrder[i];
+            StartupEntity(entity, metaQuery.GetComponent(entity));
+        }
+    }
+
+    private void StartupEntity(EntityUid uid, MetaDataComponent metadata)
+    {
+        ResetNetTicks(uid, metadata);
+        EntityManager.FinishEntityInitialization(uid, meta);
+        EntityManager.FinishEntityStartup(uid, meta);
+        MapInit(uid, metadata);
+    }
+
+    private void ResetNetTicks(EntityUid entity, MetaDataComponent metadata, MappingDataNode data)
+    {
+        if (!data.TryGet("components", out SequenceDataNode? componentList))
+        {
+            return;
+        }
+
+        if (metadata.EntityPrototype is not {} prototype)
+        {
+            return;
+        }
+
+        foreach (var (netId, component) in EntityManager.GetNetComponents(entity))
+        {
+            var compName = _factory.GetComponentName(component.GetType());
+
+            if (componentList.Cast<MappingDataNode>().Any(p => ((ValueDataNode)p["type"]).Value == compName))
+            {
+                if (prototype.Components.ContainsKey(compName))
+                {
+                    // This component is modified by the map so we have to send state.
+                    // Though it's still in the prototype itself so creation doesn't need to be sent.
+                    component.ClearCreationTick();
+                }
+
+                continue;
+            }
+
+            // This component is not modified by the map file,
+            // so the client will have the same data after instantiating it from prototype ID.
+            component.ClearTicks();
+        }
+    }
+
+    private void MapInit(EntityUid uid, MetaDataComponent metadata, MapData data)
+    {
+        var isPaused = data.MapIsPaused;
+
+        if (data.MapIsPostInit)
+        {
+            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+        }
+        else if (_mapManager.IsMapInitialized(mapId))
+        {
+            EntityManager.RunMapInit(uid, metadata);
+
+            if (isPaused)
+                metaSystem.SetEntityPaused(uid, true, metadata);
+
+        }
+        else if (isPaused)
+        {
+            metaSystem.SetEntityPaused(uid, true, metadata);
         }
     }
 
@@ -564,7 +744,7 @@ public sealed partial class MapManagerSystem
         public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
 
         // Run-specific data
-        public Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
+        public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
         public string? CurrentWritingComponent;
         public EntityUid? CurrentWritingEntity;
 
@@ -705,6 +885,7 @@ public sealed partial class MapManagerSystem
 
         public MappingDataNode RootMappingNode { get; }
 
+        public readonly MapId TargetMap;
         public bool MapIsPostInit;
         public readonly MapLoadOptions Options;
 
@@ -713,8 +894,9 @@ public sealed partial class MapManagerSystem
         public readonly List<EntityUid> Entities = new();
         public readonly Dictionary<int, EntityUid> UidEntityMap = new();
         public readonly List<(EntityUid, MappingDataNode)> EntitiesToDeserialize = new();
+        public List<EntityUid> InitOrder = default!;
 
-        public MapData(TextReader reader, MapLoadOptions options)
+        public MapData(MapId mapId, TextReader reader, MapLoadOptions options)
         {
             var stream = new YamlStream();
             stream.Load(reader);
@@ -734,6 +916,7 @@ public sealed partial class MapManagerSystem
             Stream = stream;
             RootMappingNode = RootNode.ToDataNodeCast<MappingDataNode>();
             Options = options;
+            TargetMap = mapId;
         }
     }
 }

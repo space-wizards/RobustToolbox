@@ -465,7 +465,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to remove component from entity '{ToPrettyString(uid)}'");
+                    Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }
             }
 

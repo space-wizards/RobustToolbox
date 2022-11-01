@@ -5,12 +5,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using Prometheus;
 using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -41,6 +43,7 @@ public sealed partial class MapManagerSystem
     public override void Initialize()
     {
         base.Initialize();
+        _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
         _context = new MapSerializationContext(_factory, EntityManager, _serManager);
     }
@@ -75,7 +78,9 @@ public sealed partial class MapManagerSystem
         {
             _logLoader.Info($"Loading Map: {resPath}");
 
+            _stopwatch.Restart();
             var data = new MapData(mapId, reader, options);
+            _logLoader.Debug($"Loaded yml stream in {_stopwatch.Elapsed}");
             result = Deserialize(data);
         }
 
@@ -187,14 +192,10 @@ public sealed partial class MapManagerSystem
         // the root from the yml.
         SwapRootNode(data);
 
+        ReadGrids(data);
+
         // Then, go hierarchically in order and do the entity things.
         StartupEntities(data);
-
-        // 3. Reset net ticks
-        // 4. apply map transforms
-        // 5. initialize
-        // 6. Startup
-        // 7. MapInitEvent
 
         return true;
     }
@@ -259,13 +260,13 @@ public sealed partial class MapManagerSystem
 
         // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
         var tileMap = data.RootMappingNode.Get<MappingDataNode>("tilemap");
-        data.TileMap = new Dictionary<ushort, string>(tileMap.Count);
+        _context.TileMap = new Dictionary<ushort, string>(tileMap.Count);
 
         foreach (var (key, value) in tileMap.Children)
         {
             var tileId = (ushort) ((ValueDataNode)key).AsInt();
             var tileDefName = ((ValueDataNode)value).Value;
-            data.TileMap.Add(tileId, tileDefName);
+            _context.TileMap.Add(tileId, tileDefName);
         }
 
         _logLoader.Debug($"Read tilemap in {_stopwatch.Elapsed}");
@@ -273,12 +274,12 @@ public sealed partial class MapManagerSystem
 
     private void AllocEntities(MapData data)
     {
+        _stopwatch.Restart();
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>());
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
-        var sEntityManager = (IServerEntityManagerInternal) EntityManager;
 
         foreach (var entityDef in entities.Cast<MappingDataNode>())
         {
@@ -297,47 +298,56 @@ public sealed partial class MapManagerSystem
                 uid = uidNode.AsInt();
             }
 
-            var entity = sEntityManager.AllocEntity(type);
+            var entity = _serverEntityManager.AllocEntity(type);
             data.Entities.Add(entity);
             data.UidEntityMap.Add(uid, entity);
-            data.EntitiesToDeserialize.Add((entity, entityDef));
+            data.EntitiesToDeserialize.Add(entity, entityDef);
 
             if (data.Options.StoreMapUids)
             {
-                var comp = sEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
                 comp.Uid = uid;
             }
         }
+
+        _logLoader.Debug($"Allocated {data.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
     private void LoadEntities(MapData mapData)
     {
-        var sEntityManager = (IServerEntityManagerInternal)EntityManager;
+        _stopwatch.Restart();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
 
         foreach (var (entity, data) in mapData.EntitiesToDeserialize)
         {
-            _context.CurrentReadingEntityComponents.Clear();
-
-            if (data.TryGet("components", out SequenceDataNode? componentList))
-            {
-                foreach (var compData in componentList.Cast<MappingDataNode>())
-                {
-                    var datanode = compData.Copy();
-                    datanode.Remove("type");
-                    var value = ((ValueDataNode)compData["type"]).Value;
-                    _context.CurrentReadingEntityComponents[value] = datanode;
-                }
-            }
-
-            sEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, _context);
+            LoadEntity(entity, data, metaQuery.GetComponent(entity));
         }
+
+        _logLoader.Debug($"Loaded {mapData.Entities.Count} entities in {_stopwatch.Elapsed}");
+    }
+
+    private void LoadEntity(EntityUid uid, MappingDataNode data, MetaDataComponent meta)
+    {
+        _context.CurrentReadingEntityComponents.Clear();
+
+        if (data.TryGet("components", out SequenceDataNode? componentList))
+        {
+            foreach (var compData in componentList.Cast<MappingDataNode>())
+            {
+                var datanode = compData.Copy();
+                datanode.Remove("type");
+                var value = ((ValueDataNode)compData["type"]).Value;
+                _context.CurrentReadingEntityComponents[value] = datanode;
+            }
+        }
+
+        _serverEntityManager.FinishEntityLoad(uid, meta.EntityPrototype, _context);
     }
 
     private void BuildEntityHierarchy(MapData mapData)
     {
         _stopwatch.Restart();
-        var hierarchy = new Dictionary<EntityUid, EntityUid>();
+        var hierarchy = mapData.Hierarchy;
         var xformQuery = GetEntityQuery<TransformComponent>();
 
         foreach (var ent in mapData.Entities)
@@ -364,71 +374,229 @@ public sealed partial class MapManagerSystem
             enumerator.Dispose();
         }
 
-        _logLoader.Debug($"Built entity hierarchy for {mapData.Entities.Count} in {_stopwatch.Elapsed}");
+        _logLoader.Debug($"Built entity hierarchy for {mapData.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
     private void BuildTopology(Dictionary<EntityUid, EntityUid> hierarchy, HashSet<EntityUid> added, List<EntityUid> initOrder, EntityUid current, EntityUid parent)
     {
-        if (!added.Contains(parent) && hierarchy.TryGetValue(parent, out var parentValue))
+        // If we've already added it then skip.
+        if (!added.Add(current))
+            return;
+
+        // Ensure parent is done first.
+        if (hierarchy.TryGetValue(parent, out var parentValue))
         {
-            current = parent;
-            parent = parentValue;
-            BuildTopology(hierarchy, added, initOrder, current, parent);
+            BuildTopology(hierarchy, added, initOrder, parent, parentValue);
         }
 
-        added.Add(current);
+        DebugTools.Assert(current.IsValid());
+        DebugTools.Assert(!initOrder.Contains(current));
         initOrder.Add(current);
         hierarchy.Remove(current);
     }
 
     private void SwapRootNode(MapData data)
     {
+        _stopwatch.Restart();
+
+        // There's x scenarios
+        // 1. We're loading a map file onto an existing map. In this case dump the map file map and use the existing map
+        // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
+        // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
+
         var rootNode = data.InitOrder[0];
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        // TODO: Need to do this after alloc but before load.
+        // We just need to cache the old mapuid and point to the new mapuid.
 
         if (HasComp<MapComponent>(rootNode))
         {
             // If map exists swap out
             if (_mapManager.MapExists(data.TargetMap))
             {
-                data.InitOrder[0] = _mapManager.GetMapEntityId(data.TargetMap);
+                if (data.Options.LoadMap)
+                {
+                    _logLoader.Warning($"Loading map file with a root node onto an existing map!");
+                }
 
-                // TODO: Swap everything with that as its parent.
+                var oldRootUid = data.InitOrder[0];
+                var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
+                data.InitOrder[0] = newRootUid;
+
+                foreach (var ent in data.InitOrder)
+                {
+                    var xform = xformQuery.GetComponent(ent);
+
+                    if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                    {
+                        xform.AttachParent(newRootUid);
+                    }
+                }
 
                 data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
             }
-            else if (data.Options.LoadMap)
+            else
             {
-                _logLoader.Warning($"Loading map file with a root node onto an existing map!");
+                // If we're loading a file with a map then swap out the entityuid
+                // TODO: Mapmanager nonsense
+                var AAAAA = _mapManager.CreateMap(data.TargetMap);
+
+                if (!data.MapIsPostInit)
+                {
+                    _mapManager.AddUninitializedMap(data.TargetMap);
+                }
+
+                _mapManager.SetMapEntity(data.TargetMap, rootNode);
+
+                // Nothing should have invalid uid except for the root node.
+            }
+        }
+        else
+        {
+            // No map file root, in that case create a new map / get the one we're loading onto.
+            var mapNode = _mapManager.GetMapEntityId(data.TargetMap);
+
+            if (!mapNode.IsValid())
+            {
+                // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
+                _mapManager.CreateMap(data.TargetMap);
+                mapNode = _mapManager.GetMapEntityId(data.TargetMap);
+                DebugTools.Assert(mapNode.IsValid());
+            }
+
+            // If anything has an invalid parent (e.g. it's some form of root node) then parent it to the map.
+            foreach (var ent in data.InitOrder)
+            {
+                // If it's the map itself don't reparent.
+                if (ent.Equals(mapNode))
+                    continue;
+
+                var xform = xformQuery.GetComponent(ent);
+
+                if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(rootNode))
+                {
+                    xform.AttachParent(mapNode);
+                }
+            }
+        }
+
+        data.MapIsPaused = _mapManager.IsMapPaused(data.TargetMap);
+        _logLoader.Debug($"Swapped out root node in {_stopwatch.Elapsed}");
+    }
+
+    private void ReadGrids(MapData data)
+    {
+        // TODO: Kill this when we get map format v3 and remove grid-specific yml area.
+
+        // MapGrids already contain their assigned GridId from their ctor, and the MapComponents just got deserialized.
+        // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
+        // After doing this, it should be 100% safe to use the MapManager API like normal.
+
+        var yamlGrids = data.RootMappingNode.Get<SequenceDataNode>("grids");
+
+        // There were no new grids, nothing to do here.
+        if (yamlGrids.Count == 0)
+            return;
+
+        // get ents that the grids will bind to
+        var gridComps = new MapGridComponent[yamlGrids.Count];
+
+        var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
+
+        // linear search for new grid comps
+        foreach (var uid in data.EntitiesToDeserialize.Keys)
+        {
+            if (!gridQuery.TryGetComponent(uid, out var gridComp))
+                continue;
+
+            // These should actually be new, pre-init
+            DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
+
+            gridComps[gridComp.GridIndex] = gridComp;
+        }
+
+        for (var index = 0; index < yamlGrids.Count; index++)
+        {
+            // Here is where the implicit index pairing magic happens from the yaml.
+            var yamlGrid = (MappingDataNode)yamlGrids[index];
+
+            // designed to throw if something is broken, every grid must map to an ent
+            var gridComp = gridComps[index];
+
+            // TODO Once maps have been updated (save+load), remove GridComponent.GridIndex altogether and replace it with:
+            // var savedUid = ((ValueDataNode)yamlGrid["uid"]).Value;
+            // var gridUid = UidEntityMap[int.Parse(savedUid)];
+            // var gridComp = gridQuery.GetComponent(gridUid);
+
+            MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
+            SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
+
+            var grid = AllocateMapGrid(gridComp, yamlGridInfo);
+
+            foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
+            {
+                var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
+                var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+                _serManager.Read(chunkNode, _context, value: chunk);
             }
         }
     }
 
+    private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    {
+        // sane defaults
+        ushort csz = 16;
+        ushort tsz = 1;
+
+        foreach (var kvInfo in yamlGridInfo)
+        {
+            var key = ((ValueDataNode)kvInfo.Key).Value;
+            var val = ((ValueDataNode)kvInfo.Value).Value;
+            if (key == "chunksize")
+                csz = ushort.Parse(val);
+            else if (key == "tilesize")
+                tsz = ushort.Parse(val);
+            else if (key == "snapsize")
+                continue; // obsolete
+        }
+
+        var grid = gridComp.AllocMapGrid(csz, tsz);
+
+        return grid;
+    }
+
     private void StartupEntities(MapData data)
     {
+        _stopwatch.Restart();
         DebugTools.Assert(data.Entities.Count == data.InitOrder.Count);
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var rootEntity = data.InitOrder[0];
 
         // If the root node is a map that's already existing don't bother with it.
+        // If we're loading a grid then the map is already started up elsewhere in which case this
+        // just loads the grid outside of the loop which is also fine.
         if (MetaData(rootEntity).EntityLifeStage < EntityLifeStage.Initialized)
         {
-            StartupEntity(rootEntity, metaQuery.GetComponent(rootEntity));
+            StartupEntity(rootEntity, metaQuery.GetComponent(rootEntity), data);
         }
 
         // TODO: For anything that's a root entity apply the transform adjustments.
         for (var i = 1; i < data.InitOrder.Count; i++)
         {
             var entity = data.InitOrder[i];
-            StartupEntity(entity, metaQuery.GetComponent(entity));
+            StartupEntity(entity, metaQuery.GetComponent(entity), data);
         }
+
+        _logLoader.Debug($"Started up {data.InitOrder.Count} entities in {_stopwatch.Elapsed}");
     }
 
-    private void StartupEntity(EntityUid uid, MetaDataComponent metadata)
+    private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)
     {
-        ResetNetTicks(uid, metadata);
-        EntityManager.FinishEntityInitialization(uid, meta);
-        EntityManager.FinishEntityStartup(uid, meta);
-        MapInit(uid, metadata);
+        ResetNetTicks(uid, metadata, data.EntitiesToDeserialize[uid]);
+        // TODO: Apply map transforms if root node.
+        _serverEntityManager.FinishEntityInitialization(uid, metadata);
+        _serverEntityManager.FinishEntityStartup(uid);
+        MapInit(uid, metadata, data);
     }
 
     private void ResetNetTicks(EntityUid entity, MetaDataComponent metadata, MappingDataNode data)
@@ -473,17 +641,17 @@ public sealed partial class MapManagerSystem
         {
             metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
         }
-        else if (_mapManager.IsMapInitialized(mapId))
+        else if (_mapManager.IsMapInitialized(data.TargetMap))
         {
             EntityManager.RunMapInit(uid, metadata);
 
             if (isPaused)
-                metaSystem.SetEntityPaused(uid, true, metadata);
+                _meta.SetEntityPaused(uid, true, metadata);
 
         }
         else if (isPaused)
         {
-            metaSystem.SetEntityPaused(uid, true, metadata);
+            _meta.SetEntityPaused(uid, true, metadata);
         }
     }
 
@@ -731,7 +899,7 @@ public sealed partial class MapManagerSystem
 
     }
 
-    private sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
+    internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
         ITypeSerializer<EntityUid, ValueDataNode>
     {
         private readonly IComponentFactory _factory;
@@ -744,6 +912,7 @@ public sealed partial class MapManagerSystem
         public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
 
         // Run-specific data
+        public Dictionary<ushort, string>? TileMap;
         public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
         public string? CurrentWritingComponent;
         public EntityUid? CurrentWritingEntity;
@@ -887,13 +1056,15 @@ public sealed partial class MapManagerSystem
 
         public readonly MapId TargetMap;
         public bool MapIsPostInit;
+        public bool MapIsPaused;
         public readonly MapLoadOptions Options;
 
         // Loading data
-        public Dictionary<ushort, string>? TileMap;
         public readonly List<EntityUid> Entities = new();
         public readonly Dictionary<int, EntityUid> UidEntityMap = new();
-        public readonly List<(EntityUid, MappingDataNode)> EntitiesToDeserialize = new();
+        public readonly Dictionary<EntityUid, MappingDataNode> EntitiesToDeserialize = new();
+
+        public readonly Dictionary<EntityUid, EntityUid> Hierarchy = new();
         public List<EntityUid> InitOrder = default!;
 
         public MapData(MapId mapId, TextReader reader, MapLoadOptions options)

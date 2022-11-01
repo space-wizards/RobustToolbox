@@ -1,3 +1,4 @@
+using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,5 +15,7 @@ public sealed partial class MapManagerSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly ISerializationManager _serManager = default!;
+                 private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
+    [Dependency] private readonly MetaDataSystem _meta = default!;
 }

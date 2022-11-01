@@ -45,13 +45,16 @@ namespace Robust.Server.Maps
                     $"Someone tried deserializing a gridchunk without passing a value.");
             }
 
-            if (context is not MapLoader.MapContext mapContext)
-            {
-                throw new InvalidOperationException(
-                    $"Someone tried serializing a gridchunk without passing {nameof(MapLoader.MapContext)} as context.");
-            }
+            IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            var tileMap = mapContext.TileMap;
+            if (context is MapManagerSystem.MapSerializationContext serContext)
+            {
+                tileMap = serContext.TileMap;
+            }
+            else if (context is MapLoader.MapContext mapContext)
+            {
+                tileMap = mapContext.TileMap;
+            }
 
             if (tileMap == null)
             {
@@ -167,7 +170,7 @@ namespace Robust.Server.Maps
             }
 
             //TODO: Pass in options
-            if (context is not MapLoader.MapContext mapContext)
+            if (context is not MapLoader.MapContext or MapManagerSystem.MapSerializationContext)
             {
                 throw new InvalidOperationException(
                     $"Someone tried serializing a mapgrid without passing {nameof(MapLoader.MapContext)} as context.");

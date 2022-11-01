@@ -49,6 +49,21 @@ Template for new versions:
 
 *None yet*
 
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
+
 ## 0.58.1.1
 
 ### Bugfixes

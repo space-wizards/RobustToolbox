@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
+        [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
@@ -85,7 +86,7 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
-            _dependencies = new DependencyCollection(IoCManager.Instance!);
+            _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();

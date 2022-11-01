@@ -81,7 +81,10 @@ public sealed partial class MapManagerSystem
             _stopwatch.Restart();
             var data = new MapData(mapId, reader, options);
             _logLoader.Debug($"Loaded yml stream in {_stopwatch.Elapsed}");
+            var sw = new Stopwatch();
+            sw.Start();
             result = Deserialize(data);
+            _logLoader.Debug($"Loaded map in {sw.Elapsed}");
         }
 
         _context.Clear();
@@ -390,7 +393,7 @@ public sealed partial class MapManagerSystem
         }
 
         DebugTools.Assert(current.IsValid());
-        DebugTools.Assert(!initOrder.Contains(current));
+        // DebugTools.Assert(!initOrder.Contains(current));
         initOrder.Add(current);
         hierarchy.Remove(current);
     }

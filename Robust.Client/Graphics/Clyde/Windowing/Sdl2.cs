@@ -54,6 +54,8 @@ internal partial class Clyde
 
             SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
             SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+            SDL_SetHint(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT, "1");
+            SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
             var res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
             if (res < 0)
@@ -67,6 +69,8 @@ internal partial class Clyde
                 "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
 
             _sdlEventWakeup = SDL_RegisterEvents(1);
+
+            SDL_EventState(SDL_EventType.SDL_SYSWMEVENT, SDL_ENABLE);
 
             InitCursors();
             InitMonitors();

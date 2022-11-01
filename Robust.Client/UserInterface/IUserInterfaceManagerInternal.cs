@@ -31,6 +31,8 @@ namespace Robust.Client.UserInterface
 
         void TextEntered(TextEventArgs textEvent);
 
+        void TextEditing(TextEditingEventArgs textEvent);
+
         void ControlHidden(Control control);
 
         void ControlRemovedFromTree(Control control);

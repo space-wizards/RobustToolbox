@@ -42,6 +42,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
 
         public event Action<TextEventArgs>? TextEntered;
+        public event Action<TextEditingEventArgs>? TextEditing;
         public event Action<MouseMoveEventArgs>? MouseMove;
         public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
@@ -463,6 +464,27 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.AssertNotNull(_windowing);
 
             _windowing!.RunOnWindowThread(a);
+        }
+
+        public void SetTextInputRect(UIBox2i rect)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.SetTextInputRect(rect);
+        }
+
+        public void StartTextInput()
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.StartTextInput();
+        }
+
+        public void StopTextInput()
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.StopTextInput();
         }
 
         private abstract class WindowReg

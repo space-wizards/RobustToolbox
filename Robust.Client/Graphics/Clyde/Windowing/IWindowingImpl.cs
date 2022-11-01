@@ -62,6 +62,11 @@ namespace Robust.Client.Graphics.Clyde
 
             // Misc
             void RunOnWindowThread(Action a);
+
+            // IME
+            void SetTextInputRect(UIBox2i rect);
+            void StartTextInput();
+            void StopTextInput();
         }
     }
 }

@@ -25,6 +25,11 @@ namespace Robust.Client
             _userInterfaceManager.TextEntered(textEvent);
         }
 
+        public void TextEditing(TextEditingEventArgs textEvent)
+        {
+            _userInterfaceManager.TextEditing(textEvent);
+        }
+
         /// <summary>
         ///     Invoked when the mouse is moved inside the game window.
         /// </summary>

@@ -353,6 +353,14 @@ public static class Rope
         return Concat(left, right);
     }
 
+    public static Node ReplaceSubstring(Node rope, long start, long length, string text)
+    {
+        var (left, mid) = Split(rope, start);
+        var (_, right) = Split(mid, length);
+
+        return Concat(left, Concat(text, right));
+    }
+
     public static bool TryGetRuneAt(Node rope, long index, out Rune value)
     {
         var chr = Index(rope, index);

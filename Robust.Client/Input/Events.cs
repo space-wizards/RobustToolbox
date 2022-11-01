@@ -65,6 +65,35 @@ namespace Robust.Client.Input
         public Rune AsRune => new Rune(CodePoint);
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="Text"></param>
+    /// <param name="Start">The position in the composition at which the cursor should be placed. This is in runes, not chars.</param>
+    /// <param name="Length">This is in runes, not chars.</param>
+    public sealed record TextEditingEventArgs(string Text, int Start, int Length)
+    {
+        /// <summary>
+        /// Get <see cref="Start"/> but in chars instead of runes.
+        /// </summary>
+        public int GetStartChars()
+        {
+            var chars = 0;
+            var count = 0;
+
+            foreach (var rune in Text.EnumerateRunes())
+            {
+                if (count >= Start)
+                    break;
+
+                count += 1;
+                chars += rune.Utf16SequenceLength;
+            }
+
+            return chars;
+        }
+    }
+
     [Virtual]
     public class KeyEventArgs : ModifierInputEventArgs
     {

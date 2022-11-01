@@ -439,6 +439,43 @@ internal partial class Clyde
             SendCmd(new CmdRunAction(a));
         }
 
+        public void SetTextInputRect(UIBox2i rect)
+        {
+            SendCmd(new CmdSetTextInputRect(new SDL_Rect
+            {
+                x = rect.Left,
+                y = rect.Top,
+                w = rect.Width,
+                h = rect.Height
+            }));
+        }
+
+        private static void WinThreadSetTextInputRect(CmdSetTextInputRect cmd)
+        {
+            var rect = cmd.Rect;
+            SDL_SetTextInputRect(ref rect);
+        }
+
+        public void StartTextInput()
+        {
+            SendCmd(CmdStartTextInput.Instance);
+        }
+
+        private static void WinThreadStartTextInput()
+        {
+            SDL_StartTextInput();
+        }
+
+        public void StopTextInput()
+        {
+            SendCmd(CmdStopTextInput.Instance);
+        }
+
+        private static void WinThreadStopTextInput()
+        {
+            SDL_StopTextInput();
+        }
+
         public void ClipboardSetText(WindowReg mainWindow, string text)
         {
             SendCmd(new CmdSetClipboard(text));

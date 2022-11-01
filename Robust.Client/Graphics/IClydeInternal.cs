@@ -24,6 +24,7 @@ namespace Robust.Client.Graphics
         void TerminateWindowLoop();
 
         event Action<TextEventArgs> TextEntered;
+        event Action<TextEditingEventArgs> TextEditing;
         event Action<MouseMoveEventArgs> MouseMove;
         event Action<MouseEnterLeaveEventArgs> MouseEnterLeave;
         event Action<KeyEventArgs> KeyUp;

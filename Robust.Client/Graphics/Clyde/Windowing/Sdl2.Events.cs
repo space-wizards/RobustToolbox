@@ -2,6 +2,7 @@
 using Robust.Client.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_EventType;
 using static SDL2.SDL.SDL_Keymod;
@@ -58,6 +59,9 @@ internal partial class Clyde
                 case EventText ev:
                     ProcessEventText(ev);
                     break;
+                case EventTextEditing ev:
+                    ProcessEventTextEditing(ev);
+                    break;
                 case EventMouseMotion ev:
                     ProcessEventMouseMotion(ev);
                     break;
@@ -69,6 +73,9 @@ internal partial class Clyde
                     break;
                 case EventMonitorSetup ev:
                     ProcessSetupMonitor(ev);
+                    break;
+                case EventWindowsFakeV ev:
+                    ProcessWindowsFakeV(ev);
                     break;
                 default:
                     _sawmill.Error($"Unknown SDL2 event type: {evb.GetType().Name}");
@@ -159,8 +166,13 @@ internal partial class Clyde
         {
             foreach (var rune in ev.Text.EnumerateRunes())
             {
-                _clyde.SendText(new TextEventArgs((uint) rune.Value));
+                _clyde.SendText(new TextEventArgs((uint)rune.Value));
             }
+        }
+
+        private void ProcessEventTextEditing(EventTextEditing ev)
+        {
+            _clyde.SendTextEditing(new TextEditingEventArgs(ev.Text, ev.Start, ev.Length));
         }
 
         private void ProcessEventWindowSize(EventWindowSize ev)
@@ -182,7 +194,7 @@ internal partial class Clyde
             if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
                 return;
 
-            windowReg.PixelRatio = windowReg.FramebufferSize / (Vector2) windowReg.WindowSize;
+            windowReg.PixelRatio = windowReg.FramebufferSize / (Vector2)windowReg.WindowSize;
 
             if (windowReg.WindowScale != (ev.XScale, ev.YScale))
             {
@@ -222,6 +234,25 @@ internal partial class Clyde
                     _clyde.SendKeyDown(ev);
                     break;
             }
+        }
+
+        private void ProcessWindowsFakeV(EventWindowsFakeV ev)
+        {
+            var type = (int)ev.Message switch
+            {
+                WM.WM_KEYUP => SDL_KEYUP,
+                WM.WM_KEYDOWN => SDL_KEYDOWN,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var key = (int)ev.WParam switch
+            {
+                0x56 /* V */ => Key.V,
+                VK.VK_CONTROL => Key.Control,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            EmitKeyEvent(key, type, false, 0, 0);
         }
     }
 }

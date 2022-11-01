@@ -19,6 +19,7 @@ namespace Robust.Client.UserInterface.Controls;
 public sealed class TextEdit : Control
 {
     [Dependency] private readonly IClipboardManager _clipboard = null!;
+    [Dependency] private readonly IClyde _clyde = null!;
 
     public const string StylePropertyStyleBox       = "stylebox";
     public const string StylePropertyCursorColor    = "cursor-color";
@@ -50,6 +51,8 @@ public sealed class TextEdit : Control
 
     private TextEditShared.CursorBlink _blink;
     private bool _editable = true;
+
+    private (int start, int length)? _imeData;
 
     public TextEdit()
     {
@@ -531,7 +534,51 @@ public sealed class TextEdit : Control
 
         InsertAtCursor(args.AsRune.ToString());
         _blink.Reset();
+        EnsureCursorVisible();
         // OnTextTyped?.Invoke(args);
+    }
+
+    protected internal override void TextEditing(GUITextEditingEventArgs args)
+    {
+        base.TextEditing(args);
+
+        if (!Editable)
+            return;
+
+        var ev = args.Event;
+        var startChars = ev.GetStartChars();
+
+        if (_imeData.HasValue)
+        {
+            // Already have an active IME composition, have to replace it.
+            var (imeStart, imeLength) = _imeData.Value;
+
+            TextRope = Rope.ReplaceSubstring(TextRope, imeStart, imeLength, ev.Text);
+
+            _selectionStart = _cursorPosition = new CursorPos(imeStart + startChars, LineBreakBias.Top);
+
+            if (ev.Text != "")
+                _imeData = (imeStart, ev.Text.Length);
+            else
+                _imeData = null;
+        }
+        else if (ev.Text != "")
+        {
+            // Starting a new IME composition.
+            if (_selectionStart != _cursorPosition)
+            {
+                // Delete active selection.
+                InsertAtCursor("");
+            }
+
+            var startPos = _cursorPosition.Index;
+            TextRope = Rope.Insert(TextRope, startPos, ev.Text);
+
+            _selectionStart = _cursorPosition = new CursorPos(startPos + startChars, LineBreakBias.Top);
+            _imeData = (startPos, ev.Text.Length);
+        }
+
+        EnsureCursorVisible();
     }
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
@@ -603,10 +650,7 @@ public sealed class TextEdit : Control
         var lower = SelectionLower.Index;
         var upper = SelectionUpper.Index;
 
-        var (left, mid) = Rope.Split(TextRope, lower);
-        var (_, right) = Rope.Split(mid, upper - lower);
-
-        TextRope = Rope.Concat(left, Rope.Concat(text, right));
+        TextRope = Rope.ReplaceSubstring(TextRope, lower, upper - lower, text);
 
         //if (!InternalSetText(newContents))
         //{
@@ -1020,6 +1064,10 @@ public sealed class TextEdit : Control
                 CheckDrawCursors(LineBreakBias.Bottom);
 
                 var color = Color.White;
+                if (_master._imeData.HasValue && count >= _master._imeData.Value.start && count <=
+                    (_master._imeData.Value.start + _master._imeData.Value.length))
+                    color = Color.Yellow;
+
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
 
                 count += rune.Utf16SequenceLength;
@@ -1043,9 +1091,9 @@ public sealed class TextEdit : Control
 
             void CheckDrawCursors(LineBreakBias bias)
             {
-                if (drawIndexDebug != null
-                    && drawIndexDebug.Value.Index == count
-                    && drawIndexDebug.Value.Bias == bias)
+                var pos = new CursorPos(count, bias);
+
+                if (drawIndexDebug == pos)
                 {
                     handle.DrawRect(
                         new UIBox2(
@@ -1056,9 +1104,7 @@ public sealed class TextEdit : Control
                         Color.Yellow);
                 }
 
-                if (_master._cursorPosition.Index == count
-                    && _master.HasKeyboardFocus()
-                    && _master._cursorPosition.Bias == bias)
+                if (_master.HasKeyboardFocus() && _master._cursorPosition == pos)
                 {
                     var cursorColor = _master.StylePropertyDefault(
                         StylePropertyCursorColor,
@@ -1073,15 +1119,26 @@ public sealed class TextEdit : Control
                             baseLine.X + 1,
                             baseLine.Y + descent),
                         cursorColor);
+
+                    if (UserInterfaceManager.KeyboardFocused == _master)
+                    {
+                        var box = (UIBox2i)new UIBox2(
+                            baseLine.X,
+                            baseLine.Y - height + descent,
+                            drawBox.Right,
+                            baseLine.Y + descent);
+
+                        _master._clyde.SetTextInputRect(box.Translated(GlobalPixelPosition));
+                    }
                 }
 
-                if (selectionLower.Index == count && selectionLower.Bias == bias)
+                if (selectionLower == pos)
                 {
                     selecting = true;
                     selectStartPos = (int)baseLine.X;
                 }
 
-                if (selectionUpper.Index == count & selectionUpper.Bias == bias)
+                if (selectionUpper == pos)
                 {
                     selecting = false;
                     selectEndPos = (int)baseLine.X;
@@ -1107,6 +1164,24 @@ public sealed class TextEdit : Control
                 handle.DrawRect(rect, color);
             }
         }
+    }
+
+    protected internal override void KeyboardFocusEntered()
+    {
+        base.KeyboardFocusEntered();
+
+        if (Editable)
+        {
+            _clyde.StartTextInput();
+            _clyde.SetTextInputRect(PixelSizeBox.Translated(GlobalPixelPosition));
+        }
+    }
+
+    protected internal override void KeyboardFocusExited()
+    {
+        base.KeyboardFocusExited();
+
+        _clyde.StopTextInput();
     }
 
     /// <summary>

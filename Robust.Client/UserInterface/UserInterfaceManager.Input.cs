@@ -226,6 +226,17 @@ internal partial class UserInterfaceManager
         KeyboardFocused.TextEntered(guiArgs);
     }
 
+    public void TextEditing(TextEditingEventArgs textEvent)
+    {
+        if (KeyboardFocused == null)
+        {
+            return;
+        }
+
+        var guiArgs = new GUITextEditingEventArgs(KeyboardFocused, textEvent);
+        KeyboardFocused.TextEditing(guiArgs);
+    }
+
     public ScreenCoordinates MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
 
     private static void _doMouseGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,

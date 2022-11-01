@@ -56,6 +56,10 @@ namespace Robust.Client.UserInterface
         protected internal virtual void TextEntered(GUITextEventArgs args)
         {
         }
+
+        protected internal virtual void TextEditing(GUITextEditingEventArgs args)
+        {
+        }
     }
 
     public sealed class GUIMouseHoverEventArgs : EventArgs
@@ -124,6 +128,8 @@ namespace Robust.Client.UserInterface
             SourceControl = sourceControl;
         }
     }
+
+    public sealed record GUITextEditingEventArgs(Control SourceControl, TextEditingEventArgs Event);
 
     public abstract class GUIMouseEventArgs : InputEventArgs
     {

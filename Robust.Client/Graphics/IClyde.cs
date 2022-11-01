@@ -131,5 +131,9 @@ namespace Robust.Client.Graphics
         IEnumerable<IClydeMonitor> EnumerateMonitors();
 
         IClydeWindow CreateWindow(WindowCreateParameters parameters);
+
+        void SetTextInputRect(UIBox2i rect);
+        void StartTextInput();
+        void StopTextInput();
     }
 }

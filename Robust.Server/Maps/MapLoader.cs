@@ -899,7 +899,9 @@ namespace Robust.Server.Maps
                 //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
-                    if (_mapManager.IsMapInitialized(grid.ParentMapId))
+                    var mapId = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId).MapID;
+
+                    if (_mapManager.IsMapInitialized(mapId))
                     {
                         isPostInit = true;
                         break;

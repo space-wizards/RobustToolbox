@@ -77,10 +77,10 @@ namespace Robust.Shared.GameObjects
             var xformQuery = GetEntityQuery<TransformComponent>();
             var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            if (!xformQuery.TryGetComponent(_mapManager.GetMapEntityId(grid.ParentMapId), out var mapTransform))
+            if (!xformQuery.TryGetComponent(gridId, out var gridXform))
                 return;
 
-            if (!xformQuery.TryGetComponent(gridId, out var gridXform))
+            if (!xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
                 return;
 
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);

@@ -37,6 +37,14 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
+    public bool EntityPaused(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata))
+            return true;
+
+        return metadata.EntityPaused;
+    }
+
     public void SetEntityPaused(EntityUid uid, bool value, MetaDataComponent? metadata = null)
     {
         if (!Resolve(uid, ref metadata)) return;

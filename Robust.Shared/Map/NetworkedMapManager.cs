@@ -89,10 +89,13 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
+            var gridXform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var (worldPos, worldRot) = gridXform.GetWorldPositionRotation();
+
             var gridDatum = new GameStateMapData.GridDatum(
                     chunkData.ToArray(),
-                    new MapCoordinates(grid.WorldPosition, grid.ParentMapId),
-                    grid.WorldRotation);
+                    new MapCoordinates(worldPos, gridXform.MapID),
+                    worldRot);
 
             gridDatums.Add(grid.GridEntityId, gridDatum);
         }

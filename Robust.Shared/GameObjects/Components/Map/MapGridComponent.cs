@@ -12,18 +12,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <summary>
-    ///     Represents a map grid inside the ECS system.
-    /// </summary>
-    public interface IMapGridComponent : IComponent
-    {
-        IMapGrid Grid { get; }
-    }
-
-    /// <inheritdoc cref="IMapGridComponent"/>
-    [ComponentReference(typeof(IMapGridComponent))]
+    [RegisterComponent]
     [NetworkedComponent]
-    internal sealed class MapGridComponent : Component, IMapGridComponent
+    public sealed class MapGridComponent : Component
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -40,7 +31,6 @@ namespace Robust.Shared.GameObjects
         [DataField("chunkSize")]
         private ushort _chunkSize = 16;
 
-        /// <inheritdoc />
         [ViewVariables]
         public IMapGrid Grid
         {
@@ -85,7 +75,7 @@ namespace Robust.Shared.GameObjects
             _chunkSize = state.ChunkSize;
         }
 
-        public MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
+        internal MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
@@ -98,7 +88,7 @@ namespace Robust.Shared.GameObjects
             return grid;
         }
 
-        public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
+        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, MapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {
             var grid = (MapGrid)gridComp.Grid;
             networkedMapManager.SuppressOnTileChanged = true;

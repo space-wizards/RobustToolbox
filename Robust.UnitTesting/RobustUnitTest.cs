@@ -117,6 +117,16 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
+            {
+                compFactory.RegisterClass<MapComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapGridComponent)))
+            {
+                compFactory.RegisterClass<MapGridComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
                 compFactory.RegisterClass<MetaDataComponent>();

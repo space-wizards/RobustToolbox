@@ -466,7 +466,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 if (xform.MapID != mapId) continue;
 
-                if (!EntityManager.TryGetComponent(broadphase.Owner, out IMapGridComponent? mapGrid))
+                if (!EntityManager.TryGetComponent(broadphase.Owner, out MapGridComponent? mapGrid))
                 {
                     yield return broadphase;
                     continue;

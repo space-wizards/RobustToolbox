@@ -1,29 +1,15 @@
 using System;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <summary>
-    ///     Represents a world map inside the ECS system.
-    /// </summary>
-    public interface IMapComponent : IComponent
-    {
-        bool LightingEnabled { get; set; }
-        MapId WorldMap { get; }
-        bool MapPaused { get; internal set; }
-        bool MapPreInit { get; internal set; }
-    }
-
-    /// <inheritdoc cref="IMapComponent"/>
-    [ComponentReference(typeof(IMapComponent))]
+    [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapComponent : Component, IMapComponent
+    public sealed class MapComponent : Component
     {
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
@@ -33,7 +19,6 @@ namespace Robust.Shared.GameObjects
         [DataField(("lightingEnabled"))]
         public bool LightingEnabled { get; set; } = true;
 
-        /// <inheritdoc />
         public MapId WorldMap
         {
             get => _mapIndex;
@@ -41,24 +26,10 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadOnly)]
-        internal bool MapPaused { get; set; } = false;
-
-        /// <inheritdoc />
-        bool IMapComponent.MapPaused
-        {
-            get => this.MapPaused;
-            set => this.MapPaused = value;
-        }
+        public bool MapPaused { get; set; } = false;
 
         [ViewVariables(VVAccess.ReadOnly)]
-        internal bool MapPreInit { get; set; } = false;
-
-        /// <inheritdoc />
-        bool IMapComponent.MapPreInit
-        {
-            get => this.MapPreInit;
-            set => this.MapPreInit = value;
-        }
+        public bool MapPreInit { get; set; } = false;
     }
 
     /// <summary>

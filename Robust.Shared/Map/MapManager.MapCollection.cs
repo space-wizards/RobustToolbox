@@ -211,7 +211,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapComponent>(uid);
+        return EntityManager.HasComponent<MapComponent>(uid);
     }
 
     /// <inheritdoc />
@@ -246,7 +246,7 @@ internal partial class MapManager
         {
             var mapComps = EntityManager.EntityQuery<MapComponent>(true);
 
-            IMapComponent? result = null;
+            MapComponent? result = null;
             foreach (var mapComp in mapComps)
             {
                 if (mapComp.WorldMap != actualId)

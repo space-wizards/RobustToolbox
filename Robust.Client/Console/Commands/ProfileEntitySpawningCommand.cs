@@ -1,4 +1,5 @@
 ﻿#if !FULL_RELEASE
+using System;
 using JetBrains.Profiler.Api;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -39,6 +40,8 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
                 shell.WriteError(Help);
                 return;
         }
+
+        GC.Collect();
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();

@@ -4,13 +4,14 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] protected readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         public override void Initialize()
         {
@@ -26,6 +27,9 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+
+            SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
+            SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
         }
 
         private void OnMapHandleState(EntityUid uid, MapComponent component, ref ComponentHandleState args)
@@ -55,7 +59,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
-            var iMap = (IMapManagerInternal)MapManager;
+            var iMap = (IMapManagerInternal)_mapManager;
 
             iMap.TrueDeleteMap(component.WorldMap);
 
@@ -89,10 +93,10 @@ namespace Robust.Shared.GameObjects
             if (uid == EntityUid.Invalid)
                 return;
 
-            if (!MapManager.GridExists(uid))
+            if (!_mapManager.GridExists(uid))
                 return;
 
-            MapManager.DeleteGrid(uid);
+            _mapManager.DeleteGrid(uid);
         }
     }
 

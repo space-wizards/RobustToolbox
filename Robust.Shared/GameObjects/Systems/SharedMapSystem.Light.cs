@@ -11,7 +11,7 @@ public abstract partial class SharedMapSystem
 {
     public void SetAmbientLight(MapId mapId, Color color)
     {
-        var mapComp = EnsureComp<MapLightComponent>(_mapManager.GetMapEntityId(mapId));
+        var mapComp = EnsureComp<MapLightComponent>(MapManager.GetMapEntityId(mapId));
 
         if (mapComp.AmbientLightColor.Equals(color))
             return;

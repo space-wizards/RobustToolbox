@@ -1004,6 +1004,7 @@ public sealed class TextEdit : Control
 
             var drawBox = PixelSizeBox;
             var font = _master.GetFont();
+            var renderedTextColor = Color.White; // _master._getFontColor();
 
             if (_master.DebugOverlay && _master._horizontalCursorPos is { } hPos)
             {
@@ -1037,6 +1038,26 @@ public sealed class TextEdit : Control
             int? selectEndPos = null;
             var selecting = false;
 
+            var imeStartIndex = -1;
+            var imeEndIndex = -1;
+
+            int? imeStartPos = null;
+            int? imeEndPos = null;
+            var imeing = false;
+
+            if (_master._imeData.HasValue)
+            {
+                var (start, length) = _master._imeData.Value;
+                imeStartIndex = start.Index;
+                imeEndIndex = imeStartIndex + length;
+
+                if (imeStartIndex < startIdx && imeEndIndex > startIdx)
+                {
+                    imeing = true;
+                    imeStartPos = 0;
+                }
+            }
+
             if (selectionLower.Index < startIdx && selectionUpper.Index > startIdx)
             {
                 selecting = true;
@@ -1061,6 +1082,9 @@ public sealed class TextEdit : Control
                     selectStartPos = selecting ? 0 : null;
                     selectEndPos = null;
 
+                    imeStartPos = imeing ? 0 : null;
+                    imeEndPos = null;
+
                     if (baseLine.Y - height > drawBox.Height)
                     {
                         // Past the bottom of the visible area of the screen: no need to render anything else.
@@ -1070,12 +1094,7 @@ public sealed class TextEdit : Control
 
                 CheckDrawCursors(LineBreakBias.Bottom);
 
-                var color = Color.White;
-                if (_master._imeData.HasValue && count >= _master._imeData.Value.start.Index && count <=
-                    (_master._imeData.Value.start.Index + _master._imeData.Value.length))
-                    color = Color.Yellow;
-
-                baseLine.X += font.DrawChar(handle, rune, baseLine, scale, color);
+                baseLine.X += font.DrawChar(handle, rune, baseLine, scale, renderedTextColor);
 
                 count += rune.Utf16SequenceLength;
             }
@@ -1150,25 +1169,51 @@ public sealed class TextEdit : Control
                     selecting = false;
                     selectEndPos = (int)baseLine.X;
                 }
+
+                if (count == imeStartIndex)
+                {
+                    imeing = true;
+                    imeStartPos = (int) baseLine.X;
+                }
+
+                if (count == imeEndIndex)
+                {
+                    imeing = false;
+                    imeEndPos = (int) baseLine.X;
+                }
             }
 
             void PostDrawLine()
             {
-                if (selectStartPos == null)
-                    return;
+                if (selectStartPos != null)
+                {
+                    var rect = new UIBox2(
+                        selectStartPos.Value,
+                        baseLine.Y - height + descent,
+                        selectEndPos ?? baseLine.X,
+                        baseLine.Y + descent
+                    );
 
-                var rect = new UIBox2(
-                    selectStartPos.Value,
-                    baseLine.Y - height + descent,
-                    selectEndPos ?? baseLine.X,
-                    baseLine.Y + descent
-                );
+                    var color = _master.StylePropertyDefault(
+                        StylePropertySelectionColor,
+                        Color.CornflowerBlue.WithAlpha(0.25f));
 
-                var color = _master.StylePropertyDefault(
-                    StylePropertySelectionColor,
-                    Color.CornflowerBlue.WithAlpha(0.25f));
+                    handle.DrawRect(rect, color);
+                }
 
-                handle.DrawRect(rect, color);
+                if (_master._imeData.HasValue && imeStartPos.HasValue)
+                {
+                    // Draw IME underline.
+                    var y = baseLine.Y + font.GetDescent(scale);
+                    var rect = new UIBox2(
+                        imeStartPos.Value,
+                        y - 1,
+                        imeEndPos ?? baseLine.X,
+                        y
+                    );
+
+                    handle.DrawRect(rect, renderedTextColor);
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -22,7 +23,6 @@ public sealed class TextEdit : Control
     [Dependency] private readonly IClyde _clyde = null!;
 
     // @formatter:off
-    public const string StylePropertyStyleBox       = "stylebox";
     public const string StylePropertyCursorColor    = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
@@ -43,6 +43,7 @@ public sealed class TextEdit : Control
 
     private bool _lineUpdateQueued;
     private Rope.Node _textRope = Rope.Leaf.Empty;
+    private Rope.Node? _placeholder;
 
     private bool _mouseSelectingText;
     private Vector2 _lastMouseSelectPos;
@@ -103,6 +104,7 @@ public sealed class TextEdit : Control
         {
             _textRope = value;
             QueueLineBreakUpdate();
+            UpdatePseudoClass();
         }
     }
 
@@ -134,6 +136,32 @@ public sealed class TextEdit : Control
     public int TextLength => (int)Rope.CalcTotalLength(TextRope);
 
     public System.Range SelectionRange => (SelectionLower.Index)..(SelectionUpper.Index);
+
+    /// <summary>
+    /// A placeholder text to be displayed when no actual text is entered.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This isn't editable by the user, but to make the internals simpler, it is still exposed as a rope.
+    /// </para>
+    /// <para>
+    /// When set to null, the placeholder style pseudo-class will not be applied when the actual text content is empty.
+    /// If set to an empty text rope this does happen, but obviously no text is displayed either way.
+    /// </para>
+    /// </remarks>
+    [ViewVariables(VVAccess.ReadWrite)]
+    public Rope.Node? Placeholder
+    {
+        get => _placeholder;
+        set
+        {
+            _placeholder = value;
+            UpdatePseudoClass();
+            QueueLineBreakUpdate();
+        }
+    }
+
+    private bool IsPlaceholderVisible => Rope.IsNullOrEmpty(_textRope) && _placeholder != null;
 
     private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
     {
@@ -633,10 +661,13 @@ public sealed class TextEdit : Control
     [Pure]
     private Font GetFont()
     {
-        if (TryGetStyleProperty<Font>("font", out var font))
-            return font;
+        return StylePropertyDefault("font", UserInterfaceManager.ThemeDefaults.DefaultFont);
+    }
 
-        return UserInterfaceManager.ThemeDefaults.DefaultFont;
+    [Pure]
+    private Color GetFontColor()
+    {
+        return StylePropertyDefault("font-color", Color.White);
     }
 
     internal void QueueLineBreakUpdate()
@@ -680,7 +711,7 @@ public sealed class TextEdit : Control
         var wordWrap = new WordWrap(pixelWidth);
         int? breakLine;
 
-        foreach (var rune in Rope.EnumerateRunes(TextRope))
+        foreach (var rune in Rope.EnumerateRunes(GetDisplayRope()))
         {
             wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
             CheckLineBreak(breakLine);
@@ -717,6 +748,14 @@ public sealed class TextEdit : Control
         _lineUpdateQueued = false;
     }
 
+    private Rope.Node GetDisplayRope()
+    {
+        if (!Rope.IsNullOrEmpty(_textRope))
+            return _textRope;
+
+        return _placeholder ?? Rope.Leaf.Empty;
+    }
+
     private int GetLineCount()
     {
         return _lineBreaks.Count + 1;
@@ -745,7 +784,8 @@ public sealed class TextEdit : Control
     {
         var contentBox = PixelSizeBox;
         var font = GetFont();
-        horizontalPos *= UIScale;
+        var uiScale = UIScale;
+        horizontalPos *= uiScale;
 
         (int, int) FindVerticalLine()
         {
@@ -783,7 +823,7 @@ public sealed class TextEdit : Control
                 break;
             }
 
-            if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+            if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
             {
                 index += rune.Utf16SequenceLength;
                 continue;
@@ -823,6 +863,7 @@ public sealed class TextEdit : Control
 
         var hPos = 0;
         var font = GetFont();
+        var uiScale = UIScale;
 
         var (_, lineStart, _) = GetLineForCursorPos(pos);
         using var runeEnumerator = Rope.EnumerateRunes(TextRope, lineStart).GetEnumerator();
@@ -837,13 +878,13 @@ public sealed class TextEdit : Control
                 break;
 
             var rune = runeEnumerator.Current;
-            if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+            if (font.TryGetCharMetrics(rune, uiScale, out var metrics))
                 hPos += metrics.Advance;
 
             i += rune.Utf16SequenceLength;
         }
 
-        return hPos;
+        return hPos / uiScale;
     }
 
     private (int lineIdx, int lineStart, int lineEnd) GetLineForCursorPos(CursorPos pos)
@@ -966,6 +1007,12 @@ public sealed class TextEdit : Control
         return (lineHeight * line, lineHeight * (line + 1));
     }
 
+    private void UpdatePseudoClass()
+    {
+        SetOnlyStylePseudoClass(IsPlaceholderVisible ? StylePseudoClassPlaceholder : null);
+    }
+
+
     private sealed class RenderBox : Control
     {
         private static readonly (Vector2, Vector2)[] ArrowUp =
@@ -1004,7 +1051,7 @@ public sealed class TextEdit : Control
 
             var drawBox = PixelSizeBox;
             var font = _master.GetFont();
-            var renderedTextColor = Color.White; // _master._getFontColor();
+            var renderedTextColor = _master.GetFontColor();
 
             if (_master.DebugOverlay && _master._horizontalCursorPos is { } hPos)
             {
@@ -1064,7 +1111,7 @@ public sealed class TextEdit : Control
                 selectStartPos = 0;
             }
 
-            foreach (var rune in Rope.EnumerateRunes(_master.TextRope, startIdx))
+            foreach (var rune in Rope.EnumerateRunes(_master.GetDisplayRope(), startIdx))
             {
                 CheckDrawCursors(LineBreakBias.Top);
 

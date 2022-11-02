@@ -154,7 +154,10 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
     private Control TabTextEdit()
     {
-        var textEdit = new TextEdit();
+        var textEdit = new TextEdit
+        {
+            Placeholder = new Rope.Leaf("You deleted the lipsum OwO")
+        };
         TabContainer.SetTabTitle(textEdit, "TextEdit");
 
         var lipsumRope = new Rope.Branch(Rope.Leaf.Empty, null);

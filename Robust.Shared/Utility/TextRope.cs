@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -425,6 +426,14 @@ public static class Rope
             index += 1;
 
         return index;
+    }
+
+    public static bool IsNullOrEmpty([NotNullWhen(false)] Node? rope)
+    {
+        if (rope == null)
+            return true;
+
+        return CalcTotalLength(rope) == 0;
     }
 
     public abstract class Node

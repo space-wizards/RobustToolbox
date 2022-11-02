@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
 
         public override void Initialize()
         {
@@ -59,7 +59,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
-            var iMap = (IMapManagerInternal)_mapManager;
+            var iMap = (IMapManagerInternal)MapManager;
 
             iMap.TrueDeleteMap(component.WorldMap);
 
@@ -93,10 +93,10 @@ namespace Robust.Shared.GameObjects
             if (uid == EntityUid.Invalid)
                 return;
 
-            if (!_mapManager.GridExists(uid))
+            if (!MapManager.GridExists(uid))
                 return;
 
-            _mapManager.DeleteGrid(uid);
+            MapManager.DeleteGrid(uid);
         }
     }
 

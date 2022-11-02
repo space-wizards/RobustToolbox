@@ -19,6 +19,7 @@ namespace Robust.Shared.Physics.Systems
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
@@ -290,15 +291,20 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in newFixtures)
             {
                 var found = false;
+                var keys = component.Fixtures.Keys.ToArray();
 
-                foreach (var (_, existing) in component.Fixtures)
+                // TODO: Inefficient af.
+                foreach (var key in keys)
                 {
-                    if (!fixture.ID.Equals(existing.ID)) continue;
+                    if (!fixture.ID.Equals(key)) continue;
 
-                    if (!fixture.Equals(existing))
+                    var existing = component.Fixtures[key];
+
+                    if (!existing.Equivalent(fixture))
                     {
-                        toAddFixtures.Add(fixture);
-                        toRemoveFixtures.Add(existing);
+                        fixture.CopyTo(existing);
+                        FixtureUpdate(existing, component);
+                        _broadphase.Refilter(existing);
                     }
 
                     found = true;

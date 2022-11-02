@@ -430,15 +430,7 @@ namespace Robust.Shared.Physics.Systems
 
         public void Refilter(Fixture fixture, TransformComponent? xform = null)
         {
-            // TODO: Call this method whenever collisionmask / collisionlayer changes
-            // TODO: This should never becalled when body is null.
-            DebugTools.Assert(fixture.Body != null);
-            if (fixture.Body == null)
-            {
-                return;
-            }
-
-            foreach (var (_, contact) in fixture.Contacts)
+            foreach (var contact in fixture.Contacts.Values)
             {
                 contact.Flags |= ContactFlags.Filter;
             }

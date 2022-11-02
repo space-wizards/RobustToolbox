@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
@@ -277,61 +278,41 @@ namespace Robust.Shared.Physics.Systems
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new Fixture[state.Fixtures.Length];
+            var newFixtures = new Dictionary<string, Fixture>(state.Fixtures.Length);
+
             for (var i = 0; i < state.Fixtures.Length; i++)
             {
                 var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixture.Body = physics;
-                newFixtures[i] = newFixture;
+                newFixtures.Add(newFixture.ID, newFixture);
             }
 
+            TransformComponent? xform = null;
+
             // Add / update new fixtures
-            foreach (var fixture in newFixtures)
+            foreach (var (id, fixture) in newFixtures)
             {
-                var found = false;
-                var keys = component.Fixtures.Keys.ToArray();
-
-                // TODO: Inefficient af.
-                foreach (var key in keys)
+                if (component.Fixtures.TryGetValue(id, out var existing))
                 {
-                    if (!fixture.ID.Equals(key)) continue;
-
-                    var existing = component.Fixtures[key];
-
                     if (!existing.Equivalent(fixture))
                     {
                         fixture.CopyTo(existing);
-                        FixtureUpdate(existing, component);
-                        _broadphase.Refilter(existing);
+                        computeProperties = true;
+                        _broadphase.Refilter(existing, xform);
                     }
-
-                    found = true;
-                    break;
                 }
-
-                if (!found)
+                else
                 {
                     toAddFixtures.Add(fixture);
                 }
             }
 
             // Remove old fixtures
-            foreach (var (_, existing) in component.Fixtures)
+            foreach (var (existingId, existing) in component.Fixtures)
             {
-                var found = false;
-
-                foreach (var fixture in newFixtures)
-                {
-                    if (fixture.ID.Equals(existing.ID))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
+                if (!newFixtures.ContainsKey(existingId))
                 {
                     toRemoveFixtures.Add(existing);
                 }
@@ -340,7 +321,7 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
-                DestroyFixture(physics, fixture);
+                DestroyFixture(physics, fixture, false);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
@@ -349,12 +330,12 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
-                CreateFixture(physics, fixture);
+                CreateFixture(physics, fixture, false);
             }
 
             if (computeProperties)
             {
-                _physics.ResetMassData(physics, component);
+                FixtureUpdate(component, physics);
             }
         }
 

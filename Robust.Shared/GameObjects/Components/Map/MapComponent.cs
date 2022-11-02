@@ -15,7 +15,6 @@ namespace Robust.Shared.GameObjects
     public interface IMapComponent : IComponent
     {
         bool LightingEnabled { get; set; }
-        Color AmbientLightColor { get; set; }
         MapId WorldMap { get; }
         bool MapPaused { get; internal set; }
         bool MapPreInit { get; internal set; }
@@ -33,13 +32,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField(("lightingEnabled"))]
         public bool LightingEnabled { get; set; } = true;
-
-        /// <summary>
-        /// Ambient light. This is in linear-light, i.e. when providing a fixed colour, you must use Color.FromSrgb(Color.Black)!
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("ambientLightColor")]
-        public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
 
         /// <inheritdoc />
         public MapId WorldMap
@@ -77,13 +69,11 @@ namespace Robust.Shared.GameObjects
     {
         public MapId MapId;
         public bool LightingEnabled;
-        public Color AmbientLightColor;
 
-        public MapComponentState(MapId mapId, bool lightingEnabled, Color ambientLightColor)
+        public MapComponentState(MapId mapId, bool lightingEnabled)
         {
             MapId = mapId;
             LightingEnabled = lightingEnabled;
-            AmbientLightColor = ambientLightColor;
         }
     }
 }

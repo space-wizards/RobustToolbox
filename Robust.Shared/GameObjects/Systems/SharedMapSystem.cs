@@ -8,7 +8,7 @@ using Robust.Shared.GameStates;
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    public abstract class SharedMapSystem : EntitySystem
+    public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] protected readonly IMapManager MapManager = default!;
 
@@ -35,7 +35,6 @@ namespace Robust.Shared.GameObjects
 
             component.WorldMap = state.MapId;
             component.LightingEnabled = state.LightingEnabled;
-            component.AmbientLightColor = state.AmbientLightColor;
             var xformQuery = GetEntityQuery<TransformComponent>();
 
             xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
@@ -43,7 +42,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
         {
-            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled, component.AmbientLightColor);
+            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
         }
 
         protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
@@ -95,21 +94,6 @@ namespace Robust.Shared.GameObjects
 
             MapManager.DeleteGrid(uid);
         }
-
-        #region Public
-
-        public void SetAmbientLight(MapId mapId, Color color)
-        {
-            var mapComp = Comp<MapComponent>(MapManager.GetMapEntityId(mapId));
-
-            if (mapComp.AmbientLightColor.Equals(color))
-                return;
-
-            mapComp.AmbientLightColor = color;
-            Dirty(mapComp);
-        }
-
-        #endregion
     }
 
     /// <summary>

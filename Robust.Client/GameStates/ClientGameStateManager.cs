@@ -706,6 +706,8 @@ namespace Robust.Client.GameStates
                         continue;
 
                     // re-add to broadphase.
+                    // TODO OPTIMIZE THIS
+                    // e.g., if a locker full of stuff is re-entering PVS range, we only need to call FindAndAddToEntityTree() once on the parent, not for each and every entity. 
                     var xform = xforms.GetComponent(entity);
                     DebugTools.Assert(xform.Broadphase != null && !xform.Broadphase.Value.IsValid());
                     xform.Broadphase = null;
@@ -809,6 +811,9 @@ namespace Robust.Client.GameStates
                     var xform = xforms.GetComponent(ent);
                     if (xform.ParentUid.IsValid())
                     {
+                        lookupSys.RemoveFromEntityTree(ent, xform, xforms);
+                        xform.Broadphase = BroadphaseData.Invalid;
+
                         // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                         // In those situations, we need to add the entity back to the list of expected entities after detaching.
                         IContainer? container = null;
@@ -817,8 +822,6 @@ namespace Robust.Client.GameStates
                             (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                             containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            lookupSys.RemoveFromEntityTree(ent, xform, xforms);
-                            xform.Broadphase = BroadphaseData.Invalid;
                             container.Remove(ent, _entities, xform, meta, false, true);
                         }
 

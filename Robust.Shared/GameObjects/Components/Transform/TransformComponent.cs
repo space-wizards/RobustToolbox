@@ -844,8 +844,9 @@ namespace Robust.Shared.GameObjects
     ///     Data used to store information about the broad-phase that any given entity is currently on.
     /// </summary>
     /// <remarks>
-    ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container. An
-    ///     invalid entity indicates that an entity has intentionally been removed from broadphases.
+    ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container).
+    ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
+    ///     not automatically be re-added by movement events..
     /// </remarks>
     internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
     {

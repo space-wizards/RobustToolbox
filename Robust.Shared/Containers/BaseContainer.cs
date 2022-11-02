@@ -261,7 +261,6 @@ namespace Robust.Shared.Containers
 
             // Unset flag (before parent change events are raised).
             meta.Flags &= ~MetaDataFlags.InContainer;
-
             // Implementation specific remove logic
             InternalRemove(toRemove, entMan);
 

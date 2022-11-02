@@ -693,6 +693,7 @@ namespace Robust.Client.GameStates
             var physicsQuery = _entities.GetEntityQuery<PhysicsComponent>();
             var fixturesQuery = _entities.GetEntityQuery<FixturesComponent>();
             var broadQuery = _entities.GetEntityQuery<BroadphaseComponent>();
+            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
 
             // Apply entity states.
             using (_prof.Group("Apply States"))
@@ -705,15 +706,25 @@ namespace Robust.Client.GameStates
                     if (!data.EnteringPvs)
                         continue;
 
-                    // re-add to broadphase.
-                    // TODO OPTIMIZE THIS
-                    // e.g., if a locker full of stuff is re-entering PVS range, we only need to call FindAndAddToEntityTree() once on the parent, not for each and every entity. 
+                    // Now that things like collision data, fixtures, and positions have been updated, we queue a
+                    // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
+                    // we only need to update it's parent (as it recursively updates children anyways).
                     var xform = xforms.GetComponent(entity);
-                    DebugTools.Assert(xform.Broadphase != null && !xform.Broadphase.Value.IsValid());
+                    DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
                     xform.Broadphase = null;
-                    lookupSys.FindAndAddToEntityTree(entity, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);                    
+                    if (!toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
+                        queuedBroadphaseUpdates.Add((entity, xform));
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
+            }
+
+            // Add entering entities back to broadphase.
+            using (_prof.Group("Update Broadphase"))
+            {
+                foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                {
+                    lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                }
             }
 
             var delSpan = curState.EntityDeletions.Span;

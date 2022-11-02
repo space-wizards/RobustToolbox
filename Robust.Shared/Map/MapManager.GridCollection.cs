@@ -214,18 +214,6 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool SuppressOnTileChanged { get; set; }
 
-    public void OnComponentRemoved(MapGridComponent comp)
-    {
-        var gridIndex = comp.Owner;
-        if (gridIndex == EntityUid.Invalid)
-            return;
-
-        if (!GridExists(gridIndex))
-            return;
-
-        DeleteGrid(gridIndex);
-    }
-
     /// <summary>
     ///     Raises the OnTileChanged event.
     /// </summary>

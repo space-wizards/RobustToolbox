@@ -2,6 +2,7 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -14,6 +15,7 @@ namespace Robust.Shared.GameObjects
     public interface IMapComponent : IComponent
     {
         bool LightingEnabled { get; set; }
+        Color AmbientLightColor { get; set; }
         MapId WorldMap { get; }
         bool MapPaused { get; internal set; }
         bool MapPreInit { get; internal set; }
@@ -24,8 +26,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public sealed class MapComponent : Component, IMapComponent
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
@@ -33,6 +33,13 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField(("lightingEnabled"))]
         public bool LightingEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Ambient light. This is in linear-light, i.e. when providing a fixed colour, you must use Color.FromSrgb(Color.Black)!
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("ambientLightColor")]
+        public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
 
         /// <inheritdoc />
         public MapId WorldMap
@@ -60,51 +67,23 @@ namespace Robust.Shared.GameObjects
             get => this.MapPreInit;
             set => this.MapPreInit = value;
         }
-
-        /// <inheritdoc />
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            var mapMan = IoCManager.Resolve<IMapManagerInternal>();
-            mapMan.TrueDeleteMap(_mapIndex);
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new MapComponentState(_mapIndex, LightingEnabled);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not MapComponentState state)
-                return;
-
-            _mapIndex = state.MapId;
-            LightingEnabled = state.LightingEnabled;
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-            xformQuery.GetComponent(Owner).ChangeMapId(_mapIndex, xformQuery);
-        }
     }
 
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapComponentState : ComponentState
+    public sealed class MapComponentState : ComponentState
     {
-        public MapId MapId { get; }
-        public bool LightingEnabled { get; }
+        public MapId MapId;
+        public bool LightingEnabled;
+        public Color AmbientLightColor;
 
-        public MapComponentState(MapId mapId, bool lightingEnabled)
+        public MapComponentState(MapId mapId, bool lightingEnabled, Color ambientLightColor)
         {
             MapId = mapId;
             LightingEnabled = lightingEnabled;
+            AmbientLightColor = ambientLightColor;
         }
     }
 }

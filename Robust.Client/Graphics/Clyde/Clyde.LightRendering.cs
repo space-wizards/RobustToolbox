@@ -338,7 +338,8 @@ namespace Robust.Client.Graphics.Clyde
 
             // If this map has lighting disabled, return
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            if (!_entityManager.GetComponent<IMapComponent>(mapUid).LightingEnabled)
+            var mapComp = _entityManager.GetComponent<IMapComponent>(mapUid);
+            if (!mapComp.LightingEnabled)
             {
                 return;
             }
@@ -396,7 +397,7 @@ namespace Robust.Client.Graphics.Clyde
 
             BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             CheckGlError();
-            GLClearColor(_lightManager.AmbientLightColor);
+            GLClearColor(mapComp.AmbientLightColor);
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);

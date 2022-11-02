@@ -11,12 +11,13 @@ namespace Robust.Shared.Map.Commands;
 public sealed class AmbientLightCommand : IConsoleCommand
 {
     public string Command => $"setambientlight";
-    public string Description => $"Sloth localise dis";
-    public string Help => $"setambientlight [mapid] [r g b a]";
+    public string Description => $"cmd-set-ambient-light-desc";
+    public string Help => $"cmd-set-ambient-light-help";
     public void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 5)
         {
+            shell.WriteError("cmd-invalid-arg-number-error");
             return;
         }
 
@@ -24,6 +25,7 @@ public sealed class AmbientLightCommand : IConsoleCommand
 
         if (!int.TryParse(args[0], out var mapInt))
         {
+            shell.WriteError($"cmd-parse-failure-integer");
             return;
         }
 
@@ -31,6 +33,7 @@ public sealed class AmbientLightCommand : IConsoleCommand
 
         if (!mapManager.MapExists(mapId))
         {
+            shell.WriteError($"cmd-parse-failure-mapid");
             return;
         }
 
@@ -39,6 +42,7 @@ public sealed class AmbientLightCommand : IConsoleCommand
             !byte.TryParse(args[3], out var b) ||
             !byte.TryParse(args[4], out var a))
         {
+            shell.WriteError($"cmd-set-ambient-light-parse");
             return;
         }
 

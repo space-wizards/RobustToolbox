@@ -20,6 +20,11 @@ namespace Robust.Server
         string ServerName { get; }
 
         /// <summary>
+        ///     Which fork we're running.
+        /// </summary
+        string ForkID { get; }
+
+        /// <summary>
         ///     Sets up the server, loads the game, gets ready for client connections.
         /// </summary>
         /// <returns></returns>

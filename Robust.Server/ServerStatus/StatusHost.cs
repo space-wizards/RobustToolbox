@@ -45,6 +45,7 @@ namespace Robust.Server.ServerStatus
 
         private string? _serverNameCache;
         private string[]? _serverTagsCache;
+        private string? _serverForkIDCache;
 
         public async Task ProcessRequestAsync(HttpListenerContext context)
         {
@@ -107,6 +108,7 @@ namespace Robust.Server.ServerStatus
             // Cache these in fields to avoid thread safety shenanigans.
             // Writes/reads of references are atomic in C# so no further synchronization necessary.
             _cfg.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
+            _cfg.OnValueChanged(CVars.BuildForkId, f => _serverForkIDCache = f, true);
             _cfg.OnValueChanged(CVars.HubTags, t =>
                 {
                     var tags = t.Split(",", StringSplitOptions.RemoveEmptyEntries);

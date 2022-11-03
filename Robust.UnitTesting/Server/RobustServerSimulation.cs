@@ -23,6 +23,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
@@ -246,6 +247,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
             compFactory.RegisterClass<MapComponent>();
+            compFactory.RegisterClass<MapLightComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();

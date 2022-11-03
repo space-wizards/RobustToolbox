@@ -188,7 +188,7 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        IMapGridComponent GetGridComp(EntityUid euid);
+        MapGridComponent GetGridComp(EntityUid euid);
 
         //
         // Pausing functions

@@ -197,7 +197,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
 
             // no, you can't put maps or grids into containers
-            if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<IMapGridComponent>(toinsert))
+            if (entMan.HasComponent<MapComponent>(toinsert) || entMan.HasComponent<MapGridComponent>(toinsert))
                 return false;
 
             var xformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
@@ -261,6 +261,7 @@ namespace Robust.Shared.Containers
 
             // Unset flag (before parent change events are raised).
             meta.Flags &= ~MetaDataFlags.InContainer;
+
             // Implementation specific remove logic
             InternalRemove(toRemove, entMan);
 

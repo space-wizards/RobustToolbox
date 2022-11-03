@@ -192,7 +192,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 var xformComp = EntityManager.GetComponent<TransformComponent>(gridId);
                 ApplyTransformState(xformComp, gridDatum);
 
-                var gridComp = EntityManager.GetComponent<IMapGridComponent>(gridId);
+                var gridComp = EntityManager.GetComponent<MapGridComponent>(gridId);
                 MapGridComponent.ApplyMapGridState(this, gridComp, gridDatum.ChunkData);
             }
         }

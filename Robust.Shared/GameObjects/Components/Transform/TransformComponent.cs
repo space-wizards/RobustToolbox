@@ -448,12 +448,12 @@ namespace Robust.Shared.GameObjects
 
         internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
         {
-            if (_entMan.HasComponent<IMapComponent>(Owner))
+            if (_entMan.HasComponent<MapComponent>(Owner))
             {
                 return null;
             }
 
-            if (_entMan.HasComponent<IMapGridComponent>(Owner))
+            if (_entMan.HasComponent<MapGridComponent>(Owner))
             {
                 return Owner;
             }

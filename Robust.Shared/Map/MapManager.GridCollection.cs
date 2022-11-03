@@ -65,9 +65,9 @@ internal partial class MapManager
 
     public virtual void ChunkRemoved(EntityUid gridId, MapChunk chunk) { }
 
-    public IMapGridComponent GetGridComp(EntityUid euid)
+    public MapGridComponent GetGridComp(EntityUid euid)
     {
-        return EntityManager.GetComponent<IMapGridComponent>(euid);
+        return EntityManager.GetComponent<MapGridComponent>(euid);
     }
 
     /// <inheritdoc />
@@ -121,12 +121,12 @@ internal partial class MapManager
 
     public bool IsGrid(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(uid);
+        return EntityManager.HasComponent<MapGridComponent>(uid);
     }
 
     public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out IMapGrid grid)
     {
-        if (EntityManager.TryGetComponent(euid, out IMapGridComponent? comp))
+        if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
         {
             grid = comp.Grid;
             return true;
@@ -138,14 +138,14 @@ internal partial class MapManager
 
     public bool GridExists([NotNullWhen(true)] EntityUid? euid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(euid);
+        return EntityManager.HasComponent<MapGridComponent>(euid);
     }
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
-        return EntityManager.EntityQuery<IMapGridComponent>(true)
+        return EntityManager.EntityQuery<MapGridComponent>(true)
             .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
             .Select(c => c.Grid);
     }
@@ -213,18 +213,6 @@ internal partial class MapManager
 
     /// <inheritdoc />
     public bool SuppressOnTileChanged { get; set; }
-
-    public void OnComponentRemoved(MapGridComponent comp)
-    {
-        var gridIndex = comp.Owner;
-        if (gridIndex == EntityUid.Invalid)
-            return;
-
-        if (!GridExists(gridIndex))
-            return;
-
-        DeleteGrid(gridIndex);
-    }
 
     /// <summary>
     ///     Raises the OnTileChanged event.

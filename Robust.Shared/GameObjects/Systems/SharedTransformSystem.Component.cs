@@ -110,7 +110,7 @@ public abstract partial class SharedTransformSystem
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;
 
-        if (TryComp(xform.GridUid, out IMapGridComponent? grid))
+        if (TryComp(xform.GridUid, out MapGridComponent? grid))
         {
             var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
             grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
@@ -179,7 +179,7 @@ public abstract partial class SharedTransformSystem
     {
         // Children MAY be initialized here before their parents are.
         // We do this whole dance to handle this recursively,
-        // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
+        // setting _mapIdInitialized along the way to avoid going to the MapComponent every iteration.
         static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
         {
             if (xform._mapIdInitialized)
@@ -194,7 +194,7 @@ public abstract partial class SharedTransformSystem
             else
             {
                 // second level node, terminates recursion up the branch of the tree
-                if (entMan.TryGetComponent(xform.Owner, out IMapComponent? mapComp))
+                if (entMan.TryGetComponent(xform.Owner, out MapComponent? mapComp))
                 {
                     value = mapComp.WorldMap;
                 }
@@ -250,7 +250,7 @@ public abstract partial class SharedTransformSystem
         IMapGrid? grid;
 
         // First try find grid via parent:
-        if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out IMapGridComponent? gridComp))
+        if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
         {
             grid = gridComp.Grid;
         }
@@ -574,7 +574,7 @@ public abstract partial class SharedTransformSystem
                 || xform.ParentUid != newParentId)
             {
                 // remove from any old grid lookups
-                if (xform.Anchored && TryComp(xform.ParentUid, out IMapGridComponent? grid))
+                if (xform.Anchored && TryComp(xform.ParentUid, out MapGridComponent? grid))
                 {
                     var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
                     grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
@@ -592,7 +592,7 @@ public abstract partial class SharedTransformSystem
                 // or by the following AnchorStateChangedEvent
                 if (xform._anchored && xform.Initialized)
                 {
-                    if (xform.ParentUid == xform.GridUid && TryComp(xform.GridUid, out IMapGridComponent? newGrid))
+                    if (xform.ParentUid == xform.GridUid && TryComp(xform.GridUid, out MapGridComponent? newGrid))
                     {
                         var tileIndices = newGrid.Grid.TileIndicesFor(xform.Coordinates);
                         newGrid.Grid.AddToSnapGridCell(tileIndices, xform.Owner);
@@ -614,7 +614,7 @@ public abstract partial class SharedTransformSystem
                 var ev = new AnchorStateChangedEvent(xform);
                 RaiseLocalEvent(xform.Owner, ref ev, true);
             }
-            
+
             xform._prevPosition = newState.LocalPosition;
             xform._prevRotation = newState.Rotation;
             xform._noLocalRotation = newState.NoLocalRotation;
@@ -972,7 +972,7 @@ public abstract partial class SharedTransformSystem
 
         if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
-            var grid = Comp<IMapGridComponent>(xform.GridUid.Value);
+            var grid = Comp<MapGridComponent>(xform.GridUid.Value);
             var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
             grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
             xform._anchored = false;

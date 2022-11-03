@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 /// <summary>
 ///     Attempts to resolve a string into an enum. If it fails, it simply reads the string. Useful for both both sprite
-///     layer and appearance data keys, which both simultaneously support enums and strings. 
+///     layer and appearance data keys, which both simultaneously support enums and strings.
 /// </summary>
 [TypeSerializer]
 public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
@@ -39,12 +39,6 @@ public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
         ISerializationContext? context = null)
     {
         return new ValueDataNode(serializationManager.ReflectionManager.GetEnumReference(value));
-    }
-
-    public Enum CreateCopy(ISerializationManager serializationManager, Enum source, bool skipHook,
-        ISerializationContext? context = null)
-    {
-        return source;
     }
 }
 

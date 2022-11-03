@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
+    public sealed class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>, ITypeCopyCreator<MapId>
     {
         public MapId Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

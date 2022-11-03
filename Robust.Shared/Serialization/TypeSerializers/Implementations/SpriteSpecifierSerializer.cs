@@ -21,6 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeCopyCreator<SpriteSpecifier>,
         ITypeCopyCreator<Rsi>,
         ITypeCopyCreator<Texture>,
+        ITypeCopyCreator<EntityPrototype>,
         ITypeCopier<Rsi>,
         ITypeCopier<Texture>
     {

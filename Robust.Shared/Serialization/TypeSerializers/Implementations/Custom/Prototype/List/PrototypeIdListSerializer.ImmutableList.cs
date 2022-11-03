@@ -49,12 +49,5 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
-
-        public ImmutableList<string> CreateCopy(ISerializationManager serializationManager,
-            ImmutableList<string> source,
-            bool skipHook, ISerializationContext? context = null)
-        {
-            return ImmutableList.CreateRange(source);
-        }
     }
 }

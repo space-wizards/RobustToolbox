@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -32,14 +31,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value);
-        }
-
-        [MustUseReturnValue]
-        public string CreateCopy(ISerializationManager serializationManager, string source,
-            bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return source;
         }
     }
 }

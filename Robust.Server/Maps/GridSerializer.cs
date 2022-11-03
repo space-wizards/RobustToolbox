@@ -18,7 +18,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Server.Maps
 {
     [TypeSerializer]
-    internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>
+    internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>, ITypeCopyCreator<MapChunk>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -135,7 +135,7 @@ namespace Robust.Server.Maps
 
     //todo paul make this be used
     [TypeSerializer]
-    internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
+    internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>, ITypeCopyCreator<MapGrid>
     {
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

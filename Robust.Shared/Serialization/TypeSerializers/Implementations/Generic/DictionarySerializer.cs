@@ -17,6 +17,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode>,
     ITypeCopier<Dictionary<TKey, TValue>>,
+    ITypeCopyCreator<IReadOnlyDictionary<TKey, TValue>>,
     ITypeCopier<SortedDictionary<TKey, TValue>> where TKey : notnull
 
 {
@@ -155,6 +156,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         ISerializationContext? context = null)
     {
         target.Clear();
+        target.EnsureCapacity(source.Count);
         foreach (var value in source)
         {
             target.Add(
@@ -173,5 +175,20 @@ public sealed class DictionarySerializer<TKey, TValue> :
                 serializationManager.CreateCopy(value.Key, context, skipHook),
                 serializationManager.CreateCopy(value.Value, context, skipHook));
         }
+    }
+
+    public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, bool skipHook,
+        ISerializationContext? context = null)
+    {
+        var target = new Dictionary<TKey, TValue>();
+        target.EnsureCapacity(source.Count);
+        foreach (var value in source)
+        {
+            target.Add(
+                serializationManager.CreateCopy(value.Key, context, skipHook),
+                serializationManager.CreateCopy(value.Value, context, skipHook));
+        }
+
+        return target;
     }
 }

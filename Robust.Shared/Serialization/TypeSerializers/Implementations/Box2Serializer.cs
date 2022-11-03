@@ -14,7 +14,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
+    public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>, ITypeCopyCreator<Box2>
     {
         private static void NextOrThrow(ref SpanSplitExtensions.Enumerator<char> enumerator, string value)
         {

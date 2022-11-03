@@ -43,11 +43,5 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             return new ValueDataNode(value);
         }
-
-        public string CreateCopy(ISerializationManager serializationManager, string source, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return source;
-        }
     }
 }

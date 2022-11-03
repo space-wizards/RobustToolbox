@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -41,13 +40,5 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     {
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
         return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
-    }
-
-    [MustUseReturnValue]
-    public TimeSpan CreateCopy(ISerializationManager serializationManager, TimeSpan source,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        return source;
     }
 }

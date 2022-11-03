@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
+    public sealed class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>, ITypeCopyCreator<FormattedMessage>
     {
         public FormattedMessage Read(ISerializationManager serializationManager,
             ValueDataNode node, IDependencyCollection dependencies, bool skipHook,

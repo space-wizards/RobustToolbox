@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class RegexSerializer : ITypeSerializer<Regex, ValueDataNode>
+    public sealed class RegexSerializer : ITypeSerializer<Regex, ValueDataNode>, ITypeCopyCreator<Regex>
     {
         public Regex Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

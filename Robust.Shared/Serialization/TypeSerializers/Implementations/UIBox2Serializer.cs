@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
+    public sealed class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>, ITypeCopyCreator<UIBox2>
     {
         public UIBox2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

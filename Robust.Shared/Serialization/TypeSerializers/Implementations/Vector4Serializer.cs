@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>
+    public sealed class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>, ITypeCopyCreator<Vector4>
     {
         public Vector4 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

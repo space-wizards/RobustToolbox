@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class TypeSerializer : ITypeSerializer<Type, ValueDataNode>
+    public sealed class TypeSerializer : ITypeSerializer<Type, ValueDataNode>, ITypeCopyCreator<Type>
     {
         private static readonly Dictionary<string, Type> Shortcuts = new ()
         {

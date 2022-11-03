@@ -18,7 +18,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableList<T>, SequenceDataNode>,
-        ITypeCopier<List<T>>
+        ITypeCopier<List<T>>,
+        ITypeCopyCreator<IReadOnlyList<T>>,
+        ITypeCopyCreator<IReadOnlyCollection<T>>,
+        ITypeCopyCreator<ImmutableList<T>>
     {
         private DataNode WriteInternal(ISerializationManager serializationManager, IEnumerable<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
@@ -184,6 +187,46 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
                 ref var val = ref sourceSpan[i];
                 target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
+        }
+
+        public IReadOnlyList<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyList<T> source,
+            bool skipHook,
+            ISerializationContext? context = null)
+        {
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+
+            return target;
+        }
+
+        public IReadOnlyCollection<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyCollection<T> source, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+
+            return target;
+        }
+
+        public ImmutableList<T> CreateCopy(ISerializationManager serializationManager, ImmutableList<T> source, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+
+            return target.ToImmutableList();
         }
     }
 }

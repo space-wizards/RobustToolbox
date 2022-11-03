@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
+    public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>, ITypeCopyCreator<TimeSpan>
     {
         public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

@@ -16,7 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
     public sealed class HashSetSerializer<T> :
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>,
-        ITypeCopier<HashSet<T>>
+        ITypeCopier<HashSet<T>>,
+        ITypeCopyCreator<ImmutableHashSet<T>>
     {
         HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -109,6 +110,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             {
                 target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
+        }
+
+        public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            var target = new HashSet<T>();
+            target.EnsureCapacity(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+
+            return target.ToImmutableHashSet();
         }
     }
 }

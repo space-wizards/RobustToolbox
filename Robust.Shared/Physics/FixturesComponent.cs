@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -37,11 +36,7 @@ namespace Robust.Shared.Physics
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
         internal List<Fixture> SerializedFixtures
         {
-            get =>
-                SerializedFixtureData ??
-                (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(Owner)
-                    ? new List<Fixture>()
-                    : Fixtures.Values.ToList());
+            get => SerializedFixtureData ?? Fixtures.Values.ToList();
             set => SerializedFixtureData = value;
         }
 

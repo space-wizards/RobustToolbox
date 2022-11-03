@@ -49,6 +49,30 @@ Template for new versions:
 
 *None yet*
 
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
+
+### Internal
+
+* Removed redundant grid-init physics logic 
+* Modified garbage collection for entity spawning profiling.
+
 ## 0.59.0.0
 
 ### Breaking changes

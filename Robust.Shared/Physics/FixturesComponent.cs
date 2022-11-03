@@ -1,13 +1,10 @@
 using System.Collections.Generic;
-using Robust.Shared.Analyzers;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -20,9 +17,8 @@ namespace Robust.Shared.Physics
     /// </remarks>
     [RegisterComponent]
     [NetworkedComponent]
-    [Access(typeof(FixtureSystem))]
     [ComponentProtoName("Fixtures")]
-    public sealed class FixturesComponent : Component, ISerializationHooks
+    public sealed class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)
@@ -38,21 +34,12 @@ namespace Robust.Shared.Physics
         [DataField("fixtures")]
         [NeverPushInheritance]
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
-        internal List<Fixture> SerializedFixtures = new();
-
-        void ISerializationHooks.BeforeSerialization()
+        internal List<Fixture> SerializedFixtures
         {
-            // Can't assert the count is 0 because it's possible it gets re-serialized before init!
-            if (SerializedFixtures.Count > 0) return;
-
-            // At some stage we'll serialize non-default grids (gridfixturesystem does support it)
-            // but for now just for smaller map file + reading speed we'll just globally cull them.
-            if (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(Owner)) return;
-
-            foreach (var (_, fixture) in Fixtures)
-            {
-                SerializedFixtures.Add(fixture);
-            }
+            get => SerializedFixtureData ?? Fixtures.Values.ToList();
+            set => SerializedFixtureData = value;
         }
+
+        internal List<Fixture>? SerializedFixtureData;
     }
 }

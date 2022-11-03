@@ -238,7 +238,7 @@ namespace Robust.Shared.Physics.Systems
                 // Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
-            component.SerializedFixtures.Clear();
+            component.SerializedFixtureData = null;
 
             // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
@@ -272,7 +272,7 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            component.SerializedFixtures.Clear();
+            component.SerializedFixtureData = null;
             var toAddFixtures = new ValueList<Fixture>();
             var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;

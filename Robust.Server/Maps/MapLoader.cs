@@ -55,8 +55,14 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveGrid(EntityUid gridId, string yamlPath)
         {
+
             var grid = _mapManager.GetGrid(gridId);
 
+            // Dont save grid fixtures.
+            if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+            {
+                fixtures.SerializedFixtureData = new(); // empty list.
+            }
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
             context.RegisterGrid(grid);
             var root = context.Serialize();
@@ -165,6 +171,11 @@ namespace Robust.Server.Maps
 
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
+                // Dont save grid fixtures.
+                if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+                {
+                    fixtures.SerializedFixtureData = new(); // empty list.
+                }
                 context.RegisterGrid(grid);
             }
 

@@ -98,8 +98,8 @@ entities:
             entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
-            var mapLoad = IoCManager.Resolve<IMapLoader>();
-            var geid = mapLoad.LoadGrid(mapId, "/TestMap.yml").gridId;
+            var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapSystem>();
+            var geid = mapLoad.LoadGrid(mapId, "/TestMap.yml");
 
             Assert.That(geid, NUnit.Framework.Is.Not.Null);
 

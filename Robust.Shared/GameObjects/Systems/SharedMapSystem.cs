@@ -8,9 +8,9 @@ using System.Linq;
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    internal abstract class SharedMapSystem : EntitySystem
+    public abstract class SharedMapSystem : EntitySystem
     {
-        [Dependency] protected readonly IMapManagerInternal MapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
 
         public override void Initialize()
         {
@@ -62,7 +62,13 @@ namespace Robust.Shared.GameObjects
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
             RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
-            MapManager.OnComponentRemoved(component);
+            if (uid == EntityUid.Invalid)
+                return;
+
+            if (!MapManager.GridExists(uid))
+                return;
+
+            MapManager.DeleteGrid(uid);
         }
     }
 

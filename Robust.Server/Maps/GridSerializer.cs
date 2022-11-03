@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -47,13 +48,9 @@ namespace Robust.Server.Maps
 
             IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            if (context is MapManagerSystem.MapSerializationContext serContext)
+            if (context is MapSystem.MapSerializationContext serContext)
             {
                 tileMap = serContext.TileMap;
-            }
-            else if (context is MapLoader.MapContext mapContext)
-            {
-                tileMap = mapContext.TileMap;
             }
 
             if (tileMap == null)
@@ -170,10 +167,10 @@ namespace Robust.Server.Maps
             }
 
             //TODO: Pass in options
-            if (context is not MapLoader.MapContext or MapManagerSystem.MapSerializationContext)
+            if (context is not MapSystem.MapSerializationContext)
             {
                 throw new InvalidOperationException(
-                    $"Someone tried serializing a mapgrid without passing {nameof(MapLoader.MapContext)} as context.");
+                    $"Someone tried serializing a mapgrid without passing {nameof(MapSystem.MapSerializationContext)} as context.");
             }
 
             if (grid == null) throw new NotImplementedException();

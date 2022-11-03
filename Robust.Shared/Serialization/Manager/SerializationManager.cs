@@ -415,9 +415,6 @@ namespace Robust.Shared.Serialization.Manager
                 return sequenceNode;
             }
 
-            if (value is ISerializationHooks serHook)
-                serHook.BeforeSerialization();
-
             if (TryWriteRaw(underlyingType, value, out var node, alwaysWrite, context))
             {
                 return node;

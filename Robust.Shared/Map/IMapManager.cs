@@ -8,6 +8,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
+    public delegate bool GridCallback(IMapGrid grid);
+
+    public delegate bool GridCallback<TState>(IMapGrid grid, ref TState state);
+
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
@@ -124,7 +128,9 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
-        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
+        void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
+
+        void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
@@ -196,12 +202,6 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapPaused(MapId mapId);
-
-        [Pure]
-        bool IsGridPaused(IMapGrid grid);
-
-        [Pure]
-        bool IsGridPaused(EntityUid gridId);
 
         [Pure]
         bool IsMapInitialized(MapId mapId);

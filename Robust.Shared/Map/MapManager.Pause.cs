@@ -159,23 +159,6 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool IsGridPaused(IMapGrid grid)
-        {
-            return IsMapPaused(grid.ParentMapId);
-        }
-
-        public bool IsGridPaused(EntityUid gridId)
-        {
-            if (TryGetGrid(gridId, out var grid))
-            {
-                return IsGridPaused(grid);
-            }
-
-            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
-            return true;
-        }
-
-        /// <inheritdoc />
         public bool IsMapInitialized(MapId mapId)
         {
             return !CheckMapPreInit(mapId);

@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
+using System.Management;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -61,17 +62,9 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            mapMan.CreateNewMapEntity(MapId.Nullspace);
-
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeComponents(oldEntity);
-
-            mapMan.Restart();
-
-            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(mapMan.GridExists(EntityUid.Invalid), Is.False);
+            entMan.Shutdown();
             Assert.That(entMan.Deleted(oldEntity), Is.True);
 
         }
@@ -114,9 +107,6 @@ namespace Robust.UnitTesting.Shared.Map
             // Arrange
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             // Act
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
@@ -131,14 +121,10 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-
-            var entity = mapMan.CreateNewMapEntity(MapId.Nullspace);
-
+            var map = mapMan.CreateMap();
+            var entity = mapMan.GetMapEntityId(map);
             mapMan.Restart();
-
-            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
             Assert.That((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
-            Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }
 }

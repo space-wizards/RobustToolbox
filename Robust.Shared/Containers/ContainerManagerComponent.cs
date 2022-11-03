@@ -6,8 +6,10 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -22,6 +24,8 @@ namespace Robust.Shared.Containers
     public sealed class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         [ViewVariables]
         [DataField("containers")]
@@ -45,10 +49,9 @@ namespace Robust.Shared.Containers
         {
             base.OnRemove();
 
-            // IContainer.Shutdown modifies the _containers collection
-            foreach (var container in Containers.Values.ToArray())
+            foreach (var container in Containers.Values)
             {
-                container.Shutdown();
+                container.Shutdown(_entMan, _netMan);
             }
 
             Containers.Clear();
@@ -131,30 +134,18 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public void ForceRemove(EntityUid entity)
-        {
-            foreach (var container in Containers.Values)
-            {
-                if (container.Contains(entity))
-                {
-                    container.ForceRemove(entity);
-                    return;
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        public void InternalContainerShutdown(IContainer container)
-        {
-            Containers.Remove(container.ID);
-        }
-
-        /// <inheritdoc />
-        public bool Remove(EntityUid entity)
+        public bool Remove(EntityUid toremove,
+            TransformComponent? xform = null,
+            MetaDataComponent? meta = null,
+            bool reparent = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null)
         {
             foreach (var containers in Containers.Values)
             {
-                if (containers.Contains(entity)) return containers.Remove(entity);
+                if (containers.Contains(toremove))
+                    return containers.Remove(toremove, _entMan, xform, meta, reparent, force, destination, localRotation);
             }
 
             return true; // If we don't contain the entity, it will always be removed

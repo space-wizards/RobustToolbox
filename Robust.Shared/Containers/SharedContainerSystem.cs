@@ -2,19 +2,28 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
-    public abstract class SharedContainerSystem : EntitySystem
+    public abstract partial class SharedContainerSystem : EntitySystem
     {
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly SharedJointSystem _joint = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+
         /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
-
+            
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -98,15 +107,21 @@ namespace Robust.Shared.Containers
             return containerManager.ContainsEntity(containedUid);
         }
 
-        public void RemoveEntity(EntityUid uid, EntityUid containedUid, bool force = false, ContainerManagerComponent? containerManager = null)
+        public void RemoveEntity(
+            EntityUid uid,
+            EntityUid toremove,
+            ContainerManagerComponent? containerManager = null,
+            TransformComponent? containedXform = null,
+            MetaDataComponent? containedMeta = null,
+            bool reparent = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
+            if (!Resolve(uid, ref containerManager) || !Resolve(toremove, ref containedMeta, ref containedXform))
                 return;
 
-            if (force)
-                containerManager.ForceRemove(containedUid);
-            else
-                containerManager.Remove(containedUid);
+            containerManager.Remove(toremove, containedXform, containedMeta, reparent, force, destination, localRotation);
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)
@@ -352,23 +367,14 @@ namespace Robust.Shared.Containers
         /// Attempts to remove all entities in a container.
         /// </summary>
         public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
-            bool attachToGridOrMap = false)
+            bool attachToGridOrMap = false, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+            var query = entMan.GetEntityQuery<TransformComponent>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if (Deleted(entity))
-                    continue;
-
-                if (force)
-                    container.ForceRemove(entity);
-                else
-                    container.Remove(entity);
-
-                if (moveTo.HasValue)
-                    Transform(entity).Coordinates = moveTo.Value;
-
-                if (attachToGridOrMap)
-                    Transform(entity).AttachToGridOrMap();
+                if (query.TryGetComponent(entity, out var xform))
+                    container.Remove(entity, entMan, xform, null, attachToGridOrMap, force, moveTo);
             }
         }
 
@@ -387,8 +393,8 @@ namespace Robust.Shared.Containers
 
         public void AttachParentToContainerOrGrid(TransformComponent transform)
         {
-            if (transform.Parent == null
-                || !TryGetContainingContainer(transform.Parent.Owner, out var container)
+            if (!transform.ParentUid.IsValid()
+                || !TryGetContainingContainer(transform.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
                 transform.AttachToGridOrMap();
         }
@@ -397,7 +403,7 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (Transform(container.Owner).Parent != null
+            if (Transform(container.Owner).ParentUid.IsValid()
                 && TryGetContainingContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
@@ -421,16 +427,15 @@ namespace Robust.Shared.Containers
 
         #endregion
 
-        // Eject entities from their parent container if the parent change is done by the transform only.
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)
         {
-            var oldParentEntity = message.OldParent;
-
-            if (oldParentEntity == null || !EntityManager.EntityExists(oldParentEntity!.Value))
+            var meta = MetaData(message.Entity);
+            if ((meta.Flags & MetaDataFlags.InContainer) == 0)
                 return;
 
-            if (EntityManager.TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
-                containerManager.ForceRemove(message.Entity);
+            // Eject entities from their parent container if the parent change is done via setting the transform.
+            if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
+                containerManager.Remove(message.Entity, message.Transform, meta,  reparent: false, force: true);
         }
     }
 }

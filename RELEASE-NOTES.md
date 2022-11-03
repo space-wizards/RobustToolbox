@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
 
 ### Other
 
@@ -28,6 +28,177 @@ Template for new versions:
 -->
 
 ## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
+
+### Internal
+
+* Removed redundant grid-init physics logic 
+* Modified garbage collection for entity spawning profiling.
+
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
+
+## 0.58.1.1
+
+### Bugfixes
+
+* Fixed some container shutdown errors
+* Fixed LookupFlags.Static not acting as a full replacement for LookupFlags.Anchored
+
+## 0.58.1.0
+
+### Other
+
+* Physics collision changed and body type changed events no longer get raised before initialisation
+
+## 0.58.0.0
+
+### Breaking changes
+
+* Some TransformComponent functions have been moved to the system.
+* Container insert, remove, and shutdown function arguments and functionality has changed.
+* Physics entities without fixtures now automatically disable collision.
+
+### New features
+
+* Added command to profile entity spawning
+
+### Bugfixes
+
+* EntityLookup/BroadphaseComponent tracking has been overhauled, which should hopefully fix various broadphase bugs.
+
+### Other
+
+* Component.Owner is now marked as obsolete.
+
+## 0.57.0.4
+
+### Bugfixes
+
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
+
+## 0.57.0.2 and 0.57.0.3
+
+### Bugfixes
+
+* Fixed more entity-lookup bugs.
+
+## 0.57.0.1
+
+### Bugfixes
+
+* Fixed entity lookup bug that was causing crashes.
+
+### 0.57.0.0
+
+### Breaking changes
+
+* EntityLookupComponent has been merged into BroadphaseComponent. The data that was previously stored in this tree is now stored across the 3 trees on BroadphaseComponent.
+
+### New features
+
+* EntityLookup has had its flags updated to reflect the merge of EntityLookupComponent and BroadphaseComponent, with the new flags reflecting each tree: Dynamic, Static, and Sundries. Dynamic and Static store physics bodies that are collidable and Sundries stores everything else (apart from grids).
+
+### Internal
+
+* EntityLookup and Broadphase have had their data de-duplicated, dropping the AABBs stored on the server by half. This also means MoveEvent updates will be much faster.
+* PVS mover updates has had their performance improved slightly.
+* Physics LinkedList nodes for contacts will no longer be re-made for every contact and will just be cleared when re-used.
+* Sprite / Light dynamictree allocations on the client have been dropped by using static lambdas.
+* The physics contact buffer for each FixtureProxy is now pooled.
+
+## 0.56.1.1
+
+### Bugfixes
+
+* Fix PVS sometimes not sending an entity's parents.
+* Fix velocity preservation on parenting changes.
+
+## 0.56.1.0
+
+### New features
+
+* Update pt-BR locale with more localizations
+* Separated PVS entity budget into an entity creation budget and a pvs-entry budget.
+
+### Bugfixes
+
+* Fix VV type handler removal.
+* System errors during component removal should no longer result in undeletable entities.
+
+### Other
+
+* The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
+* Improved Box2Serializer
+* Removed uses IEnumerables from EntityLookupSystem.
+* Optimized client entity spawning by 15%.
+* Modified how the rendering tree handles entity movement.
+* Improved grid enumeration allocs.
+* Fixed a bunch of build warnings (see #3329 and #3289 for details)
+
+## 0.56.0.2
+
+### Bugfixes
+
+* Rename \_lib.ftl to \_engine_lib.ftl to avoid overwriting
+
+## 0.56.0.1
+
+### Bugfixes
+
+* Fix instantiation of data records containing value types
+
+## 0.56.0.0
 
 ### Breaking changes
 
@@ -85,10 +256,6 @@ Template for new versions:
   * Added `vvread`, `vvwrite` and `vvinvoke` commands, which allow you to read, write and invoke VV paths.
   * Added autocompletion to all VV commands.
   * Please note that the VV GUI still remains the same. It will be updated to use these new features in the future.
-
-### Bugfixes
-
-*None yet*
 
 ### Other
 

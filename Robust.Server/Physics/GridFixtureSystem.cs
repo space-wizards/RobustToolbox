@@ -247,18 +247,19 @@ namespace Robust.Server.Physics
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
                 var newGrids = new EntityUid[grids.Count - 1];
+                var mapId = oldGridXform.MapID;
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
+                    var splitGrid = _mapManager.CreateGrid(mapId);
+                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     newGrids[i] = splitGrid.GridEntityId;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    splitGrid.WorldPosition = gridPos;
-                    splitGrid.WorldRotation = gridRot;
+                    splitXform.WorldPosition = gridPos;
+                    splitXform.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
-                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
@@ -310,7 +311,7 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.GridEntityId, tilePos, LookupFlags.None))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.GridEntityId, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);
@@ -318,7 +319,7 @@ namespace Robust.Server.Physics
                                 if (entXform.ParentUid != mapGrid.GridEntityId ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                                entXform.AttachParent(splitXform);
+                                _xformSystem.SetParent(entXform, splitXform.Owner, xformQuery, splitXform);
                             }
                         }
 

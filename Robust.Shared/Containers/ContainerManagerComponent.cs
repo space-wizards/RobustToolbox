@@ -138,7 +138,6 @@ namespace Robust.Shared.Containers
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
             bool reparent = true,
-            bool addToBroadphase = true,
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
@@ -146,7 +145,7 @@ namespace Robust.Shared.Containers
             foreach (var containers in Containers.Values)
             {
                 if (containers.Contains(toremove))
-                    return containers.Remove(toremove, _entMan, xform, meta, reparent, addToBroadphase, force, destination, localRotation);
+                    return containers.Remove(toremove, _entMan, xform, meta, reparent, force, destination, localRotation);
             }
 
             return true; // If we don't contain the entity, it will always be removed

@@ -13,10 +13,5 @@ namespace Robust.Shared.Serialization
         /// Gets executed after deserialization is complete
         /// </summary>
         void AfterDeserialization() {}
-
-        /// <summary>
-        /// Gets executed before serialization
-        /// </summary>
-        void BeforeSerialization() {}
     }
 }

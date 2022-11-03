@@ -13,11 +13,9 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem : EntitySystem
     {
-        [Dependency] private readonly SharedTransformSystem _xforms = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedJointSystem _joint = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -116,7 +114,6 @@ namespace Robust.Shared.Containers
             TransformComponent? containedXform = null,
             MetaDataComponent? containedMeta = null,
             bool reparent = true,
-            bool addToBroadphase = true,
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
@@ -124,7 +121,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager) || !Resolve(toremove, ref containedMeta, ref containedXform))
                 return;
 
-            containerManager.Remove(toremove, containedXform, containedMeta, reparent, addToBroadphase, force, destination, localRotation);
+            containerManager.Remove(toremove, containedXform, containedMeta, reparent, force, destination, localRotation);
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)
@@ -377,7 +374,7 @@ namespace Robust.Shared.Containers
             foreach (var entity in container.ContainedEntities.ToArray())
             {
                 if (query.TryGetComponent(entity, out var xform))
-                    container.Remove(entity, entMan, xform, null, attachToGridOrMap, true, force, moveTo);
+                    container.Remove(entity, entMan, xform, null, attachToGridOrMap, force, moveTo);
             }
         }
 

@@ -951,6 +951,14 @@ namespace Robust.Shared.GameObjects
             return new NetComponentEnumerable(_netComponents[uid]);
         }
 
+        /// <inheritdoc />
+        public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
+        {
+            return _netComponents.TryGetValue(uid, out var data)
+                    ? new NetComponentEnumerable(data)
+                    : null;
+        }
+
         #region Join Functions
 
         /// <inheritdoc />

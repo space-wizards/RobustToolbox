@@ -449,7 +449,7 @@ namespace Robust.Client.GameStates
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
-            foreach (var entity in system.DirtyEntities)
+            while (system.DirtyEntities.TryDequeue(out var entity))
             {
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
@@ -463,7 +463,11 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
+                var netComps = _entityManager.GetNetComponentsOrNull(entity);
+                if (netComps == null)
+                    return;
+
+                foreach (var (netId, comp) in netComps.Value)
                 {
                     DebugTools.AssertNotNull(netId);
                     if (!comp.NetSyncEnabled)

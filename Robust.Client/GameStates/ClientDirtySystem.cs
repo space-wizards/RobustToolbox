@@ -1,8 +1,10 @@
-using System.Collections.Generic;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Client.GameStates;
 
@@ -18,11 +20,12 @@ internal sealed class ClientDirtySystem : EntitySystem
     // could pool the ushort sets, but predicted component changes are rare... soo...
     internal readonly Dictionary<EntityUid, HashSet<ushort>> RemovedComponents = new();
 
-    internal readonly HashSet<EntityUid> DirtyEntities = new(256);
+    internal readonly Queue<EntityUid> DirtyEntities = new(256);
 
     public override void Initialize()
     {
         base.Initialize();
+        SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
         EntityManager.EntityDirtied += OnEntityDirty;
         EntityManager.ComponentRemoved += OnCompRemoved;
     }
@@ -33,6 +36,15 @@ internal sealed class ClientDirtySystem : EntitySystem
         EntityManager.EntityDirtied -= OnEntityDirty;
         EntityManager.ComponentRemoved -= OnCompRemoved;
         Reset();
+    }
+
+    private void OnTerminate(ref EntityTerminatingEvent ev)
+    {
+        if (!_timing.InPrediction || ev.Entity.IsClientSide())
+            return;
+
+        // Client-side entity deletion is not supported and will cause errors.
+        Logger.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity)}. Trace: {Environment.StackTrace}");
     }
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
@@ -62,6 +74,6 @@ internal sealed class ClientDirtySystem : EntitySystem
     private void OnEntityDirty(EntityUid e)
     {
         if (_timing.InPrediction && !e.IsClientSide())
-            DirtyEntities.Add(e);
+            DirtyEntities.Enqueue(e);
     }
 }

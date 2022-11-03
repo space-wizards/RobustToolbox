@@ -27,27 +27,15 @@ Template for new versions:
 
 -->
 
-## Master
+## 0.61.0.0
 
 ### Breaking changes
 
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-*None yet*
+* IMap and IMapGrid have been removed. Just use the associated components directly.
 
 ### Other
 
-*None yet*
-
-### Internal
-
-*None yet*
+* AudioSystem has been refactored.
 
 ## 0.60.0.0
 

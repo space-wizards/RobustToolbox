@@ -2,17 +2,27 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
 namespace Robust.Shared.Utility;
 
 /// <summary>
-/// A data structure for efficient storage of large mutable text.
+/// A binary tree data structure for efficient storage of large mutable text.
 /// </summary>
 /// <remarks>
+/// <para>
 /// <see href="https://en.wikipedia.org/wiki/Rope_(data_structure)">Read the Wikipedia article, nerd</see>
 /// Also read the original paper, it's useful too.
+/// </para>
+/// <para>
+/// Like strings, ropes are immutable and all "mutating" operations return new copies.
+/// </para>
+/// <para>
+/// All indexing functions use <see langword="long"/> indices.
+/// While individual rope leaves cannot be larger than an <see langword="int"/>, ropes with many leaves may exceed that.
+/// </para>
 /// </remarks>
 public static class Rope
 {
@@ -30,6 +40,7 @@ public static class Rope
     /// <remarks>
     /// For a balanced tree, this is O(log n).
     /// </remarks>
+    [Pure]
     public static long CalcTotalLength(Node? node)
     {
         return node switch
@@ -207,8 +218,9 @@ public static class Rope
     }
 
     /// <summary>
-    /// Check whether the rope is sufficiently balanced to avoid bad performance.
+    /// Check whether the given rope is sufficiently balanced to avoid bad performance.
     /// </summary>
+    [Pure]
     public static bool IsBalanced(Node node)
     {
         var depth = node.Depth;
@@ -221,6 +233,10 @@ public static class Rope
     /// <summary>
     /// Ensure the rope is balanced to ensure decent performance on various operations.
     /// </summary>
+    /// <remarks>
+    /// If the rope is already balanced, this method does nothing.
+    /// </remarks>
+    [Pure]
     public static Node Rebalance(Node node)
     {
         if (IsBalanced(node))
@@ -248,6 +264,7 @@ public static class Rope
     /// <remarks>
     /// For a balanced tree, this is O(log n).
     /// </remarks>
+    [Pure]
     public static char Index(Node rope, long index)
     {
         switch (rope)
@@ -270,12 +287,13 @@ public static class Rope
     }
 
     /// <summary>
-    /// Splice text into a rope.
+    /// Create a new rope with text spliced in at an index.
     /// </summary>
     /// <param name="rope">The rope to splice text into.</param>
     /// <param name="index">The position the inserted text should start at.</param>
     /// <param name="value">The text to insert.</param>
     /// <returns>The new rope containing the spliced data.</returns>
+    [Pure]
     public static Node Insert(Node rope, long index, string value)
     {
         var (left, right) = Split(rope, index);
@@ -283,32 +301,36 @@ public static class Rope
     }
 
     /// <summary>
-    /// Join two ropes together.
+    /// Create a new rope concatenating two given ropes.
     /// </summary>
+    [Pure]
     public static Node Concat(Node left, Node right)
     {
         return new Branch(left, right);
     }
 
     /// <summary>
-    /// Join a rope with a string.
+    /// Create a new rope concatenating a rope and a string.
     /// </summary>
+    [Pure]
     public static Node Concat(Node left, string right)
     {
         return Concat(left, new Leaf(right));
     }
 
     /// <summary>
-    /// Join a string with a rope.
+    /// Create a new rope concatenating a string with a rope.
     /// </summary>
+    [Pure]
     public static Node Concat(string left, Node right)
     {
         return Concat(new Leaf(left), right);
     }
 
     /// <summary>
-    /// Split a rope into two at a certain index.
+    /// Return two new ropes split from the given rope at a specified index.
     /// </summary>
+    [Pure]
     public static (Node left, Node right) Split(Node rope, long index)
     {
         switch (rope)
@@ -346,6 +368,13 @@ public static class Rope
         }
     }
 
+    /// <summary>
+    /// Create a new rope with a slice of text removed.
+    /// </summary>
+    /// <param name="rope">The rope to copy.</param>
+    /// <param name="start">The position to start removing chars at.</param>
+    /// <param name="length">How many chars to remove.</param>
+    [Pure]
     public static Node Delete(Node rope, long start, long length)
     {
         var (left, _) = Split(rope, start);
@@ -354,6 +383,14 @@ public static class Rope
         return Concat(left, right);
     }
 
+    /// <summary>
+    /// Create a new rope with a given slice of text replaced with a new string.
+    /// </summary>
+    /// <param name="rope">The rope to copy.</param>
+    /// <param name="start">The position to start removing characters at, and insert the new text at.</param>
+    /// <param name="length">How many characters from the original rope to remove.</param>
+    /// <param name="text">The new text to insert at the start position.</param>
+    [Pure]
     public static Node ReplaceSubstring(Node rope, long start, long length, string text)
     {
         var (left, mid) = Split(rope, start);
@@ -362,6 +399,11 @@ public static class Rope
         return Concat(left, Concat(text, right));
     }
 
+    /// <summary>
+    /// Try to fetch a <see cref="Rune"/> at a certain position in the rune.
+    /// Fails if the given position is inside a surrogate pair.
+    /// </summary>
+    [Pure]
     public static bool TryGetRuneAt(Node rope, long index, out Rune value)
     {
         var chr = Index(rope, index);
@@ -389,6 +431,11 @@ public static class Rope
         return true;
     }
 
+    /// <summary>
+    /// Collapse the rope into a single string instance.
+    /// </summary>
+    /// <exception cref="OverflowException">The given rope is too large to fit in a single string.</exception>
+    [Pure]
     public static string Collapse(Node rope)
     {
         var length = CalcTotalLength(rope);
@@ -404,12 +451,23 @@ public static class Rope
         });
     }
 
+    /// <summary>
+    /// Collapse a substring of a rope into a single string instance.
+    /// </summary>
+    /// <param name="rope">The rope to collapse part of.</param>
+    /// <param name="range">The range of the substring to collapse.</param>
+    /// <exception cref="OverflowException">The given rope is too large to fit in a single string.</exception>
+    [Pure]
     public static string CollapseSubstring(Node rope, Range range)
     {
         // TODO: Optimize
         return Collapse(rope)[range];
     }
 
+    /// <summary>
+    /// Offset a cursor position in a rope to the left, skipping over the middle of surrogate pairs.
+    /// </summary>
+    [Pure]
     public static long RuneShiftLeft(long index, Node rope)
     {
         index -= 1;
@@ -419,15 +477,28 @@ public static class Rope
         return index;
     }
 
+    /// <summary>
+    /// Offset a cursor position in a rope to the right, skipping over the middle of surrogate pairs.
+    /// </summary>
+    [Pure]
     public static long RuneShiftRight(long index, Node rope)
     {
         index += 1;
+
+        // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
+        // (Because yes, I did myself too a week after writing it)
+        // char.IsLowSurrogate(_text[_cursorPosition]) means "is the cursor between a surrogate pair"
+        // because we ALREADY moved.
         if (char.IsLowSurrogate(Index(rope, index)))
             index += 1;
 
         return index;
     }
 
+    /// <summary>
+    /// Returns true if the given rope is either null or empty (length 0).
+    /// </summary>
+    [Pure]
     public static bool IsNullOrEmpty([NotNullWhen(false)] Node? rope)
     {
         if (rope == null)
@@ -436,12 +507,22 @@ public static class Rope
         return CalcTotalLength(rope) == 0;
     }
 
+    /// <summary>
+    /// A nope in a rope. This is either a <see cref="Leaf"/> or a <see cref="Branch"/>.
+    /// </summary>
     public abstract class Node
     {
         public abstract long Weight { get; }
-        public abstract byte Depth { get; }
+
+        /// <summary>
+        /// The depth of the deepest leaf in this node tree. A leaf has depth 0, and a branch one above 1, etc...
+        /// </summary>
+        public abstract short Depth { get; }
     }
 
+    /// <summary>
+    /// A leaf contains a string of text.
+    /// </summary>
     [DebuggerDisplay("W: {Weight}, Text: {Text}")]
     public sealed class Leaf : Node
     {
@@ -455,23 +536,26 @@ public static class Rope
         }
 
         public override long Weight => Text.Length;
-        public override byte Depth => 0;
+        public override short Depth => 0;
     }
 
+    /// <summary>
+    /// A branch contains other nodes to the left and right.
+    /// </summary>
     [DebuggerDisplay("W: {Weight}")]
     public sealed class Branch : Node
     {
         public Node Left { get; }
         public Node? Right { get; }
         public override long Weight { get; }
-        public override byte Depth { get; }
+        public override short Depth { get; }
 
         public Branch(Node left, Node? right)
         {
             Left = left;
             Right = right;
             Weight = CalcTotalLength(left);
-            Depth = checked((byte)(Math.Max(left.Depth, right?.Depth ?? 0) + 1));
+            Depth = checked((short)(Math.Max(left.Depth, right?.Depth ?? 0) + 1));
         }
     }
 }

@@ -12,6 +12,11 @@ namespace Robust.Client.UserInterface.Controls;
 internal static class TextEditShared
 {
     // Approach for NextWordPosition and PrevWordPosition taken from Avalonia.
+
+    //
+    // Functions for calculating next positions when doing word-bound cursor movement (ctrl+left/right).
+    //
+
     internal static int NextWordPosition(string str, int cursor)
     {
         return cursor + NextWordPosition(new StringEnumerateHelpers.SubstringRuneEnumerator(str, cursor));
@@ -84,14 +89,9 @@ internal static class TextEditShared
 
             return false;
         }
-
-        static Rune GetRuneBackwards(string str, int i)
-        {
-            return Rune.TryGetRuneAt(str, i, out var rune) ? rune : Rune.GetRuneAt(str, i - 1);
-        }
     }
 
-    internal static CharClass GetCharClass(Rune rune)
+    private static CharClass GetCharClass(Rune rune)
     {
         if (Rune.IsWhiteSpace(rune))
         {
@@ -106,7 +106,7 @@ internal static class TextEditShared
         return CharClass.Other;
     }
 
-    internal enum CharClass : byte
+    private enum CharClass : byte
     {
         Other,
         AlphaNumeric,

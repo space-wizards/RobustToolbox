@@ -113,7 +113,7 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
-        public void Cleanup()
+        public virtual void Cleanup()
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
             _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;

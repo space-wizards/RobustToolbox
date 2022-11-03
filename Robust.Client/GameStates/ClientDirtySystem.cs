@@ -20,7 +20,7 @@ internal sealed class ClientDirtySystem : EntitySystem
     // could pool the ushort sets, but predicted component changes are rare... soo...
     internal readonly Dictionary<EntityUid, HashSet<ushort>> RemovedComponents = new();
 
-    internal readonly Queue<EntityUid> DirtyEntities = new(256);
+    internal readonly HashSet<EntityUid> DirtyEntities = new(256);
 
     public override void Initialize()
     {
@@ -74,6 +74,6 @@ internal sealed class ClientDirtySystem : EntitySystem
     private void OnEntityDirty(EntityUid e)
     {
         if (_timing.InPrediction && !e.IsClientSide())
-            DirtyEntities.Enqueue(e);
+            DirtyEntities.Add(e);
     }
 }

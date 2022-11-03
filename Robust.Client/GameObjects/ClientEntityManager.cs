@@ -31,6 +31,17 @@ namespace Robust.Client.GameObjects
 
             base.Initialize();
         }
+        public override void Shutdown()
+        {
+            using var _ = _gameTiming.StartStateApplicationArea();
+            base.Shutdown();
+        }
+
+        public override void Cleanup()
+        {
+            using var _ = _gameTiming.StartStateApplicationArea();
+            base.Cleanup();
+        }
 
         EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
         {

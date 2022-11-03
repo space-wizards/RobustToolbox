@@ -249,7 +249,18 @@ namespace Robust.Client.GameStates
                 }
 
                 if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
+                {
+                    try
+                    {
+                        ResetPredictedEntities();
+                    }
+                    catch
+                    {
+                        // avoid exception spam from repeatedly trying to reset the same entity.
+                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                        throw;
+                    }
+                }
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
@@ -449,7 +460,7 @@ namespace Robust.Client.GameStates
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
 
-            while (system.DirtyEntities.TryDequeue(out var entity))
+            foreach (var entity in system.DirtyEntities)
             {
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)

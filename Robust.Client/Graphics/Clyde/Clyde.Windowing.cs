@@ -466,25 +466,25 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.RunOnWindowThread(a);
         }
 
-        public void SetTextInputRect(UIBox2i rect)
+        public void TextInputSetRect(UIBox2i rect)
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _windowing!.SetTextInputRect(rect);
+            _windowing!.TextInputSetRect(rect);
         }
 
-        public void StartTextInput()
+        public void TextInputStart()
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _windowing!.StartTextInput();
+            _windowing!.TextInputStart();
         }
 
-        public void StopTextInput()
+        public void TextInputStop()
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _windowing!.StopTextInput();
+            _windowing!.TextInputStop();
         }
 
         private abstract class WindowReg

@@ -99,7 +99,7 @@ internal partial class Clyde
             fixed (byte* text = ev.text)
             {
                 var str = Marshal.PtrToStringUTF8((IntPtr)text) ?? "";
-                _logManager.GetSawmill("ime").Debug($"Input: {str}");
+                // _logManager.GetSawmill("ime").Debug($"Input: {str}");
                 SendEvent(new EventText(ev.windowID, str));
             }
         }
@@ -121,7 +121,7 @@ internal partial class Clyde
         private unsafe void SendTextEditing(uint window, byte* text, int start, int length)
         {
             var str = Marshal.PtrToStringUTF8((nint) text) ?? "";
-            _logManager.GetSawmill("ime").Debug($"Editing: '{str}', start: {start}, len: {length}");
+            // _logManager.GetSawmill("ime").Debug($"Editing: '{str}', start: {start}, len: {length}");
             SendEvent(new EventTextEditing(window, str, start, length));
         }
 

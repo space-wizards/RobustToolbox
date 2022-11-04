@@ -78,6 +78,10 @@ internal partial class Clyde
 
             SDL_AddEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
 
+            // SDL defaults to having text input enabled, so we have to manually turn it off in init for consistency.
+            // If we don't, text input will remain enabled *until* the user first leaves a LineEdit/TextEdit.
+            SDL_StopTextInput();
+
             return true;
         }
 

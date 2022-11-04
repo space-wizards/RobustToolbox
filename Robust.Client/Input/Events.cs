@@ -66,8 +66,11 @@ namespace Robust.Client.Input
     }
 
     /// <summary>
-    ///
+    /// Information about an in-progress IME composition.
     /// </summary>
+    /// <remarks>
+    /// https://wiki.libsdl.org/Tutorials-TextInput
+    /// </remarks>
     /// <param name="Text"></param>
     /// <param name="Start">The position in the composition at which the cursor should be placed. This is in runes, not chars.</param>
     /// <param name="Length">This is in runes, not chars.</param>

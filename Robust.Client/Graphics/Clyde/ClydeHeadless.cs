@@ -229,17 +229,17 @@ namespace Robust.Client.Graphics.Clyde
             return window;
         }
 
-        public void SetTextInputRect(UIBox2i rect)
+        public void TextInputSetRect(UIBox2i rect)
         {
             // Nada.
         }
 
-        public void StartTextInput()
+        public void TextInputStart()
         {
             // Nada.
         }
 
-        public void StopTextInput()
+        public void TextInputStop()
         {
             // Nada.
         }

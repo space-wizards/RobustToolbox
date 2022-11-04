@@ -439,9 +439,9 @@ internal partial class Clyde
             SendCmd(new CmdRunAction(a));
         }
 
-        public void SetTextInputRect(UIBox2i rect)
+        public void TextInputSetRect(UIBox2i rect)
         {
-            SendCmd(new CmdSetTextInputRect(new SDL_Rect
+            SendCmd(new CmdTextInputSetRect(new SDL_Rect
             {
                 x = rect.Left,
                 y = rect.Top,
@@ -450,15 +450,15 @@ internal partial class Clyde
             }));
         }
 
-        private static void WinThreadSetTextInputRect(CmdSetTextInputRect cmd)
+        private static void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
         {
-            var rect = cmd.Rect;
+            var rect = cmdTextInput.Rect;
             SDL_SetTextInputRect(ref rect);
         }
 
-        public void StartTextInput()
+        public void TextInputStart()
         {
-            SendCmd(CmdStartTextInput.Instance);
+            SendCmd(CmdTextInputStart.Instance);
         }
 
         private static void WinThreadStartTextInput()
@@ -466,9 +466,9 @@ internal partial class Clyde
             SDL_StartTextInput();
         }
 
-        public void StopTextInput()
+        public void TextInputStop()
         {
-            SendCmd(CmdStopTextInput.Instance);
+            SendCmd(CmdTextInputStop.Instance);
         }
 
         private static void WinThreadStopTextInput()

@@ -94,6 +94,9 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessEventChar(EventChar ev)
             {
+                if (!_textInputActive)
+                    return;
+
                 _clyde.SendText(new TextEventArgs(ev.CodePoint));
             }
 

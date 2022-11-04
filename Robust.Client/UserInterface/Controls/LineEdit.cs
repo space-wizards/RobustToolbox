@@ -756,7 +756,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Editable)
             {
-                _clyde.StartTextInput();
+                _clyde.TextInputStart();
             }
         }
 
@@ -766,7 +766,7 @@ namespace Robust.Client.UserInterface.Controls
 
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
 
-            _clyde.StopTextInput();
+            _clyde.TextInputStop();
             AbortIme(delete: false);
         }
 
@@ -1017,7 +1017,7 @@ namespace Robust.Client.UserInterface.Controls
                             contentBox.Right,
                             contentBox.Bottom);
 
-                        _master._clyde.SetTextInputRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
+                        _master._clyde.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
                     }
                 }
 

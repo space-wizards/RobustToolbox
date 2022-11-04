@@ -132,8 +132,28 @@ namespace Robust.Client.Graphics
 
         IClydeWindow CreateWindow(WindowCreateParameters parameters);
 
-        void SetTextInputRect(UIBox2i rect);
-        void StartTextInput();
-        void StopTextInput();
+        /// <summary>
+        /// Set the active text input area in window pixel coordinates.
+        /// </summary>
+        /// <param name="rect">
+        /// This information is used by the OS to position overlays like IMEs or emoji pickers etc.
+        /// </param>
+        void TextInputSetRect(UIBox2i rect);
+
+        /// <summary>
+        /// Indicate that the game should start accepting text input on the currently focused window.
+        /// </summary>
+        /// <remarks>
+        /// On some platforms, this will cause an on-screen keyboard to appear.
+        /// The game will also start accepting IME input if configured by the user.
+        /// </remarks>
+        /// <seealso cref="TextInputStop"/>
+        void TextInputStart();
+
+        /// <summary>
+        /// Stop text input, opposite of <see cref="TextInputStart"/>.
+        /// </summary>
+        /// <seealso cref="TextInputStart"/>
+        void TextInputStop();
     }
 }

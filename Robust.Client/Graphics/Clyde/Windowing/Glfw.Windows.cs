@@ -668,19 +668,23 @@ namespace Robust.Client.Graphics.Clyde
                 return (void*) GLFW.GetProcAddress(procName);
             }
 
-            public void SetTextInputRect(UIBox2i rect)
+            public void TextInputSetRect(UIBox2i rect)
             {
                 // Not supported on GLFW.
             }
 
-            public void StartTextInput()
+            public void TextInputStart()
             {
-                // Not supported on GLFW.
+                // Not properly supported on GLFW.
+
+                _textInputActive = true;
             }
 
-            public void StopTextInput()
+            public void TextInputStop()
             {
-                // Not supported on GLFW.
+                // Not properly supported on GLFW.
+
+                _textInputActive = false;
             }
 
             private void CheckWindowDisposed(WindowReg reg)

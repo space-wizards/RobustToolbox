@@ -1273,7 +1273,7 @@ public sealed class TextEdit : Control
                             drawBox.Right,
                             baseLine.Y + descent);
 
-                        _master._clyde.SetTextInputRect(box.Translated(GlobalPixelPosition));
+                        _master._clyde.TextInputSetRect(box.Translated(GlobalPixelPosition));
                     }
                 }
 
@@ -1345,7 +1345,7 @@ public sealed class TextEdit : Control
 
         if (Editable)
         {
-            _clyde.StartTextInput();
+            _clyde.TextInputStart();
         }
     }
 
@@ -1353,7 +1353,7 @@ public sealed class TextEdit : Control
     {
         base.KeyboardFocusExited();
 
-        _clyde.StopTextInput();
+        _clyde.TextInputStop();
         AbortIme(delete: false);
     }
 
@@ -1447,8 +1447,8 @@ public sealed class TextEdit : Control
         RightWord       =  1 << 3,
         Up              =  1 << 4,
         Down            =  1 << 5,
-        BeginOfLine           =  1 << 6,
-        EndOfLine             =  1 << 7,
+        BeginOfLine     =  1 << 6,
+        EndOfLine       =  1 << 7,
 
         ActionMask      = (1 << 16) - 1,
         SelectFlag      =  1 << 16,
@@ -1457,7 +1457,10 @@ public sealed class TextEdit : Control
     }
 }
 
-// To run these, you need a Command input keybinding for them.
+//
+// Debug commands for TextEdit.
+// They work on the active focused control, so you *need* to bind these to a key and press the key.
+//
 
 // bind F12 Command textedit_ropeviz
 internal sealed class TextEditRopeVizCommand : IConsoleCommand

@@ -48,7 +48,7 @@ namespace Robust.Server.Maps
 
             IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            if (context is MapSystem.MapSerializationContext serContext)
+            if (context is MapLoaderSystem.MapSerializationContext serContext)
             {
                 tileMap = serContext.TileMap;
             }
@@ -167,10 +167,10 @@ namespace Robust.Server.Maps
             }
 
             //TODO: Pass in options
-            if (context is not MapSystem.MapSerializationContext)
+            if (context is not MapLoaderSystem.MapSerializationContext)
             {
                 throw new InvalidOperationException(
-                    $"Someone tried serializing a mapgrid without passing {nameof(MapSystem.MapSerializationContext)} as context.");
+                    $"Someone tried serializing a mapgrid without passing {nameof(MapLoaderSystem.MapSerializationContext)} as context.");
             }
 
             if (grid == null) throw new NotImplementedException();

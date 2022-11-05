@@ -219,6 +219,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
+            container.Register<ITileDefinitionManager, TileDefinitionManager>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();

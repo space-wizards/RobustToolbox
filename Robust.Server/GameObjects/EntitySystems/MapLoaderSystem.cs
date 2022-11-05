@@ -28,8 +28,21 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.GameObjects;
 
-public sealed partial class MapSystem
+public sealed class MapLoaderSystem : EntitySystem
 {
+    /*
+     * Not a partial of MapSystem so we don't have to deal with additional test dependencies.
+     */
+
+    [Dependency] private readonly IComponentFactory _factory = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private readonly ISerializationManager _serManager = default!;
+    private          IServerEntityManagerInternal _serverEntityManager = default!;
+    [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
+    [Dependency] private readonly MetaDataSystem _meta = default!;
+
     private ISawmill _logLoader = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
@@ -38,8 +51,9 @@ public sealed partial class MapSystem
     private MapSerializationContext _context = default!;
     private Stopwatch _stopwatch = new();
 
-    private void InitializeLoader()
+    public override void Initialize()
     {
+        base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
         _context = new MapSerializationContext(_factory, EntityManager, _serManager);
@@ -154,13 +168,13 @@ public sealed partial class MapSystem
 
     public void SaveMap(MapId mapId, string ymlPath)
     {
-        if (!MapManager.MapExists(mapId))
+        if (!_mapManager.MapExists(mapId))
         {
             _logLoader.Error($"Unable to find map {mapId}");
             return;
         }
 
-        Save(MapManager.GetMapEntityId(mapId), ymlPath);
+        Save(_mapManager.GetMapEntityId(mapId), ymlPath);
     }
 
     #endregion
@@ -440,7 +454,7 @@ public sealed partial class MapSystem
         if (HasComp<MapComponent>(rootNode))
         {
             // If map exists swap out
-            if (MapManager.MapExists(data.TargetMap))
+            if (_mapManager.MapExists(data.TargetMap))
             {
                 if (data.Options.LoadMap)
                 {
@@ -448,7 +462,7 @@ public sealed partial class MapSystem
                 }
 
                 var oldRootUid = data.InitOrder[0];
-                var newRootUid = MapManager.GetMapEntityId(data.TargetMap);
+                var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
                 data.InitOrder[0] = newRootUid;
 
                 foreach (var ent in data.InitOrder)
@@ -461,20 +475,20 @@ public sealed partial class MapSystem
                     }
                 }
 
-                data.MapIsPostInit = MapManager.IsMapInitialized(data.TargetMap);
+                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
             }
             else
             {
                 // If we're loading a file with a map then swap out the entityuid
                 // TODO: Mapmanager nonsense
-                var AAAAA = MapManager.CreateMap(data.TargetMap);
+                var AAAAA = _mapManager.CreateMap(data.TargetMap);
 
                 if (!data.MapIsPostInit)
                 {
-                    MapManager.AddUninitializedMap(data.TargetMap);
+                    _mapManager.AddUninitializedMap(data.TargetMap);
                 }
 
-                MapManager.SetMapEntity(data.TargetMap, rootNode);
+                _mapManager.SetMapEntity(data.TargetMap, rootNode);
 
                 // Nothing should have invalid uid except for the root node.
             }
@@ -482,13 +496,13 @@ public sealed partial class MapSystem
         else
         {
             // No map file root, in that case create a new map / get the one we're loading onto.
-            var mapNode = MapManager.GetMapEntityId(data.TargetMap);
+            var mapNode = _mapManager.GetMapEntityId(data.TargetMap);
 
             if (!mapNode.IsValid())
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
-                MapManager.CreateMap(data.TargetMap);
-                mapNode = MapManager.GetMapEntityId(data.TargetMap);
+                _mapManager.CreateMap(data.TargetMap);
+                mapNode = _mapManager.GetMapEntityId(data.TargetMap);
                 DebugTools.Assert(mapNode.IsValid());
             }
 
@@ -508,7 +522,7 @@ public sealed partial class MapSystem
             }
         }
 
-        data.MapIsPaused = MapManager.IsMapPaused(data.TargetMap);
+        data.MapIsPaused = _mapManager.IsMapPaused(data.TargetMap);
         _logLoader.Debug($"Swapped out root node in {_stopwatch.Elapsed}");
     }
 
@@ -669,7 +683,7 @@ public sealed partial class MapSystem
         {
             metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
         }
-        else if (MapManager.IsMapInitialized(data.TargetMap))
+        else if (_mapManager.IsMapInitialized(data.TargetMap))
         {
             EntityManager.RunMapInit(uid, metadata);
 
@@ -720,7 +734,7 @@ public sealed partial class MapSystem
         meta.Add("author", "Space-Wizards");
 
         var xform = Transform(uid);
-        var isPostInit = MapManager.IsMapInitialized(xform.MapID);
+        var isPostInit = _mapManager.IsMapInitialized(xform.MapID);
 
         meta.Add("postmapinit", isPostInit ? "true" : "false");
     }

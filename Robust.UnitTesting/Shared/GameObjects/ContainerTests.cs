@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
@@ -303,7 +304,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 container.Insert(containeeEnt);
 
                 // save the map
-                var mapLoader = entMan.EntitySysManager.GetEntitySystem<MapSystem>();
+                var mapLoader = entMan.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
                 mapLoader.SaveMap(mapIdOne, "container_test.yml");
                 mapManager.DeleteMap(mapIdOne);
@@ -316,7 +317,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 var mapIdTwo = new MapId(2);
                 var mapManager = IoCManager.Resolve<IMapManager>();
-                var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapSystem>();
+                var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
 
                 // load the map
                 mapLoader.Load(mapIdTwo, "container_test.yml");

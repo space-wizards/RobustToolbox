@@ -71,8 +71,19 @@ public sealed class MapLoaderSystem : EntitySystem
             return null;
         }
 
-        DebugTools.Assert(grids.Count == 1);
-        return grids[0];
+        var actualGrids = new List<EntityUid>();
+        var gridQuery = GetEntityQuery<MapGridComponent>();
+
+        foreach (var ent in grids)
+        {
+            if (!gridQuery.HasComponent(ent))
+                continue;
+
+            actualGrids.Add(ent);
+        }
+
+        DebugTools.Assert(actualGrids.Count == 1);
+        return actualGrids[0];
     }
 
     [Obsolete("Use TryLoad")]
@@ -520,7 +531,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 var xform = xformQuery.GetComponent(ent);
 
-                if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(rootNode))
+                if (!xform.ParentUid.IsValid())
                 {
                     _transform.SetParent(xform, mapNode);
                 }
@@ -869,7 +880,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue;
 
             grid.GridIndex = index;
-            var entry = _serManager.WriteValue(grid, context: _context);
+            var entry = _serManager.WriteValue(grid.Grid, context: _context);
             grids.Add(entry);
             index++;
         }

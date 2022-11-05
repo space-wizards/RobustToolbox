@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -60,8 +60,6 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
 
 internal sealed class TestLog : LocalizedCommands
 {
-    public override string Command => "testlog";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 3)

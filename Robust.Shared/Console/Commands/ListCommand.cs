@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text;
 using Robust.Shared.Localization;
 
@@ -6,8 +6,6 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed class ListCommands : LocalizedCommands
 {
-    public override string Command => "list";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var filter = "";

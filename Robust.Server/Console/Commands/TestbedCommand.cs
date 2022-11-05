@@ -48,8 +48,6 @@ namespace Robust.Server.Console.Commands
     /// </summary>
     public sealed class TestbedCommand : LocalizedCommands
     {
-        public override string Command => "testbed";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)

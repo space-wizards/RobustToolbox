@@ -18,8 +18,6 @@ namespace Robust.Client.Console.Commands
 
     sealed class FillCommand : LocalizedCommands
     {
-        public override string Command => "fill";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             for (int x = 0; x < 50; x++)

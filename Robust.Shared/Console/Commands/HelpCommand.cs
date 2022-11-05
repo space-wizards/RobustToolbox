@@ -1,12 +1,10 @@
-﻿using System.Linq;
+using System.Linq;
 using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
 internal sealed class HelpCommand : LocalizedCommands
 {
-    public override string Command => "help";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         switch (args.Length)

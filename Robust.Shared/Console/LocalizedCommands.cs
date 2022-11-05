@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -10,8 +10,16 @@ public abstract class LocalizedCommands : IConsoleCommand
     [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
 
     /// <inheritdoc />
-    public abstract string Command { get; }
-
+    public virtual string Command
+    {
+        get
+        {
+            var className = GetType().Name;
+            if (className.EndsWith("Command") && className.Length > 7)
+                className = className.Substring(0, className.Length - 7);
+            return className.ToLowerInvariant();
+        }
+    }
     /// <inheritdoc />
     public virtual string Description => LocalizationManager.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
 

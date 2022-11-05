@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using Robust.Shared.Localization;
 using Robust.Shared.Utility;
@@ -7,8 +7,6 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed class GcCommand : LocalizedCommands
 {
-    public override string Command => "gc";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length == 0)
@@ -91,8 +89,6 @@ internal sealed class GcModeCommand : LocalizedCommands
 
 internal sealed class MemCommand : LocalizedCommands
 {
-    public override string Command => "mem";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var info = GC.GetGCMemoryInfo();

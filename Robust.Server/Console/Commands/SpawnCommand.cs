@@ -10,8 +10,6 @@ namespace Robust.Server.Console.Commands
 {
     public sealed class SpawnCommand : LocalizedCommands
     {
-        public override string Command => "spawn";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;

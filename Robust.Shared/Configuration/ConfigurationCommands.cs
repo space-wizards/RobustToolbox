@@ -11,8 +11,6 @@ namespace Robust.Shared.Configuration
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal sealed class CVarCommand : LocalizedCommands
     {
-        public override string Command => "cvar";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length is < 1 or > 2)

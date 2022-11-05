@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Console;
 using Robust.Shared.Utility;
@@ -13,8 +13,6 @@ namespace Robust.Client.Graphics.Clyde
 {
     public sealed class VramCommand : LocalizedCommands
     {
-        public override string Command => "vram";
-
         public override unsafe void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (!OperatingSystem.IsWindows())

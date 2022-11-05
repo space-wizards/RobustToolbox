@@ -9,8 +9,6 @@ namespace Robust.Server.Bql
 {
     public sealed class ForAllCommand : LocalizedCommands
     {
-        public override string Command => "forall";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)

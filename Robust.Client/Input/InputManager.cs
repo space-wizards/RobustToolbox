@@ -909,8 +909,6 @@ namespace Robust.Client.Input
     [UsedImplicitly]
     internal sealed class BindCommand : LocalizedCommands
     {
-        public override string Command => "bind";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)

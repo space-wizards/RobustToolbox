@@ -8,8 +8,6 @@ namespace Robust.Server.Console.Commands;
 
 public sealed class SpinCommand : LocalizedCommands
 {
-    public override string Command => "spin";
-
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length < 1)

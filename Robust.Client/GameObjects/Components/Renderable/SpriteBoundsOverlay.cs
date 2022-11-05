@@ -12,8 +12,6 @@ namespace Robust.Client.GameObjects
 {
     public sealed class ShowSpriteBBCommand : LocalizedCommands
     {
-        public override string Command => "showspritebb";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             EntitySystem.Get<SpriteBoundsSystem>().Enabled ^= true;

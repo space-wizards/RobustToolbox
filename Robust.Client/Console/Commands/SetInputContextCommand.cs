@@ -8,8 +8,6 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class SetInputContextCommand : LocalizedCommands
     {
-        public override string Command => "setinputcontext";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)

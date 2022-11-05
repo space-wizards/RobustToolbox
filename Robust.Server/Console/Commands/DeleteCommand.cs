@@ -7,8 +7,6 @@ namespace Robust.Server.Console.Commands
 {
     public sealed class DeleteCommand : LocalizedCommands
     {
-        public override string Command => "delete";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)

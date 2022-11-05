@@ -15,8 +15,6 @@ namespace Robust.Server.Console.Commands
 {
     sealed class AddMapCommand : LocalizedCommands
     {
-        public override string Command => "addmap";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
@@ -70,8 +68,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class SaveGridCommand : LocalizedCommands
     {
-        public override string Command => "savegrid";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
@@ -116,8 +112,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class LoadGridCommand : LocalizedCommands
     {
-        public override string Command => "loadgrid";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2 || args.Length == 3 || args.Length > 6)
@@ -200,8 +194,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class SaveMap : LocalizedCommands
     {
-        public override string Command => "savemap";
-
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
@@ -260,8 +252,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class LoadMap : LocalizedCommands
     {
-        public override string Command => "loadmap";
-
         public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
@@ -397,8 +387,6 @@ namespace Robust.Server.Console.Commands
 
     sealed class TpGridCommand : LocalizedCommands
     {
-        public override string Command => "tpgrid";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3 || args.Length > 4)

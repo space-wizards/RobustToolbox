@@ -12,7 +12,6 @@ namespace Robust.Server.Console.Commands;
 
 public sealed class ScaleCommand : LocalizedCommands
 {
-    public override string Command => "scale";
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)

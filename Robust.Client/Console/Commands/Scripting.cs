@@ -16,8 +16,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class WatchCommand : LocalizedCommands
     {
-        public override string Command => "watch";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             new WatchWindow().OpenCentered();

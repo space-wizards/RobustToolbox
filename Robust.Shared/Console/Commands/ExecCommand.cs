@@ -12,8 +12,6 @@ namespace Robust.Shared.Console.Commands
     {
         private static readonly Regex CommentRegex = new Regex(@"^\s*#");
 
-        public override string Command => "exec";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var res = IoCManager.Resolve<IResourceManager>();

@@ -33,8 +33,6 @@ namespace Robust.Client.Console.Commands
 {
     internal sealed class DumpEntitiesCommand : LocalizedCommands
     {
-        public override string Command => "dumpentities";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
@@ -49,9 +47,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GetComponentRegistrationCommand : LocalizedCommands
     {
-        public override string Command => "getcomponentregistration";
-
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
@@ -211,8 +206,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
-        public override string Command => "disconnect";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
@@ -431,8 +424,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
-        public override string Command => "guidump";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
@@ -503,8 +494,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class UITestCommand : LocalizedCommands
     {
-        public override string Command => "uitest";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var window = new DefaultWindow { MinSize = (500, 400) };
@@ -633,8 +622,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SetClipboardCommand : LocalizedCommands
     {
-        public override string Command => "setclipboard";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
@@ -644,8 +631,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GetClipboardCommand : LocalizedCommands
     {
-        public override string Command => "getclipboard";
-
         public override async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
@@ -655,8 +640,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleLight : LocalizedCommands
     {
-        public override string Command => "togglelight";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
@@ -667,8 +650,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleFOV : LocalizedCommands
     {
-        public override string Command => "togglefov";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IEyeManager>();
@@ -679,8 +660,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleHardFOV : LocalizedCommands
     {
-        public override string Command => "togglehardfov";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
@@ -691,8 +670,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleShadows : LocalizedCommands
     {
-        public override string Command => "toggleshadows";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
@@ -703,8 +680,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleLightBuf : LocalizedCommands
     {
-        public override string Command => "togglelightbuf";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
@@ -715,8 +690,6 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ChunkInfoCommand : LocalizedCommands
     {
-        public override string Command => "chunkinfo";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mapMan = IoCManager.Resolve<IMapManager>();

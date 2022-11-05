@@ -143,7 +143,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class ListPlayers : LocalizedCommands
     {
-        public override string Command => "listplayers";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             // Player: number of people connected and their byond keys

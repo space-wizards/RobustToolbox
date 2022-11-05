@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
@@ -9,8 +9,6 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class LsMonitorCommand : LocalizedCommands
     {
-        public override string Command => "lsmonitor";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();
@@ -26,8 +24,6 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class MonitorInfoCommand : LocalizedCommands
     {
-        public override string Command => "monitorinfo";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
@@ -52,8 +48,6 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class SetMonitorCommand : LocalizedCommands
     {
-        public override string Command => "setmonitor";
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();

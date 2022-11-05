@@ -170,9 +170,6 @@ public sealed partial class SerializationManager
 
         if (value == null) return NullNode();
 
-        if (value is ISerializationHooks serHook)
-            serHook.BeforeSerialization();
-
         return GetOrCreateWriteDelegate(underlyingType)(value, alwaysWrite, context);
     }
 }

@@ -90,7 +90,20 @@ public sealed class MapLoaderSystem : EntitySystem
     public IReadOnlyList<EntityUid> LoadMap(MapId mapId, string path, MapLoadOptions? options = null)
     {
         if (TryLoad(mapId, path, out var grids, options))
-            return grids;
+        {
+            var actualGrids = new List<EntityUid>();
+            var gridQuery = GetEntityQuery<MapGridComponent>();
+
+            foreach (var ent in grids)
+            {
+                if (!gridQuery.HasComponent(ent))
+                    continue;
+
+                actualGrids.Add(ent);
+            }
+
+            return actualGrids;
+        }
 
         DebugTools.Assert(false);
         return new List<EntityUid>();
@@ -880,7 +893,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue;
 
             grid.GridIndex = index;
-            var entry = _serManager.WriteValue(grid.Grid, context: _context);
+            var entry = _serManager.WriteValue((MapGrid) grid.Grid, context: _context);
             grids.Add(entry);
             index++;
         }

@@ -42,6 +42,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -467,14 +468,18 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 foreach (var ent in data.InitOrder)
                 {
+                    if (ent == newRootUid)
+                        continue;
+
                     var xform = xformQuery.GetComponent(ent);
 
                     if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
                     {
-                        xform.AttachParent(newRootUid);
+                        _transform.SetParent(xform, newRootUid);
                     }
                 }
 
+                Del(oldRootUid);
                 data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
             }
             else
@@ -517,7 +522,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(rootNode))
                 {
-                    xform.AttachParent(mapNode);
+                    _transform.SetParent(xform, mapNode);
                 }
             }
         }
@@ -542,7 +547,6 @@ public sealed class MapLoaderSystem : EntitySystem
 
         // get ents that the grids will bind to
         var gridComps = new MapGridComponent[yamlGrids.Count];
-
         var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
 
         // linear search for new grid comps
@@ -613,6 +617,8 @@ public sealed class MapLoaderSystem : EntitySystem
         DebugTools.Assert(data.Entities.Count == data.InitOrder.Count);
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var rootEntity = data.InitOrder[0];
+        var mapQuery = GetEntityQuery<MapComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
 
         // If the root node is a map that's already existing don't bother with it.
         // If we're loading a grid then the map is already started up elsewhere in which case this
@@ -620,16 +626,40 @@ public sealed class MapLoaderSystem : EntitySystem
         if (MetaData(rootEntity).EntityLifeStage < EntityLifeStage.Initialized)
         {
             StartupEntity(rootEntity, metaQuery.GetComponent(rootEntity), data);
+
+            if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
+            {
+                xform.LocalPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                xform.LocalRotation += data.Options.Rotation;
+            }
         }
 
-        // TODO: For anything that's a root entity apply the transform adjustments.
+        var isRoot = true;
+
         for (var i = 1; i < data.InitOrder.Count; i++)
         {
             var entity = data.InitOrder[i];
+
+            if (isRoot && xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
+            {
+                // Don't want to trigger events
+                xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                xform._localRotation += data.Options.Rotation;
+            }
+            else
+            {
+                isRoot = false;
+            }
+
             StartupEntity(entity, metaQuery.GetComponent(entity), data);
         }
 
         _logLoader.Debug($"Started up {data.InitOrder.Count} entities in {_stopwatch.Elapsed}");
+    }
+
+    private bool IsRoot(TransformComponent xform, EntityQuery<MapComponent> mapQuery)
+    {
+        return !xform.ParentUid.IsValid() || mapQuery.HasComponent(xform.ParentUid);
     }
 
     private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)

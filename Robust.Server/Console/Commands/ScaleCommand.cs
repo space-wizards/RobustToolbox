@@ -10,12 +10,10 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
-public sealed class ScaleCommand : IConsoleCommand
+public sealed class ScaleCommand : LocalizedCommands
 {
-    public string Command => "scale";
-    public string Description => "Increases or decreases an entity's size naively";
-    public string Help => $"{Command} <entityUid> <float>";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "scale";
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)
         {

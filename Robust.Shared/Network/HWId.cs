@@ -33,13 +33,11 @@ namespace Robust.Shared.Network
     }
 
 #if DEBUG
-    internal sealed class HwidCommand : IConsoleCommand
+    internal sealed class HwidCommand : LocalizedCommands
     {
-        public string Command => "hwid";
-        public string Description => "Returns the current HWID.";
-        public string Help => "Returns the current HWID.";
+        public override string Command => "hwid";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             shell.WriteLine(Convert.ToBase64String(HWId.Calc(), Base64FormattingOptions.None));
         }

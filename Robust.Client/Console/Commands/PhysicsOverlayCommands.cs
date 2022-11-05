@@ -6,13 +6,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class PhysicsOverlayCommands : IConsoleCommand
+    public sealed class PhysicsOverlayCommands : LocalizedCommands
     {
-        public string Command => "physics";
-        public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
-        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / distance / joints / shapeinfo / shapes>";
+        public override string Command => "physics";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -56,7 +54,7 @@ namespace Robust.Client.Console.Commands
             return;
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length != 1) return CompletionResult.Empty;
 

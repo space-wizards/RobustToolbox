@@ -27,27 +27,54 @@ Template for new versions:
 
 -->
 
-## Master
+## 0.61.0.0
 
 ### Breaking changes
 
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-*None yet*
+* IMap and IMapGrid have been removed. Just use the associated components directly.
 
 ### Other
 
-*None yet*
+* AudioSystem has been refactored.
+
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
 
 ### Internal
 
-*None yet*
+* Removed redundant grid-init physics logic 
+* Modified garbage collection for entity spawning profiling.
+
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
 
 ## 0.58.1.1
 

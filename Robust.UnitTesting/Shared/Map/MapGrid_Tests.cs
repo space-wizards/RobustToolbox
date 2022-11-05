@@ -48,15 +48,17 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsExpansion()
         {
             var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, 8);
-            grid.WorldPosition = new Vector2(3, 5);
+            var gridXform = entMan.GetComponent<TransformComponent>(grid.GridEntityId);
+            gridXform.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
-            var bounds = grid.WorldAABB;
+            var bounds = gridXform.WorldMatrix.TransformBox(grid.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -72,17 +74,20 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsContract()
         {
             var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, 8);
-            grid.WorldPosition = new Vector2(3, 5);
+            var gridXform = entMan.GetComponent<TransformComponent>(grid.GridEntityId);
+
+            gridXform.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
 
             grid.SetTile(new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = grid.WorldAABB;
+            var bounds = gridXform.WorldMatrix.TransformBox(grid.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));

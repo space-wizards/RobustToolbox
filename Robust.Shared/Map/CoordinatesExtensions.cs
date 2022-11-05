@@ -46,12 +46,15 @@ namespace Robust.Shared.Map
                 IMapGrid? closest = null;
                 var distance = float.PositiveInfinity;
                 var intersect = new Box2();
+                var xformQuery = entityManager.GetEntityQuery<TransformComponent>();
+
                 foreach (var grid in gridsInArea)
                 {
+                    var gridXform = xformQuery.GetComponent(grid.GridEntityId);
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
+                    var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.LocalAABB));
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)

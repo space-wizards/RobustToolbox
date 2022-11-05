@@ -430,13 +430,15 @@ namespace Robust.Server.Console.Commands
             var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : grid.ParentMapId;
+                var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
-                grid.ParentMapId = mapId;
-                grid.WorldPosition = new Vector2(xpos, ypos);
+                gridXform.Coordinates =
+                    new EntityCoordinates(mapManager.GetMapEntityId(mapId), new Vector2(xpos, ypos));
 
                 shell.WriteLine("Grid was teleported.");
             }

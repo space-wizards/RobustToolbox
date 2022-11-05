@@ -54,8 +54,14 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveGrid(EntityUid gridId, string yamlPath)
         {
+
             var grid = _mapManager.GetGrid(gridId);
 
+            // Dont save grid fixtures.
+            if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+            {
+                fixtures.SerializedFixtureData = new(); // empty list.
+            }
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
             context.RegisterGrid(grid);
             var root = context.Serialize();
@@ -164,6 +170,11 @@ namespace Robust.Server.Maps
 
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
+                // Dont save grid fixtures.
+                if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+                {
+                    fixtures.SerializedFixtureData = new(); // empty list.
+                }
                 context.RegisterGrid(grid);
             }
 
@@ -473,7 +484,7 @@ namespace Robust.Server.Maps
                     gridFixtures.EnsureGrid(grid.GridEntityId);
                     gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
-                    fixtures.SerializedFixtures.Clear();
+                    fixtures.SerializedFixtureData = null;
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
@@ -895,7 +906,9 @@ namespace Robust.Server.Maps
                 //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
-                    if (_mapManager.IsMapInitialized(grid.ParentMapId))
+                    var mapId = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId).MapID;
+
+                    if (_mapManager.IsMapInitialized(mapId))
                     {
                         isPostInit = true;
                         break;

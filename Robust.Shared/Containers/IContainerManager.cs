@@ -28,8 +28,6 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
         /// destination is not null</param>
-        /// <param name="addToBroadphase">If false, this entity will not get re-added to broadphases after removal
-        /// Useful if the entity is about to move or be re-inserted into another container.</param>
         /// <param name="force">If true, this will not perform can-remove checks.</param>
         /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
         /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
@@ -39,7 +37,6 @@ namespace Robust.Shared.Containers
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
             bool reparent = true,
-            bool addToBroadphase = true,
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null);

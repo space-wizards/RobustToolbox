@@ -24,9 +24,5 @@ namespace Robust.Client.Graphics
         /// This is useful to prevent players messing with lighting setup when they shouldn't.
         /// </summary>
         bool LockConsoleAccess { get; set; }
-        /// <summary>
-        /// Ambient light. This is in linear-light, i.e. when providing a fixed colour, you must use Color.FromSrgb(Color.Black)!
-        /// </summary>
-        Color AmbientLightColor { get; set; }
     }
 }

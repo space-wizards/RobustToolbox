@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Map;
 
-public struct AnchoredEntitiesEnumerator
+public struct AnchoredEntitiesEnumerator : IDisposable
 {
     // ReSharper disable once CollectionNeverUpdated.Local
     private static readonly List<EntityUid> Dummy = new();
@@ -27,5 +28,10 @@ public struct AnchoredEntitiesEnumerator
 
         uid = _enumerator.Current;
         return true;
+    }
+
+    public void Dispose()
+    {
+        _enumerator.Dispose();
     }
 }

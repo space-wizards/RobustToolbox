@@ -1,7 +1,5 @@
-namespace Robust.Shared.Audio
+namespace Robust.Shared.Audio;
+public interface IPlayingAudioStream
 {
-    public interface IPlayingAudioStream
-    {
-        void Stop();
-    }
+    void Stop();
 }

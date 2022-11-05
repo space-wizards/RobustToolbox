@@ -16,8 +16,6 @@ namespace Robust.Client.GameObjects
 
             RegisterClass<MetaDataComponent>();
             RegisterClass<TransformComponent>();
-            RegisterClass<MapComponent>();
-            RegisterClass<MapGridComponent>();
             RegisterClass<PhysicsComponent>();
             RegisterClass<CollisionWakeComponent>();
             RegisterClass<ClientUserInterfaceComponent>();

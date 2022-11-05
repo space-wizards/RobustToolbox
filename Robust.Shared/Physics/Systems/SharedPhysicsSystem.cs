@@ -85,7 +85,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
         {
-            SetCanCollide(component, false);
+            SetCanCollide(component, false, false);
             DebugTools.Assert(!component.Awake);
         }
 
@@ -116,9 +116,11 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            foreach (var component in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+            while (enumerator.MoveNext(out var comp))
             {
-                component.AutoClearForces = value;
+                comp.AutoClearForces = value;
             }
         }
 
@@ -306,8 +308,9 @@ namespace Robust.Shared.Physics.Systems
         {
             var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateBeforeSolve);
+            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
 
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            while (enumerator.MoveNext(out var comp))
             {
                 comp.Step(deltaTime, prediction);
             }
@@ -315,14 +318,16 @@ namespace Robust.Shared.Physics.Systems
             var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateAfterSolve);
 
+            // Enumerator reset
+            enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
             // Go through and run all of the deferred events now
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            while (enumerator.MoveNext(out var comp))
             {
                 comp.ProcessQueue();
             }
 
             _traversal.ProcessMovement();
-
             _physicsManager.ClearTransforms();
         }
 

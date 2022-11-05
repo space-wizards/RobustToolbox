@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
@@ -338,7 +339,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // If this map has lighting disabled, return
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            if (!_entityManager.GetComponent<IMapComponent>(mapUid).LightingEnabled)
+            if (!_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
             {
                 return;
             }
@@ -396,7 +397,7 @@ namespace Robust.Client.Graphics.Clyde
 
             BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             CheckGlError();
-            GLClearColor(_lightManager.AmbientLightColor);
+            GLClearColor(_entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ?? MapLightComponent.DefaultColor);
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);

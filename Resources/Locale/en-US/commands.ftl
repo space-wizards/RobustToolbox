@@ -8,6 +8,7 @@ cmd-parse-failure-integer = {$arg} is not a valid integer.
 cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
 cmd-parse-failure-uid = {$arg} is not a valid entity UID.
+cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
 
@@ -127,6 +128,11 @@ cmd-monitor-arg-count = Missing monitor argument
 cmd-monitor-minus-all-hint = Hides all monitors
 cmd-monitor-plus-all-hint = Shows all monitors
 
+
+## 'setambientlight' command
+cmd-set-ambient-light-desc = Allows you to set the ambient light for the specified map, in SRGB.
+cmd-set-ambient-light-help = setambientlight [mapid] [r g b a]
+cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
 
 ## Mapping commands
 

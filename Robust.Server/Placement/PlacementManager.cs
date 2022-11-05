@@ -168,7 +168,7 @@ namespace Robust.Server.Placement
             foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<IMapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
+                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<MapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
                 _entityManager.DeleteEntity(entity);
             }

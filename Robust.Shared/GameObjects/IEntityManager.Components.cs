@@ -376,6 +376,42 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
+        AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
+            where TComp1 : Component;
+
+        AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : Component
+            where TComp2 : Component;
+
+        AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component;
+
+        AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+            where TComp4 : Component;
+
+        EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
+            where TComp1 : Component;
+
+        EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : Component
+            where TComp2 : Component;
+
+        EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component;
+
+        EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+            where TComp4 : Component;
+
         /// <summary>
         ///     Returns ALL component instances of a specified type.
         /// </summary>

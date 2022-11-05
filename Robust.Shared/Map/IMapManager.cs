@@ -128,8 +128,6 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
-        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
-
         void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
 
         void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback);
@@ -190,7 +188,7 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        IMapGridComponent GetGridComp(EntityUid euid);
+        MapGridComponent GetGridComp(EntityUid euid);
 
         //
         // Pausing functions
@@ -204,12 +202,6 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapPaused(MapId mapId);
-
-        [Pure]
-        bool IsGridPaused(IMapGrid grid);
-
-        [Pure]
-        bool IsGridPaused(EntityUid gridId);
 
         [Pure]
         bool IsMapInitialized(MapId mapId);

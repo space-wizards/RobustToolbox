@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
@@ -19,6 +20,7 @@ namespace Robust.Shared.Physics.Systems
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
@@ -86,8 +88,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (body.CanCollide)
             {
-                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-                _lookup.CreateProxies(fixture, worldPos, worldRot);
+                _lookup.CreateProxies(xform, fixture);
             }
 
             // Supposed to be wrapped in density but eh
@@ -204,19 +205,15 @@ namespace Robust.Shared.Physics.Systems
                 {
                     physicsMap.ContactManager.Destroy(contact);
                 }
-            }
 
-            if (body.CanCollide)
-            {
-                _lookup.DestroyProxies(fixture, xform);
+                if (body.CanCollide && xform.GridUid != xform.Owner)
+                {
+                    _lookup.DestroyProxies(fixture, xform, physicsMap);
+                }
             }
 
             if (updates)
-            {
                 FixtureUpdate(manager, body);
-                _physics.ResetMassData(body, manager);
-                Dirty(manager);
-            }
         }
 
         #endregion
@@ -227,9 +224,8 @@ namespace Robust.Shared.Physics.Systems
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        internal void OnPhysicsInit(EntityUid uid)
+        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component)
         {
-            var component = EntityManager.EnsureComponent<FixturesComponent>(uid);
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
             foreach (var fixture in component.SerializedFixtures)
@@ -242,7 +238,7 @@ namespace Robust.Shared.Physics.Systems
                 // Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
-            component.SerializedFixtures.Clear();
+            component.SerializedFixtureData = null;
 
             // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
@@ -276,62 +272,47 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            component.SerializedFixtures.Clear();
+            component.SerializedFixtureData = null;
             var toAddFixtures = new ValueList<Fixture>();
             var toRemoveFixtures = new ValueList<Fixture>();
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new Fixture[state.Fixtures.Length];
+            var newFixtures = new Dictionary<string, Fixture>(state.Fixtures.Length);
+
             for (var i = 0; i < state.Fixtures.Length; i++)
             {
                 var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixture.Body = physics;
-                newFixtures[i] = newFixture;
+                newFixtures.Add(newFixture.ID, newFixture);
             }
 
+            TransformComponent? xform = null;
+
             // Add / update new fixtures
-            foreach (var fixture in newFixtures)
+            foreach (var (id, fixture) in newFixtures)
             {
-                var found = false;
-
-                foreach (var (_, existing) in component.Fixtures)
+                if (component.Fixtures.TryGetValue(id, out var existing))
                 {
-                    if (!fixture.ID.Equals(existing.ID)) continue;
-
-                    if (!fixture.Equals(existing))
+                    if (!existing.Equivalent(fixture))
                     {
-                        toAddFixtures.Add(fixture);
-                        toRemoveFixtures.Add(existing);
+                        fixture.CopyTo(existing);
+                        computeProperties = true;
+                        _broadphase.Refilter(existing, xform);
                     }
-
-                    found = true;
-                    break;
                 }
-
-                if (!found)
+                else
                 {
                     toAddFixtures.Add(fixture);
                 }
             }
 
             // Remove old fixtures
-            foreach (var (_, existing) in component.Fixtures)
+            foreach (var (existingId, existing) in component.Fixtures)
             {
-                var found = false;
-
-                foreach (var fixture in newFixtures)
-                {
-                    if (fixture.ID.Equals(existing.ID))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
+                if (!newFixtures.ContainsKey(existingId))
                 {
                     toRemoveFixtures.Add(existing);
                 }
@@ -340,7 +321,7 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
-                DestroyFixture(physics, fixture);
+                DestroyFixture(physics, fixture, false);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
@@ -349,12 +330,12 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
-                CreateFixture(physics, fixture);
+                CreateFixture(physics, fixture, false);
             }
 
             if (computeProperties)
             {
-                _physics.ResetMassData(physics, component);
+                FixtureUpdate(component, physics);
             }
         }
 
@@ -437,6 +418,9 @@ namespace Robust.Shared.Physics.Systems
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
+            if (component.FixtureCount == 0)
+                _physics.SetCanCollide(body, false);
+
             if (dirty)
                 Dirty(component);
         }

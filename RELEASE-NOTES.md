@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
 
 ### Other
 
@@ -27,33 +27,105 @@ Template for new versions:
 
 -->
 
-## Master
+## 0.61.0.0
 
 ### Breaking changes
 
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-*None yet*
+* IMap and IMapGrid have been removed. Just use the associated components directly.
 
 ### Other
 
-*None yet*
+* AudioSystem has been refactored.
+
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
 
 ### Internal
 
-*None yet*
+* Removed redundant grid-init physics logic 
+* Modified garbage collection for entity spawning profiling.
+
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
+
+## 0.58.1.1
+
+### Bugfixes
+
+* Fixed some container shutdown errors
+* Fixed LookupFlags.Static not acting as a full replacement for LookupFlags.Anchored
+
+## 0.58.1.0
+
+### Other
+
+* Physics collision changed and body type changed events no longer get raised before initialisation
+
+## 0.58.0.0
+
+### Breaking changes
+
+* Some TransformComponent functions have been moved to the system.
+* Container insert, remove, and shutdown function arguments and functionality has changed.
+* Physics entities without fixtures now automatically disable collision.
+
+### New features
+
+* Added command to profile entity spawning
+
+### Bugfixes
+
+* EntityLookup/BroadphaseComponent tracking has been overhauled, which should hopefully fix various broadphase bugs.
+
+### Other
+
+* Component.Owner is now marked as obsolete.
+
+## 0.57.0.4
+
+### Bugfixes
+
+* Made entity deletion more resilient against exceptions. Should fix several bugs.
+
+## 0.57.0.2 and 0.57.0.3
+
+### Bugfixes
+
+* Fixed more entity-lookup bugs.
 
 ## 0.57.0.1
 
 ### Bugfixes
 
-* Fixed entity lookup bug that was causing crashes.  
+* Fixed entity lookup bug that was causing crashes.
 
 ### 0.57.0.0
 
@@ -96,7 +168,7 @@ Template for new versions:
 
 * The ordering of component removals and shutdowns during entity deltion has changed (see #3355).
 * Improved Box2Serializer
-* Removed uses IEnumerables from EntityLookupSystem. 
+* Removed uses IEnumerables from EntityLookupSystem.
 * Optimized client entity spawning by 15%.
 * Modified how the rendering tree handles entity movement.
 * Improved grid enumeration allocs.

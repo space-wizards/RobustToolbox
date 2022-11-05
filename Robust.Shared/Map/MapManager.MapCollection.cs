@@ -70,10 +70,6 @@ internal partial class MapManager
             MapDestroyed?.Invoke(this, args);
             _mapEntities.Remove(mapId);
         }
-        else
-        {
-            _mapEntities[mapId] = EntityUid.Invalid;
-        }
 
         Logger.InfoS("map", $"Deleting map {mapId}");
     }
@@ -93,6 +89,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public EntityUid CreateNewMapEntity(MapId mapId)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -146,8 +143,6 @@ internal partial class MapManager
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
             EntityManager.DeleteEntity(oldEntId);
         }
-        else
-            _mapEntities.Add(mapId, EntityUid.Invalid);
 
         var raiseEvent = false;
 
@@ -216,7 +211,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapComponent>(uid);
+        return EntityManager.HasComponent<MapComponent>(uid);
     }
 
     /// <inheritdoc />
@@ -251,7 +246,7 @@ internal partial class MapManager
         {
             var mapComps = EntityManager.EntityQuery<MapComponent>(true);
 
-            IMapComponent? result = null;
+            MapComponent? result = null;
             foreach (var mapComp in mapComps)
             {
                 if (mapComp.WorldMap != actualId)
@@ -273,14 +268,11 @@ internal partial class MapManager
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
                 mapComp.WorldMap = actualId;
+                EntityManager.Dirty(mapComp);
                 EntityManager.InitializeComponents(newEnt);
                 EntityManager.StartComponents(newEnt);
                 Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt}");
             }
-        }
-        else
-        {
-            _mapEntities.Add(MapId.Nullspace, EntityUid.Invalid);
         }
 
         var args = new MapEventArgs(actualId);

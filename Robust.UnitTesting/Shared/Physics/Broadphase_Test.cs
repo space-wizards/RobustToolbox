@@ -82,14 +82,14 @@ public sealed class Broadphase_Test
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));
         Assert.That(child2Xform.ParentUid, Is.EqualTo(child1));
 
-        Assert.That(lookup.GetBroadphase(parent), Is.EqualTo(gridBroadphase));
-        Assert.That(lookup.GetBroadphase(child1), Is.EqualTo(gridBroadphase));
+        Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(gridBroadphase));
+        Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(gridBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         grid.SetTile(Vector2i.Zero, Tile.Empty);
-        Assert.That(lookup.GetBroadphase(parent), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child1), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
     }
 
     /// <summary>
@@ -129,22 +129,22 @@ public sealed class Broadphase_Test
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));
         Assert.That(child2Xform.ParentUid, Is.EqualTo(child1));
 
-        Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         xformSystem.DetachParentToNull(parentXform);
-        Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(null));
-        Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(null));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(null));
 
         // Can't assert CanCollide because they may still want to be valid when coming out of nullspace.
 
         // Check it goes back to normal
         parentXform.AttachParent(mapUid);
-        Assert.That(lookup.GetBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.GetBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
     }
 }

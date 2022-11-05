@@ -134,14 +134,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
         foreach (var (index, tick) in _removalBuffer)
         {
-            //changes dont need to be computed if we are removing the index anyways
-            if (_changedIndices.Remove(index) && !_indexLocations.ContainsKey(index))
-            {
-                //this index wasnt added yet, so we can safely just skip the deletion
-                continue;
-            }
-
+            _changedIndices.Remove(index);
             var location = RemoveIndexInternal(index);
+            if (location == null)
+                continue;
+            
             if(location is GridChunkLocation or MapChunkLocation)
                 _dirtyChunks.Add((IChunkIndexLocation) location);
             _deletionHistory.Add((tick, index));
@@ -230,7 +227,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     private IIndexLocation? RemoveIndexInternal(TIndex index)
     {
         // the index might be gone due to disconnects/grid-/map-deletions
-        if (!_indexLocations.TryGetValue(index, out var location))
+        if (!_indexLocations.Remove(index, out var location))
             return null;
         // since we can find the index, we can assume the dicts will be there too & dont need to do any checks. gaming.
         switch (location)
@@ -248,8 +245,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Remove(index);
                 break;
         }
-
-        _indexLocations.Remove(index);
         return location;
     }
 

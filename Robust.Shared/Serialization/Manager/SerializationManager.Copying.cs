@@ -199,8 +199,7 @@ public sealed partial class SerializationManager
         return type.IsPrimitive ||
                type.IsEnum ||
                type == typeof(string) ||
-               _copyByRefRegistrations.Contains(type) ||
-               type.IsValueType;
+               _copyByRefRegistrations.Contains(type);
     }
 
     private bool CopyToInternal<TCommon>(
@@ -220,7 +219,7 @@ public sealed partial class SerializationManager
         }
 
         Type type;
-        if (typeof(TCommon).IsAbstract || typeof(TCommon).IsInterface)
+        if (typeof(TCommon).IsAbstract || typeof(TCommon).IsInterface) //todo paul can be precomputed
         {
             type = source.GetType();
             definition ??= GetDefinition(source.GetType());
@@ -230,7 +229,7 @@ public sealed partial class SerializationManager
             type = typeof(TCommon);
         }
 
-        if (ShouldReturnSource(type))
+        if (ShouldReturnSource(type)) //todo paul can be precomputed
         {
             target = source;
             return true;
@@ -242,7 +241,7 @@ public sealed partial class SerializationManager
             return true;
         }
 
-        if (type.IsArray)
+        if (type.IsArray) //todo paul can be precomputed
         {
             var sourceArray = (source as Array)!;
             var targetArray = (target as Array)!;

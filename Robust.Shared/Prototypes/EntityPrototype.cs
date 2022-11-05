@@ -320,18 +320,8 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public sealed class ComponentRegistryEntry
-        {
-            public readonly IComponent Component;
-            // Mapping is just a quick reference to speed up entity creation.
-            public readonly MappingDataNode Mapping;
-
-            public ComponentRegistryEntry(IComponent component, MappingDataNode mapping)
-            {
-                Component = component;
-                Mapping = mapping;
-            }
-        }
+        [DataRecord]
+        public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
         public sealed class EntityPlacementProperties

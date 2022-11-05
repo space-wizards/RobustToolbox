@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Manager.Exceptions;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
@@ -15,7 +17,7 @@ public sealed partial class SerializationManager
             bool skipHook,
             ISerializationContext? context = null);
 
-    private delegate void CopyToGenericDelegate<T>(
+    private delegate bool CopyToGenericDelegate<T>(
         T source,
         ref T target,
         ISerializationContext? context = null,
@@ -75,14 +77,17 @@ public sealed partial class SerializationManager
                 {
                     var copierConstant = Expression.Constant(copier, typeof(ITypeCopier<>).MakeGenericType(t));
 
-                    call = Expression.Call(
-                        copierConstant,
-                        typeof(ITypeCopier<>).MakeGenericType(t).GetMethod("CopyTo")!,
-                        instanceParam,
-                        sourceParam,
-                        targetParam,
-                        skipHookParam,
-                        contextParam);
+                    call = Expression.Block(
+                        Expression.Call(
+                            copierConstant,
+                            typeof(ITypeCopier<>).MakeGenericType(t).GetMethod("CopyTo")!,
+                            instanceParam,
+                            sourceParam,
+                            targetParam,
+                            skipHookParam,
+                            contextParam),
+                        Expression.Constant(true)
+                    );
                 }
                 else
                 {
@@ -198,7 +203,7 @@ public sealed partial class SerializationManager
                type.IsValueType;
     }
 
-    private void CopyToInternal<TCommon>(
+    private bool CopyToInternal<TCommon>(
         TCommon source,
         ref TCommon target,
         DataDefinition? definition,
@@ -228,7 +233,13 @@ public sealed partial class SerializationManager
         if (ShouldReturnSource(type))
         {
             target = source;
-            return;
+            return true;
+        }
+
+        if (source is DataNode node)
+        {
+            target = (TCommon)(object)node.Copy();
+            return true;
         }
 
         if (type.IsArray)
@@ -253,16 +264,17 @@ public sealed partial class SerializationManager
 
             //todo paul serv3 fix
             target = (TCommon)(object)newArray;
-            return;
+            return true;
         }
 
         if (definition == null)
         {
-            throw new ArgumentException($"No data definition found for type {type} when running CopyTo");
+            return false;
         }
 
         var targetObj = (object)target!;
         definition.CopyTo(source!, ref targetObj, serializationManager, context);
+        return true;
     }
 
     private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook, DataDefinition? definition) where T : notnull
@@ -281,10 +293,16 @@ public sealed partial class SerializationManager
         if (ShouldReturnSource(type))
             return source;
 
+        if (source is DataNode node)
+            return (T)(object)node.Copy();
+
         var isRecord = definition?.IsRecord ?? false;
         var target = (T) GetOrCreateInstantiator(type, isRecord)();
 
-        CopyTo(source, ref target, context, skipHook);
+        if (!GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context, skipHook))
+        {
+            throw new CopyToFailedException<T>();
+        }
         return target!;
     }
 
@@ -324,12 +342,12 @@ public sealed partial class SerializationManager
             return;
         }
 
-        //this should be here but is commented out bc it breaks atmos. it should work for now bc nothing relies on this
-        //im keeping it commented out bc i plan on nuking hooks next anyways
-        //if(source is ISerializationHooks hooks)
-        //    hooks.BeforeSerialization();
-        GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context, skipHook);
-        if(target is ISerializationHooks hookres)
+        if (!GetOrCreateCopyToGenericDelegate<T>()(source, ref target, context))
+        {
+            target = CreateCopy(source, context);
+        }
+
+        if(!skipHook && target is ISerializationHooks hookres)
             hookres.AfterDeserialization();
     }
 
@@ -345,6 +363,12 @@ public sealed partial class SerializationManager
     {
         if (source == null) return default!;
 
-        return GetOrCreateCreateCopyGenericDelegate<T>()(source, skipHook, context);
+        var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, skipHook, context);
+        if (!skipHook && res is ISerializationHooks hooks)
+        {
+            hooks.AfterDeserialization();
+        }
+
+        return res;
     }
 }

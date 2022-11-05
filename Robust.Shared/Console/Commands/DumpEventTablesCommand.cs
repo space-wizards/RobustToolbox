@@ -44,7 +44,7 @@ internal sealed class DumpEventTablesCommand : LocalizedCommands
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
             return CompletionResult.FromHint(Loc.GetString("cmd-dump_event_tables-arg-entity"));

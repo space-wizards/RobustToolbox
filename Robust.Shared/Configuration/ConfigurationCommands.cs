@@ -60,7 +60,7 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             var cfg = IoCManager.Resolve<IConfigurationManager>();
             if (args.Length == 1)

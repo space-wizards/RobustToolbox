@@ -24,7 +24,7 @@ internal sealed class GcCommand : LocalizedCommands
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
             return CompletionResult.FromHint(Loc.GetString("cmd-gc-arg-generation"));
@@ -76,7 +76,7 @@ internal sealed class GcModeCommand : LocalizedCommands
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {

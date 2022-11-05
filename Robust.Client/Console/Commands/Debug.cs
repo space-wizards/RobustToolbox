@@ -96,7 +96,7 @@ namespace Robust.Client.Console.Commands
     {
         public override string Command => "monitor";
 
-        public string Help
+        public override string Help
         {
             get
             {
@@ -145,7 +145,7 @@ namespace Robust.Client.Console.Commands
             monitors.ToggleMonitor(parsedMonitor);
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length == 1)
             {

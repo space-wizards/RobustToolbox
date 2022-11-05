@@ -99,7 +99,7 @@ namespace Robust.Server.Console.Commands
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
@@ -192,7 +192,7 @@ namespace Robust.Server.Console.Commands
             mapLoader.LoadGrid(mapId, args[1], loadOptions);
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             return LoadMap.GetCompletionResult(shell, args);
         }
@@ -202,7 +202,7 @@ namespace Robust.Server.Console.Commands
     {
         public override string Command => "savemap";
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
@@ -286,7 +286,7 @@ namespace Robust.Server.Console.Commands
             return CompletionResult.Empty;
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             return GetCompletionResult(shell, args);
         }

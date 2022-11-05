@@ -37,7 +37,7 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
         Logger.GetSawmill(name).Level = level;
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         var logMgr = IoCManager.Resolve<ILogManager>();
 
@@ -84,7 +84,7 @@ internal sealed class TestLog : LocalizedCommands
         Logger.LogS(level, name, message);
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         var logMgr = IoCManager.Resolve<ILogManager>();
 

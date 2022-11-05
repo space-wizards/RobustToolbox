@@ -31,7 +31,7 @@ internal sealed class ListCommands : LocalizedCommands
         shell.WriteLine(message);
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
             return CompletionResult.FromHint(Loc.GetString("cmd-list-arg-filter"));

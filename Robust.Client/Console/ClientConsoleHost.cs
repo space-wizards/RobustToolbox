@@ -277,7 +277,7 @@ namespace Robust.Client.Console
                 shell.RemoteExecuteCommand(argStr["> ".Length..]);
             }
 
-            public async ValueTask<CompletionResult> GetCompletionAsync(
+            public override async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
                 CancellationToken cancel)

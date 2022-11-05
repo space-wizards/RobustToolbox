@@ -113,7 +113,7 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
-        public void Cleanup()
+        public virtual void Cleanup()
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
             _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
@@ -345,8 +345,8 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                var ev = new EntityTerminatingEvent();
-                EventBus.RaiseLocalEvent(uid, ref ev);
+                var ev = new EntityTerminatingEvent(uid);
+                EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
             {

@@ -249,7 +249,18 @@ namespace Robust.Client.GameStates
                 }
 
                 if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
+                {
+                    try
+                    {
+                        ResetPredictedEntities();
+                    }
+                    catch
+                    {
+                        // avoid exception spam from repeatedly trying to reset the same entity.
+                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                        throw;
+                    }
+                }
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
@@ -463,7 +474,11 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
+                var netComps = _entityManager.GetNetComponentsOrNull(entity);
+                if (netComps == null)
+                    return;
+
+                foreach (var (netId, comp) in netComps.Value)
                 {
                     DebugTools.AssertNotNull(netId);
                     if (!comp.NetSyncEnabled)

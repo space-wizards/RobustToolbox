@@ -27,6 +27,27 @@ Template for new versions:
 
 -->
 
+## 0.62.0.0
+
+### Breaking changes
+
+* Removed some obsolete map event handlers.
+
+### New features
+
+* Added entity query struct enumerators
+
+### Bugfixes
+
+* Improved error tolerance during client state application.
+* Added better error logs when a client deletes a predicted entity.
+* Fixes command permissions not getting sent to clients.
+* Fixes a broad-phase bug were entities were not properly updating their positions.
+
+### Other
+
+* Added the LocalizedCommands class, which automatically infer help and description loc strings from the commands name.
+
 ## 0.61.0.0
 
 ### Breaking changes

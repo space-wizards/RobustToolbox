@@ -13,9 +13,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
-#if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
-#endif
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -61,9 +59,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
-#if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-#endif
 
         private ISawmill _sawmill = default!;
 
@@ -254,11 +250,11 @@ namespace Robust.Client.GameStates
                     {
                         ResetPredictedEntities();
                     }
-                    catch
+                    catch (Exception e)
                     {
                         // avoid exception spam from repeatedly trying to reset the same entity.
                         _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
-                        throw;
+                        _runtimeLog.LogException(e, "ResetPredictedEntities");
                     }
                 }
 

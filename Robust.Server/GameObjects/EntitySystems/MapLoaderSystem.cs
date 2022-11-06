@@ -768,6 +768,7 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
+        _context.Set(uidEntityMap, entityUidMap);
         WriteGridSection(data, entities);
 
         _stopwatch.Restart();
@@ -906,7 +907,6 @@ public sealed class MapLoaderSystem : EntitySystem
         rootNode.Add("entities", entities);
 
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
-        _context.Set(uidEntityMap, entityUidMap);
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
         {
@@ -978,22 +978,6 @@ public sealed class MapLoaderSystem : EntitySystem
     }
 
     #endregion
-
-    private sealed record MapLoaderData
-    {
-        public readonly MapId TargetMap;
-        public readonly MappingDataNode RootNode;
-
-        public MapLoaderData(MappingDataNode rootNode)
-        {
-            RootNode = rootNode;
-        }
-    }
-
-    private sealed class MapDeserializationContext
-    {
-
-    }
 
     internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
         ITypeSerializer<EntityUid, ValueDataNode>

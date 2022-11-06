@@ -238,7 +238,7 @@ namespace Robust.Shared.GameObjects
             if (body.CanCollide)
                 AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);
             else
-                AddSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
+                AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
         }
 
         private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
@@ -288,10 +288,10 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
-            AddPhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
+            AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
         }
 
-        private void AddPhysicsTree(
+        private void AddOrUpdatePhysicsTree(
             EntityUid broadUid,
             BroadphaseComponent broadphase,
             TransformComponent broadphaseXform,
@@ -362,12 +362,12 @@ namespace Robust.Shared.GameObjects
             fixture.ProxyCount = count;
         }
 
-        private void AddSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
+        private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
         {
             DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
             DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, false, staticBody));
             xform.Broadphase ??= new(broadUid, false, staticBody);
-            (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Add(uid, aabb);
+            (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
         }
 
         private void OnEntityInit(EntityUid uid)
@@ -456,7 +456,7 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
             }
 
-            AddToEntityTree(
+            AddOrUpdateEntityTree(
                 newBroadphase.Owner,
                 newBroadphase,
                 newBroadphaseXform,
@@ -478,7 +478,7 @@ namespace Robust.Shared.GameObjects
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
-                AddToEntityTree(broadphase, uid, xform, xformQuery);
+                AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
         }
 
         public void FindAndAddToEntityTree(EntityUid uid,
@@ -491,7 +491,7 @@ namespace Robust.Shared.GameObjects
             EntityQuery<BroadphaseComponent> broadQuery)
         {
             if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
-                AddToEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, true);
+                AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, true);
         }
 
         /// <summary>
@@ -506,10 +506,10 @@ namespace Robust.Shared.GameObjects
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
-            AddToEntityTree(broadphase, uid, xform, xformQuery);
+            AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
         }
 
-        private void AddToEntityTree(
+        private void AddOrUpdateEntityTree(
             BroadphaseComponent broadphase,
             EntityUid uid,
             TransformComponent xform,
@@ -521,10 +521,10 @@ namespace Robust.Shared.GameObjects
             var physicsQuery = GetEntityQuery<PhysicsComponent>();
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
-            AddToEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, recursive);
+            AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, recursive);
         }
 
-        private void AddToEntityTree(EntityUid broadUid,
+        private void AddOrUpdateEntityTree(EntityUid broadUid,
             BroadphaseComponent broadphase,
             EntityUid uid,
             TransformComponent xform,
@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
             }
 
-            AddToEntityTree(
+            AddOrUpdateEntityTree(
                 broadUid,
                 broadphase,
                 broadphaseXform,
@@ -557,7 +557,7 @@ namespace Robust.Shared.GameObjects
                 recursive);
         }
 
-        private void AddToEntityTree(
+        private void AddOrUpdateEntityTree(
             EntityUid broadUid,
             BroadphaseComponent broadphase,
             TransformComponent broadphaseXform,
@@ -580,11 +580,11 @@ namespace Robust.Shared.GameObjects
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
                 var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
-                AddSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
+                AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
             }
             else
             {
-                AddPhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
+                AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
             }
 
             var childEnumerator = xform.ChildEnumerator;
@@ -596,7 +596,7 @@ namespace Robust.Shared.GameObjects
                 while (childEnumerator.MoveNext(out var child))
                 {
                     var childXform = xformQuery.GetComponent(child.Value);
-                    AddToEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
+                    AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
                 }
                 return;
             }
@@ -607,7 +607,7 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 var childXform = xformQuery.GetComponent(child.Value);
-                AddToEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
             }
         }
 

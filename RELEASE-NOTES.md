@@ -27,6 +27,13 @@ Template for new versions:
 
 -->
 
+## 0.62.0.1
+
+### Bugfixes
+
+* Fixed sprites not animating when directly toggling layer visibility,
+* Fixed anchored entities not being added to the anchored lookups.
+
 ## 0.62.0.0
 
 ### Breaking changes

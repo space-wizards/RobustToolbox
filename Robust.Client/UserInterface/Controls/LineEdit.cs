@@ -241,6 +241,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
+            IgnoreNext = false;
+
             _blink.FrameUpdate(args);
 
             if (_mouseSelectingText)

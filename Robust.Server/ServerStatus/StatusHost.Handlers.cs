@@ -42,7 +42,7 @@ namespace Robust.Server.ServerStatus
                 // Tags is optional technically but will be necessary practically for future organization.
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
-                ["fork_id"] = _serverForkIDCache,
+                ["game_name"] = _serverGameNameCache,
                 ["players"] = _playerManager.PlayerCount
             };
 

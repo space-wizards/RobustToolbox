@@ -112,7 +112,7 @@ namespace Robust.Server
         /// <inheritdoc />
         public string ServerName => _config.GetCVar(CVars.GameHostName);
 
-        public string ForkID => _config.GetCVar(CVars.BuildForkId);
+        public string GameName => _config.GetCVar(CVars.GameGameName);
 
         public bool ContentStart { get; set; }
 

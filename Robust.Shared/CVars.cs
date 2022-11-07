@@ -555,6 +555,12 @@ namespace Robust.Shared
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Name of which 'game' this server is running. This shows up in the launcher.
+        /// </summary>
+        public static readonly CVarDef<string> GameGameName =
+            CVarDef.Create("game.gamename", "Robust Toolbox Game", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
         /// If a grid is shrunk to include no more tiles should it be deleted.
         /// </summary>
         public static readonly CVarDef<bool> GameDeleteEmptyGrids =

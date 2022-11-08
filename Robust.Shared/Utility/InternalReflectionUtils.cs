@@ -30,16 +30,6 @@ public static class InternalReflectionUtils
         }
     }
 
-    public struct TestStruct
-    {
-        public int Test;
-    }
-
-    private static void Test(ref TestStruct val)
-    {
-        val.Test = 5;
-    }
-
     internal static AccessField<T, object?> EmitFieldAccessor<T>(Type type, AbstractFieldInfo fieldDefinition)
     {
         var method = new DynamicMethod(

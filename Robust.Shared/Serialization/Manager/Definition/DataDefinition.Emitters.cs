@@ -10,6 +10,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
@@ -221,6 +222,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         contextParam);
                 }
 
+                call = ExpressionUtils.WriteLineBefore($"calling {i}", call);
+
                 Expression writeExpression;
                 var nodeVariable = Expression.Variable(typeof(DataNode));
                 if (fieldDefinition.Attribute is DataFieldAttribute dfa)
@@ -251,6 +254,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 $"Writing field {fieldDefinition} for type {typeof(T)} did not return a {nameof(MappingDataNode)} but was annotated to be included."))));
                 }
 
+                writeExpression = ExpressionUtils.WriteLineBefore($"writing {i}", writeExpression);
+
                 writeExpression = Expression.Block(
                     new[] { nodeVariable },
                     Expression.Assign(nodeVariable, call),
@@ -268,7 +273,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     expressions.Add(writeExpression);
                 }
+
+                expressions.Add(ExpressionUtils.WriteLine(i));
             }
+
             expressions.Add(mappingDataVar);
 
             return Expression.Lambda<SerializeDelegateSignature>(

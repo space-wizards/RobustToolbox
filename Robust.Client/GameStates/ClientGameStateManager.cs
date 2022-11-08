@@ -1180,8 +1180,11 @@ namespace Robust.Client.GameStates
             if (!uid.IsClientSide() && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(xform, _entities.GetEntityQuery<TransformComponent>());
 
-            _entities.DeleteEntity(uid);
-
+            // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.
+            using (_timing.StartStateApplicationArea())
+            {
+                _entities.DeleteEntity(uid);
+            }
         }
 
         /// <summary>

@@ -38,7 +38,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         Logger.DebugS("map", "Starting...");
 
         StartupGridTrees();
-        EnsureNullspaceExistsAndClear();
 
         DebugTools.Assert(_grids.Count == 0);
         DebugTools.Assert(!GridExists(EntityUid.Invalid));
@@ -76,7 +75,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         {
             EntityManager.DeleteEntity(mapComp.Owner);
         }
-        EnsureNullspaceExistsAndClear();
     }
 
 #if DEBUG

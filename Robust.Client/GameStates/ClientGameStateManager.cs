@@ -623,10 +623,14 @@ namespace Robust.Client.GameStates
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             var toApply = new Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)>();
             var toCreate = new Dictionary<EntityUid, EntityState>();
             var enteringPvs = 0;
+
+            if (curState.FromSequence == GameTick.Zero)
+                FullReset(curState, metas, xforms, xformSys);
 
             var curSpan = curState.EntityStates.Span;
             foreach (var es in curSpan)
@@ -674,7 +678,6 @@ namespace Robust.Client.GameStates
             }
 
             // Detach entities to null space
-            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
@@ -732,15 +735,33 @@ namespace Robust.Client.GameStates
             // Add entering entities back to broadphase.
             using (_prof.Group("Update Broadphase"))
             {
-                foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                try
                 {
-                    lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                    foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                    {
+                        lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Caught exception while updating entity broadphases");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
                 }
             }
 
             var delSpan = curState.EntityDeletions.Span;
             if (delSpan.Length > 0)
-                ProcessDeletions(delSpan, xforms, metas, xformSys);
+            {
+                try
+                {
+                    ProcessDeletions(delSpan, xforms, metas, xformSys);
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Caught exception while deleting entities");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+                }
+            }
 
             // Initialize and start the newly created entities.
             if (toCreate.Count > 0)
@@ -750,6 +771,43 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
 
             return (toCreate.Keys, detached);
+        }
+
+        private void FullReset(GameState curState, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys)
+        {
+            // This is somewhat of a hack to do a proper reset for exception tolerance. I need to do this properly at
+            // some point. This is basically a hotfix to hide the side effects of #3413. Basically, this gets run if the
+            // client encounters an error while applying game states and requests a full server state.
+
+            _sawmill.Info("Performing full entity reset.");
+
+            // TODO properly reset maps
+            // TODO properly reset player-states (e.g., attached enttiy and current eye).
+
+            // Linq bad, but this should be rare (when first connecting, and when encountering PVS errors, which ideally would just never happen).
+            var ents = curState.EntityStates.Value?.Select(x => x.Uid)?.ToHashSet() ?? new HashSet<EntityUid>();
+            foreach (var ent in _entities.GetEntities().ToArray())
+            {
+                if (ent.IsClientSide())
+                    continue;
+
+                if (ents.Contains(ent) && metas.TryGetComponent(ent, out var meta))
+                {
+                    meta.LastStateApplied = GameTick.Zero;
+                    continue;
+                }
+
+                if (!xforms.TryGetComponent(ent, out var xform))
+                    continue;
+
+                xformSys.DetachParentToNull(xform, xforms, metas);
+                var childEnumerator = xform.ChildEnumerator;
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                }
+                _entities.DeleteEntity(ent);
+            }
         }
 
         private void ProcessDeletions(

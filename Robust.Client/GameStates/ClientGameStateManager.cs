@@ -785,7 +785,7 @@ namespace Robust.Client.GameStates
             // TODO properly reset player-states (e.g., attached enttiy and current eye).
 
             // Linq bad, but this should be rare (when first connecting, and when encountering PVS errors, which ideally would just never happen).
-            var ents = curState.EntityStates.Value.Select(x => x.Uid).ToHashSet();
+            var ents = curState.EntityStates.Value?.Select(x => x.Uid)?.ToHashSet() ?? new HashSet<EntityUid>();
             foreach (var ent in _entities.GetEntities().ToArray())
             {
                 if (ent.IsClientSide())

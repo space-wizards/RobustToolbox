@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Serialization.Markdown;
+﻿using System;
+using System.Linq.Expressions;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.Shared.Serialization.Manager;
@@ -6,6 +8,13 @@ namespace Robust.Shared.Serialization.Manager;
 public sealed partial class SerializationManager
 {
     //null values are the bane of my existence
+
+    private Expression GetNullExpression(Expression managerConst, Type type)
+    {
+        return type.IsValueType
+            ? Expression.Call(managerConst, nameof(GetNullable), new[] { type })
+            : Expression.Constant(null, type);
+    }
 
     private T? GetNullable<T>() where T : struct
     {

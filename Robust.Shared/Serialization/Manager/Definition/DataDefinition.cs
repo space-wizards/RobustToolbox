@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.IoC;
+using JetBrains.Annotations;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -17,7 +17,15 @@ using static Robust.Shared.Serialization.Manager.SerializationManager;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public sealed partial class DataDefinition
+    public abstract class DataDefinition
+    {
+        internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; init; }
+        internal bool IsRecord { get; init; }
+
+        public abstract bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates);
+    }
+
+    public sealed partial class DataDefinition<T> : DataDefinition where T : notnull
     {
         private readonly struct FieldInterfaceInfo
         {
@@ -35,13 +43,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
             }
         }
 
-        private readonly PopulateDelegateSignature _populate;
-        private readonly SerializeDelegateSignature _serialize;
-        private readonly CopyDelegateSignature _copy;
+        public readonly PopulateDelegateSignature Populate;
+        public readonly SerializeDelegateSignature Serialize;
+        public readonly CopyDelegateSignature CopyTo;
 
-        internal DataDefinition(Type type, IDependencyCollection collection, InstantiationDelegate<object> instantiator, bool isRecord)
+        //todo paul InstantiationDelegate
+        [UsedImplicitly]
+        internal DataDefinition(SerializationManager manager, InstantiationDelegate<object> instantiator, bool isRecord)
         {
-            Type = type;
             IsRecord = isRecord;
 
             var fieldDefs = GetFieldDefinitions(instantiator, isRecord);
@@ -62,22 +71,18 @@ namespace Robust.Shared.Serialization.Manager.Definition
             fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
 
             BaseFieldDefinitions = fields.ToImmutableArray();
+
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
+            var fieldAssigners = new InternalReflectionUtils.AssignField<T, object?>[BaseFieldDefinitions.Length];
+            var fieldAccessors = new InternalReflectionUtils.AccessField<T, object?>[BaseFieldDefinitions.Length];
 
-            _populate = EmitPopulateDelegate(collection);
-            _serialize = EmitSerializeDelegate(collection);
-            _copy = EmitCopyDelegate();
-
-            var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
-            var fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
             var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
 
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
-
-                fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
-                fieldAssigners[i] = EmitFieldAssigner<object>(Type, fieldDefinition.FieldType, fieldDefinition.BackingField);
+                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(typeof(T), fieldDefinition.FieldType, fieldDefinition.BackingField);
+                fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor<T>(fieldDefinition.FieldType, fieldDefinition.BackingField);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {
@@ -131,58 +136,29 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
                     {
                         throw new InvalidOperationException(
-                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {type} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {typeof(T)} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
                     interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator);
                 }
             }
 
-            FieldAccessors = fieldAccessors.ToImmutableArray();
-            FieldAssigners = fieldAssigners.ToImmutableArray();
             FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
-        }
+            FieldAssigners = fieldAssigners.ToImmutableArray();
+            FieldAccessors = fieldAccessors.ToImmutableArray();
 
-        public Type Type { get; }
+            Populate = EmitPopulateDelegate(manager);
+            Serialize = EmitSerializeDelegate(manager);
+            CopyTo = EmitCopyDelegate(manager);
+        }
 
         private string[] Duplicates { get; }
         private object?[] DefaultValues { get; }
 
-        private ImmutableArray<AccessField<object, object?>> FieldAccessors { get; }
-        private ImmutableArray<AssignField<object, object?>> FieldAssigners { get; }
-
-        internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
         private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 
-        internal bool IsRecord { get; }
-
-        public object Populate(
-            object target,
-            MappingDataNode mapping,
-            ISerializationManager serialization,
-            ISerializationContext? context,
-            bool skipHook)
-        {
-            return _populate(target, mapping, serialization, context, skipHook, DefaultValues);
-        }
-
-        public MappingDataNode Serialize(
-            object obj,
-            ISerializationManager serialization,
-            ISerializationContext? context,
-            bool alwaysWrite)
-        {
-            return _serialize(obj, serialization, context, alwaysWrite, DefaultValues);
-        }
-
-        public void CopyTo(
-            object source,
-            ref object target,
-            ISerializationManager serialization,
-            ISerializationContext? context)
-        {
-            _copy(source, ref target, serialization, context);
-        }
+        private ImmutableArray<InternalReflectionUtils.AssignField<T, object?>> FieldAssigners { get; }
+        private ImmutableArray<InternalReflectionUtils.AccessField<T, object?>> FieldAccessors { get; }
 
         public ValidationNode Validate(
             ISerializationManager serialization,
@@ -204,7 +180,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     var error = new ErrorNode(
                         key,
-                        $"Field \"{valueDataNode.Value}\" not found in \"{Type}\".",
+                        $"Field \"{valueDataNode.Value}\" not found in \"{typeof(T)}\".",
                         false);
 
                     validatedMapping.Add(error, new InconclusiveNode(val));
@@ -222,9 +198,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return new ValidatedMappingNode(validatedMapping);
         }
 
-        public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
-
-        public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
+        public override bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
         {
             duplicates = Duplicates;
             return duplicates.Length > 0;
@@ -249,7 +223,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             if (fieldInfo is SpecificPropertyInfo propertyInfo)
             {
                 // We only want the most overriden instance of a property for the type we are working with
-                if (!propertyInfo.IsMostOverridden(Type))
+                if (!propertyInfo.IsMostOverridden(typeof(T)))
                 {
                     return false;
                 }
@@ -293,7 +267,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             var dummyObject = instantiator();
             var fieldDefinitions = new List<FieldDefinition>();
 
-            foreach (var abstractFieldInfo in Type.GetAllPropertiesAndFields())
+            foreach (var abstractFieldInfo in typeof(T).GetAllPropertiesAndFields())
             {
                 if (abstractFieldInfo.IsBackingField())
                     continue;

@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager;
 
@@ -23,6 +24,8 @@ public sealed partial class SerializationManager
 
     private WriteDelegate GetOrCreateWriteDelegate(Type type)
     {
+        type = type.EnsureNotNullableType();
+
         return _writerDelegates
             .GetOrAdd(type, static (t, manager) =>
             {
@@ -77,16 +80,29 @@ public sealed partial class SerializationManager
                 }
                 else
                 {
-                    var defConst = Expression.Constant(manager.GetDefinition(t), typeof(DataDefinition));
 
-                    call = Expression.Call(
-                        instanceParam,
-                        nameof(WriteValueInternal),
-                        new[] { t },
-                        objParam,
-                        defConst,
-                        alwaysWriteParam,
-                        contextParam);
+                    if (t.IsAbstract || t.IsInterface)
+                    {
+                        call = Expression.Call(
+                            instanceParam,
+                            nameof(WriteValue),
+                            Type.EmptyTypes,
+                            Expression.Convert(objParam, typeof(object)),
+                            alwaysWriteParam,
+                            contextParam);
+                    }
+                    else
+                    {
+                        call = Expression.Call(
+                            instanceParam,
+                            nameof(WriteValueInternal),
+                            new[] { t },
+                            Expression.Convert(objParam, t),
+                            Expression.Constant(manager.GetDefinition(t), typeof(DataDefinition<>).MakeGenericType(t)),
+                            alwaysWriteParam,
+                            contextParam);
+                    }
+
                 }
 
                 return Expression.Lambda<WriteDelegate>(
@@ -121,10 +137,11 @@ public sealed partial class SerializationManager
     }
 
     private DataNode WriteValueInternal<T>(
-        object value,
-        DataDefinition? definition,
+        T value,
+        DataDefinition<T>? definition,
         bool alwaysWrite,
         ISerializationContext? context)
+        where T : notnull
     {
         if(context != null && context.SerializerProvider.TryGetTypeSerializer<ITypeWriter<T>, T>(out var writer))
         {
@@ -133,18 +150,10 @@ public sealed partial class SerializationManager
 
         if (definition == null)
         {
-            if (!typeof(T).IsAbstract && !typeof(T).IsInterface || !TryGetDefinition(value.GetType(), out definition))
-            {
-                throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
-            }
+            throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
         }
 
-        if (definition.CanCallWith(value) != true)
-        {
-            throw new ArgumentException($"Supplied value does not fit with data definition of {typeof(T)}.");
-        }
-
-        var mapping = definition.Serialize(value, this, context, alwaysWrite);
+        var mapping = definition.Serialize(value, context, alwaysWrite);
         if (typeof(T).IsAbstract || typeof(T).IsInterface)
         {
             mapping.Tag = $"!type:{value.GetType().Name}";
@@ -171,5 +180,13 @@ public sealed partial class SerializationManager
         if (value == null) return NullNode();
 
         return GetOrCreateWriteDelegate(underlyingType)(value, alwaysWrite, context);
+    }
+
+    public DataNode WriteValue(object? value, bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        if (value == null) return NullNode();
+
+        return WriteValue(value.GetType(), alwaysWrite, context);
     }
 }

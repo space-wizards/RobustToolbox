@@ -56,7 +56,7 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ValidateSerializerDelegate>
             _customValidateSerializerDelegates = new();
 
-        private object GetOrCreateCustomTypeSerializer(Type type)
+        internal object GetOrCreateCustomTypeSerializer(Type type)
         {
             return _customTypeSerializers.GetOrAdd(type, CreateSerializer);
         }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -15,231 +13,285 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate object? ReadDelegate(
-            Type type,
+        private delegate object? ReadBoxingDelegate(
             DataNode node,
             ISerializationContext? context = null,
             bool skipHook = false,
             object? value = null);
 
-        private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
+        private delegate T ReadGenericDelegate<T>(
+            DataNode node,
+            ISerializationContext? context = null,
+            bool skipHook = false,
+            T? value = default);
+
+        private readonly ConcurrentDictionary<Type, ReadBoxingDelegate> _readBoxingDelegates = new();
+        private readonly ConcurrentDictionary<(Type value, Type node), object> _readGenericDelegates = new();
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            return (T)Read(typeof(T), node, context, skipHook, EqualityComparer<T>.Default.Equals(value, default) ? null : value)!;
+            // we ignore the null check here due to the method only returning a nullable if the type is actually nullable
+            // (at least in theory, still waiting on my dotnet api proposal to get approved)
+            return GetOrCreateGenericReadDelegate<T>(node)(node, context, skipHook, value);
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
         {
-            var val = GetOrCreateReader(type, node)(type, node, context, skipHook, value);
-            ReadNullCheck(type, val);
-            return val;
+            return GetOrCreateBoxingReadDelegate(type)(node, context, skipHook, value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReadNullCheck(Type type, object? val)
+        private ReadBoxingDelegate GetOrCreateBoxingReadDelegate(Type type)
         {
-            if (!type.IsNullable() && val == null)
+            return _readBoxingDelegates.GetOrAdd(type, static (type, manager) =>
             {
-                throw new InvalidOperationException(
-                    $"{nameof(Read)}-Call returned a null value for non-nullable type {type}");
-            }
+                var managerConst = Expression.Constant(manager);
+
+                var nodeParam = Expression.Variable(typeof(DataNode));
+                var contextParam = Expression.Variable(typeof(ISerializationContext));
+                var skipHookParam = Expression.Variable(typeof(bool));
+                var valueParam = Expression.Variable(typeof(object));
+
+                var call = Expression.Convert(Expression.Call(
+                    managerConst,
+                    nameof(Read),
+                    new[] { type },
+                    nodeParam,
+                    contextParam,
+                    skipHookParam,
+                    Expression.Convert(valueParam, type)), typeof(object));
+
+                return Expression.Lambda<ReadBoxingDelegate>(
+                    call,
+                    nodeParam,
+                    contextParam,
+                    skipHookParam,
+                    valueParam).Compile();
+            }, this);
         }
 
-        private ReadDelegate GetOrCreateReader(Type value, DataNode node)
+        private ReadGenericDelegate<T> GetOrCreateGenericReadDelegate<T>(DataNode node)
         {
+            Type indexType;
             if (node.Tag?.StartsWith("!type:") ?? false)
             {
                 var typeString = node.Tag.Substring(6);
-                value = ResolveConcreteType(value, typeString);
+                indexType = ResolveConcreteType(typeof(T), typeString);
+            }
+            else
+            {
+                indexType = typeof(T);
             }
 
-            return _readers.GetOrAdd((value, node.GetType()), static (tuple, vfArgument) =>
+            return (ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((indexType, node.GetType()!), static (tuple, manager) =>
             {
-                var (value, nodeType) = tuple;
-                var (node, instance) = vfArgument;
+                var (type, nodeType) = tuple;
 
-                var nullable = value.IsNullable();
-                value = value.EnsureNotNullableType();
+                var nullable = type.IsNullable();
+                type = type.EnsureNotNullableType();
 
-                var instanceConst = Expression.Constant(instance);
+                var managerConst = Expression.Constant(manager);
 
-                var typeParam = Expression.Parameter(typeof(Type), "type");
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                var valueParam = Expression.Parameter(typeof(object), "value");
+                var valueParam = Expression.Parameter(type, "value");
+
 
                 Expression call;
-
-                if (value.IsArray)
+                if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeReader<,>), type, nodeType, out var reader))
                 {
-                    var elementType = value.GetElementType()!;
+                    var readerType = typeof(ITypeReader<,>).MakeGenericType(type, nodeType);
+                    var readerConst = Expression.Constant(reader, readerType);
+                    var depencencyConst = Expression.Constant(manager.DependencyCollection);
 
-                    switch (node)
+                    call = Expression.Call(
+                        readerConst,
+                        readerType.GetMethod("Read")!,
+                        managerConst,
+                        Expression.Convert(nodeParam, nodeType),
+                        depencencyConst,
+                        skipHookParam,
+                        contextParam,
+                        valueParam);
+                }
+                else if (type.IsInterface || type.IsAbstract)
+                {
+                    throw new ArgumentException($"Unable to create an instance of an interface or abstract type. Type: {type}");
+                }
+                else if (type.IsArray)
+                {
+                    var elementType = type.GetElementType()!;
+
+                    if (nodeType == typeof(ValueDataNode))
                     {
-                        case ValueDataNode:
-                            call = Expression.Call(
-                                instanceConst,
-                                nameof(ReadArrayValue),
-                                new[] { elementType },
-                                Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                                contextParam,
-                                skipHookParam);
-                            break;
-                        case SequenceDataNode seqNode:
-                            var isSealed = elementType.IsPrimitive || elementType.IsEnum ||
-                                           elementType == typeof(string) || elementType.IsSealed;
-
-                            if (isSealed && seqNode.Sequence.Count > 0)
-                            {
-                                var reader = instance.GetOrCreateReader(elementType, seqNode.Sequence[0]);
-                                var readerConst = Expression.Constant(reader);
-
-                                call = Expression.Call(
-                                    instanceConst,
-                                    nameof(ReadArraySequenceSealed),
-                                    new[] { elementType },
-                                    Expression.Convert(nodeParam, typeof(SequenceDataNode)),
-                                    readerConst,
-                                    contextParam,
-                                    skipHookParam);
-
-                                break;
-                            }
-
-                            call = Expression.Call(
-                                instanceConst,
-                                nameof(ReadArraySequence),
-                                new[] { elementType },
-                                Expression.Convert(nodeParam, typeof(SequenceDataNode)),
-                                contextParam,
-                                skipHookParam);
-                            break;
-                        default:
-                            throw new ArgumentException($"Cannot read array from data node type {nodeType}");
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadArrayValue),
+                            new[] { elementType },
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                            contextParam,
+                            skipHookParam);
+                    }
+                    else if (nodeType == typeof(SequenceDataNode))
+                    {
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadArraySequence),
+                            new[] { elementType },
+                            Expression.Convert(nodeParam, typeof(SequenceDataNode)),
+                            contextParam,
+                            skipHookParam);
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Cannot read array from data node type {nodeType}");
                     }
                 }
-                else if (value.IsEnum)
+                else if (type.IsEnum)
                 {
-                    call = node switch
+                    if (nodeType == typeof(ValueDataNode))
                     {
-                        ValueDataNode => Expression.Call(
-                            instanceConst,
+                        call = Expression.Call(
+                            managerConst,
                             nameof(ReadEnumValue),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode))),
-                        SequenceDataNode => Expression.Call(
-                            instanceConst,
+                            new[] { type },
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)));
+                    }
+                    else if (nodeType == typeof(SequenceDataNode))
+                    {
+                        call = Expression.Call(
+                            managerConst,
                             nameof(ReadEnumSequence),
-                            new[] { value },
-                            Expression.Convert(nodeParam, typeof(SequenceDataNode))),
-                        _ => throw new InvalidNodeTypeException(
-                            $"Cannot serialize node as {value}, unsupported node type {node.GetType()}")
-                    };
+                            new[] { type },
+                            Expression.Convert(nodeParam, typeof(SequenceDataNode)));
+                    }
+                    else
+                    {
+                        throw new InvalidNodeTypeException(
+                            $"Cannot serialize node as {type}, unsupported node type {nodeType}");
+                    }
                 }
-                else if (value.IsAssignableTo(typeof(ISelfSerialize)))
+                else if (type.IsAssignableTo(typeof(ISelfSerialize)))
                 {
-                    if (node is not ValueDataNode)
+                    if (nodeType != typeof(ValueDataNode))
                     {
                         throw new InvalidNodeTypeException(
                             $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
-                    var definition = instance.GetDefinition(value);
-                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
-                    var instantiatorConst = Expression.Constant(instantiator);
-
-                    call = Expression.Call(
-                        instanceConst,
-                        nameof(ReadSelfSerialize),
-                        new[] { value },
-                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                        instantiatorConst, valueParam);
-                }
-                else if (instance._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeReader<,>), value, nodeType, out var reader))
-                {
-                    var readerType = typeof(ITypeReader<,>).MakeGenericType(value, nodeType);
-                    var readerConst = Expression.Constant(reader, readerType);
-
-                    call = Expression.Call(
-                        instanceConst,
-                        nameof(ReadWithTypeReader),
-                        new[] { value, nodeType },
-                        Expression.Convert(nodeParam, nodeType),
-                        readerConst,
-                        contextParam,
-                        skipHookParam,
-                        valueParam);
-                }
-                else if (value.IsInterface || value.IsAbstract)
-                {
-                    throw new ArgumentException($"Unable to create an instance of an interface or abstract type. Type: {value}");
+                    call = Expression.Block(
+                        Expression.Assign(valueParam, Expression.Coalesce(valueParam, Expression.New(type))),
+                        Expression.Call(
+                            valueParam,
+                            typeof(ISelfSerialize).GetMethod("Deserialize")!,
+                            Expression.Field(Expression.Convert(nodeParam, typeof(ValueDataNode)), typeof(ValueDataNode).GetField("Value")!)));
                 }
                 else
                 {
-                    var definition = instance.GetDefinition(value);
-                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition));
+                    var definition = manager.GetDefinition(type);
+                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(type));
 
-                    var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
-                    var instantiatorConst = Expression.Constant(instantiator);
+                    var hooksConst = Expression.Constant(type.IsAssignableTo(typeof(ISerializationHooks)));
 
-                    var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));
-
-                    call = node switch
+                    if (nodeType == typeof(ValueDataNode))
                     {
-                        ValueDataNode => Expression.Call(
-                            instanceConst,
+                        call = Expression.Call(
+                            managerConst,
                             nameof(ReadGenericValue),
-                            new[] { value },
+                            new[] { type },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst,
                             definitionConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
-                            valueParam),
-                        MappingDataNode => Expression.Call(
-                            instanceConst,
+                            valueParam);
+                    }
+                    else if (nodeType == typeof(MappingDataNode))
+                    {
+                        call = Expression.Call(
+                            managerConst,
                             nameof(ReadGenericMapping),
-                            new[] { value },
+                            new[] { type },
                             Expression.Convert(nodeParam, typeof(MappingDataNode)),
-                            instantiatorConst,
                             definitionConst,
                             hooksConst,
                             contextParam,
                             skipHookParam,
-                            valueParam),
-                        SequenceDataNode => throw new ArgumentException($"No mapping node provided for type {value} at line: {node.Start.Line}"),
-                        _ => throw new ArgumentException($"Unknown node type {nodeType} provided. Expected mapping node at line: {node.Start.Line}")
-                    };
+                            valueParam);
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"No mapping or value node provided for type {type}.");
+                    }
+
+                    call = Expression.Block(
+                        Expression.Assign(valueParam, Expression.Coalesce(valueParam, Expression.New(type))),
+                        call);
                 }
 
-                if (nullable)
-                {
-                    call = Expression.Condition(
+                // early-out null
+                var returnValue = Expression.Variable(type);
+                call = Expression.Block(
+                    new[] { returnValue },
+                    Expression.Condition(
                         Expression.Call(
-                            instanceConst,
+                            managerConst,
                             nameof(IsNull),
                             Type.EmptyTypes,
                             nodeParam),
-                        Expression.Convert(value.IsValueType ? Expression.Call(instanceConst, nameof(GetNullable), new []{value}) : Expression.Constant(null), typeof(object)),
-                        Expression.Convert(call, typeof(object)));
-                }
-                else
+                        nullable
+                            ? Expression.Block(typeof(void), Expression.Assign(returnValue, manager.GetNullExpression(managerConst, type)))
+                            : Expression.Throw(Expression.New(typeof(InvalidOperationException))),
+                        Expression.Block(typeof(void), Expression.Assign(returnValue, call))),
+                    returnValue);
+
+                // check for customtypeserializer before anything
+                var serializerType = typeof(ITypeReader<,>).MakeGenericType(type, nodeType);
+                var dependencyConst = Expression.Constant(manager.DependencyCollection);
+                var serializerVar = Expression.Variable(typeof(ITypeReader<,>).MakeGenericType(type, nodeType));
+                call = Expression.Block(
+                    new[] { serializerVar },
+                    Expression.Condition(
+                        Expression.AndAlso(
+                            Expression.ReferenceNotEqual(contextParam,
+                                Expression.Constant(null, typeof(ISerializationContext))),
+                            Expression.Call(
+                                Expression.Property(contextParam, "SerializerProvider"),
+                                "TryGetTypeNodeSerializer",
+                                new[] { serializerType, type, nodeType },
+                                serializerVar)),
+                        Expression.Call(
+                            serializerVar,
+                            serializerType.GetMethod("Read")!,
+                            managerConst,
+                            Expression.Convert(nodeParam, nodeType),
+                            dependencyConst,
+                            skipHookParam,
+                            contextParam,
+                            Expression.Convert(valueParam, type)),
+                        call));
+
+                if (!nullable && !type.IsValueType)
                 {
-                    call = Expression.Convert(call, typeof(object));
+                    // check that value isn't null
+                    var finalValue = Expression.Variable(typeof(T));
+                    call = Expression.Block(
+                        new[] { finalValue },
+                        Expression.Assign(finalValue, call),
+                        Expression.IfThen(
+                            Expression.Equal(finalValue, manager.GetNullExpression(managerConst, type)),
+                            Expression.Throw(Expression.New(typeof(InvalidOperationException)))),
+                        finalValue);
                 }
 
-                return Expression.Lambda<ReadDelegate>(
+                return Expression.Lambda<ReadGenericDelegate<T>>(
                     call,
-                    typeParam,
                     nodeParam,
                     contextParam,
                     skipHookParam,
                     valueParam).Compile();
-            }, (node, this));
+            }, this);
         }
 
         private T[] ReadArrayValue<T>(
@@ -267,26 +319,6 @@ namespace Robust.Shared.Serialization.Manager
             return array;
         }
 
-        private T[] ReadArraySequenceSealed<T>(
-            SequenceDataNode node,
-            ReadDelegate elementReader,
-            ISerializationContext? context = null,
-            bool skipHook = false)
-        {
-            var type = typeof(T);
-            var array = new T[node.Sequence.Count];
-
-            for (var i = 0; i < node.Sequence.Count; i++)
-            {
-                var subNode = node.Sequence[i];
-                var result = elementReader(type, subNode, context, skipHook);
-                ReadNullCheck(type, result);
-                array[i] = (T) result!;
-            }
-
-            return array;
-        }
-
         private TEnum ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
         {
             return Enum.Parse<TEnum>(node.Value, true);
@@ -297,58 +329,21 @@ namespace Robust.Shared.Serialization.Manager
             return Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
         }
 
-        private TValue ReadSelfSerialize<TValue>(
-            ValueDataNode node,
-            InstantiationDelegate<object> instantiator,
-            object? rawValue = null)
-            where TValue : ISelfSerialize
-        {
-            var value = (TValue) (rawValue ?? instantiator());
-            value.Deserialize(node.Value);
-
-            return value;
-        }
-
-        private TValue ReadWithTypeReader<TValue, TNode>(
-            TNode node,
-            ITypeReader<TValue, TNode> reader,
-            ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = null)
-            where TNode : DataNode
-        {
-            if (context != null &&
-                context.SerializerProvider.TryGetTypeNodeSerializer<ITypeReader<TValue, TNode>, TValue, TNode>(out var readerVal))
-            {
-                reader = readerVal;
-            }
-
-            return reader.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (TValue) value);
-        }
-
         private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
-            InstantiationDelegate<object> instantiator,
-            DataDefinition? definition,
+            DataDefinition<TValue>? definition,
             bool hooks,
-            ISerializationContext? context = null,
-            bool skipHook = false,
-            object? instance = null)
+            ISerializationContext? context,
+            bool skipHook,
+            TValue instance)
+            where TValue : notnull
         {
             var type = typeof(TValue);
-
-            if (context != null &&
-                context.SerializerProvider.TryGetTypeNodeSerializer<ITypeReader<TValue, ValueDataNode>, TValue, ValueDataNode>(out var reader))
-            {
-                return reader.Read(this, node, DependencyCollection, skipHook, context, instance == null ? default : (TValue)instance);
-            }
 
             if (definition == null)
             {
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
             }
-
-            instance ??= instantiator();
 
             if (node.Value != string.Empty)
             {
@@ -360,39 +355,31 @@ namespace Robust.Shared.Serialization.Manager
                 ((ISerializationHooks) instance).AfterDeserialization();
             }
 
-            return (TValue) instance;
+            return instance;
         }
 
         private TValue ReadGenericMapping<TValue>(
             MappingDataNode node,
-            InstantiationDelegate<object> instantiator,
-            DataDefinition? definition,
+            DataDefinition<TValue>? definition,
             bool hooks,
-            ISerializationContext? context = null,
-            bool skipHook = false,
-            object? instance = null)
+            ISerializationContext? context,
+            bool skipHook,
+            TValue instance)
+            where TValue : notnull
         {
-            instance ??= instantiator();
-
-            if (context != null &&
-                context.SerializerProvider.TryGetTypeNodeSerializer<ITypeReader<TValue, MappingDataNode>, TValue, MappingDataNode>(out var reader))
-            {
-                return reader.Read(this, node, DependencyCollection, skipHook, context, (TValue?) instance);
-            }
-
             if (definition == null)
             {
                 throw new ArgumentException($"No data definition found for type {typeof(TValue)} with node type {node.GetType()} when reading");
             }
 
-            var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;
+            definition.Populate(ref instance, node, context, skipHook);
 
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result).AfterDeserialization();
+                ((ISerializationHooks) instance).AfterDeserialization();
             }
 
-            return result;
+            return instance;
         }
     }
 }

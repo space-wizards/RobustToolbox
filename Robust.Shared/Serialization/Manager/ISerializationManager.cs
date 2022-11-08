@@ -20,13 +20,6 @@ namespace Robust.Shared.Serialization.Manager
 
         IReflectionManager ReflectionManager { get; }
 
-        /// <summary>
-        ///     Checks if a type has a data definition defined for it.
-        /// </summary>
-        /// <param name="type">The type to check for.</param>
-        /// <returns>True if it does, false otherwise.</returns>
-        bool HasDataDefinition(Type type);
-
         #region Validation
 
         /// <summary>
@@ -110,6 +103,21 @@ namespace Robust.Shared.Serialization.Manager
         ///     of type <see cref="type"/>.
         /// </returns>
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
+
+        /// <summary>
+        ///     Serializes a value into a node.
+        /// </summary>
+        /// <param name="value">The value to serialize.</param>
+        /// <param name="alwaysWrite">
+        ///     Whether or not to always write the given values into the resulting node,
+        ///     even if they are the default.
+        /// </param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <returns>
+        ///     A serialized datanode created from the given <see cref="value"/>
+        ///     of type <see cref="type"/>.
+        /// </returns>
+        DataNode WriteValue(object? value, bool alwaysWrite = false, ISerializationContext? context = null);
 
         #endregion
 

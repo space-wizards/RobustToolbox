@@ -57,7 +57,13 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         public DataNode this[string index]
         {
             get => Get(index);
-            set => Add(new ValueDataNode(index), value);
+            set => Add(index, value);
+        }
+
+        public MappingDataNode Add(string key, DataNode node)
+        {
+            _children.Add(new ValueDataNode(key), node);
+            return this;
         }
 
         private static ValueDataNode GetFetchNode(string key)

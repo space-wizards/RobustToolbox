@@ -1,340 +1,400 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
-using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Utility;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public partial class DataDefinition
+    public partial class DataDefinition<T>
     {
-        private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
+        private PopulateDelegateSignature EmitPopulateDelegate(SerializationManager manager)
         {
-            var isServer = collection.Resolve<INetManager>().IsServer;
+            var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
 
-            object PopulateDelegate(
-                object target,
-                MappingDataNode mappingDataNode,
-                ISerializationManager serializationManager,
-                ISerializationContext? serializationContext,
-                bool skipHook,
-                object?[] defaultValues)
+            var managerConst = Expression.Constant(manager);
+
+            var targetParam = Expression.Parameter(typeof(T).MakeByRefType());
+            var mappingDataParam = Expression.Parameter(typeof(MappingDataNode));
+            var contextParam = Expression.Parameter(typeof(ISerializationContext));
+            var skipHookParam = Expression.Parameter(typeof(bool));
+
+            var expressions = new List<BlockExpression>();
+
+            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
-                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+                var fieldDefinition = BaseFieldDefinitions[i];
+
+                if (fieldDefinition.Attribute.ServerOnly && !isServer)
                 {
-                    var fieldDefinition = BaseFieldDefinitions[i];
-
-                    if (fieldDefinition.Attribute.ServerOnly && !isServer)
-                    {
-                        continue;
-                    }
-
-                    if (fieldDefinition.Attribute is DataFieldAttribute dfa && !mappingDataNode.Has(dfa.Tag))
-                    {
-                        if (dfa.Required)
-                            throw new InvalidOperationException($"Required field {dfa.Tag} of type {target.GetType()} wasn't mapped.");
-                        continue;
-                    }
-
-                    var type = fieldDefinition.FieldType;
-                    var node = fieldDefinition.Attribute is DataFieldAttribute dfa2 ? mappingDataNode.Get(dfa2.Tag) : mappingDataNode;
-                    object? result;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && node switch
-                        {
-                            ValueDataNode => FieldInterfaceInfos[i].Reader.Value,
-                            SequenceDataNode => FieldInterfaceInfos[i].Reader.Sequence,
-                            MappingDataNode => FieldInterfaceInfos[i].Reader.Mapping,
-                            _ => throw new InvalidOperationException()
-                        })
-                    {
-                        result = serializationManager.ReadWithCustomSerializer(type,
-                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
-                    }
-                    else
-                    {
-                        result = serializationManager.Read(type, node, serializationContext, skipHook);
-                    }
-
-                    var defValue = defaultValues[i];
-
-                    if (Equals(result, defValue))
-                    {
-                        continue;
-                    }
-
-                    FieldAssigners[i](ref target, result);
+                    continue;
                 }
 
-                return target;
-            }
-
-            return PopulateDelegate;
-        }
-
-        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
-        {
-            MappingDataNode SerializeDelegate(
-                object obj,
-                ISerializationManager manager,
-                ISerializationContext? context,
-                bool alwaysWrite,
-                object?[] defaultValues)
-            {
-                var mapping = new MappingDataNode();
-
-                for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
+                var nodeVariable = Expression.Variable(typeof(DataNode));
+                var valueVariable = Expression.Variable(fieldDefinition.FieldType);
+                Expression call;
+                if (fieldDefinition.Attribute.CustomTypeSerializer != null && (FieldInterfaceInfos[i].Reader.Value ||
+                                                                               FieldInterfaceInfos[i].Reader.Sequence ||
+                                                                               FieldInterfaceInfos[i].Reader.Mapping))
                 {
-                    var fieldDefinition = BaseFieldDefinitions[i];
+                    var switchCases = new List<SwitchCase>();
 
-                    if (fieldDefinition.Attribute.ReadOnly)
+                    var dependencyConst = Expression.Constant(manager.DependencyCollection);
+                    var serializerInstance =
+                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
+                    if (FieldInterfaceInfos[i].Reader.Value)
                     {
-                        continue;
+                        var serializerType =
+                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(ValueDataNode));
+                        switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void), Expression.Assign(valueVariable, Expression.Call(
+                            Expression.Constant(serializerInstance, serializerType),
+                            serializerType.GetMethod("Read")!,
+                            managerConst,
+                            Expression.Convert(nodeVariable, typeof(ValueDataNode)),
+                            dependencyConst,
+                            skipHookParam,
+                            contextParam,
+                            Expression.Default(fieldDefinition.FieldType)))),
+                            Expression.Constant(typeof(ValueDataNode))));
                     }
 
-                    if (fieldDefinition.Attribute is DataFieldAttribute dfa1 && mapping.Has(dfa1.Tag))
+                    if (FieldInterfaceInfos[i].Reader.Sequence)
                     {
-                        continue; //this node was already written by a type higher up the includetree
+                        var serializerType =
+                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(SequenceDataNode));
+                        switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void), Expression.Assign(valueVariable, Expression.Call(
+                            Expression.Constant(serializerInstance, serializerType),
+                            serializerType.GetMethod("Read")!,
+                            managerConst,
+                            Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
+                            dependencyConst,
+                            skipHookParam,
+                            contextParam,
+                            Expression.Default(fieldDefinition.FieldType)))),
+                            Expression.Constant(typeof(SequenceDataNode))));
                     }
 
-                    if (fieldDefinition.Attribute.ServerOnly &&
-                        !collection.Resolve<INetManager>().IsServer)
+                    if (FieldInterfaceInfos[i].Reader.Mapping)
                     {
-                        continue;
+
+                        var serializerType =
+                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(MappingDataNode));
+                        switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void), Expression.Assign(valueVariable, Expression.Call(
+                                Expression.Constant(serializerInstance, serializerType),
+                                serializerType.GetMethod("Read")!,
+                                managerConst,
+                                Expression.Convert(nodeVariable, typeof(MappingDataNode)),
+                                dependencyConst,
+                                skipHookParam,
+                                contextParam,
+                                Expression.Default(fieldDefinition.FieldType)))),
+                            Expression.Constant(typeof(MappingDataNode))));
                     }
 
-                    var value = FieldAccessors[i](ref obj);
-
-                    if (value == null)
-                    {
-                        continue;
-                    }
-
-                    if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true } &&
-                        !alwaysWrite &&
-                        Equals(value, defaultValues[i]))
-                    {
-                        continue;
-                    }
-
-
-                    var type = fieldDefinition.FieldType;
-
-                    DataNode node;
-                    if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
-                    {
-                        node = manager.WriteWithCustomSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
-                            value, context, alwaysWrite);
-                    }
-                    else
-                    {
-                        node = manager.WriteValue(type, value, alwaysWrite, context);
-                    }
-
-                    if (fieldDefinition.Attribute is not DataFieldAttribute dfa)
-                    {
-                        if (node is not MappingDataNode nodeMapping)
-                        {
-                            throw new InvalidOperationException(
-                                $"Writing field {fieldDefinition} for type {Type} did not return a {nameof(MappingDataNode)} but was annotated to be included.");
-                        }
-
-                        mapping.Insert(nodeMapping, skipDuplicates: true);
-                    }
-                    else
-                    {
-                        mapping[dfa.Tag] = node;
-                    }
+                    call = Expression.Switch(Expression.Call(nodeVariable, "GetType", Type.EmptyTypes),
+                        Expression.Throw(Expression.New(typeof(InvalidOperationException).GetConstructor(Type.EmptyTypes)!)),
+                        switchCases.ToArray());
+                }
+                else
+                {
+                    call = Expression.Assign(valueVariable, Expression.Call(
+                        managerConst,
+                        "Read",
+                        new[] { fieldDefinition.FieldType },
+                        nodeVariable,
+                        contextParam,
+                        skipHookParam,
+                        Expression.Default(fieldDefinition.FieldType)));
                 }
 
-                return mapping;
-            }
+                call = Expression.Block(
+                    new[] { valueVariable },
+                    call,
+                    Expression.IfThen(
+                        Expression.Not(IsDefault(i, valueVariable, fieldDefinition)),
+                        Expression.Invoke(Expression.Constant(FieldAssigners[i]), targetParam,
+                            Expression.Convert(valueVariable, typeof(object)))));
 
-            return SerializeDelegate;
-        }
 
-        // TODO Serialization: add skipHook
-        private CopyDelegateSignature EmitCopyDelegate()
-        {
-            void CopyDelegate(
-                object source,
-                ref object target,
-                ISerializationManager manager,
-                ISerializationContext? context)
-            {
-                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+                if (fieldDefinition.Attribute is DataFieldAttribute dfa)
                 {
-                    var field = BaseFieldDefinitions[i];
-                    var accessor = FieldAccessors[i];
-                    var sourceValue = accessor(ref source);
-                    var targetValue = accessor(ref target);
+                    var tagConst = Expression.Constant(dfa.Tag);
 
-                    if (targetValue == null || sourceValue == null)
-                    {
-                        targetValue = manager.CreateCopy(sourceValue, context);
-                    }
-                    else if (field.Attribute.CustomTypeSerializer != null)
-                    {
-                        if (FieldInterfaceInfos[i].Copier)
-                        {
-                            manager.CopyToWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
-                                ref targetValue, context: context);
-                        }
-                        else if (FieldInterfaceInfos[i].CopyCreator)
-                        {
-                            targetValue = manager.CreateCopyWithCustomSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
-                                context: context);
-                        }
-                        else if (TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
-                        {
-                            manager.CopyTo(sourceValue, ref targetValue, context);
-                        }
-                        else
-                        {
-                            targetValue = manager.CreateCopy(sourceValue, context);
-                        }
-                    }
-                    else
-                    {
-                        if (TypeHelpers.TrySelectCommonType(sourceValue.GetType(), targetValue.GetType(), out _))
-                        {
-                            manager.CopyTo(sourceValue, ref targetValue, context);
-                        }
-                        else
-                        {
-                            targetValue = manager.CreateCopy(sourceValue, context);
-                        }
-                    }
-
-                    FieldAssigners[i](ref target, targetValue);
+                    expressions.Add(Expression.Block(
+                        new []{nodeVariable},
+                        Expression.IfThenElse(
+                        Expression.Call(
+                            mappingDataParam,
+                            typeof(MappingDataNode).GetMethod("TryGet",
+                                new [] { typeof(string), typeof(DataNode).MakeByRefType() })!,
+                            tagConst,
+                            nodeVariable),
+                        call,
+                        dfa.Required
+                            ? Expression.Throw(Expression.New(
+                                typeof(RequiredFieldNotMappedException).GetConstructor(new[]
+                                    { typeof(Type), typeof(string) })!, Expression.Constant(fieldDefinition.FieldType), tagConst))
+                            : Expression.Empty()
+                    )));
+                }
+                else
+                {
+                    expressions.Add(Expression.Block(
+                        new []{nodeVariable},
+                        Expression.Assign(nodeVariable, mappingDataParam),
+                        call));
                 }
             }
 
-            return CopyDelegate;
+            return Expression.Lambda<PopulateDelegateSignature>(
+                Expression.Block(expressions),
+                targetParam,
+                mappingDataParam,
+                contextParam,
+                skipHookParam).Compile();
         }
 
-        private static void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
+        private SerializeDelegateSignature EmitSerializeDelegate(SerializationManager manager)
         {
-            switch (info)
+            var managerConst = Expression.Constant(manager);
+            var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
+
+            var objParam = Expression.Parameter(typeof(T));
+            var contextParam = Expression.Parameter(typeof(ISerializationContext));
+            var alwaysWriteParam = Expression.Parameter(typeof(bool));
+
+            var expressions = new List<Expression>();
+            var mappingDataVar = Expression.Variable(typeof(MappingDataNode));
+
+            expressions.Add(
+                Expression.Assign(
+                    mappingDataVar,
+                    Expression.New(typeof(MappingDataNode).GetConstructor(Type.EmptyTypes)!)
+                ));
+
+            for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
             {
-                case SpecificFieldInfo field:
-                    rGenerator.Emit(OpCodes.Stfld, field.FieldInfo);
-                    break;
-                case SpecificPropertyInfo property:
-                    var setter = property.PropertyInfo.GetSetMethod(true) ?? throw new NullReferenceException();
+                var fieldDefinition = BaseFieldDefinitions[i];
 
-                    var opCode = info.DeclaringType?.IsValueType ?? false
-                        ? OpCodes.Call
-                        : OpCodes.Callvirt;
+                if (fieldDefinition.Attribute.ReadOnly)
+                {
+                    continue;
+                }
 
-                    rGenerator.Emit(opCode, setter);
-                    break;
+                if (fieldDefinition.Attribute.ServerOnly && !isServer)
+                {
+                    continue;
+                }
+
+                Expression call;
+                if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
+                {
+                    var serializerInstance =
+                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
+                    var dependencyConst = Expression.Constant(manager.DependencyCollection);
+                    var serializerType =
+                        typeof(ITypeWriter<>).MakeGenericType(fieldDefinition.FieldType);
+                    call = Expression.Call(
+                        Expression.Constant(serializerInstance, serializerType),
+                        serializerType.GetMethod("Write")!,
+                        managerConst,
+                        AccessExpression(i, objParam, fieldDefinition),
+                        dependencyConst,
+                        alwaysWriteParam,
+                        contextParam);
+                }
+                else
+                {
+                    call = Expression.Call(
+                        managerConst,
+                        "WriteValue",
+                        new[] { fieldDefinition.FieldType },
+                        AccessExpression(i, objParam, fieldDefinition),
+                        alwaysWriteParam,
+                        contextParam);
+                }
+
+                Expression writeExpression;
+                var nodeVariable = Expression.Variable(typeof(DataNode));
+                if (fieldDefinition.Attribute is DataFieldAttribute dfa)
+                {
+                    writeExpression = Expression.IfThen(Expression.Not(Expression.Call(
+                            mappingDataVar,
+                            typeof(MappingDataNode).GetMethod("Has", new[] { typeof(string) })!,
+                            Expression.Constant(dfa
+                                .Tag))), //check if this node was already written by a type higher up the includetree
+                        Expression.Call(
+                            mappingDataVar,
+                            typeof(MappingDataNode).GetMethod("Add", new[] { typeof(string), typeof(DataNode) })!,
+                            Expression.Constant(dfa.Tag),
+                            nodeVariable));
+                }
+                else
+                {
+                    writeExpression = Expression.IfThenElse(Expression.TypeIs(nodeVariable, typeof(MappingDataNode)),
+                        Expression.Call(
+                            mappingDataVar,
+                            "Insert",
+                            Type.EmptyTypes,
+                            Expression.Convert(nodeVariable, typeof(MappingDataNode)),
+                            Expression.Constant(true)),
+                        Expression.Throw(Expression.New(
+                            typeof(InvalidOperationException).GetConstructor(new []{typeof(string)})!,
+                            Expression.Constant(
+                                $"Writing field {fieldDefinition} for type {typeof(T)} did not return a {nameof(MappingDataNode)} but was annotated to be included."))));
+                }
+
+                writeExpression = Expression.Block(
+                    new[] { nodeVariable },
+                    Expression.Assign(nodeVariable, call),
+                    writeExpression);
+
+                if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true })
+                {
+                    expressions.Add(Expression.IfThen(
+                        Expression.Or(alwaysWriteParam,
+                            Expression.Not(
+                                IsDefault(i, AccessExpression(i, objParam, fieldDefinition), fieldDefinition))),
+                        writeExpression));
+                }
+                else
+                {
+                    expressions.Add(writeExpression);
+                }
             }
+            expressions.Add(mappingDataVar);
+
+            return Expression.Lambda<SerializeDelegateSignature>(
+                Expression.Block(
+                    new []{mappingDataVar},
+                    expressions),
+                objParam,
+                contextParam,
+                alwaysWriteParam).Compile();
         }
 
-        private AccessField<object, object?> EmitFieldAccessor(FieldDefinition fieldDefinition)
+        private CopyDelegateSignature EmitCopyDelegate(SerializationManager manager)
         {
-            var method = new DynamicMethod(
-                "AccessField",
-                typeof(object),
-                new[] {typeof(object).MakeByRefType()},
-                true);
+            var managerConst = Expression.Constant(manager);
+            var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
 
-            method.DefineParameter(1, ParameterAttributes.Out, "target");
+            var sourceParam = Expression.Parameter(typeof(T));
+            var targetParam = Expression.Parameter(typeof(T).MakeByRefType());
+            var contextParam = Expression.Parameter(typeof(ISerializationContext));
+            var skipHookParam = Expression.Parameter(typeof(bool));
 
-            var generator = method.GetRobustGen();
+            var expressions = new List<Expression>();
 
-            if (Type.IsValueType)
+            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
-                generator.DeclareLocal(Type);
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Unbox_Any, Type);
-                generator.Emit(OpCodes.Stloc_0);
-                generator.Emit(OpCodes.Ldloca_S, 0);
-            }
-            else
-            {
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Castclass, Type);
+                var fieldDefinition = BaseFieldDefinitions[i];
+
+                if (fieldDefinition.Attribute.ServerOnly && !isServer)
+                {
+                    continue;
+                }
+
+                Expression call;
+                Expression sourceValue = AccessExpression(i, sourceParam, fieldDefinition);
+                var targetValue = Expression.Variable(fieldDefinition.FieldType);
+
+                if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
+                {
+                    var serializerInstance =
+                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
+                    var serializerType = typeof(ITypeCopier<>).MakeGenericType(fieldDefinition.FieldType);
+                    call = Expression.Assign(targetValue, Expression.Call(
+                        Expression.Constant(serializerInstance, serializerType),
+                        serializerType.GetMethod("CopyTo")!,
+                        managerConst,
+                        sourceValue,
+                        targetValue,
+                        skipHookParam,
+                        contextParam));
+                }
+                else if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
+                {
+                    var serializerInstance =
+                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
+                    var serializerType = typeof(ITypeCopyCreator<>).MakeGenericType(fieldDefinition.FieldType);
+                    call = Expression.Assign(targetValue, Expression.Call(
+                        Expression.Constant(serializerInstance, serializerType),
+                        serializerType.GetMethod("CreateCopy")!,
+                        managerConst,
+                        sourceValue,
+                        skipHookParam,
+                        contextParam));
+                }
+                else
+                {
+                    call = Expression.Call(
+                        managerConst,
+                        "CopyTo",
+                        new[] { fieldDefinition.FieldType },
+                        sourceValue,
+                        targetValue,
+                        contextParam,
+                        skipHookParam);
+                }
+
+                expressions.Add(Expression.Block(
+                        new[] { targetValue },
+                        Expression.Assign(targetValue, AccessExpression(i, targetParam, fieldDefinition)),
+                        call,
+                        AssignExpression(i, targetParam, targetValue)
+                    )
+                );
             }
 
-            switch (fieldDefinition.BackingField)
-            {
-                case SpecificFieldInfo field:
-                    generator.Emit(OpCodes.Ldfld, field.FieldInfo);
-                    break;
-                case SpecificPropertyInfo property:
-                    var getter = property.PropertyInfo.GetGetMethod(true) ?? throw new NullReferenceException();
-                    var opCode = Type.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
-                    generator.Emit(opCode, getter);
-                    break;
-            }
-
-            var returnType = fieldDefinition.BackingField.FieldType;
-            if (returnType.IsValueType)
-            {
-                generator.Emit(OpCodes.Box, returnType);
-            }
-
-            generator.Emit(OpCodes.Ret);
-
-            return method.CreateDelegate<AccessField<object, object?>>();
+            return Expression.Lambda<CopyDelegateSignature>(
+                Expression.Block(expressions),
+                sourceParam,
+                targetParam,
+                contextParam,
+                skipHookParam).Compile();
         }
 
-        internal static AssignField<T, object?> EmitFieldAssigner<T>(Type type, Type fieldType, AbstractFieldInfo backingField)
+        private Expression AssignExpression(int i, Expression obj, Expression value)
         {
-            var method = new DynamicMethod(
-                "AssignField",
-                typeof(void),
-                new[] {typeof(T).MakeByRefType(), typeof(object)},
-                true);
+            return Expression.Invoke(Expression.Constant(FieldAssigners[i]), obj, Expression.Convert(value, typeof(object)));
+        }
 
-            method.DefineParameter(1, ParameterAttributes.Out, "target");
-            method.DefineParameter(2, ParameterAttributes.None, "value");
+        private Expression AccessExpression(int i, Expression obj, FieldDefinition fieldDefinition)
+        {
+            return Expression.Convert(Expression.Invoke(Expression.Constant(FieldAccessors[i]), obj), fieldDefinition.FieldType);
+        }
 
-            var generator = method.GetRobustGen();
-
-            if (type.IsValueType)
+        private Expression IsDefault(int i, Expression left, FieldDefinition fieldDefinition)
+        {
+            var equatableType = typeof(IEquatable<>).MakeGenericType(fieldDefinition.FieldType);
+            var defaultValueExpression = Expression.Constant(DefaultValues[i], fieldDefinition.FieldType);
+            if (equatableType.IsAssignableFrom(fieldDefinition.FieldType))
             {
-                generator.DeclareLocal(type);
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Unbox_Any, type);
-                generator.Emit(OpCodes.Stloc_0);
-                generator.Emit(OpCodes.Ldloca, 0);
-                generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldType);
-
-                EmitSetField(generator, backingField);
-
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Box, type);
-                generator.Emit(OpCodes.Stind_Ref);
-
-                generator.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Castclass, type);
-                generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldType);
-
-                EmitSetField(generator, backingField.GetBackingField() ?? backingField);
-
-                generator.Emit(OpCodes.Ret);
+                return Expression.Call(
+                    left,
+                    equatableType.GetMethod("Equals")!,
+                    defaultValueExpression);
             }
 
-            return method.CreateDelegate<AssignField<T, object?>>();
+            if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string) || fieldDefinition.FieldType.GetMethod("op_Equality", BindingFlags.Instance) != null)
+            {
+                return Expression.Equal(left, defaultValueExpression);
+            }
+
+            var comparerType = typeof(EqualityComparer<>).MakeGenericType(fieldDefinition.FieldType);
+            return Expression.Call(
+                Expression.Constant(comparerType.GetProperty("Default")!.GetMethod!.Invoke(null, null)!, comparerType),
+                "Equals",
+                Type.EmptyTypes,
+                left,
+                defaultValueExpression);
         }
     }
 }

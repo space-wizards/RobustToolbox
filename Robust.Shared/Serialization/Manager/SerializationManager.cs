@@ -218,7 +218,10 @@ namespace Robust.Shared.Serialization.Manager
 
         private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection, bool isRecord)
         {
-            return new(t, collection, GetOrCreateInstantiator(t, isRecord), isRecord);
+            return (DataDefinition)typeof(DataDefinition<>).MakeGenericType(t)
+                .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, new[]
+                    { typeof(SerializationManager), typeof(InstantiationDelegate<object>), typeof(bool) })!
+                .Invoke(new object[]{this, GetOrCreateInstantiator(t, isRecord), isRecord});
         }
 
         public void Shutdown()
@@ -234,15 +237,14 @@ namespace Robust.Shared.Serialization.Manager
 
             _highestFlagBit.Clear();
 
-            _readers.Clear();
+            _readBoxingDelegates.Clear();
 
             _initialized = false;
         }
 
-        public bool HasDataDefinition(Type type)
+        internal DataDefinition<T>? GetDefinition<T>() where T : notnull
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
-            return _dataDefinitions.TryGetValue(type, out _);
+            return GetDefinition(typeof(T)) as DataDefinition<T>;
         }
 
         internal DataDefinition? GetDefinition(Type type)
@@ -250,6 +252,12 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.TryGetValue(type, out var dataDefinition)
                 ? dataDefinition
                 : null;
+        }
+
+        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : notnull
+        {
+            dataDefinition = GetDefinition<T>();
+            return dataDefinition != null;
         }
 
         internal bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)

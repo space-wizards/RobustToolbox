@@ -174,7 +174,7 @@ public sealed partial class SerializationManager
         return new ValidatedValueNode(node);
     }
 
-    private ValidationNode ValidateDataDefinition(DataNode node, DataDefinition dataDefinition, ISerializationContext? context)
+    private ValidationNode ValidateDataDefinition<T>(DataNode node, DataDefinition<T> dataDefinition, ISerializationContext? context) where T : notnull
     {
         return node switch
         {

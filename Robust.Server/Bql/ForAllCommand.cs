@@ -7,13 +7,11 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Bql
 {
-    public sealed class ForAllCommand : IConsoleCommand
+    public sealed class ForAllCommand : LocalizedCommands
     {
-        public string Command => "forall";
-        public string Description => "Runs a command over all entities with a given component";
-        public string Help => "Usage: forall <bql query> do <command...>";
+        public override string Command => "forall";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {

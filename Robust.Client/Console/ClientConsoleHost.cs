@@ -266,18 +266,18 @@ namespace Robust.Client.Console
             }
         }
 
-        private sealed class RemoteExecCommand : IConsoleCommand
+        private sealed class RemoteExecCommand : LocalizedCommands
         {
-            public string Command => ">";
-            public string Description => Loc.GetString("cmd-remoteexec-desc");
-            public string Help => Loc.GetString("cmd-remoteexec-help");
+            public override string Command => ">";
+            public override string Description => LocalizationManager.GetString("cmd-remoteexec-desc");
+            public override string Help => LocalizationManager.GetString("cmd-remoteexec-help");
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 shell.RemoteExecuteCommand(argStr["> ".Length..]);
             }
 
-            public async ValueTask<CompletionResult> GetCompletionAsync(
+            public override async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
                 CancellationToken cancel)

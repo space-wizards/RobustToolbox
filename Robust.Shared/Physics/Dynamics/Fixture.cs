@@ -352,18 +352,25 @@ namespace Robust.Shared.Physics.Dynamics
 
         #endregion
 
+        /// <summary>
+        /// Returns true if equal apart from body reference.
+        /// </summary>
+        public bool Equivalent(Fixture other)
+        {
+            return _hard == other.Hard &&
+                   _collisionLayer == other.CollisionLayer &&
+                   _collisionMask == other.CollisionMask &&
+                   Shape.Equals(other.Shape) &&
+                   ID.Equals(other.ID) &&
+                   MathHelper.CloseTo(Density, other.Density);
+        }
+
         // This is a crude equals mainly to avoid having to re-create the fixtures every time a state comes in.
         public bool Equals(Fixture? other)
         {
             if (other == null) return false;
 
-            return _hard == other.Hard &&
-                   _collisionLayer == other.CollisionLayer &&
-                   _collisionMask == other.CollisionMask &&
-                   Shape.Equals(other.Shape) &&
-                   Body == other.Body &&
-                   ID.Equals(other.ID) &&
-                    MathHelper.CloseTo(Density, other.Density);
+            return Equivalent(other) && other.Body == Body;
         }
     }
 

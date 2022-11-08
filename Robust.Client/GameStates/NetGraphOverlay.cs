@@ -251,13 +251,11 @@ namespace Robust.Client.GameStates
             base.DisposeBehavior();
         }
 
-        private sealed class NetShowGraphCommand : IConsoleCommand
+        private sealed class NetShowGraphCommand : LocalizedCommands
         {
-            public string Command => "net_graph";
-            public string Help => "net_graph";
-            public string Description => "Toggles the net statistics pannel.";
+            public override string Command => "net_graph";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
@@ -274,13 +272,11 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetWatchEntCommand : IConsoleCommand
+        private sealed class NetWatchEntCommand : LocalizedCommands
         {
-            public string Command => "net_watchent";
-            public string Help => "net_watchent <0|EntityUid>";
-            public string Description => "Dumps all network updates for an EntityId to the console.";
+            public override string Command => "net_watchent";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 EntityUid eValue;
                 if (args.Length == 0)

@@ -9,13 +9,11 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class LauncherAuthCommand : IConsoleCommand
+    internal sealed class LauncherAuthCommand : LocalizedCommands
     {
-        public string Command => "launchauth";
-        public string Description => "Load authentication tokens from launcher data to aid in testing of live servers";
-        public string Help => "launchauth [account name]";
+        public override string Command => "launchauth";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var wantName = args.Length > 0 ? args[0] : null;
 

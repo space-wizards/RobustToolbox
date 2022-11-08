@@ -13,9 +13,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
-#if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
-#endif
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -25,6 +23,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -59,9 +59,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
-#if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-#endif
 
         private ISawmill _sawmill = default!;
 
@@ -247,7 +245,18 @@ namespace Robust.Client.GameStates
                 }
 
                 if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
+                {
+                    try
+                    {
+                        ResetPredictedEntities();
+                    }
+                    catch (Exception e)
+                    {
+                        // avoid exception spam from repeatedly trying to reset the same entity.
+                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                        _runtimeLog.LogException(e, "ResetPredictedEntities");
+                    }
+                }
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
@@ -461,7 +470,11 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
+                var netComps = _entityManager.GetNetComponentsOrNull(entity);
+                if (netComps == null)
+                    return;
+
+                foreach (var (netId, comp) in netComps.Value)
                 {
                     DebugTools.AssertNotNull(netId);
                     if (!comp.NetSyncEnabled)
@@ -664,7 +677,7 @@ namespace Robust.Client.GameStates
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -687,6 +700,12 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            var contQuery = _entities.GetEntityQuery<ContainerManagerComponent>();
+            var physicsQuery = _entities.GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = _entities.GetEntityQuery<FixturesComponent>();
+            var broadQuery = _entities.GetEntityQuery<BroadphaseComponent>();
+            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
+
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
@@ -695,10 +714,28 @@ namespace Robust.Client.GameStates
                     HandleEntityState(entity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
 
-                    if (data.EnteringPvs)
-                        lookupSys.FindAndAddToEntityTree(entity);
+                    if (!data.EnteringPvs)
+                        continue;
+
+                    // Now that things like collision data, fixtures, and positions have been updated, we queue a
+                    // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
+                    // we only need to update it's parent (as it recursively updates children anyways).
+                    var xform = xforms.GetComponent(entity);
+                    DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
+                    xform.Broadphase = null;
+                    if (!toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
+                        queuedBroadphaseUpdates.Add((entity, xform));
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
+            }
+
+            // Add entering entities back to broadphase.
+            using (_prof.Group("Update Broadphase"))
+            {
+                foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                {
+                    lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                }
             }
 
             var delSpan = curState.EntityDeletions.Span;
@@ -754,7 +791,13 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }
 
-        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys, ContainerSystem containerSys)
+        private List<EntityUid> ProcessPvsDeparture(
+            GameTick toTick,
+            EntityQuery<MetaDataComponent> metas,
+            EntityQuery<TransformComponent> xforms,
+            SharedTransformSystem xformSys,
+            ContainerSystem containerSys,
+            EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
             var detached = new List<EntityUid>();
@@ -790,6 +833,9 @@ namespace Robust.Client.GameStates
                     var xform = xforms.GetComponent(ent);
                     if (xform.ParentUid.IsValid())
                     {
+                        lookupSys.RemoveFromEntityTree(ent, xform, xforms);
+                        xform.Broadphase = BroadphaseData.Invalid;
+
                         // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                         // In those situations, we need to add the entity back to the list of expected entities after detaching.
                         IContainer? container = null;
@@ -798,7 +844,7 @@ namespace Robust.Client.GameStates
                             (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                             containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            container.Remove(ent, _entities, xform, meta, false, false, true);
+                            container.Remove(ent, _entities, xform, meta, false, true);
                         }
 
                         meta._flags |= MetaDataFlags.Detached;

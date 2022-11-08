@@ -11,13 +11,11 @@ using static TerraFX.Interop.DirectX.DXGI;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    public sealed class VramCommand : IConsoleCommand
+    public sealed class VramCommand : LocalizedCommands
     {
-        public string Command => "vram";
-        public string Description => "Displays video memory usage statics by the game.";
-        public string Help => "Usage: vram";
+        public override string Command => "vram";
 
-        public unsafe void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override unsafe void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (!OperatingSystem.IsWindows())
             {

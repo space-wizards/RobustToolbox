@@ -4,13 +4,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class ReloadLocalizationsCommand : IConsoleCommand
+    internal sealed class ReloadLocalizationsCommand : LocalizedCommands
     {
-        public string Command => "rldloc";
-        public string Description => "Reloads localization (client & server)";
-        public string Help => "Usage: rldloc";
+        public override string Command => "rldloc";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<ILocalizationManager>().ReloadLocalizations();
 

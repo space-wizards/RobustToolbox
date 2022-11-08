@@ -9,7 +9,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Server.GameObjects
 {
-    internal sealed class MapSystem : SharedMapSystem
+    public sealed class MapSystem : SharedMapSystem
     {
         private bool _deleteEmptyGrids;
 

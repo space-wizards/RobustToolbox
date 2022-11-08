@@ -7,13 +7,11 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class LsMonitorCommand : IConsoleCommand
+    public sealed class LsMonitorCommand : LocalizedCommands
     {
-        public string Command => "lsmonitor";
-        public string Description => "";
-        public string Help => "";
+        public override string Command => "lsmonitor";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();
 
@@ -26,13 +24,11 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public sealed class MonitorInfoCommand : IConsoleCommand
+    public sealed class MonitorInfoCommand : LocalizedCommands
     {
-        public string Command => "monitorinfo";
-        public string Description => "";
-        public string Help => "Usage: monitorinfo <id>";
+        public override string Command => "monitorinfo";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
@@ -54,13 +50,11 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public sealed class SetMonitorCommand : IConsoleCommand
+    public sealed class SetMonitorCommand : LocalizedCommands
     {
-        public string Command => "setmonitor";
-        public string Description => "";
-        public string Help => "Usage: setmonitor <id>";
+        public override string Command => "setmonitor";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();
 

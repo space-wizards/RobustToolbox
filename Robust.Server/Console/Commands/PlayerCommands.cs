@@ -13,13 +13,11 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal sealed class TeleportCommand : IConsoleCommand
+    internal sealed class TeleportCommand : LocalizedCommands
     {
-        public string Command => "tp";
-        public string Description => "Teleports a player to any location in the round.";
-        public string Help => "tp <x> <y> [<mapID>]";
+        public override string Command => "tp";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame)
@@ -70,13 +68,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class TeleportToCommand : IConsoleCommand
+    public sealed class TeleportToCommand : LocalizedCommands
     {
-        public string Command => "tpto";
-        public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
-        public string Help => "tpto <username|uid> [username|uid]...";
+        public override string Command => "tpto";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length == 0)
                 return;
@@ -145,13 +141,10 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class ListPlayers : IConsoleCommand
+    public sealed class ListPlayers : LocalizedCommands
     {
-        public string Command => "listplayers";
-        public string Description => "Lists all players currently connected";
-        public string Help => "listplayers";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "listplayers";
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
@@ -177,13 +170,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal sealed class KickCommand : IConsoleCommand
+    internal sealed class KickCommand : LocalizedCommands
     {
-        public string Command => "kick";
-        public string Description => "Kicks a connected player out of the server, disconnecting them.";
-        public string Help => "kick <PlayerIndex> [<Reason>]";
+        public override string Command => "kick";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var players = IoCManager.Resolve<IPlayerManager>();
             if (args.Length < 1)
@@ -215,7 +206,7 @@ namespace Robust.Server.Console.Commands
             }
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length == 1)
             {

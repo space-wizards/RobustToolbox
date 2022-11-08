@@ -7,17 +7,12 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.ViewVariables.Commands;
 
-public abstract class ViewVariablesBaseCommand : IConsoleCommand
+public abstract class ViewVariablesBaseCommand : LocalizedCommands
 {
     [Dependency] protected readonly INetManager _netMan = default!;
     [Dependency] protected readonly IViewVariablesManager _vvm = default!;
 
-    public abstract string Command { get; }
-    public abstract string Description { get; }
-    public abstract string Help { get; }
-    public abstract void Execute(IConsoleShell shell, string argStr, string[] args);
-
-    public virtual async ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+    public override async ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
     {
         if (args.Length is 0 or > 1)
             return CompletionResult.Empty;

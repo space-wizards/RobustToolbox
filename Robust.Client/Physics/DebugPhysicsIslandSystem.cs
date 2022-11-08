@@ -11,12 +11,11 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics
 {
-    internal sealed class PhysicsIslandCommand : IConsoleCommand
+    internal sealed class PhysicsIslandCommand : LocalizedCommands
     {
-        public string Command => "showislands";
-        public string Description => "Shows the current physics bodies involved in each physics island.";
-        public string Help => "showislands";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "showislands";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 0)
             {

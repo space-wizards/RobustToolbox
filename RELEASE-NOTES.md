@@ -27,27 +27,82 @@ Template for new versions:
 
 -->
 
-## Master
-
-### Breaking changes
-
-*None yet*
-
-### New features
-
-*None yet*
+## 0.62.0.1
 
 ### Bugfixes
 
-*None yet*
+* Fixed sprites not animating when directly toggling layer visibility,
+* Fixed anchored entities not being added to the anchored lookups.
+
+## 0.62.0.0
+
+### Breaking changes
+
+* Removed some obsolete map event handlers.
+
+### New features
+
+* Added entity query struct enumerators
+
+### Bugfixes
+
+* Improved error tolerance during client state application.
+* Added better error logs when a client deletes a predicted entity.
+* Fixes command permissions not getting sent to clients.
+* Fixes a broad-phase bug were entities were not properly updating their positions.
 
 ### Other
 
-*None yet*
+* Added the LocalizedCommands class, which automatically infer help and description loc strings from the commands name.
+
+## 0.61.0.0
+
+### Breaking changes
+
+* IMap and IMapGrid have been removed. Just use the associated components directly.
+
+### Other
+
+* AudioSystem has been refactored.
+
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
 
 ### Internal
 
-*None yet*
+* Removed redundant grid-init physics logic 
+* Modified garbage collection for entity spawning profiling.
+
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
 
 ## 0.58.1.1
 

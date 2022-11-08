@@ -70,7 +70,7 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         /// <summary>
-        /// When using SetMapEntity, the existing entities on the map are removed, and the new map entity gets a IMapComponent.
+        /// When using SetMapEntity, the existing entities on the map are removed, and the new map entity gets a MapComponent.
         /// </summary>
         [Test]
         public void SetMapEntity_WithExistingEntity_ExistingEntityDeleted()
@@ -92,9 +92,9 @@ namespace Robust.UnitTesting.Shared.Map
 
             // Assert
             Assert.That(entMan.Deleted(oldMapEntity));
-            Assert.That(entMan.HasComponent<IMapComponent>(newMapEntity));
+            Assert.That(entMan.HasComponent<MapComponent>(newMapEntity));
 
-            var mapComp = entMan.GetComponent<IMapComponent>(newMapEntity);
+            var mapComp = entMan.GetComponent<MapComponent>(newMapEntity);
             Assert.That(mapComp.WorldMap == mapID);
         }
 

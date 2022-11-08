@@ -3,13 +3,15 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using Robust.Shared.GameStates;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    internal abstract class SharedMapSystem : EntitySystem
+    public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] protected readonly IMapManagerInternal MapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
 
         public override void Initialize()
         {
@@ -18,11 +20,33 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
             SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
+            SubscribeLocalEvent<MapComponent, ComponentHandleState>(OnMapHandleState);
+            SubscribeLocalEvent<MapComponent, ComponentGetState>(OnMapGetState);
 
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+
+            SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
+            SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
+        }
+
+        private void OnMapHandleState(EntityUid uid, MapComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is not MapComponentState state)
+                return;
+
+            component.WorldMap = state.MapId;
+            component.LightingEnabled = state.LightingEnabled;
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
+        }
+
+        private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
+        {
+            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
         }
 
         protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
@@ -35,6 +59,10 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
+            var iMap = (IMapManagerInternal)MapManager;
+
+            iMap.TrueDeleteMap(component.WorldMap);
+
             var msg = new MapChangedEvent(component.WorldMap, false);
             RaiseLocalEvent(uid, msg, true);
         }
@@ -61,7 +89,14 @@ namespace Robust.Shared.GameObjects
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
             RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
-            MapManager.OnComponentRemoved(component);
+
+            if (uid == EntityUid.Invalid)
+                return;
+
+            if (!MapManager.GridExists(uid))
+                return;
+
+            MapManager.DeleteGrid(uid);
         }
     }
 

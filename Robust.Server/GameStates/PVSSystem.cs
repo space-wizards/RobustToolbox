@@ -734,7 +734,7 @@ internal sealed partial class PVSSystem : EntitySystem
         var entStateCount = 0;
 
         var stack = _stackPool.Get();
-        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop0in less visible.
+        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
         foreach (var i in chunkIndices)
         {
             var cache = chunkCache[i];
@@ -827,7 +827,7 @@ internal sealed partial class PVSSystem : EntitySystem
 #if !FULL_RELEASE
                 // This happens relatively frequently for the current TickBuffer value, and doesn't really provide any
                 // useful info when not debugging/testing locally. Hence disabled on FULL_RELEASE.
-                _sawmill.Warning($"Client {session} exceeded tick buffer.");
+                _sawmill.Debug($"Client {session} exceeded tick buffer.");
 #endif
             }
             else if (oldEntry.Value.Value != lastAcked)

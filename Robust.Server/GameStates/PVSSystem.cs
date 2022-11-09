@@ -339,7 +339,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
-        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
+        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false, ev.ParentChanged);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ref TransformStartupEvent args)
@@ -357,10 +357,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component, xformQuery);
-        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
+        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false, false);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover, bool forceDirty)
     {
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
@@ -372,9 +372,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
         if (xform.GridUid != null)
-            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices);
+            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices, forceDirty: forceDirty);
         else
-            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices);
+            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices, forceDirty: forceDirty);
 
         var children = xform.ChildEnumerator;
 
@@ -384,7 +384,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // directly.
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
+            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true, forceDirty);
         }
     }
 

@@ -428,7 +428,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="gridId">The id of the grid.</param>
     /// <param name="chunkIndices">The indices of the chunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false)
+    /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
+    public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -436,7 +437,12 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if (_indexLocations.TryGetValue(index, out var oldLocation) &&
             oldLocation is GridChunkLocation oldGrid &&
             oldGrid.ChunkIndices == chunkIndices &&
-            oldGrid.GridId == gridId) return;
+            oldGrid.GridId == gridId)
+        {
+            if (forceDirty)
+                _dirtyChunks.Add(oldGrid);
+            return;
+        }
 
         RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
     }
@@ -448,7 +454,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="mapId">The id of the map.</param>
     /// <param name="chunkIndices">The indices of the mapchunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false)
+    /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
+    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -456,7 +463,13 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if (_indexLocations.TryGetValue(index, out var oldLocation) &&
             oldLocation is MapChunkLocation oldMap &&
             oldMap.ChunkIndices == chunkIndices &&
-            oldMap.MapId == mapId) return;
+            oldMap.MapId == mapId)
+        {
+            if (forceDirty)
+                _dirtyChunks.Add(oldMap);
+            return;
+        }
+
 
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Network;
@@ -195,6 +196,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 Expression call;
+                var valueVar = Expression.Variable(fieldDefinition.FieldType);
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
                     var serializerInstance =
@@ -206,7 +208,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Constant(serializerInstance, serializerType),
                         serializerType.GetMethod("Write")!,
                         managerConst,
-                        AccessExpression(i, objParam, fieldDefinition),
+                        valueVar,
                         dependencyConst,
                         alwaysWriteParam,
                         contextParam);
@@ -217,7 +219,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         managerConst,
                         "WriteValue",
                         new[] { fieldDefinition.FieldType },
-                        AccessExpression(i, objParam, fieldDefinition),
+                        valueVar,
                         alwaysWriteParam,
                         contextParam);
                 }
@@ -258,20 +260,26 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 writeExpression = Expression.Block(
                     new[] { nodeVariable },
+                    Expression.Assign(valueVar, AccessExpression(i, objParam, fieldDefinition)),
                     Expression.Assign(nodeVariable, call),
                     writeExpression);
 
                 if (fieldDefinition.Attribute is not DataFieldAttribute { Required: true })
                 {
-                    expressions.Add(Expression.IfThen(
+                    expressions.Add(Expression.Block(
+                        new []{valueVar},
+                        Expression.IfThen(
                         Expression.Or(alwaysWriteParam,
                             Expression.Not(
-                                IsDefault(i, AccessExpression(i, objParam, fieldDefinition), fieldDefinition))),
-                        writeExpression));
+                                IsDefault(i, valueVar, fieldDefinition))),
+                        writeExpression)));
                 }
                 else
                 {
-                    expressions.Add(writeExpression);
+                    expressions.Add(
+                        Expression.Block(
+                            new []{valueVar},
+                            writeExpression));
                 }
 
                 expressions.Add(ExpressionUtils.WriteLine(i));
@@ -310,7 +318,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 Expression call;
-                Expression sourceValue = AccessExpression(i, sourceParam, fieldDefinition);
+                var sourceVar = Expression.Variable(fieldDefinition.FieldType);
                 var targetValue = Expression.Variable(fieldDefinition.FieldType);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
@@ -322,7 +330,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Constant(serializerInstance, serializerType),
                         serializerType.GetMethod("CopyTo")!,
                         managerConst,
-                        sourceValue,
+                        sourceVar,
                         targetValue,
                         skipHookParam,
                         contextParam));
@@ -336,7 +344,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Constant(serializerInstance, serializerType),
                         serializerType.GetMethod("CreateCopy")!,
                         managerConst,
-                        sourceValue,
+                        sourceVar,
                         skipHookParam,
                         contextParam));
                 }
@@ -346,15 +354,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         managerConst,
                         "CopyTo",
                         new[] { fieldDefinition.FieldType },
-                        sourceValue,
+                        sourceVar,
                         targetValue,
                         contextParam,
                         skipHookParam);
                 }
 
                 expressions.Add(Expression.Block(
-                        new[] { targetValue },
-                        Expression.Assign(targetValue, AccessExpression(i, targetParam, fieldDefinition)),
+                        new[] { targetValue, sourceVar },
+                        Expression.Empty(),
+                        Expression.Assign(sourceVar, AccessExpression(i, sourceParam, fieldDefinition)),
+                        Expression.Assign(targetValue, Expression.Default(fieldDefinition.FieldType)),
                         call,
                         AssignExpression(i, targetParam, targetValue)
                     )
@@ -376,20 +386,29 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private Expression AccessExpression(int i, Expression obj, FieldDefinition fieldDefinition)
         {
-            return Expression.Convert(Expression.Invoke(Expression.Constant(FieldAccessors[i]), obj), fieldDefinition.FieldType);
+            return Expression.Convert(Expression.Call(
+                Expression.Constant(this),
+                nameof(AccessFieldWrap),
+                new []{fieldDefinition.BackingField.FieldType},
+                Expression.Constant(i),
+                obj), fieldDefinition.BackingField.FieldType);
+        }
+
+        private TValue AccessFieldWrap<TValue>(int i, ref T target)
+        {
+            System.Console.WriteLine($"fieldaccess start for {typeof(TValue)}");
+            var temp = ((InternalReflectionUtils.AccessField<T, TValue>)FieldAccessors[i])(ref target);
+            if (temp != null && typeof(TValue) != temp.GetType())
+            {
+                Debugger.Break();
+            }
+            System.Console.WriteLine($"fieldaccess got: {temp?.GetType()}");
+            return temp!;
         }
 
         private Expression IsDefault(int i, Expression left, FieldDefinition fieldDefinition)
         {
-            var equatableType = typeof(IEquatable<>).MakeGenericType(fieldDefinition.FieldType);
             var defaultValueExpression = Expression.Constant(DefaultValues[i], fieldDefinition.FieldType);
-            if (equatableType.IsAssignableFrom(fieldDefinition.FieldType))
-            {
-                return Expression.Call(
-                    left,
-                    equatableType.GetMethod("Equals")!,
-                    defaultValueExpression);
-            }
 
             if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string) || fieldDefinition.FieldType.GetMethod("op_Equality", BindingFlags.Instance) != null)
             {

@@ -74,7 +74,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
             var fieldAssigners = new InternalReflectionUtils.AssignField<T, object?>[BaseFieldDefinitions.Length];
-            var fieldAccessors = new InternalReflectionUtils.AccessField<T, object?>[BaseFieldDefinitions.Length];
+            var fieldAccessors = new object[BaseFieldDefinitions.Length];
 
             var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
                 fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(typeof(T), fieldDefinition.FieldType, fieldDefinition.BackingField);
-                fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor<T>(fieldDefinition.FieldType, fieldDefinition.BackingField);
+                fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {
@@ -158,7 +158,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 
         private ImmutableArray<InternalReflectionUtils.AssignField<T, object?>> FieldAssigners { get; }
-        private ImmutableArray<InternalReflectionUtils.AccessField<T, object?>> FieldAccessors { get; }
+        private ImmutableArray<object> FieldAccessors { get; }
 
         public ValidationNode Validate(
             ISerializationManager serialization,

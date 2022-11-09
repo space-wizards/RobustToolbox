@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.Shared.Utility;
 
@@ -30,12 +31,12 @@ public static class InternalReflectionUtils
         }
     }
 
-    internal static AccessField<T, object?> EmitFieldAccessor<T>(Type type, AbstractFieldInfo fieldDefinition)
+    internal static object EmitFieldAccessor(Type obj, FieldDefinition fieldDefinition)
     {
         var method = new DynamicMethod(
             "AccessField",
-            typeof(object),
-            new[] {typeof(T).MakeByRefType()},
+            fieldDefinition.BackingField.FieldType,
+            new[] {obj.MakeByRefType()},
             true);
 
         method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -44,27 +45,21 @@ public static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ldarg_0);
 
-        switch (fieldDefinition)
+        switch (fieldDefinition.BackingField)
         {
             case SpecificFieldInfo field:
                 generator.Emit(OpCodes.Ldfld, field.FieldInfo);
                 break;
             case SpecificPropertyInfo property:
                 var getter = property.PropertyInfo.GetGetMethod(true) ?? throw new NullReferenceException();
-                var opCode = type.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
+                var opCode = fieldDefinition.BackingField.FieldType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
                 generator.Emit(opCode, getter);
                 break;
         }
 
-        var returnType = fieldDefinition.FieldType;
-        if (returnType.IsValueType)
-        {
-            generator.Emit(OpCodes.Box, returnType);
-        }
-
         generator.Emit(OpCodes.Ret);
 
-        return method.CreateDelegate<AccessField<T, object?>>();
+        return method.CreateDelegate(typeof(AccessField<,>).MakeGenericType(obj, fieldDefinition.BackingField.FieldType));
     }
 
     internal static AssignField<T, object?> EmitFieldAssigner<T>(Type type, Type fieldType, AbstractFieldInfo backingField)

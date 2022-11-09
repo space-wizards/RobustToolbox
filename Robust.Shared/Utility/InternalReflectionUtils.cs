@@ -45,6 +45,9 @@ public static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ldarg_0);
 
+        if(!obj.IsValueType)
+            generator.Emit(OpCodes.Ldind_Ref);
+
         switch (fieldDefinition.BackingField)
         {
             case SpecificFieldInfo field:

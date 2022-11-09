@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Network;
@@ -386,24 +385,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private Expression AccessExpression(int i, Expression obj, FieldDefinition fieldDefinition)
         {
-            return Expression.Convert(Expression.Call(
-                Expression.Constant(this),
-                nameof(AccessFieldWrap),
-                new []{fieldDefinition.BackingField.FieldType},
-                Expression.Constant(i),
-                obj), fieldDefinition.BackingField.FieldType);
-        }
-
-        private TValue AccessFieldWrap<TValue>(int i, ref T target)
-        {
-            System.Console.WriteLine($"fieldaccess start for {typeof(TValue)}");
-            var temp = ((InternalReflectionUtils.AccessField<T, TValue>)FieldAccessors[i])(ref target);
-            if (temp != null && typeof(TValue) != temp.GetType())
-            {
-                Debugger.Break();
-            }
-            System.Console.WriteLine($"fieldaccess got: {temp?.GetType()}");
-            return temp!;
+            return Expression.Invoke(Expression.Constant(FieldAccessors[i]), obj);
         }
 
         private Expression IsDefault(int i, Expression left, FieldDefinition fieldDefinition)

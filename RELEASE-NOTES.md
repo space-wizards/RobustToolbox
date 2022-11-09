@@ -27,6 +27,22 @@ Template for new versions:
 
 -->
 
+
+## 0.62.1.0
+
+### Bugfixes
+
+* Fixed a PVS issue causing entities to be sent to clients without first sending their parents.
+* Improved client-side state handling exception tolerance.
+
+### Other
+
+* Removed null-space map entities.
+
+### Internal
+
+* Added some more anchoring tests.
+
 ## 0.62.0.1
 
 ### Bugfixes

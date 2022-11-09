@@ -178,11 +178,17 @@ public sealed class TextEdit : Control
     /// <summary>
     /// The lower (in string index terms) end of the active text selection.
     /// </summary>
+    /// <remarks>
+    /// Confusingly, because text is read top-to-bottom, "lower" is actually higher up on your monitor.
+    /// </remarks>
     public CursorPos SelectionLower => CursorPos.Min(_selectionStart, _cursorPosition);
 
     /// <summary>
     /// The upper (in string index terms) end of the active text selection.
     /// </summary>
+    /// <remarks>
+    /// Confusingly, because text is read top-to-bottom, "upper" is actually lower down on your monitor.
+    /// </remarks>
     public CursorPos SelectionUpper => CursorPos.Max(_selectionStart, _cursorPosition);
 
     /// <summary>
@@ -225,23 +231,23 @@ public sealed class TextEdit : Control
     private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
     {
         // @formatter:off
-        { EngineKeyFunctions.TextCursorLeft,            MoveType.Left                                 },
-        { EngineKeyFunctions.TextCursorRight,           MoveType.Right                                },
-        { EngineKeyFunctions.TextCursorUp,              MoveType.Up        | MoveType.CacheHorizontal },
-        { EngineKeyFunctions.TextCursorDown,            MoveType.Down      | MoveType.CacheHorizontal },
-        { EngineKeyFunctions.TextCursorWordLeft,        MoveType.LeftWord                             },
-        { EngineKeyFunctions.TextCursorWordRight,       MoveType.RightWord                            },
-        { EngineKeyFunctions.TextCursorBegin,           MoveType.BeginOfLine                          },
-        { EngineKeyFunctions.TextCursorEnd,             MoveType.EndOfLine                            },
+        { EngineKeyFunctions.TextCursorLeft,            MoveType.Left        },
+        { EngineKeyFunctions.TextCursorRight,           MoveType.Right       },
+        { EngineKeyFunctions.TextCursorUp,              MoveType.Up          },
+        { EngineKeyFunctions.TextCursorDown,            MoveType.Down        },
+        { EngineKeyFunctions.TextCursorWordLeft,        MoveType.LeftWord    },
+        { EngineKeyFunctions.TextCursorWordRight,       MoveType.RightWord   },
+        { EngineKeyFunctions.TextCursorBegin,           MoveType.BeginOfLine },
+        { EngineKeyFunctions.TextCursorEnd,             MoveType.EndOfLine   },
 
-        { EngineKeyFunctions.TextCursorSelectLeft,      MoveType.Left        | MoveType.SelectFlag                            },
-        { EngineKeyFunctions.TextCursorSelectRight,     MoveType.Right       | MoveType.SelectFlag                            },
-        { EngineKeyFunctions.TextCursorSelectUp,        MoveType.Up          | MoveType.SelectFlag | MoveType.CacheHorizontal },
-        { EngineKeyFunctions.TextCursorSelectDown,      MoveType.Down        | MoveType.SelectFlag | MoveType.CacheHorizontal },
-        { EngineKeyFunctions.TextCursorSelectWordLeft,  MoveType.LeftWord    | MoveType.SelectFlag                            },
-        { EngineKeyFunctions.TextCursorSelectWordRight, MoveType.RightWord   | MoveType.SelectFlag                            },
-        { EngineKeyFunctions.TextCursorSelectBegin,     MoveType.BeginOfLine | MoveType.SelectFlag                            },
-        { EngineKeyFunctions.TextCursorSelectEnd,       MoveType.EndOfLine   | MoveType.SelectFlag                            },
+        { EngineKeyFunctions.TextCursorSelectLeft,      MoveType.Left        | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectRight,     MoveType.Right       | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectUp,        MoveType.Up          | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectDown,      MoveType.Down        | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectWordLeft,  MoveType.LeftWord    | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectWordRight, MoveType.RightWord   | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectBegin,     MoveType.BeginOfLine | MoveType.SelectFlag },
+        { EngineKeyFunctions.TextCursorSelectEnd,       MoveType.EndOfLine   | MoveType.SelectFlag },
         // @formatter:on
     };
 
@@ -260,11 +266,8 @@ public sealed class TextEdit : Control
             // To allow sharing this code, we map key functions to a flag that defines the actual operation,
             // making code reuse easy.
 
-            var selectFlag = (moveType & MoveType.SelectFlag) != 0;
-            if ((moveType & MoveType.CacheHorizontal) != 0)
-                CacheHorizontalCursorPos();
-
             // Calculate actual new position.
+            var selectFlag = (moveType & MoveType.SelectFlag) != 0;
             var newPos = CalcCursorMove(moveType & MoveType.ActionMask, selectFlag, out var keepH);
 
             _cursorPosition = newPos;
@@ -454,21 +457,22 @@ public sealed class TextEdit : Control
         }
     }
 
-    private void CacheHorizontalCursorPos()
+    private void CacheHorizontalCursorPos(CursorPos pos)
     {
         EnsureLineBreaksUpdated();
 
         if (_horizontalCursorPos != null)
             return;
 
-        _horizontalCursorPos = GetHorizontalPositionAtIndex(_cursorPosition);
+        _horizontalCursorPos = GetHorizontalPositionAtIndex(pos);
     }
 
     /// <summary>
     /// Calculate the position the cursor should move to with a certain move.
     /// </summary>
     /// <remarks>
-    /// This method is pure: it does not modify the actual cursor position yet, it only calculates the next position.
+    /// This method is not pure: while it does not modify the actual cursor position yet,
+    /// only calculating the next position, it still calls <c>CacheHorizontalCursorPos</c> manually.
     /// </remarks>
     /// <param name="type">The type of move the cursor is doing.</param>
     /// <param name="select">Whether a selection is being expanded.</param>
@@ -476,18 +480,18 @@ public sealed class TextEdit : Control
     /// Whether the cached horizontal cursor position must be kept instead of being invalidates.
     /// </param>
     /// <returns>The new position of the cursor in the text.</returns>
-    [Pure]
     private CursorPos CalcCursorMove(MoveType type, bool select, out bool keepHorizontalCursorPos)
     {
         DebugTools.Assert(BitOperations.PopCount((uint)type) == 1, "Only a single movement bit may be set in the type");
 
         keepHorizontalCursorPos = false;
 
+        var breakingSelection = _selectionStart != _cursorPosition && !select;
         switch (type)
         {
             case MoveType.Left:
             {
-                if (_selectionStart != _cursorPosition && !select)
+                if (breakingSelection)
                 {
                     // If we're breaking an active selection, move to the lower side of it.
                     return SelectionLower;
@@ -512,7 +516,7 @@ public sealed class TextEdit : Control
             }
             case MoveType.Right:
             {
-                if (_selectionStart != _cursorPosition && !select)
+                if (breakingSelection)
                 {
                     return SelectionUpper;
                 }
@@ -547,10 +551,19 @@ public sealed class TextEdit : Control
             }
             case MoveType.Up:
             {
+                var cursor = _cursorPosition;
+                if (breakingSelection)
+                {
+                    // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
+                    InvalidateHorizontalCursorPos();
+
+                    cursor = SelectionLower;
+                }
+
+                CacheHorizontalCursorPos(cursor);
                 DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
 
-                // TODO: From selection lower, not cursor pos.
-                var (line, _, _) = GetLineForCursorPos(_cursorPosition);
+                var (line, _, _) = GetLineForCursorPos(cursor);
 
                 if (line == 0)
                 {
@@ -564,11 +577,20 @@ public sealed class TextEdit : Control
             }
             case MoveType.Down:
             {
+                var cursor = _cursorPosition;
+                if (breakingSelection)
+                {
+                    // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
+                    InvalidateHorizontalCursorPos();
+
+                    cursor = SelectionUpper;
+                }
+
+                CacheHorizontalCursorPos(cursor);
                 DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
 
-                var (line, _, _) = GetLineForCursorPos(_cursorPosition);
+                var (line, _, _) = GetLineForCursorPos(cursor);
 
-                // TODO: Isn't this off-by-one.
                 if (line == _lineBreaks.Count)
                 {
                     // On the last line already, move to the end of it.
@@ -1452,7 +1474,6 @@ public sealed class TextEdit : Control
 
         ActionMask      = (1 << 16) - 1,
         SelectFlag      =  1 << 16,
-        CacheHorizontal =  1 << 17,
         // @formatter:on
     }
 }

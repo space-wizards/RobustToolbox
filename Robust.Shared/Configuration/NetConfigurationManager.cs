@@ -198,6 +198,15 @@ namespace Robust.Shared.Configuration
                 // Server sent us a CVar update.
                 foreach (var (name, value) in networkedVars)
                 {
+                    if (!_configVars.TryGetValue(name, out var cVar))
+                    {
+                        _sawmill.Warning($"{msgChannel} tried to replicate an unknown CVar '{name}.'");
+                        continue;
+                    }
+
+                    if ((cVar.Flags & CVar.CLIENT) != 0)
+                        continue; // ignore the server specified value.
+
                     // Actually set the CVar
                     SetCVarInternal(name, value, tick);
 
@@ -281,6 +290,14 @@ namespace Robust.Shared.Configuration
                         if ((cVar.Flags & CVar.SERVER) != 0)
                         {
                             _sawmill.Warning($"Only the server can change '{name}'.");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if ((cVar.Flags & CVar.CLIENT) != 0)
+                        {
+                            _sawmill.Warning($"Only clients can change '{name}'.");
                             return;
                         }
                     }

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -11,6 +8,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -30,8 +30,40 @@ namespace Robust.Shared.GameObjects
         [DataField("anchored")]
         internal bool _anchored;
 
+        /// <summary>
+        ///     The broadphase that this entity is currently stored on, if any.
+        /// </summary>
+        /// <remarks>
+        ///     Maybe this should be moved to its own component eventually, but at least currently comps are not structs
+        ///     and this data is required whenever any entity moves, so this will just save a component lookup.
+        /// </remarks>
+        [ViewVariables]
+        internal BroadphaseData? Broadphase;
+
+        internal bool MatricesDirty = false;
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
+
+        // these should just be system methods, but existing component functions like InvWorldMatrix still rely on
+        // getting these so those have to be fully ECS-ed first.
+        public Matrix3 LocalMatrix
+        {
+            get
+            {
+                if (MatricesDirty)
+                    RebuildMatrices();
+                return _localMatrix;
+            }
+        }
+        public Matrix3 InvLocalMatrix
+        {
+            get
+            {
+                if (MatricesDirty)
+                    RebuildMatrices();
+                return _invLocalMatrix;
+            }
+        }
 
         // used for lerping
 
@@ -69,7 +101,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
-        public EntityUid? MapUid => _mapManager.MapExists(MapID) ? _mapManager.GetMapEntityId(MapID) : null;
+        public EntityUid? MapUid
+        {
+            get
+            {
+                var id = _mapManager.GetMapEntityId(MapID);
+                return id.IsValid() ? id : null;
+            }
+        }
 
         /// <summary>
         ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
@@ -84,14 +123,6 @@ namespace Robust.Shared.GameObjects
 
         [Access(typeof(SharedTransformSystem))]
         internal EntityUid? _gridUid = null;
-
-        [Obsolete("Use GridUid")]
-        public GridId GridID
-        {
-            get => _entMan.TryGetComponent(GridUid, out MapGridComponent? grid)
-                ? grid.GridIndex
-                : GridId.Invalid;
-        }
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
@@ -132,7 +163,10 @@ namespace Robust.Shared.GameObjects
 
                 if (!DeferUpdates)
                 {
-                    RebuildMatrices();
+                    MatricesDirty = true;
+                    if (!Initialized)
+                        return;
+
                     var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -176,39 +210,16 @@ namespace Robust.Shared.GameObjects
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         [ViewVariables]
+        [Obsolete("Use ParentUid and query the parent TransformComponent")]
         public TransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
-            internal set
-            {
-                if (value == null)
-                {
-                    AttachToGridOrMap();
-                    return;
-                }
-
-                if (_anchored && (value).Owner != _parent)
-                {
-                    Anchored = false;
-                }
-
-                AttachParent(value);
-            }
         }
 
         /// <summary>
         /// The UID of the parent entity that this entity is attached to.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public EntityUid ParentUid
-        {
-            get => _parent;
-            set
-            {
-                if (value == _parent) return;
-                Parent = _entMan.GetComponent<TransformComponent>(value);
-            }
-        }
+        public EntityUid ParentUid  => _parent;
 
         /// <summary>
         ///     Matrix for transforming points from local to world space.
@@ -219,12 +230,12 @@ namespace Robust.Shared.GameObjects
             {
                 var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                 var parent = _parent;
-                var myMatrix = _localMatrix;
+                var myMatrix = LocalMatrix;
 
                 while (parent.IsValid())
                 {
                     var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform._localMatrix;
+                    var parentMatrix = parentXform.LocalMatrix;
                     parent = parentXform.ParentUid;
 
                     Matrix3.Multiply(in myMatrix, in parentMatrix, out var result);
@@ -244,12 +255,12 @@ namespace Robust.Shared.GameObjects
             {
                 var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                 var parent = _parent;
-                var myMatrix = _invLocalMatrix;
+                var myMatrix = InvLocalMatrix;
 
                 while (parent.IsValid())
                 {
                     var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform._invLocalMatrix;
+                    var parentMatrix = parentXform.InvLocalMatrix;
                     parent = parentXform.ParentUid;
 
                     Matrix3.Multiply(in parentMatrix, in myMatrix, out var result);
@@ -306,94 +317,10 @@ namespace Robust.Shared.GameObjects
                 var valid = _parent.IsValid();
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
-            // NOTE: This setter must be callable from before initialize (inheriting from AttachParent's note)
+            [Obsolete("Use the system's setter method instead.")]
             set
             {
-                // unless the parent is changing, nothing to do here
-                if(value.EntityId == _parent && _anchored)
-                    return;
-
-                var sameParent = value.EntityId == _parent;
-
-                if (!sameParent)
-                {
-                    // Need to set anchored before we update position so that we can clear snapgrid cells correctly.
-                    if(_parent != EntityUid.Invalid) // Allow setting Transform.Parent in Prototypes
-                        Anchored = false; // changing the parent un-anchors the entity
-                }
-
-                var oldPosition = Coordinates;
-                _localPosition = value.Position;
-                var changedParent = false;
-
-                if (!sameParent)
-                {
-                    var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                    changedParent = true;
-                    var newParent = xformQuery.GetComponent(value.EntityId);
-
-                    DebugTools.Assert(newParent != this,
-                        $"Can't parent a {nameof(TransformComponent)} to itself.");
-
-                    if (newParent.LifeStage > ComponentLifeStage.Running ||
-                        _entMan.GetComponent<MetaDataComponent>(newParent.Owner).EntityLifeStage > EntityLifeStage.MapInitialized)
-                    {
-                        var msg = $"Attempted to re-parent to a terminating object. Entity: {_entMan.ToPrettyString(Owner)}, new parent: {_entMan.ToPrettyString(value.EntityId)}";
-#if EXCEPTION_TOLERANCE
-                        Logger.Error(msg);
-                        _entMan.DeleteEntity(Owner);
-#else
-                        throw new InvalidOperationException(msg);
-#endif
-                    }
-
-                    // That's already our parent, don't bother attaching again.
-
-                    var oldParent = _parent.IsValid() ? xformQuery.GetComponent(_parent) : null;
-                    var uid = Owner;
-                    oldParent?._children.Remove(uid);
-                    newParent._children.Add(uid);
-
-                    // offset position from world to parent
-                    _parent = value.EntityId;
-                    var oldMapId = MapID;
-                    ChangeMapId(newParent.MapID, xformQuery);
-
-                    // Cache new GridID before raising the event.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(this, FindGridEntityId(xformQuery), xformQuery);
-
-                    // preserve world rotation
-                    if (LifeStage == ComponentLifeStage.Running)
-                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
-
-                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage, true);
-                }
-
-                // These conditions roughly emulate the effects of the code before I changed things,
-                //  in regards to when to rebuild matrices.
-                // This may not in fact be the right thing.
-                if (changedParent || !DeferUpdates)
-                    RebuildMatrices();
-
-                Dirty(_entMan);
-
-                if (!DeferUpdates)
-                {
-                    //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                    if (Running)
-                    {
-                        if (!oldPosition.Equals(Coordinates))
-                        {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
-                        }
-                    }
-                }
-                else
-                {
-                    _oldCoords ??= oldPosition;
-                }
+                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
             }
         }
 
@@ -406,7 +333,7 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Local offset of this entity relative to its parent
-        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
+        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridUid"/> otherwise).
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -427,7 +354,10 @@ namespace Robust.Shared.GameObjects
 
                 if (!DeferUpdates)
                 {
-                    RebuildMatrices();
+                    MatricesDirty = true;
+                    if (!Initialized)
+                        return;
+
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
                 }
@@ -447,8 +377,8 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
             set
             {
-                // This will be set again when the transform starts, actually anchoring it.
-                if (LifeStage < ComponentLifeStage.Starting)
+                // This will be set again when the transform initializes, actually anchoring it.
+                if (!Initialized)
                 {
                     _anchored = value;
                 }
@@ -518,19 +448,23 @@ namespace Robust.Shared.GameObjects
 
         internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
         {
-            if (_entMan.HasComponent<IMapComponent>(Owner))
+            if (_entMan.HasComponent<MapComponent>(Owner))
             {
                 return null;
             }
 
-            if (_entMan.TryGetComponent(Owner, out IMapGridComponent? gridComponent))
+            if (_entMan.HasComponent<MapGridComponent>(Owner))
             {
                 return Owner;
             }
 
             if (_parent.IsValid())
             {
-                return xformQuery.GetComponent(_parent).GridUid;
+                var parentXform = xformQuery.GetComponent(_parent);
+                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
+                    return parentXform.GridUid;
+                else
+                    return parentXform.FindGridEntityId(xformQuery);
             }
 
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
@@ -548,7 +482,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            RebuildMatrices();
+            MatricesDirty = true;
 
             var moveEvent = new MoveEvent(Owner, _oldCoords ?? Coordinates, Coordinates, _oldLocalRotation ?? _localRotation, _localRotation, this, _gameTiming.ApplyingState);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
@@ -589,7 +523,7 @@ namespace Robust.Shared.GameObjects
                 if (!_mapManager.IsMap(Owner))
                     Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
 
-                DetachParentToNull();
+                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
                 return;
             }
 
@@ -609,29 +543,14 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
-        [Obsolete("Use transform system")]
-        public void DetachParentToNull()
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
-        }
-
         /// <summary>
         /// Sets another entity as the parent entity, maintaining world position.
         /// </summary>
         /// <param name="newParent"></param>
+        [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(TransformComponent newParent)
         {
-            //NOTE: This function must be callable from before initialize
-
-            // don't attach to something we're already attached to
-            if (ParentUid == newParent.Owner)
-                return;
-
-            DebugTools.Assert(newParent != this,
-                $"Can't parent a {nameof(TransformComponent)} to itself.");
-
-            // offset position from world to parent, and set
-            Coordinates = new EntityCoordinates(newParent.Owner, newParent.InvWorldMatrix.Transform(WorldPosition));
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, newParent.Owner, newParent);
         }
 
         internal void ChangeMapId(MapId newMapId, EntityQuery<TransformComponent> xformQuery)
@@ -676,10 +595,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {
-            var transform = _entMan.GetComponent<TransformComponent>(parent);
-            AttachParent(transform);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, parent, _entMan.GetEntityQuery<TransformComponent>());
         }
 
         /// <summary>
@@ -706,14 +625,14 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var worldMatrix = _localMatrix;
+            var worldMatrix = LocalMatrix;
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
-                var parentMatrix = xform._localMatrix;
+                var parentMatrix = xform.LocalMatrix;
                 Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
@@ -767,20 +686,20 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var invMatrix = _invLocalMatrix;
-            var worldMatrix = _localMatrix;
+            var invMatrix = InvLocalMatrix;
+            var worldMatrix = LocalMatrix;
 
-            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            // By doing these all at once we can avoid multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
                 var xform = xformQuery.GetComponent(parent);
                 worldRot += xform.LocalRotation;
 
-                var parentMatrix = xform._localMatrix;
+                var parentMatrix = xform.LocalMatrix;
                 Matrix3.Multiply(in worldMatrix, in parentMatrix, out var result);
                 worldMatrix = result;
 
-                var parentInvMatrix = xform._invLocalMatrix;
+                var parentInvMatrix = xform.InvLocalMatrix;
                 Matrix3.Multiply(in parentInvMatrix, in invMatrix, out var invResult);
                 invMatrix = invResult;
 
@@ -792,42 +711,33 @@ namespace Robust.Shared.GameObjects
             return (worldPosition, worldRot, worldMatrix, invMatrix);
         }
 
-        internal void RebuildMatrices()
+        private void RebuildMatrices()
         {
-            // TODO maybe just add a matrix dirty bool, and rebuild only when needed? I.e., if a lone entity is just
-            // drifting through space, do things even usually need to access both the local & inverse-local matrices??
-            var pos = _localPosition;
+            MatricesDirty = false;
 
             if (!_parent.IsValid()) // Root Node
-                pos = Vector2.Zero;
+            {
+                _localMatrix = Matrix3.Identity;
+                _invLocalMatrix = Matrix3.Identity;
+            }
 
-            var rot = (float)_localRotation.Theta;
-
-            _localMatrix = Matrix3.CreateTransform(pos.X, pos.Y, rot);
-            _invLocalMatrix = Matrix3.CreateInverseTransform(pos.X, pos.Y, rot);
+            _localMatrix = Matrix3.CreateTransform(_localPosition, _localRotation);
+            _invLocalMatrix = Matrix3.CreateInverseTransform(_localPosition, _localRotation);
         }
 
         public string GetDebugString()
         {
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
-
-        internal void SetAnchored(bool value, bool issueEvent = true)
-        {
-            _anchored = value;
-            Dirty(_entMan);
-
-            if (issueEvent)
-            {
-                var anchorStateChangedEvent = new AnchorStateChangedEvent(this, false);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent, true);
-            }
-        }
     }
 
     /// <summary>
     ///     Raised whenever an entity translates or rotates relative to their parent.
     /// </summary>
+    /// <remarks>
+    ///     This will also get raised if the entity's parent changes, even if the local position and rotation remains
+    ///     unchanged.
+    /// </remarks>
     [ByRefEvent]
     public readonly struct MoveEvent
     {
@@ -848,6 +758,8 @@ namespace Robust.Shared.GameObjects
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
         public readonly TransformComponent Component;
+
+        public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
@@ -897,7 +809,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Detaching;
 
-        public AnchorStateChangedEvent(TransformComponent transform, bool detaching)
+        public AnchorStateChangedEvent(TransformComponent transform, bool detaching = false)
         {
             Detaching = detaching;
             Transform = transform;
@@ -926,5 +838,22 @@ namespace Robust.Shared.GameObjects
             Grid = grid;
             TilePos = tilePos;
         }
+    }
+
+    /// <summary>
+    ///     Data used to store information about the broad-phase that any given entity is currently on.
+    /// </summary>
+    /// <remarks>
+    ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container).
+    ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
+    ///     not automatically be re-added by movement events..
+    /// </remarks>
+    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
+    {
+        public bool IsValid() => Uid.IsValid();
+        public bool Valid => IsValid();
+        public readonly static BroadphaseData Invalid = default;
+
+        // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }
 }

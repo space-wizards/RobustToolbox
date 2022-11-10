@@ -60,7 +60,7 @@ internal partial class MapManager
 
         foreach (var grid in grids)
         {
-            DeleteGrid(grid.Index);
+            DeleteGrid(grid.GridEntityId);
         }
 
         if (mapId != MapId.Nullspace)
@@ -69,10 +69,6 @@ internal partial class MapManager
             OnMapDestroyedGridTree(args);
             MapDestroyed?.Invoke(this, args);
             _mapEntities.Remove(mapId);
-        }
-        else
-        {
-            _mapEntities[mapId] = EntityUid.Invalid;
         }
 
         Logger.InfoS("map", $"Deleting map {mapId}");
@@ -93,6 +89,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public EntityUid CreateNewMapEntity(MapId mapId)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -146,8 +143,6 @@ internal partial class MapManager
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
             EntityManager.DeleteEntity(oldEntId);
         }
-        else
-            _mapEntities.Add(mapId, EntityUid.Invalid);
 
         var raiseEvent = false;
 
@@ -216,7 +211,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapComponent>(uid);
+        return EntityManager.HasComponent<MapComponent>(uid);
     }
 
     /// <inheritdoc />
@@ -233,6 +228,9 @@ internal partial class MapManager
 
     protected MapId CreateMap(MapId? mapId, EntityUid entityUid)
     {
+        if (mapId == MapId.Nullspace)
+            throw new InvalidOperationException("Attempted to create a null-space map.");
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -251,7 +249,7 @@ internal partial class MapManager
         {
             var mapComps = EntityManager.EntityQuery<MapComponent>(true);
 
-            IMapComponent? result = null;
+            MapComponent? result = null;
             foreach (var mapComp in mapComps)
             {
                 if (mapComp.WorldMap != actualId)
@@ -273,14 +271,11 @@ internal partial class MapManager
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
                 mapComp.WorldMap = actualId;
+                EntityManager.Dirty(mapComp);
                 EntityManager.InitializeComponents(newEnt);
                 EntityManager.StartComponents(newEnt);
                 Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt}");
             }
-        }
-        else
-        {
-            _mapEntities.Add(MapId.Nullspace, EntityUid.Invalid);
         }
 
         var args = new MapEventArgs(actualId);
@@ -288,25 +283,5 @@ internal partial class MapManager
         MapCreated?.Invoke(this, args);
 
         return actualId;
-    }
-
-    private void EnsureNullspaceExistsAndClear()
-    {
-        if (!MapExists(MapId.Nullspace))
-            CreateMap(MapId.Nullspace);
-        else
-        {
-            // nullspace ent may not have been allocated, but the mapId does exist, so we are done here
-            if (!_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId) || mapEntId == EntityUid.Invalid)
-                return;
-
-            // the point of this is to completely clear the map without remaking the allocated entity, which would invalidate the
-            // euid which I'm sure some code has cached. Notice this does not touch the map ent itself, so any comps added to it are not removed,
-            // so i guess don't do that?
-            foreach (var childTransform in EntityManager.GetComponent<TransformComponent>(mapEntId).Children.ToArray())
-            {
-                EntityManager.DeleteEntity(childTransform.Owner);
-            }
-        }
     }
 }

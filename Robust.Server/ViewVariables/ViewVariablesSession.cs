@@ -11,7 +11,7 @@ namespace Robust.Server.ViewVariables
     internal sealed class ViewVariablesSession : IViewVariablesSession
     {
         private readonly List<ViewVariablesTrait> _traits = new();
-        public IViewVariablesHost Host { get; }
+        public IServerViewVariablesInternal Host { get; }
         public IRobustSerializer RobustSerializer { get; }
         public NetUserId PlayerUser { get; }
         public object Object { get; }
@@ -24,7 +24,7 @@ namespace Robust.Server.ViewVariables
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IViewVariablesHost host,
+        public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IServerViewVariablesInternal host,
             IRobustSerializer robustSerializer)
         {
             PlayerUser = playerUser;

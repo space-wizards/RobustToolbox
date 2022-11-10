@@ -907,15 +907,13 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal sealed class BindCommand : IConsoleCommand
+    internal sealed class BindCommand : LocalizedCommands
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
 
-        public string Command => "bind";
-        public string Description => Loc.GetString("cmd-bind-desc");
-        public string Help => Loc.GetString("cmd-bind-help");
+        public override string Command => "bind";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 3)
             {
@@ -983,15 +981,13 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal sealed class SaveBindCommand : IConsoleCommand
+    internal sealed class SaveBindCommand : LocalizedCommands
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
 
-        public string Command => "svbind";
-        public string Description => "";
-        public string Help => "";
+        public override string Command => "svbind";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             _inputManager.SaveToUserData();
         }

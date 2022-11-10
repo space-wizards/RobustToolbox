@@ -45,9 +45,9 @@ namespace Robust.Shared.Physics.Systems
             });
 
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly IManifoldManager _collision = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -64,13 +64,7 @@ namespace Robust.Shared.Physics.Systems
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
 
-            SubscribeLocalEvent<MapChangedEvent>(ev =>
-            {
-                if (ev.Created)
-                    OnMapAdded(ref ev);
-            });
-
-            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
@@ -91,7 +85,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
         {
-            component.CanCollide = false;
+            SetCanCollide(component, false, false);
             DebugTools.Assert(!component.Awake);
         }
 
@@ -122,14 +116,20 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            foreach (var component in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+            while (enumerator.MoveNext(out var comp))
             {
-                component.AutoClearForces = value;
+                comp.AutoClearForces = value;
             }
         }
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
         {
+            // THis entity might be getting deleted before ever having been initialized.
+            if (component.ContactManager == null)
+                return;
+
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
             component.ContactManager.Shutdown();
         }
@@ -164,8 +164,6 @@ namespace Robust.Shared.Physics.Systems
             if (args.OldMapId != xform.MapID)
                 return;
 
-            _broadphase.UpdateBroadphase(uid, args.OldMapId, xform: xform);
-
             if (body != null)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
@@ -191,9 +189,7 @@ namespace Robust.Shared.Physics.Systems
                 oldMoveBuffer = oldMap.MoveBuffer;
             }
 
-            var newBroadphase = _broadphase.GetBroadphase(xform, broadQuery, xformQuery);
-
-            RecursiveMapUpdate(xform, body, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+            RecursiveMapUpdate(xform, body, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
         }
 
         /// <summary>
@@ -203,7 +199,6 @@ namespace Robust.Shared.Physics.Systems
             TransformComponent xform,
             PhysicsComponent? body,
             MapId newMapId,
-            BroadphaseComponent? newBroadphase,
             SharedPhysicsMapComponent? newMap,
             SharedPhysicsMapComponent? oldMap,
             Dictionary<FixtureProxy, Box2>? oldMoveBuffer,
@@ -213,7 +208,7 @@ namespace Robust.Shared.Physics.Systems
             EntityQuery<JointComponent> jointQuery,
             EntityQuery<BroadphaseComponent> broadQuery)
         {
-            EntityUid? uid = xform.Owner;
+            var uid = xform.Owner;
 
             DebugTools.Assert(!Deleted(uid));
 
@@ -233,20 +228,10 @@ namespace Robust.Shared.Physics.Systems
                 if (oldMap != null)
                     DestroyContacts(body, oldMap); // This can modify body.Awake
                 DebugTools.Assert(body.Contacts.Count == 0);
-
-                // TODO: When we cull sharedphysicsmapcomponent we can probably remove this grid check.
-                if (!MapManager.IsGrid(uid.Value) && fixturesQuery.TryGetComponent(uid, out var fixtures) && body._canCollide)
-                {
-                    // TODO If not deleting, update world position+rotation while iterating through children and pass into UpdateBodyBroadphase
-                    _broadphase.UpdateBodyBroadphase(body, fixtures, xform, newBroadphase, xformQuery, oldMoveBuffer);
-                }
             }
 
             if (jointQuery.TryGetComponent(uid, out var joint))
-                _joints.ClearJoints(joint);
-
-            if (newMapId != MapId.Nullspace && broadQuery.TryGetComponent(uid, out var parentBroadphase))
-                newBroadphase = parentBroadphase;
+                _joints.ClearJoints(uid, joint);
 
             var childEnumerator = xform.ChildEnumerator;
             while (childEnumerator.MoveNext(out var child))
@@ -254,19 +239,22 @@ namespace Robust.Shared.Physics.Systems
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(childXform, childBody, newMapId, newBroadphase, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+                    RecursiveMapUpdate(childXform, childBody, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
                 }
 
             }
         }
 
-        private void HandleGridInit(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
-            if (!EntityManager.EntityExists(ev.EntityUid)) return;
-            // Yes this ordering matters
-            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
-            collideComp.BodyType = BodyType.Static;
-            EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
+            var guid = ev.EntityUid;
+
+            if (!EntityManager.EntityExists(guid) || HasComp<PhysicsComponent>(guid))
+                return;
+
+            var body = AddComp<PhysicsComponent>(guid);
+            SetCanCollide(body, true);
+            SetBodyType(body, BodyType.Static);
         }
 
         public override void Shutdown()
@@ -276,8 +264,6 @@ namespace Robust.Shared.Physics.Systems
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
-
-        protected abstract void OnMapAdded(ref MapChangedEvent eventArgs);
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {
@@ -322,8 +308,9 @@ namespace Robust.Shared.Physics.Systems
         {
             var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateBeforeSolve);
+            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
 
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            while (enumerator.MoveNext(out var comp))
             {
                 comp.Step(deltaTime, prediction);
             }
@@ -331,14 +318,16 @@ namespace Robust.Shared.Physics.Systems
             var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateAfterSolve);
 
+            // Enumerator reset
+            enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
             // Go through and run all of the deferred events now
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            while (enumerator.MoveNext(out var comp))
             {
                 comp.ProcessQueue();
             }
 
             _traversal.ProcessMovement();
-
             _physicsManager.ClearTransforms();
         }
 

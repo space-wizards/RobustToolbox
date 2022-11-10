@@ -1,17 +1,17 @@
 using Robust.Client.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class VelocitiesCommand : IConsoleCommand
+    public sealed class VelocitiesCommand : LocalizedCommands
     {
-        public string Command => "showvelocities";
-        public string Description => "Displays your angular and linear velocities";
-        public string Help => $"{Command}";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "showvelocities";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            EntitySystem.Get<VelocityDebugSystem>().Enabled ^= true;
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<VelocityDebugSystem>().Enabled ^= true;
         }
     }
 }

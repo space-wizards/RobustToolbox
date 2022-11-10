@@ -475,7 +475,7 @@ namespace Robust.Shared.GameObjects
             table.ComponentLists = newArray;
         }
 
-        private static void InitEventTableFreeList(EventTableListEntry[] entries, int end, int start)
+        private static void InitEventTableFreeList(Span<EventTableListEntry> entries, int end, int start)
         {
             var lastFree = -1;
             for (var i = end - 1; i >= start; i--)

@@ -1,4 +1,3 @@
-using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -7,7 +6,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
+using System.Linq;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -89,6 +90,54 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 calledCount++;
             }
+        }
+
+        [ComponentProtoName("AnchorOnInit")]
+        private sealed class AnchorOnInitComponent : Component { };
+
+        private sealed class AnchorOnInitTestSystem : EntitySystem
+        {
+            public override void Initialize()
+            {
+                base.Initialize();
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+            }
+        }
+
+        /// <summary>
+        ///     Ensures that if an entity gets added to lookups when anchored during init by some system.
+        /// </summary>
+        /// <remarks>
+        ///     See space-wizards/RobustToolbox/issues/3444
+        /// </remarks>
+        [Test]
+        public void OnInitAnchored_AddedToLookup()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterEntitySystems(f => f.LoadExtraSystemType<AnchorOnInitTestSystem>())
+                .RegisterComponents(f => f.RegisterClass<AnchorOnInitComponent>())
+                .InitializeInstance();
+
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+            mapMan.CreateMap(TestMapId);
+            var grid = mapMan.CreateGrid(TestMapId);
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+            var pos = grid.TileIndicesFor(coordinates);
+            grid.SetTile(pos, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coordinates);
+            Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
+            Assert.That(grid.GetAnchoredEntities(pos).Count() == 0);
+            entMan.DeleteEntity(ent1);
+
+            var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
+            entMan.AddComponent<AnchorOnInitComponent>(ent2);
+            entMan.InitializeAndStartEntity(ent2);
+            Assert.True(entMan.GetComponent<TransformComponent>(ent2).Anchored);
+            Assert.That(grid.GetAnchoredEntities(pos).Count(), Is.EqualTo(1));
+            Assert.That(grid.GetAnchoredEntities(pos).Contains(ent2));
         }
 
         /// <summary>
@@ -200,7 +249,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = new Vector2(99, 99);
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates = new EntityCoordinates(grid.GridEntityId, 99, 99); // make sure not to change parent, that would un-anchor
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
             Assert.That(calledCount, Is.EqualTo(0));
@@ -231,7 +279,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid = mapMan.GetMapEntityId(TestMapId);
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, mapMan.GetMapEntityId(TestMapId));
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
@@ -257,7 +305,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid = grid.GridEntityId;
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.GridEntityId);
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
@@ -352,6 +400,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
@@ -361,7 +410,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
-            physComp.BodyType = BodyType.Dynamic;
+            physSystem.SetBodyType(physComp, BodyType.Dynamic);
 
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;

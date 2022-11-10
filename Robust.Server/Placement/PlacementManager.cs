@@ -147,7 +147,8 @@ namespace Robust.Server.Placement
             else if (tileType != 0) // create a new grid
             {
                 var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
-                newGrid.WorldPosition = coordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
+                var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid.GridEntityId);
+                newGridXform.WorldPosition = coordinates.Position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(coordinates.Position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }
@@ -167,7 +168,7 @@ namespace Robust.Server.Placement
             foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<IMapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
+                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<MapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
                 _entityManager.DeleteEntity(entity);
             }

@@ -4,13 +4,13 @@ namespace Robust.Shared.GameObjects
     /// The children of this entity are about to be deleted.
     /// </summary>
     [ByRefEvent]
-    public struct EntityTerminatingEvent
+    public readonly struct EntityTerminatingEvent
     {
-        public EntityUid Owner;
+        public readonly EntityUid Entity;
 
-        public EntityTerminatingEvent(EntityUid uid)
+        public EntityTerminatingEvent(EntityUid entity)
         {
-            Owner = uid;
+            Entity = entity;
         }
     }
 }

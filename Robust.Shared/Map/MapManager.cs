@@ -38,13 +38,9 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         Logger.DebugS("map", "Starting...");
 
         StartupGridTrees();
-        EnsureNullspaceExistsAndClear();
 
         DebugTools.Assert(_grids.Count == 0);
-#pragma warning disable CS0618
-        // Not really sure what to do with this. Can't hurt to leave it in.
-        DebugTools.Assert(!GridExists(GridId.Invalid));
-#pragma warning restore CS0618
+        DebugTools.Assert(!GridExists(EntityUid.Invalid));
     }
 
     /// <inheritdoc />
@@ -55,7 +51,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
         Logger.DebugS("map", "Stopping...");
 
-        foreach (var mapComp in EntityManager.EntityQuery<IMapComponent>())
+        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
         {
             EntityManager.DeleteEntity(mapComp.Owner);
         }
@@ -63,9 +59,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
 #if DEBUG
         DebugTools.Assert(_grids.Count == 0);
-#pragma warning disable CS0618
-        DebugTools.Assert(!GridExists(GridId.Invalid));
-#pragma warning restore CS0618
+        DebugTools.Assert(!GridExists(EntityUid.Invalid));
         _dbgGuardRunning = false;
 #endif
     }
@@ -77,11 +71,10 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
         // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
-        foreach (var mapComp in EntityManager.EntityQuery<IMapComponent>())
+        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
         {
             EntityManager.DeleteEntity(mapComp.Owner);
         }
-        EnsureNullspaceExistsAndClear();
     }
 
 #if DEBUG

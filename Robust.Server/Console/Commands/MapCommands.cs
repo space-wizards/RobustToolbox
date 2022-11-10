@@ -13,16 +13,11 @@ using Robust.Shared.Maths;
 
 namespace Robust.Server.Console.Commands
 {
-    sealed class AddMapCommand : IConsoleCommand
+    sealed class AddMapCommand : LocalizedCommands
     {
-        public string Command => "addmap";
+        public override string Command => "addmap";
 
-        public string Description =>
-            "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
-
-        public string Help => "addmap <mapID> [initialize]";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -47,13 +42,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    sealed class RemoveMapCommand : IConsoleCommand
+    sealed class RemoveMapCommand : LocalizedCommands
     {
-        public string Command => "rmmap";
-        public string Description => "Removes a map from the world. You cannot remove nullspace.";
-        public string Help => "rmmap <mapId>";
+        public override string Command => "rmmap";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -75,13 +68,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveGridCommand : IConsoleCommand
+    public sealed class SaveGridCommand : LocalizedCommands
     {
-        public string Command => "savegrid";
-        public string Description => "Serializes a grid to disk.";
-        public string Help => "savegrid <gridID> <Path>";
+        public override string Command => "savegrid";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
@@ -108,7 +99,7 @@ namespace Robust.Server.Console.Commands
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
@@ -123,13 +114,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadGridCommand : IConsoleCommand
+    public sealed class LoadGridCommand : LocalizedCommands
     {
-        public string Command => "loadgrid";
-        public string Description => "Loads a grid from a file into an existing map.";
-        public string Help => "loadgrid <MapID> <Path> [x y] [rotation] [storeUids]";
+        public override string Command => "loadgrid";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2 || args.Length == 3 || args.Length > 6)
             {
@@ -203,19 +192,17 @@ namespace Robust.Server.Console.Commands
             mapLoader.LoadGrid(mapId, args[1], loadOptions);
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             return LoadMap.GetCompletionResult(shell, args);
         }
     }
 
-    public sealed class SaveMap : IConsoleCommand
+    public sealed class SaveMap : LocalizedCommands
     {
-        public string Command => "savemap";
-        public string Description => Loc.GetString("cmd-savemap-desc");
-        public string Help => Loc.GetString("cmd-savemap-help");
+        public override string Command => "savemap";
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
@@ -231,7 +218,7 @@ namespace Robust.Server.Console.Commands
             return CompletionResult.Empty;
         }
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
@@ -271,11 +258,9 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadMap : IConsoleCommand
+    public sealed class LoadMap : LocalizedCommands
     {
-        public string Command => "loadmap";
-        public string Description => Loc.GetString("cmd-loadmap-desc");
-        public string Help => Loc.GetString("cmd-loadmap-help");
+        public override string Command => "loadmap";
 
         public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args)
         {
@@ -301,12 +286,12 @@ namespace Robust.Server.Console.Commands
             return CompletionResult.Empty;
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             return GetCompletionResult(shell, args);
         }
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2 || args.Length > 6)
             {
@@ -391,13 +376,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    sealed class LocationCommand : IConsoleCommand
+    sealed class LocationCommand : LocalizedCommands
     {
-        public string Command => "loc";
-        public string Description => "Prints the absolute location of the player's entity to console.";
-        public string Help => "loc";
+        public override string Command => "loc";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             var pt = player?.AttachedEntityTransform;
@@ -408,48 +391,46 @@ namespace Robust.Server.Console.Commands
             var pos = pt.Coordinates;
 
             shell.WriteLine(
-                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
+                $"MapID:{pos.GetMapId(entityManager)} GridUid:{pos.GetGridUid(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
-    sealed class TpGridCommand : IConsoleCommand
+    sealed class TpGridCommand : LocalizedCommands
     {
-        public string Command => "tpgrid";
-        public string Description => "Teleports a grid to a new location.";
-        public string Help => "tpgrid <gridId> <X> <Y> [<MapId>]";
+        public override string Command => "tpgrid";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3 || args.Length > 4)
             {
                 shell.WriteError("Wrong number of args.");
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
             var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : grid.ParentMapId;
+                var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
-                grid.ParentMapId = mapId;
-                grid.WorldPosition = new Vector2(xpos, ypos);
+                gridXform.Coordinates =
+                    new EntityCoordinates(mapManager.GetMapEntityId(mapId), new Vector2(xpos, ypos));
 
                 shell.WriteLine("Grid was teleported.");
             }
         }
     }
 
-    sealed class RemoveGridCommand : IConsoleCommand
+    sealed class RemoveGridCommand : LocalizedCommands
     {
-        public string Command => "rmgrid";
-        public string Description => "Removes a grid from a map. You cannot remove the default grid.";
-        public string Help => "rmgrid <gridId>";
+        public override string Command => "rmgrid";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -457,27 +438,25 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var gridId = new GridId(int.Parse(args[0]));
+            var gridId = EntityUid.Parse(args[0]);
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (!mapManager.GridExists(gridId))
             {
-                shell.WriteError($"Grid {gridId.Value} does not exist.");
+                shell.WriteError($"Grid {gridId} does not exist.");
                 return;
             }
 
             mapManager.DeleteGrid(gridId);
-            shell.WriteLine($"Grid {gridId.Value} was removed.");
+            shell.WriteLine($"Grid {gridId} was removed.");
         }
     }
 
-    internal sealed class RunMapInitCommand : IConsoleCommand
+    internal sealed class RunMapInitCommand : LocalizedCommands
     {
-        public string Command => "mapinit";
-        public string Description => "Runs map init on a map";
-        public string Help => "mapinit <mapID>";
+        public override string Command => "mapinit";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -506,13 +485,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal sealed class ListMapsCommand : IConsoleCommand
+    internal sealed class ListMapsCommand : LocalizedCommands
     {
-        public string Command => "lsmap";
-        public string Description => "Lists maps";
-        public string Help => "lsmap";
+        public override string Command => "lsmap";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
 
@@ -524,20 +501,17 @@ namespace Robust.Server.Console.Commands
                     mapId, mapManager.IsMapInitialized(mapId),
                     mapManager.IsMapPaused(mapId),
                     mapManager.GetMapEntityId(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)));
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.GridEntityId)));
             }
 
             shell.WriteLine(msg.ToString());
         }
     }
 
-    internal sealed class ListGridsCommand : IConsoleCommand
+    internal sealed class ListGridsCommand : LocalizedCommands
     {
-        public string Command => "lsgrid";
-        public string Description => "List grids";
-        public string Help => "lsgrid";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "lsgrid";
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var entManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
@@ -545,13 +519,13 @@ namespace Robust.Server.Console.Commands
             var msg = new StringBuilder();
             var xformQuery = entManager.GetEntityQuery<TransformComponent>();
 
-            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.GridEntityId))
             {
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
                 var worldPos = xform.WorldPosition;
 
                 msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
-                    grid.Index, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
+                    grid.GridEntityId, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
             }
 
             shell.WriteLine(msg.ToString());

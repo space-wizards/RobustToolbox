@@ -17,8 +17,6 @@ namespace Robust.Server.GameObjects
 
             RegisterClass<MetaDataComponent>();
             RegisterClass<TransformComponent>();
-            RegisterClass<MapComponent>();
-            RegisterClass<MapGridComponent>();
             RegisterClass<EyeComponent>();
             RegisterClass<ActorComponent>();
             RegisterClass<PhysicsComponent>();

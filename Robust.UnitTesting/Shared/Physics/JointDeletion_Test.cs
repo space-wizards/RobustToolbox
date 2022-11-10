@@ -26,6 +26,7 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         var jointSystem = susManager.GetEntitySystem<SharedJointSystem>();
         var broadphase = susManager.GetEntitySystem<SharedBroadphaseSystem>();
         var fixSystem = susManager.GetEntitySystem<FixtureSystem>();
+        var physicsSystem = susManager.GetEntitySystem<SharedPhysicsSystem>();
 
         DistanceJoint joint = default!;
         EntityUid ent1;
@@ -44,10 +45,10 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
             body2 = entManager.AddComponent<PhysicsComponent>(ent2);
             entManager.AddComponent<CollisionWakeComponent>(ent2);
 
-            body1.BodyType = BodyType.Dynamic;
-            body2.BodyType = BodyType.Dynamic;
-            body1.CanCollide = true;
-            body2.CanCollide = true;
+            physicsSystem.SetBodyType(body1, BodyType.Dynamic);
+            physicsSystem.SetBodyType(body2, BodyType.Dynamic);
+            physicsSystem.SetCanCollide(body1, true);
+            physicsSystem.SetCanCollide(body2, true);
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
 
@@ -62,7 +63,7 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(joint.Enabled);
-            body2.Awake = false;
+            physicsSystem.SetAwake(body2, false);
             Assert.That(!body2.Awake);
 
             entManager.DeleteEntity(ent2);

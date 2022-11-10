@@ -85,6 +85,13 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                {
+                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
+                    return;
+                }
+
                 _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
@@ -1076,7 +1083,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
 
-            theLayer.SetVisible(visible);
+            theLayer.Visible = visible;
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -1144,9 +1151,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
 
-            theLayer.SetAutoAnimated(autoAnimated);
-
-            RebuildBounds();
+            theLayer.AutoAnimated = autoAnimated;
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -1578,6 +1583,13 @@ namespace Robust.Client.GameObjects
                 {
                     if (_scale.EqualsApprox(value)) return;
 
+                    if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                    {
+                        // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                        Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {_parent.entities.ToPrettyString(_parent.Owner)}. Scale: {value}");
+                        return;
+                    }
+
                     _scale = value;
                     UpdateLocalMatrix();
                     _parent.RebuildBounds();
@@ -1600,8 +1612,21 @@ namespace Robust.Client.GameObjects
             }
             internal Angle _rotation = Angle.Zero;
 
+            private bool _visible = true;
             [ViewVariables(VVAccess.ReadWrite)]
-            public bool Visible = true;
+            public bool Visible
+            {
+                get => _visible;
+                set
+                {
+                    if (_visible == value)
+                        return;
+                    _visible = value;
+
+                    _parent.QueueUpdateIsInert();
+                    _parent.RebuildBounds();
+                }
+            }
 
             [ViewVariables]
             public bool Blank => !State.IsValid && Texture == null;
@@ -1609,8 +1634,19 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
 
+            private bool _autoAnimated = true;
             [ViewVariables(VVAccess.ReadWrite)]
-            public bool AutoAnimated = true;
+            public bool AutoAnimated
+            {
+                get => _autoAnimated;
+                set
+                {
+                    if (_autoAnimated == value)
+                        return;
+                    _autoAnimated = value;
+                    _parent.QueueUpdateIsInert();
+                }
+            }
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Offset
@@ -1657,10 +1693,10 @@ namespace Robust.Client.GameObjects
                 _rotation = toClone.Rotation;
                 _offset = toClone.Offset;
                 UpdateLocalMatrix();
-                Visible = toClone.Visible;
+                _visible = toClone._visible;
                 Color = toClone.Color;
                 DirOffset = toClone.DirOffset;
-                AutoAnimated = toClone.AutoAnimated;
+                _autoAnimated = toClone._autoAnimated;
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1693,12 +1729,6 @@ namespace Robust.Client.GameObjects
                 };
             }
 
-            bool ISpriteLayer.Visible
-            {
-                get => Visible;
-                set => SetVisible(value);
-            }
-
             float ISpriteLayer.AnimationTime
             {
                 get => AnimationTime;
@@ -1706,12 +1736,6 @@ namespace Robust.Client.GameObjects
             }
 
             int ISpriteLayer.AnimationFrame => AnimationFrame;
-
-            bool ISpriteLayer.AutoAnimated
-            {
-                get => AutoAnimated;
-                set => SetAutoAnimated(value);
-            }
 
             public RSIDirection EffectiveDirection(Angle worldRotation)
             {
@@ -1794,14 +1818,6 @@ namespace Robust.Client.GameObjects
                 AutoAnimated = value;
 
                 _parent.QueueUpdateIsInert();
-            }
-
-            public void SetVisible(bool value)
-            {
-                Visible = value;
-
-                _parent.QueueUpdateIsInert();
-                _parent.RebuildBounds();
             }
 
             public void SetRsi(RSI? rsi)
@@ -1933,7 +1949,7 @@ namespace Robust.Client.GameObjects
                         _ => textureSize
                     };
                 }
-                
+
                 return Box2.CenteredAround(Offset, size * _scale);
             }
 

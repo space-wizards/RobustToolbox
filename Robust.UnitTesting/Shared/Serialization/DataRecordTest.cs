@@ -28,6 +28,23 @@ public sealed class DataRecordTest : SerializationTest
     [PrototypeRecord("emptyTestPrototypeRecord")]
     public record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
 
+    [DataRecord]
+    public record IntStructHolder(IntStruct Struct);
+
+    [DataDefinition]
+    public struct IntStruct
+    {
+        [DataField("value")] public int Value;
+
+        public IntStruct(int value)
+        {
+            Value = value;
+        }
+    }
+
+    [DataRecord]
+    public record TwoIntStructHolder(IntStruct Struct1, IntStruct Struct2);
+
     [Test]
     public void TwoIntRecordTest()
     {
@@ -121,5 +138,46 @@ public sealed class DataRecordTest : SerializationTest
         var prototypes = IoCManager.Resolve<IPrototypeManager>();
         prototypes.Initialize();
         Assert.That(prototypes.HasVariant("emptyTestPrototypeRecord"), Is.True);
+    }
+
+    [Test]
+    public void IntStructHolderTest()
+    {
+        var mapping = new MappingDataNode
+        {
+            {
+                "struct", new MappingDataNode
+                {
+                    {"value", "42"}
+                }
+            }
+        };
+        var val = Serialization.Read<IntStructHolder>(mapping);
+
+        Assert.That(val.Struct.Value, Is.EqualTo(42));
+    }
+
+    [Test]
+    public void TwoIntStructHolderTest()
+    {
+        var mapping = new MappingDataNode
+        {
+            {
+                "struct1", new MappingDataNode
+                {
+                    {"value", "5"}
+                }
+            },
+            {
+                "struct2", new MappingDataNode
+                {
+                    {"value", "10"}
+                }
+            }
+        };
+        var val = Serialization.Read<TwoIntStructHolder>(mapping);
+
+        Assert.That(val.Struct1.Value, Is.EqualTo(5));
+        Assert.That(val.Struct2.Value, Is.EqualTo(10));
     }
 }

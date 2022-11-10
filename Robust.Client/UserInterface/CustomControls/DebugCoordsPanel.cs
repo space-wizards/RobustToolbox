@@ -76,8 +76,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
                     mouseWorldMap.Position);
-                tile = new TileRef(GridId.Invalid, EntityUid.Invalid,
-                    mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
+                tile = new TileRef(EntityUid.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
@@ -105,15 +104,17 @@ Mouse Pos:
 
                 var playerCoordinates = entityTransform.Coordinates;
                 var playerRotation = entityTransform.WorldRotation;
-
-                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridID, out var grid) ? grid.WorldRotation : Angle.Zero;
+                var gridRotation = entityTransform.GridUid != null
+                    ? _entityManager.GetComponent<TransformComponent>(entityTransform.GridUid.Value)
+                    .WorldRotation
+                    : Angle.Zero;
 
                 _textBuilder.Append($@"    Screen: {playerScreen}
     {playerWorldOffset}
     {playerCoordinates}
     Rotation: {playerRotation.Degrees:F2}°
     EntId: {entityTransform.Owner}
-    GridID: {entityTransform.GridID}
+    GridUid: {entityTransform.GridUid}
     Grid Rotation: {gridRotation.Degrees:F2}°");
             }
 

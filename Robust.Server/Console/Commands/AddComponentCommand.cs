@@ -7,13 +7,11 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddComponentCommand : IConsoleCommand
+    internal sealed class AddComponentCommand : LocalizedCommands
     {
-        public string Command => "addcomp";
-        public string Description => "Adds a component to an entity";
-        public string Help => $"{Command} <uid> <componentName>";
+        public override string Command => "addcomp";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

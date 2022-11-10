@@ -58,7 +58,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentException("That map is already initialized.");
 
             var mapEnt = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEnt);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEnt);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
@@ -100,7 +100,7 @@ namespace Robust.Shared.Map
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
             mapComp.MapPaused = true;
         }
 
@@ -114,7 +114,7 @@ namespace Robust.Shared.Map
             if (mapEuid == EntityUid.Invalid)
                 return false;
 
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
             return mapComp.MapPaused;
         }
 
@@ -124,7 +124,7 @@ namespace Robust.Shared.Map
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
             mapComp.MapPaused = false;
         }
 
@@ -134,7 +134,7 @@ namespace Robust.Shared.Map
                 return;
 
             var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
             mapComp.MapPreInit = true;
         }
 
@@ -148,7 +148,7 @@ namespace Robust.Shared.Map
             if (mapEuid == EntityUid.Invalid)
                 return false;
 
-            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
             return mapComp.MapPreInit;
         }
 
@@ -156,36 +156,6 @@ namespace Robust.Shared.Map
         public bool IsMapPaused(MapId mapId)
         {
             return CheckMapPause(mapId) || CheckMapPreInit(mapId);
-        }
-
-        /// <inheritdoc />
-        public bool IsGridPaused(IMapGrid grid)
-        {
-            return IsMapPaused(grid.ParentMapId);
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Use EntityUids instead")]
-        public bool IsGridPaused(GridId gridId)
-        {
-            if (TryGetGrid(gridId, out var grid))
-            {
-                return IsGridPaused(grid);
-            }
-
-            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
-            return true;
-        }
-
-        public bool IsGridPaused(EntityUid gridId)
-        {
-            if (TryGetGrid(gridId, out var grid))
-            {
-                return IsGridPaused(grid);
-            }
-
-            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
-            return true;
         }
 
         /// <inheritdoc />

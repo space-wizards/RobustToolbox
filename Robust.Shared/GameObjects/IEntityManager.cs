@@ -59,6 +59,8 @@ namespace Robust.Shared.GameObjects
 
         EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
+        void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
+
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>

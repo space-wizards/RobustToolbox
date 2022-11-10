@@ -246,19 +246,20 @@ namespace Robust.Server.Physics
                 var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
-                var newGrids = new GridId[grids.Count - 1];
+                var newGrids = new EntityUid[grids.Count - 1];
+                var mapId = oldGridXform.MapID;
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
-                    newGrids[i] = splitGrid.Index;
+                    var splitGrid = _mapManager.CreateGrid(mapId);
+                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
+                    newGrids[i] = splitGrid.GridEntityId;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    splitGrid.WorldPosition = gridPos;
-                    splitGrid.WorldRotation = gridRot;
+                    splitXform.WorldPosition = gridPos;
+                    splitXform.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
-                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
@@ -310,7 +311,7 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Index, tilePos, LookupFlags.None))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.GridEntityId, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);
@@ -318,7 +319,7 @@ namespace Robust.Server.Physics
                                 if (entXform.ParentUid != mapGrid.GridEntityId ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                                entXform.AttachParent(splitXform);
+                                _xformSystem.SetParent(entXform, splitXform.Owner, xformQuery, splitXform);
                             }
                         }
 
@@ -355,7 +356,7 @@ namespace Robust.Server.Physics
                 }
 
                 // Allow content to react to the grid being split...
-                var ev = new GridSplitEvent(newGrids, mapGrid.Index);
+                var ev = new GridSplitEvent(newGrids, mapGrid.GridEntityId);
                 RaiseLocalEvent(uid, ref ev, true);
 
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
@@ -745,14 +746,14 @@ public readonly struct GridSplitEvent
     /// <summary>
     ///     Contains the IDs of the newly created grids.
     /// </summary>
-    public readonly GridId[] NewGrids;
+    public readonly EntityUid[] NewGrids;
 
     /// <summary>
     ///     The grid that has been split.
     /// </summary>
-    public readonly GridId Grid;
+    public readonly EntityUid Grid;
 
-    public GridSplitEvent(GridId[] newGrids, GridId grid)
+    public GridSplitEvent(EntityUid[] newGrids, EntityUid grid)
     {
         NewGrids = newGrids;
         Grid = grid;

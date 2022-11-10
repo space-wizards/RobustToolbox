@@ -228,7 +228,7 @@ namespace Robust.Server.GameStates
                 0, players.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
                 () => _threadResourcesPool.Get(),
-                (i, loop, resource) =>
+                (i, _, resource) =>
                 {
                     try
                     {

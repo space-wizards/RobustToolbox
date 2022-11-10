@@ -52,6 +52,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
             var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
+            var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
             MapId mapId;
 
             const int columnCount = 1;
@@ -70,24 +71,22 @@ namespace Robust.UnitTesting.Shared.Physics
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-                var horizontalFixture = new Fixture(ground, horizontal)
-                {
-                    CollisionLayer = 1,
-                    CollisionMask = 1,
-                    Hard = true
-                };
+                var horizontalFixture = new Fixture(ground, horizontal);
+                physSystem.SetCollisionLayer(horizontalFixture, 1);
+                physSystem.SetCollisionMask(horizontalFixture, 1);
+                physSystem.SetHard(horizontalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, horizontalFixture);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-                var verticalFixture = new Fixture(ground, vertical)
-                {
-                    CollisionLayer = 1,
-                    CollisionMask = 1,
-                    Hard = true
-                };
+
+                var verticalFixture = new Fixture(ground, vertical);
+                physSystem.SetCollisionLayer(verticalFixture, 1);
+                physSystem.SetCollisionMask(verticalFixture, 1);
+                physSystem.SetHard(verticalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, verticalFixture);
+                physSystem.WakeBody(ground);
 
                 var xs = new[]
                 {
@@ -104,7 +103,7 @@ namespace Robust.UnitTesting.Shared.Physics
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                         var box = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
 
-                        box.BodyType = BodyType.Dynamic;
+                        physSystem.SetBodyType(box, BodyType.Dynamic);
                         var poly = new PolygonShape(0.001f);
                         poly.SetVertices(new List<Vector2>()
                         {
@@ -114,14 +113,13 @@ namespace Robust.UnitTesting.Shared.Physics
                             new(-0.5f, -0.5f),
                         });
 
-                        var fixture = new Fixture(box, poly)
-                        {
-                            CollisionMask = 1,
-                            CollisionLayer = 1,
-                            Hard = true,
-                        };
+                        var fixture = new Fixture(box, poly);
+                        physSystem.SetCollisionLayer(fixture, 1);
+                        physSystem.SetCollisionMask(fixture, 1);
+                        physSystem.SetHard(fixture, true);
 
                         fixtureSystem.CreateFixture(box, fixture);
+                        physSystem.WakeBody(box);
 
                         bodies[j * rowCount + i] = box;
                     }
@@ -173,6 +171,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
             var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
+            var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
             MapId mapId;
 
             var columnCount = 1;
@@ -190,24 +189,21 @@ namespace Robust.UnitTesting.Shared.Physics
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-                var horizontalFixture = new Fixture(ground, horizontal)
-                {
-                    CollisionLayer = 1,
-                    CollisionMask = 1,
-                    Hard = true
-                };
+                var horizontalFixture = new Fixture(ground, horizontal);
+                physSystem.SetCollisionLayer(horizontalFixture, 1);
+                physSystem.SetCollisionMask(horizontalFixture, 1);
+                physSystem.SetHard(horizontalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, horizontalFixture);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-                var verticalFixture = new Fixture(ground, vertical)
-                {
-                    CollisionLayer = 1,
-                    CollisionMask = 1,
-                    Hard = true
-                };
+                var verticalFixture = new Fixture(ground, vertical);
+                physSystem.SetCollisionLayer(verticalFixture, 1);
+                physSystem.SetCollisionMask(verticalFixture, 1);
+                physSystem.SetHard(verticalFixture, true);
 
                 fixtureSystem.CreateFixture(ground, verticalFixture);
+                physSystem.WakeBody(ground);
 
                 var xs = new[]
                 {
@@ -226,18 +222,17 @@ namespace Robust.UnitTesting.Shared.Physics
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                         var circle = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
 
-                        circle.LinearDamping = 0.05f;
-                        circle.BodyType = BodyType.Dynamic;
+                        physSystem.SetLinearDamping(circle, 0.05f);
+                        physSystem.SetBodyType(circle, BodyType.Dynamic);
                         shape = new PhysShapeCircle {Radius = 0.5f};
 
-                        var fixture = new Fixture(circle, shape)
-                        {
-                            CollisionMask = 1,
-                            CollisionLayer = 1,
-                            Hard = true,
-                        };
+                        var fixture = new Fixture(circle, shape);
+                        physSystem.SetCollisionLayer(fixture, 1);
+                        physSystem.SetCollisionMask(fixture, 1);
+                        physSystem.SetHard(fixture, true);
 
                         fixtureSystem.CreateFixture(circle, fixture);
+                        physSystem.WakeBody(circle);
 
                         bodies[j * rowCount + i] = circle;
                     }

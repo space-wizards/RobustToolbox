@@ -1,29 +1,55 @@
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using System.Collections.Generic;
+using Robust.Shared.GameStates;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    internal abstract class SharedMapSystem : EntitySystem
+    public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] protected readonly IMapManagerInternal MapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
 
         public override void Initialize()
         {
             base.Initialize();
 
+            SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
             SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
+            SubscribeLocalEvent<MapComponent, ComponentHandleState>(OnMapHandleState);
+            SubscribeLocalEvent<MapComponent, ComponentGetState>(OnMapGetState);
 
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+
+            SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
+            SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
         }
+
+        private void OnMapHandleState(EntityUid uid, MapComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is not MapComponentState state)
+                return;
+
+            component.WorldMap = state.MapId;
+            component.LightingEnabled = state.LightingEnabled;
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
+        }
+
+        private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
+        {
+            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
+        }
+
+        protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
 
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
         {
@@ -33,6 +59,10 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
+            var iMap = (IMapManagerInternal)MapManager;
+
+            iMap.TrueDeleteMap(component.WorldMap);
+
             var msg = new MapChangedEvent(component.WorldMap, false);
             RaiseLocalEvent(uid, msg, true);
         }
@@ -46,22 +76,27 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
-#pragma warning disable CS0618
-            var msg = new GridInitializeEvent(uid, component.GridIndex);
+            var msg = new GridInitializeEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
-#pragma warning disable CS0618
-            var msg = new GridStartupEvent(uid, component.GridIndex);
+            var msg = new GridStartupEvent(uid);
             RaiseLocalEvent(uid, msg, true);
         }
 
         private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
         {
-            RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex), true);
-            MapManager.OnComponentRemoved(component);
+            RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
+
+            if (uid == EntityUid.Invalid)
+                return;
+
+            if (!MapManager.GridExists(uid))
+                return;
+
+            MapManager.DeleteGrid(uid);
         }
     }
 
@@ -99,26 +134,20 @@ namespace Robust.Shared.GameObjects
     public sealed class GridStartupEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridStartupEvent(EntityUid uid, GridId gridId)
+        public GridStartupEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 
     public sealed class GridRemovalEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridRemovalEvent(EntityUid uid, GridId gridId)
+        public GridRemovalEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 
@@ -128,13 +157,10 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        [Obsolete("Use EntityUids")]
-        public GridId GridId { get; }
 
-        public GridInitializeEvent(EntityUid uid, GridId gridId)
+        public GridInitializeEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 #pragma warning restore CS0618

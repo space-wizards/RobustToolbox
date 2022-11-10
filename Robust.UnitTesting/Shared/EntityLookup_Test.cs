@@ -1,8 +1,6 @@
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
@@ -12,11 +10,8 @@ namespace Robust.UnitTesting.Shared
     [TestFixture, TestOf(typeof(EntityLookupSystem))]
     public sealed class EntityLookupTest
     {
-        /// <summary>
-        /// If we don't pass an anchor flag do we still return an anchored entity
-        /// </summary>
         [Test]
-        public void TestNoAnchorReturn()
+        public void AnyIntersecting()
         {
             var sim = RobustServerSimulation.NewSimulation();
             var server = sim.InitializeInstance();
@@ -26,24 +21,11 @@ namespace Robust.UnitTesting.Shared
             var mapManager = server.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
-            grid.SetTile(new Vector2i(), new Tile(1));
 
-            // Setup and check it actually worked
             var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var xform = entManager.GetComponent<TransformComponent>(dummy);
-
-            // When anchoring it should still get returned.
-            xform.Anchored = true;
-            Assert.That(xform.Anchored);
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
-
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, LookupFlags.None).ToList(), Is.Empty);
-
-            entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid.Index);
+            Assert.That(lookup.AnyEntitiesIntersecting(mapId, theMapSpotBeingUsed));
             mapManager.DeleteMap(mapId);
         }
 
@@ -84,7 +66,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid.Index);
+            mapManager.DeleteGrid(grid.GridEntityId);
             mapManager.DeleteMap(mapId);
         }
     }

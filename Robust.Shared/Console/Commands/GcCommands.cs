@@ -5,13 +5,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class GcCommand : IConsoleCommand
+internal sealed class GcCommand : LocalizedCommands
 {
-    public string Command => "gc";
-    public string Description => Loc.GetString("cmd-gc-desc");
-    public string Help => Loc.GetString("cmd-gc-help");
+    public override string Command => "gc";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length == 0)
         {
@@ -26,7 +24,7 @@ internal sealed class GcCommand : IConsoleCommand
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
             return CompletionResult.FromHint(Loc.GetString("cmd-gc-arg-generation"));
@@ -35,28 +33,22 @@ internal sealed class GcCommand : IConsoleCommand
     }
 }
 
-internal sealed class GcFullCommand : IConsoleCommand
+internal sealed class GcFullCommand : LocalizedCommands
 {
-    public string Command => "gcf";
-    public string Description => Loc.GetString("cmd-gcf-desc");
-    public string Help => Loc.GetString("cmd-gcf-help");
+    public override string Command => "gcf";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
         GC.Collect(2, GCCollectionMode.Forced, true, true);
     }
 }
 
-internal sealed class GcModeCommand : IConsoleCommand
+internal sealed class GcModeCommand : LocalizedCommands
 {
-    public string Command => "gc_mode";
+    public override string Command => "gc_mode";
 
-    public string Description => Loc.GetString("cmd-gc_mode-desc");
-
-    public string Help => Loc.GetString("cmd-gc_mode-help");
-
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var prevMode = GCSettings.LatencyMode;
         if (args.Length == 0)
@@ -84,7 +76,7 @@ internal sealed class GcModeCommand : IConsoleCommand
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {
@@ -97,13 +89,11 @@ internal sealed class GcModeCommand : IConsoleCommand
     }
 }
 
-internal sealed class MemCommand : IConsoleCommand
+internal sealed class MemCommand : LocalizedCommands
 {
-    public string Command => "mem";
-    public string Description => Loc.GetString("cmd-mem-desc");
-    public string Help => Loc.GetString("cmd-mem-help");
+    public override string Command => "mem";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var info = GC.GetGCMemoryInfo();
 

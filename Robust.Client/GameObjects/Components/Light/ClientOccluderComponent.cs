@@ -13,7 +13,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables] private (GridId, Vector2i) _lastPosition;
+        [ViewVariables] private (EntityUid, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 
@@ -46,8 +46,9 @@ namespace Robust.Client.GameObjects
             if(!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridID);
-            _lastPosition = (xform.GridID, grid.TileIndicesFor(xform.Coordinates));
+            var gridId = xform.GridUid ?? throw new InvalidOperationException("Anchored without a grid");
+            var grid = _mapManager.GetGrid(gridId);
+            _lastPosition = (gridId, grid.TileIndicesFor(xform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -92,7 +93,7 @@ namespace Robust.Client.GameObjects
             if (!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(xform.GridID);
+            var grid = _mapManager.GetGrid(xform.GridUid ?? throw new InvalidOperationException("Anchored without a grid"));
             var position = xform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {

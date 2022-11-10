@@ -13,9 +13,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
-#if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
-#endif
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -25,6 +23,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -59,9 +59,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
-#if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-#endif
 
         private ISawmill _sawmill = default!;
 
@@ -124,15 +122,9 @@ namespace Robust.Client.GameStates
 
             _conHost.RegisterCommand("resetent", Loc.GetString("cmd-reset-ent-desc"), Loc.GetString("cmd-reset-ent-help"), ResetEntCommand);
             _conHost.RegisterCommand("resetallents", Loc.GetString("cmd-reset-all-ents-desc"), Loc.GetString("cmd-reset-all-ents-help"), ResetAllEnts);
-
-#if !FULL_RELEASE
-            // disable on release, to avoid making it trivial to make walls/occluders disappear.
             _conHost.RegisterCommand("detachent", Loc.GetString("cmd-detach-ent-desc"), Loc.GetString("cmd-detach-ent-help"), DetachEntCommand);
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
-
-            // Disabled on full release, because I am too lazy to implement rate limiting.
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
-#endif
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -253,7 +245,18 @@ namespace Robust.Client.GameStates
                 }
 
                 if (PredictionNeedsResetting)
-                    ResetPredictedEntities();
+                {
+                    try
+                    {
+                        ResetPredictedEntities();
+                    }
+                    catch (Exception e)
+                    {
+                        // avoid exception spam from repeatedly trying to reset the same entity.
+                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                        _runtimeLog.LogException(e, "ResetPredictedEntities");
+                    }
+                }
 
                 // If we were waiting for a new state, we are now applying it.
                 if (_processor.LastFullStateRequested.HasValue)
@@ -467,7 +470,11 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
+                var netComps = _entityManager.GetNetComponentsOrNull(entity);
+                if (netComps == null)
+                    return;
+
+                foreach (var (netId, comp) in netComps.Value)
                 {
                     DebugTools.AssertNotNull(netId);
                     if (!comp.NetSyncEnabled)
@@ -536,7 +543,7 @@ namespace Robust.Client.GameStates
                 }
 
                 var meta = query.GetComponent(entity);
-                DebugTools.Assert(meta.LastModifiedTick > _timing.LastRealTick || meta.LastModifiedTick == GameTick.Zero);
+                DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
@@ -616,10 +623,14 @@ namespace Robust.Client.GameStates
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             var toApply = new Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)>();
             var toCreate = new Dictionary<EntityUid, EntityState>();
             var enteringPvs = 0;
+
+            if (curState.FromSequence == GameTick.Zero)
+                FullReset(curState, metas, xforms, xformSys);
 
             var curSpan = curState.EntityStates.Span;
             foreach (var es in curSpan)
@@ -667,9 +678,9 @@ namespace Robust.Client.GameStates
             }
 
             // Detach entities to null space
-            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys);
+            var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
+            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -692,6 +703,12 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            var contQuery = _entities.GetEntityQuery<ContainerManagerComponent>();
+            var physicsQuery = _entities.GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = _entities.GetEntityQuery<FixturesComponent>();
+            var broadQuery = _entities.GetEntityQuery<BroadphaseComponent>();
+            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
+
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
@@ -699,13 +716,52 @@ namespace Robust.Client.GameStates
                 {
                     HandleEntityState(entity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
+
+                    if (!data.EnteringPvs)
+                        continue;
+
+                    // Now that things like collision data, fixtures, and positions have been updated, we queue a
+                    // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
+                    // we only need to update it's parent (as it recursively updates children anyways).
+                    var xform = xforms.GetComponent(entity);
+                    DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
+                    xform.Broadphase = null;
+                    if (!toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
+                        queuedBroadphaseUpdates.Add((entity, xform));
                 }
                 _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
             }
 
+            // Add entering entities back to broadphase.
+            using (_prof.Group("Update Broadphase"))
+            {
+                try
+                {
+                    foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                    {
+                        lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Caught exception while updating entity broadphases");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+                }
+            }
+
             var delSpan = curState.EntityDeletions.Span;
             if (delSpan.Length > 0)
-                ProcessDeletions(delSpan, xforms, metas, xformSys);
+            {
+                try
+                {
+                    ProcessDeletions(delSpan, xforms, metas, xformSys);
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Caught exception while deleting entities");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+                }
+            }
 
             // Initialize and start the newly created entities.
             if (toCreate.Count > 0)
@@ -715,6 +771,43 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
 
             return (toCreate.Keys, detached);
+        }
+
+        private void FullReset(GameState curState, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys)
+        {
+            // This is somewhat of a hack to do a proper reset for exception tolerance. I need to do this properly at
+            // some point. This is basically a hotfix to hide the side effects of #3413. Basically, this gets run if the
+            // client encounters an error while applying game states and requests a full server state.
+
+            _sawmill.Info("Performing full entity reset.");
+
+            // TODO properly reset maps
+            // TODO properly reset player-states (e.g., attached enttiy and current eye).
+
+            // Linq bad, but this should be rare (when first connecting, and when encountering PVS errors, which ideally would just never happen).
+            var ents = curState.EntityStates.Value?.Select(x => x.Uid)?.ToHashSet() ?? new HashSet<EntityUid>();
+            foreach (var ent in _entities.GetEntities().ToArray())
+            {
+                if (ent.IsClientSide())
+                    continue;
+
+                if (ents.Contains(ent) && metas.TryGetComponent(ent, out var meta))
+                {
+                    meta.LastStateApplied = GameTick.Zero;
+                    continue;
+                }
+
+                if (!xforms.TryGetComponent(ent, out var xform))
+                    continue;
+
+                xformSys.DetachParentToNull(xform, xforms, metas);
+                var childEnumerator = xform.ChildEnumerator;
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                }
+                _entities.DeleteEntity(ent);
+            }
         }
 
         private void ProcessDeletions(
@@ -756,7 +849,13 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }
 
-        private List<EntityUid> ProcessPvsDeparture(GameTick toTick, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys, ContainerSystem containerSys)
+        private List<EntityUid> ProcessPvsDeparture(
+            GameTick toTick,
+            EntityQuery<MetaDataComponent> metas,
+            EntityQuery<TransformComponent> xforms,
+            SharedTransformSystem xformSys,
+            ContainerSystem containerSys,
+            EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
             var detached = new List<EntityUid>();
@@ -792,6 +891,9 @@ namespace Robust.Client.GameStates
                     var xform = xforms.GetComponent(ent);
                     if (xform.ParentUid.IsValid())
                     {
+                        lookupSys.RemoveFromEntityTree(ent, xform, xforms);
+                        xform.Broadphase = BroadphaseData.Invalid;
+
                         // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                         // In those situations, we need to add the entity back to the list of expected entities after detaching.
                         IContainer? container = null;
@@ -800,7 +902,7 @@ namespace Robust.Client.GameStates
                             (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                             containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
                         {
-                            container.ForceRemove(ent, _entities, meta);
+                            container.Remove(ent, _entities, xform, meta, false, true);
                         }
 
                         meta._flags |= MetaDataFlags.Detached;
@@ -1078,8 +1180,11 @@ namespace Robust.Client.GameStates
             if (!uid.IsClientSide() && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(xform, _entities.GetEntityQuery<TransformComponent>());
 
-            _entities.DeleteEntity(uid);
-
+            // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.
+            using (_timing.StartStateApplicationArea())
+            {
+                _entities.DeleteEntity(uid);
+            }
         }
 
         /// <summary>

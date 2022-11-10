@@ -38,7 +38,7 @@ namespace Robust.Shared.GameObjects
             if (component.Enabled)
                 UpdateCanCollide(uid, component);
             else if (TryComp(uid, out PhysicsComponent? physics))
-                physics.CanCollide = true;
+                _physics.SetCanCollide(physics, true);
 
             Dirty(component);
         }
@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
                 && !Terminating(uid)
                 && TryComp(uid, out PhysicsComponent? physics))
             {
-                physics.CanCollide = true;
+                _physics.SetCanCollide(physics, true);
             }
         }
 

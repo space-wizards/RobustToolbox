@@ -13,32 +13,14 @@ namespace Robust.Shared.Map
     public interface IMapGrid
     {
         /// <summary>
-        ///     The integer ID of the map this grid is currently located within.
-        /// </summary>
-        MapId ParentMapId { get; set; }
-
-        /// <summary>
         /// The entity this grid is represented by in the ECS system.
         /// </summary>
         EntityUid GridEntityId { get; }
 
         /// <summary>
-        ///     The identifier of this grid.
-        /// </summary>
-        [Obsolete("Use EntityUids instead")]
-        GridId Index { get; }
-
-        /// <summary>
         ///     The length of the side of a square tile in world units.
         /// </summary>
         ushort TileSize { get; }
-
-        Box2Rotated WorldBounds { get; }
-
-        /// <summary>
-        ///     The bounding box of the grid in world coordinates.
-        /// </summary>
-        Box2 WorldAABB { get; }
 
         /// <summary>
         ///     The bounding box of the grid in local coordinates.
@@ -49,20 +31,6 @@ namespace Robust.Shared.Map
         ///     The length of a side of the square chunk in number of tiles.
         /// </summary>
         ushort ChunkSize { get; }
-
-        /// <summary>
-        ///     The origin of the grid in world coordinates. Make sure to set this!
-        /// </summary>
-        Vector2 WorldPosition { get; set; }
-
-        /// <summary>
-        ///     The rotation of the grid in world terms.
-        /// </summary>
-        Angle WorldRotation { get; set; }
-
-        Matrix3 WorldMatrix { get; }
-
-        Matrix3 InvWorldMatrix { get; }
 
         #region TileAccess
 

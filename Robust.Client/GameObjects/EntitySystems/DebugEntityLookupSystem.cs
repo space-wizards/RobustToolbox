@@ -6,17 +6,17 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class DebugEntityLookupCommand : IConsoleCommand
+public sealed class DebugEntityLookupCommand : LocalizedCommands
 {
-    public string Command => "togglelookup";
-    public string Description => "Shows / hides entitylookup bounds via an overlay";
-    public string Help => $"{Command}";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "togglelookup";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         EntitySystem.Get<DebugEntityLookupSystem>().Enabled ^= true;
     }
@@ -79,11 +79,29 @@ public sealed class EntityLookupOverlay : Overlay
             var lookupAABB = invMatrix.TransformBox(args.WorldBounds);
             var ents = new List<EntityUid>();
 
-            // Gonna allocate a lot but debug overlay sooo
-            lookup.Tree._b2Tree.FastQuery(ref lookupAABB, (ref EntityUid data) =>
+            lookup.DynamicTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
             {
-                ents.Add(data);
-            });
+                state.Add(value.Fixture.Body.Owner);
+                return true;
+            }, lookupAABB);
+
+            lookup.StaticTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
+            {
+                state.Add(value.Fixture.Body.Owner);
+                return true;
+            }, lookupAABB);
+
+            lookup.StaticSundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
+            {
+                state.Add(value);
+                return true;
+            }, lookupAABB);
+
+            lookup.SundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
+            {
+                state.Add(value);
+                return true;
+            }, lookupAABB);
 
             foreach (var ent in ents)
             {

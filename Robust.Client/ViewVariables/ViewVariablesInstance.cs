@@ -18,10 +18,10 @@ namespace Robust.Client.ViewVariables
     /// </summary>
     internal abstract class ViewVariablesInstance
     {
-        public readonly IViewVariablesManagerInternal ViewVariablesManager;
+        public readonly IClientViewVariablesManagerInternal ViewVariablesManager;
         protected readonly IRobustSerializer _robustSerializer;
 
-        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
+        protected ViewVariablesInstance(IClientViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
         {
             ViewVariablesManager = vvm;
             _robustSerializer = robustSerializer;
@@ -53,7 +53,7 @@ namespace Robust.Client.ViewVariables
         {
         }
 
-        protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
+        protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, IClientViewVariablesManagerInternal vvm,
             IRobustSerializer robustSerializer)
         {
             var styleOther = false;

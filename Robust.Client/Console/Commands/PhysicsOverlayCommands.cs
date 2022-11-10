@@ -1,17 +1,16 @@
 using Robust.Client.Debugging;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class PhysicsOverlayCommands : IConsoleCommand
+    public sealed class PhysicsOverlayCommands : LocalizedCommands
     {
-        public string Command => "physics";
-        public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
-        public string Help => $"{Command} <aabbs / com / contactnormals / contactpoints / distance / joints / shapeinfo / shapes>";
+        public override string Command => "physics";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -19,7 +18,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var system = EntitySystem.Get<DebugPhysicsSystem>();
+            var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugPhysicsSystem>();
 
             switch (args[0])
             {
@@ -55,7 +54,7 @@ namespace Robust.Client.Console.Commands
             return;
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length != 1) return CompletionResult.Empty;
 

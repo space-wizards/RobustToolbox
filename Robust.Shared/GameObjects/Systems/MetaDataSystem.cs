@@ -1,11 +1,15 @@
+using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class MetaDataSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
 
     public override void Initialize()
@@ -16,7 +20,7 @@ public abstract class MetaDataSystem : EntitySystem
 
     private void OnMetaDataGetState(EntityUid uid, MetaDataComponent component, ref ComponentGetState args)
     {
-        args.State = new MetaDataComponentState(component._entityName, component._entityDescription, component._entityPrototype?.ID);
+        args.State = new MetaDataComponentState(component._entityName, component._entityDescription, component._entityPrototype?.ID, component.PauseTime);
     }
 
     private void OnMetaDataHandle(EntityUid uid, MetaDataComponent component, ref ComponentHandleState args)
@@ -29,16 +33,57 @@ public abstract class MetaDataSystem : EntitySystem
 
         if(state.PrototypeId != null && state.PrototypeId != component._entityPrototype?.ID)
             component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
+
+        component.PauseTime = state.PauseTime;
+    }
+
+    public bool EntityPaused(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata))
+            return true;
+
+        return metadata.EntityPaused;
     }
 
     public void SetEntityPaused(EntityUid uid, bool value, MetaDataComponent? metadata = null)
     {
         if (!Resolve(uid, ref metadata)) return;
 
-        if (metadata._entityPaused == value) return;
+        if (metadata.EntityPaused == value) return;
 
-        metadata._entityPaused = value;
+        if (value)
+        {
+            DebugTools.Assert(metadata.PauseTime == null);
+            metadata.PauseTime = _timing.CurTime;
+        }
+        else
+        {
+            DebugTools.Assert(metadata.PauseTime != null);
+            metadata.PauseTime = null;
+        }
+
         RaiseLocalEvent(uid, new EntityPausedEvent(uid, value));
+        Dirty(metadata);
+    }
+
+    /// <summary>
+    /// Gets how long this entity has been paused.
+    /// </summary>
+    public TimeSpan GetPauseTime(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata))
+            return TimeSpan.Zero;
+
+        return (_timing.CurTime - metadata.PauseTime) ?? TimeSpan.Zero;
+    }
+
+    /// <summary>
+    /// Offsets the specified time by how long the entity has been paused.
+    /// </summary>
+    public void PauseOffset(EntityUid uid, ref TimeSpan time, MetaDataComponent? metadata = null)
+    {
+        var paused = GetPauseTime(uid, metadata);
+        time += paused;
     }
 
     public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)

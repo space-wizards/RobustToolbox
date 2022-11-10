@@ -65,6 +65,8 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Adding;
             CreationTick = entManager.CurrentTick;
+            // networked components are assumed to be dirty when added to entities. See also: ClearTicks()
+            LastModifiedTick = entManager.CurrentTick;
             entManager.EventBus.RaiseComponentEvent(this, type, CompAddInstance);
             LifeStage = ComponentLifeStage.Added;
         }
@@ -220,6 +222,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete]
         public void Dirty(IEntityManager? entManager = null)
         {
             IoCManager.Resolve(ref entManager);

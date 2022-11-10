@@ -171,10 +171,9 @@ namespace Robust.Client.Placement
         /// </summary>
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridId(pManager.EntityManager);
-            var gridUid = coordinates.GetGridUid(pManager.EntityManager);
-            return gridId.IsValid() ? pManager.MapManager.GetGrid(gridId).GetTileRef(MouseCoords)
-                : new TileRef(gridId, gridUid.GetValueOrDefault(),
+            var gridUidOpt = coordinates.GetGridUid(pManager.EntityManager);
+            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.MapManager.GetGrid(gridUid).GetTileRef(MouseCoords)
+                : new TileRef(gridUidOpt ?? EntityUid.Invalid,
                     MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
         }
 

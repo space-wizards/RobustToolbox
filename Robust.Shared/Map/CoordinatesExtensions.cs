@@ -7,17 +7,6 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        [Obsolete("Use EntityUid overload instead.")]
-        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, GridId gridId, IMapManager? mapManager = null)
-        {
-            IoCManager.Resolve(ref mapManager);
-
-            var grid = mapManager.GetGrid(gridId);
-            var tile = grid.TileSize;
-
-            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
-        }
-
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref mapManager);
@@ -57,12 +46,15 @@ namespace Robust.Shared.Map
                 IMapGrid? closest = null;
                 var distance = float.PositiveInfinity;
                 var intersect = new Box2();
+                var xformQuery = entityManager.GetEntityQuery<TransformComponent>();
+
                 foreach (var grid in gridsInArea)
                 {
+                    var gridXform = xformQuery.GetComponent(grid.GridEntityId);
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
-                    var gridIntersect = gridSearchBox.Intersect(grid.WorldAABB);
+                    var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.LocalAABB));
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)

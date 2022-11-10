@@ -219,13 +219,11 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     }
 }
 
-internal sealed class UITestCommand : IConsoleCommand
+internal sealed class UITestCommand : LocalizedCommands
 {
-    public string Command => "uitest";
-    public string Description => "Open a dummy UI testing window";
-    public string Help => "uitest";
+    public override string Command => "uitest";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var window = new DefaultWindow { MinSize = (500, 400) };
         window.Contents.AddChild(new UITestControl());
@@ -234,16 +232,14 @@ internal sealed class UITestCommand : IConsoleCommand
     }
 }
 
-internal sealed class UITest2Command : IConsoleCommand
+internal sealed class UITest2Command : LocalizedCommands
 {
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
 
-    public string Command => "uitest2";
-    public string Description => Loc.GetString("cmd-uitest2-desc");
-    public string Help => Loc.GetString("cmd-uitest2-help");
+    public override string Command => "uitest2";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length > 1)
         {
@@ -275,7 +271,7 @@ internal sealed class UITest2Command : IConsoleCommand
         root.AddChild(control);
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {

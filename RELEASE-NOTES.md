@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-* Made entity deletion more resilient against exceptions. Should fix several bugs.
+*None yet*
 
 ### Other
 
@@ -27,6 +27,27 @@ Template for new versions:
 
 -->
 
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+* Fixes for compiling & running on .NET 7. You'll still have to edit a bunch of project files to enable this though.
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
 
 ## 0.62.1.0
 
@@ -102,7 +123,7 @@ Template for new versions:
 
 ### Internal
 
-* Removed redundant grid-init physics logic 
+* Removed redundant grid-init physics logic
 * Modified garbage collection for entity spawning profiling.
 
 ## 0.59.0.0

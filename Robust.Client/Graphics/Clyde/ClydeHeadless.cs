@@ -289,6 +289,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public bool IsGlobal { get; }
+
             public bool SetPosition(Vector2 position)
             {
                 return true;
@@ -309,7 +311,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetVolumeDirect(float scale)
+            public void SetVolumeDirect(float gain)
             {
                 // Nada.
             }

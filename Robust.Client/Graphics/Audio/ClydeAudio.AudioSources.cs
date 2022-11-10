@@ -84,6 +84,17 @@ namespace Robust.Client.Graphics.Audio
                 }
             }
 
+            public bool IsGlobal
+            {
+                get
+                {
+                    _checkDisposed();
+                    AL.GetSource(SourceHandle, ALSourceb.SourceRelative, out var value);
+                    _master._checkAlError();
+                    return value;
+                }
+            }
+
             public void SetGlobal()
             {
                 _checkDisposed();
@@ -444,6 +455,17 @@ namespace Robust.Client.Graphics.Audio
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle!.Value, ALSourcef.SecOffset, seconds);
                 _master._checkAlError();
+            }
+
+            public bool IsGlobal
+            {
+                get
+                {
+                    _checkDisposed();
+                    AL.GetSource(SourceHandle!.Value, ALSourceb.SourceRelative, out var value);
+                    _master._checkAlError();
+                    return value;
+                }
             }
 
             public bool SetPosition(Vector2 position)

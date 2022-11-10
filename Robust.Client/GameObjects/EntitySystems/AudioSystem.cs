@@ -215,19 +215,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
             if (stream.Source.IsGlobal)
             {
-                float actualGain;
-
-                if (stream.Gain != null)
-                {
-                    actualGain = stream.Gain.Value;
-                }
-                else
-                {
-                    var volume = MathF.Pow(10, stream.Volume / 10);
-                    actualGain = MathF.Max(0f, volume);
-                }
-
-                stream.Source.SetVolumeDirect(actualGain);
+                stream.Source.SetVolume(stream.Volume);
             }
             else if (pos.MapId != _eyeManager.CurrentMap)
                 stream.Source.SetVolumeDirect(0f);

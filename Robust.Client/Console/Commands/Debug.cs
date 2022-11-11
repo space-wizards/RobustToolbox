@@ -501,7 +501,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SetClipboardCommand : IConsoleCommand
+    internal sealed class SetClipboardCommand : LocalizedCommands
     {
         public override string Command => "setclipboard";
 

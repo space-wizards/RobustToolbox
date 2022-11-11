@@ -44,7 +44,9 @@ Template for new versions:
 
 ### Other
 
-*None yet*
+* Properly re-use `HttpClient` in `NetManager` meaning we properly pool connections to the auth server, improving performance.
+* Hub advertisements have extended keep-alive pool timeout, so the connection can be kept active between advertisements.
+* All HTTP requests from the engine now have appropriate `User-Agent` header.
 
 ### Internal
 

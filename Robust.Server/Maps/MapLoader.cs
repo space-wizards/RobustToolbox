@@ -1079,7 +1079,7 @@ namespace Robust.Server.Maps
                         mapping.Add("components", components);
                     }
 
-                    if (prototype == null)
+                    if (md.EntityPrototype == null)
                     {
                         // No prototype - we are done.
                         entities.Add(mapping);
@@ -1088,7 +1088,7 @@ namespace Robust.Server.Maps
 
                     // an entity may have less components than the original prototype, so we need to check if any are missing.
                     var missingComponents = new SequenceDataNode();
-                    foreach (var compName in prototype.Components.Keys)
+                    foreach (var compName in md.EntityPrototype.Components.Keys)
                     {
                         missingComponents.Add(new ValueDataNode(compName));
                     }

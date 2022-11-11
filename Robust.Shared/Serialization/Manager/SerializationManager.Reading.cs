@@ -31,8 +31,6 @@ namespace Robust.Shared.Serialization.Manager
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            // we ignore the null check here due to the method only returning a nullable if the type is actually nullable
-            // (at least in theory, still waiting on my dotnet api proposal to get approved)
             return GetOrCreateGenericReadDelegate<T>(node)(node, context, skipHook, value);
         }
 
@@ -80,7 +78,6 @@ namespace Robust.Shared.Serialization.Manager
                 var managerConst = Expression.Constant(manager);
 
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
-                //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var valueParam = Expression.Parameter(baseType, "value");
@@ -178,11 +175,11 @@ namespace Robust.Shared.Serialization.Manager
                 // early-out null
                 var returnValue = Expression.Variable(actualType);
                 call = Expression.Block(new[] { returnValue },
-                    Expression.Condition(
-                    Expression.Call(managerConst, nameof(IsNull), Type.EmptyTypes, nodeParam), nullable
-                        ? Expression.Block(typeof(void),
-                            Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
-                        : ThrowExpression<InvalidOperationException>(),
+                    Expression.IfThenElse(
+                    Expression.Call(managerConst, nameof(IsNull), Type.EmptyTypes, nodeParam),
+                    nullable
+                        ? Expression.Block(typeof(void), Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
+                        : ExpressionUtils.ThrowExpression<InvalidOperationException>(),
                     Expression.Block(typeof(void),
                         Expression.Assign(returnValue, call))),
                     returnValue);
@@ -209,7 +206,7 @@ namespace Robust.Shared.Serialization.Manager
                     var finalValue = Expression.Variable(typeof(T));
                     call = Expression.Block(new[] { finalValue }, Expression.Assign(finalValue, call),
                         Expression.IfThen(Expression.Equal(finalValue, GetNullExpression(managerConst, actualType)),
-                            ThrowExpression<InvalidOperationException>()), finalValue);
+                            ExpressionUtils.ThrowExpression<InvalidOperationException>()), finalValue);
                 }
 
                 return Expression.Lambda<ReadGenericDelegate<T>>(call, nodeParam,

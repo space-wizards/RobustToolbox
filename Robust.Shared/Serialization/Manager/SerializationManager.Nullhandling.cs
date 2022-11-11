@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager;
 
@@ -14,7 +15,7 @@ public sealed partial class SerializationManager
         return left.Type.IsValueType &&
                (!left.Type.IsGenericType || left.Type.GetGenericTypeDefinition() != typeof(Nullable<>))
             ? Expression.Condition(
-                EqualExpression(left, Expression.Default(left.Type)),
+                ExpressionUtils.EqualExpression(left, Expression.Default(left.Type)),
                 left,
                 right)
             : Expression.Coalesce(left, right);

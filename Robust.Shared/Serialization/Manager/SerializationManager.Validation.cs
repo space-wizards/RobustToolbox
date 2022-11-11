@@ -129,12 +129,12 @@ public sealed partial class SerializationManager
 
     private Expression ErrorNodeExpression(ParameterExpression nodeParam, string message, bool alwaysRelevant = true)
     {
-        return NewExpression<ErrorNode>(nodeParam, message, alwaysRelevant);
+        return ExpressionUtils.NewExpression<ErrorNode>(nodeParam, message, alwaysRelevant);
     }
 
     private Expression ValidateNodeExpression(ParameterExpression nodeParam)
     {
-        return NewExpression<ValidatedMappingNode>(nodeParam);
+        return ExpressionUtils.NewExpression<ValidatedMappingNode>(nodeParam);
     }
 
     private ValidationNode ValidateArray<TElem>(SequenceDataNode sequenceDataNode, ISerializationContext? context)

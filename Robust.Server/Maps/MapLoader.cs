@@ -296,6 +296,7 @@ namespace Robust.Server.Maps
             private EntityUid? TargetMapUid;
 
             private Dictionary<string, MappingDataNode>? CurrentReadingEntityComponents;
+            private HashSet<string>? CurrentlyIgnoredComponents;
 
             private string? CurrentWritingComponent;
             private EntityUid? CurrentWritingEntity;
@@ -755,6 +756,7 @@ namespace Robust.Server.Maps
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
                     CurrentReadingEntityComponents = new Dictionary<string, MappingDataNode>();
+                    HashSet<string> missingComponents = new();
                     if (data.TryGet("components", out SequenceDataNode? componentList))
                     {
                         foreach (var compData in componentList.Cast<MappingDataNode>())
@@ -765,6 +767,11 @@ namespace Robust.Server.Maps
                             CurrentReadingEntityComponents[value] = datanode;
                         }
                     }
+
+                    if (data.TryGet("missingComponents", out SequenceDataNode? missingComponentList))
+                        CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
+                    else
+                        CurrentlyIgnoredComponents = new();
 
                     _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
 
@@ -1072,6 +1079,33 @@ namespace Robust.Server.Maps
                         mapping.Add("components", components);
                     }
 
+                    if (cache == null)
+                    {
+                        // No prototype - we are done.
+                        entities.Add(mapping);
+                        return;
+                    }
+
+                    // an entity may have less components than the original prototype, so we need to check if any are missing.
+                    var missingComponents = new SequenceDataNode();
+
+                    foreach (var compName in cache.Keys)
+                    {
+                        var reg = compFactory.GetRegistration(compName);
+
+                        // try comp instead of has-comp as it checks whether the component is supposed to have been
+                        // deleted.
+                        if (_serverEntityManager.TryGetComponent(entityUid, reg.Idx, out _))
+                            continue;
+
+                        missingComponents.Add(new ValueDataNode(compName));
+                    }
+
+                    if (missingComponents.Count != 0)
+                    {
+                        mapping.Add("missingComponents", missingComponents);
+                    }
+
                     entities.Add(mapping);
                 }
             }
@@ -1100,6 +1134,11 @@ namespace Robust.Server.Maps
             public IEnumerable<string> GetExtraComponentTypes()
             {
                 return CurrentReadingEntityComponents!.Keys;
+            }
+
+            public bool ShouldSkipComponent(string compName)
+            {
+                return CurrentlyIgnoredComponents!.Contains(compName);
             }
 
             [Virtual]

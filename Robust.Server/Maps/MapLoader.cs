@@ -1129,7 +1129,7 @@ namespace Robust.Server.Maps
                 ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
-                ISerializationContext? context, EntityUid _)
+                ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? instanceProvider = null)
             {
                 if (node.Value == "null")
                 {

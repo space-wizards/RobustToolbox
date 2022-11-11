@@ -23,9 +23,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, HashSet<T>? set)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
         {
-            set ??= new HashSet<T>();
+            var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
             foreach (var dataNode in node.Sequence)
             {
@@ -86,9 +86,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, ImmutableHashSet<T>? rawValue)
+            ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
             var set = ImmutableHashSet.CreateBuilder<T>();
 

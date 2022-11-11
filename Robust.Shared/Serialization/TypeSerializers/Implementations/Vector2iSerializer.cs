@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Vector2i Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Vector2i value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Vector2i>? instanceProvider = null)
         {
             if (!VectorSerializerUtility.TryParseArgs(node.Value, 2, out var args))
             {

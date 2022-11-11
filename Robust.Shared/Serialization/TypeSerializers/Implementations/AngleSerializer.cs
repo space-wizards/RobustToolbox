@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Angle Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Angle value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Angle>? instanceProvider = null)
         {
             var nodeContents = node.Value;
 

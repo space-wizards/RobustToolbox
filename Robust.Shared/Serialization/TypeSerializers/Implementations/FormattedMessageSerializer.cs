@@ -15,7 +15,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public FormattedMessage Read(ISerializationManager serializationManager,
             ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
-            ISerializationContext? context = null, FormattedMessage? value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<FormattedMessage>? instanceProvider = null)
         {
             return FormattedMessage.FromMarkup(node.Value);
         }

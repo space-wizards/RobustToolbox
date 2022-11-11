@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public MapId Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, MapId value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<MapId>? instanceProvider = null)
         {
             var val = Parse.Int32(node.Value);
             return new MapId(val);

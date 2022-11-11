@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -21,9 +20,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
     [Virtual]
     public class PrototypeIdDictionarySerializer<TValue, TPrototype> :
-        ITypeSerializer<Dictionary<string, TValue>, MappingDataNode>,
-        ITypeSerializer<SortedDictionary<string, TValue>, MappingDataNode>,
-        ITypeSerializer<IReadOnlyDictionary<string, TValue>, MappingDataNode>
+        ITypeValidator<Dictionary<string, TValue>, MappingDataNode>,
+        ITypeValidator<SortedDictionary<string, TValue>, MappingDataNode>,
+        ITypeValidator<IReadOnlyDictionary<string, TValue>, MappingDataNode>
         where TPrototype : class, IPrototype
     {
         private readonly DictionarySerializer<string, TValue> _dictionarySerializer = new();
@@ -66,54 +65,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, dependencies, context);
-        }
-
-        Dictionary<string, TValue> ITypeReader<Dictionary<string, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            Dictionary<string, TValue>? value)
-        {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context, value);
-        }
-
-        SortedDictionary<string, TValue> ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            SortedDictionary<string, TValue>? value)
-        {
-            return ((ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
-        }
-
-        IReadOnlyDictionary<string, TValue> ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            IReadOnlyDictionary<string, TValue>? value)
-        {
-            return ((ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, Dictionary<string, TValue> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, SortedDictionary<string, TValue> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, IReadOnlyDictionary<string, TValue> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
         }
     }
 }

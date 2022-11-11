@@ -18,7 +18,8 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context = null, TimeSpan value = default)
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;

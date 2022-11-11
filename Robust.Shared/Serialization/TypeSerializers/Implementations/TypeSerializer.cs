@@ -31,7 +31,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Type Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, Type? value = default)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Type>? instanceProvider = null)
         {
             if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
                 return shortcutType;

@@ -22,9 +22,9 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         SequenceDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context, HashSet<T>? set)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
     {
-        set ??= new HashSet<T>();
+        var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
         foreach (var dataNode in node.Sequence)
         {

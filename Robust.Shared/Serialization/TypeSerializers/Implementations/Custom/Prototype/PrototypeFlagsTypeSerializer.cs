@@ -44,9 +44,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
+            ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
 
             var flags = new List<string>(node.Sequence.Count);
@@ -77,9 +77,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
+            ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
 
             return new PrototypeFlags<T>(node.Value);

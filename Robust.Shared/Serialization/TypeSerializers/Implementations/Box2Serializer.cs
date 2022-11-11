@@ -25,7 +25,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Box2 value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Box2>? instanceProvider = null)
         {
             var nodeValue = node.Value;
             var args = nodeValue.AsSpan().Split(',').GetEnumerator();

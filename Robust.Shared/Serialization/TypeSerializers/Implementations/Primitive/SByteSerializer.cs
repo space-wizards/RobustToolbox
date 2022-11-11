@@ -21,7 +21,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public sbyte Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, sbyte value = default)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<sbyte>? instanceProvider = null)
         {
             return sbyte.Parse(node.Value, CultureInfo.InvariantCulture);
         }

@@ -41,9 +41,9 @@ public sealed class DictionarySerializer<TKey, TValue> :
 
     public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
         MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-        Dictionary<TKey, TValue>? dict)
+        ISerializationManager.InstantiationDelegate<Dictionary<TKey, TValue>>? instanceProvider)
     {
-        dict ??= new Dictionary<TKey, TValue>();
+        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
 
         foreach (var (key, value) in node.Children)
         {
@@ -112,13 +112,13 @@ public sealed class DictionarySerializer<TKey, TValue> :
         return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
     }
 
-    IReadOnlyDictionary<TKey, TValue>
-        ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyDictionary<TKey, TValue>? rawValue)
+    IReadOnlyDictionary<TKey, TValue> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
+        ISerializationManager serializationManager, MappingDataNode node,
+        IDependencyCollection dependencies,
+        bool skipHook, ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<IReadOnlyDictionary<TKey, TValue>>? instanceProvider)
     {
-        if (rawValue != null)
+        if (instanceProvider != null)
         {
             Logger.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
@@ -135,13 +135,13 @@ public sealed class DictionarySerializer<TKey, TValue> :
         return dict;
     }
 
-    SortedDictionary<TKey, TValue>
-        ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, SortedDictionary<TKey, TValue>? dict)
+    SortedDictionary<TKey, TValue> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
+        ISerializationManager serializationManager, MappingDataNode node,
+        IDependencyCollection dependencies,
+        bool skipHook, ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<SortedDictionary<TKey, TValue>>? instanceProvider)
     {
-        dict ??= new SortedDictionary<TKey, TValue>();
+        var dict = instanceProvider != null ? instanceProvider() : new SortedDictionary<TKey, TValue>();
 
         foreach (var (key, value) in node.Children)
         {

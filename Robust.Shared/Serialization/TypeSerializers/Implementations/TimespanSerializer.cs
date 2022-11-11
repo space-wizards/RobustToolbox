@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, TimeSpan value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
             return TimeSpan.FromSeconds(seconds);

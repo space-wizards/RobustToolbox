@@ -16,7 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Color Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Color value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Color>? instanceProvider = null)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)
                 ? color :

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -18,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
     }
 
     [Virtual]
-    public class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    public class PrototypeIdHashSetSerializer<TPrototype> : ITypeValidator<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
     {
         protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
@@ -38,38 +37,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             }
 
             return new ValidatedSequenceNode(list);
-        }
-
-        public HashSet<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            HashSet<string>? set = null)
-        {
-            set ??= new HashSet<string>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                set.Add(PrototypeSerializer.Read(
-                    serializationManager,
-                    (ValueDataNode) dataNode,
-                    dependencies,
-                    skipHook,
-                    context));
-            }
-
-            return set;
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, HashSet<string> value,
-            IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext? context = null)
-        {
-            var list = new List<DataNode>();
-
-            foreach (var str in value)
-            {
-                list.Add(PrototypeSerializer.Write(serializationManager, str, dependencies, alwaysWrite, context));
-            }
-
-            return new SequenceDataNode(list);
         }
     }
 }

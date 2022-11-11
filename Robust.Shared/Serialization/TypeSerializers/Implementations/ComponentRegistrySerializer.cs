@@ -24,10 +24,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, ComponentRegistry? components = null)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<ComponentRegistry>? instanceProvider = null)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
-            components ??= new ComponentRegistry();
+            var components = instanceProvider != null ? instanceProvider() : new ComponentRegistry();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {

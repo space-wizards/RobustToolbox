@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         public (T1, T2) Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, (T1, T2) val = default)
+            ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<(T1, T2)>? val = null)
         {
             if (node.Children.Count != 1)
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");

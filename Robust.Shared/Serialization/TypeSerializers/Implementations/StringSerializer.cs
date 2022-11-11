@@ -14,7 +14,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public string Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, string? value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<string>? instanceProvider = null)
         {
             return node.Value;
         }

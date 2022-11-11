@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Regex Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Regex? value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Regex>? instanceProvider = null)
         {
             return new Regex(node.Value, RegexOptions.Compiled);
         }

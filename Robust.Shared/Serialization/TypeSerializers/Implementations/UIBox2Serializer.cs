@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public UIBox2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, UIBox2 value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<UIBox2>? instanceProvider = null)
         {
             var args = node.Value.Split(',');
 

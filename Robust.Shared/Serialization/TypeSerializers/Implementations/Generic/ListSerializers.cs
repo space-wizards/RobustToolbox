@@ -71,9 +71,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, List<T>? list)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<List<T>>? instanceProvider = null)
         {
-            list ??= new List<T>();
+            var list = instanceProvider != null ? instanceProvider() : new List<T>();
 
             foreach (var dataNode in node.Sequence)
             {
@@ -124,9 +124,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyList<T> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyList<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<IReadOnlyList<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
 
             var list = new List<T>();
@@ -142,9 +143,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyCollection<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<IReadOnlyCollection<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
 
             var list = new List<T>();
@@ -160,9 +162,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ImmutableList<T> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, ImmutableList<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<ImmutableList<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
 
             var list = ImmutableList.CreateBuilder<T>();

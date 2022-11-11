@@ -573,8 +573,7 @@ namespace Robust.Server.Maps
                     foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
                     {
                         var (chunkOffsetX, chunkOffsetY) = _serializationManager.Read<Vector2i>(chunkNode["ind"]);
-                        var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
-                        _serializationManager.Read(chunkNode, this, value: chunk);
+                        _serializationManager.Read<MapChunk>(chunkNode, this, instanceProvider: () => grid.GetChunk(chunkOffsetX, chunkOffsetY));
                     }
 
                     Grids.Add(grid); // Grids are kept in index order

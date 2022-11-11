@@ -16,8 +16,7 @@ namespace Robust.Shared.Serialization.Manager
         private delegate object? ReadBoxingDelegate(
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = null);
+            bool skipHook = false);
 
         private delegate T ReadGenericDelegate<T>(
             DataNode node,
@@ -29,14 +28,14 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node), object> _readGenericBaseDelegates = new();
         private readonly ConcurrentDictionary<(Type value, Type node), object> _readGenericDelegates = new();
 
-        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
+        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null)
         {
-            return GetOrCreateGenericReadDelegate<T>(node)(node, context, skipHook, value);
+            return GetOrCreateGenericReadDelegate<T>(node)(node, context, skipHook);
         }
 
-        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
         {
-            return GetOrCreateBoxingReadDelegate(type)(node, context, skipHook, value);
+            return GetOrCreateBoxingReadDelegate(type)(node, context, skipHook);
         }
 
         private ReadBoxingDelegate GetOrCreateBoxingReadDelegate(Type type)
@@ -139,7 +138,7 @@ namespace Robust.Shared.Serialization.Manager
                     }
 
                     call = Expression.Block(
-                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.NewExpressionDefault(actualType))),
+                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.InstantiationExpression(managerConst, actualType))),
                         Expression.Call(valueParam, typeof(ISelfSerialize).GetMethod("Deserialize")!,
                             Expression.Field(Expression.Convert(nodeParam, typeof(ValueDataNode)), "Value")));
                 }
@@ -168,7 +167,7 @@ namespace Robust.Shared.Serialization.Manager
                     }
 
                     call = Expression.Block(
-                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.NewExpressionDefault(actualType))),
+                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.InstantiationExpression(managerConst, actualType))),
                         call);
                 }
 

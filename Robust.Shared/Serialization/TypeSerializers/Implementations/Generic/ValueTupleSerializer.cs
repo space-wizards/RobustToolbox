@@ -23,8 +23,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook, val.Item1);
-            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook, val.Item2);
+            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook);
+            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook);
 
             return (v1, v2);
         }

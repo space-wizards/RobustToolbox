@@ -8,6 +8,8 @@ namespace Robust.Shared.Serialization.Manager
 {
     public interface ISerializationManager
     {
+        public delegate T InstantiationDelegate<out T>();
+
         /// <summary>
         ///     Initializes the serialization manager.
         /// </summary>
@@ -55,10 +57,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <param name="value">The value to read into. If none is supplied, a new object will be created.</param>
         /// <returns>The deserialized object or null.</returns>
-        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false,
-            object? value = null);
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into a populated object of the given generic type <see cref="T"/>
@@ -66,10 +66,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <param name="value">The value to read into. If none is supplied, a new object will be created.</param>
+        /// <param name="instanceProvider">The valueProvider which can provide a value to read into. If none is supplied, a new object will be created.</param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default);
+        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null);
 
         #endregion
 

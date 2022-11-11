@@ -291,7 +291,7 @@ public sealed partial class SerializationManager
             return (T)(object)node.Copy();
 
         var isRecord = definition?.IsRecord ?? false;
-        var target = (T) GetOrCreateInstantiator(typeof(T), isRecord)();
+        var target = GetOrCreateInstantiator<T>(isRecord)();
 
         if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, context, skipHook))
         {

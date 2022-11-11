@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public partial class DataDefinition<T>
+    internal partial class DataDefinition<T>
     {
         public delegate void PopulateDelegateSignature(
             ref T target,

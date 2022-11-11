@@ -220,8 +220,8 @@ namespace Robust.Shared.Serialization.Manager
         {
             return (DataDefinition)typeof(DataDefinition<>).MakeGenericType(t)
                 .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, new[]
-                    { typeof(SerializationManager), typeof(InstantiationDelegate<object>), typeof(bool) })!
-                .Invoke(new object[]{this, GetOrCreateInstantiator(t, isRecord), isRecord});
+                    { typeof(SerializationManager), typeof(bool) })!
+                .Invoke(new object[]{this, isRecord});
         }
 
         public void Shutdown()

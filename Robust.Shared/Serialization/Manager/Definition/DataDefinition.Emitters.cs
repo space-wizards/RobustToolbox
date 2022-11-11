@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public partial class DataDefinition<T>
+    internal partial class DataDefinition<T>
     {
         private PopulateDelegateSignature EmitPopulateDelegate(SerializationManager manager)
         {

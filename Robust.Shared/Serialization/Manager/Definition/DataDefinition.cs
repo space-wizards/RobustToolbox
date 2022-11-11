@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public abstract bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates);
     }
 
-    public sealed partial class DataDefinition<T> : DataDefinition where T : notnull
+    internal sealed partial class DataDefinition<T> : DataDefinition where T : notnull
     {
         private readonly struct FieldInterfaceInfo
         {
@@ -43,17 +43,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
             }
         }
 
-        public readonly PopulateDelegateSignature Populate;
-        public readonly SerializeDelegateSignature Serialize;
-        public readonly CopyDelegateSignature CopyTo;
+        internal readonly PopulateDelegateSignature Populate;
+        internal readonly SerializeDelegateSignature Serialize;
+        internal readonly CopyDelegateSignature CopyTo;
 
         //todo paul InstantiationDelegate
         [UsedImplicitly]
-        internal DataDefinition(SerializationManager manager, InstantiationDelegate<object> instantiator, bool isRecord)
+        internal DataDefinition(SerializationManager manager, bool isRecord)
         {
             IsRecord = isRecord;
 
-            var fieldDefs = GetFieldDefinitions(instantiator, isRecord);
+            var fieldDefs = GetFieldDefinitions(manager, isRecord);
 
             var dataFields = fieldDefs
                 .Select(f => f.Attribute)
@@ -262,9 +262,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return true;
         }
 
-        private List<FieldDefinition> GetFieldDefinitions(InstantiationDelegate<object> instantiator, bool isRecord)
+        private List<FieldDefinition> GetFieldDefinitions(SerializationManager manager, bool isRecord)
         {
-            var dummyObject = instantiator();
+            var dummyObject = manager.GetOrCreateInstantiator<T>(isRecord)();
             var fieldDefinitions = new List<FieldDefinition>();
 
             foreach (var abstractFieldInfo in typeof(T).GetAllPropertiesAndFields())

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -7,9 +8,7 @@ namespace Robust.Shared.Serialization.Manager;
 
 public partial class SerializationManager
 {
-    internal delegate T InstantiationDelegate<out T>();
-
-    private readonly ConcurrentDictionary<Type, InstantiationDelegate<object>> _instantiators = new();
+    private readonly ConcurrentDictionary<Type, object> _instantiators = new();
 
     private static void CreateValueTypeInstantiator(ILGenerator generator, Type type)
     {
@@ -27,7 +26,6 @@ public partial class SerializationManager
             generator.Emit(OpCodes.Newobj, constructor);
         }
 
-        generator.Emit(OpCodes.Box, type);
         generator.Emit(OpCodes.Ret);
     }
 
@@ -35,10 +33,7 @@ public partial class SerializationManager
     {
         if (type.IsArray)
         {
-            generator.Emit(OpCodes.Ldc_I4_0);
-            generator.Emit(OpCodes.Newarr, type.GetElementType()!);
-            generator.Emit(OpCodes.Ret);
-            return;
+            throw new ArgumentException($"Tried instantiating unsupported type {type}.");
         }
 
         var constructor = type.GetConstructor(
@@ -88,14 +83,14 @@ public partial class SerializationManager
         generator.Emit(OpCodes.Ret);
     }
 
-    private InstantiationDelegate<object> GetOrCreateInstantiator(Type type, bool isRecord)
+    internal ISerializationManager.InstantiationDelegate<T> GetOrCreateInstantiator<T>(bool isDataRecord)
     {
-        return _instantiators.GetOrAdd(type, static (type, isRecord) =>
+        return (ISerializationManager.InstantiationDelegate<T>)_instantiators.GetOrAdd(typeof(T), static (type, isRecord) =>
         {
             var method = new DynamicMethod(
                 "Instantiator",
-                typeof(object),
-                new[] { typeof(object) },
+                typeof(T),
+                Type.EmptyTypes,
                 true);
 
             var generator = method.GetILGenerator();
@@ -113,7 +108,18 @@ public partial class SerializationManager
                 CreateClassInstantiator(generator, type);
             }
 
-            return method.CreateDelegate<InstantiationDelegate<object>>();
-        }, isRecord);
+            return method.CreateDelegate<ISerializationManager.InstantiationDelegate<T>>();
+        }, isDataRecord);
+    }
+
+    //we can safely set isDataRecord to false here due to a delegate already existing if it if it were
+    private T InstantiateValue<T>() => GetOrCreateInstantiator<T>(false)();
+
+    internal MethodCallExpression InstantiationExpression(ConstantExpression managerConst, Type type)
+    {
+        return Expression.Call(
+            managerConst,
+            nameof(InstantiateValue),
+            new[] { type });
     }
 }

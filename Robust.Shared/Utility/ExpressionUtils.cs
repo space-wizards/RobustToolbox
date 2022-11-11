@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Shared.Utility;
 
@@ -98,20 +97,5 @@ public static class ExpressionUtils
             Type.EmptyTypes,
             left,
             right);
-    }
-
-    public static Expression NewExpressionDefault(this SerializationManager serializationManager, Type type)
-    {
-        if (type.IsValueType)
-            return Expression.Default(type);
-
-        if (serializationManager.TryGetDefinition(type, out var def) && def.IsRecord)
-        {
-            var constructor = type.GetConstructors()[0];
-            return Expression.New(constructor,
-                constructor.GetParameters().Select(DefaultValueOrTypeDefault));
-        }
-
-        return Expression.New(type);
     }
 }

@@ -15,7 +15,7 @@ Template for new versions:
 
 ### Bugfixes
 
-* Made entity deletion more resilient against exceptions. Should fix several bugs.
+*None yet*
 
 ### Other
 
@@ -26,6 +26,44 @@ Template for new versions:
 *None yet*
 
 -->
+
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+* Fixes for compiling & running on .NET 7. You'll still have to edit a bunch of project files to enable this though.
+
+### Bugfixes
+
+* Fixes erroneous literal "\\n" inside the Clyde debug panel.
+* Fixed Lidgren connection status changes potentially getting mislogged.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+## 0.62.1.0
+
+### Bugfixes
+
+* Fixed a PVS issue causing entities to be sent to clients without first sending their parents.
+* Improved client-side state handling exception tolerance.
+
+### Other
+
+* Removed null-space map entities.
+
+### Internal
+
+* Added some more anchoring tests.
 
 ## 0.62.0.1
 
@@ -86,7 +124,7 @@ Template for new versions:
 
 ### Internal
 
-* Removed redundant grid-init physics logic 
+* Removed redundant grid-init physics logic
 * Modified garbage collection for entity spawning profiling.
 
 ## 0.59.0.0

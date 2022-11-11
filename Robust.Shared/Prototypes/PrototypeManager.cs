@@ -786,7 +786,7 @@ namespace Robust.Shared.Prototypes
                 if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
                     throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
+                if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
                 {
                     throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
                 }

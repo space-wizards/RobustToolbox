@@ -1083,7 +1083,7 @@ namespace Robust.Server.Maps
                     {
                         // No prototype - we are done.
                         entities.Add(mapping);
-                        return;
+                        continue;
                     }
 
                     // an entity may have less components than the original prototype, so we need to check if any are missing.

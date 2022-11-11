@@ -1079,7 +1079,7 @@ namespace Robust.Server.Maps
                         mapping.Add("components", components);
                     }
 
-                    if (cache == null)
+                    if (prototype == null)
                     {
                         // No prototype - we are done.
                         entities.Add(mapping);
@@ -1088,16 +1088,8 @@ namespace Robust.Server.Maps
 
                     // an entity may have less components than the original prototype, so we need to check if any are missing.
                     var missingComponents = new SequenceDataNode();
-
-                    foreach (var compName in cache.Keys)
+                    foreach (var compName in prototype.Components.Keys)
                     {
-                        var reg = compFactory.GetRegistration(compName);
-
-                        // try comp instead of has-comp as it checks whether the component is supposed to have been
-                        // deleted.
-                        if (_serverEntityManager.TryGetComponent(entityUid, reg.Idx, out _))
-                            continue;
-
                         missingComponents.Add(new ValueDataNode(compName));
                     }
 

@@ -27,6 +27,7 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -49,6 +50,7 @@ namespace Robust.Server.Maps
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         public event Action<YamlStream, string>? LoadedMapData;
 
@@ -63,7 +65,7 @@ namespace Robust.Server.Maps
             {
                 fixtures.SerializedFixtureData = new(); // empty list.
             }
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory, _timing);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -116,7 +118,7 @@ namespace Robust.Server.Maps
                 }
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
-                    _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
+                    _prototypeManager, _serializationManager, _componentFactory, _timing, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.LogErrorOnMap = true;
                 context.Deserialize();
                 grid = context.Grids.FirstOrDefault();
@@ -166,7 +168,7 @@ namespace Robust.Server.Maps
         public void SaveMap(MapId mapId, string yamlPath)
         {
             Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory, _timing);
             context.MapId = mapId;
 
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
@@ -242,7 +244,7 @@ namespace Robust.Server.Maps
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
-                    _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
+                    _prototypeManager, _serializationManager, _componentFactory, _timing, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
                 grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
@@ -266,6 +268,7 @@ namespace Robust.Server.Maps
             private readonly IPrototypeManager _prototypeManager;
             private readonly ISerializationManager _serializationManager;
             private readonly IComponentFactory _componentFactory;
+            private readonly IGameTiming _timing;
 
             private readonly MapLoadOptions? _loadOptions;
 
@@ -313,7 +316,7 @@ namespace Robust.Server.Maps
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities, IPrototypeManager prototypeManager,
-                ISerializationManager serializationManager, IComponentFactory componentFactory)
+                ISerializationManager serializationManager, IComponentFactory componentFactory, IGameTiming timing)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
@@ -321,6 +324,7 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
                 _serializationManager = serializationManager;
                 _componentFactory = componentFactory;
+                _timing = timing;
 
                 RootNode = new MappingDataNode();
                 TypeWriters = new Dictionary<Type, object>()
@@ -338,6 +342,7 @@ namespace Robust.Server.Maps
                 IPrototypeManager prototypeManager,
                 ISerializationManager serializationManager,
                 IComponentFactory componentFactory,
+                IGameTiming timing,
                 MappingDataNode node, MapId targetMapId, MapLoadOptions options)
             {
                 _mapManager = maps;
@@ -346,6 +351,7 @@ namespace Robust.Server.Maps
                 _loadOptions = options;
                 _serializationManager = serializationManager;
                 _componentFactory = componentFactory;
+                _timing = timing;
 
                 RootNode = node;
                 TargetMap = targetMapId;
@@ -771,9 +777,12 @@ namespace Robust.Server.Maps
                     if (data.TryGet("missingComponents", out SequenceDataNode? missingComponentList))
                         CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
                     else
-                        CurrentlyIgnoredComponents = new();
+                        CurrentlyIgnoredComponents = null;
 
-                    _serverEntityManager.FinishEntityLoad(entity, metaQuery.GetComponent(entity).EntityPrototype, this);
+                    var meta = metaQuery.GetComponent(entity);
+                    _serverEntityManager.FinishEntityLoad(entity, meta.EntityPrototype, this);
+                    if (CurrentlyIgnoredComponents != null)
+                        meta.LastComponentRemoved = _timing.CurTick;
 
                     if (!mapQuery.HasComponent(entity))
                         continue;
@@ -1135,7 +1144,7 @@ namespace Robust.Server.Maps
 
             public bool ShouldSkipComponent(string compName)
             {
-                return CurrentlyIgnoredComponents!.Contains(compName);
+                return CurrentlyIgnoredComponents != null && CurrentlyIgnoredComponents.Contains(compName);
             }
 
             [Virtual]

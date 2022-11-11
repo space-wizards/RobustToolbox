@@ -9,7 +9,18 @@ public sealed partial class SerializationManager
 {
     //null values are the bane of my existence
 
-    private Expression GetNullExpression(Expression managerConst, Type type)
+    private static Expression ValueSafeCoalesceExpression(Expression left, Expression right)
+    {
+        return left.Type.IsValueType &&
+               (!left.Type.IsGenericType || left.Type.GetGenericTypeDefinition() != typeof(Nullable<>))
+            ? Expression.Condition(
+                EqualExpression(left, Expression.Default(left.Type)),
+                left,
+                right)
+            : Expression.Coalesce(left, right);
+    }
+
+    private static Expression GetNullExpression(Expression managerConst, Type type)
     {
         return type.IsValueType
             ? Expression.Call(managerConst, nameof(GetNullable), new[] { type })
@@ -30,4 +41,6 @@ public sealed partial class SerializationManager
     {
         return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
     }
+
+    public ValueDataNode NullNode() => new ValueDataNode("null");
 }

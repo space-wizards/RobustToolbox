@@ -26,6 +26,7 @@ namespace Robust.Shared.Serialization.Manager
             T? value = default);
 
         private readonly ConcurrentDictionary<Type, ReadBoxingDelegate> _readBoxingDelegates = new();
+        private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node), object> _readGenericBaseDelegates = new();
         private readonly ConcurrentDictionary<(Type value, Type node), object> _readGenericDelegates = new();
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
@@ -71,23 +72,10 @@ namespace Robust.Shared.Serialization.Manager
 
         private ReadGenericDelegate<T> GetOrCreateGenericReadDelegate<T>(DataNode node)
         {
-            Type indexType;
-            if (node.Tag?.StartsWith("!type:") ?? false)
+            static object ValueFactory(Type baseType, Type actualType, Type nodeType, SerializationManager manager)
             {
-                var typeString = node.Tag.Substring(6);
-                indexType = ResolveConcreteType(typeof(T), typeString);
-            }
-            else
-            {
-                indexType = typeof(T);
-            }
-
-            return (ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((indexType, node.GetType()!), static (tuple, manager) =>
-            {
-                var (type, nodeType) = tuple;
-
-                var nullable = type.IsNullable();
-                type = type.EnsureNotNullableType();
+                var nullable = actualType.IsNullable();
+                actualType = actualType.EnsureNotNullableType();
 
                 var managerConst = Expression.Constant(manager);
 
@@ -95,203 +83,155 @@ namespace Robust.Shared.Serialization.Manager
                 //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                var valueParam = Expression.Parameter(type, "value");
+                var valueParam = Expression.Parameter(baseType, "value");
 
+                var sameType = baseType == actualType;
 
                 Expression call;
-                if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeReader<,>), type, nodeType, out var reader))
+                if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeReader<,>), actualType, nodeType, out var reader))
                 {
-                    var readerType = typeof(ITypeReader<,>).MakeGenericType(type, nodeType);
+                    var readerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
                     var readerConst = Expression.Constant(reader, readerType);
                     var depencencyConst = Expression.Constant(manager.DependencyCollection);
 
-                    call = Expression.Call(
-                        readerConst,
-                        readerType.GetMethod("Read")!,
-                        managerConst,
-                        Expression.Convert(nodeParam, nodeType),
-                        depencencyConst,
-                        skipHookParam,
-                        contextParam,
-                        valueParam);
+                    call = Expression.Call(readerConst, readerType.GetMethod("Read")!, managerConst,
+                        Expression.Convert(nodeParam, nodeType), depencencyConst, skipHookParam, contextParam,
+                        sameType ? valueParam : Expression.Convert(valueParam, actualType));
                 }
-                else if (type.IsInterface || type.IsAbstract)
+                else if (actualType.IsArray)
                 {
-                    throw new ArgumentException($"Unable to create an instance of an interface or abstract type. Type: {type}");
-                }
-                else if (type.IsArray)
-                {
-                    var elementType = type.GetElementType()!;
+                    var elementType = actualType.GetElementType()!;
 
                     if (nodeType == typeof(ValueDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadArrayValue),
-                            new[] { elementType },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            contextParam,
-                            skipHookParam);
+                        call = Expression.Call(managerConst, nameof(ReadArrayValue), new[] { elementType },
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)), contextParam, skipHookParam);
                     }
                     else if (nodeType == typeof(SequenceDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadArraySequence),
-                            new[] { elementType },
-                            Expression.Convert(nodeParam, typeof(SequenceDataNode)),
-                            contextParam,
-                            skipHookParam);
+                        call = Expression.Call(managerConst, nameof(ReadArraySequence), new[] { elementType },
+                            Expression.Convert(nodeParam, typeof(SequenceDataNode)), contextParam, skipHookParam);
                     }
                     else
                     {
                         throw new ArgumentException($"Cannot read array from data node type {nodeType}");
                     }
                 }
-                else if (type.IsEnum)
+                else if (actualType.IsEnum)
                 {
                     if (nodeType == typeof(ValueDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadEnumValue),
-                            new[] { type },
+                        call = Expression.Call(managerConst, nameof(ReadEnumValue), new[] { actualType },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)));
                     }
                     else if (nodeType == typeof(SequenceDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadEnumSequence),
-                            new[] { type },
+                        call = Expression.Call(managerConst, nameof(ReadEnumSequence), new[] { actualType },
                             Expression.Convert(nodeParam, typeof(SequenceDataNode)));
                     }
                     else
                     {
-                        throw new InvalidNodeTypeException(
-                            $"Cannot serialize node as {type}, unsupported node type {nodeType}");
+                        throw new InvalidNodeTypeException($"Cannot serialize node as {actualType}, unsupported node type {nodeType}");
                     }
                 }
-                else if (type.IsAssignableTo(typeof(ISelfSerialize)))
+                else if (actualType.IsAssignableTo(typeof(ISelfSerialize)))
                 {
                     if (nodeType != typeof(ValueDataNode))
                     {
-                        throw new InvalidNodeTypeException(
-                            $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
+                        throw new InvalidNodeTypeException($"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
                     call = Expression.Block(
-                        Expression.Assign(valueParam, Expression.Coalesce(valueParam, Expression.New(type))),
-                        Expression.Call(
-                            valueParam,
-                            typeof(ISelfSerialize).GetMethod("Deserialize")!,
-                            Expression.Field(Expression.Convert(nodeParam, typeof(ValueDataNode)), typeof(ValueDataNode).GetField("Value")!)));
+                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.NewExpressionDefault(actualType))),
+                        Expression.Call(valueParam, typeof(ISelfSerialize).GetMethod("Deserialize")!,
+                            Expression.Field(Expression.Convert(nodeParam, typeof(ValueDataNode)), "Value")));
                 }
                 else
                 {
-                    var definition = manager.GetDefinition(type);
-                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(type));
+                    var definition = manager.GetDefinition(actualType);
+                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
 
-                    var hooksConst = Expression.Constant(type.IsAssignableTo(typeof(ISerializationHooks)));
+                    var hooksConst = Expression.Constant(actualType.IsAssignableTo(typeof(ISerializationHooks)));
 
                     if (nodeType == typeof(ValueDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadGenericValue),
-                            new[] { type },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            definitionConst,
-                            hooksConst,
-                            contextParam,
-                            skipHookParam,
-                            valueParam);
+                        call = Expression.Call(managerConst, nameof(ReadGenericValue), new[] { actualType },
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)), definitionConst, hooksConst,
+                            contextParam, skipHookParam, sameType ? valueParam : Expression.Convert(valueParam, actualType));
                     }
                     else if (nodeType == typeof(MappingDataNode))
                     {
-                        call = Expression.Call(
-                            managerConst,
-                            nameof(ReadGenericMapping),
-                            new[] { type },
-                            Expression.Convert(nodeParam, typeof(MappingDataNode)),
-                            definitionConst,
-                            hooksConst,
-                            contextParam,
-                            skipHookParam,
-                            valueParam);
+                        call = Expression.Call(managerConst, nameof(ReadGenericMapping), new[] { actualType },
+                            Expression.Convert(nodeParam, typeof(MappingDataNode)), definitionConst, hooksConst,
+                            contextParam, skipHookParam, sameType ? valueParam : Expression.Convert(valueParam, actualType));
                     }
                     else
                     {
-                        throw new ArgumentException($"No mapping or value node provided for type {type}.");
+                        throw new ArgumentException($"No mapping or value node provided for type {actualType}.");
                     }
 
                     call = Expression.Block(
-                        Expression.Assign(valueParam, Expression.Coalesce(valueParam, Expression.New(type))),
+                        Expression.Assign(valueParam, ValueSafeCoalesceExpression(valueParam, manager.NewExpressionDefault(actualType))),
                         call);
                 }
 
                 // early-out null
-                var returnValue = Expression.Variable(type);
-                call = Expression.Block(
-                    new[] { returnValue },
+                var returnValue = Expression.Variable(actualType);
+                call = Expression.Block(new[] { returnValue },
                     Expression.Condition(
-                        Expression.Call(
-                            managerConst,
-                            nameof(IsNull),
-                            Type.EmptyTypes,
-                            nodeParam),
-                        nullable
-                            ? Expression.Block(typeof(void), Expression.Assign(returnValue, manager.GetNullExpression(managerConst, type)))
-                            : Expression.Throw(Expression.New(typeof(InvalidOperationException))),
-                        Expression.Block(typeof(void), Expression.Assign(returnValue, call))),
+                    Expression.Call(managerConst, nameof(IsNull), Type.EmptyTypes, nodeParam), nullable
+                        ? Expression.Block(typeof(void),
+                            Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
+                        : ThrowExpression<InvalidOperationException>(),
+                    Expression.Block(typeof(void),
+                        Expression.Assign(returnValue, call))),
                     returnValue);
 
                 // check for customtypeserializer before anything
-                var serializerType = typeof(ITypeReader<,>).MakeGenericType(type, nodeType);
+                var serializerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
                 var dependencyConst = Expression.Constant(manager.DependencyCollection);
-                var serializerVar = Expression.Variable(typeof(ITypeReader<,>).MakeGenericType(type, nodeType));
-                call = Expression.Block(
-                    new[] { serializerVar },
+                var serializerVar = Expression.Variable(serializerType);
+                call = Expression.Block(new[] { serializerVar },
                     Expression.Condition(
                         Expression.AndAlso(
                             Expression.ReferenceNotEqual(contextParam,
                                 Expression.Constant(null, typeof(ISerializationContext))),
-                            Expression.Call(
-                                Expression.Property(contextParam, "SerializerProvider"),
-                                "TryGetTypeNodeSerializer",
-                                new[] { serializerType, type, nodeType },
-                                serializerVar)),
-                        Expression.Call(
-                            serializerVar,
-                            serializerType.GetMethod("Read")!,
-                            managerConst,
-                            Expression.Convert(nodeParam, nodeType),
-                            dependencyConst,
-                            skipHookParam,
-                            contextParam,
-                            Expression.Convert(valueParam, type)),
+                            Expression.Call(Expression.Property(contextParam, "SerializerProvider"),
+                                "TryGetTypeNodeSerializer", new[] { serializerType, actualType, nodeType }, serializerVar)),
+                        Expression.Call(serializerVar, serializerType.GetMethod("Read")!, managerConst,
+                            Expression.Convert(nodeParam, nodeType), dependencyConst, skipHookParam, contextParam,
+                            Expression.Convert(valueParam, actualType)),
                         call));
 
-                if (!nullable && !type.IsValueType)
+                if (!nullable && !actualType.IsValueType)
                 {
                     // check that value isn't null
                     var finalValue = Expression.Variable(typeof(T));
-                    call = Expression.Block(
-                        new[] { finalValue },
-                        Expression.Assign(finalValue, call),
-                        Expression.IfThen(
-                            Expression.Equal(finalValue, manager.GetNullExpression(managerConst, type)),
-                            Expression.Throw(Expression.New(typeof(InvalidOperationException)))),
-                        finalValue);
+                    call = Expression.Block(new[] { finalValue }, Expression.Assign(finalValue, call),
+                        Expression.IfThen(Expression.Equal(finalValue, GetNullExpression(managerConst, actualType)),
+                            ThrowExpression<InvalidOperationException>()), finalValue);
                 }
 
-                return Expression.Lambda<ReadGenericDelegate<T>>(
-                    call,
-                    nodeParam,
-                    contextParam,
-                    skipHookParam,
-                    valueParam).Compile();
-            }, this);
+                return Expression.Lambda<ReadGenericDelegate<T>>(call, nodeParam,
+                    contextParam, skipHookParam, valueParam).Compile();
+            }
+
+            if (node.Tag?.StartsWith("!type:") ?? false)
+            {
+                var type = ResolveConcreteType(typeof(T), node.Tag.Substring(6));
+                if (type.IsInterface || type.IsAbstract)
+                {
+                    throw new ArgumentException($"Interface or abstract type used for !type node. Type: {type}");
+                }
+
+                return (ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
+                    (typeof(T), type, node.GetType()!),
+                    static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, tuple.node, manager),
+                    this);
+            }
+
+            return (ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!),
+                static (tuple, manager) => ValueFactory(tuple.value, tuple.value, tuple.node, manager), this);
         }
 
         private T[] ReadArrayValue<T>(

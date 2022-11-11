@@ -115,8 +115,6 @@ public sealed partial class SerializationManager
                 static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, manager), this);
         }
 
-
-
         return (CopyToGenericDelegate<T>) _copyToGenericDelegates
             .GetOrAdd(type, static (type, manager) => ValueFactory(type, type, manager), this);
     }
@@ -274,6 +272,7 @@ public sealed partial class SerializationManager
             return true;
         }
 
+        //this check is in here on purpose. we cannot check this during expression tree generation due to the value maybe being handled by a custom typeserializer
         if (definition == null)
         {
             return false;

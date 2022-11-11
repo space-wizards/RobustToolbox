@@ -129,15 +129,12 @@ public sealed partial class SerializationManager
 
     private Expression ErrorNodeExpression(ParameterExpression nodeParam, string message, bool alwaysRelevant = true)
     {
-        return Expression.New(typeof(ErrorNode).GetConstructor(new[] { typeof(DataNode), typeof(string), typeof(bool) })!,
-            nodeParam,
-            Expression.Constant(message),
-            Expression.Constant(alwaysRelevant));
+        return NewExpression<ErrorNode>(nodeParam, message, alwaysRelevant);
     }
 
     private Expression ValidateNodeExpression(ParameterExpression nodeParam)
     {
-        return Expression.New(typeof(ValidatedValueNode).GetConstructor(new[] { typeof(DataNode) })!, nodeParam);
+        return NewExpression<ValidatedMappingNode>(nodeParam);
     }
 
     private ValidationNode ValidateArray<TElem>(SequenceDataNode sequenceDataNode, ISerializationContext? context)

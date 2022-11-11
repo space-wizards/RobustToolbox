@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
@@ -100,7 +99,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     call = Expression.Switch(Expression.Call(nodeVariable, "GetType", Type.EmptyTypes),
-                        Expression.Throw(Expression.New(typeof(InvalidOperationException).GetConstructor(Type.EmptyTypes)!)),
+                        SerializationManager.ThrowExpression<InvalidOperationException>(),
                         switchCases.ToArray());
                 }
                 else
@@ -139,9 +138,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             nodeVariable),
                         call,
                         dfa.Required
-                            ? Expression.Throw(Expression.New(
-                                typeof(RequiredFieldNotMappedException).GetConstructor(new[]
-                                    { typeof(Type), typeof(string) })!, Expression.Constant(fieldDefinition.FieldType), tagConst))
+                            ? SerializationManager.ThrowExpression<RequiredFieldNotMappedException>(fieldDefinition.FieldType, tagConst)
                             : Expression.Empty()
                     )));
                 }
@@ -177,7 +174,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             expressions.Add(
                 Expression.Assign(
                     mappingDataVar,
-                    Expression.New(typeof(MappingDataNode).GetConstructor(Type.EmptyTypes)!)
+                    SerializationManager.NewExpression<MappingDataNode>()
                 ));
 
             for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
@@ -249,10 +246,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             Type.EmptyTypes,
                             Expression.Convert(nodeVariable, typeof(MappingDataNode)),
                             Expression.Constant(true)),
-                        Expression.Throw(Expression.New(
-                            typeof(InvalidOperationException).GetConstructor(new []{typeof(string)})!,
-                            Expression.Constant(
-                                $"Writing field {fieldDefinition} for type {typeof(T)} did not return a {nameof(MappingDataNode)} but was annotated to be included."))));
+                        SerializationManager.ThrowExpression<InvalidOperationException>(
+                            $"Writing field {fieldDefinition} for type {typeof(T)} did not return a {nameof(MappingDataNode)} but was annotated to be included."));
                 }
 
                 writeExpression = ExpressionUtils.WriteLineBefore($"writing {i}", writeExpression);
@@ -390,20 +385,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private Expression IsDefault(int i, Expression left, FieldDefinition fieldDefinition)
         {
-            var defaultValueExpression = Expression.Constant(DefaultValues[i], fieldDefinition.FieldType);
-
-            if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string) || fieldDefinition.FieldType.GetMethod("op_Equality", BindingFlags.Instance) != null)
-            {
-                return Expression.Equal(left, defaultValueExpression);
-            }
-
-            var comparerType = typeof(EqualityComparer<>).MakeGenericType(fieldDefinition.FieldType);
-            return Expression.Call(
-                Expression.Constant(comparerType.GetProperty("Default")!.GetMethod!.Invoke(null, null)!, comparerType),
-                "Equals",
-                Type.EmptyTypes,
-                left,
-                defaultValueExpression);
+            return SerializationManager.EqualExpression(left, Expression.Constant(DefaultValues[i], fieldDefinition.FieldType));
         }
     }
 }

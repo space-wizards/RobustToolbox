@@ -1037,7 +1037,6 @@ namespace Robust.Server.Maps
 
                     var components = new SequenceDataNode();
 
-                    // See engine#636 for why the Distinct() call.
                     foreach (var component in _serverEntityManager.GetComponents(entityUid))
                     {
                         if (component is MapSaveIdComponent)
@@ -1048,7 +1047,8 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = compName;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(compType, component, context: this);
 
-                        if (cache != null && cache.TryGetValue(compName, out var protMapping))
+                        MappingDataNode? protMapping = null;
+                        if (cache != null && cache.TryGetValue(compName, out protMapping))
                         {
                             // This will NOT recursively call Except() on the values of the mapping. It will only remove
                             // key-value pairs if both the keys and values are equal.
@@ -1059,7 +1059,7 @@ namespace Robust.Server.Maps
                         // Don't need to write it if nothing was written! Note that if this entity has no associated
                         // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
                         // information that needs to be written.
-                        if (compMapping.Children.Count != 0 || md.EntityPrototype == null)
+                        if (compMapping.Children.Count != 0 || protMapping == null)
                         {
                             compMapping.Add("type", new ValueDataNode(compName));
                             // Something actually got written!

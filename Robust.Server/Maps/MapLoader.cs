@@ -1088,9 +1088,14 @@ namespace Robust.Server.Maps
 
                     // an entity may have less components than the original prototype, so we need to check if any are missing.
                     var missingComponents = new SequenceDataNode();
-                    foreach (var compName in md.EntityPrototype.Components.Keys)
+                    foreach (var (name, comp) in md.EntityPrototype.Components)
                     {
-                        missingComponents.Add(new ValueDataNode(compName));
+                        // try comp instead of has-comp as it checks whether the component is supposed to have been
+                        // deleted.
+                        if (_serverEntityManager.TryGetComponent(entityUid, comp.GetType(), out _))
+                            continue;
+
+                        missingComponents.Add(new ValueDataNode(name));
                     }
 
                     if (missingComponents.Count != 0)

@@ -1092,7 +1092,7 @@ namespace Robust.Server.Maps
                     {
                         // try comp instead of has-comp as it checks whether the component is supposed to have been
                         // deleted.
-                        if (_serverEntityManager.TryGetComponent(entityUid, comp.GetType(), out _))
+                        if (_serverEntityManager.TryGetComponent(entityUid, comp.Component.GetType(), out _))
                             continue;
 
                         missingComponents.Add(new ValueDataNode(name));

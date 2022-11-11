@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.Manager
             DataNode node,
             ISerializationContext? context = null,
             bool skipHook = false,
-            T? value = default);
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null);
 
         private readonly ConcurrentDictionary<Type, ReadBoxingDelegate> _readBoxingDelegates = new();
         private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node), object> _readGenericBaseDelegates = new();
@@ -47,7 +47,6 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Variable(typeof(DataNode));
                 var contextParam = Expression.Variable(typeof(ISerializationContext));
                 var skipHookParam = Expression.Variable(typeof(bool));
-                var valueParam = Expression.Variable(typeof(object));
 
                 var call = Expression.Convert(Expression.Call(
                     managerConst,
@@ -56,14 +55,13 @@ namespace Robust.Shared.Serialization.Manager
                     nodeParam,
                     contextParam,
                     skipHookParam,
-                    Expression.Convert(valueParam, type)), typeof(object));
+                    Expression.Constant(null)), typeof(object));
 
                 return Expression.Lambda<ReadBoxingDelegate>(
                     call,
                     nodeParam,
                     contextParam,
-                    skipHookParam,
-                    valueParam).Compile();
+                    skipHookParam).Compile();
             }, this);
         }
 
@@ -79,7 +77,7 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                var valueParam = Expression.Parameter(baseType, "value");
+                var valueParam = Expression.Parameter(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(baseType), "instanceProvider");
 
                 var sameType = baseType == actualType;
 

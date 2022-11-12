@@ -129,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventWindowFocus(ev));
         }
 
-        private void SendText(TextEventArgs ev)
+        private void SendText(TextEnteredEventArgs ev)
         {
             _eventDispatchQueue.Enqueue(new DEventText(ev));
         }
@@ -166,7 +166,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventWindowFocus(WindowFocusedEventArgs Args) : DEventBase;
 
-        private sealed record DEventText(TextEventArgs Args) : DEventBase;
+        private sealed record DEventText(TextEnteredEventArgs Args) : DEventBase;
         private sealed record DEventTextEditing(TextEditingEventArgs Args) : DEventBase;
 
         private sealed record DEventMouseMove(MouseMoveEventArgs Args) : DEventBase;

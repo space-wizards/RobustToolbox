@@ -652,14 +652,14 @@ public sealed class TextEdit : Control
         _horizontalCursorPos = null;
     }
 
-    protected internal override void TextEntered(GUITextEventArgs args)
+    protected internal override void TextEntered(GUITextEnteredEventArgs args)
     {
         base.TextEntered(args);
 
         if (!Editable)
             return;
 
-        InsertAtCursor(args.AsRune.ToString());
+        InsertAtCursor(args.Text);
         _blink.Reset();
         EnsureCursorVisible();
         // OnTextTyped?.Invoke(args);

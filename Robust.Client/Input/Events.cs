@@ -53,17 +53,11 @@ namespace Robust.Client.Input
         }
     }
 
-    [Virtual]
-    public class TextEventArgs : EventArgs
-    {
-        public TextEventArgs(uint codePoint)
-        {
-            CodePoint = codePoint;
-        }
-
-        public uint CodePoint { get; }
-        public Rune AsRune => new Rune(CodePoint);
-    }
+    /// <summary>
+    /// Information about text that has been typed by the user.
+    /// </summary>
+    /// <param name="Text">The typed text.</param>
+    public sealed record TextEnteredEventArgs(string Text);
 
     /// <summary>
     /// Information about an in-progress IME composition.

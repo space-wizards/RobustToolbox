@@ -23,7 +23,7 @@ namespace Robust.Client.Graphics
         void Ready();
         void TerminateWindowLoop();
 
-        event Action<TextEventArgs> TextEntered;
+        event Action<TextEnteredEventArgs> TextEntered;
         event Action<TextEditingEventArgs> TextEditing;
         event Action<MouseMoveEventArgs> MouseMove;
         event Action<MouseEnterLeaveEventArgs> MouseEnterLeave;

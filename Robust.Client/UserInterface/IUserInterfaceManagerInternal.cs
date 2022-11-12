@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface
 
         void MouseWheel(MouseWheelEventArgs args);
 
-        void TextEntered(TextEventArgs textEvent);
+        void TextEntered(TextEnteredEventArgs textEnteredEvent);
 
         void TextEditing(TextEditingEventArgs textEvent);
 

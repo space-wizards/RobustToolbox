@@ -164,10 +164,7 @@ internal partial class Clyde
 
         private void ProcessEventText(EventText ev)
         {
-            foreach (var rune in ev.Text.EnumerateRunes())
-            {
-                _clyde.SendText(new TextEventArgs((uint)rune.Value));
-            }
+            _clyde.SendText(new TextEnteredEventArgs(ev.Text));
         }
 
         private void ProcessEventTextEditing(EventTextEditing ev)

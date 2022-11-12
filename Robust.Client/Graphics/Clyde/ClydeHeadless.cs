@@ -50,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
-        public event Action<TextEventArgs>? TextEntered { add { } remove { } }
+        public event Action<TextEnteredEventArgs>? TextEntered { add { } remove { } }
         public event Action<TextEditingEventArgs>? TextEditing { add { } remove { } }
         public event Action<MouseMoveEventArgs>? MouseMove { add { } remove { } }
         public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave { add { } remove { } }

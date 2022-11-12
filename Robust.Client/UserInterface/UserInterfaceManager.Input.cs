@@ -217,14 +217,14 @@ internal partial class UserInterfaceManager
         _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
     }
 
-    public void TextEntered(TextEventArgs textEvent)
+    public void TextEntered(TextEnteredEventArgs textEnteredEvent)
     {
         if (KeyboardFocused == null)
         {
             return;
         }
 
-        var guiArgs = new GUITextEventArgs(KeyboardFocused, textEvent.CodePoint);
+        var guiArgs = new GUITextEnteredEventArgs(KeyboardFocused, textEnteredEvent);
         KeyboardFocused.TextEntered(guiArgs);
     }
 

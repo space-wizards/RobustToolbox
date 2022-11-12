@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Shared.Map;
@@ -97,7 +98,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (!_textInputActive)
                     return;
 
-                _clyde.SendText(new TextEventArgs(ev.CodePoint));
+                _clyde.SendText(new TextEnteredEventArgs(new Rune(ev.CodePoint).ToString()));
             }
 
             private void ProcessEventCursorPos(EventCursorPos ev)

@@ -53,7 +53,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        protected internal virtual void TextEntered(GUITextEventArgs args)
+        protected internal virtual void TextEntered(GUITextEnteredEventArgs args)
         {
         }
 
@@ -114,19 +114,17 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public sealed class GUITextEventArgs : TextEventArgs
+    /// <summary>
+    /// Information about text typed on a keyboard-focused UI control.
+    /// </summary>
+    /// <param name="SourceControl">The control spawning this event.</param>
+    /// <param name="TextEnteredEvent">Event data for the typed text.</param>
+    public sealed record GUITextEnteredEventArgs(Control SourceControl, TextEnteredEventArgs TextEnteredEvent)
     {
         /// <summary>
-        ///     The control spawning this event.
+        /// The text typed by the user.
         /// </summary>
-        public Control SourceControl { get; }
-
-        public GUITextEventArgs(Control sourceControl,
-            uint codePoint)
-            : base(codePoint)
-        {
-            SourceControl = sourceControl;
-        }
+        public string Text => TextEnteredEvent.Text;
     }
 
     public sealed record GUITextEditingEventArgs(Control SourceControl, TextEditingEventArgs Event);

@@ -284,9 +284,9 @@ namespace Robust.Client.UserInterface.Controls
             return finalSize;
         }
 
-        public event Action<GUITextEventArgs>? OnTextTyped;
+        public event Action<GUITextEnteredEventArgs>? OnTextTyped;
 
-        protected internal override void TextEntered(GUITextEventArgs args)
+        protected internal override void TextEntered(GUITextEnteredEventArgs args)
         {
             base.TextEntered(args);
 
@@ -301,7 +301,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            InsertAtCursor(args.AsRune.ToString());
+            InsertAtCursor(args.Text);
             OnTextTyped?.Invoke(args);
         }
 

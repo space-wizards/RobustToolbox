@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -8,7 +9,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Server.GameObjects
 {
-    internal sealed class MapSystem : SharedMapSystem
+    public sealed class MapSystem : SharedMapSystem
     {
         private bool _deleteEmptyGrids;
 
@@ -19,6 +20,11 @@ namespace Robust.Server.GameObjects
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
+        }
+
+        protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
+        {
+            EnsureComp<PhysicsMapComponent>(uid);
         }
 
         private void SetGridDeletion(bool value)

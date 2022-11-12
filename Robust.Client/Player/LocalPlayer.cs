@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
@@ -68,6 +70,12 @@ namespace Robust.Client.Player
             if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {
                 eye = entMan.AddComponent<EyeComponent>(entity);
+
+                if (IoCManager.Resolve<IBaseClient>().RunLevel != ClientRunLevel.SinglePlayerGame)
+                {
+                    Logger.Warning($"Attaching local player to an entity {entMan.ToPrettyString(entity)} without an eye. This eye will not be netsynced and may cause issues.");
+                    eye.NetSyncEnabled = false;
+                }
             }
             eye.Current = true;
 
@@ -91,10 +99,6 @@ namespace Robust.Client.Player
                 !metaData.EntityDeleted)
             {
                 entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
-
-                // notify ECS Systems
-                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
-                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
             }
 
             ControlledEntity = null;
@@ -102,6 +106,8 @@ namespace Robust.Client.Player
 
             if (previous != null)
             {
+                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
+                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value), true);
                 EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
             }
         }

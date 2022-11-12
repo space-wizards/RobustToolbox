@@ -1,11 +1,14 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
+using System;
 
 namespace Robust.Shared.Physics
 {
     public static class PhysicsHelpers
     {
+        [Obsolete("Wtf is this, this isn't how you calculate this???? Use the existing system method instead.")]
         public static Vector2 GlobalLinearVelocity(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();

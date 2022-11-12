@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -284,12 +285,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
 
-            Assert.That(state.ContainerSet.Count, Is.EqualTo(1));
-            Assert.That(state.ContainerSet[0].Id, Is.EqualTo("dummy"));
-            Assert.That(state.ContainerSet[0].OccludesLight, Is.True);
-            Assert.That(state.ContainerSet[0].ShowContents, Is.True);
-            Assert.That(state.ContainerSet[0].ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(state.Containers.Count, Is.EqualTo(1));
+            var cont = state.Containers.Values.First();
+            Assert.That(cont.Id, Is.EqualTo("dummy"));
+            Assert.That(cont.OccludesLight, Is.True);
+            Assert.That(cont.ShowContents, Is.True);
+            Assert.That(cont.ContainedEntities.Length, Is.EqualTo(1));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
         }
 
         private sealed class ContainerOnlyContainer : BaseContainer
@@ -308,35 +310,37 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
+            protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
             {
-                _containerList.Add(toinsert);
-                base.InternalInsert(toinsert, oldParent, entMan);
+                _containerList.Add(toInsert);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
+            protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
             {
-                _containerList.Remove(toremove);
-                base.InternalRemove(toremove, entMan, meta);
+                _containerList.Remove(toRemove);
             }
 
             /// <inheritdoc />
             public override bool Contains(EntityUid contained)
             {
-                return _containerList.Contains(contained);
+                if (!_containerList.Contains(contained))
+                    return false;
+
+                var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
+                DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
+                return true;
             }
 
             /// <inheritdoc />
-            public override void Shutdown()
+            protected override void InternalShutdown(IEntityManager entMan, bool isClient)
             {
-                base.Shutdown();
-
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
-                foreach (var entity in _containerList)
+                foreach (var entity in _containerList.ToArray())
                 {
-                    entMan.DeleteEntity(entity);
+                    if (!isClient)
+                        entMan.DeleteEntity(entity);
+                    else if (entMan.EntityExists(entity))
+                        Remove(entity, entMan, reparent: false, force: true);
                 }
             }
 

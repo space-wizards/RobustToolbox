@@ -38,7 +38,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValidatedValueNode(node);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Regex value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Regex value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());

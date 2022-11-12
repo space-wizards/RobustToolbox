@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Serialization;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Containers
@@ -52,11 +55,6 @@ namespace Robust.Shared.Containers
         string ID { get; }
 
         /// <summary>
-        /// The container manager owning this container.
-        /// </summary>
-        IContainerManager Manager { get; }
-
-        /// <summary>
         /// Prevents light from escaping the container, from ex. a flashlight.
         /// </summary>
         bool OccludesLight { get; set; }
@@ -94,7 +92,12 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null);
+        bool Insert(EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
@@ -107,18 +110,24 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
-        /// <param name="toremove">The entity to attempt to remove.</param>
-        /// <param name="entMan"></param>
-        /// <param name="reparent">If true, will attempt to re-parent the entity to the container's parent, or the grid/map. If false, will not update the transform.</param>
-        /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true);
+        /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
+        /// destination is not null</param>
+        /// <param name="force">If true, this will not perform can-remove checks.</param>
+        /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
+        /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
+        /// container, the grid, or the map.</param>
+        /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
+        bool Remove(
+            EntityUid toremove,
+            IEntityManager? entMan = null,
+            TransformComponent? xform = null,
+            MetaDataComponent? meta = null,
+            bool reparent = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null);
 
-        /// <summary>
-        /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,
-        /// this function should be avoided.
-        /// </summary>
-        /// <param name="toRemove">The entity to attempt to remove.</param>
-        /// <param name="entMan"></param>
+        [Obsolete("use force option in Remove()")]
         void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null);
 
         /// <summary>
@@ -132,6 +141,6 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Clears the container and marks it as deleted.
         /// </summary>
-        void Shutdown();
+        void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null);
     }
 }

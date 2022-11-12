@@ -49,13 +49,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return list;
         }
 
-        DataNode ITypeWriter<IReadOnlyCollection<string>>.Write(
-            ISerializationManager serializationManager,
+        DataNode ITypeWriter<IReadOnlyCollection<string>>.Write(ISerializationManager serializationManager,
             IReadOnlyCollection<string> value,
+            IDependencyCollection dependencies,
             bool alwaysWrite,
             ISerializationContext? context)
         {
-            return WriteInternal(serializationManager, value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
         IReadOnlyCollection<string> ITypeCopier<IReadOnlyCollection<string>>.Copy(

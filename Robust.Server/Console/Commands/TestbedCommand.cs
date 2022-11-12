@@ -30,8 +30,10 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
@@ -44,12 +46,11 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
-    public sealed class TestbedCommand : IConsoleCommand
+    public sealed class TestbedCommand : LocalizedCommands
     {
-        public string Command => "testbed";
-        public string Description => "Loads a physics testbed on the specified map.";
-        public string Help => $"{Command} <mapid> <test>";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "testbed";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -184,7 +185,7 @@ namespace Robust.Server.Console.Commands
                         CollisionMask = 2,
                         CollisionLayer = 2,
                         Hard = true,
-                        Mass = 1.0f,
+                        Density = 1.0f,
                         Friction = 0.3f,
                     };
 
@@ -250,7 +251,7 @@ namespace Robust.Server.Console.Commands
                         CollisionMask = 2,
                         CollisionLayer = 2,
                         Hard = true,
-                        Mass = 5.0f,
+                        Density = 5.0f,
                     };
 
                     broadphase.CreateFixture(box, fixture);
@@ -303,7 +304,7 @@ namespace Robust.Server.Console.Commands
                         CollisionLayer = 2,
                         CollisionMask = 2,
                         Hard = true,
-                        Mass = 5.0f,
+                        Density = 5.0f,
                     });
                     y += deltaY;
                 }

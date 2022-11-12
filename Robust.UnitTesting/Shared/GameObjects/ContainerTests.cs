@@ -49,7 +49,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var mapMan = IoCManager.Resolve<IMapManager>();
                  var entMan = IoCManager.Resolve<IEntityManager>();
                  var playerMan = IoCManager.Resolve<IPlayerManager>();
-                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
+                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
@@ -74,7 +74,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
+                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  itemUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
@@ -171,7 +171,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var mapMan = IoCManager.Resolve<IMapManager>();
                  var entMan = IoCManager.Resolve<IEntityManager>();
                  var playerMan = IoCManager.Resolve<IPlayerManager>();
-                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
+                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
@@ -196,7 +196,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 var containerSys = EntitySystem.Get<SharedContainerSystem>();
+                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  itemUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
@@ -232,11 +232,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
+                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  // If possible it'd be best to only have the DeleteEntity, but right now
                  // the entity deleted event is not played on the client if the entity does not exist on the client.
                  if (entMan.EntityExists(itemUid)
-                     && itemUid.TryGetContainer(out var container))
+                     // && itemUid.TryGetContainer(out var container))
+                     && containerSystem.TryGetContainingContainer(itemUid, out var container))
                      container.ForceRemove(itemUid);
                  entMan.DeleteEntity(itemUid);
              });

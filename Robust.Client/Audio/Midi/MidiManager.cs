@@ -16,6 +16,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -129,7 +130,11 @@ internal sealed partial class MidiManager : IMidiManager
         }, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
-        _midiSawmill.Level = LogLevel.Info;
+#if DEBUG
+        _midiSawmill.Level = LogLevel.Debug;
+#else
+        _midiSawmill.Level = LogLevel.Error;
+#endif
         _sawmill = _logger.GetSawmill("midi.fluidsynth");
         _loggerDelegate = LoggerDelegate;
 
@@ -168,8 +173,7 @@ internal sealed partial class MidiManager : IMidiManager
         }
         catch (Exception e)
         {
-            _midiSawmill.Warning(
-                "Failed to initialize fluidsynth due to exception, disabling MIDI support:\n{0}", e);
+            _midiSawmill.Error("Failed to initialize fluidsynth due to exception, disabling MIDI support:\n{0}", e);
             _failedInitialize = true;
             return;
         }
@@ -177,13 +181,14 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
-        _broadPhaseSystem = EntitySystem.Get<SharedPhysicsSystem>();
+        _broadPhaseSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
         FluidsynthInitialized = true;
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
     {
-        var rLevel = level switch {
+        var rLevel = level switch
+        {
             NFluidsynth.Logger.LogLevel.Panic => LogLevel.Error,
             NFluidsynth.Logger.LogLevel.Error => LogLevel.Error,
             NFluidsynth.Logger.LogLevel.Warning => LogLevel.Warning,
@@ -218,6 +223,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
 
+            _midiSawmill.Debug($"Loading soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
             renderer.LoadSoundfont(FallbackSoundfont);
 
@@ -225,11 +231,13 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 foreach (var filepath in LinuxSoundfonts)
                 {
-                    if (!File.Exists(filepath) || !SoundFont.IsSoundFont(filepath)) continue;
+                    if (!File.Exists(filepath) || !SoundFont.IsSoundFont(filepath))
+                        continue;
 
                     try
                     {
                         renderer.LoadSoundfont(filepath);
+                        _midiSawmill.Debug($"Loaded Linux soundfont {filepath}");
                     }
                     catch (Exception)
                     {
@@ -242,29 +250,37 @@ internal sealed partial class MidiManager : IMidiManager
             else if (OperatingSystem.IsMacOS())
             {
                 if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
+                {
+                    _midiSawmill.Debug($"Loading soundfont {OsxSoundfont}");
                     renderer.LoadSoundfont(OsxSoundfont);
+                }
             }
             else if (OperatingSystem.IsWindows())
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
+                {
+                    _midiSawmill.Debug($"Loading soundfont {WindowsSoundfont}");
                     renderer.LoadSoundfont(WindowsSoundfont);
+                }
             }
 
             // Load content-specific custom soundfonts, which could override the system/fallback soundfont.
+            _midiSawmill.Debug($"Loading soundfonts from {ContentCustomSoundfontDirectory}");
             foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
                 if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                _midiSawmill.Debug($"Loading soundfont {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
 
             // Load every soundfont from the user data directory last, since those may override any other soundfont.
-            _midiSawmill.Debug($"loading soundfonts from {CustomSoundfontDirectory.ToRelativePath().ToString()}/*");
-            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath().ToString()}/*").Item1;
-            foreach (var soundfont in enumerator)
+            _midiSawmill.Debug($"Loading soundfonts from {{USERDATA}} {CustomSoundfontDirectory}");
+            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}/*").Item1;
+            foreach (var file in enumerator)
             {
-                if (soundfont.Extension != "sf2" && soundfont.Extension != "dls") continue;
-                _midiSawmill.Debug($"loading soundfont {soundfont}");
-                renderer.LoadSoundfont(soundfont.ToString());
+                if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                _midiSawmill.Debug($"Loading soundfont {{USERDATA}} {file}");
+                renderer.LoadSoundfont(file.ToString());
             }
 
             renderer.Source.SetVolume(Volume);

@@ -1,7 +1,7 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Reflection;
 
 namespace Robust.Client.GameObjects
@@ -16,8 +16,6 @@ namespace Robust.Client.GameObjects
 
             RegisterClass<MetaDataComponent>();
             RegisterClass<TransformComponent>();
-            RegisterClass<MapComponent>();
-            RegisterClass<MapGridComponent>();
             RegisterClass<PhysicsComponent>();
             RegisterClass<CollisionWakeComponent>();
             RegisterClass<ClientUserInterfaceComponent>();

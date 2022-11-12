@@ -10,7 +10,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
@@ -41,13 +40,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Map
     index: 123
   # Due to the map getting initialised last this seemed easiest to fix the test while removing the mocks.
-  - type: EntityLookup
+  - type: Broadphase
 ";
 
         private MapId MapA;
-        private MapGridComponent GridA = default!;
+        private IMapGrid GridA = default!;
         private MapId MapB;
-        private MapGridComponent GridB = default!;
+        private IMapGrid GridB = default!;
 
         private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
 
@@ -68,12 +67,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             // build the net dream
             MapA = MapManager.CreateMap();
-            var gridEnt = MapManager.EntityManager.SpawnEntity(null, MapA);
-            GridA = MapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            GridA = MapManager.CreateGrid(MapA);
 
             MapB = MapManager.CreateMap();
-            var gridEnt1 = MapManager.EntityManager.SpawnEntity(null, MapB);
-            GridB = MapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt1);
+            GridB = MapManager.CreateGrid(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
@@ -96,8 +93,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
 
             // that are not on the same map
-            parentTrans.Coordinates = new EntityCoordinates(GridA.Owner, (5, 5));
-            childTrans.Coordinates = new EntityCoordinates(GridB.Owner, (4, 4));
+            parentTrans.Coordinates = new EntityCoordinates(GridA.GridEntityId, (5, 5));
+            childTrans.Coordinates = new EntityCoordinates(GridB.GridEntityId, (4, 4));
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
@@ -106,7 +103,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.Multiple(() =>
             {
                 Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
-                Assert.That(childTrans.GridEuid, Is.EqualTo(parentTrans.GridEuid));
+                Assert.That(childTrans.GridUid, Is.EqualTo(parentTrans.GridUid));
                 Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(parentTrans.Owner, (-1, -1))));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
             });

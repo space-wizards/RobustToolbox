@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -8,28 +9,38 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
     {
+        private static void NextOrThrow(ref SpanSplitExtensions.Enumerator<char> enumerator, string value)
+        {
+            if (!enumerator.MoveNext())
+                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{value}'");
+        }
+
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null, Box2 value = default)
         {
-            var args = node.Value.Split(',');
+            var nodeValue = node.Value;
+            var args = nodeValue.AsSpan().Split(',').GetEnumerator();
+            NextOrThrow(ref args, nodeValue);
 
-            if (args.Length != 4)
-            {
-                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{node.Value}'");
-            }
+            var l = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
 
-            var l = float.Parse(args[0], CultureInfo.InvariantCulture);
-            var b = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var r = float.Parse(args[2], CultureInfo.InvariantCulture);
-            var t = float.Parse(args[3], CultureInfo.InvariantCulture);
+            var b = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
+
+            var r = Parse.Float(args.Current);
+            NextOrThrow(ref args, nodeValue);
+
+            var t = Parse.Float(args.Current);
 
             return new Box2(l, b, r, t);
         }
@@ -45,15 +56,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
-            return float.TryParse(args[0], out _) &&
-                   float.TryParse(args[1], out _) &&
-                   float.TryParse(args[2], out _) &&
-                   float.TryParse(args[3], out _)
+            return Parse.TryFloat(args[0], out _) &&
+                   Parse.TryFloat(args[1], out _) &&
+                   Parse.TryFloat(args[2], out _) &&
+                   Parse.TryFloat(args[3], out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing values of Box2.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Box2 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Box2 value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var nodeValue =

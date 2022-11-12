@@ -19,11 +19,11 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
+            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
             SnapSize = 1f;
-            if (gridId.IsValid())
+            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {
-                Grid = pManager.MapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
+                Grid = pManager.MapManager.GetGrid(gridId);
                 SnapSize = Grid.TileSize; //Find snap size for the grid.
             }
             else

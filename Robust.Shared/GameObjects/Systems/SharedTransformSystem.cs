@@ -1,12 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -35,6 +36,21 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
+        }
+
+        private void OnParentChange(ref EntParentChangedMessage ev)
+        {
+            // TODO: when PVS errors on live servers get fixed, wrap this whole subscription in an #if DEBUG block to speed up parent changes & entity deletion.
+            if (ev.Transform.ParentUid == EntityUid.Invalid)
+                return;
+
+            if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
+                _logger.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
+
+
+            if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
+                _logger.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(TileChangedEvent e)
@@ -42,6 +58,7 @@ namespace Robust.Shared.GameObjects
             if(e.NewTile.Tile != Tile.Empty)
                 return;
 
+            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
             DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
         }
 
@@ -54,21 +71,34 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            var grid = _mapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
-            var gridUid = grid.Owner;
-            var mapTransform = Transform(_mapManager.GetMapEntityId(Transform(grid.Owner).MapID));
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+                return;
+
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            if (!xformQuery.TryGetComponent(gridId, out var gridXform))
+                return;
+
+            if (!xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
+                return;
+
             var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices, LookupFlags.Anchored).ToList())
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
+                if (!xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
+                    continue;
+
+                if (!aabb.Contains(xform.LocalPosition))
+                    continue;
+
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
-                    continue;
-
-                var transform = Transform(entity);
-                if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
-                    transform.AttachParent(mapTransform);
+                    DetachParentToNull(xform, xformQuery, metaQuery, gridXform);
+                else
+                    SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 
@@ -108,64 +138,92 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
+        public EntityCoordinates GetMoverCoordinates(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
-            // If they're parented directly to the map or grid then just return the coordinates.
-            if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>(xform.GridUid, out var grid))
-            {
-                var mapUid = _mapManager.GetMapEntityId(xform.MapID);
-                var coordinates = xform.Coordinates;
-
-                // Parented directly to the map.
-                if (xform.ParentUid == mapUid)
-                    return coordinates;
-
-                return new EntityCoordinates(mapUid, coordinates.ToMapPos(EntityManager));
-            }
-
-            // Parented directly to the grid
-            if (grid.Owner == xform.ParentUid)
+            // Nullspace (or map)
+            if (!xform.ParentUid.IsValid())
                 return xform.Coordinates;
 
-            // Parented to grid so convert their pos back to the grid.
-            var gridPos = Transform(grid.Owner).InvWorldMatrix.Transform(xform.WorldPosition);
-            return new EntityCoordinates(grid.Owner, gridPos);
+            // GriddUid is only set after init.
+            if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
+                SetGridId(xform, xform.FindGridEntityId(xformQuery));
+
+            // Is the entity directly parented to the grid?
+            if (xform.GridUid == xform.ParentUid)
+                return xform.Coordinates;
+
+            DebugTools.Assert(!_mapManager.IsGrid(xform.Owner) && !_mapManager.IsMap(xform.Owner));
+
+            // Not parented to grid so convert their pos back to the grid.
+            var worldPos = GetWorldPosition(xform, xformQuery);
+
+            return xform.GridUid == null
+                ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
+                : new EntityCoordinates(xform.GridUid.Value, xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
+        /// <summary>
+        ///     Variant of <see cref="GetMoverCoordinates"/> that uses a entity coordinates, rather than an entity's transform.
+        /// </summary>
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
         {
-            // GridID isn't ready during EntityInit so YAY
-            MapGridComponent? grid = null;
-            var ent = coordinates.EntityId;
+            var parentUid = coordinates.EntityId;
 
-            while (ent.IsValid())
-            {
-                if (_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) ent, out grid))
-                    break;
-
-                ent = xformQuery.GetComponent(ent).ParentUid;
-            }
-
-            // If they're parented directly to the map or grid then just return the coordinates.
-            if (grid == null)
-            {
-                var mapPos = coordinates.ToMap(EntityManager);
-                var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
-
-                // Parented directly to the map.
-                if (coordinates.EntityId == mapUid)
-                    return coordinates;
-
-                return new EntityCoordinates(mapUid, mapPos.Position);
-            }
-
-            // Parented directly to the grid
-            if (grid.Owner == coordinates.EntityId)
+            // Nullspace coordiantes?
+            if (!parentUid.IsValid())
                 return coordinates;
 
-            // Parented to grid so convert their pos back to the grid.
-            var gridPos = Transform(grid.Owner).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
-            return new EntityCoordinates(grid.Owner, gridPos);
+            var parentXform = xformQuery.GetComponent(parentUid);
+
+            // GriddUid is only set after init.
+            if (parentXform.LifeStage < ComponentLifeStage.Initialized && parentXform.GridUid == null)
+                SetGridId(parentXform, parentXform.FindGridEntityId(xformQuery));
+
+            // Is the entity directly parented to the grid?
+            if (parentXform.GridUid == parentUid)
+                return coordinates;
+
+            // Is the entity directly parented to the map?
+            var mapId = parentXform.MapUid;
+            if (mapId == parentUid)
+                return coordinates;
+
+            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+
+            // Not parented to grid so convert their pos back to the grid.
+            var worldPos = GetWorldMatrix(parentXform, xformQuery).Transform(coordinates.Position);
+
+            return parentXform.GridUid == null
+                ? new EntityCoordinates(mapId ?? parentUid, worldPos)
+                : new EntityCoordinates(parentXform.GridUid.Value, xformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+        }
+
+        /// <summary>
+        ///     Variant of <see cref="GetMoverCoordinates()"/> that also returns the entity's world rotation
+        /// </summary>
+        public (EntityCoordinates Coords, Angle worldRot) GetMoverCoordinateRotation(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        {
+            // Nullspace (or map)
+            if (!xform.ParentUid.IsValid())
+                return (xform.Coordinates, xform.LocalRotation);
+
+            // GriddUid is only set after init.
+            if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
+                SetGridId(xform, xform.FindGridEntityId(xformQuery));
+
+            // Is the entity directly parented to the grid?
+            if (xform.GridUid == xform.ParentUid)
+                return (xform.Coordinates, GetWorldRotation(xform, xformQuery));
+
+            DebugTools.Assert(!_mapManager.IsGrid(xform.Owner) && !_mapManager.IsMap(xform.Owner));
+
+            var (pos, worldRot) = GetWorldPositionRotation(xform, xformQuery);
+
+            var coords = xform.GridUid == null
+                ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
+                : new EntityCoordinates(xform.GridUid.Value, xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+
+            return (coords, worldRot);
         }
 
         /// <summary>
@@ -181,7 +239,7 @@ namespace Robust.Shared.GameObjects
                 return (Vector2i) xform.WorldPosition;
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.EntityManager.GetComponent<MapGridComponent>(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
+            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
         }
     }
 

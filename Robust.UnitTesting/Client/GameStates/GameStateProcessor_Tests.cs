@@ -50,7 +50,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState.ToSequence.Value, Is.EqualTo(1));
+            Assert.That(curState!.ToSequence.Value, Is.EqualTo(1));
             Assert.That(nextState, Is.Null);
         }
 
@@ -76,7 +76,7 @@ namespace Robust.UnitTesting.Client.GameStates
             processor.TryGetServerState(out var state, out _);
 
             Assert.NotNull(state);
-            Assert.That(state.ToSequence.Value, Is.EqualTo(1));
+            Assert.That(state!.ToSequence.Value, Is.EqualTo(1));
         }
 
         [Test]

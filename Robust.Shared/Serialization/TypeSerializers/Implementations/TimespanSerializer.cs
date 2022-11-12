@@ -32,7 +32,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing TimeSpan");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, TimeSpan value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, TimeSpan value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));

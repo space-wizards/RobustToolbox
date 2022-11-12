@@ -109,7 +109,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures {
             set {
-                PreparePlacementTexList(value, value != null, null);
+                PreparePlacementTexList(value, !Hijack?.CanRotate ?? value != null, null);
             }
         }
 
@@ -334,7 +334,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(TileChangedEvent args)
         {
-            var coords = MapManager.EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -717,7 +717,7 @@ namespace Robust.Client.Placement
             }
             sc.NoRotation = noRot;
 
-            if (prototype?.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp) == true)
+            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
             {
                 sc.Scale = spriteComp.Scale;
             }
@@ -740,11 +740,11 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var gridId = coordinates.GetGridEuid(EntityManager);
+                var gridIdOpt = coordinates.GetGridUid(EntityManager);
                 // If we have actually placed something on a valid grid...
-                if (gridId.IsValid())
+                if (gridIdOpt is EntityUid gridId && gridId.IsValid())
                 {
-                    var grid = MapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
+                    var grid = MapManager.GetGrid(gridId);
 
                     // no point changing the tile to the same thing.
                     if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)

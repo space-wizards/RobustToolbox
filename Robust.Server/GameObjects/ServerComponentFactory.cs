@@ -1,7 +1,7 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Reflection;
 
 namespace Robust.Server.GameObjects
@@ -17,8 +17,6 @@ namespace Robust.Server.GameObjects
 
             RegisterClass<MetaDataComponent>();
             RegisterClass<TransformComponent>();
-            RegisterClass<MapComponent>();
-            RegisterClass<MapGridComponent>();
             RegisterClass<EyeComponent>();
             RegisterClass<ActorComponent>();
             RegisterClass<PhysicsComponent>();

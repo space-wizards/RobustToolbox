@@ -24,6 +24,17 @@ namespace Robust.Client.GameObjects
         [DataField("zoom")]
         private Vector2 _setZoomOnInitialize = Vector2.One;
 
+        /// <summary>
+        ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful for things like vehicles that effectively need to hijack the eye. This allows them to do
+        ///     that without messing with the main viewport's eye. This is important as there are some overlays that are
+        ///     only be drawn if that viewport's eye belongs to the currently controlled entity.
+        /// </remarks>
+        [ViewVariables]
+        public EntityUid? Target;
+
         public IEye? Eye => _eye;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -162,8 +173,14 @@ namespace Robust.Client.GameObjects
         public void UpdateEyePosition()
         {
             if (_eye == null) return;
-            var mapPos = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position, mapPos.MapId);
+
+            if (!_entityManager.TryGetComponent(Target, out TransformComponent? xform))
+            {
+                xform = _entityManager.GetComponent<TransformComponent>(Owner);
+                Target = null;
+            }
+
+            _eye.Position = xform.MapPosition;
         }
     }
 }

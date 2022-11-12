@@ -13,6 +13,7 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -57,7 +58,7 @@ namespace Robust.Client
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager = default!;
+        [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
@@ -128,10 +129,7 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
-
             _resourceCache.PreloadTextures();
-            _userInterfaceManager.Initialize();
-            _eyeManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
@@ -141,16 +139,18 @@ namespace Robust.Client
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.ResolveResults();
+            _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
             _scriptClient.Initialize();
-
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _userInterfaceManager.PostInitialize();
 
             if (_commandLineArgs?.Username != null)
             {
@@ -383,6 +383,7 @@ namespace Robust.Client
             }
 
             _clyde.TextEntered += TextEntered;
+            _clyde.TextEditing += TextEditing;
             _clyde.MouseMove += MouseMove;
             _clyde.KeyUp += KeyUp;
             _clyde.KeyDown += KeyDown;

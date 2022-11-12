@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
+using System.Management;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -46,13 +47,11 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapID);
-            MapGridComponent tempQualifier = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
-            var gridId = tempQualifier.Owner;
+            var grid = mapMan.CreateGrid(mapID);
 
             mapMan.Restart();
 
-            Assert.That(mapMan.EntityManager.HasComponent<MapGridComponent>((EntityUid?) gridId), Is.False);
+            Assert.That(mapMan.GridExists(grid.GridEntityId), Is.False);
         }
 
         /// <summary>
@@ -63,22 +62,15 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            mapMan.CreateNewMapEntity(MapId.Nullspace);
-
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeComponents(oldEntity);
-
-            mapMan.Restart();
-
-            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
+            entMan.Shutdown();
             Assert.That(entMan.Deleted(oldEntity), Is.True);
 
         }
 
         /// <summary>
-        /// When using SetMapEntity, the existing entities on the map are removed, and the new map entity gets a IMapComponent.
+        /// When using SetMapEntity, the existing entities on the map are removed, and the new map entity gets a MapComponent.
         /// </summary>
         [Test]
         public void SetMapEntity_WithExistingEntity_ExistingEntityDeleted()
@@ -100,9 +92,9 @@ namespace Robust.UnitTesting.Shared.Map
 
             // Assert
             Assert.That(entMan.Deleted(oldMapEntity));
-            Assert.That(entMan.HasComponent<IMapComponent>(newMapEntity));
+            Assert.That(entMan.HasComponent<MapComponent>(newMapEntity));
 
-            var mapComp = entMan.GetComponent<IMapComponent>(newMapEntity);
+            var mapComp = entMan.GetComponent<MapComponent>(newMapEntity);
             Assert.That(mapComp.WorldMap == mapID);
         }
 
@@ -115,9 +107,6 @@ namespace Robust.UnitTesting.Shared.Map
             // Arrange
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             // Act
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
@@ -132,14 +121,10 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-
-            var entity = mapMan.CreateNewMapEntity(MapId.Nullspace);
-
+            var map = mapMan.CreateMap();
+            var entity = mapMan.GetMapEntityId(map);
             mapMan.Restart();
-
-            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
             Assert.That((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
-            Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }
 }

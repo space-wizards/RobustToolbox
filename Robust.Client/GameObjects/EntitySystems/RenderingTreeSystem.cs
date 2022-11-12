@@ -43,7 +43,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                var tempQualifier = grid.Owner;
+                var tempQualifier = grid.GridEntityId;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -57,7 +57,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                var tempQualifier = grid.Owner;
+                var tempQualifier = grid.GridEntityId;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -78,13 +78,12 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
             // Due to how recursion works, this must be done.
+            // Note that this also implicitly handles parent changes.
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
 
-            SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
-            SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
+            SubscribeLocalEvent<SpriteComponent, UpdateSpriteTreeEvent>(HandleSpriteUpdate);
 
-            SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
 
@@ -107,10 +106,9 @@ namespace Robust.Client.GameObjects
             QueueLightUpdate(component);
         }
 
-        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, SpriteUpdateEvent args)
+        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, UpdateSpriteTreeEvent args)
         {
-            if (component.TreeUpdateQueued) return;
-            QueueSpriteUpdate(component);
+            _spriteQueue.Add(component);
         }
 
         private void AnythingMoved(ref MoveEvent args)
@@ -118,18 +116,21 @@ namespace Robust.Client.GameObjects
             var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
             var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var renderingQuery = EntityManager.GetEntityQuery<RenderingTreeComponent>();
 
-            AnythingMovedSubHandler(args.Sender, xformQuery, pointQuery, spriteQuery);
+            AnythingMovedSubHandler(args.Sender, args.Component, xformQuery, pointQuery, spriteQuery, renderingQuery);
         }
 
         private void AnythingMovedSubHandler(
             EntityUid uid,
+            TransformComponent xform,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery)
+            EntityQuery<SpriteComponent> spriteQuery,
+            EntityQuery<RenderingTreeComponent> renderingQuery)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
-            if (!_checkedChildren.Add(uid) || EntityManager.HasComponent<RenderingTreeComponent>(uid)) return;
+            if (!_checkedChildren.Add(uid) || renderingQuery.HasComponent(uid)) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
@@ -141,13 +142,12 @@ namespace Robust.Client.GameObjects
             if (pointQuery.TryGetComponent(uid, out var light))
                 QueueLightUpdate(light);
 
-            if (!xformQuery.TryGetComponent(uid, out var xform)) return;
-
             var childEnumerator = xform.ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {
-                AnythingMovedSubHandler(child.Value, xformQuery, pointQuery, spriteQuery);
+                if (xformQuery.TryGetComponent(uid, out var childXform))
+                    AnythingMovedSubHandler(child.Value, childXform, xformQuery, pointQuery, spriteQuery, renderingQuery);
             }
         }
 
@@ -157,11 +157,6 @@ namespace Robust.Client.GameObjects
         // Otherwise these will still have their past MapId and that's all we need..
 
         #region SpriteHandlers
-
-        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, ref EntParentChangedMessage args)
-        {
-            QueueSpriteUpdate(component);
-        }
 
         private void RemoveSprite(EntityUid uid, SpriteComponent component, ComponentRemove args)
         {
@@ -186,11 +181,6 @@ namespace Robust.Client.GameObjects
         #endregion
 
         #region LightHandlers
-
-        private void LightParentChanged(EntityUid uid, PointLightComponent component, ref EntParentChangedMessage args)
-        {
-            QueueLightUpdate(component);
-        }
 
         private void PointLightRadiusChanged(EntityUid uid, PointLightComponent component, PointLightRadiusChangedEvent args)
         {
@@ -242,8 +232,7 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            MapGridComponent tempQualifier = _mapManager.EntityManager.GetComponent<MapGridComponent>(ev.EntityUid);
-            EntityManager.EnsureComponent<RenderingTreeComponent>(tempQualifier.Owner);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).GridEntityId);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, TransformComponent xform, EntityQuery<TransformComponent> xforms)

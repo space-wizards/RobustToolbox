@@ -18,11 +18,18 @@ public interface IPVSCollection
     /// Processes all previous additions, removals and updates of indices.
     /// </summary>
     public void Process();
-    public void AddPlayer(ICommonSession session);
+
+    /// <summary>
+    ///     Adds a player session to the collection. Returns false if the player was already present.
+    /// </summary>
+    public bool AddPlayer(ICommonSession session);
     public void AddGrid(EntityUid gridId);
     public void AddMap(MapId mapId);
 
-    public void RemovePlayer(ICommonSession session);
+    /// <summary>
+    ///     Removes a player session from the collection. Returns false if the player was not present in the collection.
+    /// </summary>
+    public bool RemovePlayer(ICommonSession session);
 
     public void RemoveGrid(EntityUid gridId);
 
@@ -47,7 +54,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector2i GetChunkIndices(Vector2 coordinates)
+    public static Vector2i GetChunkIndices(Vector2 coordinates)
     {
         return (coordinates / PVSSystem.ChunkSize).Floored();
     }
@@ -120,21 +127,18 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         _changedIndices.EnsureCapacity(_locationChangeBuffer.Count);
 
-        foreach (var (key, loc) in _locationChangeBuffer)
+        foreach (var key in _locationChangeBuffer.Keys)
         {
             _changedIndices.Add(key);
         }
 
         foreach (var (index, tick) in _removalBuffer)
         {
-            //changes dont need to be computed if we are removing the index anyways
-            if (_changedIndices.Remove(index) && !_indexLocations.ContainsKey(index))
-            {
-                //this index wasnt added yet, so we can safely just skip the deletion
-                continue;
-            }
-
+            _changedIndices.Remove(index);
             var location = RemoveIndexInternal(index);
+            if (location == null)
+                continue;
+            
             if(location is GridChunkLocation or MapChunkLocation)
                 _dirtyChunks.Add((IChunkIndexLocation) location);
             _deletionHistory.Add((tick, index));
@@ -223,7 +227,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     private IIndexLocation? RemoveIndexInternal(TIndex index)
     {
         // the index might be gone due to disconnects/grid-/map-deletions
-        if (!_indexLocations.TryGetValue(index, out var location))
+        if (!_indexLocations.Remove(index, out var location))
             return null;
         // since we can find the index, we can assume the dicts will be there too & dont need to do any checks. gaming.
         switch (location)
@@ -241,18 +245,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Remove(index);
                 break;
         }
-
-        _indexLocations.Remove(index);
         return location;
     }
 
     #region Init Functions
 
     /// <inheritdoc />
-    public void AddPlayer(ICommonSession session)
+    public bool AddPlayer(ICommonSession session)
     {
-        _localOverrides[session] = new();
-        _lastSeen[session] = new();
+        return _localOverrides.TryAdd(session, new()) & _lastSeen.TryAdd(session, new());
     }
 
     /// <inheritdoc />
@@ -266,14 +267,17 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     #region ShutdownFunctions
 
     /// <inheritdoc />
-    public void RemovePlayer(ICommonSession session)
+    public bool RemovePlayer(ICommonSession session)
     {
-        foreach (var index in _localOverrides[session])
+        if (_localOverrides.Remove(session, out var indices))
         {
-            _indexLocations.Remove(index);
+            foreach (var index in indices)
+            {
+                _indexLocations.Remove(index);
+            }
         }
-        _localOverrides.Remove(session);
-        _lastSeen.Remove(session);
+
+        return _lastSeen.Remove(session) && indices != null;
     }
 
     /// <inheritdoc />
@@ -390,8 +394,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
-        var gridId = coordinates.GetGridEuid(_entityManager);
-        if (gridId != EntityUid.Invalid)
+        var gridIdOpt = coordinates.GetGridUid(_entityManager);
+        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
@@ -405,8 +409,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
     {
-        var gridId = coordinates.GetGridEuid(_entityManager);
-        if (gridId != EntityUid.Invalid)
+        var gridIdOpt = coordinates.GetGridUid(_entityManager);
+        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             return new GridChunkLocation(gridId, gridIndices);
@@ -424,7 +428,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="gridId">The id of the grid.</param>
     /// <param name="chunkIndices">The indices of the chunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false)
+    /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
+    public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -432,7 +437,12 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if (_indexLocations.TryGetValue(index, out var oldLocation) &&
             oldLocation is GridChunkLocation oldGrid &&
             oldGrid.ChunkIndices == chunkIndices &&
-            oldGrid.GridId == gridId) return;
+            oldGrid.GridId == gridId)
+        {
+            if (forceDirty)
+                _dirtyChunks.Add(oldGrid);
+            return;
+        }
 
         RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
     }
@@ -444,7 +454,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="mapId">The id of the map.</param>
     /// <param name="chunkIndices">The indices of the mapchunk.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
-    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false)
+    /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
+    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
         if(!removeFromOverride && IsOverride(index))
             return;
@@ -452,7 +463,13 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if (_indexLocations.TryGetValue(index, out var oldLocation) &&
             oldLocation is MapChunkLocation oldMap &&
             oldMap.ChunkIndices == chunkIndices &&
-            oldMap.MapId == mapId) return;
+            oldMap.MapId == mapId)
+        {
+            if (forceDirty)
+                _dirtyChunks.Add(oldMap);
+            return;
+        }
+
 
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }

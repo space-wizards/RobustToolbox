@@ -5,17 +5,20 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Server.Containers;
+using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -82,17 +85,30 @@ namespace Robust.UnitTesting
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
             // and it was like this when I found it.
-            systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
-            systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+
+            systems.LoadExtraSystemType<SharedGridTraversalSystem>();
+            systems.LoadExtraSystemType<FixtureSystem>();
 
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
+                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
             }
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
                 systems.LoadExtraSystemType<PVSSystem>();
+                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<BroadPhaseSystem>();
+                systems.LoadExtraSystemType<JointSystem>();
+                systems.LoadExtraSystemType<PhysicsSystem>();
+                systems.LoadExtraSystemType<DebugRayDrawingSystem>();
             }
 
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -101,14 +117,19 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
+            {
+                compFactory.RegisterClass<MapComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapGridComponent)))
+            {
+                compFactory.RegisterClass<MapGridComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
                 compFactory.RegisterClass<MetaDataComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
-            {
-                compFactory.RegisterClass<EntityLookupComponent>();
             }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
@@ -126,9 +147,9 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<FixturesComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
             {
-                compFactory.RegisterClass<EntityLookupComponent>();
+                compFactory.RegisterClass<JointComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

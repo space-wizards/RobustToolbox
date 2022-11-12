@@ -136,6 +136,35 @@ namespace Robust.Shared.Reflection
             if (_looseTypeCache.TryGetValue(name, out type))
                 return true;
 
+            // Check standard types first.
+            switch (name)
+            {
+                case "Byte":
+                    type = typeof(byte);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "Bool":
+                    type = typeof(bool);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "Double":
+                    type = typeof(double);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "SByte":
+                    type = typeof(sbyte);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "Single":
+                    type = typeof(float);
+                    _looseTypeCache[name] = type;
+                    return true;
+                case "String":
+                    type = typeof(string);
+                    _looseTypeCache[name] = type;
+                    return true;
+            }
+
             foreach (var assembly in assemblies)
             {
                 foreach (var tryType in assembly.DefinedTypes)
@@ -274,6 +303,16 @@ namespace Robust.Shared.Reflection
                     found = derivedType;
                     break;
                 }
+            }
+
+            // Fallback
+            if (found == null)
+            {
+                TryLooseGetType(typeName, out found);
+
+                // If we may have gotten the type but it's still abstract then don't return it.
+                if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
+                    found = null;
             }
 
             _yamlTypeTagCache.Add((baseType, typeName), found);

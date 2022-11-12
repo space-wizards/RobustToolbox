@@ -46,6 +46,7 @@ public sealed class SoundPathSpecifier : SoundSpecifier
             Params = @params.Value;
     }
 
+    [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
     {
         return Path == null ? string.Empty : Path.ToString();
@@ -70,6 +71,7 @@ public sealed class SoundCollectionSpecifier : SoundSpecifier
             Params = @params.Value;
     }
 
+    [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
     {
         if (Collection == null)

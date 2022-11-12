@@ -1,5 +1,4 @@
-using Robust.Shared.GameObjects;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -17,9 +16,9 @@ namespace Robust.Client.Placement.Modes
 
             MouseCoords = ScreenToCursorGrid(mouseScreen).AlignWithClosestGridTile(SearchBoxSize, pManager.EntityManager, pManager.MapManager);
 
-            var gridId = MouseCoords.GetGridEuid(pManager.EntityManager);
+            var gridId = MouseCoords.GetGridUid(pManager.EntityManager);
 
-            if (!pManager.MapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) gridId, out var mapGrid))
+            if (!pManager.MapManager.TryGetGrid(gridId, out var mapGrid))
                 return;
 
             CurrentTile = mapGrid.GetTileRef(MouseCoords);

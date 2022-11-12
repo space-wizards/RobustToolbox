@@ -141,14 +141,10 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(mapId, true);
 
         // act
-        var gridEnt = mapMan.EntityManager.SpawnEntity(null, mapId);
-        var newGrid = mapMan.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+        var newGrid = mapMan.CreateGrid(mapId);
 
         // assert
-        Assert.That(mapMan.IsMapPaused(mapId), Is.True);
-        Assert.That(mapMan.IsGridPaused(newGrid.Owner), Is.True);
-
-        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.Owner);
+        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.GridEntityId);
         Assert.That(metaData.EntityPaused, Is.True);
     }
 
@@ -174,7 +170,7 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(map2, false);
 
         // Act
-        xform.ParentUid = mapMan.GetMapEntityId(map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -202,7 +198,7 @@ internal sealed class MapPauseTests
         mapMan.SetMapPaused(map2, true);
 
         // Act
-        xform.ParentUid = mapMan.GetMapEntityId(map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);

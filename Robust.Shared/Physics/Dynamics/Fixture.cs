@@ -26,7 +26,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -35,14 +37,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public interface IFixture
-    {
-        // TODO
-    }
-
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IFixture, IEquatable<Fixture>, ISerializationHooks
+    public sealed class Fixture : IEquatable<Fixture>, ISerializationHooks
     {
         /// <summary>
         /// Allows us to reference a specific fixture when we contain multiple
@@ -97,17 +94,16 @@ namespace Robust.Shared.Physics.Dynamics
         public float Friction
         {
             get => _friction;
+            [Obsolete("Use SharedPhysicsSystem.SetFriction")]
             set
             {
-                if (MathHelper.CloseToPercent(value, _friction)) return;
-
-                _friction = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetFriction(this, value);
             }
         }
 
         [DataField("friction")]
-        private float _friction = 0.4f;
+        internal float _friction = 0.4f;
 
         /// <summary>
         /// AKA how much bounce there is on a collision.
@@ -117,12 +113,11 @@ namespace Robust.Shared.Physics.Dynamics
         public float Restitution
         {
             get => _restitution;
+            [Obsolete("Use SharedPhysicsSystem.SetRestitution")]
             set
             {
-                if (MathHelper.CloseTo(value, _restitution)) return;
-
-                _restitution = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetRestitution(this, value);
             }
         }
 
@@ -146,14 +141,12 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _hard = value;
-                Body.CanCollide = true;
-                Body.Awake = true;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetHard(this, value);
             }
         }
 
-        [DataField("hard")]
-        private bool _hard = true;
+        [DataField("hard")] private bool _hard = true;
 
         // MassData
         // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
@@ -162,25 +155,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         private float _inertia;
 
-        // Should be calculated by density or whatever but eh.
         /// <summary>
-        ///     Mass of the fixture. The sum of these is the mass of the body.
+        /// In kg / m ^ 2
         /// </summary>
-        [ViewVariables(VVAccess.ReadOnly)]
-        public float Mass
-        {
-            get => _mass;
-            set
-            {
-                if (MathHelper.CloseToPercent(value, _mass)) return;
-
-                _mass = MathF.Max(0f, value);
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
-            }
-        }
-
-        [DataField("mass")]
-        internal float _mass;
+        [ViewVariables(VVAccess.ReadWrite),
+         DataField("density")]
+        public float Density { get; internal set; } = 1f;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -189,14 +169,13 @@ namespace Robust.Shared.Physics.Dynamics
         public int CollisionLayer
         {
             get => _collisionLayer;
+            [Obsolete("Use SharedPhysicsSystem.SetCollisionLayer")]
             set
             {
                 if (_collisionLayer == value)
                     return;
 
-                _collisionLayer = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
-                EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>().SetCollisionLayer(this, value);
             }
         }
 
@@ -210,14 +189,13 @@ namespace Robust.Shared.Physics.Dynamics
         public int CollisionMask
         {
             get => _collisionMask;
+            [Obsolete("Use SharedPhysicsSystem.SetCollisionMask")]
             set
             {
                 if (_collisionMask == value)
                     return;
 
-                _collisionMask = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
-                EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>().SetCollisionMask(this, value);
             }
         }
 
@@ -292,11 +270,10 @@ namespace Robust.Shared.Physics.Dynamics
             fixture._hard = _hard;
             fixture._collisionLayer = _collisionLayer;
             fixture._collisionMask = _collisionMask;
-            fixture._mass = _mass;
+            fixture.Density = Density;
         }
 
         #region ComputeProperties
-
 
         private void ComputePoly(PolygonShape poly, out float area)
         {
@@ -371,48 +348,29 @@ namespace Robust.Shared.Physics.Dynamics
 
             //The area is too small for the engine to handle.
             DebugTools.Assert(area > float.Epsilon);
-
-            // Total mass
-            // TODO: Do we need this?
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            center *= 1.0f / area;
-            poly.Centroid = center + s;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
-
-            // Shift to center of mass then to original body origin.
-            _inertia += Mass * (Vector2.Dot(poly.Centroid, poly.Centroid) - Vector2.Dot(center, center));
         }
 
-        private void ComputeCircle(PhysShapeCircle circle)
-        {
-            var radSquared = MathF.Pow(circle.Radius, 2);
-
-            // inertia about the local origin
-            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(circle.Position, circle.Position));
-        }
-
-        private void ComputeEdge(EdgeShape edge)
-        {
-            edge.Centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
-        }
         #endregion
+
+        /// <summary>
+        /// Returns true if equal apart from body reference.
+        /// </summary>
+        public bool Equivalent(Fixture other)
+        {
+            return _hard == other.Hard &&
+                   _collisionLayer == other.CollisionLayer &&
+                   _collisionMask == other.CollisionMask &&
+                   Shape.Equals(other.Shape) &&
+                   ID.Equals(other.ID) &&
+                   MathHelper.CloseTo(Density, other.Density);
+        }
 
         // This is a crude equals mainly to avoid having to re-create the fixtures every time a state comes in.
         public bool Equals(Fixture? other)
         {
             if (other == null) return false;
 
-            return _hard == other.Hard &&
-                   _collisionLayer == other.CollisionLayer &&
-                   _collisionMask == other.CollisionMask &&
-                   Shape.Equals(other.Shape) &&
-                   Body == other.Body &&
-                   ID.Equals(other.ID) &&
-                    MathHelper.CloseTo(_mass, other._mass);
+            return Equivalent(other) && other.Body == Body;
         }
     }
 

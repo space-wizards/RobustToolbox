@@ -15,7 +15,9 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -53,8 +55,14 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveGrid(EntityUid gridId, string yamlPath)
         {
-            var grid = _mapManager.EntityManager.GetComponent<MapGridComponent>(gridId);
 
+            var grid = _mapManager.GetGrid(gridId);
+
+            // Dont save grid fixtures.
+            if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+            {
+                fixtures.SerializedFixtureData = new(); // empty list.
+            }
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
             context.RegisterGrid(grid);
             var root = context.Serialize();
@@ -92,7 +100,7 @@ namespace Robust.Server.Maps
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            MapGridComponent? grid;
+            IMapGrid? grid;
             IReadOnlyList<EntityUid> entities;
             using (reader)
             {
@@ -118,7 +126,7 @@ namespace Robust.Server.Maps
                 options.LoadMap = oldLoadMapOpt;
             }
 
-            return (entities, GridEntityId: (grid != null ? grid.Owner : null));
+            return (entities, grid?.GridEntityId);
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -161,10 +169,13 @@ namespace Robust.Server.Maps
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager, _serializationManager, _componentFactory);
             context.MapId = mapId;
 
-            foreach (var grid in _mapManager.EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true)
-                         .Where(tuple => tuple.Item2.MapID == mapId)
-                         .Select(tuple => tuple.Item1))
+            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
+                // Dont save grid fixtures.
+                if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+                {
+                    fixtures.SerializedFixtureData = new(); // empty list.
+                }
                 context.RegisterGrid(grid);
             }
 
@@ -233,7 +244,7 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grids = context.Grids.Select(x => x.Owner).ToArray(); // TODO: make context use grid IDs.
+                grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
@@ -246,7 +257,6 @@ namespace Robust.Server.Maps
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
         internal sealed class MapContext : ISerializationContext, IEntityLoadContext,
-            ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
             ITypeReaderWriter<EntityUid, ValueDataNode>
         {
@@ -263,9 +273,8 @@ namespace Robust.Server.Maps
             /// If we're using savemap and not savebp then save everything on map.
             /// </summary>
             internal MapId? MapId { get; set; }
-            private readonly Dictionary<GridId, int> GridIDMap = new();
-            public readonly List<MapGridComponent> Grids = new();
-            private readonly List<GridId> _readGridIndices = new();
+            private readonly Dictionary<EntityUid, int> GridIDMap = new();
+            public readonly List<MapGrid> Grids = new();
             private EntityQuery<TransformComponent>? _xformQuery = null;
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
@@ -315,12 +324,10 @@ namespace Robust.Server.Maps
                 RootNode = new MappingDataNode();
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
             }
@@ -344,12 +351,10 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
             }
@@ -365,9 +370,6 @@ namespace Robust.Server.Maps
 
                 // Create the new map.
                 AllocMap();
-
-                // Maps grid section indices to GridIds, for deserializing GridIds on entities.
-                ReadGridSectionIndices();
 
                 // Entities are first allocated. This allows us to know the future UID of all entities on the map before
                 // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
@@ -422,7 +424,7 @@ namespace Robust.Server.Maps
                         var type = typeNode.Value;
                         if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
                         {
-                            Logger.Error("Missing prototype for map: {0}", type);
+                            Logger.ErrorS("map", "Missing prototype for map: {0}", type);
                             fail = true;
                             reportedError.Add(type);
                         }
@@ -465,11 +467,8 @@ namespace Robust.Server.Maps
                                 // Though it's still in the prototype itself so creation doesn't need to be sent.
                                 castComp.ClearCreationTick();
                             }
-                            else
-                            {
-                                // New component that the prototype normally does not have, need to sync full data.
-                                continue;
-                            }
+
+                            continue;
                         }
 
                         // This component is not modified by the map file,
@@ -494,13 +493,14 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.Owner);
-                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.Owner);
+                    var gridInternal = (IMapGridInternal) grid;
+                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
+                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
-                    gridFixtures.EnsureGrid(grid.Owner);
+                    gridFixtures.EnsureGrid(grid.GridEntityId);
                     gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
-                    fixtures.SerializedFixtures.Clear();
+                    fixtures.SerializedFixtureData = null;
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
@@ -510,7 +510,7 @@ namespace Robust.Server.Maps
                     {
                         var found = false;
 
-                        foreach (var (_, chunk) in grid.GetMapChunks())
+                        foreach (var (_, chunk) in gridInternal.GetMapChunks())
                         {
                             foreach (var cFixture in chunk.Fixtures)
                             {
@@ -541,18 +541,18 @@ namespace Robust.Server.Maps
 
             private void ReadGridSection()
             {
-                // There were no new grids, nothing to do here.
-                if(_readGridIndices.Count == 0)
-                    return;
-
                 // MapGrids already contain their assigned GridId from their ctor, and the MapComponents just got deserialized.
                 // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
                 // After doing this, it should be 100% safe to use the MapManager API like normal.
 
                 var yamlGrids = RootNode.Get<SequenceDataNode>("grids");
 
+                // There were no new grids, nothing to do here.
+                if (yamlGrids.Count == 0)
+                    return;
+
                 // get ents that the grids will bind to
-                var gridComps = new Dictionary<GridId, MapGridComponent>(_readGridIndices.Count);
+                var gridComps = new MapGridComponent[yamlGrids.Count];
 
                 var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
 
@@ -565,22 +565,21 @@ namespace Robust.Server.Maps
                     // These should actually be new, pre-init
                     DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
 
-                    // yaml deserializer turns "null" into Invalid, this has been encountered by a customer from failed serialization.
-                    DebugTools.Assert(gridComp.GridIndex != GridId.Invalid);
-
                     gridComps[gridComp.GridIndex] = gridComp;
                 }
 
-                for (var index = 0; index < _readGridIndices.Count; index++)
+                for (var index = 0; index < yamlGrids.Count; index++)
                 {
                     // Here is where the implicit index pairing magic happens from the yaml.
-                    var gridIndex = _readGridIndices[index];
                     var yamlGrid = (MappingDataNode)yamlGrids[index];
 
                     // designed to throw if something is broken, every grid must map to an ent
-                    var gridComp = gridComps[gridIndex];
+                    var gridComp = gridComps[index];
 
-                    DebugTools.Assert(gridComp.GridIndex == gridIndex);
+                    // TODO Once maps have been updated (save+load), remove GridComponent.GridIndex altogether and replace it with:
+                    // var savedUid = ((ValueDataNode)yamlGrid["uid"]).Value;
+                    // var gridUid = UidEntityMap[int.Parse(savedUid)];
+                    // var gridComp = gridQuery.GetComponent(gridUid);
 
                     MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
                     SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
@@ -598,7 +597,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
             {
                 // sane defaults
                 ushort csz = 16;
@@ -637,7 +636,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var transform = _xformQuery!.Value.GetComponent(grid.Owner);
+                    var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
                     if (transform.MapUid?.IsValid() == true)
                         continue;
 
@@ -653,12 +652,12 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    pvs?.EntityPVSCollection.UpdateIndex(grid.Owner);
+                    pvs?.EntityPVSCollection.UpdateIndex(grid.GridEntityId);
                     // The problem here is that the grid is initialising at the same time as everything else which
                     // is bad for slothcoin because a bunch of components are only added
                     // to the grid during its initialisation hence you get exceptions
                     // hence this 1 snowflake thing.
-                    _serverEntityManager.EnsureComponent<EntityLookupComponent>(grid.Owner);
+                    _serverEntityManager.EnsureComponent<BroadphaseComponent>(grid.GridEntityId);
                 }
             }
 
@@ -692,18 +691,6 @@ namespace Robust.Server.Maps
                     var tileId = (ushort) ((ValueDataNode)key).AsInt();
                     var tileDefName = ((ValueDataNode)value).Value;
                     _tileMap.Add(tileId, tileDefName);
-                }
-            }
-
-            private void ReadGridSectionIndices()
-            {
-                // sets up the mapping so the serializer can properly deserialize GridIds.
-
-                var yamlGrids = RootNode.Get<SequenceDataNode>("grids");
-
-                for (var i = 0; i < yamlGrids.Count; i++)
-                {
-                    _readGridIndices.Add(_mapManager.GenerateGridId(null));
                 }
             }
 
@@ -804,6 +791,8 @@ namespace Robust.Server.Maps
                 if (_loadOptions is null || _loadOptions.TransformMatrix.EqualsApprox(Matrix3.Identity))
                     return;
 
+                var xformSys = _serverEntityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+
                 foreach (var entity in Entities)
                 {
                     if (!_xformQuery!.Value.TryGetComponent(entity, out var transform) ||
@@ -811,7 +800,7 @@ namespace Robust.Server.Maps
 
                     var off = _loadOptions.TransformMatrix.Transform(transform.Coordinates.Position);
 
-                    transform.Coordinates = transform.Coordinates.WithPosition(off);
+                    xformSys.SetCoordinates(transform, transform.Coordinates.WithPosition(off));
                     transform.WorldRotation += _loadOptions.Rotation;
                 }
             }
@@ -832,6 +821,7 @@ namespace Robust.Server.Maps
                     // If we're loading a map but not 'loading the map' then kill it
                     if (TargetMapUid == null && mapQuery.HasComponent(entity))
                     {
+                        Logger.InfoS("map", $"Deleting extra map entity: {_serverEntityManager.ToPrettyString(entity)}");
                         _serverEntityManager.DeleteEntity(entity);
                         Entities.RemoveSwap(i);
                         _entitiesToDeserialize.RemoveAt(i);
@@ -841,7 +831,7 @@ namespace Robust.Server.Maps
 
                     if (!query.TryGetComponent(entity, out var meta))
                     {
-                        Logger.Error($"Found deleted entity {entity} (original uid {_entitiesToDeserialize[i].Item2[0].Value}) on maploader!");
+                        Logger.Error("map", $"Found deleted entity {entity} (original uid {_entitiesToDeserialize[i].Item2[0].Value}) on maploader!");
                         failure = true;
                         continue;
                     }
@@ -877,30 +867,29 @@ namespace Robust.Server.Maps
                 var gridFixtures = _serverEntityManager.EntitySysManager.GetEntitySystem<GridFixtureSystem>();
                 foreach (var grid in Grids)
                 {
-                    if (_serverEntityManager.Deleted(grid.Owner)) continue;
-                    gridFixtures.CheckSplits(grid.Owner);
+                    if (_serverEntityManager.Deleted(grid.GridEntityId)) continue;
+                    gridFixtures.CheckSplits(grid.GridEntityId);
                 }
             }
 
             // Serialization
-            public void RegisterGrid(MapGridComponent grid)
+            public void RegisterGrid(IMapGrid grid)
             {
-                if (GridIDMap.ContainsKey(grid.GridIndex))
+                if (GridIDMap.ContainsKey(grid.GridEntityId))
                 {
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add(grid);
-                GridIDMap.Add(grid.GridIndex, GridIDMap.Count);
+                Grids.Add((MapGrid) grid);
+                GridIDMap.Add(grid.GridEntityId, GridIDMap.Count);
             }
 
             public YamlNode Serialize()
             {
                 WriteMetaSection();
                 WriteTileMapSection();
-                WriteGridSection();
-
                 PopulateEntityList();
+                WriteGridSection();
                 WriteEntitySection();
 
                 return RootNode.ToYaml();
@@ -921,7 +910,9 @@ namespace Robust.Server.Maps
                 //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
-                    if (_mapManager.IsMapInitialized(_serverEntityManager.GetComponent<TransformComponent>(grid.Owner).MapID))
+                    var mapId = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId).MapID;
+
+                    if (_mapManager.IsMapInitialized(mapId))
                     {
                         isPostInit = true;
                         break;
@@ -946,28 +937,13 @@ namespace Robust.Server.Maps
                 var grids = new SequenceDataNode();
                 RootNode.Add("grids", grids);
 
+                int index = 0;
                 foreach (var grid in Grids)
                 {
-                    var entry = (MappingDataNode) _serializationManager.WriteValue(grid, context: this);
-                    // Temporary shitcode alert
-                    var settingsNode = new MappingDataNode();
-                    settingsNode.Add("chunksize", grid.ChunkSize.ToString());
-                    settingsNode.Add("tilesize", grid.TileSize.ToString());
-                    entry.Add("settings", settingsNode);
-
-                    var chunksNode = new SequenceDataNode();
-
-                    foreach (var chunk in grid.GetMapChunks())
-                    {
-                        var chunkNode = new MappingDataNode();
-                        chunkNode.Add("ind", _serializationManager.WriteValue(chunk.Key));
-                        chunkNode.Add("tiles", MapGridComponent.SerializeTiles(chunk.Value));
-                        
-                        chunksNode.Add(chunkNode);
-                    }
-
-                    entry.Add("chunks", chunksNode);
+                    _serverEntityManager.GetComponent<MapGridComponent>(grid.GridEntityId).GridIndex = index;
+                    var entry = _serializationManager.WriteValue(grid, context: this);
                     grids.Add(entry);
+                    index++;
                 }
             }
 
@@ -980,16 +956,8 @@ namespace Robust.Server.Maps
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
                     var currentTransform = transformCompQuery.GetComponent(entity);
-
-                    // Transform is not part of this map tree
                     if (MapId != null && currentTransform.MapID != MapId) continue;
-
-                    // Transform is part of th grid trees to be serialized.
-                    var xformGridId = _serverEntityManager.TryGetComponent(currentTransform.GridUid, out MapGridComponent? grid)
-                        ? grid.GridIndex
-                        : GridId.Invalid;
-
-                    if (MapId == null && !GridIDMap.ContainsKey(xformGridId)) continue;
+                    if (MapId == null && (!(currentTransform.GridUid is EntityUid gridId) || !GridIDMap.ContainsKey(gridId))) continue;
 
                     var currentEntity = entity;
 
@@ -1088,8 +1056,10 @@ namespace Robust.Server.Maps
                             if(compMapping == null) continue;
                         }
 
-                        // Don't need to write it if nothing was written!
-                        if (compMapping.Children.Count != 0)
+                        // Don't need to write it if nothing was written! Note that if this entity has no associated
+                        // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
+                        // information that needs to be written.
+                        if (compMapping.Children.Count != 0 || md.EntityPrototype == null)
                         {
                             compMapping.Add("type", new ValueDataNode(compName));
                             // Something actually got written!
@@ -1139,28 +1109,6 @@ namespace Robust.Server.Maps
                     : base(message) { }
             }
 
-            public GridId Read(ISerializationManager serializationManager, ValueDataNode node,
-                IDependencyCollection dependencies,
-                bool skipHook,
-                ISerializationContext? context = null, GridId _ = default)
-            {
-                // This is the code that deserializes the Grids index into the GridId. This has to happen between Grid allocation
-                // and when grids are bound to their entities.
-
-                if (node.Value == "null")
-                {
-                    throw new MapLoadException($"Error in map file: found local grid ID '{node.Value}' which does not exist.");
-                }
-
-                var val = int.Parse(node.Value);
-                if (val >= _readGridIndices.Count)
-                {
-                    throw new MapLoadException($"Error in map file: found local grid ID '{val}' which does not exist.");
-                }
-
-                return _readGridIndices[val];
-            }
-
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
@@ -1177,20 +1125,8 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidationNode ITypeValidator<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
-            {
-                if (node.Value == "null") return new ValidatedValueNode(node);
-
-                if (!int.TryParse(node.Value, out var val) || val >= Grids.Count)
-                {
-                    return new ErrorNode(node, "Invalid GridId", true);
-                }
-
-                return new ValidatedValueNode(node);
-            }
-
-            public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
+            public DataNode Write(ISerializationManager serializationManager, EntityUid value,
+                IDependencyCollection dependencies, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
@@ -1207,20 +1143,6 @@ namespace Robust.Server.Maps
                 else
                 {
                     return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
-                }
-            }
-
-            public DataNode Write(ISerializationManager serializationManager, GridId value, bool alwaysWrite = false,
-                ISerializationContext? context = null)
-            {
-                if (!GridIDMap.TryGetValue(value, out var gridMapped))
-                {
-                    Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridMapped);
-                    return new ValueDataNode("");
-                }
-                else
-                {
-                    return new ValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
                 }
             }
 
@@ -1246,14 +1168,6 @@ namespace Robust.Server.Maps
                 {
                     return entity;
                 }
-            }
-
-            [MustUseReturnValue]
-            public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target,
-                bool skipHook,
-                ISerializationContext? context = null)
-            {
-                return new(source.Value);
             }
 
             [MustUseReturnValue]

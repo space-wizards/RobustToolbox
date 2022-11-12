@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Client.Input;
 using Robust.Shared.Configuration;
@@ -6,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using static SDL2.SDL;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -16,9 +18,9 @@ internal partial class Clyde
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly ILocalizationManager _loc = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
 
         private readonly Clyde _clyde;
+        private GCHandle _selfGCHandle;
 
         private readonly ISawmill _sawmill;
         private readonly ISawmill _sawmillSdl2;
@@ -42,14 +44,17 @@ internal partial class Clyde
             return true;
         }
 
-        private bool InitSdl2()
+        private unsafe bool InitSdl2()
         {
-            StoreCallbacks();
+            _selfGCHandle = GCHandle.Alloc(this, GCHandleType.Normal);
 
             SDL_LogSetAllPriority(SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE);
-            SDL_LogSetOutputFunction(_logOutputFunction!, IntPtr.Zero);
+            SDL_LogSetOutputFunction(&LogOutputFunction, (void*) GCHandle.ToIntPtr(_selfGCHandle));
 
             SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
+            SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+            SDL_SetHint(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT, "1");
+            SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
             var res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
             if (res < 0)
@@ -64,17 +69,31 @@ internal partial class Clyde
 
             _sdlEventWakeup = SDL_RegisterEvents(1);
 
+            SDL_EventState(SDL_EventType.SDL_SYSWMEVENT, SDL_ENABLE);
+
             InitCursors();
             InitMonitors();
             InitKeyMap();
 
-            SDL_AddEventWatch(_eventWatch, IntPtr.Zero);
+            SDL_AddEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
+
+            // SDL defaults to having text input enabled, so we have to manually turn it off in init for consistency.
+            // If we don't, text input will remain enabled *until* the user first leaves a LineEdit/TextEdit.
+            SDL_StopTextInput();
 
             return true;
         }
 
-        public void Shutdown()
+        public unsafe void Shutdown()
         {
+            if (_selfGCHandle != default)
+            {
+                SDL_DelEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
+                _selfGCHandle.Free();
+            }
+
+            SDL_LogSetOutputFunction(null, null);
+
             if (SDL_WasInit(0) != 0)
             {
                 _sawmill.Debug("Terminating SDL2");
@@ -110,8 +129,15 @@ internal partial class Clyde
             return (void*) SDL_GL_GetProcAddress(procName);
         }
 
-        private void LogOutputFunction(IntPtr userdata, int category, SDL_LogPriority priority, IntPtr message)
+        [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]
+        private static unsafe void LogOutputFunction(
+            void* userdata,
+            int category,
+            SDL_LogPriority priority,
+            byte* message)
         {
+            var obj = (Sdl2WindowingImpl) GCHandle.FromIntPtr((IntPtr)userdata).Target!;
+
             var level = priority switch
             {
                 SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE => LogLevel.Verbose,
@@ -123,8 +149,8 @@ internal partial class Clyde
                 _ => LogLevel.Error
             };
 
-            var msg = Marshal.PtrToStringUTF8(message) ?? "";
-            _sawmillSdl2.Log(level, msg);
+            var msg = Marshal.PtrToStringUTF8((IntPtr) message) ?? "";
+            obj._sawmillSdl2.Log(level, msg);
         }
     }
 }

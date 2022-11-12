@@ -1,23 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Robust.Client.Player;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
     public sealed class ContainerSystem : SharedContainerSystem
     {
+        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
@@ -33,6 +33,11 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
+        }
+
+        protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
+        {
+            DebugTools.Assert(ExpectedEntities.TryGetValue(missing, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(missing));
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
@@ -55,18 +60,12 @@ namespace Robust.Client.GameObjects
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                // TODO: This is usually O(n^2) to the amount of containers.
-                foreach (var stateContainer in cast.ContainerSet)
-                {
-                    if (stateContainer.Id == id)
-                        goto skip;
-                }
+                if (cast.Containers.ContainsKey(id))
+                    continue;
 
-                EmptyContainer(container, true);
-                container.Shutdown();
+                EmptyContainer(container, true, null, false, EntityManager);
+                container.Shutdown(EntityManager, _netMan);
                 toDelete.Add(id);
-
-                skip: ;
             }
 
             foreach (var dead in toDelete)
@@ -76,7 +75,7 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
+            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.Containers.Values)
             {
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
@@ -197,11 +196,13 @@ namespace Robust.Client.GameObjects
 
             if (!ExpectedEntities.TryAdd(uid, container))
             {
-                DebugTools.Assert(ExpectedEntities[uid] == container,
-                    $"Expecting entity {ToPrettyString(uid)} to be present in two containers. New: {container.ID} in {ToPrettyString(container.Owner)}. Old: {ExpectedEntities[uid].ID} in {ToPrettyString(ExpectedEntities[uid].Owner)}");
-                DebugTools.Assert(ExpectedEntities[uid].ExpectedEntities.Contains(uid),
-                    $"Entity {ToPrettyString(uid)} is expected, but not expected in the given container? Container: {ExpectedEntities[uid].ID} in {ToPrettyString(ExpectedEntities[uid].Owner)}");
-                return;
+                // It is possible that we were expecting this entity in one container, but it has now moved to another
+                // container, and this entity's state is just being applied before the old container is getting updated.
+                var oldContainer = ExpectedEntities[uid];
+                ExpectedEntities[uid] = container;
+                DebugTools.Assert(oldContainer.ExpectedEntities.Contains(uid),
+                    $"Entity {ToPrettyString(uid)} is expected, but not expected in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
+                oldContainer.ExpectedEntities.Remove(uid);
             }
 
             DebugTools.Assert(!container.ExpectedEntities.Contains(uid),

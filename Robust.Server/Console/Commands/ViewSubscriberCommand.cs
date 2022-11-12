@@ -7,12 +7,11 @@ using Robust.Shared.Players;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class AddViewSubscriberCommand : IConsoleCommand
+    public sealed class AddViewSubscriberCommand : LocalizedCommands
     {
-        public string Command => "addview";
-        public string Description => $"Allows you to subscribe to an entity's view for debugging purposes";
-        public string Help => $"{Command} <entityUid>";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "addview";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var session = shell.Player;
 
@@ -45,13 +44,11 @@ namespace Robust.Server.Console.Commands
             EntitySystem.Get<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
         }
 
-        public sealed class RemoveViewSubscriberCommand : IConsoleCommand
+        public sealed class RemoveViewSubscriberCommand : LocalizedCommands
         {
-            public string Command => "removeview";
-            public string Description => $"Allows you to unsubscribe to an entity's view for debugging purposes";
-            public string Help => $"{Command} <entityUid>";
+            public override string Command => "removeview";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var session = shell.Player;
 

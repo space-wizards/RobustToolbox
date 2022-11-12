@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Lidgren.Network;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Network.Messages
         public int ScriptSession { get; set; }
         public ImmutableArray<LiteResult> Results;
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer)
+        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             ScriptSession = buffer.ReadInt32()!;
 
@@ -24,7 +25,7 @@ namespace Robust.Shared.Network.Messages
             Results = cli.ToImmutable();
         }
 
-        public override void WriteToBuffer(NetOutgoingMessage buffer)
+        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(ScriptSession);
 

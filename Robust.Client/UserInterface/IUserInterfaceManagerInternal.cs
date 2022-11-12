@@ -11,7 +11,6 @@ namespace Robust.Client.UserInterface
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
     {
         void Initialize();
-        void InitializeTesting();
 
         void FrameUpdate(FrameEventArgs args);
 
@@ -30,7 +29,9 @@ namespace Robust.Client.UserInterface
 
         void MouseWheel(MouseWheelEventArgs args);
 
-        void TextEntered(TextEventArgs textEvent);
+        void TextEntered(TextEnteredEventArgs textEnteredEvent);
+
+        void TextEditing(TextEditingEventArgs textEvent);
 
         void ControlHidden(Control control);
 

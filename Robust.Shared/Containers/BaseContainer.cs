@@ -1,11 +1,16 @@
-using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.Containers
 {
@@ -33,7 +38,7 @@ namespace Robust.Shared.Containers
         public string ID { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
-        public IContainerManager Manager { get; internal set; } = default!; // Make sure you set me in init
+        public ContainerManagerComponent Manager { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -56,12 +61,19 @@ namespace Robust.Shared.Containers
         protected BaseContainer() { }
 
         /// <inheritdoc />
-        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null)
+        public bool Insert(
+            EntityUid toinsert,
+            IEntityManager? entMan = null,
+            TransformComponent? transform = null,
+            TransformComponent? ownerTransform = null,
+            MetaDataComponent? meta = null,
+            PhysicsComponent? physics = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
-            DebugTools.Assert(meta == null || meta.Owner == toinsert);
+            DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
+            DebugTools.Assert(physics == null || physics.Owner == toinsert);
             DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
 
@@ -69,40 +81,108 @@ namespace Robust.Shared.Containers
             if (!CanInsert(toinsert, entMan))
                 return false;
 
-            transform ??= entMan.GetComponent<TransformComponent>(toinsert);
+            var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
+            var transformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var jointQuery = entMan.GetEntityQuery<JointComponent>();
+
+            // ECS containers when
+            var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+            var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
+
+            // Please somebody ecs containers
+            var lookupSys = entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
+            var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+
+            transform ??= transformQuery.GetComponent(toinsert);
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
 
             // remove from any old containers.
             if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                 entMan.TryGetComponent(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
                 oldManager.TryGetContainer(toinsert, out var oldContainer) &&
-                !oldContainer.Remove(toinsert, entMan, transform, meta, false))
+                !oldContainer.Remove(toinsert, entMan, transform, meta, false, false))
             {
                 // failed to remove from container --> cannot insert.
                 return false;
             }
 
             // Update metadata first, so that parent change events can check IsInContainer.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
             meta.Flags |= MetaDataFlags.InContainer;
 
-            ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
+            // Remove the entity and any children from broadphases.
+            // This is done before changing can collide to avoid unecceary updates.
+            // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
+            lookupSys.RemoveFromEntityTree(toinsert, transform, transformQuery);
+            DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
+
+            // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
+            var old = transform.Broadphase;
+            transform.Broadphase = BroadphaseData.Invalid;
+
+            // Unanchor the entity (without changing physics body types).
+            xformSys.Unanchor(transform, false);
+
+            // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
+            // because the insertion may not result in a parent change. This could alternatively be done via a
+            // got-inserted event, but really that event should run after the entity was actually inserted (so that
+            // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
+            physicsQuery.Resolve(toinsert, ref physics, false);
+            RecursivelyUpdatePhysics(transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+
+            // Attach to new parent
             var oldParent = transform.ParentUid;
-            transform.AttachParent(ownerTransform);
-            InternalInsert(toinsert, oldParent, entMan);
+            xformSys.SetCoordinates(transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
+            transform.Broadphase = old;
 
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
 
-            // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
-            if (transform.Anchored)
-                transform.Anchored = false;
+            // Implementation specific insert logic
+            InternalInsert(toinsert, entMan);
 
-            // spatially move the object to the location of the container. If you don't want this functionality, the
-            // calling code can save the local position before calling this function, and apply it afterwords.
-            transform.LocalPosition = Vector2.Zero;
-            transform.LocalRotation = Angle.Zero;
+            // Raise container events (after re-parenting and internal remove).
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
+            entMan.EventBus.RaiseLocalEvent(toinsert, new EntGotInsertedIntoContainerMessage(toinsert, this), true);
 
+            // The sheer number of asserts tells you about how little I trust container and parenting code.
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
+            DebugTools.Assert(!transform.Anchored);
+            DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
+            DebugTools.Assert(transform.LocalRotation == Angle.Zero);
+            DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || (!phys.Awake && !phys.CanCollide));
+
+            entMan.Dirty(Manager);
             return true;
+        }
+
+        internal void RecursivelyUpdatePhysics(TransformComponent xform,
+            PhysicsComponent? physics,
+            SharedPhysicsSystem physicsSys,
+            SharedJointSystem jointSys,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<TransformComponent> transformQuery,
+            EntityQuery<JointComponent> jointQuery)
+        {
+            if (physics != null)
+            {
+                // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
+                // changes. This also ensures that the server doesn't have to send the physics comp state to every
+                // player for any entity inside of a container during init.
+                physicsSys.SetLinearVelocity(physics, Vector2.Zero, false);
+                physicsSys.SetAngularVelocity(physics, 0, false);
+                physicsSys.SetCanCollide(physics, false, false);
+
+                if (jointQuery.TryGetComponent(xform.Owner, out var joint))
+                    jointSys.ClearJoints(xform.Owner, joint);
+            }
+
+            foreach (var child in xform.ChildEntities)
+            {
+                var childXform = transformQuery.GetComponent(child);
+                physicsQuery.TryGetComponent(child, out var childPhysics);
+                RecursivelyUpdatePhysics(childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+            }
         }
 
         /// <inheritdoc />
@@ -117,7 +197,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
 
             // no, you can't put maps or grids into containers
-            if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<MapGridComponent>(toinsert))
+            if (entMan.HasComponent<MapComponent>(toinsert) || entMan.HasComponent<MapGridComponent>(toinsert))
                 return false;
 
             var xformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
@@ -144,57 +224,102 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null, bool reparent = true)
+        public bool Remove(
+            EntityUid toRemove,
+            IEntityManager? entMan = null,
+            TransformComponent? xform = null,
+            MetaDataComponent? meta = null,
+            bool reparent = true,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            Angle? localRotation = null)
         {
+            IoCManager.Resolve(ref entMan);
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
-            DebugTools.AssertNotNull(toremove);
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(toremove));
-            DebugTools.Assert(xform == null || xform.Owner == toremove);
+            DebugTools.Assert(entMan.EntityExists(toRemove));
+            DebugTools.Assert(xform == null || xform.Owner == toRemove);
+            DebugTools.Assert(meta == null || meta.Owner == toRemove);
 
-            if (!CanRemove(toremove, entMan)) return false;
-            InternalRemove(toremove, entMan, meta);
+            xform ??= entMan.GetComponent<TransformComponent>(toRemove);
+            meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
 
-            if (reparent)
+            if (!force && !CanRemove(toRemove, entMan))
+                return false;
+
+            if (force && !Contains(toRemove))
             {
-                xform ??= entMan.GetComponent<TransformComponent>(toremove);
-                xform.AttachParentToContainerOrGrid(entMan);
+                DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
+                return false;
             }
 
+            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
+            DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
+            DebugTools.Assert(!xform.Anchored);
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
+            DebugTools.Assert(!entMan.TryGetComponent(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
+
+            // Unset flag (before parent change events are raised).
+            meta.Flags &= ~MetaDataFlags.InContainer;
+
+            // Implementation specific remove logic
+            InternalRemove(toRemove, entMan);
+
+            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0);
+            var oldParent = xform.ParentUid;
+
+            if (destination != null)
+            {
+                // Container ECS when.
+                entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(xform, destination.Value, localRotation);
+            }
+            else if (reparent)
+            {
+                // Container ECS when.
+                entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>().AttachParentToContainerOrGrid(xform);
+                if (localRotation != null)
+                    entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
+            }
+
+            // Add to new broadphase
+            if (xform.ParentUid == oldParent // move event should already have handled it
+                && xform.Broadphase == null) // broadphase explicitly invalid?
+            {
+                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform);
+            }
+
+            // Raise container events (after re-parenting and internal remove).
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toRemove, this), true);
+            entMan.EventBus.RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, this), false);
+
+            DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
+
+            entMan.Dirty(Manager);
             return true;
         }
 
-        /// <inheritdoc />
+        [Obsolete("use force option in Remove()")]
         public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
-        {
-            DebugTools.Assert(!Deleted);
-            DebugTools.AssertNotNull(Manager);
-            DebugTools.AssertNotNull(toRemove);
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(toRemove));
-
-            InternalRemove(toRemove, entMan, meta);
-        }
+            => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
 
         /// <inheritdoc />
-        public virtual bool CanRemove(EntityUid toremove, IEntityManager? entMan = null)
+        public virtual bool CanRemove(EntityUid toRemove, IEntityManager? entMan = null)
         {
             DebugTools.Assert(!Deleted);
 
-            if (!Contains(toremove))
+            if (!Contains(toRemove))
                 return false;
 
             IoCManager.Resolve(ref entMan);
 
             //raise events
-            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
+            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toRemove);
             entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent, true);
             if (removeAttemptEvent.Cancelled)
                 return false;
 
-            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
-            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent, true);
+            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toRemove);
+            entMan.EventBus.RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
             if (gettingRemovedAttemptEvent.Cancelled)
                 return false;
 
@@ -205,42 +330,29 @@ namespace Robust.Shared.Containers
         public abstract bool Contains(EntityUid contained);
 
         /// <inheritdoc />
-        public virtual void Shutdown()
+        public void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null)
         {
-            Manager.InternalContainerShutdown(this);
+            IoCManager.Resolve(ref entMan, ref netMan);
+            InternalShutdown(entMan, netMan.IsClient);
+            Manager.Containers.Remove(ID);
             Deleted = true;
         }
+
+        /// <inheritdoc />
+        protected abstract void InternalShutdown(IEntityManager entMan, bool isClient);
 
         /// <summary>
         /// Implement to store the reference in whatever form you want
         /// </summary>
-        /// <param name="toinsert"></param>
+        /// <param name="toInsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
-        {
-            DebugTools.Assert(!Deleted);
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
-            Manager.Dirty(entMan);
-        }
+        protected abstract void InternalInsert(EntityUid toInsert, IEntityManager entMan);
 
         /// <summary>
         /// Implement to remove the reference you used to store the entity
         /// </summary>
-        /// <param name="toremove"></param>
+        /// <param name="toRemove"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
-        {
-            DebugTools.Assert(!Deleted);
-            DebugTools.AssertNotNull(Manager);
-            DebugTools.AssertNotNull(toremove);
-            DebugTools.Assert(entMan.EntityExists(toremove));
-            DebugTools.Assert(meta == null || meta.Owner == toremove);
-
-            meta ??= entMan.GetComponent<MetaDataComponent>(toremove);
-            meta.Flags &= ~MetaDataFlags.InContainer;
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this), true);
-            entMan.EventBus.RaiseLocalEvent(toremove, new EntGotRemovedFromContainerMessage(toremove, this), false);
-            Manager.Dirty(entMan);
-        }
+        protected abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
     }
 }

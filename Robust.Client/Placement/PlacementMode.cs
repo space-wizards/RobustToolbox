@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.GameObjects;
@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
@@ -170,9 +171,10 @@ namespace Robust.Client.Placement
         /// </summary>
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridEuid(pManager.EntityManager);
-            return gridId.IsValid() ? pManager.MapManager.EntityManager.GetComponent<MapGridComponent>(gridId).GetTileRef(MouseCoords)
-                : new TileRef(gridId, MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
+            var gridUidOpt = coordinates.GetGridUid(pManager.EntityManager);
+            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.MapManager.GetGrid(gridUid).GetTileRef(MouseCoords)
+                : new TileRef(gridUidOpt ?? EntityUid.Invalid,
+                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
         }
 
         public TextureResource GetSprite(string key)
@@ -238,7 +240,7 @@ namespace Robust.Client.Placement
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);
         }
     }
 }

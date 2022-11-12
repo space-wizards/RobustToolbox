@@ -30,8 +30,14 @@ namespace Robust.Shared.GameStates
         /// </summary>
         public ComponentState? State { get; set; }
 
-        public ComponentGetState(GameTick fromTick)
+        /// <summary>
+        ///     Input parameter. The player the state is being sent to.
+        /// </summary>
+        public readonly ICommonSession? Player;
+
+        public ComponentGetState(ICommonSession? player, GameTick fromTick)
         {
+            Player = player;
             FromTick = fromTick;
             State = null;
         }

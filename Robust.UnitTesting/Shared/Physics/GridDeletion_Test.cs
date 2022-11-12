@@ -4,6 +4,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
@@ -23,19 +25,21 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapManager = server.ResolveDependency<IMapManager>();
+        var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+
+
         PhysicsComponent physics = default!;
-        MapGridComponent grid = default!;
+        IMapGrid grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>
         {
             mapId = mapManager.CreateMap();
-            var gridEnt = mapManager.EntityManager.SpawnEntity(null, mapId);
-            grid = mapManager.EntityManager.AddComponent<MapGridComponent>(gridEnt);
+            grid = mapManager.CreateGrid(mapId);
 
-            physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
-            physics.BodyType = BodyType.Dynamic;
-            physics.LinearVelocity = new Vector2(50f, 0f);
+            physics = entManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+            physSystem.SetBodyType(physics, BodyType.Dynamic);
+            physSystem.SetLinearVelocity(physics, new Vector2(50f, 0f));
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
         });
 
@@ -44,7 +48,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
-            entManager.DeleteEntity(grid.Owner);
+            entManager.DeleteEntity(grid.GridEntityId);
 
             // So if gridtree is fucky then this SHOULD throw.
             foreach (var _ in mapManager.FindGridsIntersecting(mapId,

@@ -5,13 +5,11 @@ using Robust.Shared.ContentPack;
 namespace Robust.Client.Console.Commands
 {
 #if DEBUG
-    internal sealed class DumpMetadataMembersCommand : IConsoleCommand
+    internal sealed class DumpMetadataMembersCommand : LocalizedCommands
     {
-        public string Command => "dmetamem";
-        public string Description => "Dumps a type's members in a format suitable for the sandbox configuration file.";
-        public string Help => "Usage: dmetamem <type>";
+        public override string Command => "dmetamem";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var type = Type.GetType(args[0]);
 

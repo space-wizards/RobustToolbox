@@ -8,6 +8,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
+    public delegate bool GridCallback(IMapGrid grid);
+
+    public delegate bool GridCallback<TState>(IMapGrid grid, ref TState state);
+
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
@@ -101,7 +105,11 @@ namespace Robust.Shared.Map
         /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapCoordinates mapCoordinates, [MaybeNullWhen(false)] out MapGridComponent grid);
+        bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
+
+        void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
+
+        void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
@@ -118,19 +126,15 @@ namespace Robust.Shared.Map
         /// <param name="mapId">The relevant MapID</param>
         /// <param name="worldArea">The AABB to intersect</param>
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
+
+        void DeleteGrid(EntityUid euid);
 
         /// <summary>
-        ///     A new map has been created.
+        ///     A tile is being modified.
         /// </summary>
-        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Created is true.")]
-        event EventHandler<MapEventArgs> MapCreated;
-
-        /// <summary>
-        ///     An existing map has been destroyed.
-        /// </summary>
-        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Destroyed is true.")]
-        event EventHandler<MapEventArgs> MapDestroyed;
+        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
+        event EventHandler<TileChangedEventArgs> TileChanged;
 
         bool HasMapEntity(MapId mapId);
 
@@ -138,6 +142,7 @@ namespace Robust.Shared.Map
 
         [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
+        MapGridComponent GetGridComp(EntityUid euid);
 
         #region Paused
 
@@ -149,12 +154,6 @@ namespace Robust.Shared.Map
 
         [Pure]
         bool IsMapPaused(MapId mapId);
-
-        [Pure]
-        bool IsGridPaused(MapGridComponent grid);
-
-        [Pure]
-        bool IsGridPaused(EntityUid gridId);
 
         [Pure]
         bool IsMapInitialized(MapId mapId);

@@ -74,14 +74,14 @@ namespace Robust.Client.GameObjects
         private void OnOccluderDirty(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            MapGridComponent? grid;
+            IMapGrid? grid;
             var occluderQuery = GetEntityQuery<ClientOccluderComponent>();
 
             if (EntityManager.EntityExists(sender) &&
                 occluderQuery.HasComponent(sender))
             {
                 var xform = EntityManager.GetComponent<TransformComponent>(sender);
-                if (!_mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) xform.GridEuid, out grid))
+                if (!_mapManager.TryGetGrid(xform.GridUid, out grid))
                     return;
 
                 var coords = xform.Coordinates;
@@ -95,9 +95,9 @@ namespace Robust.Client.GameObjects
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            else if (ev.LastPosition.HasValue && _mapManager.EntityManager.TryGetComponent<MapGridComponent>((EntityUid?) ev.LastPosition.Value.Item1, out grid))
+            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out grid))
             {
-                var pos = ev.LastPosition.Value.Item2;
+                var pos = ev.LastPosition.Value.pos;
 
                 AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, 1)), occluderQuery);
                 AddValidEntities(grid.GetAnchoredEntitiesEnumerator(pos + new Vector2i(0, -1)), occluderQuery);
@@ -122,13 +122,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(EntityUid sender, (EntityUid, Vector2i) lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (EntityUid grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
-        public (EntityUid, Vector2i)? LastPosition { get; }
+        public (EntityUid grid, Vector2i pos)? LastPosition { get; }
         public EntityUid Sender { get; }
     }
 }

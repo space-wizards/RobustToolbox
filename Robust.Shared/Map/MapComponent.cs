@@ -8,24 +8,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
-    /// <summary>
-    ///     Represents a world map inside the ECS system.
-    /// </summary>
-    public interface IMapComponent : IComponent
-    {
-        bool LightingEnabled { get; set; }
-        MapId WorldMap { get; }
-        bool MapPaused { get; internal set; }
-        bool MapPreInit { get; internal set; }
-    }
-
-    /// <inheritdoc cref="IMapComponent"/>
-    [ComponentReference(typeof(IMapComponent))]
+    [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapComponent : Component, IMapComponent
+    public sealed class MapComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
@@ -34,7 +20,6 @@ namespace Robust.Shared.Map
         [DataField(("lightingEnabled"))]
         public bool LightingEnabled { get; set; } = true;
 
-        /// <inheritdoc />
         public MapId WorldMap
         {
             get => _mapIndex;
@@ -42,64 +27,20 @@ namespace Robust.Shared.Map
         }
 
         [ViewVariables(VVAccess.ReadOnly)]
-        internal bool MapPaused { get; set; } = false;
-
-        /// <inheritdoc />
-        bool IMapComponent.MapPaused
-        {
-            get => this.MapPaused;
-            set => this.MapPaused = value;
-        }
+        public bool MapPaused { get; set; } = false;
 
         [ViewVariables(VVAccess.ReadOnly)]
-        internal bool MapPreInit { get; set; } = false;
-
-        /// <inheritdoc />
-        bool IMapComponent.MapPreInit
-        {
-            get => this.MapPreInit;
-            set => this.MapPreInit = value;
-        }
-
-        /// <inheritdoc />
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            var mapMan = IoCManager.Resolve<IMapManagerInternal>();
-            mapMan.TrueDeleteMap(_mapIndex);
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new MapComponentState(_mapIndex, LightingEnabled);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not MapComponentState state)
-                return;
-
-            _mapIndex = state.MapId;
-            LightingEnabled = state.LightingEnabled;
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-
-            xformQuery.GetComponent(Owner).ChangeMapId(_mapIndex, xformQuery);
-        }
+        public bool MapPreInit { get; set; } = false;
     }
 
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapComponentState : ComponentState
+    public sealed class MapComponentState : ComponentState
     {
-        public MapId MapId { get; }
-        public bool LightingEnabled { get; }
+        public MapId MapId;
+        public bool LightingEnabled;
 
         public MapComponentState(MapId mapId, bool lightingEnabled)
         {

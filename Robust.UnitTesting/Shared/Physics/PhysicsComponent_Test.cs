@@ -7,7 +7,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -24,6 +26,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var mapManager = server.ResolveDependency<IMapManager>();
             var fixtureSystem = server.ResolveDependency<IEntitySystemManager>()
                 .GetEntitySystem<FixtureSystem>();
+            var physicsSystem = server.ResolveDependency<IEntitySystemManager>()
+                .GetEntitySystem<SharedPhysicsSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -33,22 +37,22 @@ namespace Robust.UnitTesting.Shared.Physics
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
                 var fixture = fixtureSystem.CreateFixture(box, poly);
-                fixture.Mass = 1f;
-                box.FixedRotation = false;
-                box.BodyType = BodyType.Dynamic;
+                physicsSystem.SetDensity(fixture, 1f);
+                physicsSystem.SetFixedRotation(box, false);
+                physicsSystem.SetBodyType(box, BodyType.Dynamic);
                 Assert.That(box.InvI, Is.GreaterThan(0f));
 
                 // Check regular impulse works
-                box.ApplyLinearImpulse(new Vector2(0f, 1f));
+                physicsSystem.ApplyLinearImpulse(box, new Vector2(0f, 1f));
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
 
                 // Reset the box
-                box.LinearVelocity = Vector2.Zero;
+                physicsSystem.SetLinearVelocity(box, Vector2.Zero);
                 Assert.That(box.LinearVelocity.Length, Is.EqualTo(0f));
                 Assert.That(box.AngularVelocity, Is.EqualTo(0f));
 
                 // Check the angular impulse is applied from the point
-                box.ApplyLinearImpulse(new Vector2(0f, 1f), new Vector2(0.5f, 0f));
+                physicsSystem.ApplyLinearImpulse(box, new Vector2(0f, 1f), new Vector2(0.5f, 0f));
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
                 Assert.That(box.AngularVelocity, Is.Not.EqualTo(0f));
             });

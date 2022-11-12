@@ -25,6 +25,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -211,7 +212,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             K[1].X = K[0].Y;
             K[1].Y = mA + mB + iA * _rA.X * _rA.X + iB * _rB.X * _rB.X;
 
-            _linearMass = Vector2Helpers.Inverse(K);
+            Vector4Helpers.Inverse(K);
 
             _angularMass = iA + iB;
             if (_angularMass > 0.0f)

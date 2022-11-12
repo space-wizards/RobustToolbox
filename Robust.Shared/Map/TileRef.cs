@@ -15,12 +15,6 @@ namespace Robust.Shared.Map
         public static TileRef Zero => new(EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
 
         /// <summary>
-        ///     Identifier of the <see cref="MapGridComponent"/> this Tile belongs to.
-        /// </summary>
-        [Obsolete("Use EntityUids instead")]
-        public EntityUid GridIndex => GridUid;
-
-        /// <summary>
         ///     Grid Entity this Tile belongs to.
         /// </summary>
         public readonly EntityUid GridUid;
@@ -94,7 +88,9 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool Equals(TileRef other)
         {
-            return GridUid.Equals(other.GridUid) && GridIndices.Equals(other.GridIndices) && Tile.Equals(other.Tile);
+            return GridUid.Equals(other.GridUid) &&
+                   GridIndices.Equals(other.GridIndices) &&
+                   Tile.Equals(other.Tile);
         }
 
         /// <inheritdoc />
@@ -121,7 +117,13 @@ namespace Robust.Shared.Map
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(GridUid, GridIndices, Tile);
+            unchecked
+            {
+                var hashCode = GridUid.GetHashCode();
+                hashCode = (hashCode * 397) ^ GridIndices.GetHashCode();
+                hashCode = (hashCode * 397) ^ Tile.GetHashCode();
+                return hashCode;
+            }
         }
     }
 }

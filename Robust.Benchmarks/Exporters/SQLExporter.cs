@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Mathematics;
+using BenchmarkDotNet.Parameters;
 using BenchmarkDotNet.Reports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -20,6 +22,11 @@ namespace Robust.Benchmarks.Exporters;
 
 public sealed class SQLExporter : IExporter
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+    {
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+    };
+
     public static readonly IExporter Default = new SQLExporter();
 
     private SQLExporter(){}
@@ -74,13 +81,13 @@ public sealed class SQLExporter : IExporter
         {
             ctx.Database.OpenConnection();
             var con = (NpgsqlConnection) ctx.Database.GetDbConnection();
-            con.TypeMapper.AddTypeResolverFactory(new JsonOverrideTypeHandlerResolverFactory(new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
-            }));
+            con.TypeMapper.AddTypeResolverFactory(new JsonOverrideTypeHandlerResolverFactory(JsonSerializerOptions));
 
             ctx.Database.Migrate();
-            ctx.BenchmarkRuns.Add(BenchmarkRun.FromSummary(summary, gitHash));
+            foreach (var run in BenchmarkRun.FromSummary(summary, gitHash))
+            {
+                ctx.BenchmarkRuns.Add(run);
+            }
             ctx.SaveChanges();
         }
         finally
@@ -131,6 +138,7 @@ class JsonOverrideTypeHandlerResolverFactory : TypeHandlerResolverFactory
             => null; // Let the built-in resolver do this
     }
 }
+
 public sealed class DesignTimeContextFactoryPostgres : IDesignTimeDbContextFactory<BenchmarkContext>
 {
     public BenchmarkContext CreateDbContext(string[] args)
@@ -154,42 +162,66 @@ public class BenchmarkRun
     public int Id { get; set; }
     public string GitHash { get; set; } = string.Empty;
 
-    [Column(TypeName = "timestamptz")]
-    public DateTime RunDate { get; set; }
+    [Column(TypeName = "timestamptz")] public DateTime RunDate { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
-    [Column(TypeName = "jsonb")]
-    public BenchmarkRunReport[] Reports { get; set; } = Array.Empty<BenchmarkRunReport>();
+    public string? ParameterMapping { get; set; }
 
-    public static BenchmarkRun FromSummary(Summary summary, string gitHash)
+    [Column(TypeName = "jsonb")]
+    public BenchmarkRunParameter[]? ParameterMappingJson { get; set; }
+
+    [Column(TypeName = "jsonb")]
+    public Statistics Statistics { get; set; } = default!;
+
+    public static IEnumerable<BenchmarkRun> FromSummary(Summary summary, string gitHash)
     {
-        return new BenchmarkRun
+        var runDate = DateTime.UtcNow;
+
+        foreach (var benchmarkReport in summary.Reports)
         {
-            Reports = summary.Reports.Select(r => new BenchmarkRunReport
+            var paramString = new StringBuilder();
+            var parametersItems = benchmarkReport.BenchmarkCase.Parameters.Items;
+            var runParameters = new BenchmarkRunParameter[parametersItems.Count];
+            for (var i = 0; i < parametersItems.Count; i++)
             {
-                Parameters = r.BenchmarkCase.Parameters.Items.Select(p => new BenchmarkRunParameter
-                {
-                    Name = p.Name,
-                    Value = p.Value
-                }).ToArray(),
-                Statistics = r.ResultStatistics
-            }).ToArray(),
-            Name = summary.BenchmarksCases.First().FolderInfo,
-            RunDate = DateTime.UtcNow,
-            GitHash = gitHash
-        };
+                runParameters[i] = new BenchmarkRunParameter(parametersItems[i]);
+                paramString.Append(runParameters[i].ToString());
+                if (i < parametersItems.Count - 1) paramString.Append(',');
+            }
+
+            if (benchmarkReport.ResultStatistics == null)
+            {
+                Console.WriteLine($"err: No statistics available for {benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo}!");
+                continue;
+            }
+
+            yield return new BenchmarkRun
+            {
+                Name = benchmarkReport.BenchmarkCase.Descriptor.DisplayInfo,
+                RunDate = runDate,
+                GitHash = gitHash,
+                ParameterMapping = runParameters.Length > 0 ? paramString.ToString() : null,
+                ParameterMappingJson = runParameters.Length > 0 ? runParameters : null,
+                Statistics = benchmarkReport.ResultStatistics
+            };
+        }
     }
 }
 
-public class BenchmarkRunReport
-{
-    public BenchmarkRunParameter[] Parameters { get; set; } = Array.Empty<BenchmarkRunParameter>();
-    public Statistics Statistics { get; set; } = default!;
-}
-
-public class BenchmarkRunParameter
+public struct BenchmarkRunParameter
 {
     public string Name { get; set; } = string.Empty;
     public object Value { get; set; } = default!;
+
+    public BenchmarkRunParameter(ParameterInstance instance)
+    {
+        Name = instance.Name;
+        Value = instance.Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name}={Value}";
+    }
 }

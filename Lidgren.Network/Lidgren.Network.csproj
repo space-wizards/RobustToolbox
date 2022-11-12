@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>SpaceWizards.Lidgren.Network</AssemblyName>
+
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefaultItemExcludes>Lidgren.Network/**/*</DefaultItemExcludes>
@@ -13,6 +15,7 @@
     <Compile Include="Lidgren.Network\Lidgren.Network\**\*.cs">
      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Remove="Lidgren.Network\Lidgren.Network\obj\**\*.cs" />
   </ItemGroup>
 
 </Project>

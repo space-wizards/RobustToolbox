@@ -39,7 +39,10 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -48,6 +51,8 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private EntityLookupSystem _lookup = default!;
+        private SharedPhysicsSystem _physics = default!;
         private SharedTransformSystem _transform = default!;
 
         internal MapId MapId { get; set; }
@@ -114,7 +119,7 @@ namespace Robust.Shared.Physics.Dynamics
                 var contact = new Contact();
                 IoCManager.InjectDependencies(contact);
 #if DEBUG
-                contact._debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
 #endif
                 contact.Manifold = new Manifold
                 {
@@ -159,7 +164,9 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
+            _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
+            _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+            _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
             configManager.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
@@ -243,7 +250,7 @@ namespace Robust.Shared.Physics.Dynamics
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
             // Does a joint override collision? Is at least one body dynamic?
-            if (!bodyB.ShouldCollide(bodyA))
+            if (!_physics.ShouldCollide(bodyB, bodyA))
                 return;
 
             // Call the factory.
@@ -257,17 +264,17 @@ namespace Robust.Shared.Physics.Dynamics
             bodyB = fixtureB.Body;
 
             // Insert into world
-            contact.MapNode = _activeContacts.AddLast(contact);
+            _activeContacts.AddLast(contact.MapNode);
 
             // Connect to body A
             DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Add(fixtureB, contact);
-            contact.BodyANode = bodyA.Contacts.AddLast(contact);
+            bodyA.Contacts.AddLast(contact.BodyANode);
 
             // Connect to body B
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Add(fixtureA, contact);
-            contact.BodyBNode = bodyB.Contacts.AddLast(contact);
+            bodyB.Contacts.AddLast(contact.BodyBNode);
         }
 
         /// <summary>
@@ -293,36 +300,34 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB), true);
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA), true);
+                var ev1 = new EndCollideEvent(fixtureA, fixtureB);
+                var ev2 = new EndCollideEvent(fixtureB, fixtureA);
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, ref ev1);
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, ref ev2);
             }
 
             if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
             {
                 if (bodyA.CanCollide)
-                    contact.FixtureA.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureA.Body, true);
 
                 if (bodyB.CanCollide)
-                    contact.FixtureB.Body.Awake = true;
+                    _physics.SetAwake(contact.FixtureB.Body, true);
             }
 
             // Remove from the world
-            DebugTools.Assert(contact.MapNode != null);
-            _activeContacts.Remove(contact.MapNode!);
-            contact.MapNode = null;
+            _activeContacts.Remove(contact.MapNode);
 
             // Remove from body 1
             DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Remove(fixtureB);
             DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
-            bodyA.Contacts.Remove(contact.BodyANode!);
-            contact.BodyANode = null;
+            bodyA.Contacts.Remove(contact.BodyANode);
 
             // Remove from body 2
             DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Remove(fixtureA);
-            bodyB.Contacts.Remove(contact.BodyBNode!);
-            contact.BodyBNode = null;
+            bodyB.Contacts.Remove(contact.BodyBNode);
 
             // Insert into the pool.
             _contactPool.Return(contact);
@@ -364,7 +369,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if ((contact.Flags & ContactFlags.Filter) != 0x0)
                 {
                     // Should these bodies collide?
-                    if (bodyB.ShouldCollide(bodyA) == false)
+                    if (_physics.ShouldCollide(bodyB, bodyA) == false)
                     {
                         node = node.Next;
                         Destroy(contact);
@@ -410,8 +415,8 @@ namespace Robust.Shared.Physics.Dynamics
                     var xformA = xformQuery.GetComponent(bodyA.Owner);
                     var xformB = xformQuery.GetComponent(bodyB.Owner);
 
-                    var gridABounds = fixtureA.Shape.ComputeAABB(bodyA.GetTransform(xformA), 0);
-                    var gridBBounds = fixtureB.Shape.ComputeAABB(bodyB.GetTransform(xformB), 0);
+                    var gridABounds = fixtureA.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyA.Owner, xformA, xformQuery), 0);
+                    var gridBBounds = fixtureB.Shape.ComputeAABB(_physics.GetPhysicsTransform(bodyB.Owner, xformB, xformQuery), 0);
 
                     if (!gridABounds.Intersects(gridBBounds))
                     {
@@ -428,8 +433,8 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
-                var broadphaseA = bodyA.Broadphase;
-                var broadphaseB = bodyB.Broadphase;
+                var broadphaseA = _lookup.GetCurrentBroadphase(xformQuery.GetComponent(bodyA.Owner));
+                var broadphaseB = _lookup.GetCurrentBroadphase(xformQuery.GetComponent(bodyB.Owner));
                 var overlap = false;
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace
@@ -497,8 +502,11 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyB = fixtureB.Body;
                         var worldPoint = Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new StartCollideEvent(fixtureA, fixtureB, worldPoint), true);
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new StartCollideEvent(fixtureB, fixtureA, worldPoint), true);
+                        var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
+                        var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
+
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, ref ev1, true);
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, ref ev2, true);
                         break;
                     }
                     case ContactStatus.Touching:
@@ -515,8 +523,11 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyA = fixtureA.Body;
                         var bodyB = fixtureB.Body;
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB), true);
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA), true);
+                        var ev1 = new EndCollideEvent(fixtureA, fixtureB);
+                        var ev2 = new EndCollideEvent(fixtureB, fixtureA);
+
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, ref ev1);
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, ref ev2);
                         break;
                     }
                     case ContactStatus.NoContact:
@@ -561,8 +572,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                bodyA.Awake = true;
-                bodyB.Awake = true;
+                _physics.SetAwake(bodyA, true);
+                _physics.SetAwake(bodyB, true);
             }
 
             ArrayPool<bool>.Shared.Return(wake);
@@ -606,59 +617,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
         }
-
-        public void PostSolve()
-        {
-
-        }
     }
-
-    #region Collide Events Classes
-
-    public abstract class CollideEvent : EntityEventArgs
-    {
-        public Fixture OurFixture { get; }
-        public Fixture OtherFixture { get; }
-
-        public CollideEvent(Fixture ourFixture, Fixture otherFixture)
-        {
-            OurFixture = ourFixture;
-            OtherFixture = otherFixture;
-        }
-    }
-
-    public sealed class StartCollideEvent : CollideEvent
-    {
-        public Vector2 WorldPoint;
-
-        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Vector2 worldPoint)
-            : base(ourFixture, otherFixture)
-        {
-            WorldPoint = worldPoint;
-        }
-    }
-
-    public sealed class EndCollideEvent : CollideEvent
-    {
-        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture)
-            : base(ourFixture, otherFixture)
-        {
-        }
-    }
-
-    public sealed class PreventCollideEvent : CancellableEntityEventArgs
-    {
-        public IPhysBody BodyA;
-        public IPhysBody BodyB;
-
-        public PreventCollideEvent(IPhysBody ourBody, IPhysBody otherBody)
-        {
-            BodyA = ourBody;
-            BodyB = otherBody;
-        }
-    }
-
-    #endregion
 
     internal enum ContactStatus : byte
     {

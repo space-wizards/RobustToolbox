@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -150,11 +150,10 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
-            var gridId = GetGridEuid(entityManager);
-
-            if (gridId.IsValid())
+            var gridIdOpt = GetGridUid(entityManager);
+            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {
-                return mapManager.EntityManager.GetComponent<MapGridComponent>(gridId).GetTileRef(this).GridIndices;
+                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
             }
 
             var (x, y) = ToMapPos(entityManager);
@@ -210,21 +209,9 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Grid EntityUid this entity is on or null</returns>
-        [Obsolete("Use GetGridEuid")]
         public EntityUid? GetGridUid(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
-        }
-
-        /// <summary>
-        ///     Returns the Grid EntityUid these coordinates are on.
-        ///     If none of the ancestors are a grid, returns <see cref="EntityUid.Invalid"/> instead.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <returns>Grid EntityUid this entity is on or null</returns>
-        public EntityUid GetGridEuid(IEntityManager entityManager)
-        {
-            return !IsValid(entityManager) ? EntityUid.Invalid : entityManager.GetComponent<TransformComponent>(EntityId).GridUid.GetValueOrDefault();
         }
 
         /// <summary>

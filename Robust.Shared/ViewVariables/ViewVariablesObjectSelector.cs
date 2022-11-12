@@ -96,4 +96,15 @@ namespace Robust.Shared.ViewVariables
 
         public string TypeName { get; }
     }
+
+    [Serializable, NetSerializable]
+    public sealed class ViewVariablesPathSelector : ViewVariablesObjectSelector
+    {
+        public ViewVariablesPathSelector(string path)
+        {
+            Path = path;
+        }
+
+        public string Path { get; }
+    }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -36,6 +38,11 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IReflectionManager reflection = default!;
         [Dependency] private readonly IEyeManager eyeManager = default!;
 
+        /// <summary>
+        ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
+        /// </summary>
+        public static double DirectionBias = -0.05;
+
         [DataField("visible")]
         private bool _visible = true;
 
@@ -48,7 +55,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                QueueUpdateRenderTree();
             }
         }
 
@@ -78,6 +85,14 @@ namespace Robust.Client.GameObjects
             get => scale;
             set
             {
+                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                {
+                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
+                    return;
+                }
+
+                _bounds = _bounds.Scale(value / scale);
                 scale = value;
                 UpdateLocalMatrix();
             }
@@ -156,6 +171,8 @@ namespace Robust.Client.GameObjects
                 }
 
                 _layerMapShared = true;
+
+                QueueUpdateRenderTree();
                 QueueUpdateIsInert();
             }
         }
@@ -222,7 +239,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+                QueueUpdateRenderTree();
             }
         }
 
@@ -400,10 +417,38 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public bool LayerMapTryGet(object key, out int layer)
+        public bool LayerMapTryGet(object key, out int layer, bool logError = false)
         {
-            return LayerMap.TryGetValue(key, out layer);
+            var result = LayerMap.TryGetValue(key, out layer);
+
+            if (!result && logError)
+            {
+                Logger.ErrorS(LogCategory, "{0} - Layer with key '{1}' does not exist! Trace:\n{2}",
+                    entities.ToPrettyString(Owner), layer, Environment.StackTrace);
+            }
+
+            return result;
         }
+
+        public bool TryGetLayer(int index, [NotNullWhen(true)] out Layer? layer, bool logError = false)
+        {
+            if (index < Layers.Count)
+            {
+                layer = Layers[index];
+                return true;
+            }
+
+            if (logError)
+            {
+                Logger.ErrorS(LogCategory, "{0} - Layer index '{1}' does not exist! Trace:\n{2}",
+                    entities.ToPrettyString(Owner), index, Environment.StackTrace);
+            }
+
+            layer = null;
+            return false;
+        }
+
+        public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
 
         private void _layerMapEnsurePrivate()
         {
@@ -588,12 +633,8 @@ namespace Robust.Client.GameObjects
 
         public void RemoveLayer(int layer)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer,
-                    Environment.StackTrace);
+            if (!LayerExists(layer))
                 return;
-            }
 
             Layers.RemoveAt(layer);
             foreach (var kv in LayerMap)
@@ -615,12 +656,8 @@ namespace Robust.Client.GameObjects
 
         public void RemoveLayer(object layerKey)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             RemoveLayer(layer);
         }
@@ -634,6 +671,8 @@ namespace Robust.Client.GameObjects
 
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
+            _bounds = _bounds.Scale(Scale);
+            QueueUpdateRenderTree();
         }
 
         /// <summary>
@@ -641,14 +680,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {
-            if (Layers.Count <= index)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set layer data! Trace:\n{1}",
-                    index, Environment.StackTrace);
+            if (!TryGetLayer(index, out var layer))
                 return;
-            }
-
-            var layer = Layers[index];
 
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
@@ -763,38 +796,25 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetData(layer, data);
         }
 
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.Shader = shader;
             theLayer.ShaderPrototype = prototype;
         }
 
         public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetShader(layer, shader, prototype);
         }
@@ -815,25 +835,14 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetShader(object layerKey, string shaderName)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetShader(layer, shaderName);
         }
 
         public void LayerSetSprite(int layer, SpriteSpecifier specifier)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}",
-                    layer, Environment.StackTrace);
-                return;
-            }
-
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
@@ -851,38 +860,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set sprite! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetSprite(layer, specifier);
         }
 
         public void LayerSetTexture(int layer, Texture? texture)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetTexture(texture);
             RebuildBounds();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetTexture(layer, texture);
         }
@@ -917,52 +912,32 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetTexture(object layerKey, ResourcePath texturePath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetTexture(layer, texturePath);
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetState(stateId);
             RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId);
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.State = stateId;
             theLayer.RSI = rsi;
             var actualRsi = theLayer.RSI ?? BaseRSI;
@@ -992,12 +967,8 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId, rsi);
         }
@@ -1024,38 +995,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, ResourcePath rsiPath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetState(layer, stateId, rsiPath);
         }
 
         public void LayerSetRSI(int layer, RSI? rsi)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer,
-                    Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.SetRsi(rsi);
             RebuildBounds();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRSI(layer, rsi);
         }
@@ -1082,38 +1039,24 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetRSI(object layerKey, ResourcePath rsiPath)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
-                    Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRSI(layer, rsiPath);
         }
 
         public void LayerSetScale(int layer, Vector2 scale)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.Scale = scale;
             RebuildBounds();
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetScale(layer, scale);
         }
@@ -1121,64 +1064,41 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetRotation(int layer, Angle rotation)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
-
-            var theLayer = Layers[layer];
             theLayer.Rotation = rotation;
             RebuildBounds();
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetRotation(layer, rotation);
         }
 
         public void LayerSetVisible(int layer, bool visible)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetVisible(visible);
+            theLayer.Visible = visible;
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetVisible(layer, visible);
         }
 
         public void LayerSetColor(int layer, Color color)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.Color = color;
 
             RebuildBounds();
@@ -1186,26 +1106,17 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetColor(object layerKey, Color color)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetColor(layer, color);
         }
 
         public void LayerSetDirOffset(int layer, DirectionOffset offset)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            var theLayer = Layers[layer];
             theLayer.DirOffset = offset;
 
             RebuildBounds();
@@ -1213,92 +1124,58 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetDirOffset(layer, offset);
         }
 
         public void LayerSetAnimationTime(int layer, float animationTime)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set animation time! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetAnimationTime(animationTime);
+            theLayer.SetAnimationTime(animationTime);
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with key '{0}' does not exist, cannot set animation time! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetAnimationTime(layer, animationTime);
         }
 
         public void LayerSetAutoAnimated(int layer, bool autoAnimated)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].SetAutoAnimated(autoAnimated);
-
-            RebuildBounds();
+            theLayer.AutoAnimated = autoAnimated;
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
         public void LayerSetOffset(int layer, Vector2 layerOffset)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
-                    layer, Environment.StackTrace);
+            if (!TryGetLayer(layer, out var theLayer, true))
                 return;
-            }
 
-            Layers[layer].Offset = layerOffset;
+            theLayer.Offset = layerOffset;
 
             RebuildBounds();
         }
 
         public void LayerSetOffset(object layerKey, Vector2 layerOffset)
         {
-            if (!LayerMapTryGet(layerKey, out var layer))
-            {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
-                    layerKey, Environment.StackTrace);
+            if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
-            }
 
             LayerSetOffset(layer, layerOffset);
         }
@@ -1306,15 +1183,10 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
-            if (Layers.Count <= layer)
-            {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot get state! Trace:\n{1}",
-                    layer, Environment.StackTrace);
-                return null;
-            }
+            if (!TryGetLayer(layer, out var theLayer, true))
+                return default;
 
-            var thelayer = Layers[layer];
-            return thelayer.State;
+            return theLayer.State;
         }
 
         public RSI? LayerGetActualRSI(int layer)
@@ -1392,11 +1264,11 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            // Reduce the angles to fix math shenanigans
-            worldRotation = worldRotation.Reduced().FlipPositive();
-
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             var cardinal = Angle.Zero;
+
+            // Reduce the angles to fix math shenanigans
+            angle = angle.Reduced().FlipPositive();
 
             // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
             if (!NoRotation && SnapCardinals)
@@ -1516,20 +1388,24 @@ namespace Robust.Client.GameObjects
             LayerDatums = thestate.Layers;
         }
 
-        private void QueueUpdateIsInert()
+        private void QueueUpdateRenderTree()
         {
-            // Look this was an easy way to get bounds checks for layer updates.
-            // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            if ((Owner != default ? entities : null)?.EventBus != null)
-                UpdateBounds();
-
-            if (_inertUpdateQueued)
+            if (TreeUpdateQueued || Owner == default || entities?.EventBus == null)
                 return;
 
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+            TreeUpdateQueued = true;
+            entities.EventBus.RaiseLocalEvent(Owner, new UpdateSpriteTreeEvent());
+        }
+
+        private void QueueUpdateIsInert()
+        {
+            if (_inertUpdateQueued || Owner == default || entities?.EventBus == null)
+                return;
+
+            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             _inertUpdateQueued = true;
-            // Yes that null check is valid because of that stupid fucking dummy IEntity.
-            // Who thought that was a good idea.
-            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            entities.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1612,17 +1488,9 @@ namespace Robust.Client.GameObjects
 
             eye ??= eyeManager.CurrentEye;
 
-            // we need to calculate bounding box taking into account all nested layers
-            // because layers can have offsets, scale or rotation, we need to calculate a new BB
-            // based on lowest bottomLeft and highest topRight points from all layers
-            var box = Bounds;
-
             // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
             // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
             // transform our box by the combination of these matrices:
-
-            if (Scale != Vector2.One)
-                box = box.Scale(Scale);
 
             var adjustedOffset = NoRotation
                 ? (-eye.Rotation).RotateVec(Offset)
@@ -1633,12 +1501,7 @@ namespace Robust.Client.GameObjects
                 ? Rotation - eye.Rotation
                 : Rotation + worldRotation;
 
-            return new Box2Rotated(box.Translated(position), finalRotation, position);
-        }
-
-        internal void UpdateBounds()
-        {
-            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent(), true);
+            return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
         }
 
         /// <summary>
@@ -1720,9 +1583,16 @@ namespace Robust.Client.GameObjects
                 {
                     if (_scale.EqualsApprox(value)) return;
 
+                    if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.X) < 0.005f)
+                    {
+                        // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
+                        Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {_parent.entities.ToPrettyString(_parent.Owner)}. Scale: {value}");
+                        return;
+                    }
+
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1737,13 +1607,26 @@ namespace Robust.Client.GameObjects
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
             internal Angle _rotation = Angle.Zero;
 
+            private bool _visible = true;
             [ViewVariables(VVAccess.ReadWrite)]
-            public bool Visible = true;
+            public bool Visible
+            {
+                get => _visible;
+                set
+                {
+                    if (_visible == value)
+                        return;
+                    _visible = value;
+
+                    _parent.QueueUpdateIsInert();
+                    _parent.RebuildBounds();
+                }
+            }
 
             [ViewVariables]
             public bool Blank => !State.IsValid && Texture == null;
@@ -1751,8 +1634,19 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
 
+            private bool _autoAnimated = true;
             [ViewVariables(VVAccess.ReadWrite)]
-            public bool AutoAnimated = true;
+            public bool AutoAnimated
+            {
+                get => _autoAnimated;
+                set
+                {
+                    if (_autoAnimated == value)
+                        return;
+                    _autoAnimated = value;
+                    _parent.QueueUpdateIsInert();
+                }
+            }
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Offset
@@ -1764,7 +1658,7 @@ namespace Robust.Client.GameObjects
 
                     _offset = value;
                     UpdateLocalMatrix();
-                    _parent.UpdateBounds();
+                    _parent.RebuildBounds();
                 }
             }
 
@@ -1799,10 +1693,10 @@ namespace Robust.Client.GameObjects
                 _rotation = toClone.Rotation;
                 _offset = toClone.Offset;
                 UpdateLocalMatrix();
-                Visible = toClone.Visible;
+                _visible = toClone._visible;
                 Color = toClone.Color;
                 DirOffset = toClone.DirOffset;
-                AutoAnimated = toClone.AutoAnimated;
+                _autoAnimated = toClone._autoAnimated;
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1835,12 +1729,6 @@ namespace Robust.Client.GameObjects
                 };
             }
 
-            bool ISpriteLayer.Visible
-            {
-                get => Visible;
-                set => SetVisible(value);
-            }
-
             float ISpriteLayer.AnimationTime
             {
                 get => AnimationTime;
@@ -1848,12 +1736,6 @@ namespace Robust.Client.GameObjects
             }
 
             int ISpriteLayer.AnimationFrame => AnimationFrame;
-
-            bool ISpriteLayer.AutoAnimated
-            {
-                get => AutoAnimated;
-                set => SetAutoAnimated(value);
-            }
 
             public RSIDirection EffectiveDirection(Angle worldRotation)
             {
@@ -1938,14 +1820,6 @@ namespace Robust.Client.GameObjects
                 _parent.QueueUpdateIsInert();
             }
 
-            public void SetVisible(bool value)
-            {
-                Visible = value;
-
-                _parent.QueueUpdateIsInert();
-                _parent.RebuildBounds();
-            }
-
             public void SetRsi(RSI? rsi)
             {
                 RSI = rsi;
@@ -1975,6 +1849,7 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2015,6 +1890,7 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
+                _parent.QueueUpdateRenderTree();
                 _parent.QueueUpdateIsInert();
             }
 
@@ -2048,8 +1924,7 @@ namespace Robust.Client.GameObjects
 
                 // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
                 // any possible rotation.
-                if (_rotation != 0 ||
-                    _parent.NoRotation) // no-rot effectively means _rotation = - eyeRotation, so we still have to assume the worst-case BB
+                if (_rotation != 0)
                 {
                     size = new Vector2(longestRotatedSide, longestRotatedSide);
                 }
@@ -2074,7 +1949,7 @@ namespace Robust.Client.GameObjects
                         _ => textureSize
                     };
                 }
-                
+
                 return Box2.CenteredAround(Offset, size * _scale);
             }
 
@@ -2124,14 +1999,43 @@ namespace Robust.Client.GameObjects
                 Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
             };
 
+            /// <summary>
+            ///     Converts an angle (between 0 and 2pi) to an RSI direction. This will slightly bias the angle to avoid flickering for
+            ///     4-directional sprites.
+            /// </summary>
+            public static RSIDirection GetDirection(RSI.State.DirectionType dirType, Angle angle)
+            {
+                if (dirType == RSI.State.DirectionType.Dir1)
+                    return RSIDirection.South;
+                else if (dirType == RSI.State.DirectionType.Dir8)
+                    return angle.GetDir().Convert(dirType);
+
+                // For 4-directional sprites, as entities are often moving & facing diagonally, we will slightly bias the
+                // angle to avoid the sprite flickering.
+
+                // mod is -0.5 for angles between 0-90 and 180-270, and +0.5 for 90-180 and 270-360
+                var mod = (Math.Floor(angle.Theta / MathHelper.PiOver2) % 2) - 0.5;
+
+                var modTheta = angle.Theta + mod * DirectionBias;
+
+                return ((int)Math.Round(modTheta / MathHelper.PiOver2) % 4) switch
+                {
+                    0 => RSIDirection.South,
+                    1 => RSIDirection.East,
+                    2 => RSIDirection.North,
+                    _ => RSIDirection.West,
+                };
+            }
+
+            /// <summary>
+            ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
+            /// </summary>
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
                 if (!Visible || Blank)
                     return;
 
-                var dir = (_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1)
-                    ? RSIDirection.South
-                    : angle.ToRsiDirection(_actualState.Directions);
+                var dir = _actualState == null ? RSIDirection.South : GetDirection(_actualState.Directions, angle);
 
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
@@ -2303,7 +2207,8 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
+    internal sealed class UpdateSpriteTreeEvent : EntityEventArgs
     {
 
     }

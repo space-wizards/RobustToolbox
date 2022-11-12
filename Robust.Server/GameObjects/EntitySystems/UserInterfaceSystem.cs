@@ -121,7 +121,7 @@ namespace Robust.Server.GameObjects
         public override void Update(float frameTime)
         {
             var query = GetEntityQuery<TransformComponent>();
-            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>())
+            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>(true))
             {
                 foreach (var ui in activeUis.Interfaces)
                 {
@@ -220,12 +220,21 @@ namespace Robust.Server.GameObjects
                 ? bui
                 : null;
         }
-
         public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out BoundUserInterface? bui, ServerUserInterfaceComponent? ui = null)
         {
             bui = null;
 
             return Resolve(uid, ref ui, false) && ui._interfaces.TryGetValue(uiKey, out bui);
+        }
+
+        /// <summary>
+        ///     Return UIs a session has open.
+        ///     Null if empty.
+        /// <summary>
+        public List<BoundUserInterface>? GetAllUIsForSession(IPlayerSession session)
+        {
+            _openInterfaces.TryGetValue(session, out var value);
+            return value;
         }
         #endregion
 

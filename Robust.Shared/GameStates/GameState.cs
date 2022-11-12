@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using NetSerializer;
 using Robust.Shared.Timing;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameStates
 {
@@ -20,7 +21,13 @@ namespace Robust.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, NetListAsArray<EntityState> entities, NetListAsArray<PlayerState> players, NetListAsArray<EntityUid> deletions)
+        public GameState(
+            GameTick fromSequence,
+            GameTick toSequence,
+            uint lastInput,
+            NetListAsArray<EntityState> entities,
+            NetListAsArray<PlayerState> players,
+            NetListAsArray<EntityUid> deletions)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;

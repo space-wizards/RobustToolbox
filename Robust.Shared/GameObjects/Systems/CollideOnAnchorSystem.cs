@@ -1,7 +1,13 @@
+using Robust.Shared.IoC;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
+
 namespace Robust.Shared.GameObjects
 {
     public sealed class CollideOnAnchorSystem : EntitySystem
     {
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -19,7 +25,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnAnchor(EntityUid uid, CollideOnAnchorComponent component, ref AnchorStateChangedEvent args)
         {
-            SetCollide(uid, component, args.Anchored);
+            if (!args.Detaching)
+                SetCollide(uid, component, args.Anchored);
         }
 
         private void SetCollide(EntityUid uid, CollideOnAnchorComponent component, bool anchored)
@@ -33,7 +40,7 @@ namespace Robust.Shared.GameObjects
                 enabled ^= true;
             }
 
-            body.CanCollide = enabled;
+            _physics.SetCanCollide(body, enabled);
         }
     }
 }

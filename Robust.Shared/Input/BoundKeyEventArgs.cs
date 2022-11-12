@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Robust.Shared.Map;
 
 namespace Robust.Shared.Input
@@ -7,6 +8,7 @@ namespace Robust.Shared.Input
     ///     Event data values for a bound key state change.
     /// </summary>
     [Virtual]
+    [DebuggerDisplay("{Function}, {State}, CF: {CanFocus}, H: {Handled}")]
     public class BoundKeyEventArgs : EventArgs
     {
         /// <summary>

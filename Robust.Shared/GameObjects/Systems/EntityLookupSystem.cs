@@ -1,14 +1,20 @@
-using System;
-using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.BroadPhase;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -16,65 +22,72 @@ namespace Robust.Shared.GameObjects
     public enum LookupFlags : byte
     {
         None = 0,
+
         /// <summary>
         /// Should we use the approximately intersecting entities or check tighter bounds.
         /// </summary>
         Approximate = 1 << 0,
 
         /// <summary>
+        /// Should we query dynamic physics bodies.
+        /// </summary>
+        Dynamic = 1 << 1,
+
+        /// <summary>
+        /// Should we query static physics bodies.
+        /// </summary>
+        Static = 1 << 2,
+
+        /// <summary>
+        /// Should we query non-collidable physics bodies.
+        /// </summary>
+        Sundries = 1 << 3,
+
+        /// <summary>
         /// Also return entities from an anchoring query.
         /// </summary>
-        Anchored = 1 << 1,
+        [Obsolete("Use Static")]
+        Anchored = 1 << 4,
 
         /// <summary>
         /// Include entities that are currently in containers.
         /// </summary>
-        Contained = 1 << 2,
-        // IncludeGrids = 1 << 2,
-        // IncludePhysics (whenever it gets split off)
-        // Include maps
+        Contained = 1 << 5,
+
+        Uncontained = Dynamic | Static | Sundries,
+
+        StaticSundries = Static | Sundries,
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <summary>
         /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
         /// </summary>
-        public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Anchored;
-
-        private const int GrowthRate = 256;
-
-        private const float PointEnlargeRange = .00001f / 2;
-
-        /// <summary>
-        /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
-        /// 1 EntityLookupComponent at a time (hence it may overlap without another lookup).
-        /// </summary>
-        private float _lookupEnlargementRange;
+        public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
 
         public override void Initialize()
         {
             base.Initialize();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
+
+            SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
+            SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
             SubscribeLocalEvent<MoveEvent>(OnMove);
-            SubscribeLocalEvent<RotateEvent>(OnRotate);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-            SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
-            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(OnContainerInsert);
-            SubscribeLocalEvent<EntRemovedFromContainerMessage>(OnContainerRemove);
 
-            SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
-            SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
-            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
+            SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
-            SubscribeLocalEvent<MapChangedEvent>(OnMapCreated);
         }
 
         public override void Shutdown()
@@ -82,106 +95,39 @@ namespace Robust.Shared.GameObjects
             base.Shutdown();
             EntityManager.EntityInitialized -= OnEntityInit;
         }
-
-        /// <summary>
-        /// Updates the entity's AABB. Uses <see cref="ILookupWorldBox2Component"/>
-        /// </summary>
-        [UsedImplicitly]
-        public void UpdateBounds(EntityUid uid, TransformComponent? xform = null, MetaDataComponent? meta = null)
-        {
-            if (_container.IsEntityInContainer(uid, meta))
-                return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
-            if (!xformQuery.Resolve(uid, ref xform) || xform.Anchored)
-                return;
-
-            var lookup = GetLookup(uid, xform, xformQuery);
-
-            if (lookup == null) return;
-
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
-
-            // TODO: Only container children need updating so could manually do this slightly better.
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
-        }
-
-        private void OnAnchored(ref AnchorStateChangedEvent args)
-        {
-            // This event needs to be handled immediately as anchoring is handled immediately
-            // and any callers may potentially get duplicate entities that just changed state.
-            if (args.Anchored)
-            {
-                RemoveFromEntityTree(args.Entity);
-            }
-            else if (!args.Detaching &&
-                TryComp(args.Entity, out MetaDataComponent? meta) &&
-                meta.EntityLifeStage < EntityLifeStage.Terminating)
-            {
-                var xformQuery = GetEntityQuery<TransformComponent>();
-                var xform = xformQuery.GetComponent(args.Entity);
-                var lookup = GetLookup(args.Entity, xform, xformQuery);
-
-                if (lookup == null)
-                    throw new InvalidOperationException();
-
-                var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-                var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-                DebugTools.Assert(coordinates.EntityId == lookup.Owner);
-
-                // If we're contained then LocalRotation should be 0 anyway.
-                var aabb = GetAABB(args.Entity, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
-                AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
-            }
-            // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
-        }
-
         #region DynamicTree
 
-        private void OnLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
+        private void OnBroadphaseTerminating(EntityUid uid, BroadphaseComponent component, ref EntityTerminatingEvent args)
         {
-            component.Tree.Clear();
+            // The broadphase entity terminating and all of its children are about to get detached. Instead of updating
+            // the broad-phase as that happens, we will just remove it. In principle, some of the null-space checks
+            // already effectively stop that, but again someday the client might send grids to null-space and we can't
+            // use those anymore.
+            RemComp(uid, component);
+        }
+
+        private void OnMapChange(MapChangedEvent ev)
+        {
+            if (ev.Created && ev.Map != MapId.Nullspace)
+            {
+                EnsureComp<BroadphaseComponent>(_mapManager.GetMapEntityId(ev.Map));
+            }
         }
 
         private void OnGridAdd(GridAddEvent ev)
         {
-            // Remove the grid from the map tree.
-            RemoveFromEntityTree(ev.EntityUid);
-            EntityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
+            // Must be done before initialization as that's when broadphase data starts getting set.
+            EnsureComp<BroadphaseComponent>(ev.EntityUid);
         }
 
-        private void OnLookupAdd(EntityUid uid, EntityLookupComponent component, ComponentAdd args)
+        private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
         {
-            int capacity;
-
-            if (EntityManager.TryGetComponent(uid, out TransformComponent? xform))
-            {
-                capacity = (int) Math.Min(256, Math.Ceiling(xform.ChildCount / (float) GrowthRate) * GrowthRate);
-            }
-            else
-            {
-                capacity = 256;
-            }
-
-            component.Tree = new DynamicTree<EntityUid>(
-                (in EntityUid e) => GetTreeAABB(e, component.Owner),
-                capacity: capacity,
-                growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x * 2
-            );
-        }
-
-        private void OnMapCreated(MapChangedEvent eventArgs)
-        {
-            if(eventArgs.Destroyed)
-                return;
-
-            if (eventArgs.Map == MapId.Nullspace) return;
-
-            EntityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
+            component.DynamicTree = new DynamicTreeBroadPhase();
+            component.StaticTree = new DynamicTreeBroadPhase();
+            component.StaticSundriesTree = new DynamicTree<EntityUid>(
+                (in EntityUid value) => GetTreeAABB(value, component.Owner));
+            component.SundriesTree = new DynamicTree<EntityUid>(
+                (in EntityUid value) => GetTreeAABB(value, component.Owner));
         }
 
         private Box2 GetTreeAABB(EntityUid entity, EntityUid tree)
@@ -206,260 +152,625 @@ namespace Robust.Shared.GameObjects
             return treeXform.InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
         }
 
+        internal void CreateProxies(TransformComponent xform, Fixture fixture)
+        {
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
+
+            if (!TryComp(xform.MapUid, out SharedPhysicsMapComponent? physMap))
+                throw new InvalidOperationException();
+
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
+            var mapTransform = new Transform(worldPos, worldRot);
+
+            var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
+            var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
+            var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+            DebugTools.Assert(fixture.ProxyCount == 0);
+
+            AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
+        }
+
+        internal void DestroyProxies(Fixture fixture, TransformComponent xform, SharedPhysicsMapComponent physicsMap)
+        {
+            if (fixture.ProxyCount == 0)
+            {
+                Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(fixture.Body.Owner)} that already has no proxies?");
+                return;
+            }
+
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
+
+            var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+            DestroyProxies(fixture, tree, physicsMap.MoveBuffer);
+        }
+
         #endregion
 
         #region Entity events
+
+        private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
+        {
+            var xform = Transform(ev.Body.Owner);
+            UpdatePhysicsBroadphase(ev.Body.Owner, xform, ev.Body);
+
+            // ensure that the cached broadphase is correct.
+            DebugTools.Assert(_timing.ApplyingState
+                || xform.Broadphase == null
+                || !xform.Broadphase.Value.IsValid()
+                || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
+                && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
+        }
+
+        private void OnBodyTypeChange(EntityUid uid, TransformComponent xform, ref PhysicsBodyTypeChangedEvent args)
+        {
+            // only matters if we swapped from static to non-static or vice versa.
+            if (args.Old != BodyType.Static && args.New != BodyType.Static)
+                return;
+
+            UpdatePhysicsBroadphase(uid, xform, args.Component);
+        }
+
+        private void UpdatePhysicsBroadphase(EntityUid uid, TransformComponent xform, PhysicsComponent body)
+        {
+            if (xform.GridUid == uid)
+                return;
+            DebugTools.Assert(!_mapManager.IsGrid(uid));
+
+            if (xform.Broadphase is not { Valid: true } old)
+                return; // entity is not on any broadphase
+            
+            xform.Broadphase = null;
+
+            if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
+                return; // broadphase probably got deleted.
+
+            // remove from the old broadphase
+            var fixtures = Comp<FixturesComponent>(uid);
+            if (old.CanCollide)
+                RemoveBroadTree(broadphase, fixtures, old.Static);
+            else
+                (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
+            
+            // Add to new broadphase
+            if (body.CanCollide)
+                AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);
+            else
+                AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
+        }
+
+        private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
+        {
+            if (!TryComp<TransformComponent>(lookup.Owner, out var lookupXform))
+            {
+                throw new InvalidOperationException("Lookup does not exist?");
+            }
+
+            var map = lookupXform.MapUid;
+            if (map == null)
+            {
+                // See the comments in UpdateParent()
+                throw new NotSupportedException("Nullspace lookups are not supported.");
+            }
+
+            var tree = staticBody ? lookup.StaticTree : lookup.DynamicTree;
+            var moveBuffer = Comp<SharedPhysicsMapComponent>(map.Value).MoveBuffer;
+
+            foreach (var fixture in manager.Fixtures.Values)
+            {
+                DestroyProxies(fixture, tree, moveBuffer);
+            }
+        }
+
+        private void DestroyProxies(Fixture fixture, IBroadPhase tree, Dictionary<FixtureProxy, Box2> moveBuffer)
+        {
+            for (var i = 0; i < fixture.ProxyCount; i++)
+            {
+                var proxy = fixture.Proxies[i];
+                tree.RemoveProxy(proxy.ProxyId);
+                moveBuffer.Remove(proxy);
+            }
+
+            fixture.ProxyCount = 0;
+            fixture.Proxies = Array.Empty<FixtureProxy>();
+        }
+
+        private void AddPhysicsTree(EntityUid broadUid, BroadphaseComponent broadphase, TransformComponent xform, PhysicsComponent body, FixturesComponent fixtures)
+        {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var broadphaseXform = xformQuery.GetComponent(broadUid);
+
+            if (broadphaseXform.MapID == MapId.Nullspace)
+                return;
+
+            if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
+                throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
+
+            AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
+        }
+
+        private void AddOrUpdatePhysicsTree(
+            EntityUid broadUid,
+            BroadphaseComponent broadphase,
+            TransformComponent broadphaseXform,
+            SharedPhysicsMapComponent physicsMap,
+            TransformComponent xform,
+            PhysicsComponent body,
+            FixturesComponent manager,
+            EntityQuery<TransformComponent> xformQuery)
+        {
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform, null, xformQuery));
+            DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, body.CanCollide, body.BodyType == BodyType.Static));
+            DebugTools.Assert(broadphase.Owner == broadUid);
+
+            xform.Broadphase ??= new(broadUid, body.CanCollide, body.BodyType == BodyType.Static);
+            var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+
+            // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
+            var mapTransform = new Transform(worldPos, worldRot);
+
+            // TODO BROADPHASE PARENTING this just assumes local = world
+            var broadphaseTransform = new Transform(broadphaseXform.InvLocalMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
+
+            foreach (var fixture in manager.Fixtures.Values)
+            {
+                AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physicsMap.MoveBuffer);
+            }
+        }
+
+        private void AddOrMoveProxies(
+            Fixture fixture,
+            IBroadPhase tree,
+            Transform broadphaseTransform,
+            Transform mapTransform,
+            Dictionary<FixtureProxy, Box2> moveBuffer)
+        {
+            DebugTools.Assert(fixture.Body.CanCollide);
+
+            // Moving
+            if (fixture.ProxyCount > 0)
+            {
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
+                    var proxy = fixture.Proxies[i];
+                    tree.MoveProxy(proxy.ProxyId, bounds, Vector2.Zero);
+                    proxy.AABB = bounds;
+                    moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+                }
+
+                return;
+            }
+
+            var count = fixture.Shape.ChildCount;
+            var proxies = new FixtureProxy[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
+                var proxy = new FixtureProxy(bounds, fixture, i);
+                proxy.ProxyId = tree.AddProxy(ref proxy);
+                proxy.AABB = bounds;
+                proxies[i] = proxy;
+                moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+            }
+
+            fixture.Proxies = proxies;
+            fixture.ProxyCount = count;
+        }
+
+        private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
+        {
+            DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
+            DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, false, staticBody));
+            xform.Broadphase ??= new(broadUid, false, staticBody);
+            (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
+        }
+
         private void OnEntityInit(EntityUid uid)
         {
-            if (_container.IsEntityInContainer(uid)) return;
+            if (_container.IsEntityOrParentInContainer(uid) || _mapManager.IsMap(uid) || _mapManager.IsGrid(uid))
+                return;
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
-            if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                xform.Anchored) return;
-
-            if (_mapManager.IsMap(uid) ||
-                _mapManager.EntityManager.HasComponent<MapGridComponent>(uid)) return;
-
-            var lookup = GetLookup(uid, xform, xformQuery);
-
-            // If nullspace or the likes.
-            if (lookup == null) return;
-
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            DebugTools.Assert(coordinates.EntityId == lookup.Owner);
-            var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
-
-            // Any child entities should be handled by their own OnEntityInit
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, false);
+            // TODO can this just be done implicitly via transform startup?
+            // or do things need to be in trees for other component startup logic?
+            FindAndAddToEntityTree(uid);
         }
 
         private void OnMove(ref MoveEvent args)
         {
-            UpdatePosition(args.Sender, args.Component);
-        }
-
-        private void OnRotate(ref RotateEvent args)
-        {
-            UpdatePosition(args.Sender, args.Component);
-        }
-
-        private void UpdatePosition(EntityUid uid, TransformComponent xform)
-        {
-            // Even if the entity is contained it may have children that aren't so we still need to update.
-            if (!CanMoveUpdate(uid)) return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var lookup = GetLookup(uid, xform, xformQuery);
-
-            if (lookup == null) return;
-
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            var lookupRotation = _transform.GetWorldRotation(lookup.Owner, xformQuery);
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform) - lookupRotation, xform, xformQuery);
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation);
-        }
-
-        private bool CanMoveUpdate(EntityUid uid)
-        {
-            return !_mapManager.IsMap(uid) &&
-                     !_mapManager.EntityManager.HasComponent<MapGridComponent>(uid) &&
-                     !_container.IsEntityInContainer(uid);
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage args)
-        {
-            var meta = MetaData(args.Entity);
-
-            // If our parent is changing due to a container-insert, we let the container insert event handle that. Note
-            // that the in-container flag gets set BEFORE insert parent change, and gets unset before the container
-            // removal parent-change. So if it is set here, this must mean we are getting inserted.
-            //
-            // However, this means that this method will still get run in full on container removal. Additionally,
-            // because not all container removals are guaranteed to result in a parent change, container removal events
-            // also need to add the entity to a tree. So this generally results in:
-            // add-to-tree -> remove-from-tree -> add-to-tree.
-            // Though usually, `oldLookup == newLookup` for the last step. Its still shit though.
-            //
-            // TODO IMPROVE CONTAINER REMOVAL HANDLING
-
-            if (_container.IsEntityInContainer(args.Entity, meta))
+            if (args.Component.GridUid == args.Sender)
                 return;
+            DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
 
-            if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
-                _mapManager.EntityManager.HasComponent<MapGridComponent>(args.Entity) ||
-                _mapManager.IsMap(args.Entity)) return;
-
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = args.Transform;
-            EntityLookupComponent? oldLookup = null;
-
-            if (args.OldMapId != MapId.Nullspace && args.OldParent != null)
-            {
-                oldLookup = GetLookup(args.OldParent.Value, xformQuery);
-            }
-
-            var newLookup = GetLookup(args.Entity, xform, xformQuery);
-
-            // If parent is the same then no need to do anything as position should stay the same.
-            if (oldLookup == newLookup) return;
-
-            RemoveFromEntityTree(oldLookup, xform, xformQuery);
-
-            if (newLookup != null)
-                AddToEntityTree(newLookup, xform, xformQuery, _transform.GetWorldRotation(newLookup.Owner, xformQuery));
-        }
-
-        private void OnContainerRemove(EntRemovedFromContainerMessage ev)
-        {
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(ev.Entity);
-            var lookup = GetLookup(ev.Entity, xform, xformQuery);
-
-            if (lookup == null) return;
-
-            AddToEntityTree(lookup, xform, xformQuery, _transform.GetWorldRotation(lookup.Owner, xformQuery));
-        }
-
-        private void OnContainerInsert(EntInsertedIntoContainerMessage ev)
-        {
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
-            if (ev.OldParent == EntityUid.Invalid || !xformQuery.TryGetComponent(ev.OldParent, out var oldXform))
+            if (args.Component.MapUid == args.Sender)
                 return;
+            DebugTools.Assert(!_mapManager.IsMap(args.Sender));
 
-            var lookup = GetLookup(ev.OldParent, oldXform, xformQuery);
-
-            RemoveFromEntityTree(lookup, xformQuery.GetComponent(ev.Entity), xformQuery);
-        }
-
-        private void AddToEntityTree(
-            EntityLookupComponent lookup,
-            TransformComponent xform,
-            EntityQuery<TransformComponent> xformQuery,
-            Angle lookupRotation,
-            bool recursive = true)
-        {
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - lookupRotation, xform, xformQuery);
-            AddToEntityTree(lookup, xform, aabb, xformQuery, lookupRotation, recursive);
-        }
-
-        private void AddToEntityTree(
-            EntityLookupComponent? lookup,
-            TransformComponent xform,
-            Box2 aabb,
-            EntityQuery<TransformComponent> xformQuery,
-            Angle lookupRotation,
-            bool recursive = true)
-        {
-            // If entity is in nullspace then no point keeping track of data structure.
-            if (lookup == null) return;
-
-            if (!xform.Anchored)
-                lookup.Tree.AddOrUpdate(xform.Owner, aabb);
-
-            var childEnumerator = xform.ChildEnumerator;
-
-            if (xform.ChildCount == 0 || !recursive) return;
-
-            // If they're in a container then don't add to entitylookup due to the additional cost.
-            // It's cheaper to just query these components at runtime given PVS no longer uses EntityLookupSystem.
-            if (EntityManager.TryGetComponent<ContainerManagerComponent>(xform.Owner, out var conManager))
-            {
-                while (childEnumerator.MoveNext(out var child))
-                {
-                    if (conManager.ContainsEntity(child.Value)) continue;
-
-                    var childXform = xformQuery.GetComponent(child.Value);
-                    var coordinates = _transform.GetMoverCoordinates(childXform.Coordinates, xformQuery);
-                    // TODO: If we have 0 position and not contained can optimise these further, but future problem.
-                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupRotation);
-                    AddToEntityTree(lookup, childXform, childAABB, xformQuery, lookupRotation);
-                }
-            }
+            if (args.ParentChanged)
+                UpdateParent(args.Sender, args.Component, args.OldPosition.EntityId);
             else
-            {
-                while (childEnumerator.MoveNext(out var child))
-                {
-                    var childXform = xformQuery.GetComponent(child.Value);
-                    var coordinates = _transform.GetMoverCoordinates(childXform.Coordinates, xformQuery);
-                    // TODO: If we have 0 position and not contained can optimise these further, but future problem.
-                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupRotation);
-                    AddToEntityTree(lookup, childXform, childAABB, xformQuery, lookupRotation);
-                }
-            }
+                UpdateEntityTree(args.Sender, args.Component);
         }
 
-        private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
+        private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
+        {
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            BroadphaseComponent? oldBroadphase = null;
+            if (xform.Broadphase != null)
+            {
+                if (!xform.Broadphase.Value.IsValid())
+                    return; // Entity is intentionally not on a broadphase (deferred updating?).
+
+                if (!broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
+                {
+                    // broadphase was probably deleted
+                    xform.Broadphase = null;
+                }
+            }
+
+            if (oldBroadphase != null && xformQuery.GetComponent(oldParent).MapID == MapId.Nullspace)
+            {
+                oldBroadphase = null;
+                // Note that the parentXform.MapID != MapId.Nullspace is required because currently grids are not allowed to
+                // ever enter null-space. If they are in null-space, we assume that the grid is being deleted, as otherwise
+                // RemoveFromEntityTree() will explode. This may eventually have to change if we stop universally sending
+                // all grids to all players (i.e., out-of view grids will need to get sent to null-space)
+                //
+                // This also means the queries above can be reverted (check broadQuery, then xformQuery, as this will
+                // generally save a component lookup.
+            }
+
+            TryFindBroadphase(xform, broadQuery, xformQuery, out var newBroadphase);
+
+            var physicsQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+            if (oldBroadphase != null && oldBroadphase != newBroadphase)
+            {
+
+                var oldBroadphaseXform = xformQuery.GetComponent(oldBroadphase.Owner);
+                if (!TryComp(oldBroadphaseXform.MapUid, out SharedPhysicsMapComponent? oldPhysMap))
+                {
+                    throw new InvalidOperationException(
+                        $"Old broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(oldBroadphase.Owner)}");
+                }
+
+                RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, oldBroadphaseXform, oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+            }
+
+            if (newBroadphase == null)
+                return;
+
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var contQuery = GetEntityQuery<ContainerManagerComponent>();
+
+            var newBroadphaseXform = xformQuery.GetComponent(newBroadphase.Owner);
+            if (!TryComp(newBroadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
+            {
+                throw new InvalidOperationException(
+                    $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
+            }
+
+            AddOrUpdateEntityTree(
+                newBroadphase.Owner,
+                newBroadphase,
+                newBroadphaseXform,
+                physMap,
+                uid,
+                xform,
+                xformQuery,
+                metaQuery,
+                contQuery,
+                physicsQuery,
+                fixturesQuery);
+        }
+
+        public void FindAndAddToEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(uid);
-            var lookup = GetLookup(uid, xform, xformQuery);
-            RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
+            if (!xformQuery.Resolve(uid, ref xform))
+                return;
+
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
+                AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
+        }
+
+        public void FindAndAddToEntityTree(EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<ContainerManagerComponent> contQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            EntityQuery<BroadphaseComponent> broadQuery)
+        {
+            if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
+                AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, true);
         }
 
         /// <summary>
-        /// Recursively iterates through this entity's children and removes them from the entitylookupcomponent.
+        ///     Variant of <see cref="FindAndAddToEntityTree(EntityUid, TransformComponent?)"/> that just re-adds the entity to the current tree (updates positions).
         /// </summary>
-        private void RemoveFromEntityTree(EntityLookupComponent? lookup, TransformComponent xform, EntityQuery<TransformComponent> xformQuery, bool recursive = true)
+        public void UpdateEntityTree(EntityUid uid, TransformComponent? xform = null)
         {
-            // TODO: Move this out of the loop
-            if (lookup == null) return;
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            if (!xformQuery.Resolve(uid, ref xform))
+                return;
 
-            lookup.Tree.Remove(xform.Owner);
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
 
-            if (!recursive) return;
+            AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
+        }
+
+        private void AddOrUpdateEntityTree(
+            BroadphaseComponent broadphase,
+            EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            bool recursive = true)
+        {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var contQuery = GetEntityQuery<ContainerManagerComponent>();
+            var physicsQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+
+            AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, recursive);
+        }
+
+        private void AddOrUpdateEntityTree(EntityUid broadUid,
+            BroadphaseComponent broadphase,
+            EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<ContainerManagerComponent> contQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            bool recursive)
+        {
+            var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
+            if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
+            {
+                throw new InvalidOperationException(
+                    $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
+            }
+
+            AddOrUpdateEntityTree(
+                broadUid,
+                broadphase,
+                broadphaseXform,
+                physMap,
+                uid,
+                xform,
+                xformQuery,
+                metaQuery,
+                contQuery,
+                physicsQuery,
+                fixturesQuery,
+                recursive);
+        }
+
+        private void AddOrUpdateEntityTree(
+            EntityUid broadUid,
+            BroadphaseComponent broadphase,
+            TransformComponent broadphaseXform,
+            SharedPhysicsMapComponent physicsMap,
+            EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<ContainerManagerComponent> contQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            bool recursive = true)
+        {
+            if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
+            {
+                // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
+                var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+
+                // TODO BROADPHASE PARENTING this just assumes local = world
+                var relativeRotation = rotation - broadphaseXform.LocalRotation;
+
+                var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
+                AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
+            }
+            else
+            {
+                AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
+            }
 
             var childEnumerator = xform.ChildEnumerator;
+            if (xform.ChildCount == 0 || !recursive)
+                return;
+
+            if (!contQuery.HasComponent(xform.Owner))
+            {
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    var childXform = xformQuery.GetComponent(child.Value);
+                    AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
+                }
+                return;
+            }
 
             while (childEnumerator.MoveNext(out var child))
             {
-                RemoveFromEntityTree(lookup, xformQuery.GetComponent(child.Value), xformQuery);
+                if ((metaQuery.GetComponent(child.Value).Flags & MetaDataFlags.InContainer) != 0x0)
+                    continue;
+
+                var childXform = xformQuery.GetComponent(child.Value);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
             }
         }
 
-        #endregion
-
-        private EntityLookupComponent? GetLookup(EntityUid entity, EntityQuery<TransformComponent> xformQuery)
+        /// <summary>
+        /// Recursively iterates through this entity's children and removes them from the BroadphaseComponent.
+        /// </summary>
+        public void RemoveFromEntityTree(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
-            var xform = xformQuery.GetComponent(entity);
-            return GetLookup(entity, xform, xformQuery);
+            if (!TryGetCurrentBroadphase(xform, out var broadphase))
+                return;
+
+            var physicsQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+
+            var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
+            if (broadphaseXform.MapID == MapId.Nullspace)
+                return;
+
+            if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
+            {
+                throw new InvalidOperationException(
+                    $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
+            }
+
+            RemoveFromEntityTree(broadphase.Owner, broadphase, broadphaseXform, physMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
         }
 
-        private EntityLookupComponent? GetLookup(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        /// <summary>
+        /// Recursively iterates through this entity's children and removes them from the BroadphaseComponent.
+        /// </summary>
+        private void RemoveFromEntityTree(
+            EntityUid broadUid,
+            BroadphaseComponent broadphase,
+            TransformComponent broadphaseXform,
+            SharedPhysicsMapComponent physicsMap,
+            EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            bool recursive = true)
         {
-            if (xform.MapID == MapId.Nullspace)
-                return null;
+            if (xform.Broadphase is not { Valid: true } old)
+            {
+                // this entity was probably inside of a container during a recursive iteration. This should mean all of
+                // its own children are also not on any broadphase.
+                return;
+            }
+
+            if (old.Uid != broadUid)
+            {
+                // This may happen when the client has deferred broadphase updates, where maybe an entity from one
+                // broadphase was parented to one from another.
+                DebugTools.Assert(_netMan.IsClient);
+                broadUid = old.Uid;
+                broadphaseXform = xformQuery.GetComponent(broadUid);
+                if (broadphaseXform.MapID == MapId.Nullspace)
+                    return;
+
+                if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? map))
+                {
+                    throw new InvalidOperationException(
+                        $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadUid)}");
+                }
+                physicsMap = map;
+            }
+
+            if (old.CanCollide)
+                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), old.Static);
+            else if (old.Static)
+                broadphase.StaticSundriesTree.Remove(uid);
+            else
+                broadphase.SundriesTree.Remove(uid);
+
+            xform.Broadphase = null;
+            if (!recursive)
+                return;
+
+            var childEnumerator = xform.ChildEnumerator;
+            while (childEnumerator.MoveNext(out var child))
+            {
+                RemoveFromEntityTree(
+                    broadUid,
+                    broadphase,
+                    broadphaseXform,
+                    physicsMap,
+                    child.Value,
+                    xformQuery.GetComponent(child.Value),
+                    xformQuery,
+                    physicsQuery,
+                    fixturesQuery);
+            }
+        }
+
+        public bool TryGetCurrentBroadphase(TransformComponent xform, [NotNullWhen(true)] out BroadphaseComponent? broadphase)
+        {
+            broadphase = null;
+            if (xform.Broadphase is not { Valid: true } old)
+                return false;
+
+            if (!TryComp(xform.Broadphase.Value.Uid, out broadphase))
+            {
+                // broadphase was probably deleted
+                xform.Broadphase = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        public BroadphaseComponent? GetCurrentBroadphase(TransformComponent xform)
+        {
+            TryGetCurrentBroadphase(xform, out var broadphase);
+            return broadphase;
+        }
+
+        public BroadphaseComponent? FindBroadphase(EntityUid uid)
+        {
+            TryFindBroadphase(uid, out var broadphase);
+            return broadphase;
+        }
+
+        public bool TryFindBroadphase(EntityUid uid, [NotNullWhen(true)] out BroadphaseComponent? broadphase)
+        {
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            return TryFindBroadphase(xformQuery.GetComponent(uid), broadQuery, xformQuery, out broadphase);
+        }
+
+        public bool TryFindBroadphase(
+            TransformComponent xform,
+            EntityQuery<BroadphaseComponent> broadQuery,
+            EntityQuery<TransformComponent> xformQuery,
+            [NotNullWhen(true)] out BroadphaseComponent? broadphase)
+        {
+            if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform, null, xformQuery))
+            {
+                broadphase = null;
+                return false;
+            }
 
             var parent = xform.ParentUid;
-            var lookupQuery = GetEntityQuery<EntityLookupComponent>();
 
-            // If we're querying a map / grid just return it directly.
-            if (lookupQuery.TryGetComponent(uid, out var lookup))
-            {
-                return lookup;
-            }
-
+            // TODO provide variant that also returns world rotation (and maybe position). Avoids having to iterate though parents twice.
             while (parent.IsValid())
             {
-                if (lookupQuery.TryGetComponent(parent, out var comp)) return comp;
+                if (broadQuery.TryGetComponent(parent, out broadphase))
+                    return true;
+
                 parent = xformQuery.GetComponent(parent).ParentUid;
             }
 
-            return null;
+            broadphase = null;
+            return false;
         }
+        #endregion
 
         #region Bounds
 
         /// <summary>
         /// Get the AABB of an entity with the supplied position and angle. Tries to consider if the entity is in a container.
         /// </summary>
-        internal Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        public Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             // If we're in a container then we just use the container's bounds.
             if (_container.TryGetOuterContainer(uid, xform, out var container, xformQuery))
@@ -473,7 +784,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the AABB of an entity with the supplied position and angle without considering containers.
         /// </summary>
-        private Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
+        public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
             if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
             {

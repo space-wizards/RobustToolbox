@@ -439,6 +439,43 @@ internal partial class Clyde
             SendCmd(new CmdRunAction(a));
         }
 
+        public void TextInputSetRect(UIBox2i rect)
+        {
+            SendCmd(new CmdTextInputSetRect(new SDL_Rect
+            {
+                x = rect.Left,
+                y = rect.Top,
+                w = rect.Width,
+                h = rect.Height
+            }));
+        }
+
+        private static void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
+        {
+            var rect = cmdTextInput.Rect;
+            SDL_SetTextInputRect(ref rect);
+        }
+
+        public void TextInputStart()
+        {
+            SendCmd(CmdTextInputStart.Instance);
+        }
+
+        private static void WinThreadStartTextInput()
+        {
+            SDL_StartTextInput();
+        }
+
+        public void TextInputStop()
+        {
+            SendCmd(CmdTextInputStop.Instance);
+        }
+
+        private static void WinThreadStopTextInput()
+        {
+            SDL_StopTextInput();
+        }
+
         public void ClipboardSetText(WindowReg mainWindow, string text)
         {
             SendCmd(new CmdSetClipboard(text));
@@ -498,7 +535,9 @@ internal partial class Clyde
             public uint WindowId;
             public nint GlContext;
             public SDL_SysWMinfo SysWMinfo;
+#pragma warning disable CS0649
             public bool Fullscreen;
+#pragma warning restore CS0649
             public int SwapInterval;
 
             // Kept around to avoid it being GCd.

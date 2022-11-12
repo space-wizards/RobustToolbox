@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
 
         private void GetCompState(EntityUid uid, SharedPointLightComponent component, ref ComponentGetState args)
         {
-            args.State = new PointLightComponentState(component.Enabled, component.Color, component.Radius, component.Offset, component.Energy, component.Softness);
+            args.State = new PointLightComponentState(component.Enabled, component.Color, component.Radius, component.Offset, component.Energy, component.Softness, component.CastShadows);
         }
 
         private void HandleCompState(EntityUid uid, SharedPointLightComponent component, ref ComponentHandleState args)
@@ -25,6 +25,7 @@ namespace Robust.Shared.GameObjects
             component.Color = newState.Color;
             component.Energy = newState.Energy;
             component.Softness = newState.Softness;
+            component.CastShadows = newState.CastShadows;
         }
     }
 }

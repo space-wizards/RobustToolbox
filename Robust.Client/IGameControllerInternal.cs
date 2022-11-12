@@ -13,7 +13,7 @@ namespace Robust.Client
         void Run(GameController.DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null);
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
-        void TextEntered(TextEventArgs textEvent);
+        void TextEntered(TextEnteredEventArgs textEnteredEvent);
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
         void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs);
         void OverrideMainLoop(IGameLoop gameLoop);

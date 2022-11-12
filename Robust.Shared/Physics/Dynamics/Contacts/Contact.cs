@@ -34,6 +34,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -50,17 +51,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// The node of this contact on the map.
         /// </summary>
-        public LinkedListNode<Contact>? MapNode = null;
+        public readonly LinkedListNode<Contact> MapNode;
 
         /// <summary>
         /// The node of this contact on body A.
         /// </summary>
-        public LinkedListNode<Contact>? BodyANode = null;
+        public readonly LinkedListNode<Contact> BodyANode;
 
         /// <summary>
         /// The node of this contact on body A.
         /// </summary>
-        public LinkedListNode<Contact>? BodyBNode = null;
+        public readonly LinkedListNode<Contact> BodyBNode;
 
         public Fixture? FixtureA;
         public Fixture? FixtureB;
@@ -70,6 +71,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         internal ContactType Type;
 
         internal ContactFlags Flags = ContactFlags.None;
+
+        public Contact()
+        {
+            MapNode = new LinkedListNode<Contact>(this);
+            BodyANode = new LinkedListNode<Contact>(this);
+            BodyBNode = new LinkedListNode<Contact>(this);
+        }
 
         /// <summary>
         ///     Determines whether the contact is touching.

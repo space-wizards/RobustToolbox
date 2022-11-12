@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
 using JetBrains.Annotations;
-using Prometheus;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -32,6 +31,11 @@ namespace Robust.Shared.Prototypes
     public interface IPrototypeManager
     {
         void Initialize();
+
+        /// <summary>
+        /// Returns an IEnumerable to iterate all registered prototype kind by their ID.
+        /// </summary>
+        IEnumerable<string> GetPrototypeKinds();
 
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
@@ -202,7 +206,8 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
-    public sealed class PrototypeAttribute : Attribute
+    [Virtual]
+    public class PrototypeAttribute : Attribute
     {
         private readonly string type;
         public string Type => type;
@@ -212,6 +217,18 @@ namespace Robust.Shared.Prototypes
         {
             this.type = type;
             LoadPriority = loadPriority;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [BaseTypeRequired(typeof(IPrototype))]
+    [MeansImplicitUse]
+    [MeansDataDefinition]
+    [MeansDataRecord]
+    public sealed class PrototypeRecordAttribute : PrototypeAttribute
+    {
+        public PrototypeRecordAttribute(string type, int loadPriority = 1) : base(type, loadPriority)
+        {
         }
     }
 
@@ -247,6 +264,11 @@ namespace Robust.Shared.Prototypes
 
             _initialized = true;
             ReloadPrototypeTypes();
+        }
+
+        public IEnumerable<string> GetPrototypeKinds()
+        {
+            return _prototypeTypes.Keys;
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -764,7 +786,7 @@ namespace Robust.Shared.Prototypes
                 if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
                     throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
+                if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
                 {
                     throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
                 }

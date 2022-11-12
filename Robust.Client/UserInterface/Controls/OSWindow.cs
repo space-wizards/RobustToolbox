@@ -134,6 +134,13 @@ namespace Robust.Client.UserInterface.Controls
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
             _root.AddChild(this);
+
+            Shown();
+        }
+
+        protected virtual void Shown()
+        {
+
         }
 
         /// <summary>

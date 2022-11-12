@@ -18,6 +18,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
@@ -32,6 +33,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client
 {
@@ -112,8 +114,9 @@ namespace Robust.Client
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
-            IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
-            IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
+            IoCManager.Register<IViewVariablesManager, ClientViewVariablesManager>();
+            IoCManager.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
+            IoCManager.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
         }

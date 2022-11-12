@@ -40,7 +40,7 @@ namespace Robust.Shared.Network
                 var incPacket = await AwaitData(connection);
 
                 var msgLogin = new MsgLoginStart();
-                msgLogin.ReadFromBuffer(incPacket);
+                msgLogin.ReadFromBuffer(incPacket, _serializer);
 
                 var ip = connection.RemoteEndPoint.Address;
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
@@ -75,13 +75,13 @@ namespace Robust.Shared.Network
                     var outMsgEncReq = peer.Peer.CreateMessage();
                     outMsgEncReq.Write(false);
                     outMsgEncReq.WritePadBits();
-                    msgEncReq.WriteToBuffer(outMsgEncReq);
+                    msgEncReq.WriteToBuffer(outMsgEncReq, _serializer);
                     peer.Peer.SendMessage(outMsgEncReq, connection, NetDeliveryMethod.ReliableOrdered);
 
                     incPacket = await AwaitData(connection);
 
                     var msgEncResponse = new MsgEncryptionResponse();
-                    msgEncResponse.ReadFromBuffer(incPacket);
+                    msgEncResponse.ReadFromBuffer(incPacket, _serializer);
 
                     var encResp = new byte[verifyToken.Length + SharedKeyLength];
                     var ret = CryptoBox.SealOpen(
@@ -115,9 +115,8 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var client = new HttpClient();
                     var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    var joinedRespJson = await client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    var joinedRespJson = await _httpClient.GetFromJsonAsync<HasJoinedResponse>(url);
 
                     if (joinedRespJson is not {IsValid: true})
                     {
@@ -219,7 +218,7 @@ namespace Robust.Shared.Network
                     msg.WritePadBits();
                 }
 
-                msgResp.WriteToBuffer(msg);
+                msgResp.WriteToBuffer(msg, _serializer);
                 encryption?.Encrypt(msg);
                 peer.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
 

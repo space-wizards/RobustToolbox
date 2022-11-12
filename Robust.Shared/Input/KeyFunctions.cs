@@ -23,6 +23,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction CameraReset = "CameraReset";
 
         public static readonly BoundKeyFunction Use = "Use";
+        public static readonly BoundKeyFunction UseSecondary = "UseSecondary";
         public static readonly BoundKeyFunction UIClick = "UIClick";
         public static readonly BoundKeyFunction UIRightClick = "UIRightClick";
 
@@ -45,6 +46,8 @@ namespace Robust.Shared.Input
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
+        public static readonly BoundKeyFunction TextCursorUp = "TextCursorUp";
+        public static readonly BoundKeyFunction TextCursorDown = "TextCursorDown";
         public static readonly BoundKeyFunction TextCursorWordLeft = "TextCursorWordLeft";
         public static readonly BoundKeyFunction TextCursorWordRight = "TextCursorWordRight";
         public static readonly BoundKeyFunction TextCursorBegin = "TextCursorBegin";
@@ -54,12 +57,15 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextCursorSelect = "TextCursorSelect";
         public static readonly BoundKeyFunction TextCursorSelectLeft = "TextCursorSelectLeft";
         public static readonly BoundKeyFunction TextCursorSelectRight = "TextCursorSelectRight";
+        public static readonly BoundKeyFunction TextCursorSelectUp = "TextCursorSelectUp";
+        public static readonly BoundKeyFunction TextCursorSelectDown = "TextCursorSelectDown";
         public static readonly BoundKeyFunction TextCursorSelectWordLeft = "TextCursorSelectWordLeft";
         public static readonly BoundKeyFunction TextCursorSelectWordRight = "TextCursorSelectWordRight";
         public static readonly BoundKeyFunction TextCursorSelectBegin = "TextCursorSelectBegin";
         public static readonly BoundKeyFunction TextCursorSelectEnd = "TextCursorSelectEnd";
 
         public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
+        public static readonly BoundKeyFunction TextNewline = "TextNewline";
         public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
         public static readonly BoundKeyFunction TextSelectAll = "TextSelectAll";
         public static readonly BoundKeyFunction TextCopy = "TextCopy";

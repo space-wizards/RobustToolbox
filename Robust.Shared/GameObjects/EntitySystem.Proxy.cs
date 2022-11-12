@@ -173,18 +173,18 @@ public partial class EntitySystem
     ///     Marks an entity as dirty.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid)
+    protected void Dirty(EntityUid uid, MetaDataComponent? meta = null)
     {
-        EntityManager.Dirty(uid);
+        EntityManager.DirtyEntity(uid, meta);
     }
 
     /// <summary>
-    ///     Marks a component as dirty.
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(Component component)
+    protected void Dirty(Component component, MetaDataComponent? meta = null)
     {
-        EntityManager.Dirty(component);
+        EntityManager.Dirty(component, meta);
     }
 
     /// <summary>
@@ -360,20 +360,6 @@ public partial class EntitySystem
         }
 
         paused = metaData.EntityPaused;
-        return true;
-    }
-
-    /// <summary>
-    ///     Attempts to set the paused status on an entity.
-    /// </summary>
-    /// <returns>Whether the paused status could be set.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TrySetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
-    {
-        if (!Resolve(uid, ref metaData, false))
-            return false;
-
-        metaData.EntityPaused = paused;
         return true;
     }
 
@@ -558,6 +544,23 @@ public partial class EntitySystem
     }
     #endregion
 
+    #region Component count
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count<T>() where T : Component
+    {
+        return EntityManager.Count<T>();
+    }
+
+    /// <inheritdoc cref="IEntityManager.Count" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int Count(Type type)
+    {
+        return EntityManager.Count(type);
+    }
+
+    #endregion
 
     #region Component Remove
 
@@ -636,6 +639,80 @@ public partial class EntitySystem
 
     #endregion
 
+    #region All Entity Query
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    #endregion
+
+    #region Get Entity Query
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    #endregion
+
     #region Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -675,6 +752,19 @@ public partial class EntitySystem
         where TComp4 : Component
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
+    }
+
+    #endregion
+
+    #region Networked Events
+
+    /// <summary>
+    ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
+    {
+        EntityManager.RaisePredictiveEvent(msg);
     }
 
     #endregion

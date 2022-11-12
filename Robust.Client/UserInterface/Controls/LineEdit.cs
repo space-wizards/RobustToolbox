@@ -18,7 +18,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LineEdit : Control
     {
-        private const float BlinkTime = 0.5f;
+        [Dependency] private readonly IClyde _clyde = default!;
+
         private const float MouseScrollDelay = 0.001f;
 
         public const string StylePropertyStyleBox = "stylebox";
@@ -36,8 +37,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _drawOffset;
 
-        private float _cursorBlinkTimer;
-        private bool _cursorCurrentlyLit;
+        private TextEditShared.CursorBlink _blink;
         private readonly LineEditRenderBox _renderBox;
 
         private bool _mouseSelectingText;
@@ -163,6 +163,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool IgnoreNext { get; set; }
 
+        private (int start, int length)? _imeData;
+
+
         // TODO:
         // I decided to not implement the entire LineEdit API yet,
         // since most of it won't be used yet (if at all).
@@ -171,9 +174,12 @@ namespace Robust.Client.UserInterface.Controls
         // Second future me reporting, thanks again.
         // Third future me is here to say thanks.
         // Fourth future me is here to continue the tradition.
+        // Fifth future me is unsure what this is even about but continues to be grateful.
 
         public LineEdit()
         {
+            IoCManager.InjectDependencies(this);
+
             MouseFilter = MouseFilterMode.Stop;
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
@@ -235,12 +241,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            _cursorBlinkTimer -= args.DeltaSeconds;
-            if (_cursorBlinkTimer <= 0)
-            {
-                _cursorBlinkTimer += BlinkTime;
-                _cursorCurrentlyLit = !_cursorCurrentlyLit;
-            }
+            IgnoreNext = false;
+
+            _blink.FrameUpdate(args);
 
             if (_mouseSelectingText)
             {
@@ -281,9 +284,9 @@ namespace Robust.Client.UserInterface.Controls
             return finalSize;
         }
 
-        public event Action<GUITextEventArgs>? OnTextTyped;
+        public event Action<GUITextEnteredEventArgs>? OnTextTyped;
 
-        protected internal override void TextEntered(GUITextEventArgs args)
+        protected internal override void TextEntered(GUITextEnteredEventArgs args)
         {
             base.TextEntered(args);
 
@@ -298,8 +301,61 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            InsertAtCursor(args.AsRune.ToString());
+            InsertAtCursor(args.Text);
             OnTextTyped?.Invoke(args);
+        }
+
+        protected internal override void TextEditing(GUITextEditingEventArgs args)
+        {
+            base.TextEditing(args);
+
+            if (!Editable)
+                return;
+
+            // TODO: yeah so uh this ignores all the valid checks and everything like that.
+            // Uh....
+
+            var ev = args.Event;
+            var startChars = ev.GetStartChars();
+
+            // Just break an active composition and build it anew to handle in-progress ones.
+            AbortIme();
+
+            if (ev.Text != "")
+            {
+                if (_selectionStart != _cursorPosition)
+                {
+                    // Delete active text selection.
+                    InsertAtCursor("");
+                }
+
+                var startPos = _cursorPosition;
+                _text = _text[..startPos] + ev.Text + _text[startPos..];
+
+                _selectionStart = _cursorPosition = startPos + startChars;
+                _imeData = (startPos, ev.Text.Length);
+
+                _updatePseudoClass();
+            }
+        }
+
+        private void AbortIme(bool delete = true)
+        {
+            if (!_imeData.HasValue)
+                return;
+
+            if (delete)
+            {
+                var (imeStart, imeLength) = _imeData.Value;
+
+                _text = _text.Remove(imeStart, imeLength);
+
+                _selectionStart = _cursorPosition = imeStart;
+
+                _updatePseudoClass();
+            }
+
+            _imeData = null;
         }
 
         public event Action<LineEditBackspaceEventArgs>? OnBackspace;
@@ -417,13 +473,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordLeft)
                 {
-                    _selectionStart = _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.PrevWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordRight)
                 {
-                    _selectionStart = _cursorPosition = NextWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -451,13 +507,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordLeft)
                 {
-                    _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.PrevWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordRight)
                 {
-                    _cursorPosition = NextWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -567,7 +623,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
-            _resetCursorBlink();
+            _blink.Reset();
 
             void ShiftCursorLeft()
             {
@@ -697,14 +753,23 @@ namespace Robust.Client.UserInterface.Controls
             base.KeyboardFocusEntered();
 
             // Reset this so the cursor is always visible immediately after gaining focus..
-            _resetCursorBlink();
+            _blink.Reset();
             OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
+
+            if (Editable)
+            {
+                _clyde.TextInputStart();
+            }
         }
 
         protected internal override void KeyboardFocusExited()
         {
             base.KeyboardFocusExited();
+
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
+
+            _clyde.TextInputStop();
+            AbortIme(delete: false);
         }
 
         [Pure]
@@ -750,102 +815,6 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             _getStyleBox().Draw(handle, PixelSizeBox);
-        }
-
-        // Approach for NextWordPosition and PrevWordPosition taken from Avalonia.
-        internal static int NextWordPosition(string str, int cursor)
-        {
-            if (cursor >= str.Length)
-            {
-                return str.Length;
-            }
-
-            var charClass = GetCharClass(Rune.GetRuneAt(str, cursor));
-
-            var i = cursor;
-
-            IterForward(charClass);
-            IterForward(CharClass.Whitespace);
-
-            return i;
-
-            void IterForward(CharClass cClass)
-            {
-                while (i < str.Length)
-                {
-                    var rune = Rune.GetRuneAt(str, i);
-
-                    if (GetCharClass(rune) != cClass)
-                        break;
-
-                    i += rune.Utf16SequenceLength;
-                }
-            }
-        }
-
-        internal static int PrevWordPosition(string str, int cursor)
-        {
-            if (cursor == 0)
-            {
-                return 0;
-            }
-
-            var startRune = GetRuneBackwards(str, cursor - 1);
-            var charClass = GetCharClass(startRune);
-
-            var i = cursor;
-            IterBackward();
-
-            if (charClass == CharClass.Whitespace)
-            {
-                if (!Rune.TryGetRuneAt(str, i - 1, out var midRune))
-                    midRune = Rune.GetRuneAt(str, i - 2);
-                charClass = GetCharClass(midRune);
-
-                IterBackward();
-            }
-
-            return i;
-
-            void IterBackward()
-            {
-                while (i > 0)
-                {
-                    var rune = GetRuneBackwards(str, i - 1);
-
-                    if (GetCharClass(rune) != charClass)
-                        break;
-
-                    i -= rune.Utf16SequenceLength;
-                }
-            }
-
-            static Rune GetRuneBackwards(string str, int i)
-            {
-                return Rune.TryGetRuneAt(str, i, out var rune) ? rune : Rune.GetRuneAt(str, i - 1);
-            }
-        }
-
-        internal static CharClass GetCharClass(Rune rune)
-        {
-            if (Rune.IsWhiteSpace(rune))
-            {
-                return CharClass.Whitespace;
-            }
-
-            if (Rune.IsLetterOrDigit(rune))
-            {
-                return CharClass.AlphaNumeric;
-            }
-
-            return CharClass.Other;
-        }
-
-        internal enum CharClass : byte
-        {
-            Other,
-            AlphaNumeric,
-            Whitespace
         }
 
         public sealed class LineEditEventArgs : EventArgs
@@ -903,7 +872,8 @@ namespace Robust.Client.UserInterface.Controls
                 var font = _master._getFont();
                 var renderedTextColor = _master._getFontColor();
 
-                var offsetY = (contentBox.Height - font.GetHeight(UIScale)) / 2;
+                var uiScale = UIScale;
+                var offsetY = (contentBox.Height - font.GetHeight(uiScale)) / 2;
 
                 var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder! : _master._text;
                 DebugTools.AssertNotNull(renderedText);
@@ -915,9 +885,22 @@ namespace Robust.Client.UserInterface.Controls
                 var posX = 0;
                 var actualCursorPosition = 0;
                 var actualSelectionStartPosition = 0;
+
+                var actualImeStartPosition = 0;
+                var actualImeEndPosition = 0;
+
+                var imeStartIndex = -1;
+                var imeEndIndex = -1;
+
+                if (_master._imeData.HasValue)
+                {
+                    (imeStartIndex, var length) = _master._imeData.Value;
+                    imeEndIndex = imeStartIndex + length;
+                }
+
                 foreach (var chr in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, uiScale, out var metrics))
                     {
                         count += 1;
                         continue;
@@ -926,6 +909,10 @@ namespace Robust.Client.UserInterface.Controls
                     posX += metrics.Advance;
                     count += chr.Utf16SequenceLength;
 
+                    // NOTE: Due to the way this code works, these if statements don't get triggered
+                    // if the relevant positions are all the way at the left of the LineEdit.
+                    // This happens to be fine, because in that case the horizontal position = 0,
+                    // and that's what we initialize the variables to by default.
                     if (count == _master._cursorPosition)
                     {
                         actualCursorPosition = posX;
@@ -934,6 +921,16 @@ namespace Robust.Client.UserInterface.Controls
                     if (count == _master._selectionStart)
                     {
                         actualSelectionStartPosition = posX;
+                    }
+
+                    if (count == imeStartIndex)
+                    {
+                        actualImeStartPosition = posX;
+                    }
+
+                    if (count == imeEndIndex)
+                    {
+                        actualImeEndPosition = posX;
                     }
                 }
 
@@ -961,12 +958,12 @@ namespace Robust.Client.UserInterface.Controls
                 actualSelectionStartPosition -= drawOffset;
 
                 // Actually render.
-                var baseLine = (-drawOffset, offsetY + font.GetAscent(UIScale)) +
+                var baseLine = (-drawOffset, offsetY + font.GetAscent(uiScale)) +
                                contentBox.TopLeft;
 
                 foreach (var rune in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
                     {
                         continue;
                     }
@@ -980,7 +977,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Make sure we're not off the left edge of the box.
                     if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
                     {
-                        font.DrawChar(handle, rune, baseLine, UIScale, renderedTextColor);
+                        font.DrawChar(handle, rune, baseLine, uiScale, renderedTextColor);
                     }
 
                     baseLine += (metrics.Advance, 0);
@@ -1003,25 +1000,43 @@ namespace Robust.Client.UserInterface.Controls
                             color);
                     }
 
-                    if (_master._cursorCurrentlyLit)
-                    {
-                        var color = _master.StylePropertyDefault(
-                            StylePropertyCursorColor,
-                            Color.White);
+                    var cursorColor = _master.StylePropertyDefault(
+                        StylePropertyCursorColor,
+                        Color.White);
 
-                        handle.DrawRect(
-                            new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
-                                contentBox.Bottom),
-                            color);
+                    cursorColor.A *= _master._blink.Opacity;
+
+                    handle.DrawRect(
+                        new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
+                            contentBox.Bottom),
+                        cursorColor);
+
+                    {
+                        // Update IME position.
+                        var imeBox = new UIBox2(
+                            actualCursorPosition,
+                            contentBox.Top,
+                            contentBox.Right,
+                            contentBox.Bottom);
+
+                        _master._clyde.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
                     }
                 }
-            }
-        }
 
-        private void _resetCursorBlink()
-        {
-            _cursorCurrentlyLit = true;
-            _cursorBlinkTimer = BlinkTime;
+                // Draw IME underline if necessary.
+                if (_master._imeData.HasValue)
+                {
+                    var y = baseLine.Y + font.GetDescent(uiScale);
+                    var rect = new UIBox2(
+                        actualImeStartPosition,
+                        y - 1,
+                        actualImeEndPosition,
+                        y
+                    );
+
+                    handle.DrawRect(rect, renderedTextColor);
+                }
+            }
         }
     }
 }

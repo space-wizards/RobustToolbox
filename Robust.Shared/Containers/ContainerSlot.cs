@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
@@ -73,34 +74,40 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
         {
-            if (contained == ContainedEntity)
-                return true;
-            return false;
+            if (contained != ContainedEntity)
+                return false;
+
+
+            var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
+            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
+
+            return true;
         }
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert, EntityUid oldParent, IEntityManager entMan)
+        protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
-            ContainedEntity = toinsert;
-            base.InternalInsert(toinsert, oldParent, entMan);
+            DebugTools.Assert(ContainedEntity == null);
+            ContainedEntity = toInsert;
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
+        protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
         {
+            DebugTools.Assert(ContainedEntity == toRemove);
             ContainedEntity = null;
-            base.InternalRemove(toremove, entMan, meta);
         }
 
         /// <inheritdoc />
-        public override void Shutdown()
+        protected override void InternalShutdown(IEntityManager entMan, bool isClient)
         {
-            base.Shutdown();
+            if (ContainedEntity is not { } entity)
+                return;
 
-            if (ContainedEntity is {} contained)
-            {
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(contained);
-            }
+            if (!isClient)
+                entMan.DeleteEntity(entity);
+            else if (entMan.EntityExists(entity))
+                Remove(entity, entMan, reparent: false, force: true);
         }
     }
 }

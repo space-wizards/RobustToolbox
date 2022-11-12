@@ -10,7 +10,7 @@ using Robust.Shared.Network;
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    internal abstract class SharedMapSystem : EntitySystem
+    public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] protected readonly IMapManagerInternal MapManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
@@ -25,8 +25,14 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
+            SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
             SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
             SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
+            SubscribeLocalEvent<MapComponent, ComponentHandleState>(OnMapHandleState);
+            SubscribeLocalEvent<MapComponent, ComponentGetState>(OnMapGetState);
+
+			SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
+            SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
 
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
@@ -58,6 +64,25 @@ namespace Robust.Shared.GameObjects
                 component.ApplyMapGridState(this, state.ChunkDatums);
         }
 
+        private void OnMapHandleState(EntityUid uid, MapComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is not MapComponentState state)
+                return;
+
+            component.WorldMap = state.MapId;
+            component.LightingEnabled = state.LightingEnabled;
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
+        }
+
+        private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
+        {
+            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
+        }
+
+        protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
+
         private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
         {
             var msg = new MapChangedEvent(component.WorldMap, true);
@@ -66,6 +91,10 @@ namespace Robust.Shared.GameObjects
 
         private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
         {
+            var iMap = (IMapManagerInternal)MapManager;
+
+            iMap.TrueDeleteMap(component.WorldMap);
+
             var msg = new MapChangedEvent(component.WorldMap, false);
             RaiseLocalEvent(uid, msg, true);
         }

@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return ushort.TryParse(node.Value, out _)
+            return Parse.TryUInt16(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing unsigned short value: {node.Value}");
         }
@@ -23,10 +24,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ushort Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ushort value = default)
         {
-            return ushort.Parse(node.Value, CultureInfo.InvariantCulture);
+            return Parse.UInt16(node.Value);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, ushort value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, ushort value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));

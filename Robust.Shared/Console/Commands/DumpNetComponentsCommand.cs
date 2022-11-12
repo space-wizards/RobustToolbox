@@ -4,13 +4,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class DumpNetComponentsCommand : IConsoleCommand
+internal sealed class DumpNetComponentsCommand : LocalizedCommands
 {
-    public string Command => "dump_net_comps";
-    public string Description => Loc.GetString("cmd-dump_net_comps-desc");
-    public string Help => Loc.GetString("cmd-dump_net_comps-help");
+    public override string Command => "dump_net_comps";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var mgr = IoCManager.Resolve<IComponentFactory>();
 

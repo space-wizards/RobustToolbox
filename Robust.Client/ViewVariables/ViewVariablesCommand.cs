@@ -9,13 +9,11 @@ using Robust.Shared.ViewVariables.Commands;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public sealed class ViewVariablesCommand : ViewVariablesBaseCommand, IConsoleCommand
+    public sealed class ViewVariablesCommand : ViewVariablesBaseCommand
     {
         [Dependency] private readonly IClientViewVariablesManager _cvvm = default!;
 
         public override string Command => "vv";
-        public override string Description => "Opens View Variables.";
-        public override string Help => "Usage: vv <path|entity ID|guihover>";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {

@@ -3,54 +3,44 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
-    sealed class RestartCommand : IConsoleCommand
+    sealed class RestartCommand : LocalizedCommands
     {
-        public string Command => "restart";
-        public string Description => "Gracefully restarts the server (not just the round).";
-        public string Help => "restart";
+        public override string Command => "restart";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Restart();
         }
     }
 
-    sealed class ShutdownCommand : IConsoleCommand
+    sealed class ShutdownCommand : LocalizedCommands
     {
-        public string Command => "shutdown";
-        public string Description => "Gracefully shuts down the server.";
-        public string Help => "shutdown";
+        public override string Command => "shutdown";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
 
-    public sealed class SaveConfig : IConsoleCommand
+    public sealed class SaveConfig : LocalizedCommands
     {
-        public string Command => "saveconfig";
-        public string Description => "Saves the server configuration to the config file";
-        public string Help => "saveconfig";
+        public override string Command => "saveconfig";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
     }
 
-    sealed class NetworkAuditCommand : IConsoleCommand
+    sealed class NetworkAuditCommand : LocalizedCommands
     {
-        public string Command => "netaudit";
-        public string Description => "Prints into about NetMsg security.";
-        public string Help => "netaudit";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "netaudit";
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var network = (NetManager) IoCManager.Resolve<INetManager>();
 
@@ -70,13 +60,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    sealed class ShowTimeCommand : IConsoleCommand
+    sealed class ShowTimeCommand : LocalizedCommands
     {
-        public string Command => "showtime";
-        public string Description => "Shows the server time.";
-        public string Help => "showtime";
+        public override string Command => "showtime";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var timing = IoCManager.Resolve<IGameTiming>();
             shell.WriteLine($"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");

@@ -1,8 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_EventType;
+using static SDL2.SDL.SDL_SYSWM_TYPE;
 using static SDL2.SDL.SDL_WindowEventID;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -11,20 +15,13 @@ internal partial class Clyde
 {
     private sealed partial class Sdl2WindowingImpl
     {
-        private SDL_LogOutputFunction? _logOutputFunction;
-        private SDL_EventFilter? _eventWatch;
-
-        private void StoreCallbacks()
+        [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]
+        private static unsafe int EventWatch(void* userdata, SDL_Event* sdlevent)
         {
-            _logOutputFunction = LogOutputFunction;
-            _eventWatch = EventWatch;
-        }
+            var obj = (Sdl2WindowingImpl) GCHandle.FromIntPtr((IntPtr)userdata).Target!;
+            ref readonly var ev = ref *sdlevent;
 
-        private unsafe int EventWatch(IntPtr userdata, IntPtr sdlevent)
-        {
-            ref readonly var ev = ref *(SDL_Event*)sdlevent;
-
-            ProcessSdl2Event(in ev);
+            obj.ProcessSdl2Event(in ev);
 
             return 0;
         }
@@ -34,32 +31,41 @@ internal partial class Clyde
             switch (ev.type)
             {
                 case SDL_WINDOWEVENT:
-                    ProcessSdl2EventWindow(ev.window);
+                    ProcessSdl2EventWindow(in ev.window);
                     break;
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
-                    ProcessSdl2KeyEvent(ev.key);
+                    ProcessSdl2KeyEvent(in ev.key);
                     break;
                 case SDL_TEXTINPUT:
-                    ProcessSdl2EventTextInput(ev.text);
+                    ProcessSdl2EventTextInput(in ev.text);
+                    break;
+                case SDL_TEXTEDITING:
+                    ProcessSdl2EventTextEditing(in ev.edit);
+                    break;
+                case SDL_TEXTEDITING_EXT:
+                    ProcessSdl2EventTextEditingExt(in ev.editExt);
                     break;
                 case SDL_MOUSEMOTION:
-                    ProcessSdl2EventMouseMotion(ev.motion);
+                    ProcessSdl2EventMouseMotion(in ev.motion);
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
-                    ProcessSdl2EventMouseButton(ev.button);
+                    ProcessSdl2EventMouseButton(in ev.button);
                     break;
                 case SDL_MOUSEWHEEL:
-                    ProcessSdl2EventMouseWheel(ev.wheel);
+                    ProcessSdl2EventMouseWheel(in ev.wheel);
                     break;
                 case SDL_DISPLAYEVENT:
-                    ProcessSdl2EventDisplay(ev.display);
+                    ProcessSdl2EventDisplay(in ev.display);
+                    break;
+                case SDL_SYSWMEVENT:
+                    ProcessSdl2EventSysWM(in ev.syswm);
                     break;
             }
         }
 
-        private void ProcessSdl2EventDisplay(SDL_DisplayEvent evDisplay)
+        private void ProcessSdl2EventDisplay(in SDL_DisplayEvent evDisplay)
         {
             switch (evDisplay.displayEvent)
             {
@@ -93,8 +99,30 @@ internal partial class Clyde
             fixed (byte* text = ev.text)
             {
                 var str = Marshal.PtrToStringUTF8((IntPtr)text) ?? "";
+                // _logManager.GetSawmill("ime").Debug($"Input: {str}");
                 SendEvent(new EventText(ev.windowID, str));
             }
+        }
+
+        private unsafe void ProcessSdl2EventTextEditing(in SDL_TextEditingEvent ev)
+        {
+            fixed (byte* text = ev.text)
+            {
+                SendTextEditing(ev.windowID, text, ev.start, ev.length);
+            }
+        }
+
+        private unsafe void ProcessSdl2EventTextEditingExt(in SDL_TextEditingExtEvent ev)
+        {
+            SendTextEditing(ev.windowID, (byte*) ev.text, ev.start, ev.length);
+            SDL_free(ev.text);
+        }
+
+        private unsafe void SendTextEditing(uint window, byte* text, int start, int length)
+        {
+            var str = Marshal.PtrToStringUTF8((nint) text) ?? "";
+            // _logManager.GetSawmill("ime").Debug($"Editing: '{str}', start: {start}, len: {length}");
+            SendEvent(new EventTextEditing(window, str, start, length));
         }
 
         private void ProcessSdl2KeyEvent(in SDL_KeyboardEvent ev)
@@ -130,6 +158,37 @@ internal partial class Clyde
             }
         }
 
+        // ReSharper disable once InconsistentNaming
+        private unsafe void ProcessSdl2EventSysWM(in SDL_SysWMEvent ev)
+        {
+            ref readonly var sysWmMessage = ref *(SDL_SysWMmsg*)ev.msg;
+            if (sysWmMessage.subsystem != SDL_SYSWM_WINDOWS)
+                return;
+
+            ref readonly var winMessage = ref *(SDL_SysWMmsgWin32*)ev.msg;
+            if (winMessage.msg is WM.WM_KEYDOWN or WM.WM_KEYUP)
+            {
+                TryWin32VirtualVKey(in winMessage);
+            }
+        }
+
+        private void TryWin32VirtualVKey(in SDL_SysWMmsgWin32 msg)
+        {
+            // Workaround for https://github.com/ocornut/imgui/issues/2977
+            // This is gonna bite me in the ass if SDL2 ever fixes this upstream, isn't it...
+            // (I spent disproportionate amounts of effort on this).
+
+            // Code for V key.
+            if ((int)msg.wParam is not (0x56 or VK.VK_CONTROL))
+                return;
+
+            var scanCode = (msg.lParam >> 16) & 0xFF;
+            if (scanCode != 0)
+                return;
+
+            SendEvent(new EventWindowsFakeV(msg.hwnd, msg.msg, msg.wParam));
+        }
+
         private abstract record EventBase;
 
         private record EventWindowCreate(
@@ -160,6 +219,13 @@ internal partial class Clyde
         private record EventText(
             uint WindowId,
             string Text
+        ) : EventBase;
+
+        private record EventTextEditing(
+            uint WindowId,
+            string Text,
+            int Start,
+            int Length
         ) : EventBase;
 
         private record EventWindowSize(
@@ -196,5 +262,34 @@ internal partial class Clyde
         (
             int Id
         ) : EventBase;
+
+        private record EventWindowsFakeV(HWND Window,
+            uint Message, WPARAM WParam) : EventBase;
+
+        [StructLayout(LayoutKind.Sequential)]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "IdentifierTypo")]
+        [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        private struct SDL_SysWMmsg
+        {
+            public SDL_version version;
+            public SDL_SYSWM_TYPE subsystem;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "IdentifierTypo")]
+        [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        private struct SDL_SysWMmsgWin32
+        {
+            public SDL_version version;
+            public SDL_SYSWM_TYPE subsystem;
+            public HWND hwnd;
+            public uint msg;
+            public WPARAM wParam;
+            public LPARAM lParam;
+        }
     }
 }

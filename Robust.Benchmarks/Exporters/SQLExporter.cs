@@ -22,6 +22,11 @@ namespace Robust.Benchmarks.Exporters;
 
 public sealed class SQLExporter : IExporter
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+    {
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+    };
+
     public static readonly IExporter Default = new SQLExporter();
 
     private SQLExporter(){}
@@ -76,10 +81,7 @@ public sealed class SQLExporter : IExporter
         {
             ctx.Database.OpenConnection();
             var con = (NpgsqlConnection) ctx.Database.GetDbConnection();
-            con.TypeMapper.AddTypeResolverFactory(new JsonOverrideTypeHandlerResolverFactory(new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
-            }));
+            con.TypeMapper.AddTypeResolverFactory(new JsonOverrideTypeHandlerResolverFactory(JsonSerializerOptions));
 
             ctx.Database.Migrate();
             foreach (var run in BenchmarkRun.FromSummary(summary, gitHash))

@@ -10,8 +10,7 @@ public sealed class RobustClientPackaging
         // Leaving this here for future archaeologists to ponder at.
         "emotes.xml",
         "Groups",
-        "engineCommandPerms.yml",
-        "clientCommandPerms.yml"
+        "engineCommandPerms.yml"
     };
 
     public static async Task WriteClientResources(

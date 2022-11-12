@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 internal sealed partial class UserInterfaceManager
 {
-        private readonly List<WindowRoot> _roots = new();
-        private readonly Dictionary<WindowId, WindowRoot> _windowsToRoot = new();
-        public IEnumerable<UIRoot> AllRoots => _roots;
-
-        private readonly List<Control> _modalStack = new();
+    private readonly List<Control> _modalStack = new();
 
         private void RunMeasure(Control control)
         {
@@ -75,6 +69,9 @@ internal sealed partial class UserInterfaceManager
 
         public void ControlRemovedFromTree(Control control)
         {
+            if (control.Root?.StoredKeyboardFocus == control)
+                control.Root.StoredKeyboardFocus = null;
+
             ReleaseKeyboardFocus(control);
             RemoveModal(control);
             if (control == CurrentlyHovered)
@@ -153,47 +150,5 @@ internal sealed partial class UserInterfaceManager
         public void QueueArrangeUpdate(Control control)
         {
             _arrangeUpdateQueue.Enqueue(control);
-        }
-
-        public WindowRoot CreateWindowRoot(IClydeWindow window)
-        {
-            if (_windowsToRoot.ContainsKey(window.Id))
-            {
-                throw new ArgumentException("Window already has a UI root.");
-            }
-
-            var newRoot = new WindowRoot(window)
-            {
-                MouseFilter = Control.MouseFilterMode.Ignore,
-                HorizontalAlignment = Control.HAlignment.Stretch,
-                VerticalAlignment = Control.VAlignment.Stretch,
-                UIScaleSet = window.ContentScale.X
-            };
-
-            _roots.Add(newRoot);
-            _windowsToRoot.Add(window.Id, newRoot);
-
-            newRoot.StyleSheetUpdate();
-            newRoot.InvalidateMeasure();
-            QueueMeasureUpdate(newRoot);
-
-            return newRoot;
-        }
-
-        public void DestroyWindowRoot(IClydeWindow window)
-        {
-            // Destroy window root if this window had one.
-            if (!_windowsToRoot.TryGetValue(window.Id, out var root))
-                return;
-
-            _windowsToRoot.Remove(window.Id);
-            _roots.Remove(root);
-
-            root.RemoveAllChildren();
-        }
-
-        public WindowRoot? GetWindowRoot(IClydeWindow window)
-        {
-            return !_windowsToRoot.TryGetValue(window.Id, out var root) ? null : root;
         }
 }

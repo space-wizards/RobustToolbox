@@ -46,12 +46,11 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
-    public sealed class TestbedCommand : IConsoleCommand
+    public sealed class TestbedCommand : LocalizedCommands
     {
-        public string Command => "testbed";
-        public string Description => "Loads a physics testbed on the specified map.";
-        public string Help => $"{Command} <mapid> <test>";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "testbed";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

@@ -6,13 +6,11 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class SaveConfig : IConsoleCommand
+    public sealed class SaveConfig : LocalizedCommands
     {
-        public string Command => "saveconfig";
-        public string Description => "Saves the client configuration to the config file";
-        public string Help => "saveconfig";
+        public override string Command => "saveconfig";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }

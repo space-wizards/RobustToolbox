@@ -12,6 +12,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 #nullable enable
 
@@ -34,6 +35,11 @@ namespace Robust.Server.ServerStatus
         private string? _watchdogKey;
         private Uri? _baseUri;
         private ISawmill _sawmill = default!;
+
+        public WatchdogApi()
+        {
+            HttpClientUserAgent.AddUserAgent(_httpClient);
+        }
 
         public void PostInject()
         {

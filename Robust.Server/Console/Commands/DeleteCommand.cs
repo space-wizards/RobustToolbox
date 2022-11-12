@@ -5,13 +5,11 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class DeleteCommand : IConsoleCommand
+    public sealed class DeleteCommand : LocalizedCommands
     {
-        public string Command => "delete";
-        public string Description => "Deletes the entity with the specified ID.";
-        public string Help => "delete <entity UID>";
+        public override string Command => "delete";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {

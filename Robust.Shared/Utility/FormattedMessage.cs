@@ -100,6 +100,11 @@ namespace Robust.Shared.Utility
             _tags.Clear();
         }
 
+        public FormattedMessageRuneEnumerator EnumerateRunes()
+        {
+            return new FormattedMessageRuneEnumerator(this);
+        }
+
         /// <returns>The string without markup tags.</returns>
         public override string ToString()
         {
@@ -190,6 +195,62 @@ namespace Robust.Shared.Utility
             public int Count => _tags.Count;
 
             public Tag this[int index] => _tags[index];
+        }
+    }
+
+    public struct FormattedMessageRuneEnumerator : IEnumerable<Rune>, IEnumerator<Rune>
+    {
+        private readonly FormattedMessage _msg;
+        private List<FormattedMessage.Tag>.Enumerator _tagEnumerator;
+        private StringRuneEnumerator _runeEnumerator;
+
+        internal FormattedMessageRuneEnumerator(FormattedMessage msg)
+        {
+            _msg = msg;
+            _tagEnumerator = msg.Tags.GetEnumerator();
+            // Rune enumerator will immediately give false on first iteration so I dont' need to special case anything.
+            _runeEnumerator = "".EnumerateRunes();
+        }
+
+        public IEnumerator<Rune> GetEnumerator() => this;
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool MoveNext()
+        {
+            while (!_runeEnumerator.MoveNext())
+            {
+                FormattedMessage.TagText text;
+                while (true)
+                {
+                    var result = _tagEnumerator.MoveNext();
+                    if (!result)
+                        return false;
+
+                    if (_tagEnumerator.Current is not FormattedMessage.TagText { Text.Length: > 0 } nextText)
+                        continue;
+
+                    text = nextText;
+                    break;
+                }
+
+                _runeEnumerator = text.Text.EnumerateRunes();
+            }
+
+            return true;
+        }
+
+        public void Reset()
+        {
+            _tagEnumerator = _msg.Tags.GetEnumerator();
+            _runeEnumerator = "".EnumerateRunes();
+        }
+
+        public Rune Current => _runeEnumerator.Current;
+
+        object IEnumerator.Current => Current;
+
+        void IDisposable.Dispose()
+        {
         }
     }
 }

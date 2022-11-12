@@ -6,5 +6,11 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct EntityTerminatingEvent
     {
+        public readonly EntityUid Entity;
+
+        public EntityTerminatingEvent(EntityUid entity)
+        {
+            Entity = entity;
+        }
     }
 }

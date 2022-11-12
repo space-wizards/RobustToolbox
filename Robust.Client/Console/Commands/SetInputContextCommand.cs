@@ -8,6 +8,8 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class SetInputContextCommand : LocalizedCommands
     {
+        [Dependency] private readonly IInputManager _inputManager = default!;
+
         public override string Command => "setinputcontext";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -18,15 +20,13 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var inputMan = IoCManager.Resolve<IInputManager>();
-
-            if (!inputMan.Contexts.Exists(args[0]))
+            if (!_inputManager.Contexts.Exists(args[0]))
             {
                 shell.WriteLine("Context not found!");
                 return;
             }
 
-            inputMan.Contexts.SetActiveContext(args[0]);
+            _inputManager.Contexts.SetActiveContext(args[0]);
         }
     }
 }

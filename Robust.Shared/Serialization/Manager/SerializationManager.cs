@@ -40,7 +40,8 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConditionalWeakTable<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
-        public IDependencyCollection DependencyCollection { get; private set; } = default!;
+        [field: IoC.Dependency]
+        public IDependencyCollection DependencyCollection { get; } = default!;
 
         public void Initialize()
         {
@@ -51,8 +52,6 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException($"{nameof(SerializationManager)} has already been initialized.");
 
             _initializing = true;
-
-            DependencyCollection = IoCManager.Instance ?? throw new NullReferenceException();
 
             var flagsTypes = new ConcurrentBag<Type>();
             var constantsTypes = new ConcurrentBag<Type>();
@@ -231,8 +230,6 @@ namespace Robust.Shared.Serialization.Manager
 
         public void Shutdown()
         {
-            DependencyCollection = null!;
-
             _constantsMapping.Clear();
             _flagsMapping.Clear();
 
@@ -319,7 +316,7 @@ namespace Robust.Shared.Serialization.Manager
                 var typeString = node.Tag.Substring(6);
                 try
                 {
-                    underlyingType = ResolveConcreteType(underlyingType, typeString);
+                    underlyingType = ResolveConcreteType(underlyingType, typeString, _reflectionManager);
                 }
                 catch (InvalidOperationException)
                 {
@@ -596,9 +593,8 @@ namespace Robust.Shared.Serialization.Manager
                    type.IsValueType;
         }
 
-        private static Type ResolveConcreteType(Type baseType, string typeName)
+        private static Type ResolveConcreteType(Type baseType, string typeName, IReflectionManager reflection)
         {
-            var reflection = IoCManager.Resolve<IReflectionManager>();
             var type = reflection.YamlTypeTagLookup(baseType, typeName);
             if (type == null)
             {

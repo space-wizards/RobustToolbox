@@ -32,51 +32,51 @@ namespace Robust.Server
     internal static class ServerIoC
     {
         /// <summary>
-        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
+        /// Registers all the types into the <see cref="IDependencyCollection"/>
         /// </summary>
-        internal static void RegisterIoC()
+        internal static void RegisterIoC(IDependencyCollection deps)
         {
-            SharedIoC.RegisterIoC();
+            SharedIoC.RegisterIoC(deps);
 
-            IoCManager.Register<IBaseServer, BaseServer>();
-            IoCManager.Register<IBaseServerInternal, BaseServer>();
-            IoCManager.Register<BaseServer, BaseServer>();
-            IoCManager.Register<IGameTiming, GameTiming>();
-            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
-            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
-            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
-            IoCManager.Register<IComponentFactory, ServerComponentFactory>();
-            IoCManager.Register<IConGroupController, ConGroupController>();
-            IoCManager.Register<IMapManager, NetworkedMapManager>();
-            IoCManager.Register<IMapManagerInternal, NetworkedMapManager>();
-            IoCManager.Register<INetworkedMapManager, NetworkedMapManager>();
-            IoCManager.Register<IEntityManager, ServerEntityManager>();
-            IoCManager.Register<IEntityNetworkManager, ServerEntityManager>();
-            IoCManager.Register<IServerEntityNetworkManager, ServerEntityManager>();
-            IoCManager.Register<IMapLoader, MapLoader>();
-            IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<IPlayerManager, PlayerManager>();
-            IoCManager.Register<ISharedPlayerManager, PlayerManager>();
-            IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
-            IoCManager.Register<IResourceManagerInternal, ResourceManager>();
-            IoCManager.Register<EntityManager, ServerEntityManager>();
-            IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-            IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
-            IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
-            IoCManager.Register<IServerNetManager, NetManager>();
-            IoCManager.Register<IStatusHost, StatusHost>();
-            IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
-            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-            IoCManager.Register<IViewVariablesManager, ServerViewVariablesManager>();
-            IoCManager.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
-            IoCManager.Register<IWatchdogApi, WatchdogApi>();
-            IoCManager.Register<IScriptHost, ScriptHost>();
-            IoCManager.Register<IMetricsManager, MetricsManager>();
-            IoCManager.Register<IAuthManager, AuthManager>();
-            IoCManager.Register<IPhysicsManager, PhysicsManager>();
-            IoCManager.Register<IBqlQueryManager, BqlQueryManager>();
-            IoCManager.Register<HubManager, HubManager>();
+            deps.Register<IBaseServer, BaseServer>();
+            deps.Register<IBaseServerInternal, BaseServer>();
+            deps.Register<BaseServer, BaseServer>();
+            deps.Register<IGameTiming, GameTiming>();
+            deps.Register<IReflectionManager, ServerReflectionManager>();
+            deps.Register<IConsoleHost, ServerConsoleHost>();
+            deps.Register<IServerConsoleHost, ServerConsoleHost>();
+            deps.Register<IComponentFactory, ServerComponentFactory>();
+            deps.Register<IConGroupController, ConGroupController>();
+            deps.Register<IMapManager, NetworkedMapManager>();
+            deps.Register<IMapManagerInternal, NetworkedMapManager>();
+            deps.Register<INetworkedMapManager, NetworkedMapManager>();
+            deps.Register<IEntityManager, ServerEntityManager>();
+            deps.Register<IEntityNetworkManager, ServerEntityManager>();
+            deps.Register<IServerEntityNetworkManager, ServerEntityManager>();
+            deps.Register<IMapLoader, MapLoader>();
+            deps.Register<IPlacementManager, PlacementManager>();
+            deps.Register<IPlayerManager, PlayerManager>();
+            deps.Register<ISharedPlayerManager, PlayerManager>();
+            deps.Register<IPrototypeManager, ServerPrototypeManager>();
+            deps.Register<IResourceManager, ResourceManager>();
+            deps.Register<IResourceManagerInternal, ResourceManager>();
+            deps.Register<EntityManager, ServerEntityManager>();
+            deps.Register<IServerEntityManager, ServerEntityManager>();
+            deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
+            deps.Register<IServerGameStateManager, ServerGameStateManager>();
+            deps.Register<IServerNetManager, NetManager>();
+            deps.Register<IStatusHost, StatusHost>();
+            deps.Register<ISystemConsoleManager, SystemConsoleManager>();
+            deps.Register<ITileDefinitionManager, TileDefinitionManager>();
+            deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
+            deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
+            deps.Register<IWatchdogApi, WatchdogApi>();
+            deps.Register<IScriptHost, ScriptHost>();
+            deps.Register<IMetricsManager, MetricsManager>();
+            deps.Register<IAuthManager, AuthManager>();
+            deps.Register<IPhysicsManager, PhysicsManager>();
+            deps.Register<IBqlQueryManager, BqlQueryManager>();
+            deps.Register<HubManager, HubManager>();
         }
     }
 }

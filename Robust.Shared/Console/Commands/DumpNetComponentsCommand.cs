@@ -6,13 +6,13 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed class DumpNetComponentsCommand : LocalizedCommands
 {
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+
     public override string Command => "dump_net_comps";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var mgr = IoCManager.Resolve<IComponentFactory>();
-
-        if (mgr.NetworkedComponents is not { } comps)
+        if (_componentFactory.NetworkedComponents is not { } comps)
         {
             shell.WriteError(Loc.GetString("cmd-dump_net_comps-error-writeable"));
             return;

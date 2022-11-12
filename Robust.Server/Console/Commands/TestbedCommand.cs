@@ -48,6 +48,9 @@ namespace Robust.Server.Console.Commands
     /// </summary>
     public sealed class TestbedCommand : LocalizedCommands
     {
+        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "testbed";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -57,8 +60,6 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Require 2 args for testbed!");
                 return;
             }
-
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (!int.TryParse(args[0], out var mapInt))
             {
@@ -76,7 +77,7 @@ namespace Robust.Server.Console.Commands
 
             var player = (IPlayerSession) shell.Player;
             Action testbed;
-            SetupPlayer(mapId, shell, player, mapManager);
+            SetupPlayer(mapId, shell, player, _map);
 
             switch (args[1])
             {
@@ -99,7 +100,7 @@ namespace Robust.Server.Console.Commands
 
             Timer.Spawn(1000, () =>
             {
-                if (!mapManager.MapExists(mapId)) return;
+                if (!_map.MapExists(mapId)) return;
                 testbed();
             });
 
@@ -117,7 +118,7 @@ namespace Robust.Server.Console.Commands
 
             mapManager.SetMapPaused(mapId, false);
             var mapUid = mapManager.GetMapEntityIdOrThrow(mapId);
-            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
+            _entityManager.GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
 
             shell.ExecuteCommand("aghost");
             shell.ExecuteCommand($"tp 0 0 {mapId}");
@@ -128,10 +129,8 @@ namespace Robust.Server.Console.Commands
 
         private void CreateBoxStack(MapId mapId)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var groundUid = _entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = _entityManager.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -141,7 +140,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
 
             broadphase.CreateFixture(ground, horizontalFixture);
 
@@ -170,9 +169,9 @@ namespace Robust.Server.Console.Commands
                 {
                     var x = 0.0f;
 
-                    var boxUid = entityManager.SpawnEntity(null,
+                    var boxUid = _entityManager.SpawnEntity(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
-                    var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
+                    var box = _entityManager.AddComponent<PhysicsComponent>(boxUid);
 
                     box.BodyType = BodyType.Dynamic;
                     shape = new PolygonShape();
@@ -196,10 +195,8 @@ namespace Robust.Server.Console.Commands
 
         private void CreateCircleStack(MapId mapId)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var groundUid = _entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = _entityManager.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -209,7 +206,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
@@ -237,9 +234,9 @@ namespace Robust.Server.Console.Commands
                 {
                     var x = 0.0f;
 
-                    var boxUid = entityManager.SpawnEntity(null,
+                    var boxUid = _entityManager.SpawnEntity(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
-                    var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
+                    var box = _entityManager.AddComponent<PhysicsComponent>(boxUid);
 
                     box.BodyType = BodyType.Dynamic;
                     shape = new PhysShapeCircle {Radius = 0.5f};
@@ -264,9 +261,8 @@ namespace Robust.Server.Console.Commands
             const byte count = 20;
 
             // Setup ground
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var groundUid = _entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = _entityManager.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -276,7 +272,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
 
             // Setup boxes
@@ -295,10 +291,10 @@ namespace Robust.Server.Console.Commands
 
                 for (var j = i; j < count; ++j)
                 {
-                    var boxUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-                    var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
+                    var boxUid = _entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                    var box = _entityManager.AddComponent<PhysicsComponent>(boxUid);
                     box.BodyType = BodyType.Dynamic;
-                    entityManager.GetComponent<TransformComponent>(box.Owner).WorldPosition = y;
+                    _entityManager.GetComponent<TransformComponent>(box.Owner).WorldPosition = y;
                     broadphase.CreateFixture(box,
                         new Fixture(box, shape) {
                         CollisionLayer = 2,
@@ -315,14 +311,13 @@ namespace Robust.Server.Console.Commands
 
         private void CreateTumbler(MapId mapId)
         {
-            var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var broadphaseSystem = _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
 
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var groundUid = _entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+            _entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-            var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
+            var bodyUid = _entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+            var body = _entityManager.AddComponent<PhysicsComponent>(bodyUid);
 
             body.BodyType = BodyType.Dynamic;
             body.SleepingAllowed = false;
@@ -345,7 +340,7 @@ namespace Robust.Server.Console.Commands
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
             broadphaseSystem.CreateFixture(body, shape4, 20.0f, 2, 0);
 
-            var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
+            var revolute = _entityManager.EntitySysManager.GetEntitySystem<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
             revolute.ReferenceAngle = 0f;
@@ -357,15 +352,14 @@ namespace Robust.Server.Console.Commands
             // Wouldn't recommend higher than 100 in debug and higher than 300 on release unless
             // you really want a profile.
             var count = 300;
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
             for (var i = 0; i < count; i++)
             {
                 Timer.Spawn(i * 20, () =>
                 {
-                    if (!mapManager.MapExists(mapId)) return;
-                    var boxUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-                    var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
+                    if (!_map.MapExists(mapId)) return;
+                    var boxUid = _entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+                    var box = _entityManager.AddComponent<PhysicsComponent>(boxUid);
                     box.BodyType = BodyType.Dynamic;
                     box.FixedRotation = false;
                     var shape = new PolygonShape();

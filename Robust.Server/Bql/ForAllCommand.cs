@@ -9,6 +9,9 @@ namespace Robust.Server.Bql
 {
     public sealed class ForAllCommand : LocalizedCommands
     {
+        [Dependency] private readonly IBqlQueryManager _bql = default!;
+        [Dependency] private readonly IEntityManager _entities = default!;
+
         public override string Command => "forall";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -19,12 +22,11 @@ namespace Robust.Server.Bql
                 return;
             }
 
-            var queryManager = IoCManager.Resolve<IBqlQueryManager>();
-            var (entities, rest) = queryManager.SimpleParseAndExecute(argStr[6..]);
+            var (entities, rest) = _bql.SimpleParseAndExecute(argStr[6..]);
 
             foreach (var ent in entities.ToList())
             {
-                var cmds = SubstituteEntityDetails(shell, ent, rest).Split(";");
+                var cmds = SubstituteEntityDetails(_entities, shell, ent, rest).Split(";");
                 foreach (var cmd in cmds)
                 {
                     shell.ExecuteCommand(cmd);
@@ -33,9 +35,12 @@ namespace Robust.Server.Bql
         }
 
         // This will be refactored out soon.
-        private static string SubstituteEntityDetails(IConsoleShell shell, EntityUid ent, string ruleString)
+        private static string SubstituteEntityDetails(
+            IEntityManager entMan,
+            IConsoleShell shell,
+            EntityUid ent,
+            string ruleString)
         {
-            var entMan = IoCManager.Resolve<IEntityManager>();
             var transform = entMan.GetComponent<TransformComponent>(ent);
             var metadata = entMan.GetComponent<MetaDataComponent>(ent);
 

@@ -133,7 +133,6 @@ namespace Robust.Server.Console
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
-            var netMgr = IoCManager.Resolve<IServerNetManager>();
             var message = new MsgConCmdReg();
 
             var counter = 0;
@@ -149,7 +148,7 @@ namespace Robust.Server.Console
                 };
             }
 
-            netMgr.ServerSendMessage(message, senderConnection);
+            NetManager.ServerSendMessage(message, senderConnection);
         }
 
         private void ProcessCommand(MsgConCmd message)

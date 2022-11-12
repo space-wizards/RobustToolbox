@@ -7,11 +7,13 @@ namespace Robust.Client.Console.Commands
 {
     public sealed class VelocitiesCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
         public override string Command => "showvelocities";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<VelocityDebugSystem>().Enabled ^= true;
+            _entitySystems.GetEntitySystem<VelocityDebugSystem>().Enabled ^= true;
         }
     }
 }

@@ -430,22 +430,23 @@ public sealed class MapLoaderSystem : EntitySystem
             }
         }
 
-        mapData.InitOrder = new List<EntityUid>(mapData.Entities.Count);
+        // mapData.Entities = new List<EntityUid>(mapData.Entities.Count);
         var added = new HashSet<EntityUid>(mapData.Entities.Count);
+        mapData.Entities.Clear();
 
         while (hierarchy.Count > 0)
         {
             var enumerator = hierarchy.GetEnumerator();
             enumerator.MoveNext();
             var (current, parent) = enumerator.Current;
-            BuildTopology(hierarchy, added, mapData.InitOrder, current, parent);
+            BuildTopology(hierarchy, added, mapData.Entities, current, parent);
             enumerator.Dispose();
         }
 
         _logLoader.Debug($"Built entity hierarchy for {mapData.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
-    private void BuildTopology(Dictionary<EntityUid, EntityUid> hierarchy, HashSet<EntityUid> added, List<EntityUid> initOrder, EntityUid current, EntityUid parent)
+    private void BuildTopology(Dictionary<EntityUid, EntityUid> hierarchy, HashSet<EntityUid> added, List<EntityUid> Entities, EntityUid current, EntityUid parent)
     {
         // If we've already added it then skip.
         if (!added.Add(current))
@@ -454,12 +455,12 @@ public sealed class MapLoaderSystem : EntitySystem
         // Ensure parent is done first.
         if (hierarchy.TryGetValue(parent, out var parentValue))
         {
-            BuildTopology(hierarchy, added, initOrder, parent, parentValue);
+            BuildTopology(hierarchy, added, Entities, parent, parentValue);
         }
 
         DebugTools.Assert(current.IsValid());
-        // DebugTools.Assert(!initOrder.Contains(current));
-        initOrder.Add(current);
+        // DebugTools.Assert(!Entities.Contains(current));
+        Entities.Add(current);
         hierarchy.Remove(current);
     }
 
@@ -472,7 +473,7 @@ public sealed class MapLoaderSystem : EntitySystem
         // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
         // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
 
-        var rootNode = data.InitOrder[0];
+        var rootNode = data.Entities[0];
         var xformQuery = GetEntityQuery<TransformComponent>();
         // We just need to cache the old mapuid and point to the new mapuid.
 
@@ -486,11 +487,11 @@ public sealed class MapLoaderSystem : EntitySystem
                     _logLoader.Warning($"Loading map file with a root node onto an existing map!");
                 }
 
-                var oldRootUid = data.InitOrder[0];
+                var oldRootUid = data.Entities[0];
                 var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
-                data.InitOrder[0] = newRootUid;
+                data.Entities[0] = newRootUid;
 
-                foreach (var ent in data.InitOrder)
+                foreach (var ent in data.Entities)
                 {
                     if (ent == newRootUid)
                         continue;
@@ -536,7 +537,7 @@ public sealed class MapLoaderSystem : EntitySystem
             }
 
             // If anything has an invalid parent (e.g. it's some form of root node) then parent it to the map.
-            foreach (var ent in data.InitOrder)
+            foreach (var ent in data.Entities)
             {
                 // If it's the map itself don't reparent.
                 if (ent.Equals(mapNode))
@@ -638,9 +639,9 @@ public sealed class MapLoaderSystem : EntitySystem
     private void StartupEntities(MapData data)
     {
         _stopwatch.Restart();
-        DebugTools.Assert(data.Entities.Count == data.InitOrder.Count);
+        DebugTools.Assert(data.Entities.Count == data.Entities.Count);
         var metaQuery = GetEntityQuery<MetaDataComponent>();
-        var rootEntity = data.InitOrder[0];
+        var rootEntity = data.Entities[0];
         var mapQuery = GetEntityQuery<MapComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -660,9 +661,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var isRoot = true;
 
-        for (var i = 1; i < data.InitOrder.Count; i++)
+        for (var i = 1; i < data.Entities.Count; i++)
         {
-            var entity = data.InitOrder[i];
+            var entity = data.Entities[i];
 
             if (isRoot && xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
@@ -678,7 +679,7 @@ public sealed class MapLoaderSystem : EntitySystem
             StartupEntity(entity, metaQuery.GetComponent(entity), data);
         }
 
-        _logLoader.Debug($"Started up {data.InitOrder.Count} entities in {_stopwatch.Elapsed}");
+        _logLoader.Debug($"Started up {data.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
     private bool IsRoot(TransformComponent xform, EntityQuery<MapComponent> mapQuery)
@@ -1145,7 +1146,6 @@ public sealed class MapLoaderSystem : EntitySystem
         public readonly Dictionary<EntityUid, MappingDataNode> EntitiesToDeserialize = new();
 
         public readonly Dictionary<EntityUid, EntityUid> Hierarchy = new();
-        public List<EntityUid> InitOrder = default!;
 
         public MapData(MapId mapId, TextReader reader, MapLoadOptions options)
         {

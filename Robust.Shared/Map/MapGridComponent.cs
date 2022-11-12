@@ -49,7 +49,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Represents a map grid inside the ECS system.
     /// </summary>
-    [NetworkedComponent]
+    [RegisterComponent, NetworkedComponent]
     public sealed partial class MapGridComponent : Component
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;

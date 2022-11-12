@@ -58,11 +58,7 @@ namespace Robust.Shared.GameObjects
 
         internal void ProcessGrid(MapGridComponent gridInternal)
         {
-            // Just in case there's any deleted we'll ToArray
-            foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())
-            {
-                gridInternal.RegenerateCollision(chunk);
-            }
+            gridInternal.RegenerateCollision(gridInternal.GetMapChunks().Values.ToHashSet());
         }
 
         internal void RegenerateCollision(

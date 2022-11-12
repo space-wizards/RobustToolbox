@@ -865,13 +865,14 @@ namespace Robust.Shared.Map
                     chunkRectangles.Add(mapChunk, rectangles);
                 else
                 {
-                    RemoveChunk(mapChunk.Indices);
                     // Gone. Reduced to atoms
+                    // Need to do this before RemoveChunk because it clears fixtures.
                     foreach (var fixture in mapChunk.Fixtures)
                     {
                         fixtureSystem.DestroyFixture(fixture, false);
                     }
 
+                    RemoveChunk(mapChunk.Indices);
                     removedChunks.Add(mapChunk);
                 }
             }
@@ -909,49 +910,7 @@ namespace Robust.Shared.Map
         /// </summary>
         internal void RegenerateCollision(MapChunk mapChunk)
         {
-            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
-            if (mapChunk.FilledTiles == 0)
-            {
-                var fixtureSystem = _entMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
-                foreach (var fixture in mapChunk.Fixtures)
-                {
-                    fixtureSystem.DestroyFixture(fixture);
-                }
-
-                RemoveChunk(mapChunk.Indices);
-            }
-
-            // generate collision rectangles for this chunk based on filled tiles.
-            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
-            mapChunk.CachedBounds = localBounds;
-
-            LocalAABB = new Box2();
-            foreach (var chunk in _chunks.Values)
-            {
-                var chunkBounds = chunk.CachedBounds;
-
-                if (chunkBounds.Size.Equals(Vector2i.Zero))
-                    continue;
-
-                if (LocalAABB.Size == Vector2.Zero)
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalAABB = gridBounds;
-                }
-                else
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalAABB = LocalAABB.Union(gridBounds);
-                }
-            }
-
-            if (!_entMan.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system) ||
-                _entMan.Deleted(Owner)) return;
-
-            // TODO: Move this to the component when we combine.
-            _mapManager.OnGridBoundsChange(Owner, this);
-
-            system.RegenerateCollision(Owner, mapChunk, rectangles);
+            RegenerateCollision(new HashSet<MapChunk>() {mapChunk});
         }
 
         /// <summary>
@@ -959,8 +918,8 @@ namespace Robust.Shared.Map
         /// </summary>
         internal Box2 CalcWorldAABB(MapChunk mapChunk)
         {
-            var rotation = _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
-            var position = _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
+            var (position, rotation) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+
             var chunkPosition = mapChunk.Indices;
             var tileScale = TileSize;
             var chunkScale = mapChunk.ChunkSize;

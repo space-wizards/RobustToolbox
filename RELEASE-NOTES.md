@@ -62,7 +62,7 @@ Template for new versions:
 
 ### Internal
 
-* `uitest` is a new command that's like `uitest` but opens an OS window instead. It can also be passed an argument to open a specific tab immediately.
+* `uitest2` is a new command that's like `uitest` but opens an OS window instead. It can also be passed an argument to open a specific tab immediately.
 * Word-wrapping logic has been split off from `RichTextEntry`, into a new helper struct `WordWrap`.
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.

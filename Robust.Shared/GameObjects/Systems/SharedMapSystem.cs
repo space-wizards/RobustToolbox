@@ -6,7 +6,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 
 namespace Robust.Shared.GameObjects
 {
@@ -14,7 +13,7 @@ namespace Robust.Shared.GameObjects
     public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] protected readonly INetManager NetManager = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <summary>
@@ -98,8 +97,20 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
+            // Clear out all of the old entity data
+            // Need to do this now due to the lookup sub on GridAddEvent.
             var xformQuery = GetEntityQuery<TransformComponent>();
-            _transform.SetGridId(xformQuery.GetComponent(uid), uid, xformQuery);
+            var xform = xformQuery.GetComponent(uid);
+            _transform.SetGridId(xform, uid, xformQuery);
+            // If we spawned the entity and added grid later than cull the broadphase data.
+            _lookup.RemoveFromEntityTree(uid, xform, xformQuery);
+
+            var enumerator = xform.ChildEnumerator;
+
+            while (enumerator.MoveNext(out var child))
+            {
+                _lookup.FindAndAddToEntityTree(child.Value, xformQuery.GetComponent(child.Value));
+            }
 
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);

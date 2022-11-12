@@ -22,6 +22,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
 {
@@ -98,6 +99,8 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
             }
             else
             {
@@ -109,6 +112,8 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<JointSystem>();
                 systems.LoadExtraSystemType<PhysicsSystem>();
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
+                systems.LoadExtraSystemType<MapSystem>();
+                systems.LoadExtraSystemType<DebugPhysicsSystem>();
             }
 
             var entMan = IoCManager.Resolve<IEntityManager>();

@@ -38,16 +38,14 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
 
-            foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                var grid = (IMapGridInternal) mapGrid;
-
-                if (!_mapChunkData.ContainsKey(grid.GridEntityId))
+                if (!_mapChunkData.ContainsKey(grid.Owner))
                 {
                     continue;
                 }
 
-                var transform = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                var transform = _entityManager.GetComponent<TransformComponent>(grid.Owner);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
                 var enumerator = grid.GetMapChunks(worldBounds);
 
@@ -58,7 +56,7 @@ namespace Robust.Client.Graphics.Clyde
                         _updateChunkMesh(grid, chunk);
                     }
 
-                    var datum = _mapChunkData[grid.GridEntityId][chunk.Indices];
+                    var datum = _mapChunkData[grid.Owner][chunk.Indices];
 
                     if (datum.TileCount == 0)
                     {
@@ -75,9 +73,9 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
+        private void _updateChunkMesh(MapGridComponent grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.GridEntityId];
+            var data = _mapChunkData[grid.Owner];
 
             if (!data.TryGetValue(chunk.Indices, out var datum))
             {
@@ -135,7 +133,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(MapGridComponent grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -145,11 +143,11 @@ namespace Robust.Client.Graphics.Clyde
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                vboSize, $"Grid {grid.GridEntityId} chunk {chunk.Indices} VBO");
+                vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} VBO");
             var ebo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                eboSize, $"Grid {grid.GridEntityId} chunk {chunk.Indices} EBO");
+                eboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EBO");
 
-            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.GridEntityId} chunk {chunk.Indices} VAO");
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} VAO");
             SetupVAOLayout();
             CheckGlError();
 
@@ -163,19 +161,19 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.GridEntityId].Add(chunk.Indices, datum);
+            _mapChunkData[grid.Owner].Add(chunk.Indices, datum);
             return datum;
         }
 
-        private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
+        private bool _isChunkDirty(MapGridComponent grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.GridEntityId];
+            var data = _mapChunkData[grid.Owner];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
-        public void _setChunkDirty(IMapGrid grid, Vector2i chunk)
+        public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
         {
-            var data = _mapChunkData[grid.GridEntityId];
+            var data = _mapChunkData[grid.Owner];
             if (data.TryGetValue(chunk, out var datum))
             {
                 datum.Dirty = true;
@@ -195,7 +193,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
+            var grid = _entityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }

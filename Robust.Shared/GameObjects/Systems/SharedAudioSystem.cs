@@ -123,7 +123,7 @@ public abstract class SharedAudioSystem : EntitySystem
     protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
     {
         if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))
-            return new EntityCoordinates(mapGrid.GridEntityId, mapGrid.WorldToLocal(mapCoordinates.Position));
+            return new EntityCoordinates(mapGrid.Owner, mapGrid.WorldToLocal(mapCoordinates.Position));
 
         if (_mapManager.HasMapEntity(mapCoordinates.MapId))
             return new EntityCoordinates(_mapManager.GetMapEntityId(mapCoordinates.MapId), mapCoordinates.Position);

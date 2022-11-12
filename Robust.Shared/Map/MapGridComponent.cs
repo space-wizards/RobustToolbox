@@ -56,20 +56,6 @@ namespace Robust.Shared.Map
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        // This field is used for deserialization internally in the map loader.
-        // If you want to remove this, you would have to restructure the map save file.
-        [ViewVariables(VVAccess.ReadOnly)] [DataField("index")]
-#pragma warning disable CS0618
-        private GridId _gridIndex = GridId.Invalid;
-#pragma warning restore CS0618
-
-        [Obsolete("Use EntityUid instead")]
-        internal GridId GridIndex
-        {
-            get => _gridIndex;
-            set => _gridIndex = value;
-        }
-
         [DataField("chunkSize")] private ushort _chunkSize = 16;
 
         /// <summary>
@@ -155,7 +141,6 @@ namespace Robust.Shared.Map
             if (curState is not MapGridComponentState state)
                 return;
 
-            _gridIndex = state.GridIndex;
             _chunkSize = state.ChunkSize;
         }
 
@@ -281,11 +266,6 @@ namespace Robust.Shared.Map
     internal sealed class MapGridComponentState : ComponentState
     {
         /// <summary>
-        ///     Index of the grid this component is linked to.
-        /// </summary>
-        public GridId GridIndex { get; }
-
-        /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
         public ushort ChunkSize { get; }
@@ -298,9 +278,8 @@ namespace Robust.Shared.Map
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         /// <param name="chunkSize">The size of the chunks in the map grid.</param>
         /// <param name="chunkDatums"></param>
-        public MapGridComponentState(GridId gridIndex, ushort chunkSize, List<ChunkDatum>? chunkDatums)
+        public MapGridComponentState(ushort chunkSize, List<ChunkDatum>? chunkDatums)
         {
-            GridIndex = gridIndex;
             ChunkSize = chunkSize;
             ChunkDatums = chunkDatums;
         }

@@ -4,6 +4,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 
@@ -12,7 +13,7 @@ namespace Robust.Shared.GameObjects
     [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] protected readonly IMapManagerInternal MapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
 
         /// <summary>
@@ -45,9 +46,7 @@ namespace Robust.Shared.GameObjects
         private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
         {
             var chunkData = MapGridComponent.GetDeltaChunkData(component, args.FromTick);
-#pragma warning disable CS0618
-            args.State = new MapGridComponentState(component.GridIndex, component.ChunkSize, chunkData);
-#pragma warning restore CS0618
+            args.State = new MapGridComponentState(component.ChunkSize, chunkData);
         }
 
         private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
@@ -55,9 +54,6 @@ namespace Robust.Shared.GameObjects
             if (args.Current is not MapGridComponentState state)
                 return;
 
-#pragma warning disable CS0618
-            component.GridIndex = state.GridIndex;
-#pragma warning restore CS0618
             component.ChunkSize = state.ChunkSize;
 
             if(state.ChunkDatums is not null)
@@ -108,11 +104,6 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
         {
-#pragma warning disable CS0618
-            if (NetManager.IsServer)
-                component.GridIndex = MapManager.GenerateGridId(component.GridIndex == GridId.Invalid ? null : component.GridIndex);
-#pragma warning restore CS0618
-
             var pos = Transform(uid).MapPosition;
             Logger.InfoS(nameof(SharedMapSystem), $"Initializing new grid {uid} at {pos}.");
 

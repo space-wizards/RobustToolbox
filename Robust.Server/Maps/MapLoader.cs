@@ -59,7 +59,7 @@ namespace Robust.Server.Maps
             var grid = _mapManager.GetGrid(gridId);
 
             // Dont save grid fixtures.
-            if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+            if (_serverEntityManager.TryGetComponent(grid.Owner, out FixturesComponent? fixtures))
             {
                 fixtures.SerializedFixtureData = new(); // empty list.
             }
@@ -100,7 +100,7 @@ namespace Robust.Server.Maps
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            IMapGrid? grid;
+            MapGridComponent? grid;
             IReadOnlyList<EntityUid> entities;
             using (reader)
             {
@@ -126,7 +126,7 @@ namespace Robust.Server.Maps
                 options.LoadMap = oldLoadMapOpt;
             }
 
-            return (entities, grid?.GridEntityId);
+            return (entities, grid?.Owner);
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -172,7 +172,7 @@ namespace Robust.Server.Maps
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 // Dont save grid fixtures.
-                if (_serverEntityManager.TryGetComponent(grid.GridEntityId, out FixturesComponent? fixtures))
+                if (_serverEntityManager.TryGetComponent(grid.Owner, out FixturesComponent? fixtures))
                 {
                     fixtures.SerializedFixtureData = new(); // empty list.
                 }
@@ -244,7 +244,7 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, _componentFactory, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grids = context.Grids.Select(x => x.GridEntityId).ToArray(); // TODO: make context use grid IDs.
+                grids = context.Grids.Select(x => x.Owner).ToArray(); // TODO: make context use grid IDs.
                 entities = context.Entities;
 
                 PostDeserialize(mapId, context);
@@ -274,7 +274,7 @@ namespace Robust.Server.Maps
             /// </summary>
             internal MapId? MapId { get; set; }
             private readonly Dictionary<EntityUid, int> GridIDMap = new();
-            public readonly List<MapGrid> Grids = new();
+            public readonly List<MapGridComponent> Grids = new();
             private EntityQuery<TransformComponent>? _xformQuery = null;
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
@@ -493,11 +493,11 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var gridInternal = (IMapGridInternal) grid;
-                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
+                    var gridInternal = (IMapManagerInternal) grid;
+                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.Owner);
+                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.Owner);
                     // Regenerate grid collision.
-                    gridFixtures.EnsureGrid(grid.GridEntityId);
+                    gridFixtures.EnsureGrid(grid.Owner);
                     gridFixtures.ProcessGrid(grid);
                     // Avoid duplicating the deserialization in FixtureSystem.
                     fixtures.SerializedFixtureData = null;
@@ -636,7 +636,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
+                    var transform = _xformQuery!.Value.GetComponent(grid.Owner);
                     if (transform.MapUid?.IsValid() == true)
                         continue;
 
@@ -652,12 +652,12 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    pvs?.EntityPVSCollection.UpdateIndex(grid.GridEntityId);
+                    pvs?.EntityPVSCollection.UpdateIndex(grid.Owner);
                     // The problem here is that the grid is initialising at the same time as everything else which
                     // is bad for slothcoin because a bunch of components are only added
                     // to the grid during its initialisation hence you get exceptions
                     // hence this 1 snowflake thing.
-                    _serverEntityManager.EnsureComponent<BroadphaseComponent>(grid.GridEntityId);
+                    _serverEntityManager.EnsureComponent<BroadphaseComponent>(grid.Owner);
                 }
             }
 
@@ -867,21 +867,21 @@ namespace Robust.Server.Maps
                 var gridFixtures = _serverEntityManager.EntitySysManager.GetEntitySystem<GridFixtureSystem>();
                 foreach (var grid in Grids)
                 {
-                    if (_serverEntityManager.Deleted(grid.GridEntityId)) continue;
-                    gridFixtures.CheckSplits(grid.GridEntityId);
+                    if (_serverEntityManager.Deleted(grid.Owner)) continue;
+                    gridFixtures.CheckSplits(grid.Owner);
                 }
             }
 
             // Serialization
-            public void RegisterGrid(IMapGrid grid)
+            public void RegisterGrid(MapGridComponent grid)
             {
-                if (GridIDMap.ContainsKey(grid.GridEntityId))
+                if (GridIDMap.ContainsKey(grid.Owner))
                 {
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add((MapGrid) grid);
-                GridIDMap.Add(grid.GridEntityId, GridIDMap.Count);
+                Grids.Add((MapGridComponent) grid);
+                GridIDMap.Add(grid.Owner, GridIDMap.Count);
             }
 
             public YamlNode Serialize()
@@ -910,7 +910,7 @@ namespace Robust.Server.Maps
                 //TODO: This is a workaround to make SaveBP function
                 foreach (var grid in Grids)
                 {
-                    var mapId = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId).MapID;
+                    var mapId = _serverEntityManager.GetComponent<TransformComponent>(grid.Owner).MapID;
 
                     if (_mapManager.IsMapInitialized(mapId))
                     {
@@ -940,7 +940,7 @@ namespace Robust.Server.Maps
                 int index = 0;
                 foreach (var grid in Grids)
                 {
-                    _serverEntityManager.GetComponent<MapGridComponent>(grid.GridEntityId).GridIndex = index;
+                    _serverEntityManager.GetComponent<MapGridComponent>(grid.Owner).GridIndex = index;
                     var entry = _serializationManager.WriteValue(grid, context: this);
                     grids.Add(entry);
                     index++;

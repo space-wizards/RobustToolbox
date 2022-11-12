@@ -10,7 +10,7 @@ namespace Robust.Client.Placement.Modes
     [Virtual]
     public class SnapgridCenter : PlacementMode
     {
-        protected IMapGrid? Grid;
+        protected MapGridComponent? Grid;
         protected float SnapSize;
 
         public override bool HasLineMode => true;

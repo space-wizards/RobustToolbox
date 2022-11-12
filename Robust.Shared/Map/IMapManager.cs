@@ -8,9 +8,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
-    public delegate bool GridCallback(IMapGrid grid);
+    public delegate bool GridCallback(MapGridComponent grid);
 
-    public delegate bool GridCallback<TState>(IMapGrid grid, ref TState state);
+    public delegate bool GridCallback<TState>(MapGridComponent grid, ref TState state);
 
     /// <summary>
     ///     This manages all of the grids in the world.
@@ -105,7 +105,7 @@ namespace Robust.Shared.Map
         /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
+        bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out MapGridComponent? grid);
 
         void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
 
@@ -126,23 +126,26 @@ namespace Robust.Shared.Map
         /// <param name="mapId">The relevant MapID</param>
         /// <param name="worldArea">The AABB to intersect</param>
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
-
-        void DeleteGrid(EntityUid euid);
-
-        /// <summary>
-        ///     A tile is being modified.
-        /// </summary>
-        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
-        event EventHandler<TileChangedEventArgs> TileChanged;
+        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
         bool HasMapEntity(MapId mapId);
 
         bool IsMap(EntityUid uid);
 
-        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
+        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get its MapId.")]
         MapId NextMapId();
-        MapGridComponent GetGridComp(EntityUid euid);
+
+        [Obsolete("Use the EntityManager like everything else")]
+        public bool TryGetGrid(EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+        {
+            return EntityManager.TryGetComponent(uid, out grid);
+        }
+
+        [Obsolete("Use the EntityManager like everything else")]
+        public MapGridComponent GetGrid(EntityUid uid) => EntityManager.GetComponent<MapGridComponent>(uid);
+
+        [Obsolete("Use EntityManager like everything else")]
+        public bool IsGrid(EntityUid uid) => EntityManager.HasComponent<MapGridComponent>(uid);
 
         #region Paused
 

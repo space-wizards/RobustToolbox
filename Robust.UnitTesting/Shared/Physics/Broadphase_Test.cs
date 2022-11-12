@@ -29,7 +29,7 @@ public sealed class Broadphase_Test
         var mapId1 = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId1);
-        var xform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        var xform = entManager.GetComponent<TransformComponent>(grid.Owner);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
@@ -62,12 +62,12 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGrid(mapId);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
-        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
+        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
 
         var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);

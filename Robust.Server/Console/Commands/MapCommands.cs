@@ -415,7 +415,7 @@ namespace Robust.Server.Console.Commands
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                var gridXform = entManager.GetComponent<TransformComponent>(grid.Owner);
                 var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
                 gridXform.Coordinates =
@@ -501,7 +501,7 @@ namespace Robust.Server.Console.Commands
                     mapId, mapManager.IsMapInitialized(mapId),
                     mapManager.IsMapPaused(mapId),
                     mapManager.GetMapEntityId(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.GridEntityId)));
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
             }
 
             shell.WriteLine(msg.ToString());
@@ -519,13 +519,13 @@ namespace Robust.Server.Console.Commands
             var msg = new StringBuilder();
             var xformQuery = entManager.GetEntityQuery<TransformComponent>();
 
-            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.GridEntityId))
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Owner))
             {
-                var xform = xformQuery.GetComponent(grid.GridEntityId);
+                var xform = xformQuery.GetComponent(grid.Owner);
                 var worldPos = xform.WorldPosition;
 
                 msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
-                    grid.GridEntityId, xform.MapID, grid.GridEntityId, worldPos.X, worldPos.Y);
+                    grid.Owner, xform.MapID, grid.Owner, worldPos.X, worldPos.Y);
             }
 
             shell.WriteLine(msg.ToString());

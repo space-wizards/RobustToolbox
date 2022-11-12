@@ -97,7 +97,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
-    private readonly List<MapGrid> _gridsPool = new(8);
+    private readonly List<MapGridComponent> _gridsPool = new(8);
 
     private ISawmill _sawmill = default!;
 
@@ -555,14 +555,14 @@ internal sealed partial class PVSSystem : EntitySystem
                              physicsQuery,
                              true))
                 {
-                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+                    var localPos = transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(viewPos);
 
                     var gridChunkEnumerator =
                         new ChunkIndicesEnumerator(localPos, range, ChunkSize);
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
+                        var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
                         var entry = (visMask, chunkLocation);
 
                         if (gridDict.TryGetValue(chunkLocation, out var indexOf))

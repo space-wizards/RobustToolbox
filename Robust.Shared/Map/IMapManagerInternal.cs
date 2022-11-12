@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Map
 {
@@ -29,9 +30,6 @@ namespace Robust.Shared.Map
             bool approx = false);
 
         void TrueDeleteMap(MapId mapId);
-#pragma warning disable CS0618
-        GridId GenerateGridId(GridId? forcedGridId);
-#pragma warning restore CS0618
         void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

@@ -909,43 +909,33 @@ namespace Robust.Client.Input
     [UsedImplicitly]
     internal sealed class BindCommand : LocalizedCommands
     {
+        [Dependency] private readonly IInputManager _inputManager = default!;
+
         public override string Command => "bind";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 3)
+            if (args.Length != 3)
             {
-                shell.WriteLine("Too few arguments.");
-                return;
-            }
-
-            if (args.Length > 3)
-            {
-                shell.WriteLine("Too many arguments.");
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
                 return;
             }
 
             var keyName = args[0];
 
-            if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
+            if (!Enum.TryParse<Key>(keyName, true, out var keyId))
             {
                 shell.WriteLine($"Key '{keyName}' is unrecognized.");
                 return;
             }
 
-            var keyId = (Key) keyIdObj!;
-
-            if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
+            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var keyMode))
             {
                 shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
                 return;
             }
 
-            var keyMode = (KeyBindingType) keyModeObj!;
-
             var inputCommand = args[2];
-
-            var inputMan = IoCManager.Resolve<IInputManager>();
 
             var registration = new KeyBindingRegistration
             {
@@ -954,19 +944,52 @@ namespace Robust.Client.Input
                 Type = keyMode
             };
 
-            inputMan.RegisterBinding(registration);
+            _inputManager.RegisterBinding(registration);
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                var options = Enum.GetNames<Key>();
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-key"));
+            }
+
+            if (args.Length == 2)
+            {
+                var options = Enum.GetNames<KeyBindingType>().Except(new []{nameof(KeyBindingType.Unknown)});
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-mode"));
+            }
+
+            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var type))
+                return CompletionResult.Empty;
+
+            if (args.Length == 3)
+            {
+                if (type == KeyBindingType.Command)
+                {
+                    // Don't show completions for key functions if mode is command, it wouldn't make sense.
+                    return CompletionResult.FromHint(Loc.GetString("cmd-bind-arg-command"));
+                }
+
+                var options = _inputManager.NetworkBindMap.AllKeyFunctions.Select(x => x.FunctionName);
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-command"));
+            }
+
+            return CompletionResult.Empty;
         }
     }
 
     [UsedImplicitly]
     internal sealed class SaveBindCommand : LocalizedCommands
     {
+        [Dependency] private readonly IInputManager _inputManager = default!;
+
         public override string Command => "svbind";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IInputManager>()
-                .SaveToUserData();
+            _inputManager.SaveToUserData();
         }
     }
 }

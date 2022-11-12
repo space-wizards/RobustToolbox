@@ -55,13 +55,16 @@ internal static class StringEnumerateHelpers
     internal struct SubstringReverseRuneEnumerator : IEnumerator<Rune>, IEnumerable<Rune>
     {
         private string _source;
+        // Contains the next char to return.
+        // If the next char is actually a (valid) surrogate pair, this is INSIDE the pair,
+        // and MoveNext() has to skip more.
         private int _nextChar;
         private Rune _current;
 
         public SubstringReverseRuneEnumerator(string source, int startChar)
         {
             _source = source;
-            _nextChar = startChar - (source != "" && char.IsLowSurrogate(source, startChar - 1) ? 2 : 1);
+            _nextChar = startChar - 1;
             _current = default;
         }
 

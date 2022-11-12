@@ -47,6 +47,7 @@ Template for new versions:
     * `IClyde.TextInputStart()`, `IClyde.TextInputStop()`, `IClyde.TextInputSetRect()` APIs to control text input behavior.
     * `TextEditing` events for reporting in-progress IME compositions.
     * `LineEdit` and `TextEdit` have functional IME support when the game is running on SDL2. If you provide a font file with the relevant glyphs, CJK text input should now be usable.
+* `Register<T>` (single type parameter) extension method for `IDependencyCollection`.
 
 ### Bugfixes
 

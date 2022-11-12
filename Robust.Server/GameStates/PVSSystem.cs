@@ -789,7 +789,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             if (sessionData.RequestedFull)
             {
-                entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid)));
+                entityStates.Add(GetFullEntityState(session, uid, mQuery.GetComponent(uid), fromTick));
                 continue;
             }
 
@@ -1146,7 +1146,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null, fromTick);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1161,7 +1161,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
     /// </summary>
-    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
+    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta, GameTick fromTick)
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
@@ -1179,7 +1179,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null, fromTick), component.LastModifiedTick));
             netComps.Add(netId);
         }
 

@@ -447,7 +447,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            mapManager.DeleteGrid(gridId);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(gridId);
             shell.WriteLine($"Grid {gridId} was removed.");
         }
     }

@@ -136,7 +136,7 @@ namespace Robust.Shared.Map
         MapId NextMapId();
 
         [Obsolete("Use the EntityManager like everything else")]
-        public bool TryGetGrid(EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+        public bool TryGetGrid([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out MapGridComponent? grid)
         {
             return EntityManager.TryGetComponent(uid, out grid);
         }
@@ -146,6 +146,33 @@ namespace Robust.Shared.Map
 
         [Obsolete("Use EntityManager like everything else")]
         public bool IsGrid(EntityUid uid) => EntityManager.HasComponent<MapGridComponent>(uid);
+
+        [Obsolete("Use EntityManager like everything else")]
+        public MapGridComponent CreateGrid(MapId mapId, ushort chunkSize = 16)
+        {
+            var ent = EntityManager.SpawnEntity(null, new EntityCoordinates(GetMapEntityId(mapId), Vector2.Zero));
+            var grid = EntityManager.AddComponent<MapGridComponent>(ent);
+            grid.ChunkSize = chunkSize;
+            return grid;
+        }
+
+        [Obsolete("Use EntityQuery")]
+        public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
+        {
+            foreach (var (grid, xform) in EntityManager.EntityQuery<MapGridComponent, TransformComponent>(true))
+            {
+                if (xform.MapID != mapId)
+                    continue;
+
+                yield return grid;
+            }
+        }
+
+        [Obsolete("Use EntityManager")]
+        public IEnumerable<MapGridComponent> GetAllGrids() => EntityManager.EntityQuery<MapGridComponent>(true);
+
+        [Obsolete("Use EntityManager")]
+        public bool GridExists(EntityUid? uid) => EntityManager.HasComponent<MapGridComponent>(uid);
 
         #region Paused
 

@@ -69,7 +69,7 @@ internal partial class MapManager
             }
             else
             {
-                // DeleteGrid may be triggered by the entity being deleted,
+                // DeleteEntity may be triggered by the entity being deleted,
                 // so make sure that's not the case.
                 if (metaComp.EntityLifeStage < EntityLifeStage.Terminating)
                     EntityManager.DeleteEntity(entityId);

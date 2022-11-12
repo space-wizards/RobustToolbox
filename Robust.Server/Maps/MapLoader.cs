@@ -493,7 +493,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var gridInternal = (IMapManagerInternal) grid;
+                    var gridInternal = (MapGridComponent) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.Owner);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.Owner);
                     // Regenerate grid collision.
@@ -555,6 +555,7 @@ namespace Robust.Server.Maps
                 var gridComps = new MapGridComponent[yamlGrids.Count];
 
                 var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
+                var idx = 0;
 
                 // linear search for new grid comps
                 foreach (var tuple in _entitiesToDeserialize)
@@ -565,8 +566,10 @@ namespace Robust.Server.Maps
                     // These should actually be new, pre-init
                     DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
 
-                    gridComps[gridComp.GridIndex] = gridComp;
+                    gridComps[idx++] = gridComp;
                 }
+
+                DebugTools.Assert(idx == yamlGrids.Count);
 
                 for (var index = 0; index < yamlGrids.Count; index++)
                 {
@@ -597,7 +600,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+            private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
             {
                 // sane defaults
                 ushort csz = 16;
@@ -937,13 +940,10 @@ namespace Robust.Server.Maps
                 var grids = new SequenceDataNode();
                 RootNode.Add("grids", grids);
 
-                int index = 0;
                 foreach (var grid in Grids)
                 {
-                    _serverEntityManager.GetComponent<MapGridComponent>(grid.Owner).GridIndex = index;
                     var entry = _serializationManager.WriteValue(grid, context: this);
                     grids.Add(entry);
-                    index++;
                 }
             }
 

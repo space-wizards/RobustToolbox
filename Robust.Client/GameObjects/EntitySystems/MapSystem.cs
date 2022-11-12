@@ -1,5 +1,6 @@
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 
 namespace Robust.Client.GameObjects
 {

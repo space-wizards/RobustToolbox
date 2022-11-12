@@ -337,7 +337,7 @@ namespace Robust.Server.Physics
 
                     // Set tiles on old grid
                     mapGrid.SetTiles(tileData);
-                    GenerateSplitNodes((IMapManagerInternal) splitGrid);
+                    GenerateSplitNodes(splitGrid);
                     SendNodeDebug(splitGrid.Owner);
                 }
 
@@ -367,7 +367,7 @@ namespace Robust.Server.Physics
             SendNodeDebug(mapGrid.Owner);
         }
 
-        private void GenerateSplitNodes(IMapManagerInternal grid)
+        private void GenerateSplitNodes(MapGridComponent grid)
         {
             foreach (var (_, chunk) in grid.GetMapChunks())
             {
@@ -379,7 +379,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Creates all of the splitting nodes within this chunk; also consider neighbor chunks.
         /// </summary>
-        private ChunkNodeGroup CreateNodes(EntityUid gridEuid, IMapManagerInternal grid, MapChunk chunk)
+        private ChunkNodeGroup CreateNodes(EntityUid gridEuid, MapGridComponent grid, MapChunk chunk)
         {
             var group = new ChunkNodeGroup
             {
@@ -586,7 +586,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = (IMapManagerInternal) _mapManager.GetGrid(gridEuid);
+            var grid = (MapGridComponent) _mapManager.GetGrid(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

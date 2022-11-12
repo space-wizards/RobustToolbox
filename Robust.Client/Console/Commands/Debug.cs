@@ -601,7 +601,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var internalGrid = (IMapManagerInternal)grid;
+            var internalGrid = (MapGridComponent)grid;
 
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
             var chunk = internalGrid.GetChunk(chunkIndex);

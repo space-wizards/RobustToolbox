@@ -25,7 +25,7 @@ public sealed class GridSplit_Tests
     [Test]
     public void SimpleSplit()
     {
-        var sim =GetSim();
+        var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId);
@@ -46,7 +46,7 @@ public sealed class GridSplit_Tests
     [Test]
     public void DonutSplit()
     {
-        var sim =GetSim();
+        var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId);
@@ -76,7 +76,7 @@ public sealed class GridSplit_Tests
     [Test]
     public void TriSplit()
     {
-        var sim =GetSim();
+        var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId);
@@ -102,7 +102,7 @@ public sealed class GridSplit_Tests
     [Test]
     public void ReparentSplit()
     {
-        var sim =GetSim();
+        var sim = GetSim();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var mapId = mapManager.CreateMap();

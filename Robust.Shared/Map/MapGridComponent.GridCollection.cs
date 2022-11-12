@@ -194,8 +194,8 @@ namespace Robust.Shared.Map
             }
         }
 
-        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty,
-            Predicate<TileRef>? predicate)
+        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true,
+            Predicate<TileRef>? predicate = null)
         {
             // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
             // that way we can avoid the GetComp here.

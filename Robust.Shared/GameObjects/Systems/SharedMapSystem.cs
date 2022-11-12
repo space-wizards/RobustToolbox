@@ -15,6 +15,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -97,6 +98,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            _transform.SetGridId(xformQuery.GetComponent(uid), uid, xformQuery);
+
             // GridID is not set yet so we don't include it.
             var msg = new GridAddEvent(uid);
             RaiseLocalEvent(uid, msg, true);

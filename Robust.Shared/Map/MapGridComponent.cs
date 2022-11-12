@@ -103,8 +103,6 @@ namespace Robust.Shared.Map
             {
                 xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
-
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetGridId(xform, Owner, xformQuery);
         }
 
         internal static string SerializeTiles(MapChunk chunk)

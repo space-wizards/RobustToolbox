@@ -59,14 +59,17 @@ namespace Robust.Shared.IoC
         /// This will create a new instance of a <see cref="IDependencyCollection"/> for this thread,
         /// otherwise it will do nothing if one already exists.
         /// </remarks>
-        public static void InitThread()
+        /// <returns>The dependency collection for this thread.</returns>
+        public static IDependencyCollection InitThread()
         {
             if (_container.IsValueCreated)
             {
-                return;
+                return _container.Value!;
             }
 
-            _container.Value = new DependencyCollection();
+            var deps = new DependencyCollection();
+            _container.Value = deps;
+            return deps;
         }
 
         /// <summary>

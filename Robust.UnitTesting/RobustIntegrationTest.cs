@@ -322,7 +322,7 @@ namespace Robust.UnitTesting
 
             /// <summary>
             ///     Resolve a dependency inside the instance.
-            ///     This works identical to <see cref="IoCManager.Resolve{T}"/>.
+            ///     This works identical to <see cref="IoCManager.Resolve{T}()"/>.
             /// </summary>
             /// <exception cref="InvalidOperationException">
             ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.

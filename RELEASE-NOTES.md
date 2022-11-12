@@ -33,6 +33,7 @@ Template for new versions:
 
 * Thanks to new IME support with SDL2, `IClyde.TextInputStart()` and `IClyde.TextInputStop()` must now be appropriately called to start/stop receiving text input when focusing/unfocusing a UI control. This restriction is applied even on the (default) GLFW backend, to enforce consistent usage of these APIs.
 * `[GUI]TextEventArgs` have been renamed to `[GUI]TextEnteredEventArgs`, turned into records, and made to carry a `string` rather than a single text `Rune`.
+* IoC and `DependencyCollection` `Register` methods now have a `TInterface : class` constraint.
 
 ### New features
 

@@ -53,6 +53,9 @@ Template for new versions:
 
 ### Other
 
+* Properly re-use `HttpClient` in `NetManager` meaning we properly pool connections to the auth server, improving performance.
+* Hub advertisements have extended keep-alive pool timeout, so the connection can be kept active between advertisements.
+* All HTTP requests from the engine now have appropriate `User-Agent` header.
 * `bind` command has been made somewhat more clear thanks to a bit of help text and some basic completions.
 * `BoundKeyEventArgs` and derivatives now have a `[DebuggerDisplay]`.
 * Text cursors now have a fancy blinking animation.

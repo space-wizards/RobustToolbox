@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Robust.Shared.IoC.Exceptions
 {
     /// <summary>
-    /// Thrown by <see cref="IoCManager.Resolve{T}"/> if one attempts to resolve an interface that isn't registered.
+    /// Thrown by <see cref="IoCManager.Resolve{T}()"/> if one attempts to resolve an interface that isn't registered.
     /// </summary>
     [Serializable]
     [Virtual]

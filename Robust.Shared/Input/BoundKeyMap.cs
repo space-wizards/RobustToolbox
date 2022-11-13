@@ -70,6 +70,8 @@ namespace Robust.Shared.Input
             this.reflectionManager = reflectionManager;
         }
 
+        internal IEnumerable<BoundKeyFunction> AllKeyFunctions => KeyFunctionsList;
+
         public void PopulateKeyFunctionsMap()
         {
             if (KeyFunctionsMap.Count != 0)

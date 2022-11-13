@@ -43,9 +43,9 @@ namespace Robust.Client.UserInterface.CustomControls
             var info = _clydeInternal.DebugInfo;
             var stats = _clydeInternal.DebugStats;
 
-            _textBuilder.Append($@"Renderer: {info.Renderer}
+            _textBuilder.AppendLine($@"Renderer: {info.Renderer}
 Vendor: {info.Vendor}
-Version: {info.VersionString}\n");
+Version: {info.VersionString}");
 
             if (info.Overriding)
                 _textBuilder.Append($"Version override: {info.OpenGLVersion}\n");

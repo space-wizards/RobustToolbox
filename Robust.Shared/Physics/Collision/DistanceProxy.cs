@@ -192,7 +192,7 @@ namespace Robust.Shared.Physics.Collision
         public Vector2 WB;
     }
 
-    internal ref struct Simplex
+    internal struct Simplex
     {
         // Made it a class from a struct as it seemed silly to be a struct considering it's being mutated constantly.
 

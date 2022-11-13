@@ -183,7 +183,7 @@ namespace Robust.Client.Graphics
 
         public abstract void DrawLine(Vector2 from, Vector2 to, Color color);
 
-        public abstract void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default);
+        public abstract void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor);
     }
 
     /// <summary>

@@ -383,6 +383,7 @@ namespace Robust.Client
             }
 
             _clyde.TextEntered += TextEntered;
+            _clyde.TextEditing += TextEditing;
             _clyde.MouseMove += MouseMove;
             _clyde.KeyUp += KeyUp;
             _clyde.KeyDown += KeyDown;

@@ -115,6 +115,8 @@ namespace Robust.Client.UserInterface
         IEnumerable<UIRoot> AllRoots { get; }
 
         event Action<PostDrawUIRootEventArgs> OnPostDrawUIRoot;
+
+        void DeferAction(Action action);
     }
 
     public readonly struct PostDrawUIRootEventArgs

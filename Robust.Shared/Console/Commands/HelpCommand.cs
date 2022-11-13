@@ -3,13 +3,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class HelpCommand : IConsoleCommand
+internal sealed class HelpCommand : LocalizedCommands
 {
-    public string Command => "help";
-    public string Description => Loc.GetString("cmd-help-desc");
-    public string Help => Loc.GetString("cmd-help-help");
+    public override string Command => "help";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         switch (args.Length)
         {
@@ -36,7 +34,7 @@ internal sealed class HelpCommand : IConsoleCommand
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {

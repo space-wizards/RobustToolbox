@@ -7,13 +7,11 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class RemoveComponentCommand : IConsoleCommand
+    internal sealed class RemoveComponentCommand : LocalizedCommands
     {
-        public string Command => "rmcomp";
-        public string Description => "Removes a component from an entity.";
-        public string Help => $"{Command} <uid> <componentName>";
+        public override string Command => "rmcomp";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

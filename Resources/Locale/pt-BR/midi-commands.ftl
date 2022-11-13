@@ -1,1 +1,1 @@
-midi-panic-command-description = Desliga cada nota para cada renderizador MIDI ativo.
+cmd-midipanic-desc = Desliga cada nota para cada renderizador MIDI ativo.

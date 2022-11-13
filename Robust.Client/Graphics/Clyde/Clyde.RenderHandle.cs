@@ -114,7 +114,7 @@ namespace Robust.Client.Graphics.Clyde
                 return clydeTexture;
             }
 
-            public void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default)
+            public void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
             {
                 _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
             }
@@ -274,7 +274,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(@from, to, color * Modulate);
                 }
 
-                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
                 {
                     _renderHandle.RenderInRenderTarget(target, a, clearColor);
                 }
@@ -368,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(@from, to, color * Modulate);
                 }
 
-                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
                 {
                     _renderHandle.RenderInRenderTarget(target, a, clearColor);
                 }

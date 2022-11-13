@@ -423,7 +423,7 @@ public abstract partial class SharedTransformSystem
 
             if (value.EntityId.IsValid())
             {
-                if (!xformQuery.Resolve(value.EntityId, ref newParent))
+                if (!xformQuery.Resolve(value.EntityId, ref newParent, false))
                 {
                     QueueDel(xform.Owner);
                     throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(xform.Owner)} to non-existent entity {value.EntityId}");

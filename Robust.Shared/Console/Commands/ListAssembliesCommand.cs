@@ -4,13 +4,11 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class ListAssembliesCommand : IConsoleCommand
+internal sealed class ListAssembliesCommand : LocalizedCommands
 {
-    public string Command => "lsasm";
-    public string Description => Loc.GetString("cmd-lsasm-desc");
-    public string Help => Loc.GetString("cmd-lsasm-help");
+    public override string Command => "lsasm";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var sb = new StringBuilder();
         foreach (var context in AssemblyLoadContext.All)

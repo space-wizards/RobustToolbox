@@ -27,7 +27,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private const uint TrafficHistorySize = 64; // Size of the traffic history bar in game ticks.
-        private const int _maxEnts = 128; // maximum number of entities to track. 
+        private const int _maxEnts = 128; // maximum number of entities to track.
 
         /// <inheritdoc />
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
@@ -51,7 +51,7 @@ namespace Robust.Client.GameStates
         {
             if (msg.Tick.Value + TrafficHistorySize < _gameTiming.LastRealTick.Value)
                 return;
-            
+
             foreach (var uid in msg.Entities)
             {
                 if (!_netEnts.TryGetValue(uid, out var netEnt))
@@ -197,13 +197,11 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetEntityReportCommand : IConsoleCommand
+        private sealed class NetEntityReportCommand : LocalizedCommands
         {
-            public string Command => "net_entityreport";
-            public string Help => "net_entityreport";
-            public string Description => "Toggles the net entity report panel.";
+            public override string Command => "net_entityreport";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
@@ -220,14 +218,12 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetShowGraphCommand : IConsoleCommand
+        private sealed class NetShowGraphCommand : LocalizedCommands
         {
             // Yeah commands should be localized, but I'm lazy and this is really just a debug command.
-            public string Command => "net_refresh";
-            public string Help => "net_refresh";
-            public string Description => "requests a full server state";
+            public override string Command => "net_refresh";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 IoCManager.Resolve<IClientGameStateManager>().RequestFullState();
             }

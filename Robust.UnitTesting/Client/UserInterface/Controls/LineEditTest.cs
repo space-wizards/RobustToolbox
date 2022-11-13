@@ -1,5 +1,7 @@
 ﻿using Moq;
 using NUnit.Framework;
+using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -15,11 +17,13 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void Setup()
         {
             var uiMgr = new Mock<IUserInterfaceManagerInternal>();
+            var clyde = new ClydeHeadless();
 
             IoCManager.InitThread();
             IoCManager.Clear();
             IoCManager.RegisterInstance<IUserInterfaceManagerInternal>(uiMgr.Object);
             IoCManager.RegisterInstance<IUserInterfaceManager>(uiMgr.Object);
+            IoCManager.RegisterInstance<IClyde>(clyde);
             IoCManager.BuildGraph();
         }
 

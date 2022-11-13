@@ -8,7 +8,6 @@ using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
@@ -237,7 +236,6 @@ namespace Robust.Shared.Prototypes
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
@@ -480,23 +478,6 @@ namespace Robust.Shared.Prototypes
                             g => g.Key,
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
                                 g.Value.Where(x => _prototypes[g.Key].ContainsKey(x)).ToDictionary(a => a, a => _prototypes[g.Key][a])))));
-
-            // TODO filter by entity prototypes changed
-            if (!pushed.ContainsKey(typeof(EntityPrototype))) return;
-
-            var entityPrototypes = _prototypes[typeof(EntityPrototype)];
-
-            foreach (var prototype in pushed[typeof(EntityPrototype)])
-            {
-                foreach (var entity in _entityManager.GetEntities())
-                {
-                    var metaData = _entityManager.GetComponent<MetaDataComponent>(entity);
-                    if (metaData.EntityPrototype != null && metaData.EntityPrototype.ID == prototype)
-                    {
-                        ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity(entity);
-                    }
-                }
-            }
 #endif
         }
 
@@ -786,7 +767,7 @@ namespace Robust.Shared.Prototypes
                 if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
                     throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
+                if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
                 {
                     throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
                 }

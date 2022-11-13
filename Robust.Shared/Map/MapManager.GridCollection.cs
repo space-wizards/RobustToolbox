@@ -77,7 +77,6 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(gridComponent.Owner);
 
         Logger.InfoS("map", $"Binding grid {mapGrid.GridEntityId} to entity {gridComponent.Owner}");
-        OnGridCreated?.Invoke(xform.MapID, mapGrid.GridEntityId);
     }
 
     public GridEnumerator GetAllGridsEnumerator()
@@ -146,12 +145,14 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
             .Select(c => c.Grid);
     }
 
     public virtual void DeleteGrid(EntityUid euid)
     {
+        _grids.Remove(euid);
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -183,26 +184,8 @@ internal partial class MapManager
             EntityManager.DeleteEntity(entityId);
     }
 
-    public void TrueGridDelete(MapGrid grid)
-    {
-        grid.Deleting = true;
-        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-
-        var mapId = xform.MapID;
-
-        _grids.Remove(grid.GridEntityId);
-
-        Logger.DebugS("map", $"Deleted grid {grid.GridEntityId}");
-
-        // TODO: Remove this trash
-        OnGridRemoved?.Invoke(mapId, grid.GridEntityId);
-    }
-
     /// <inheritdoc />
     public event EventHandler<TileChangedEventArgs>? TileChanged;
-
-    public event GridEventHandler? OnGridCreated;
-    public event GridEventHandler? OnGridRemoved;
 
     /// <summary>
     ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map

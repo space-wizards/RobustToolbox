@@ -49,7 +49,7 @@ namespace Robust.UnitTesting
         {
         }
 
-        public void TextEntered(TextEventArgs textEvent)
+        public void TextEntered(TextEnteredEventArgs textEnteredEvent)
         {
         }
 

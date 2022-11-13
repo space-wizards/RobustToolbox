@@ -38,6 +38,8 @@ namespace Robust.Client.Input
 
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorUp);
+            common.AddFunction(EngineKeyFunctions.TextCursorDown);
             common.AddFunction(EngineKeyFunctions.TextCursorWordLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorWordRight);
             common.AddFunction(EngineKeyFunctions.TextCursorBegin);
@@ -46,12 +48,15 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextCursorSelect);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectUp);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectDown);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectWordLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectWordRight);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectBegin);
             common.AddFunction(EngineKeyFunctions.TextCursorSelectEnd);
 
             common.AddFunction(EngineKeyFunctions.TextBackspace);
+            common.AddFunction(EngineKeyFunctions.TextNewline);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
             common.AddFunction(EngineKeyFunctions.TextCopy);
             common.AddFunction(EngineKeyFunctions.TextCut);

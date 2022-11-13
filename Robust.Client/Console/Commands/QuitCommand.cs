@@ -4,25 +4,21 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    sealed class HardQuitCommand : IConsoleCommand
+    sealed class HardQuitCommand : LocalizedCommands
     {
-        public string Command => "hardquit";
-        public string Description => "Kills the game client instantly.";
-        public string Help => "Kills the game client instantly, leaving no traces. No telling the server goodbye";
+        public override string Command => "hardquit";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             Environment.Exit(0);
         }
     }
 
-    sealed class QuitCommand : IConsoleCommand
+    sealed class QuitCommand : LocalizedCommands
     {
-        public string Command => "quit";
-        public string Description => "Shuts down the game client gracefully.";
-        public string Help => "Properly shuts down the game client, notifying the connected server and such.";
+        public override string Command => "quit";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IGameController>().Shutdown("quit command used");
         }

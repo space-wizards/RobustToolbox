@@ -6,13 +6,11 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Server.Console.Commands;
 
-public sealed class SpinCommand : IConsoleCommand
+public sealed class SpinCommand : LocalizedCommands
 {
-    public string Command => "spin";
-    public string Description => "Causes an entity to spin. Default entity is the attached player's parent.";
-    public string Help => $"{Command} velocity [drag] [entityUid]";
+    public override string Command => "spin";
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length < 1)
         {

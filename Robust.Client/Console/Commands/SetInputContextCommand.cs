@@ -6,13 +6,11 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class SetInputContextCommand : IConsoleCommand
+    public sealed class SetInputContextCommand : LocalizedCommands
     {
-        public string Command => "setinputcontext";
-        public string Description => "Sets the active input context.";
-        public string Help => "setinputcontext <context>";
+        public override string Command => "setinputcontext";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {

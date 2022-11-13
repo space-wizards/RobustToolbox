@@ -639,6 +639,80 @@ public partial class EntitySystem
 
     #endregion
 
+    #region All Entity Query
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    #endregion
+
+    #region Get Entity Query
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    #endregion
+
     #region Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

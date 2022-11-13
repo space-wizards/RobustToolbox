@@ -454,7 +454,9 @@ namespace Robust.Shared.Physics.Systems
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var (broadphase, xform) in EntityManager.EntityQuery<BroadphaseComponent, TransformComponent>(true))
+            var enumerator = AllEntityQuery<BroadphaseComponent, TransformComponent>();
+
+            while (enumerator.MoveNext(out var broadphase, out var xform))
             {
                 if (xform.MapID != mapId) continue;
 

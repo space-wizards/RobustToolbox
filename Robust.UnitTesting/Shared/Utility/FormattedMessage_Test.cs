@@ -71,5 +71,19 @@ namespace Robust.UnitTesting.Shared.Utility
             var message = FormattedMessage.FromMarkup(text);
             Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(text));
         }
+
+        [Test]
+        [TestCase("Foo")]
+        [TestCase("[color=#FF000000]Foo[/color]")]
+        [TestCase("[color=#00FF00FF]Foo[/color]bar")]
+        [TestCase("honk honk [color=#00FF00FF]Foo[/color]bar")]
+        public static void TestEnumerateRunes(string text)
+        {
+            var message = FormattedMessage.FromMarkup(text);
+
+            Assert.That(
+                message.EnumerateRunes(),
+                Is.EquivalentTo(message.ToString().EnumerateRunes()));
+        }
     }
 }

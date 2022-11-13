@@ -64,13 +64,11 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetShowInterpCommand : IConsoleCommand
+        private sealed class NetShowInterpCommand : LocalizedCommands
         {
-            public string Command => "net_draw_interp";
-            public string Help => "net_draw_interp";
-            public string Description => "Toggles the debug drawing of the network interpolation.";
+            public override string Command => "net_draw_interp";
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 

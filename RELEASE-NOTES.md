@@ -27,7 +27,7 @@ Template for new versions:
 
 -->
 
-## Master
+## 0.63.0.0
 
 ### Breaking changes
 
@@ -54,6 +54,9 @@ Template for new versions:
 
 * Fixes erroneous literal "\\n" inside the Clyde debug panel.
 * Fixed Lidgren connection status changes potentially getting mislogged.
+* Fixed missing components not being correctly saved for maps
+* Fixed map saving sometimes not including new components.
+* Fix hot reload unit tests.
 
 ### Other
 

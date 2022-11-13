@@ -44,6 +44,7 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
@@ -76,9 +77,9 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
+            InitializeIsland();
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
@@ -259,8 +260,8 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            ShutdownIsland();
+            _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnWake(ref PhysicsWakeEvent @event)

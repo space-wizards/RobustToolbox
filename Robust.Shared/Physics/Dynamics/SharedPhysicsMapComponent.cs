@@ -98,7 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Store last tick's invDT
         /// </summary>
-        private float _invDt0;
+        internal float _invDt0;
 
         public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
@@ -143,15 +143,6 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             _deferredUpdates.Clear();
-        }
-
-        private void ClearForces()
-        {
-            foreach (var body in AwakeBodies)
-            {
-                body.Force = Vector2.Zero;
-                body.Torque = 0.0f;
-            }
         }
     }
 

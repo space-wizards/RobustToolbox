@@ -57,20 +57,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private int _positionConstraintsPerThread;
         private int _positionConstraintsMinimumThreads;
 
-        public void LoadConfig(in IslandCfg cfg)
+        public ContactSolver()
         {
-            _warmStarting = cfg.WarmStarting;
-            _velocityThreshold = cfg.VelocityThreshold;
-            _baumgarte = cfg.Baumgarte;
-            _maxLinearCorrection = cfg.MaxLinearCorrection;
-            _maxAngularCorrection = cfg.MaxAngularCorrection;
-            _positionConstraintsPerThread = cfg.PositionConstraintsPerThread;
-            _positionConstraintsMinimumThreads = cfg.PositionConstraintsMinimumThreads;
-            _velocityConstraintsPerThread = cfg.VelocityConstraintsPerThread;
-            _velocityConstraintsMinimumThreads = cfg.VelocityConstraintsMinimumThreads;
+
         }
 
-        public void Reset(SolverData data, IslandData island, Vector2[] linearVelocities, float[] angularVelocities, Vector2[] positions, float[] angles)
+        public void Reset(SolverData data, SharedPhysicsSystem.IslandData island, Vector2[] linearVelocities, float[] angularVelocities, Vector2[] positions, float[] angles)
         {
             _linearVelocities = linearVelocities;
             _angularVelocities = angularVelocities;
@@ -78,14 +70,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _positions = positions;
             _angles = angles;
 
-            _contacts = contacts;
-            var contactCount = contacts.Count;
+            _contacts = island.Contacts;
+            var contactCount = _contacts.Count;
 
             // Build constraints
             // For now these are going to be bare but will change
             for (var i = 0; i < contactCount; i++)
             {
-                var contact = contacts[i];
+                var contact = _contacts[i];
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
                 var shapeA = fixtureA.Shape;
@@ -103,8 +95,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.Friction = contact.Friction;
                 velocityConstraint.Restitution = contact.Restitution;
                 velocityConstraint.TangentSpeed = contact.TangentSpeed;
-                velocityConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
-                velocityConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
+                velocityConstraint.IndexA = bodyA.IslandIndex[island.Index];
+                velocityConstraint.IndexB = bodyB.IslandIndex[island.Index];
 
                 var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
 
@@ -118,8 +110,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.NormalMass = Vector4.Zero;
 
                 ref var positionConstraint = ref _positionConstraints[i];
-                positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
-                positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
+                positionConstraint.IndexA = bodyA.IslandIndex[island.Index];
+                positionConstraint.IndexB = bodyB.IslandIndex[island.Index];
                 (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
                 positionConstraint.LocalCenterA = bodyA.LocalCenter;
                 positionConstraint.LocalCenterB = bodyB.LocalCenter;
@@ -203,7 +195,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             Span<Vector2> points = stackalloc Vector2[2];
 
-            for (var i = 0; i < _contactCount; ++i)
+            for (var i = 0; i < _contacts.Count; ++i)
             {
                 ref var velocityConstraint = ref _velocityConstraints[i];
                 var positionConstraint = _positionConstraints[i];
@@ -313,7 +305,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void WarmStart()
         {
-            for (var i = 0; i < _contactCount; ++i)
+            for (var i = 0; i < _contacts.Count; ++i)
             {
                 var velocityConstraint = _velocityConstraints[i];
 

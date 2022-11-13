@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
@@ -11,6 +12,111 @@ using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
+
+/*
+ * These comments scabbed directly from Box2D and the licence applies to them.
+ */
+
+// MIT License
+
+// Copyright (c) 2019 Erin Catto
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+/*
+Position Correction Notes
+=========================
+I tried the several algorithms for position correction of the 2D revolute joint.
+I looked at these systems:
+- simple pendulum (1m diameter sphere on massless 5m stick) with initial angular velocity of 100 rad/s.
+- suspension bridge with 30 1m long planks of length 1m.
+- multi-link chain with 30 1m long links.
+Here are the algorithms:
+Baumgarte - A fraction of the position error is added to the velocity error. There is no
+separate position solver.
+Pseudo Velocities - After the velocity solver and position integration,
+the position error, Jacobian, and effective mass are recomputed. Then
+the velocity constraints are solved with pseudo velocities and a fraction
+of the position error is added to the pseudo velocity error. The pseudo
+velocities are initialized to zero and there is no warm-starting. After
+the position solver, the pseudo velocities are added to the positions.
+This is also called the First Order World method or the Position LCP method.
+Modified Nonlinear Gauss-Seidel (NGS) - Like Pseudo Velocities except the
+position error is re-computed for each constraint and the positions are updated
+after the constraint is solved. The radius vectors (aka Jacobians) are
+re-computed too (otherwise the algorithm has horrible instability). The pseudo
+velocity states are not needed because they are effectively zero at the beginning
+of each iteration. Since we have the current position error, we allow the
+iterations to terminate early if the error becomes smaller than b2_linearSlop.
+Full NGS or just NGS - Like Modified NGS except the effective mass are re-computed
+each time a constraint is solved.
+Here are the results:
+Baumgarte - this is the cheapest algorithm but it has some stability problems,
+especially with the bridge. The chain links separate easily close to the root
+and they jitter as they struggle to pull together. This is one of the most common
+methods in the field. The big drawback is that the position correction artificially
+affects the momentum, thus leading to instabilities and false bounce. I used a
+bias factor of 0.2. A larger bias factor makes the bridge less stable, a smaller
+factor makes joints and contacts more spongy.
+Pseudo Velocities - the is more stable than the Baumgarte method. The bridge is
+stable. However, joints still separate with large angular velocities. Drag the
+simple pendulum in a circle quickly and the joint will separate. The chain separates
+easily and does not recover. I used a bias factor of 0.2. A larger value lead to
+the bridge collapsing when a heavy cube drops on it.
+Modified NGS - this algorithm is better in some ways than Baumgarte and Pseudo
+Velocities, but in other ways it is worse. The bridge and chain are much more
+stable, but the simple pendulum goes unstable at high angular velocities.
+Full NGS - stable in all tests. The joints display good stiffness. The bridge
+still sags, but this is better than infinite forces.
+Recommendations
+Pseudo Velocities are not really worthwhile because the bridge and chain cannot
+recover from joint separation. In other cases the benefit over Baumgarte is small.
+Modified NGS is not a robust method for the revolute joint due to the violent
+instability seen in the simple pendulum. Perhaps it is viable with other constraint
+types, especially scalar constraints where the effective mass is a scalar.
+This leaves Baumgarte and Full NGS. Baumgarte has small, but manageable instabilities
+and is very fast. I don't think we can escape Baumgarte, especially in highly
+demanding cases where high constraint fidelity is not needed.
+Full NGS is robust and easy on the eyes. I recommend this as an option for
+higher fidelity simulation and certainly for suspension bridges and long chains.
+Full NGS might be a good choice for ragdolls, especially motorized ragdolls where
+joint separation can be problematic. The number of NGS iterations can be reduced
+for better performance without harming robustness much.
+Each joint in a can be handled differently in the position solver. So I recommend
+a system where the user can select the algorithm on a per joint basis. I would
+probably default to the slower Full NGS and let the user select the faster
+Baumgarte method in performance critical scenarios.
+*/
+
+/*
+Cache Performance
+The Box2D solvers are dominated by cache misses. Data structures are designed
+to increase the number of cache hits. Much of misses are due to random access
+to body data. The constraint structures are iterated over linearly, which leads
+to few cache misses.
+The bodies are not accessed during iteration. Instead read only data, such as
+the mass values are stored with the constraints. The mutable data are the constraint
+impulses and the bodies velocities/positions. The impulses are held inside the
+constraint structures. The body velocities/positions are held in compact, temporary
+arrays to increase the number of cache hits. Linear and angular velocity are
+stored in a single array since multiple arrays lead to multiple misses.
+*/
 
 public abstract partial class SharedPhysicsSystem
 {
@@ -27,13 +133,14 @@ public abstract partial class SharedPhysicsSystem
 
     private readonly ObjectPool<List<Joint>> _islandJointPool = new DefaultObjectPool<List<Joint>>(new ListPolicy<Joint>(), MaxIslands);
 
-    private record struct IslandData(int Index, bool LoneIsland, List<PhysicsComponent> Bodies, List<Contact> Contacts, List<Joint> Joints)
+    internal record struct IslandData(int Index, bool LoneIsland, List<PhysicsComponent> Bodies, List<Contact> Contacts, List<Joint> Joints)
     {
         public readonly int Index = Index;
         public readonly bool LoneIsland = LoneIsland;
         public readonly List<PhysicsComponent> Bodies = Bodies;
         public readonly List<Contact> Contacts = Contacts;
         public readonly List<Joint> Joints = Joints;
+        public bool PositionSolved = false;
     }
 
     // Caching for island generation.
@@ -41,11 +148,40 @@ public abstract partial class SharedPhysicsSystem
     private readonly Stack<PhysicsComponent> _bodyStack = new(64);
     private readonly List<PhysicsComponent> _awakeBodyList = new(256);
 
+    // Config
+    private bool _warmStarting;
+    private float _maxLinearCorrection;
+    private float _maxAngularCorrection;
+    private int _velocityIterations;
+    private int _positionIterations;
+
+    private void InitializeIsland()
+    {
+        _configManager.OnValueChanged(CVars.WarmStarting, SetWarmStarting, true);
+        _configManager.OnValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
+        _configManager.OnValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
+        _configManager.OnValueChanged(CVars.VelocityIterations, SetVelocityIterations, true);
+        _configManager.OnValueChanged(CVars.PositionIterations, SetPositionIterations, true);
+    }
+
+    private void ShutdownIsland()
+    {
+        _configManager.UnsubValueChanged(CVars.WarmStarting, SetWarmStarting);
+        _configManager.UnsubValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection);
+        _configManager.UnsubValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection);
+        _configManager.UnsubValueChanged(CVars.VelocityIterations, SetVelocityIterations);
+        _configManager.UnsubValueChanged(CVars.PositionIterations, SetPositionIterations);
+    }
+
+    private void SetWarmStarting(bool value) => _warmStarting = value;
+    private void SetMaxLinearCorrection(float value) => _maxLinearCorrection = value;
+    private void SetMaxAngularCorrection(float value) => _maxAngularCorrection = value;
+    private void SetVelocityIterations(int value) => _velocityIterations = value;
+    private void SetPositionIterations(int value) => _positionIterations = value;
+
     /// <summary>
     ///     Where the magic happens.
     /// </summary>
-    /// <param name="frameTime"></param>
-    /// <param name="prediction"></param>
     public void Step(SharedPhysicsMapComponent component, float frameTime, bool prediction)
     {
         // Box2D does this at the end of a step and also here when there's a fixture update.
@@ -74,9 +210,19 @@ public abstract partial class SharedPhysicsSystem
 
         // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
         if (!prediction && component.AutoClearForces)
-            component.ClearForces();
+            ClearForces(component);
 
         component._invDt0 = invDt;
+    }
+
+    private void ClearForces(SharedPhysicsMapComponent component)
+    {
+        foreach (var body in component.AwakeBodies)
+        {
+            // TODO: Netsync
+            body.Force = Vector2.Zero;
+            body.Torque = 0.0f;
+        }
     }
 
     private void Solve(SharedPhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
@@ -286,6 +432,17 @@ public abstract partial class SharedPhysicsSystem
         var iBegin = 0;
         var gravity = component.Gravity;
 
+        var data = new SolverData(frameTime, dtRatio, invDt, _warmStarting, _maxLinearCorrection, _maxAngularCorrection, _velocityIterations, _positionIterations);
+
+        islands.Sort((x, y) => y.Contacts.Count.CompareTo(x.Contacts.Count) + y.Joints.Count.CompareTo(x.Joints.Count));
+
+#if DEBUG
+        foreach (var island in islands)
+        {
+            RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
+        }
+#endif
+
         while (iBegin < islands.Count)
         {
             var island = islands[iBegin];
@@ -293,7 +450,7 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(island, gravity, frameTime, dtRatio, invDt, prediction);
+            SolveIsland(ref island, data, gravity, frameTime, dtRatio, invDt, prediction);
             iBegin++;
             // TODO: Submit rest in parallel if applicable
         }
@@ -301,7 +458,7 @@ public abstract partial class SharedPhysicsSystem
         Parallel.For(iBegin, islands.Count, i =>
         {
             var island = islands[i];
-            SolveIsland(island, gravity, frameTime, dtRatio, invDt, prediction);
+            SolveIsland(ref island, data, gravity, frameTime, dtRatio, invDt, prediction);
         });
 
         // Update bodies sequentially to avoid race conditions. May be able to do this parallel someday
@@ -320,28 +477,19 @@ public abstract partial class SharedPhysicsSystem
     /// <returns></returns>
     private bool InternalParallel(IslandData island)
     {
-        if (island.Contacts.Count > 32 || island.Joints.Count > 32)
-        {
-            return true;
-        }
-
-        return false;
+        return island.Contacts.Count > 32 || island.Joints.Count > 32;
     }
 
     /// <summary>
     ///     Go through all the bodies in this island and solve.
     /// </summary>
-    private void SolveIsland(IslandData island, Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIsland(ref IslandData island, SolverData data, Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
     {
-#if DEBUG
-        RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
-#endif
-
         var bodyCount = island.Bodies.Count;
-        Span<Vector2> positions = stackalloc Vector2[bodyCount];
-        Span<Angle> angles = stackalloc Angle[bodyCount];
-        Span<Vector2> linearVelocities = stackalloc Vector2[bodyCount];
-        Span<float> angularVelocities = stackalloc float[bodyCount];
+        var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
+        var angles = ArrayPool<float>.Shared.Rent(bodyCount);
+        var linearVelocities = ArrayPool<Vector2>.Shared.Rent(bodyCount);
+        var angularVelocities = ArrayPool<float>.Shared.Rent(bodyCount);
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
@@ -381,21 +529,8 @@ public abstract partial class SharedPhysicsSystem
 
         var solver = new ContactSolver();
 
-        var data = new SolverData()
-        {
-            FrameTime = frameTime,
-            DtRatio = dtRatio,
-        };
-
-        // TODO: Do these up front of the world step.
-        SolverData.InvDt = invDt;
-        SolverData.IslandIndex = ID;
-        SolverData.WarmStarting = _warmStarting;
-        SolverData.MaxLinearCorrection = _maxLinearCorrection;
-        SolverData.MaxAngularCorrection = _maxAngularCorrection;
-
         // Pass the data into the solver
-        solver.Reset(data, island.Contacts);
+        solver.Reset(data, island, linearVelocities, angularVelocities, positions, angles);
 
         solver.InitializeVelocityConstraints();
 
@@ -417,7 +552,7 @@ public abstract partial class SharedPhysicsSystem
 
                 var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
                 var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
-                joint.InitVelocityConstraints(SolverData, bodyA, bodyB);
+                joint.InitVelocityConstraints(data, bodyA, bodyB);
             }
         }
 
@@ -455,16 +590,16 @@ public abstract partial class SharedPhysicsSystem
             var angle = angles[i];
 
             var translation = linearVelocity * frameTime;
-            if (translation.Length > _maxLinearVelocity)
+            if (translation.Length > data.MaxLinearVelocity)
             {
-                var ratio = _maxLinearVelocity / translation.Length;
+                var ratio = data.MaxLinearVelocity / translation.Length;
                 linearVelocity *= ratio;
             }
 
             var rotation = angularVelocity * frameTime;
-            if (rotation * rotation > _maxAngularVelocity)
+            if (rotation * rotation > data.MaxAngularVelocity)
             {
-                var ratio = _maxAngularVelocity / MathF.Abs(rotation);
+                var ratio = data.MaxAngularVelocity / MathF.Abs(rotation);
                 angularVelocity *= ratio;
             }
 
@@ -478,52 +613,49 @@ public abstract partial class SharedPhysicsSystem
             angles[i] = angle;
         }
 
-        _positionSolved = false;
+        island.PositionSolved = false;
 
-        for (var i = 0; i < _positionIterations; i++)
+        for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = _contactSolver.SolvePositionConstraints();
+            var contactsOkay = solver.SolvePositionConstraints();
             var jointsOkay = true;
 
-            for (int j = 0; j < JointCount; ++j)
+            for (int j = 0; j < island.Joints.Count; ++j)
             {
-                var joint = _joints[j].Joint;
+                var joint = island.Joints[j];
 
                 if (!joint.Enabled)
                     continue;
 
-                var jointOkay = joint.SolvePositionConstraints(SolverData);
+                var jointOkay = joint.SolvePositionConstraints(data);
 
                 jointsOkay = jointsOkay && jointOkay;
             }
 
             if (contactsOkay && jointsOkay)
             {
-                _positionSolved = true;
+                island.PositionSolved = true;
                 break;
             }
         }
     }
 
-    internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates)
+    internal void UpdateBodies(IslandData island, HashSet<TransformComponent> deferredUpdates, Vector2[] positions, float[] angles, Vector2[] linearVelocities, float[] angularVelocities)
     {
-        foreach (var (joint, error) in _brokenJoints)
+        foreach (var (joint, error) in island.BrokenJoints)
         {
             var msg = new Joint.JointBreakMessage(joint, MathF.Sqrt(error));
-            var eventBus = _entityManager.EventBus;
-            eventBus.RaiseLocalEvent(joint.BodyAUid, msg, false);
-            eventBus.RaiseLocalEvent(joint.BodyBUid, msg, false);
-            eventBus.RaiseEvent(EventSource.Local, msg);
+            RaiseLocalEvent(joint.BodyAUid, msg, false);
+            RaiseLocalEvent(joint.BodyBUid, msg, false);
+            RaiseLocalEvent(EventSource.Local, msg);
         }
-
-        _brokenJoints.Clear();
 
         var xforms = GetEntityQuery<TransformComponent>();
 
         // Update data on bodies by copying the buffers back
-        for (var i = 0; i < BodyCount; i++)
+        for (var i = 0; i < island.Bodies.Count; i++)
         {
-            var body = Bodies[i];
+            var body = island.Bodies[i];
 
             // So technically we don't /need/ to skip static bodies here but it saves us having to check for deferred updates so we'll do it anyway.
             // Plus calcing worldpos can be costly so we skip that too which is nice.
@@ -540,7 +672,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 var q = new Quaternion2D(angle);
 
-                bodyPos -= Transform.Mul(q, body.LocalCenter);
+                bodyPos -= Physics.Transform.Mul(q, body.LocalCenter);
                 var transform = xforms.GetComponent(body.Owner);
 
                 // Defer MoveEvent until the end of the physics step so cache can be better.
@@ -560,23 +692,23 @@ public abstract partial class SharedPhysicsSystem
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                _physics.SetLinearVelocity(body, linVelocity);
+                SetLinearVelocity(body, linVelocity);
             }
 
             var angVelocity = _angularVelocities[i];
 
             if (!float.IsNaN(angVelocity))
             {
-                _physics.SetAngularVelocity(body, angVelocity);
+                SetAngularVelocity(body, angVelocity);
             }
         }
     }
 
-    private void SleepBodies(IslandData island, bool prediction, float frameTime)
+    private void SleepBodies(IslandData island, SolverData data, bool prediction, float frameTime)
     {
         if (island.LoneIsland)
         {
-            if (!prediction && _sleepAllowed)
+            if (!prediction && data.SleepAllowed)
             {
                 for (var i = 0; i < island.Bodies.Count; i++)
                 {
@@ -585,8 +717,8 @@ public abstract partial class SharedPhysicsSystem
                     if (body.BodyType == BodyType.Static) continue;
 
                     if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        body.AngularVelocity * body.AngularVelocity > data.AngToLSqr ||
+                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
                     {
                         SetSleepTime(body, 0f);
                     }
@@ -595,7 +727,7 @@ public abstract partial class SharedPhysicsSystem
                         SetSleepTime(body, body.SleepTime + frameTime);
                     }
 
-                    if (body.SleepTime >= _timeToSleep && _positionSolved)
+                    if (body.SleepTime >= data.TimeToSleep && island.PositionSolved)
                     {
                         SetAwake(body, false);
                     }
@@ -605,7 +737,7 @@ public abstract partial class SharedPhysicsSystem
         else
         {
             // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (!prediction && _sleepAllowed)
+            if (!prediction && data.SleepAllowed)
             {
                 var minSleepTime = float.MaxValue;
 
@@ -616,8 +748,8 @@ public abstract partial class SharedPhysicsSystem
                     if (body.BodyType == BodyType.Static) continue;
 
                     if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
+                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
                     {
                         SetSleepTime(body, 0f);
                         minSleepTime = 0.0f;
@@ -629,7 +761,7 @@ public abstract partial class SharedPhysicsSystem
                     }
                 }
 
-                if (minSleepTime >= _timeToSleep && _positionSolved)
+                if (minSleepTime >= data.TimeToSleep && island.PositionSolved)
                 {
                     for (var i = 0; i < island.Bodies.Count; i++)
                     {

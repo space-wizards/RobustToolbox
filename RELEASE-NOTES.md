@@ -27,6 +27,28 @@ Template for new versions:
 
 -->
 
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
 ## 0.63.0.0
 
 ### Breaking changes

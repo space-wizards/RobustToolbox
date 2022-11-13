@@ -58,10 +58,6 @@ public abstract partial class SharedMapSystem
 
     private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
     {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (component.Grid != null)
-            ((IMapManagerInternal) MapManager).TrueGridDelete((MapGrid) component.Grid);
-
         RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
 
         if (uid == EntityUid.Invalid)

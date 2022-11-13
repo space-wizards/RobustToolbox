@@ -12,91 +12,17 @@ namespace Robust.Shared.GameObjects
     public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] protected readonly IMapManager MapManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         public override void Initialize()
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
-            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
-            SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
-            SubscribeLocalEvent<MapComponent, ComponentHandleState>(OnMapHandleState);
-            SubscribeLocalEvent<MapComponent, ComponentGetState>(OnMapGetState);
-
-            SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
-            SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
-            SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
-            SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+            InitializeMap();
+            InitializeGrid();
 
             SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
             SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
-        }
-
-        private void OnMapHandleState(EntityUid uid, MapComponent component, ref ComponentHandleState args)
-        {
-            if (args.Current is not MapComponentState state)
-                return;
-
-            component.WorldMap = state.MapId;
-            component.LightingEnabled = state.LightingEnabled;
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
-            xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
-        }
-
-        private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
-        {
-            args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
-        }
-
-        protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
-
-        private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
-        {
-            var msg = new MapChangedEvent(component.WorldMap, true);
-            RaiseLocalEvent(uid, msg, true);
-        }
-
-        private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
-        {
-            var iMap = (IMapManagerInternal)MapManager;
-
-            iMap.TrueDeleteMap(component.WorldMap);
-
-            var msg = new MapChangedEvent(component.WorldMap, false);
-            RaiseLocalEvent(uid, msg, true);
-        }
-
-        private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
-        {
-            // GridID is not set yet so we don't include it.
-            var msg = new GridAddEvent(uid);
-            RaiseLocalEvent(uid, msg, true);
-        }
-
-        private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
-        {
-            var msg = new GridInitializeEvent(uid);
-            RaiseLocalEvent(uid, msg, true);
-        }
-
-        private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
-        {
-            var msg = new GridStartupEvent(uid);
-            RaiseLocalEvent(uid, msg, true);
-        }
-
-        private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
-        {
-            RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
-
-            if (uid == EntityUid.Invalid)
-                return;
-
-            if (!MapManager.GridExists(uid))
-                return;
-
-            MapManager.DeleteGrid(uid);
         }
     }
 

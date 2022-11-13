@@ -43,7 +43,7 @@ Template for new versions:
 
 ### Other
 
-*None yet*
+* Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
 
 ### Internal
 

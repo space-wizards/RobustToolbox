@@ -70,6 +70,11 @@ namespace Robust.UnitTesting
             ClientHandshakeComplete?.Invoke();
         }
 
+        public (byte[] mapHash, byte[] package) GeneratePackage()
+        {
+            throw new NotImplementedException();
+        }
+
         private sealed class TypeSerializerImpl : IStaticTypeSerializer
         {
             public bool Handles(Type type)

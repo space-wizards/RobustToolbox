@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization
     /// send the constant value instead - and at the other end, the
     /// serializer can use the same mapping to recover the original string.
     /// </remarks>
-    internal sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
+    public sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
     {
         private static readonly Counter StringsHitMetric = Metrics.CreateCounter(
             "robust_net_string_hit",
@@ -128,6 +128,8 @@ namespace Robust.Shared.Serialization
         /// Thrown if the mapping is not locked.
         /// </exception>
         public ReadOnlySpan<byte> MappedStringsHash => _stringMapHash;
+
+        public (byte[] mapHash, byte[] package) GeneratePackage() => _dict.GeneratePackage();
 
         public bool EnableCaching { get; set; } = true;
 

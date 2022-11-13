@@ -15,9 +15,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization
 {
-    internal partial class RobustMappedStringSerializer
+    public partial class RobustMappedStringSerializer
     {
-        internal sealed class MappedStringDict
+        public sealed class MappedStringDict
         {
             private readonly ISawmill _sawmill;
             public bool Locked { get; set; }

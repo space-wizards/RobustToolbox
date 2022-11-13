@@ -95,6 +95,8 @@ namespace Robust.Shared.Serialization
             */
         }
 
+        public byte[] TypesHash() => Convert.FromHexString(_serializer.GetSHA256());
+
         public void Serialize(Stream stream, object toSerialize)
         {
             var start = stream.Position;

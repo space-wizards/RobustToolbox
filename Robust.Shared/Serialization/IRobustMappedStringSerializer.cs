@@ -11,7 +11,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Shared.Serialization
 {
     [PublicAPI]
-    internal interface IRobustMappedStringSerializer
+    public interface IRobustMappedStringSerializer
     {
         bool Locked { get; }
 
@@ -96,5 +96,7 @@ namespace Robust.Shared.Serialization
         void LockStrings();
 
         void Initialize();
+
+        (byte[] mapHash, byte[] package) GeneratePackage();
     }
 }

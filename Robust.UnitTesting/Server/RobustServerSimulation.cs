@@ -38,6 +38,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Server.Replays;
 using Robust.Shared.Replays;
+using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Server
 {
@@ -228,6 +229,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
+            container.RegisterInstance<ISharedPlayerManager>(new Mock<ISharedPlayerManager>().Object);
             container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.RegisterInstance<IServerReplayRecordingManager>(new Mock<IServerReplayRecordingManager>().Object);

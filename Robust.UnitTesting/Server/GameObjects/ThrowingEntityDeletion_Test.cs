@@ -6,7 +6,7 @@ using Robust.Shared.Map;
 namespace Robust.UnitTesting.Server.GameObjects
 {
     [TestFixture]
-    public sealed class ThrowingEntityDeletion_Test : RobustUnitTest
+    public sealed class ThrowingEntityDeletion_Test
     {
         private ISimulation _sim = default!;
 

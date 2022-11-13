@@ -13,6 +13,10 @@ namespace Robust.Client.Graphics
 
         void SetMasterVolume(float newVolume);
 
+        void DisposeAllAudio();
+
+        void StopAllAudio();
+
         IClydeAudioSource? CreateAudioSource(AudioStream stream);
         IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
     }

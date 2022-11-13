@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
@@ -20,6 +22,7 @@ namespace Robust.Shared.Map
 
         private readonly Vector2i _gridIndices;
 
+        [ViewVariables]
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
@@ -34,6 +37,7 @@ namespace Robust.Shared.Map
         /// <remarks>
         /// This will always be between 1 and <see cref="ChunkSize"/>^2.
         /// </remarks>
+        [ViewVariables]
         internal int FilledTiles { get; private set; }
 
         /// <summary>
@@ -49,6 +53,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
         /// </summary>
+        [ViewVariables]
         public GameTick LastTileModifiedTick { get; set; }
 
         /// <summary>

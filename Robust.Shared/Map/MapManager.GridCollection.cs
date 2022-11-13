@@ -69,7 +69,7 @@ internal partial class MapManager
 
     public IEnumerable<MapGridComponent> GetAllGrids()
     {
-        var compQuery = EntityManager.EntityQueryEnumerator<MapGridComponent>();
+        var compQuery = EntityManager.AllEntityQueryEnumerator<MapGridComponent>();
 
         while (compQuery.MoveNext(out var comp))
         {
@@ -133,8 +133,6 @@ internal partial class MapManager
 
     public virtual void DeleteGrid(EntityUid euid)
     {
-        _grids.Remove(euid);
-
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif

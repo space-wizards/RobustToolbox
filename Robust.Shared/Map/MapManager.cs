@@ -39,7 +39,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         StartupGridTrees();
 
-        DebugTools.Assert(_grids.Count == 0);
         DebugTools.Assert(!GridExists(EntityUid.Invalid));
     }
 
@@ -58,7 +57,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         ShutdownGridTrees();
 
 #if DEBUG
-        DebugTools.Assert(_grids.Count == 0);
         DebugTools.Assert(!GridExists(EntityUid.Invalid));
         _dbgGuardRunning = false;
 #endif

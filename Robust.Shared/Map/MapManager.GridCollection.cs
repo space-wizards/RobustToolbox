@@ -61,8 +61,6 @@ public sealed class TileChangedEventArgs : EventArgs
 
 internal partial class MapManager
 {
-    private readonly HashSet<EntityUid> _grids = new();
-
     public virtual void ChunkRemoved(EntityUid gridId, MapChunk chunk) { }
 
     public MapGridComponent GetGridComp(EntityUid euid)
@@ -70,28 +68,13 @@ internal partial class MapManager
         return EntityManager.GetComponent<MapGridComponent>(euid);
     }
 
-    /// <inheritdoc />
-    public void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid)
-    {
-        _grids.Add(mapGrid.GridEntityId);
-        var xform = EntityManager.GetComponent<TransformComponent>(gridComponent.Owner);
-
-        Logger.InfoS("map", $"Binding grid {mapGrid.GridEntityId} to entity {gridComponent.Owner}");
-    }
-
-    public GridEnumerator GetAllGridsEnumerator()
-    {
-        var query = EntityManager.GetEntityQuery<MapGridComponent>();
-        return new GridEnumerator(_grids.GetEnumerator(), query);
-    }
-
     public IEnumerable<IMapGrid> GetAllGrids()
     {
-        var compQuery = EntityManager.GetEntityQuery<MapGridComponent>();
+        var compQuery = EntityManager.EntityQueryEnumerator<MapGridComponent>();
 
-        foreach (var uid in _grids)
+        while (compQuery.MoveNext(out var comp))
         {
-            yield return compQuery.GetComponent(uid).Grid;
+            yield return comp.Grid;
         }
     }
 
@@ -151,8 +134,6 @@ internal partial class MapManager
 
     public virtual void DeleteGrid(EntityUid euid)
     {
-        _grids.Remove(euid);
-
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif

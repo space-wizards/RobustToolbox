@@ -46,7 +46,6 @@ namespace Robust.Shared.GameObjects
 
             Grid = grid;
 
-            _mapManager.OnGridAllocated(this, grid);
             return grid;
         }
 

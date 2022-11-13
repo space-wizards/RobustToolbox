@@ -17,12 +17,6 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager
     {
-        /// <summary>
-        /// A faster version of <see cref="GetAllGrids"/>
-        /// </summary>
-        [Obsolete("EntityQuery for MapGridComponent instead")]
-        GridEnumerator GetAllGridsEnumerator();
-
         IEnumerable<IMapGrid> GetAllGrids();
 
         /// <summary>

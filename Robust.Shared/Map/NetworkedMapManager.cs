@@ -47,11 +47,11 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<EntityUid, GameStateMapData.GridDatum>();
-        var enumerator = GetAllGridsEnumerator();
+        var enumerator = EntityManager.EntityQueryEnumerator<MapGridComponent>();
 
         while (enumerator.MoveNext(out var iGrid))
         {
-            var grid = (MapGrid)iGrid;
+            var grid = (MapGrid)iGrid.Grid;
 
             if (grid.LastTileModifiedTick < fromTick)
                 continue;

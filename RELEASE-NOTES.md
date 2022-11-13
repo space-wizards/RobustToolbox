@@ -39,7 +39,7 @@ Template for new versions:
 
 ### Bugfixes
 
-*None yet*
+* Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
 
 ### Other
 

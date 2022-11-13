@@ -149,8 +149,6 @@ namespace Robust.Client.UserInterface
                         var text = tagText.Text;
                         foreach (var rune in text.EnumerateRunes())
                         {
-                            globalBreakCounter += 1;
-
                             if (lineBreakIndex < LineBreaks.Count &&
                                 LineBreaks[lineBreakIndex] == globalBreakCounter)
                             {
@@ -160,6 +158,8 @@ namespace Robust.Client.UserInterface
 
                             var advance = font.DrawChar(handle, rune, baseLine, uiScale, currentColorTag.Color);
                             baseLine += new Vector2(advance, 0);
+
+                            globalBreakCounter += 1;
                         }
 
                         break;

@@ -217,10 +217,9 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        private int _getScrollSpeed()
+        private float _getScrollSpeed()
         {
-            var font = _getFont();
-            return font.GetLineHeight(UIScale) * 2;
+            return GetScrollSpeed(_getFont(), UIScale);
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -235,6 +234,11 @@ namespace Robust.Client.UserInterface.Controls
             _invalidateEntries();
 
             base.UIScaleChanged();
+        }
+
+        internal static float GetScrollSpeed(Font font, float scale)
+        {
+            return font.GetLineHeight(scale) * 2;
         }
     }
 }

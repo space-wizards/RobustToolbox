@@ -37,6 +37,15 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
             configManager.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
             configManager.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
+
+            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
+        }
+
+        protected virtual void OnGridInit(GridInitializeEvent ev)
+        {
+            // This will also check for grid splits if applicable.
+            var iGrid = (IMapGridInternal) Comp<MapGridComponent>(ev.EntityUid).Grid;
+            iGrid.RegenerateCollision(iGrid.GetMapChunks().Values.ToHashSet());
         }
 
         public override void Shutdown()
@@ -58,11 +67,7 @@ namespace Robust.Shared.GameObjects
 
         internal void ProcessGrid(IMapGridInternal gridInternal)
         {
-            // Just in case there's any deleted we'll ToArray
-            foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())
-            {
-                gridInternal.RegenerateCollision(chunk);
-            }
+            gridInternal.RegenerateCollision(gridInternal.GetMapChunks().Values.ToHashSet());
         }
 
         internal void RegenerateCollision(

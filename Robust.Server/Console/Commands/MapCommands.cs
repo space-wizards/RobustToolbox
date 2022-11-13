@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Player;
 using Robust.Shared.Console;
@@ -80,22 +81,22 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridId))
+            if (!EntityUid.TryParse(args[0], out var uid))
             {
                 shell.WriteError("Not a valid entity ID.");
                 return;
             }
 
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
             // no saving default grid
-            if (!mapManager.TryGetGrid(gridId, out var grid))
+            if (!entManager.EntityExists(uid))
             {
                 shell.WriteError("That grid does not exist.");
                 return;
             }
 
-            IoCManager.Resolve<IMapLoader>().SaveGrid(gridId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().Save(uid, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -188,8 +189,8 @@ namespace Robust.Server.Console.Commands
                 loadOptions.StoreMapUids = storeUids;
             }
 
-            var mapLoader = IoCManager.Resolve<IMapLoader>();
-            mapLoader.LoadGrid(mapId, args[1], loadOptions);
+            var mapLoader = IoCManager.Resolve<MapLoaderSystem>();
+            mapLoader.Load(mapId, args[1], loadOptions);
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -253,7 +254,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            IoCManager.Resolve<IMapLoader>().SaveMap(mapId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().SaveMap(mapId, args[1]);
             shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }
@@ -367,7 +368,7 @@ namespace Robust.Server.Console.Commands
                 loadOptions.StoreMapUids = storeUids;
             }
 
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().TryLoad(mapId, args[1], out _, loadOptions);
 
             if (mapManager.MapExists(mapId))
                 shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));

@@ -41,6 +41,8 @@ internal partial class UserInterfaceManager
     private Control? _suppliedTooltip;
     private const float TooltipDelay = 1;
 
+    private WindowRoot? _focusedRoot;
+
     private static (Control control, Vector2 rel)? MouseFindControlAtPos(Control control, Vector2 position)
     {
         for (var i = control.ChildCount - 1; i >= 0; i--)
@@ -215,15 +217,26 @@ internal partial class UserInterfaceManager
         _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
     }
 
-    public void TextEntered(TextEventArgs textEvent)
+    public void TextEntered(TextEnteredEventArgs textEnteredEvent)
     {
         if (KeyboardFocused == null)
         {
             return;
         }
 
-        var guiArgs = new GUITextEventArgs(KeyboardFocused, textEvent.CodePoint);
+        var guiArgs = new GUITextEnteredEventArgs(KeyboardFocused, textEnteredEvent);
         KeyboardFocused.TextEntered(guiArgs);
+    }
+
+    public void TextEditing(TextEditingEventArgs textEvent)
+    {
+        if (KeyboardFocused == null)
+        {
+            return;
+        }
+
+        var guiArgs = new GUITextEditingEventArgs(KeyboardFocused, textEvent);
+        KeyboardFocused.TextEditing(guiArgs);
     }
 
     public ScreenCoordinates MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);

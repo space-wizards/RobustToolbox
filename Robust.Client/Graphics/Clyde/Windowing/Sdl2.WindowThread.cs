@@ -104,6 +104,18 @@ internal partial class Clyde
                 case CmdWinWinSetMode cmd:
                     WinThreadWinSetMode(cmd);
                     break;
+
+                case CmdTextInputSetRect cmd:
+                    WinThreadSetTextInputRect(cmd);
+                    break;
+
+                case CmdTextInputStart:
+                    WinThreadStartTextInput();
+                    break;
+
+                case CmdTextInputStop:
+                    WinThreadStopTextInput();
+                    break;
             }
         }
 
@@ -238,6 +250,21 @@ internal partial class Clyde
         private sealed record CmdWinWinSetMode(
             nint Window,
             WindowMode Mode
+        ) : CmdBase;
+
+        // IME
+        private sealed record CmdTextInputStart : CmdBase
+        {
+            public static readonly CmdTextInputStart Instance = new();
+        }
+
+        private sealed record CmdTextInputStop : CmdBase
+        {
+            public static readonly CmdTextInputStop Instance = new();
+        }
+
+        private sealed record CmdTextInputSetRect(
+            SDL_Rect Rect
         ) : CmdBase;
     }
 }

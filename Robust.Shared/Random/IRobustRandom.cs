@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 
@@ -11,6 +12,8 @@ namespace Robust.Shared.Random
         public float NextFloat(float maxValue) => NextFloat() * maxValue;
         int Next();
         int Next(int minValue, int maxValue);
+        TimeSpan Next(TimeSpan minTime, TimeSpan maxTime);
+        TimeSpan Next(TimeSpan maxTime);
         int Next(int maxValue);
         double NextDouble();
         double NextDouble(double minValue, double maxValue) => NextDouble() * (maxValue - minValue) + minValue;

@@ -4,7 +4,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -16,8 +15,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public sealed class MapGridComponent : Component
     {
-        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
@@ -29,50 +28,13 @@ namespace Robust.Shared.GameObjects
         private IMapGrid? _mapGrid;
 
         [DataField("chunkSize")]
-        private ushort _chunkSize = 16;
+        internal ushort ChunkSize = 16;
 
         [ViewVariables]
         public IMapGrid Grid
         {
             get => _mapGrid ?? throw new InvalidOperationException();
             private set => _mapGrid = value;
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            var xform = _entMan.GetComponent<TransformComponent>(Owner);
-            var mapId = xform.MapID;
-
-            if (_mapManager.HasMapEntity(mapId))
-            {
-                xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
-            }
-        }
-
-        protected override void OnRemove()
-        {
-            if (_mapGrid != null)
-                _mapManager.TrueGridDelete((MapGrid)_mapGrid);
-
-            base.OnRemove();
-        }
-
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            return new MapGridComponentState(Owner, _chunkSize);
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not MapGridComponentState state)
-                return;
-
-            _chunkSize = state.ChunkSize;
         }
 
         internal MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
@@ -142,15 +104,9 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
-#pragma warning disable CS0618
     [Serializable, NetSerializable]
     internal sealed class MapGridComponentState : ComponentState
     {
-        /// <summary>
-        ///     Index of the grid this component is linked to.
-        /// </summary>
-        public EntityUid GridIndex { get; }
-
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
@@ -159,13 +115,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
-        /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         /// <param name="chunkSize">The size of the chunks in the map grid.</param>
-        public MapGridComponentState(EntityUid gridIndex, ushort chunkSize)
+        public MapGridComponentState(ushort chunkSize)
         {
-            GridIndex = gridIndex;
             ChunkSize = chunkSize;
         }
     }
-#pragma warning restore CS0618
 }

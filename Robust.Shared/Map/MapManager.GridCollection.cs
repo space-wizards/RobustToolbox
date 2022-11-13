@@ -145,12 +145,14 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
             .Select(c => c.Grid);
     }
 
     public virtual void DeleteGrid(EntityUid euid)
     {
+        _grids.Remove(euid);
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -180,18 +182,6 @@ internal partial class MapManager
         // so make sure that's not the case.
         if (metaComp.EntityLifeStage < EntityLifeStage.Terminating)
             EntityManager.DeleteEntity(entityId);
-    }
-
-    public void TrueGridDelete(MapGrid grid)
-    {
-        grid.Deleting = true;
-        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-
-        var mapId = xform.MapID;
-
-        _grids.Remove(grid.GridEntityId);
-
-        Logger.DebugS("map", $"Deleted grid {grid.GridEntityId}");
     }
 
     /// <inheritdoc />

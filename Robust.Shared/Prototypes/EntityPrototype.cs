@@ -191,60 +191,6 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public void UpdateEntity(EntityUid entity)
-        {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var metaData = entityManager.GetComponent<MetaDataComponent>(entity);
-            if (ID != metaData.EntityPrototype?.ID)
-            {
-                Logger.Error(
-                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
-                return;
-            }
-
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            var oldPrototype = metaData.EntityPrototype;
-
-            var oldPrototypeComponents = oldPrototype?.Components.Keys
-                .Where(n => n != "Transform" && n != "MetaData")
-                .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList() ?? new List<(string name, Type Type)>();
-            var newPrototypeComponents = Components.Keys
-                .Where(n => n != "Transform" && n != "MetaData")
-                .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList();
-
-            var ignoredComponents = new List<string>();
-
-            // Find components to be removed, and remove them
-            foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
-            {
-                if (Components.Keys.Contains(name))
-                {
-                    ignoredComponents.Add(name);
-                    continue;
-                }
-
-                entityManager.RemoveComponent(entity, type);
-            }
-
-            entityManager.CullRemovedComponents();
-
-
-            // Add new components
-            foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
-                .Except(oldPrototypeComponents))
-            {
-                var data = Components[name];
-                var component = (Component) factory.GetComponent(name);
-                component.Owner = entity;
-                entityManager.AddComponent(entity, component);
-            }
-
-            // Update entity metadata
-            metaData.EntityPrototype = this;
-        }
-
         internal static void LoadEntity(
             EntityPrototype? prototype,
             EntityUid entity,
@@ -263,6 +209,9 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, entry) in prototype.Components)
                 {
+                    if (context != null && context.ShouldSkipComponent(name))
+                        continue;
+
                     var fullData = entry.Mapping;
 
                     if (context != null)

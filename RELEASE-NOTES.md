@@ -33,6 +33,8 @@ Template for new versions:
 
 * Thanks to new IME support with SDL2, `IClyde.TextInputStart()` and `IClyde.TextInputStop()` must now be appropriately called to start/stop receiving text input when focusing/unfocusing a UI control. This restriction is applied even on the (default) GLFW backend, to enforce consistent usage of these APIs.
 * `[GUI]TextEventArgs` have been renamed to `[GUI]TextEnteredEventArgs`, turned into records, and made to carry a `string` rather than a single text `Rune`.
+* IoC and `DependencyCollection` `Register` methods now have a `TInterface : class` constraint.
+* [ABI] `IoCManager.InitThread` now returns the `IDependencyCollection`.
 
 ### New features
 
@@ -46,6 +48,7 @@ Template for new versions:
     * `IClyde.TextInputStart()`, `IClyde.TextInputStop()`, `IClyde.TextInputSetRect()` APIs to control text input behavior.
     * `TextEditing` events for reporting in-progress IME compositions.
     * `LineEdit` and `TextEdit` have functional IME support when the game is running on SDL2. If you provide a font file with the relevant glyphs, CJK text input should now be usable.
+* `Register<T>` (single type parameter) extension method for `IDependencyCollection`.
 
 ### Bugfixes
 
@@ -70,6 +73,7 @@ Template for new versions:
 * Word-wrapping logic has been split off from `RichTextEntry`, into a new helper struct `WordWrap`.
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
+* Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
 
 ## 0.62.1.0
 

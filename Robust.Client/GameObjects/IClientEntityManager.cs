@@ -7,6 +7,6 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Raises a networked message as if it had arrived from the sever.
         /// </summary>
-        public void DispatchNetworkMsg(EntityEventArgs msg);
+        public void DispatchReceivedNetworkMsg(EntityEventArgs msg);
     }
 }

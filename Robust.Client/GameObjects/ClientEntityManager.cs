@@ -124,7 +124,7 @@ namespace Robust.Client.GameObjects
                 {
                     var (_, msg) = _queue.Take();
                     // Logger.DebugS("net.ent", "Dispatching: {0}: {1}", seq, msg);
-                    DispatchMsgEntity(msg);
+                    DispatchReceivedNetworkMsg(msg);
                 }
             }
 
@@ -158,7 +158,7 @@ namespace Robust.Client.GameObjects
         {
             if (message.SourceTick <= _gameTiming.LastRealTick)
             {
-                DispatchMsgEntity(message);
+                DispatchReceivedNetworkMsg(message);
                 return;
             }
 
@@ -168,17 +168,17 @@ namespace Robust.Client.GameObjects
             _queue.Add((++_incomingMsgSequence, message));
         }
 
-        private void DispatchMsgEntity(MsgEntity message)
+        private void DispatchReceivedNetworkMsg(MsgEntity message)
         {
             switch (message.Type)
             {
                 case EntityMessageType.SystemMessage:
-                    DispatchNetworkMsg(message.SystemMessage);
+                    DispatchReceivedNetworkMsg(message.SystemMessage);
                     return;
             }
         }
 
-        public void DispatchNetworkMsg(EntityEventArgs msg)
+        public void DispatchReceivedNetworkMsg(EntityEventArgs msg)
         {
             var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
             var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;

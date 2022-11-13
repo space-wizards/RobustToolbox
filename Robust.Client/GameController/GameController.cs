@@ -517,9 +517,16 @@ namespace Robust.Client
             {
                 using (_prof.Group("Entity"))
                 {
-                    // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                    _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
-                    _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                    if (ContentEntityTickUpdate != null)
+                    {
+                        ContentEntityTickUpdate.Invoke(frameEventArgs);
+                    }
+                    else
+                    {
+                        // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                        _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
+                        _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                    }
                 }
             }
 
@@ -686,5 +693,7 @@ namespace Robust.Client
             string? SplashLogo,
             bool AutoConnect
         );
+
+        public event Action<FrameEventArgs>? ContentEntityTickUpdate;
     }
 }

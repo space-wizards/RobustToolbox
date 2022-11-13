@@ -173,13 +173,17 @@ namespace Robust.Client.GameObjects
             switch (message.Type)
             {
                 case EntityMessageType.SystemMessage:
-                    var msg = message.SystemMessage;
-                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
-                    ReceivedSystemMessage?.Invoke(this, msg);
-                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
+                    DispatchNetworkMsg(message.SystemMessage);
                     return;
             }
+        }
+
+        public void DispatchNetworkMsg(EntityEventArgs msg)
+        {
+            var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+            var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
+            ReceivedSystemMessage?.Invoke(this, msg);
+            ReceivedSystemMessage?.Invoke(this, sessionMsg);
         }
 
         private sealed class MessageTickComparer : IComparer<(uint seq, MsgEntity msg)>

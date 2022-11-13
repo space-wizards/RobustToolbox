@@ -47,7 +47,6 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<IManifoldManager, CollisionManager>();
-            IoCManager.Register<IIslandManager, IslandManager>();
             IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             IoCManager.Register<IParallelManager, ParallelManager>();
             IoCManager.Register<IParallelManagerInternal, ParallelManager>();

@@ -49,13 +49,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private Contact[] _contacts = Array.Empty<Contact>();
         private int _contactCount;
 
-        private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
-        private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
+        private ContactVelocityConstraint[] _velocityConstraints;
+        private ContactPositionConstraint[] _positionConstraints;
 
         private int _velocityConstraintsPerThread;
         private int _velocityConstraintsMinimumThreads;
         private int _positionConstraintsPerThread;
         private int _positionConstraintsMinimumThreads;
+
+
 
         public void LoadConfig(in IslandCfg cfg)
         {

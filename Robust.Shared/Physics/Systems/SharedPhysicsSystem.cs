@@ -77,8 +77,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
 
-            IoCManager.Resolve<IIslandManager>().Initialize();
-
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
@@ -312,7 +310,7 @@ namespace Robust.Shared.Physics.Systems
 
             while (enumerator.MoveNext(out var comp))
             {
-                comp.Step(deltaTime, prediction);
+                Step(comp, deltaTime, prediction);
             }
 
             var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);

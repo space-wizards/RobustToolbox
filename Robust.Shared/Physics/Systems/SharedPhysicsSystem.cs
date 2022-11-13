@@ -49,6 +49,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 

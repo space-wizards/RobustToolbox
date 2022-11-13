@@ -133,7 +133,13 @@ public abstract partial class SharedPhysicsSystem
 
     private readonly ObjectPool<List<Joint>> _islandJointPool = new DefaultObjectPool<List<Joint>>(new ListPolicy<Joint>(), MaxIslands);
 
-    internal record struct IslandData(int Index, bool LoneIsland, List<PhysicsComponent> Bodies, List<Contact> Contacts, List<Joint> Joints)
+    internal record struct IslandData(
+        int Index,
+        bool LoneIsland,
+        List<PhysicsComponent> Bodies,
+        List<Contact> Contacts,
+        List<Joint> Joints,
+        List<(Joint Joint, float Error)> BrokenJoints)
     {
         public readonly int Index = Index;
         public readonly bool LoneIsland = LoneIsland;
@@ -141,6 +147,7 @@ public abstract partial class SharedPhysicsSystem
         public readonly List<Contact> Contacts = Contacts;
         public readonly List<Joint> Joints = Joints;
         public bool PositionSolved = false;
+        public readonly List<(Joint Joint, float Error)> BrokenJoints = BrokenJoints;
     }
 
     // Caching for island generation.
@@ -154,6 +161,12 @@ public abstract partial class SharedPhysicsSystem
     private float _maxAngularCorrection;
     private int _velocityIterations;
     private int _positionIterations;
+    private float _maxLinearVelocity;
+    private float _maxAngularVelocity;
+    private bool _sleepAllowed;
+    private float _angularToleranceSqr;
+    private float _linearToleranceSqr;
+    private float _timeToSleep;
 
     private void InitializeIsland()
     {
@@ -162,6 +175,12 @@ public abstract partial class SharedPhysicsSystem
         _configManager.OnValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
         _configManager.OnValueChanged(CVars.VelocityIterations, SetVelocityIterations, true);
         _configManager.OnValueChanged(CVars.PositionIterations, SetPositionIterations, true);
+        _configManager.OnValueChanged(CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
+        _configManager.OnValueChanged(CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
+        _configManager.OnValueChanged(CVars.SleepAllowed, SetSleepAllowed, true);
+        _configManager.OnValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
+        _configManager.OnValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
+        _configManager.OnValueChanged(CVars.TimeToSleep, SetTimeToSleep, true);
     }
 
     private void ShutdownIsland()
@@ -171,6 +190,12 @@ public abstract partial class SharedPhysicsSystem
         _configManager.UnsubValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection);
         _configManager.UnsubValueChanged(CVars.VelocityIterations, SetVelocityIterations);
         _configManager.UnsubValueChanged(CVars.PositionIterations, SetPositionIterations);
+        _configManager.UnsubValueChanged(CVars.MaxLinVelocity, SetMaxLinearVelocity);
+        _configManager.UnsubValueChanged(CVars.MaxAngVelocity, SetMaxAngularVelocity);
+        _configManager.UnsubValueChanged(CVars.SleepAllowed, SetSleepAllowed);
+        _configManager.UnsubValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr);
+        _configManager.UnsubValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr);
+        _configManager.UnsubValueChanged(CVars.TimeToSleep, SetTimeToSleep);
     }
 
     private void SetWarmStarting(bool value) => _warmStarting = value;
@@ -178,6 +203,12 @@ public abstract partial class SharedPhysicsSystem
     private void SetMaxAngularCorrection(float value) => _maxAngularCorrection = value;
     private void SetVelocityIterations(int value) => _velocityIterations = value;
     private void SetPositionIterations(int value) => _positionIterations = value;
+    private void SetMaxLinearVelocity(float value) => _maxLinearVelocity = value;
+    private void SetMaxAngularVelocity(float value) => _maxAngularVelocity = value;
+    private void SetSleepAllowed(bool value) => _sleepAllowed = value;
+    private void SetAngularToleranceSqr(float value) => _angularToleranceSqr = value;
+    private void SetLinearToleranceSqr(float value) => _linearToleranceSqr = value;
+    private void SetTimeToSleep(float value) => _timeToSleep = value;
 
     /// <summary>
     ///     Where the magic happens.
@@ -244,8 +275,15 @@ public abstract partial class SharedPhysicsSystem
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var jointQuery = GetEntityQuery<JointComponent>();
-        var islandIndex = 0;
-        var loneIsland = new IslandData(islandIndex++, true, _islandBodyPool.Get(), _islandContactPool.Get(), _islandJointPool.Get());
+        var islandIndex = -1;
+        var loneIsland = new IslandData(
+            islandIndex++,
+            true,
+            _islandBodyPool.Get(),
+            _islandContactPool.Get(),
+            _islandJointPool.Get(),
+            new List<(Joint Joint, float Error)>());
+
         var islands = new List<IslandData>();
 
         // Build the relevant islands / graphs for all bodies.
@@ -353,7 +391,7 @@ public abstract partial class SharedPhysicsSystem
             }
             else
             {
-                var data = new IslandData(islandIndex++, false, bodies, contacts, joints);
+                var data = new IslandData(islandIndex++, false, bodies, contacts, joints, new List<(Joint Joint, float Error)>());
                 islands.Add(data);
                 idx = data.Index;
             }
@@ -404,6 +442,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         _islandJointPool.Return(island.Joints);
+        island.BrokenJoints.Clear();
     }
 
     protected virtual void Cleanup(float frameTime)
@@ -428,20 +467,44 @@ public abstract partial class SharedPhysicsSystem
 
     private void SolveIslands(SharedPhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
-        // Islands are already pre-sorted
         var iBegin = 0;
         var gravity = component.Gravity;
 
-        var data = new SolverData(frameTime, dtRatio, invDt, _warmStarting, _maxLinearCorrection, _maxAngularCorrection, _velocityIterations, _positionIterations);
+        var data = new SolverData(
+            frameTime,
+            dtRatio,
+            invDt,
+            _warmStarting,
+            _maxLinearCorrection,
+            _maxAngularCorrection,
+            _velocityIterations,
+            _positionIterations,
+            _maxLinearVelocity,
+            _maxAngularVelocity,
+            _sleepAllowed,
+            _angularToleranceSqr,
+            _linearToleranceSqr,
+            _timeToSleep
+        );
 
         islands.Sort((x, y) => y.Contacts.Count.CompareTo(x.Contacts.Count) + y.Joints.Count.CompareTo(x.Joints.Count));
 
-#if DEBUG
+        var totalBodies = 0;
+
         foreach (var island in islands)
         {
+#if DEBUG
             RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
-        }
 #endif
+
+            // TODO: Need to store velocities and shit on the islands.
+            totalBodies += island.Bodies.Count;
+            // TODO: Just give each island an offset index into it
+        }
+
+        // Actual solver here; cache the data for later.
+        var solvedPositions = ArrayPool<Vector2>.Shared.Rent(totalBodies);
+        var solvedAngles = ArrayPool<float>.Shared.Rent(totalBodies);
 
         while (iBegin < islands.Count)
         {
@@ -450,24 +513,32 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, data, gravity, frameTime, dtRatio, invDt, prediction);
+            SolveIsland(ref island, in data, gravity, frameTime, invDt, prediction);
             iBegin++;
-            // TODO: Submit rest in parallel if applicable
         }
 
         Parallel.For(iBegin, islands.Count, i =>
         {
             var island = islands[i];
-            SolveIsland(ref island, data, gravity, frameTime, dtRatio, invDt, prediction);
+            SolveIsland(ref island, in data, gravity, frameTime, invDt, prediction);
         });
 
-        // Update bodies sequentially to avoid race conditions. May be able to do this parallel someday
-        // but easier to just do this for now.
-        foreach (var island in islands)
+        // Update data sequentially
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var metaQuery = GetEntityQuery<MetaDataComponent>();
+        var idx = 0;
+
+        for (var i = 0; i < islands.Count; i++)
         {
-            UpdateBodies(island, component._deferredUpdates);
-            SleepBodies(island, prediction, frameTime);
+            var island = islands[i];
+
+            UpdateBodies(in island, ref idx, solvedPositions, solvedAngles, xformQuery, metaQuery);
+            SleepBodies(in island, in data, prediction, frameTime);
         }
+
+        // Cleanup
+        ArrayPool<Vector2>.Shared.Return(solvedPositions);
+        ArrayPool<float>.Shared.Return(solvedAngles);
     }
 
     /// <summary>
@@ -483,7 +554,15 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Go through all the bodies in this island and solve.
     /// </summary>
-    private void SolveIsland(ref IslandData island, SolverData data, Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIsland(
+        ref IslandData island,
+        in SolverData data,
+        Vector2 gravity,
+        float frameTime,
+        float invDt,
+        bool prediction,
+        Vector2[] solvedPositions,
+        float[] solvedAngles)
     {
         var bodyCount = island.Bodies.Count;
         var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
@@ -527,16 +606,18 @@ public abstract partial class SharedPhysicsSystem
             angularVelocities[i] = angularVelocity;
         }
 
-        var solver = new ContactSolver();
+        var contactCount = island.Contacts.Count;
+        var velocityConstraints = ArrayPool<ContactVelocityConstraint>.Shared.Rent(contactCount);
+        var positionConstraints = ArrayPool<ContactPositionConstraint>.Shared.Rent(contactCount);
 
         // Pass the data into the solver
-        solver.Reset(data, island, linearVelocities, angularVelocities, positions, angles);
+        ResetSolver(data, island, velocityConstraints, positionConstraints);
 
-        solver.InitializeVelocityConstraints();
+        InitializeVelocityConstraints(data, island);
 
         if (data.WarmStarting)
         {
-            solver.WarmStart();
+            WarmStart(data, island);
         }
 
         var jointCount = island.Joints.Count;
@@ -574,11 +655,11 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((joint, error));
             }
 
-            solver.SolveVelocityConstraints();
+            SolveVelocityConstraints();
         }
 
         // Store for warm starting.
-        solver.StoreImpulses();
+        StoreImpulses();
 
         // Integrate positions
         for (var i = 0; i < bodyCount; i++)
@@ -617,7 +698,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = solver.SolvePositionConstraints();
+            var contactsOkay = SolvePositionConstraints();
             var jointsOkay = true;
 
             for (int j = 0; j < island.Joints.Count; ++j)
@@ -638,21 +719,51 @@ public abstract partial class SharedPhysicsSystem
                 break;
             }
         }
+
+        // Transform the solved positions back into local terms
+        // This means we can run the entire solver in parallel and not have to worry about stale world positions later
+        // E.g. if a parent had its position updated then our worldposition is invalid
+        // We can safely do this in parallel.
+        var offset = island.Offset;
+
+        for (var i = 0; i < bodyCount; i++)
+        {
+            var body = island.Bodies[i];
+            var parentInvMatrix = Transform(body.Owner).Parent!.InvWorldMatrix;
+
+            var angle = angles[i];
+
+            var q = new Quaternion2D(angle);
+            var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
+
+            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+            var solvedAngle = angles[i];
+            throw new NotImplementedException();
+            solvedPositions[offset + i] = solvedPosition;
+            solvedAngles[offset + i] = solvedAngle;
+        }
+
+        // Cleanup
+        ArrayPool<ContactVelocityConstraint>.Shared.Return(velocityConstraints);
+        ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
-    internal void UpdateBodies(IslandData island, HashSet<TransformComponent> deferredUpdates, Vector2[] positions, float[] angles, Vector2[] linearVelocities, float[] angularVelocities)
+    private void UpdateBodies(
+        in IslandData island,
+        ref int idx,
+        Vector2[] positions,
+        float[] angles,
+        EntityQuery<TransformComponent> xformQuery,
+        EntityQuery<MetaDataComponent> metaQuery)
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
             var msg = new Joint.JointBreakMessage(joint, MathF.Sqrt(error));
             RaiseLocalEvent(joint.BodyAUid, msg, false);
             RaiseLocalEvent(joint.BodyBUid, msg, false);
-            RaiseLocalEvent(EventSource.Local, msg);
+            RaiseLocalEvent(msg);
         }
 
-        var xforms = GetEntityQuery<TransformComponent>();
-
-        // Update data on bodies by copying the buffers back
         for (var i = 0; i < island.Bodies.Count; i++)
         {
             var body = island.Bodies[i];
@@ -661,50 +772,41 @@ public abstract partial class SharedPhysicsSystem
             // Plus calcing worldpos can be costly so we skip that too which is nice.
             if (body.BodyType == BodyType.Static) continue;
 
-            /*
-             * Handle new position
-             */
-            var bodyPos = positions[i];
-            var angle = angles[i];
+            var position = positions[idx];
+            var angle = angles[idx];
+            var xform = xformQuery.GetComponent(body.Owner);
 
             // Temporary NaN guards until PVS is fixed.
-            if (!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y))
+            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
             {
+                // TODO: Don't forget to do this you goober
+                throw new InvalidOperationException();
                 var q = new Quaternion2D(angle);
 
-                bodyPos -= Physics.Transform.Mul(q, body.LocalCenter);
-                var transform = xforms.GetComponent(body.Owner);
-
-                // Defer MoveEvent until the end of the physics step so cache can be better.
-                transform.DeferUpdates = true;
-                _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
-                transform.DeferUpdates = false;
-
-                // Unfortunately we can't cache the position and angle here because if our parent's position
-                // changes then this is immediately invalidated.
-                if (transform.UpdatesDeferred)
-                {
-                    deferredUpdates.Add(transform);
-                }
+                position -= Physics.Transform.Mul(q, body.LocalCenter);
+                _transform.SetLocalPositionRotation(xform, position, angle);
             }
 
             var linVelocity = linearVelocities[i];
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(body, linVelocity);
+                SetLinearVelocity(body, linVelocity, false);
             }
 
-            var angVelocity = _angularVelocities[i];
+            var angVelocity = angularVelocities[i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(body, angVelocity);
+                SetAngularVelocity(body, angVelocity, false);
             }
+
+            Dirty(body, metaQuery.GetComponent(body.Owner));
+            idx++;
         }
     }
 
-    private void SleepBodies(IslandData island, SolverData data, bool prediction, float frameTime)
+    private void SleepBodies(in IslandData island, in SolverData data, bool prediction, float frameTime)
     {
         if (island.LoneIsland)
         {
@@ -717,7 +819,7 @@ public abstract partial class SharedPhysicsSystem
                     if (body.BodyType == BodyType.Static) continue;
 
                     if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > data.AngToLSqr ||
+                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
                         Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
                     {
                         SetSleepTime(body, 0f);

@@ -154,7 +154,11 @@ stored in a single array since multiple arrays lead to multiple misses.
         int VelocityIterations,
         int PositionIterations,
         float MaxLinearVelocity,
-        float MaxAngularVelocity)
+        float MaxAngularVelocity,
+        bool SleepAllowed,
+        float AngTolSqr,
+        float LinTolSqr,
+        float TimeToSleep)
     {
         public readonly float FrameTime = FrameTime;
         public readonly float DtRatio = DtRatio;
@@ -167,5 +171,9 @@ stored in a single array since multiple arrays lead to multiple misses.
         public readonly int PositionIterations = PositionIterations;
         public readonly float MaxLinearVelocity = MaxLinearVelocity;
         public readonly float MaxAngularVelocity = MaxAngularVelocity;
+        public readonly bool SleepAllowed = SleepAllowed;
+        public readonly float AngTolSqr = AngTolSqr;
+        public readonly float LinTolSqr = LinTolSqr;
+        public readonly float TimeToSleep = TimeToSleep;
     }
 }

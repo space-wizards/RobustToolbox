@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Robust.Server.GameObjects;
@@ -11,6 +12,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -29,14 +31,6 @@ namespace Robust.Server.Maps
         public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapChunk? chunk = null)
         {
-            ushort chunkSize = 16;
-
-            if (node.TryGet("size", out var size))
-            {
-                chunkSize = (ushort) serializationManager.Read(typeof(ushort), size, context, skipHook)!;
-            }
-
-            var indices = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], context, skipHook)!;
             var tileNode = (ValueDataNode)node["tiles"];
             var tileBytes = Convert.FromBase64String(tileNode.Value);
 
@@ -46,7 +40,11 @@ namespace Robust.Server.Maps
             var mapManager = dependencies.Resolve<IMapManager>();
             mapManager.SuppressOnTileChanged = true;
 
-            chunk ??= new MapChunk(indices.X, indices.Y, chunkSize);
+            if (chunk == null)
+            {
+                throw new InvalidOperationException(
+                    $"Someone tried deserializing a gridchunk without passing a value.");
+            }
 
             IReadOnlyDictionary<ushort, string>? tileMap = null;
 
@@ -94,7 +92,6 @@ namespace Robust.Server.Maps
             var root = new MappingDataNode();
             var ind = new ValueDataNode($"{value.X},{value.Y}");
             root.Add("ind", ind);
-            root.Add("size", new ValueDataNode(value.ChunkSize.ToString()));
 
             var gridNode = new ValueDataNode();
             root.Add("tiles", gridNode);
@@ -131,6 +128,91 @@ namespace Robust.Server.Maps
         }
 
         public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    //todo paul make this be used
+    [TypeSerializer]
+    internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
+    {
+
+        public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MapGrid Read(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGrid? grid = null)
+        {
+            var info = node.Get<MappingDataNode>("settings");
+            var chunks = node.Get<SequenceDataNode>("chunks");
+            ushort csz = 0;
+            ushort tsz = 0;
+            float sgsz = 0.0f;
+
+            foreach (var kvInfo in info.Cast<KeyValuePair<ValueDataNode, ValueDataNode>>())
+            {
+                var key = kvInfo.Key.Value;
+                var val = kvInfo.Value.Value;
+                if (key == "chunksize")
+                    csz = ushort.Parse(val);
+                else if (key == "tilesize")
+                    tsz = ushort.Parse(val);
+                else if (key == "snapsize")
+                    sgsz = float.Parse(val, CultureInfo.InvariantCulture);
+            }
+
+            //TODO: Pass in options
+            if (context is not MapLoaderSystem.MapSerializationContext)
+            {
+                throw new InvalidOperationException(
+                    $"Someone tried serializing a mapgrid without passing {nameof(MapLoaderSystem.MapSerializationContext)} as context.");
+            }
+
+            if (grid == null) throw new NotImplementedException();
+            //todo paul grid ??= dependencies.Resolve<MapManager>().CreateUnboundGrid(mapContext.TargetMap);
+
+            foreach (var chunkNode in chunks.Cast<MappingDataNode>())
+            {
+                var (chunkOffsetX, chunkOffsetY) =
+                    serializationManager.Read<Vector2i>(chunkNode["ind"], context, skipHook);
+                var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+                serializationManager.Read(typeof(MapChunkSerializer), chunkNode, context, skipHook, chunk);
+            }
+
+            return grid;
+        }
+
+        public DataNode Write(ISerializationManager serializationManager, MapGrid value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            var gridn = new MappingDataNode();
+            var info = new MappingDataNode();
+            var chunkSeq = new SequenceDataNode();
+
+            gridn.Add("uid", serializationManager.WriteValue(value.GridEntityId, alwaysWrite, context));
+            gridn.Add("settings", info);
+            gridn.Add("chunks", chunkSeq);
+
+            info.Add("chunksize", value.ChunkSize.ToString(CultureInfo.InvariantCulture));
+            info.Add("tilesize", value.TileSize.ToString(CultureInfo.InvariantCulture));
+
+            var chunks = value.GetMapChunks();
+            foreach (var chunk in chunks)
+            {
+                var chunkNode = serializationManager.WriteValue(chunk.Value);
+                chunkSeq.Add(chunkNode);
+            }
+
+            return gridn;
+        }
+
+        public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target, bool skipHook,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();

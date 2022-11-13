@@ -49,6 +49,12 @@ Template for new versions:
 
 *None yet*
 
+## 0.64.0.0
+
+### Breaking changes
+
+* IMapLoader has been refactored into MapLoaderSystem. The API is similar for now but is subject to change in the future.
+
 ## 0.63.0.0
 
 ### Breaking changes

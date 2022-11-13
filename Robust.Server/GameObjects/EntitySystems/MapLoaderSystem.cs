@@ -11,7 +11,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -621,7 +620,7 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
     {
         // sane defaults
         ushort csz = 16;
@@ -639,10 +638,9 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue; // obsolete
         }
 
-        gridComp.ChunkSize = csz;
-        gridComp.TileSize = tsz;
+        var grid = gridComp.AllocMapGrid(csz, tsz);
 
-        return gridComp;
+        return grid;
     }
 
     private void StartupEntities(MapData data)
@@ -904,7 +902,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue;
 
             grid.GridIndex = index;
-            var entry = _serManager.WriteValue(grid, context: _context);
+            var entry = _serManager.WriteValue((MapGrid) grid.Grid, context: _context);
             grids.Add(entry);
             index++;
         }

@@ -133,6 +133,8 @@ internal partial class MapManager
 
     public virtual void DeleteGrid(EntityUid euid)
     {
+        _grids.Remove(euid);
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif

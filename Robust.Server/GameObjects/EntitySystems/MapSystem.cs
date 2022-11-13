@@ -7,8 +7,6 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
-using Robust.Shared.Map.Events;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 
@@ -39,7 +37,7 @@ namespace Robust.Server.GameObjects
             // If we have any existing empty ones then cull them on setting the cvar
             if (_deleteEmptyGrids)
             {
-                var toDelete = new List<MapGridComponent>();
+                var toDelete = new List<IMapGrid>();
 
                 foreach (var grid in MapManager.GetAllGrids())
                 {
@@ -54,7 +52,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private bool GridEmpty(MapGridComponent grid)
+        private bool GridEmpty(IMapGrid grid)
         {
             return !(grid.GetAllTiles().Any());
         }

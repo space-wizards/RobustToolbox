@@ -1,6 +1,7 @@
 using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -43,7 +44,7 @@ namespace Robust.Shared.Map
                 var gridsInArea = mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox);
 
                 // find closest grid intersecting our search box.
-                IMapGrid? closest = null;
+                MapGridComponent? closest = null;
                 var distance = float.PositiveInfinity;
                 var intersect = new Box2();
                 var xformQuery = entityManager.GetEntityQuery<TransformComponent>();

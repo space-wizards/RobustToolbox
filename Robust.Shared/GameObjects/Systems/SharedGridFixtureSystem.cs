@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -56,7 +57,7 @@ namespace Robust.Shared.GameObjects
 
         private void SetConvexHulls(bool value) => _convexHulls = value;
 
-        internal void ProcessGrid(IMapGridInternal gridInternal)
+        internal void ProcessGrid(MapGridComponent gridInternal)
         {
             // Just in case there's any deleted we'll ToArray
             foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())

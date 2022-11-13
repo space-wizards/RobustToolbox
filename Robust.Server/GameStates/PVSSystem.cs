@@ -13,6 +13,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -97,7 +98,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
-    private readonly List<MapGrid> _gridsPool = new(8);
+    private readonly List<MapGridComponent> _gridsPool = new(8);
 
     private ISawmill _sawmill = default!;
 

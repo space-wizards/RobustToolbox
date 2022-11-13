@@ -143,7 +143,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Grid being changed.
         /// </summary>
-        public IMapGrid Grid { get; }
+        public MapGridComponent Grid { get; }
 
         /// <summary>
         /// Set of tiles that were modified.
@@ -153,7 +153,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridModifiedEvent(IMapGrid grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
+        public GridModifiedEvent(MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
         {
             Grid = grid;
             Modified = modified;

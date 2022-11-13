@@ -246,9 +246,9 @@ namespace Robust.UnitTesting.Server
 
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
+            compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapLightComponent>();
-            compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();

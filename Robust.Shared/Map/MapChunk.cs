@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <summary>
-    ///     A square section of a <see cref="IMapGrid"/>.
+    ///     A square section of a <see cref="MapGridComponent"/>.
     /// </summary>
     internal sealed class MapChunk
     {
@@ -58,7 +58,7 @@ namespace Robust.Shared.Map
         public bool SuppressCollisionRegeneration { get; set; }
 
         /// <summary>
-        ///     Constructs an instance of a MapGrid chunk.
+        ///     Constructs an instance of a MapChunk.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -78,17 +78,17 @@ namespace Robust.Shared.Map
         public ushort ChunkSize { get; }
 
         /// <summary>
-        ///     The X index of this chunk inside the <see cref="IMapGrid"/>.
+        ///     The X index of this chunk inside the <see cref="MapGridComponent"/>.
         /// </summary>
         public int X => _gridIndices.X;
 
         /// <summary>
-        ///     The Y index of this chunk inside the <see cref="IMapGrid"/>.
+        ///     The Y index of this chunk inside the <see cref="MapGridComponent"/>.
         /// </summary>
         public int Y => _gridIndices.Y;
 
         /// <summary>
-        ///     The positional indices of this chunk in the <see cref="IMapGrid"/>.
+        ///     The positional indices of this chunk in the <see cref="MapGridComponent"/>.
         /// </summary>
         public Vector2i Indices => _gridIndices;
 

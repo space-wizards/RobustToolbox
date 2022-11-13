@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -74,7 +75,7 @@ namespace Robust.Shared.Physics.Systems
         private void FindGridContacts(
             SharedPhysicsMapComponent component,
             MapId mapId,
-            HashSet<IMapGrid> movedGrids,
+            HashSet<MapGridComponent> movedGrids,
             Dictionary<FixtureProxy, Box2> gridMoveBuffer,
             EntityQuery<BroadphaseComponent> broadQuery,
             EntityQuery<TransformComponent> xformQuery)
@@ -179,7 +180,7 @@ namespace Robust.Shared.Physics.Systems
 
                 // Get every broadphase we may be intersecting.
                 _mapManager.FindGridsIntersectingApprox(mapId, worldAABB.Enlarged(_broadphaseExpand), ref state,
-                    static (IMapGrid grid, ref (
+                    static (MapGridComponent grid, ref (
                         SharedBroadphaseSystem system,
                         FixtureProxy proxy,
                         Box2 worldAABB,
@@ -229,18 +230,16 @@ namespace Robust.Shared.Physics.Systems
         private void HandleGridCollisions(
             MapId mapId,
             ContactManager contactManager,
-            HashSet<IMapGrid> movedGrids,
+            HashSet<MapGridComponent> movedGrids,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery)
         {
-            var gridsPool = new List<MapGrid>();
+            var gridsPool = new List<MapGridComponent>();
 
             foreach (var grid in movedGrids)
             {
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
                 DebugTools.Assert(xform.MapID == mapId);
-
-                var mapGrid = (MapGrid)grid;
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = xform.GetWorldPositionRotationMatrixWithInv(xformQuery);
 
@@ -260,7 +259,6 @@ namespace Robust.Shared.Physics.Systems
                         continue;
                     }
 
-                    var otherGrid = (MapGrid) colliding;
                     var (_, _, otherGridMatrix, otherGridInvMatrix) =  collidingXform.GetWorldPositionRotationMatrixWithInv();
                     var otherGridBounds = otherGridMatrix.TransformBox(colliding.LocalAABB);
                     var otherTransform = _physicsSystem.GetPhysicsTransform(colliding.GridEntityId, xformQuery: xformQuery);
@@ -269,14 +267,14 @@ namespace Robust.Shared.Physics.Systems
                     var aabb1 = grid.LocalAABB.Intersect(invWorldMatrix.TransformBox(otherGridBounds));
 
                     // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                    var ourChunks = mapGrid.GetLocalMapChunks(aabb1);
+                    var ourChunks = grid.GetLocalMapChunks(aabb1);
 
                     // Only care about chunks on other grid overlapping us.
                     while (ourChunks.MoveNext(out var ourChunk))
                     {
                         var ourChunkWorld = worldMatrix.TransformBox(ourChunk.CachedBounds.Translated(ourChunk.Indices * grid.ChunkSize));
                         var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
-                        var collidingChunks = otherGrid.GetLocalMapChunks(ourChunkOtherRef);
+                        var collidingChunks = colliding.GetLocalMapChunks(ourChunkOtherRef);
 
                         while (collidingChunks.MoveNext(out var collidingChunk))
                         {
@@ -466,10 +464,8 @@ namespace Robust.Shared.Physics.Systems
                     continue;
                 }
 
-                var grid = (IMapGridInternal) mapGrid.Grid;
-
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = grid.GetMapChunks(aabb);
+                var chunkEnumerator = mapGrid.GetMapChunks(aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {

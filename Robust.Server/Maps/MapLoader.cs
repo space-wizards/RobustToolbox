@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -102,7 +103,7 @@ namespace Robust.Server.Maps
 
             if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            IMapGrid? grid;
+            MapGridComponent? grid;
             IReadOnlyList<EntityUid> entities;
             using (reader)
             {
@@ -277,7 +278,7 @@ namespace Robust.Server.Maps
             /// </summary>
             internal MapId? MapId { get; set; }
             private readonly Dictionary<EntityUid, int> GridIDMap = new();
-            public readonly List<MapGrid> Grids = new();
+            public readonly List<MapGridComponent> Grids = new();
             private EntityQuery<TransformComponent>? _xformQuery = null;
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
@@ -500,7 +501,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var gridInternal = (IMapGridInternal) grid;
+                    var gridInternal = (MapGridComponent) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
@@ -604,7 +605,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+            private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
             {
                 // sane defaults
                 ushort csz = 16;
@@ -622,9 +623,10 @@ namespace Robust.Server.Maps
                         continue; // obsolete
                 }
 
-                var grid = gridComp.AllocMapGrid(csz, tsz);
+                gridComp.ChunkSize = csz;
+                gridComp.TileSize = tsz;
 
-                return grid;
+                return gridComp;
             }
 
             private void AttachMapEntities()
@@ -889,14 +891,14 @@ namespace Robust.Server.Maps
             }
 
             // Serialization
-            public void RegisterGrid(IMapGrid grid)
+            public void RegisterGrid(MapGridComponent grid)
             {
                 if (GridIDMap.ContainsKey(grid.GridEntityId))
                 {
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add((MapGrid) grid);
+                Grids.Add(grid);
                 GridIDMap.Add(grid.GridEntityId, GridIDMap.Count);
             }
 

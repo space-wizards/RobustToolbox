@@ -15,7 +15,7 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
 
     public string Command => "profileEntitySpawning";
     public string Description => "Profiles entity spawning with n entities";
-    public string Help => $"Usage: {Command} | {Command} <amount>";
+    public string Help => $"Usage: {Command} | {Command} <amount> <prototype>";
 
     public void Execute(IConsoleShell shell, string argStr, string[] args)
     {

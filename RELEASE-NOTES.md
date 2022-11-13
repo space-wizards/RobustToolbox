@@ -39,6 +39,28 @@ Template for new versions:
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+## 0.64.1.0
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
 * Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
 
 ### Other

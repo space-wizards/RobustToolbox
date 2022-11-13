@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -26,8 +27,9 @@ public abstract partial class SharedPhysicsSystem
 
     private readonly ObjectPool<List<Joint>> _islandJointPool = new DefaultObjectPool<List<Joint>>(new ListPolicy<Joint>(), MaxIslands);
 
-    private record struct IslandData(bool LoneIsland, List<PhysicsComponent> Bodies, List<Contact> Contacts, List<Joint> Joints)
+    private record struct IslandData(int Index, bool LoneIsland, List<PhysicsComponent> Bodies, List<Contact> Contacts, List<Joint> Joints)
     {
+        public readonly int Index = Index;
         public readonly bool LoneIsland = LoneIsland;
         public readonly List<PhysicsComponent> Bodies = Bodies;
         public readonly List<Contact> Contacts = Contacts;
@@ -96,7 +98,8 @@ public abstract partial class SharedPhysicsSystem
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var jointQuery = GetEntityQuery<JointComponent>();
-        var loneIsland = new IslandData(true, _islandBodyPool.Get(), _islandContactPool.Get(), _islandJointPool.Get());
+        var islandIndex = 0;
+        var loneIsland = new IslandData(islandIndex++, true, _islandBodyPool.Get(), _islandContactPool.Get(), _islandJointPool.Get());
         var islands = new List<IslandData>();
 
         // Build the relevant islands / graphs for all bodies.
@@ -193,26 +196,34 @@ public abstract partial class SharedPhysicsSystem
                 }
             }
 
+            int idx;
+
             // Bodies not touching anything, hence we can just add it to the lone island.
             if (contacts.Count == 0 && joints.Count == 0)
             {
                 DebugTools.Assert(bodies.Count == 1 && bodies[0].BodyType != BodyType.Static);
                 loneIsland.Bodies.Add(bodies[0]);
+                idx = loneIsland.Index;
             }
             else
             {
-                var data = new IslandData(false, bodies, contacts, joints);
+                var data = new IslandData(islandIndex++, false, bodies, contacts, joints);
                 islands.Add(data);
+                idx = data.Index;
+            }
 
-                // Allow static bodies to be re-used in other islands
-                foreach (var body in bodies)
+            // Allow static bodies to be re-used in other islands
+            for (var i = 0; i < bodies.Count; i++)
+            {
+                var body = bodies[i];
+
+                // Static bodies can participate in other islands
+                if (body.BodyType == BodyType.Static)
                 {
-                    // Static bodies can participate in other islands
-                    if (body.BodyType == BodyType.Static)
-                    {
-                        body.Island = false;
-                    }
+                    body.Island = false;
                 }
+
+                body.IslandIndex[idx] = i;
             }
         }
 
@@ -273,17 +284,25 @@ public abstract partial class SharedPhysicsSystem
     {
         // Islands are already pre-sorted
         var iBegin = 0;
+        var gravity = component.Gravity;
 
         while (iBegin < islands.Count)
         {
             var island = islands[iBegin];
 
-            SolveIsland(island, component.Gravity, frameTime, dtRatio, invDt, prediction);
+            if (!InternalParallel(island))
+                break;
+
+            SolveIsland(island, gravity, frameTime, dtRatio, invDt, prediction);
             iBegin++;
             // TODO: Submit rest in parallel if applicable
         }
 
-        // TODO: parallel dispatch here
+        Parallel.For(iBegin, islands.Count, i =>
+        {
+            var island = islands[i];
+            SolveIsland(island, gravity, frameTime, dtRatio, invDt, prediction);
+        });
 
         // Update bodies sequentially to avoid race conditions. May be able to do this parallel someday
         // but easier to just do this for now.
@@ -292,6 +311,21 @@ public abstract partial class SharedPhysicsSystem
             UpdateBodies(island, component._deferredUpdates);
             SleepBodies(island, prediction, frameTime);
         }
+    }
+
+    /// <summary>
+    /// Can we run the island in parallel internally, otherwise solve it in parallel with the rest.
+    /// </summary>
+    /// <param name="island"></param>
+    /// <returns></returns>
+    private bool InternalParallel(IslandData island)
+    {
+        if (island.Contacts.Count > 32 || island.Joints.Count > 32)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -349,30 +383,25 @@ public abstract partial class SharedPhysicsSystem
 
         var data = new SolverData()
         {
-            FrameTime = frameTime
+            FrameTime = frameTime,
+            DtRatio = dtRatio,
         };
 
         // TODO: Do these up front of the world step.
-        SolverData.DtRatio = dtRatio;
         SolverData.InvDt = invDt;
         SolverData.IslandIndex = ID;
         SolverData.WarmStarting = _warmStarting;
         SolverData.MaxLinearCorrection = _maxLinearCorrection;
         SolverData.MaxAngularCorrection = _maxAngularCorrection;
 
-        SolverData.LinearVelocities = _linearVelocities;
-        SolverData.AngularVelocities = _angularVelocities;
-        SolverData.Positions = _positions;
-        SolverData.Angles = _angles;
-
         // Pass the data into the solver
         solver.Reset(data, island.Contacts);
 
-        _contactSolver.InitializeVelocityConstraints();
+        solver.InitializeVelocityConstraints();
 
-        if (_warmStarting)
+        if (data.WarmStarting)
         {
-            _contactSolver.WarmStart();
+            solver.WarmStart();
         }
 
         var jointCount = island.Joints.Count;
@@ -393,7 +422,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         // Velocity solver
-        for (var i = 0; i < _velocityIterations; i++)
+        for (var i = 0; i < data.VelocityIterations; i++)
         {
             for (var j = 0; j < jointCount; ++j)
             {
@@ -402,19 +431,19 @@ public abstract partial class SharedPhysicsSystem
                 if (!joint.Enabled)
                     continue;
 
-                joint.SolveVelocityConstraints(SolverData);
+                joint.SolveVelocityConstraints(data);
 
                 var error = joint.Validate(invDt);
 
                 if (error > 0.0f)
-                    _brokenJoints.Add((joint, error));
+                    island.BrokenJoints.Add((joint, error));
             }
 
-            _contactSolver.SolveVelocityConstraints();
+            solver.SolveVelocityConstraints();
         }
 
         // Store for warm starting.
-        _contactSolver.StoreImpulses();
+        solver.StoreImpulses();
 
         // Integrate positions
         for (var i = 0; i < bodyCount; i++)
@@ -443,10 +472,10 @@ public abstract partial class SharedPhysicsSystem
             position += linearVelocity * frameTime;
             angle += angularVelocity * frameTime;
 
-            _linearVelocities[i] = linearVelocity;
-            _angularVelocities[i] = angularVelocity;
-            _positions[i] = position;
-            _angles[i] = angle;
+            linearVelocities[i] = linearVelocity;
+            angularVelocities[i] = angularVelocity;
+            positions[i] = position;
+            angles[i] = angle;
         }
 
         _positionSolved = false;

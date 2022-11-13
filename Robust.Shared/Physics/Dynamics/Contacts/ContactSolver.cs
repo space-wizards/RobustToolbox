@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,18 +47,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private Vector2[] _positions = Array.Empty<Vector2>();
         private float[] _angles = Array.Empty<float>();
 
-        private Contact[] _contacts = Array.Empty<Contact>();
-        private int _contactCount;
+        private List<Contact> _contacts = new List<Contact>();
 
-        private ContactVelocityConstraint[] _velocityConstraints;
-        private ContactPositionConstraint[] _positionConstraints;
+        private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
+        private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
 
         private int _velocityConstraintsPerThread;
         private int _velocityConstraintsMinimumThreads;
         private int _positionConstraintsPerThread;
         private int _positionConstraintsMinimumThreads;
-
-
 
         public void LoadConfig(in IslandCfg cfg)
         {
@@ -72,59 +70,20 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _velocityConstraintsMinimumThreads = cfg.VelocityConstraintsMinimumThreads;
         }
 
-        public void Reset(SolverData data, int contactCount, Contact[] contacts)
+        public void Reset(SolverData data, IslandData island, Vector2[] linearVelocities, float[] angularVelocities, Vector2[] positions, float[] angles)
         {
-            _linearVelocities = data.LinearVelocities;
-            _angularVelocities = data.AngularVelocities;
+            _linearVelocities = linearVelocities;
+            _angularVelocities = angularVelocities;
 
-            _positions = data.Positions;
-            _positions = data.Positions;
-            _angles = data.Angles;
+            _positions = positions;
+            _angles = angles;
 
-            _contactCount = contactCount;
             _contacts = contacts;
-
-            // If we need more constraints then grow the cached arrays
-            if (_velocityConstraints.Length < contactCount)
-            {
-                var oldLength = _velocityConstraints.Length;
-
-                Array.Resize(ref _velocityConstraints, contactCount * 2);
-                Array.Resize(ref _positionConstraints, contactCount * 2);
-
-                for (var i = oldLength; i < _velocityConstraints.Length; i++)
-                {
-                    var velocity = new ContactVelocityConstraint
-                    {
-                        K = new Vector4(),
-                        Points = new VelocityConstraintPoint[2],
-                        NormalMass = new Vector4(),
-                    };
-
-                    for (var j = 0; j < 2; j++)
-                    {
-                        velocity.Points[j] = new VelocityConstraintPoint();
-                    }
-
-                    _velocityConstraints[i] = velocity;
-
-                    var position = new ContactPositionConstraint()
-                    {
-                        LocalPoints = new Vector2[2],
-                    };
-
-                    for (var j = 0; j < 2; j++)
-                    {
-                        position.LocalPoints[j] = Vector2.Zero;
-                    }
-
-                    _positionConstraints[i] = position;
-                }
-            }
+            var contactCount = contacts.Count;
 
             // Build constraints
             // For now these are going to be bare but will change
-            for (var i = 0; i < _contactCount; i++)
+            for (var i = 0; i < contactCount; i++)
             {
                 var contact = contacts[i];
                 Fixture fixtureA = contact.FixtureA!;

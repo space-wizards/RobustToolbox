@@ -494,50 +494,16 @@ stored in a single array since multiple arrays lead to multiple misses.
     /// <summary>
     ///     Easy way of passing around the data required for the contact solver.
     /// </summary>
-    internal sealed class SolverData
+    internal readonly record struct SolverData
     {
-        public int IslandIndex { get; set; } = -1;
+        public readonly float FrameTime;
+        public readonly float DtRatio;
+        public readonly float InvDt;
 
-        public float FrameTime { get; set; }
-        public float DtRatio { get; set; }
-        public float InvDt { get; set; }
-
-        public bool WarmStarting { get; set; }
-        public float LinearSlop { get; set; }
-        public float AngularSlop { get; set; }
-        public float MaxLinearCorrection { get; set; }
-        public float MaxAngularCorrection { get; set; }
-
-        public Vector2[] LinearVelocities { get; set; } = default!;
-        public float[] AngularVelocities { get; set; } = default!;
-
-        public Vector2[] Positions { get; set; } = default!;
-        public float[] Angles { get; set; } = default!;
-    }
-
-    /// <summary>
-    ///     Contains all configuration parameters that need to be passed to physics islands.
-    /// </summary>
-    internal struct IslandCfg
-    {
-        public float AngTolSqr;
-        public float LinTolSqr;
-        public bool SleepAllowed;
-        public bool WarmStarting;
-        public int VelocityIterations;
-        public float MaxLinearVelocity;
-        public float MaxAngularVelocity;
-        public int PositionIterations;
-        public float TimeToSleep;
-        public float VelocityThreshold;
-        public float Baumgarte;
-        public float LinearSlop;
-        public float AngularSlop;
-        public float MaxLinearCorrection;
-        public float MaxAngularCorrection;
-        public int VelocityConstraintsPerThread;
-        public int VelocityConstraintsMinimumThreads;
-        public int PositionConstraintsPerThread;
-        public int PositionConstraintsMinimumThreads;
+        public readonly bool WarmStarting;
+        public readonly float LinearSlop;
+        public readonly float AngularSlop;
+        public readonly float MaxLinearCorrection;
+        public readonly float MaxAngularCorrection;
     }
 }

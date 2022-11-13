@@ -35,6 +35,7 @@ public sealed class MapLoaderSystem : EntitySystem
      */
 
     [Dependency] private readonly IComponentFactory _factory = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
@@ -397,6 +398,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private void LoadEntity(EntityUid uid, MappingDataNode data, MetaDataComponent meta)
     {
         _context.CurrentReadingEntityComponents.Clear();
+        _context.CurrentlyIgnoredComponents.Clear();
 
         if (data.TryGet("components", out SequenceDataNode? componentList))
         {
@@ -409,7 +411,12 @@ public sealed class MapLoaderSystem : EntitySystem
             }
         }
 
+        if (data.TryGet("missingComponents", out SequenceDataNode? missingComponentList))
+            _context.CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
+
         _serverEntityManager.FinishEntityLoad(uid, meta.EntityPrototype, _context);
+        if (_context.CurrentlyIgnoredComponents.Count > 0)
+            meta.LastComponentRemoved = _timing.CurTick;
     }
 
     private void BuildEntityHierarchy(MapData mapData)
@@ -949,7 +956,8 @@ public sealed class MapLoaderSystem : EntitySystem
                 _context.CurrentWritingComponent = compName;
                 var compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, context: _context);
 
-                if (cache?.TryGetValue(compName, out var protMapping) == true)
+                MappingDataNode? protMapping = null;
+                if (cache != null && cache.TryGetValue(compName, out protMapping))
                 {
                     // This will NOT recursively call Except() on the values of the mapping. It will only remove
                     // key-value pairs if both the keys and values are equal.
@@ -961,7 +969,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 // Don't need to write it if nothing was written! Note that if this entity has no associated
                 // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
                 // information that needs to be written.
-                if (compMapping.Children.Count != 0 || md.EntityPrototype == null)
+                if (compMapping.Children.Count != 0 || protMapping == null)
                 {
                     compMapping.Add("type", new ValueDataNode(compName));
                     // Something actually got written!
@@ -972,6 +980,30 @@ public sealed class MapLoaderSystem : EntitySystem
             if (components.Count != 0)
             {
                 mapping.Add("components", components);
+            }
+
+            if (md.EntityPrototype == null)
+            {
+                // No prototype - we are done.
+                entities.Add(mapping);
+                continue;
+            }
+
+            // an entity may have less components than the original prototype, so we need to check if any are missing.
+            var missingComponents = new SequenceDataNode();
+            foreach (var (name, comp) in md.EntityPrototype.Components)
+            {
+                // try comp instead of has-comp as it checks whether the component is supposed to have been
+                // deleted.
+                if (_serverEntityManager.TryGetComponent(entityUid, comp.Component.GetType(), out _))
+                    continue;
+
+                missingComponents.Add(new ValueDataNode(name));
+            }
+
+            if (missingComponents.Count != 0)
+            {
+                mapping.Add("missingComponents", missingComponents);
             }
 
             entities.Add(mapping);
@@ -995,6 +1027,7 @@ public sealed class MapLoaderSystem : EntitySystem
         // Run-specific data
         public Dictionary<ushort, string>? TileMap;
         public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
+        public HashSet<string> CurrentlyIgnoredComponents = new();
         public string? CurrentWritingComponent;
         public EntityUid? CurrentWritingEntity;
 
@@ -1025,7 +1058,8 @@ public sealed class MapLoaderSystem : EntitySystem
 
         public void Clear()
         {
-            CurrentReadingEntityComponents?.Clear();
+            CurrentReadingEntityComponents.Clear();
+            CurrentlyIgnoredComponents.Clear();
             CurrentWritingComponent = null;
             CurrentWritingEntity = null;
         }
@@ -1054,6 +1088,11 @@ public sealed class MapLoaderSystem : EntitySystem
         public IEnumerable<string> GetExtraComponentTypes()
         {
             return CurrentReadingEntityComponents!.Keys;
+        }
+
+        public bool ShouldSkipComponent(string compName)
+        {
+            return CurrentlyIgnoredComponents.Contains(compName);
         }
 
         ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,

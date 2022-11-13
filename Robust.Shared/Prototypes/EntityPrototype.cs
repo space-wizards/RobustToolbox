@@ -208,6 +208,9 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, entry) in prototype.Components)
                 {
+                    if (context != null && context.ShouldSkipComponent(name))
+                        continue;
+
                     var fullData = entry.Mapping;
 
                     if (context != null)

@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using Robust.Server.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -44,13 +47,12 @@ namespace Robust.Server.Maps
 
             chunk ??= new MapChunk(indices.X, indices.Y, chunkSize);
 
-            if (context is not MapLoader.MapContext mapContext)
-            {
-                throw new InvalidOperationException(
-                    $"Someone tried serializing a gridchunk without passing {nameof(MapLoader.MapContext)} as context.");
-            }
+            IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            var tileMap = mapContext.TileMap;
+            if (context is MapLoaderSystem.MapSerializationContext serContext)
+            {
+                tileMap = serContext.TileMap;
+            }
 
             if (tileMap == null)
             {

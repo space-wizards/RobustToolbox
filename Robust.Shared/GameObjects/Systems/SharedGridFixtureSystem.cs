@@ -45,8 +45,8 @@ namespace Robust.Shared.GameObjects
         protected virtual void OnGridInit(GridInitializeEvent ev)
         {
             // This will also check for grid splits if applicable.
-            var iGrid = (IMapGridInternal) Comp<MapGridComponent>(ev.EntityUid).Grid;
-            iGrid.RegenerateCollision(iGrid.GetMapChunks().Values.ToHashSet());
+            var grid = Comp<MapGridComponent>(ev.EntityUid);
+            grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
         }
 
         public override void Shutdown()

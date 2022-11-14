@@ -242,6 +242,9 @@ namespace Robust.UnitTesting.Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
             configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
 
+            var parallel = (IParallelManagerInternal)container.Resolve<IParallelManager>();
+            parallel.Initialize();
+
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));
 

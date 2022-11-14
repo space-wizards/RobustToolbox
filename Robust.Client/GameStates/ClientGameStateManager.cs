@@ -457,7 +457,6 @@ namespace Robust.Client.GameStates
 
             // This is terrible, and I hate it.
             _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
-            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             foreach (var entity in system.DirtyEntities)
             {

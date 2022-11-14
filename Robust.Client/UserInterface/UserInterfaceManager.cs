@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
@@ -40,7 +39,6 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;

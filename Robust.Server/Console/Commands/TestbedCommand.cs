@@ -129,6 +129,7 @@ namespace Robust.Server.Console.Commands
         private void CreateBoxStack(MapId mapId)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -190,13 +191,17 @@ namespace Robust.Server.Console.Commands
                     };
 
                     broadphase.CreateFixture(box, fixture);
+                    physics.WakeBody(box);
                 }
             }
+
+            physics.WakeBody(ground);
         }
 
         private void CreateCircleStack(MapId mapId)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -255,8 +260,11 @@ namespace Robust.Server.Console.Commands
                     };
 
                     broadphase.CreateFixture(box, fixture);
+                    physics.WakeBody(box);
                 }
             }
+
+            physics.WakeBody(ground);
         }
 
         private void CreatePyramid(MapId mapId)
@@ -265,6 +273,7 @@ namespace Robust.Server.Console.Commands
 
             // Setup ground
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
@@ -278,6 +287,7 @@ namespace Robust.Server.Console.Commands
 
             var broadphase = EntitySystem.Get<FixtureSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
+            physics.WakeBody(ground);
 
             // Setup boxes
             float a = 0.5f;
@@ -307,6 +317,8 @@ namespace Robust.Server.Console.Commands
                         Density = 5.0f,
                     });
                     y += deltaY;
+
+                    physics.WakeBody(box);
                 }
 
                 x += deltaX;
@@ -317,9 +329,13 @@ namespace Robust.Server.Console.Commands
         {
             var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            // Due to lookup changes fixtureless bodies are invalid, so
+            var cShape = new PhysShapeCircle();
+            broadphaseSystem.CreateFixture(ground, cShape);
 
             var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
@@ -345,6 +361,8 @@ namespace Robust.Server.Console.Commands
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
             broadphaseSystem.CreateFixture(body, shape4, 20.0f, 2, 0);
 
+            physics.WakeBody(ground);
+            physics.WakeBody(body);
             var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
@@ -371,6 +389,7 @@ namespace Robust.Server.Console.Commands
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
                     broadphaseSystem.CreateFixture(box, shape, 0.0625f, 2, 2);
+                    physics.WakeBody(box);
                 });
             }
         }

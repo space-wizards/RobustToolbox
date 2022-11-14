@@ -28,6 +28,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -50,6 +51,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Change the global gravity vector.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Gravity
         {
             get => _gravity;

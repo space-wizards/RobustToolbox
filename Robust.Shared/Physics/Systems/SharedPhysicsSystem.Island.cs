@@ -178,9 +178,9 @@ public abstract partial class SharedPhysicsSystem
     private float _maxLinearVelocity;
     private float _maxAngularVelocity;
     private bool _sleepAllowed;
-    private float _angularToleranceSqr;
-    private float _linearToleranceSqr;
-    protected float _timeToSleep;
+    protected float AngularToleranceSqr;
+    protected float LinearToleranceSqr;
+    protected float TimeToSleep;
     private float _velocityThreshold;
     private float _baumgarte;
 
@@ -229,9 +229,9 @@ public abstract partial class SharedPhysicsSystem
     private void SetMaxLinearVelocity(float value) => _maxLinearVelocity = value;
     private void SetMaxAngularVelocity(float value) => _maxAngularVelocity = value;
     private void SetSleepAllowed(bool value) => _sleepAllowed = value;
-    private void SetAngularToleranceSqr(float value) => _angularToleranceSqr = value;
-    private void SetLinearToleranceSqr(float value) => _linearToleranceSqr = value;
-    private void SetTimeToSleep(float value) => _timeToSleep = value;
+    private void SetAngularToleranceSqr(float value) => AngularToleranceSqr = value;
+    private void SetLinearToleranceSqr(float value) => LinearToleranceSqr = value;
+    private void SetTimeToSleep(float value) => TimeToSleep = value;
     private void SetVelocityThreshold(float value) => _velocityThreshold = value;
     private void SetBaumgarte(float value) => _baumgarte = value;
 
@@ -507,9 +507,9 @@ public abstract partial class SharedPhysicsSystem
             _maxLinearVelocity,
             _maxAngularVelocity,
             _sleepAllowed,
-            _angularToleranceSqr,
-            _linearToleranceSqr,
-            _timeToSleep,
+            AngularToleranceSqr,
+            LinearToleranceSqr,
+            TimeToSleep,
             _velocityThreshold,
             _baumgarte
         );
@@ -763,6 +763,10 @@ public abstract partial class SharedPhysicsSystem
         for (var i = 0; i < bodyCount; i++)
         {
             var body = island.Bodies[i];
+
+            if (body.BodyType == BodyType.Static)
+                continue;
+
             var parentXform = xformQuery.GetComponent(xformQuery.GetComponent(body.Owner).ParentUid);
             var parentInvMatrix = _transform.GetInvWorldMatrix(parentXform, xformQuery);
 
@@ -840,6 +844,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void SleepBodies(in IslandData island, in SolverData data, bool prediction)
     {
+        // TODO: Easily parallelisable as long as we don't raise SetAwake in the loop.
         if (island.LoneIsland)
         {
             if (!prediction && data.SleepAllowed)

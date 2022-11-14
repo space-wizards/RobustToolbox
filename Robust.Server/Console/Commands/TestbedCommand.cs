@@ -129,6 +129,7 @@ namespace Robust.Server.Console.Commands
         private void CreateBoxStack(MapId mapId)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -190,13 +191,17 @@ namespace Robust.Server.Console.Commands
                     };
 
                     broadphase.CreateFixture(box, fixture);
+                    physics.WakeBody(box);
                 }
             }
+
+            physics.WakeBody(ground);
         }
 
         private void CreateCircleStack(MapId mapId)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -255,8 +260,11 @@ namespace Robust.Server.Console.Commands
                     };
 
                     broadphase.CreateFixture(box, fixture);
+                    physics.WakeBody(box);
                 }
             }
+
+            physics.WakeBody(ground);
         }
 
         private void CreatePyramid(MapId mapId)
@@ -265,6 +273,7 @@ namespace Robust.Server.Console.Commands
 
             // Setup ground
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
@@ -278,6 +287,7 @@ namespace Robust.Server.Console.Commands
 
             var broadphase = EntitySystem.Get<FixtureSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
+            physics.WakeBody(ground);
 
             // Setup boxes
             float a = 0.5f;
@@ -307,6 +317,8 @@ namespace Robust.Server.Console.Commands
                         Density = 5.0f,
                     });
                     y += deltaY;
+
+                    physics.WakeBody(box);
                 }
 
                 x += deltaX;

@@ -28,9 +28,9 @@ namespace Robust.Client.Physics
             // Also need to suss out having the client build the island anyway and just... not solving it?
             foreach (var body in component.AwakeBodies)
             {
-                if (body.LinearVelocity.Length > _linearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > _angularToleranceSqr / 2f) continue;
+                if (body.LinearVelocity.Length > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
-                if (body.SleepTime > _timeToSleep)
+                if (body.SleepTime > TimeToSleep)
                 {
                     toRemove.Add(body);
                 }
@@ -41,7 +41,7 @@ namespace Robust.Client.Physics
                 body.Awake = false;
             }
 
-            base.Cleanup(frameTime);
+            base.Cleanup(component, frameTime);
         }
     }
 }

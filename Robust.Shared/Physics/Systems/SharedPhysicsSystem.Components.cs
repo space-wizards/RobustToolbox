@@ -101,7 +101,6 @@ public partial class SharedPhysicsSystem
         // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
-        Dirty(component);
         SetLinearVelocity(component, newState.LinearVelocity);
         SetAngularVelocity(component, newState.AngularVelocity);
         SetBodyType(component, newState.BodyType);

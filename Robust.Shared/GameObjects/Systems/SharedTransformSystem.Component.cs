@@ -540,15 +540,9 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region States
+    public virtual void ActivateLerp(TransformComponent xform) { }
 
-    protected void ActivateLerp(TransformComponent xform)
-    {
-        if (xform.ActivelyLerping)
-            return;
-
-        xform.ActivelyLerping = true;
-        RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform), true);
-    }
+    public virtual void DeactivateLerp(TransformComponent xform) { }
 
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
@@ -615,8 +609,8 @@ public abstract partial class SharedTransformSystem
                 RaiseLocalEvent(xform.Owner, ref ev, true);
             }
 
-            xform._prevPosition = newState.LocalPosition;
-            xform._prevRotation = newState.Rotation;
+            xform.PrevPosition = newState.LocalPosition;
+            xform.PrevRotation = newState.Rotation;
             xform._noLocalRotation = newState.NoLocalRotation;
 
             DebugTools.Assert(xform.ParentUid == newState.ParentID, "Transform state failed to set parent");
@@ -625,8 +619,8 @@ public abstract partial class SharedTransformSystem
 
         if (args.Next is TransformComponentState nextTransform)
         {
-            xform._nextPosition = nextTransform.LocalPosition;
-            xform._nextRotation = nextTransform.Rotation;
+            xform.NextPosition = nextTransform.LocalPosition;
+            xform.NextRotation = nextTransform.Rotation;
             xform.LerpParent = nextTransform.ParentID;
             ActivateLerp(xform);
         }
@@ -634,14 +628,6 @@ public abstract partial class SharedTransformSystem
         {
             DeactivateLerp(xform);
         }
-    }
-
-    private void DeactivateLerp(TransformComponent component)
-    {
-        // this should cause the lerp to do nothing
-        component._nextPosition = null;
-        component._nextRotation = null;
-        component.LerpParent = EntityUid.Invalid;
     }
 
     #endregion
@@ -966,8 +952,8 @@ public abstract partial class SharedTransformSystem
         _lookup.RemoveFromEntityTree(xform.Owner, xform, xformQuery);
 
         // Stop any active lerps
-        xform._nextPosition = null;
-        xform._nextRotation = null;
+        xform.NextPosition = null;
+        xform.NextRotation = null;
         xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)

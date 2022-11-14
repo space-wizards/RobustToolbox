@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
@@ -14,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
+        [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
@@ -38,13 +39,13 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -77,14 +78,17 @@ namespace Robust.Client.UserInterface
 
         private bool _rendering = true;
 
+        private readonly Queue<Action> _deferQueue = new();
         private readonly Queue<Control> _styleUpdateQueue = new();
         private readonly Queue<Control> _measureUpdateQueue = new();
         private readonly Queue<Control> _arrangeUpdateQueue = new();
         private Stylesheet? _stylesheet;
 
+        private ISawmill _sawmillUI = default!;
+
         public void Initialize()
         {
-            _dependencies = new DependencyCollection(IoCManager.Instance!);
+            _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
@@ -114,6 +118,7 @@ namespace Robust.Client.UserInterface
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _initThemes();
         }
+
         public void PostInitialize()
         {
             _initializeScreens();
@@ -121,9 +126,13 @@ namespace Robust.Client.UserInterface
         }
         private void _initializeCommon()
         {
+            _sawmillUI = _logManager.GetSawmill("ui");
+
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
+
             _clyde.DestroyWindow += WindowDestroyed;
+            _clyde.OnWindowFocused += ClydeOnWindowFocused;
 
             MainViewport = new MainViewportContainer(_eyeManager)
             {
@@ -172,6 +181,11 @@ namespace Robust.Client.UserInterface
         }
 
         public event Action<PostDrawUIRootEventArgs>? OnPostDrawUIRoot;
+
+        public void DeferAction(Action action)
+        {
+            _deferQueue.Enqueue(action);
+        }
 
         private void WindowDestroyed(WindowDestroyedEventArgs args)
         {
@@ -265,6 +279,14 @@ namespace Robust.Client.UserInterface
             {
                 _needUpdateActiveCursor = false;
                 UpdateActiveCursor();
+            }
+
+            using (_prof.Group("Deferred actions"))
+            {
+                while (_deferQueue.TryDequeue(out var action))
+                {
+                    action();
+                }
             }
         }
 

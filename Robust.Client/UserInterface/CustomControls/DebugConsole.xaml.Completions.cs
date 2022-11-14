@@ -51,7 +51,7 @@ public sealed partial class DebugConsole
         AbortActiveCompletions();
     }
 
-    private void CommandBarOnOnTextTyped(GUITextEventArgs obj)
+    private void CommandBarOnOnTextTyped(GUITextEnteredEventArgs obj)
     {
         TypeUpdateCompletions(true);
     }

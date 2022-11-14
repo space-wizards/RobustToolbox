@@ -183,6 +183,15 @@ cmd-guidump-help = Usage: guidump
 cmd-uitest-desc = Open a dummy UI testing window
 cmd-uitest-help = Usage: uitest
 
+## 'uitest2' command
+cmd-uitest2-desc = Opens a UI control testing OS window
+cmd-uitest2-help = Usage: uitest2 <tab>
+cmd-uitest2-arg-tab = <tab>
+cmd-uitest2-error-args = Expected at most one argument
+cmd-uitest2-error-tab = Invalid tab: '{$value}'
+cmd-uitest2-title = UITest2
+
+
 cmd-setclipboard-desc = Sets the system clipboard
 cmd-setclipboard-help = Usage: setclipboard <text>
 
@@ -217,8 +226,15 @@ cmd-cldbglyr-help= Usage: cldbglyr <layer>: Toggle <layer>
 cmd-key-info-desc = Keys key info for a key.
 cmd-key-info-help = Usage: keyinfo <Key>
 
-cmd-bind-desc = Binds an input key to an input command.
-cmd-bind-help = bind <KeyName> <BindMode> <InputCommand>
+## 'bind' command
+cmd-bind-desc = Binds an input key combination to an input command.
+cmd-bind-help = Usage: bind { cmd-bind-arg-key } { cmd-bind-arg-mode } { cmd-bind-arg-command }
+    Note that this DOES NOT automatically save bindings.
+    Use the 'svbind' command to save binding configuration.
+
+cmd-bind-arg-key = <KeyName>
+cmd-bind-arg-mode = <BindMode>
+cmd-bind-arg-command = <InputCommand>
 
 cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
 cmd-net-draw-interp-help = Usage: net_draw_interp

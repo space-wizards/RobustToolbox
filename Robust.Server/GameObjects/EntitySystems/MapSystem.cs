@@ -3,9 +3,12 @@ using System.Linq;
 using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Server.GameObjects
 {

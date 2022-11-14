@@ -62,9 +62,15 @@ namespace Robust.Shared.Map
         MapGrid.ChunkEnumerator GetMapChunks(Box2Rotated worldArea);
 
         /// <summary>
-        /// Regenerates the chunk local bounds of this chunk.
+        /// Regenerates the chunk local bounds of this chunk. Also updates the grid's AABB.
         /// </summary>
         void RegenerateCollision(MapChunk mapChunk);
+
+        /// <summary>
+        /// Regenerates the chunk local bounds of the provided chunks. Also updates the grid's AABB.
+        /// </summary>
+        /// <param name="chunks"></param>
+        void RegenerateCollision(IReadOnlySet<MapChunk> chunks);
 
         /// <summary>
         /// Calculate the world space AABB for this chunk.

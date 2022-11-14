@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 
             SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
@@ -221,7 +220,7 @@ namespace Robust.Shared.GameObjects
 
             if (xform.Broadphase is not { Valid: true } old)
                 return; // entity is not on any broadphase
-            
+
             xform.Broadphase = null;
 
             if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
@@ -233,7 +232,7 @@ namespace Robust.Shared.GameObjects
                 RemoveBroadTree(broadphase, fixtures, old.Static);
             else
                 (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
-            
+
             // Add to new broadphase
             if (body.CanCollide)
                 AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);

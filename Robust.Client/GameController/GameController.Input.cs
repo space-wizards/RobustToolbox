@@ -20,9 +20,14 @@ namespace Robust.Client
             _inputManager.KeyUp(keyEvent);
         }
 
-        public void TextEntered(TextEventArgs textEvent)
+        public void TextEntered(TextEnteredEventArgs textEnteredEvent)
         {
-            _userInterfaceManager.TextEntered(textEvent);
+            _userInterfaceManager.TextEntered(textEnteredEvent);
+        }
+
+        public void TextEditing(TextEditingEventArgs textEvent)
+        {
+            _userInterfaceManager.TextEditing(textEvent);
         }
 
         /// <summary>

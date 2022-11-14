@@ -55,7 +55,6 @@ namespace Robust.Server
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityManager>();
-            IoCManager.Register<IMapLoader, MapLoader>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<ISharedPlayerManager, PlayerManager>();

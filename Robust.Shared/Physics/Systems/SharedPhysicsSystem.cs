@@ -13,6 +13,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -51,6 +52,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;

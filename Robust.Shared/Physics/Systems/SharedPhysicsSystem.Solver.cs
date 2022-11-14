@@ -333,13 +333,14 @@ public abstract partial class SharedPhysicsSystem
     private void SolveVelocityConstraints(
         in SolverData data,
         IslandData island,
+        ParallelOptions? options,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
         var contactCount = island.Contacts.Count;
 
-        if (contactCount > VelocityConstraintsPerThread * 2)
+        if (options != null && contactCount > VelocityConstraintsPerThread * 2)
         {
             var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
 
@@ -661,6 +662,7 @@ public abstract partial class SharedPhysicsSystem
     private bool SolvePositionConstraints(
         SolverData data,
         in IslandData island,
+        ParallelOptions? options,
         ContactPositionConstraint[] positionConstraints,
         Vector2[] positions,
         float[] angles)
@@ -668,7 +670,7 @@ public abstract partial class SharedPhysicsSystem
         var contactCount = island.Contacts.Count;
 
         // Parallel
-        if (contactCount > PositionConstraintsPerThread * 2)
+        if (options != null && contactCount > PositionConstraintsPerThread * 2)
         {
             var unsolved = 0;
             var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);

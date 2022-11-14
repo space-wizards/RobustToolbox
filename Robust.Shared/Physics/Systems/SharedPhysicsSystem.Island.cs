@@ -540,6 +540,10 @@ public abstract partial class SharedPhysicsSystem
         var solvedAngles = ArrayPool<float>.Shared.Rent(totalBodies);
         var linearVelocities = ArrayPool<Vector2>.Shared.Rent(totalBodies);
         var angularVelocities = ArrayPool<float>.Shared.Rent(totalBodies);
+        var options = new ParallelOptions()
+        {
+            MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
+        };
 
         while (iBegin < actualIslands.Length)
         {
@@ -548,14 +552,14 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
+            SolveIsland(ref island, in data, options, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
             iBegin++;
         }
 
-        Parallel.For(iBegin, actualIslands.Length, i =>
+        Parallel.For(iBegin, actualIslands.Length, options, i =>
         {
             ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
+            SolveIsland(ref island, in data, null, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
         });
 
         // Update data sequentially
@@ -593,6 +597,7 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIsland(
         ref IslandData island,
         in SolverData data,
+        ParallelOptions? options,
         Vector2 gravity,
         bool prediction,
         Vector2[] solvedPositions,
@@ -691,7 +696,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((joint, error));
             }
 
-            SolveVelocityConstraints(in data, island, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(in data, island, options, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.
@@ -734,7 +739,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints(data, in island, positionConstraints, positions, angles);
+            var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (int j = 0; j < island.Joints.Count; ++j)

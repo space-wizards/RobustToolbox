@@ -355,7 +355,7 @@ public partial class SharedPhysicsSystem
     {
         if (body._awake == value)
             return;
-        
+
         if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
             return;
 
@@ -539,6 +539,15 @@ public partial class SharedPhysicsSystem
             return;
 
         body._sleepTime = value;
+    }
+
+    public bool WakeBody(EntityUid uid, PhysicsComponent? body = null, FixturesComponent? manager = null, bool force = false)
+    {
+        if (!Resolve(uid, ref body, ref manager))
+            return false;
+
+        WakeBody(body, manager, force);
+        return body._awake;
     }
 
     /// <summary>

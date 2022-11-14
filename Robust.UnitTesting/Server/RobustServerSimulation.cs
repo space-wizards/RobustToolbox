@@ -35,6 +35,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
@@ -220,6 +221,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
+            container.Register<IParallelManager, ParallelManager>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();

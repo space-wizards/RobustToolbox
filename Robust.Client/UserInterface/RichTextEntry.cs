@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -32,14 +31,14 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The combined text indices in the message's text tags to put line breaks.
         /// </summary>
-        public readonly List<int> LineBreaks;
+        public ValueList<int> LineBreaks;
 
         public RichTextEntry(FormattedMessage message)
         {
             Message = message;
             Height = 0;
             Width = 0;
-            LineBreaks = new List<int>();
+            LineBreaks = default;
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public void Draw(
+        public readonly void Draw(
             DrawingHandleScreen handle,
             Font font,
             UIBox2 drawBox,
@@ -149,8 +148,6 @@ namespace Robust.Client.UserInterface
                         var text = tagText.Text;
                         foreach (var rune in text.EnumerateRunes())
                         {
-                            globalBreakCounter += 1;
-
                             if (lineBreakIndex < LineBreaks.Count &&
                                 LineBreaks[lineBreakIndex] == globalBreakCounter)
                             {
@@ -160,18 +157,14 @@ namespace Robust.Client.UserInterface
 
                             var advance = font.DrawChar(handle, rune, baseLine, uiScale, currentColorTag.Color);
                             baseLine += new Vector2(advance, 0);
+
+                            globalBreakCounter += 1;
                         }
 
                         break;
                     }
                 }
             }
-        }
-
-        [Pure]
-        private static bool IsWordBoundary(Rune a, Rune b)
-        {
-            return a == new Rune(' ') || b == new Rune(' ') || a == new Rune('-') || b == new Rune('-');
         }
     }
 }

@@ -1,32 +1,11 @@
 ﻿# Release notes for RobustToolbox.
 
 <!--
-Template for new versions:
-
-## Master
-
-### Breaking changes
-
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-*None yet*
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
-
+NOTE: automatically updated sometimes by version.py.
+Don't change the format without looking at the script!
 -->
 
+<!--START TEMPLATE
 ## Master
 
 ### Breaking changes
@@ -48,6 +27,38 @@ Template for new versions:
 ### Internal
 
 *None yet*
+
+
+END TEMPLATE-->
+
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+* Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
+
+### Internal
+
+* `Tools/version.py` has been updated to automatically update `RELEASE-NOTES.md`.
+* General cleanup to `Tools/version.py`.
+
+## 0.64.1.0
+
+### Bugfixes
+
+* Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
 
 ## 0.64.0.0
 

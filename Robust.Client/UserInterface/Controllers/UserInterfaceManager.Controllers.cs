@@ -22,7 +22,7 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<Type, UIController> _uiControllers = new();
 
     /// <summary>
-    ///     Dependency collection holding UI controllers, IoC services and entity systems
+    ///     Dependency collection holding UI controllers and IoC services
     /// </summary>
     private DependencyCollection _dependencies = default!;
 

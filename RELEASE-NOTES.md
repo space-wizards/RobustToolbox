@@ -47,7 +47,28 @@ END TEMPLATE-->
 
 ### Other
 
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.65.0.0
+
+### Breaking changes
+
+* Rename transform lerping properties alongside other minor internal changes.
+
+### Bugfixes
+
+* Fix physics testbeds.
+* Force grids to always be collidable for now and stop them clipping.
+
+### Other
+
 * Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
+* Force non-collidable contacts to be destroyed. Previously these hung around until both entities became collidable again.
 
 ### Internal
 

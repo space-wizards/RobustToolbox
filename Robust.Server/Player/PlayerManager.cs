@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
+using Robust.Server.Configuration;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -410,7 +411,7 @@ namespace Robust.Server.Player
             (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
             _network.ServerSendMessage(msgTimeBase, args.Channel);
 
-            IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
+            IoCManager.Resolve<IServerNetConfigurationManager>().SyncConnectingClient(args.Channel);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)

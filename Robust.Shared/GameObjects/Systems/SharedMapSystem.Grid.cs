@@ -1,5 +1,7 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.GameObjects;
 
@@ -44,6 +46,11 @@ public abstract partial class SharedMapSystem
         if (MapManager.HasMapEntity(mapId))
         {
             _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
+        }
+
+        if (TryComp<PhysicsComponent>(uid, out var body))
+        {
+            _physics.WakeBody(body);
         }
 
         var msg = new GridInitializeEvent(uid);

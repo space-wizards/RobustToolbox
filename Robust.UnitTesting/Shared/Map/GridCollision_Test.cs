@@ -31,8 +31,7 @@ namespace Robust.UnitTesting.Shared.Map
             EntityUid? gridEnt1;
             EntityUid? gridEnt2;
 
-            await server.WaitPost(() =>
-            {
+            await server.WaitPost(() => {
                 mapId = mapManager.CreateMap();
                 gridId1 = mapManager.CreateGrid(mapId);
                 gridId2 = mapManager.CreateGrid(mapId);
@@ -84,6 +83,9 @@ namespace Robust.UnitTesting.Shared.Map
                 {
                     var contact = node.Value;
                     node = node.Next;
+
+                    if (!contact.IsTouching)
+                        continue;
 
                     var bodyA = contact.FixtureA!.Body;
                     var bodyB = contact.FixtureB!.Body;

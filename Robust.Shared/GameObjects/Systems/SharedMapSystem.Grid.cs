@@ -48,11 +48,6 @@ public abstract partial class SharedMapSystem
             _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
 
-        if (TryComp<PhysicsComponent>(uid, out var body))
-        {
-            _physics.WakeBody(body);
-        }
-
         var msg = new GridInitializeEvent(uid);
         RaiseLocalEvent(uid, msg, true);
     }

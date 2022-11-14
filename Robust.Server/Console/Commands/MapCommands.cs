@@ -402,28 +402,31 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 3 || args.Length > 4)
+            if (args.Length is < 3 or > 4)
             {
-                shell.WriteError("Wrong number of args.");
+                shell.WriteError($"Usage: {Help}");
+                return;
             }
 
             var gridId = EntityUid.Parse(args[0]);
-            var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
+            var xPos = float.Parse(args[1], CultureInfo.InvariantCulture);
+            var yPos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
             var entManager = IoCManager.Resolve<IEntityManager>();
 
-            if (mapManager.TryGetGrid(gridId, out var grid))
+            if (!mapManager.TryGetGrid(gridId, out var grid))
             {
-                var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
-                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
-
-                gridXform.Coordinates =
-                    new EntityCoordinates(mapManager.GetMapEntityId(mapId), new Vector2(xpos, ypos));
-
-                shell.WriteLine("Grid was teleported.");
+                shell.WriteError($"No grid found with id {args[0]}");
+                return;
             }
+
+            var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
+
+            gridXform.Coordinates = new EntityCoordinates(mapManager.GetMapEntityId(mapId), new Vector2(xPos, yPos));
+
+            shell.WriteLine("Grid was teleported.");
         }
     }
 

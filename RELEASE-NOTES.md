@@ -1,32 +1,11 @@
 ﻿# Release notes for RobustToolbox.
 
 <!--
-Template for new versions:
-
-## Master
-
-### Breaking changes
-
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-*None yet*
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
-
+NOTE: automatically updated sometimes by version.py.
+Don't change the format without looking at the script!
 -->
 
+<!--START TEMPLATE
 ## Master
 
 ### Breaking changes
@@ -48,6 +27,59 @@ Template for new versions:
 ### Internal
 
 *None yet*
+
+
+END TEMPLATE-->
+
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.65.0.0
+
+### Breaking changes
+
+* Rename transform lerping properties alongside other minor internal changes.
+
+### Bugfixes
+
+* Fix physics testbeds.
+* Force grids to always be collidable for now and stop them clipping.
+
+### Other
+
+* Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
+* Force non-collidable contacts to be destroyed. Previously these hung around until both entities became collidable again.
+
+### Internal
+
+* `Tools/version.py` has been updated to automatically update `RELEASE-NOTES.md`.
+* General cleanup to `Tools/version.py`.
+
+## 0.64.1.0
+
+### Bugfixes
+
+* Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
 
 ## 0.64.0.0
 

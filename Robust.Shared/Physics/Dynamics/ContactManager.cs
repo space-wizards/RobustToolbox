@@ -345,6 +345,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
                     node = node.Next;
+                    Destroy(contact);
                     continue;
                 }
 

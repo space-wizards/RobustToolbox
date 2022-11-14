@@ -36,6 +36,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Server.Configuration;
 
 namespace Robust.UnitTesting.Server
 {
@@ -223,7 +224,8 @@ namespace Robust.UnitTesting.Server
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<INetConfigurationManager, NetConfigurationManager>();
+            container.Register<INetConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);

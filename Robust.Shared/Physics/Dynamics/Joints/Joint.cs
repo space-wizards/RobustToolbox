@@ -301,10 +301,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         internal abstract void SolveVelocityConstraints(
             in SolverData data,
             in SharedPhysicsSystem.IslandData island,
-            PhysicsComponent bodyA,
-            PhysicsComponent bodyB,
-            Vector2[] positions,
-            float[] angles,
             Vector2[] linearVelocities,
             float[] angularVelocities);
 
@@ -314,13 +310,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <returns>returns true if the position errors are within tolerance.</returns>
         internal abstract bool SolvePositionConstraints(
             in SolverData data,
-            in SharedPhysicsSystem.IslandData island,
-            PhysicsComponent bodyA,
-            PhysicsComponent bodyB,
             Vector2[] positions,
-            float[] angles,
-            Vector2[] linearVelocities,
-            float[] angularVelocities);
+            float[] angles);
 
         public bool Equals(Joint? other)
         {

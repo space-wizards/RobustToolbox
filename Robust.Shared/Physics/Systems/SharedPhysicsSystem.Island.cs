@@ -686,9 +686,7 @@ public abstract partial class SharedPhysicsSystem
                 if (!joint.Enabled)
                     continue;
 
-                var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
-                var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
-                joint.SolveVelocityConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
+                joint.SolveVelocityConstraints(in data, in island, linearVelocities, angularVelocities);
 
                 var error = joint.Validate(data.InvDt);
 
@@ -705,11 +703,11 @@ public abstract partial class SharedPhysicsSystem
         // Integrate positions
         for (var i = 0; i < bodyCount; i++)
         {
-            var linearVelocity = linearVelocities[offset + i];
-            var angularVelocity = angularVelocities[offset + i];
+            ref var linearVelocity = ref linearVelocities[offset + i];
+            ref var angularVelocity = ref angularVelocities[offset + i];
 
-            var position = positions[i];
-            var angle = angles[i];
+            ref var position = ref positions[i];
+            ref var angle = ref angles[i];
 
             var translation = linearVelocity * data.FrameTime;
             if (translation.Length > data.MaxLinearVelocity)
@@ -728,11 +726,6 @@ public abstract partial class SharedPhysicsSystem
             // Integrate
             position += linearVelocity * data.FrameTime;
             angle += angularVelocity * data.FrameTime;
-
-            linearVelocities[offset + i] = linearVelocity;
-            angularVelocities[offset + i] = angularVelocity;
-            positions[i] = position;
-            angles[i] = angle;
         }
 
         island.PositionSolved = false;
@@ -749,9 +742,7 @@ public abstract partial class SharedPhysicsSystem
                 if (!joint.Enabled)
                     continue;
 
-                var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
-                var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
-                var jointOkay = joint.SolvePositionConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
+                var jointOkay = joint.SolvePositionConstraints(in data, positions, angles);
 
                 jointsOkay = jointsOkay && jointOkay;
             }
@@ -778,7 +769,8 @@ public abstract partial class SharedPhysicsSystem
 
             var xform = xformQuery.GetComponent(body.Owner);
             var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var parentInvMatrix = _transform.GetInvWorldMatrix(parentXform, xformQuery);
+            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+            var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];
 
@@ -786,9 +778,8 @@ public abstract partial class SharedPhysicsSystem
             var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
 
             var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
-            // TODO: Do better
             solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
-            solvedAngles[offset + i] = angles[i] - (float) _transform.GetWorldRotation(xform, xformQuery).Theta;
+            solvedAngles[offset + i] = angles[i] - worldRot;
         }
 
         // Cleanup

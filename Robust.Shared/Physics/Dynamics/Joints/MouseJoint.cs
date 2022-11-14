@@ -246,10 +246,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     internal override void SolveVelocityConstraints(
         in SolverData data,
         in SharedPhysicsSystem.IslandData island,
-        PhysicsComponent bodyA,
-        PhysicsComponent bodyB,
-        Vector2[] positions,
-        float[] angles,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
@@ -280,13 +276,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     internal override bool SolvePositionConstraints(
         in SolverData data,
-        in SharedPhysicsSystem.IslandData island,
-        PhysicsComponent bodyA,
-        PhysicsComponent bodyB,
         Vector2[] positions,
-        float[] angles,
-        Vector2[] linearVelocities,
-        float[] angularVelocities)
+        float[] angles)
     {
         return true;
     }

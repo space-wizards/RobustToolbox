@@ -274,8 +274,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         vB += impulse * _invMassB;
         wB += _invIB * Vector2.Cross(_rB, impulse);
 
-        linearVelocities[_indexB] = vB;
-        angularVelocities[_indexB] = wB;
+        linearVelocities[offset + _indexB] = vB;
+        angularVelocities[offset + _indexB] = wB;
     }
 
     internal override bool SolvePositionConstraints(

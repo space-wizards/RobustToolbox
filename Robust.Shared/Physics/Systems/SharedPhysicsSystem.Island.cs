@@ -458,6 +458,11 @@ public abstract partial class SharedPhysicsSystem
 
     private void ReturnIsland(IslandData island)
     {
+        foreach (var body in island.Bodies)
+        {
+            body.IslandIndex.Remove(island.Index);
+        }
+
         _islandBodyPool.Return(island.Bodies);
         _islandContactPool.Return(island.Contacts);
 
@@ -479,7 +484,6 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            body.IslandIndex.Clear();
             body.Island = false;
             DebugTools.Assert(body.BodyType != BodyType.Static);
 
@@ -767,7 +771,8 @@ public abstract partial class SharedPhysicsSystem
             if (body.BodyType == BodyType.Static)
                 continue;
 
-            var parentXform = xformQuery.GetComponent(xformQuery.GetComponent(body.Owner).ParentUid);
+            var xform = xformQuery.GetComponent(body.Owner);
+            var parentXform = xformQuery.GetComponent(xform.ParentUid);
             var parentInvMatrix = _transform.GetInvWorldMatrix(parentXform, xformQuery);
 
             var angle = angles[i];
@@ -777,9 +782,8 @@ public abstract partial class SharedPhysicsSystem
 
             var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
             // TODO: Do better
-            var solvedAngle = angles[i] - (float) _transform.GetWorldRotation(parentXform, xformQuery).Theta;
-            solvedPositions[offset + i] = solvedPosition;
-            solvedAngles[offset + i] = solvedAngle;
+            solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
+            solvedAngles[offset + i] = angles[i] - (float) _transform.GetWorldRotation(xform, xformQuery).Theta;
         }
 
         // Cleanup
@@ -821,7 +825,7 @@ public abstract partial class SharedPhysicsSystem
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
             {
-                _transform.SetLocalPositionRotation(xform, position, angle);
+                _transform.SetLocalPositionRotation(xform, xform.LocalPosition + position, xform.LocalRotation + angle);
             }
 
             var linVelocity = linearVelocities[offset + i];

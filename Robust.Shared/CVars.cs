@@ -995,13 +995,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> GridFixtureEnlargement =
             CVarDef.Create("physics.grid_fixture_enlargement", -PhysicsConstants.PolygonRadius, CVar.ARCHIVE | CVar.REPLICATED);
 
-        // - Contacts
-        public static readonly CVarDef<int> ContactMultithreadThreshold =
-            CVarDef.Create("physics.contact_multithread_threshold", 32);
-
-        public static readonly CVarDef<int> ContactMinimumThreads =
-            CVarDef.Create("physics.contact_minimum_threads", 2);
-
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
@@ -1017,17 +1010,6 @@ namespace Robust.Shared
             CVarDef.Create("physics.timetosleep", 0.2f);
 
         // - Solver
-        public static readonly CVarDef<int> PositionConstraintsPerThread =
-            CVarDef.Create("physics.position_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> PositionConstraintsMinimumThread =
-            CVarDef.Create("physics.position_constraints_minimum_threads", 2);
-
-        public static readonly CVarDef<int> VelocityConstraintsPerThread =
-            CVarDef.Create("physics.velocity_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> VelocityConstraintMinimumThreads =
-            CVarDef.Create("physics.velocity_constraints_minimum_threads", 2);
 
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.

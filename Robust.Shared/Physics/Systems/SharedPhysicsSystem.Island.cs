@@ -180,7 +180,12 @@ public abstract partial class SharedPhysicsSystem
     private bool _sleepAllowed;
     private float _angularToleranceSqr;
     private float _linearToleranceSqr;
-    private float _timeToSleep;
+    protected float _timeToSleep;
+    private float _velocityThreshold;
+    private float _baumgarte;
+
+    private const int VelocityConstraintsPerThread = 32;
+    private const int PositionConstraintsPerThread = 32;
 
     private void InitializeIsland()
     {
@@ -195,6 +200,8 @@ public abstract partial class SharedPhysicsSystem
         _configManager.OnValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
         _configManager.OnValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
         _configManager.OnValueChanged(CVars.TimeToSleep, SetTimeToSleep, true);
+        _configManager.OnValueChanged(CVars.VelocityThreshold, SetVelocityThreshold, true);
+        _configManager.OnValueChanged(CVars.Baumgarte, SetBaumgarte, true);
     }
 
     private void ShutdownIsland()
@@ -210,6 +217,8 @@ public abstract partial class SharedPhysicsSystem
         _configManager.UnsubValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr);
         _configManager.UnsubValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr);
         _configManager.UnsubValueChanged(CVars.TimeToSleep, SetTimeToSleep);
+        _configManager.UnsubValueChanged(CVars.VelocityThreshold, SetVelocityThreshold);
+        _configManager.UnsubValueChanged(CVars.Baumgarte, SetBaumgarte);
     }
 
     private void SetWarmStarting(bool value) => _warmStarting = value;
@@ -223,6 +232,8 @@ public abstract partial class SharedPhysicsSystem
     private void SetAngularToleranceSqr(float value) => _angularToleranceSqr = value;
     private void SetLinearToleranceSqr(float value) => _linearToleranceSqr = value;
     private void SetTimeToSleep(float value) => _timeToSleep = value;
+    private void SetVelocityThreshold(float value) => _velocityThreshold = value;
+    private void SetBaumgarte(float value) => _baumgarte = value;
 
     /// <summary>
     ///     Where the magic happens.
@@ -442,7 +453,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(island);
         }
 
-        Cleanup(frameTime);
+        Cleanup(component, frameTime);
     }
 
     private void ReturnIsland(IslandData island)
@@ -459,7 +470,7 @@ public abstract partial class SharedPhysicsSystem
         island.BrokenJoints.Clear();
     }
 
-    protected virtual void Cleanup(float frameTime)
+    protected virtual void Cleanup(SharedPhysicsMapComponent component, float frameTime)
     {
         foreach (var body in _islandSet)
         {
@@ -498,7 +509,9 @@ public abstract partial class SharedPhysicsSystem
             _sleepAllowed,
             _angularToleranceSqr,
             _linearToleranceSqr,
-            _timeToSleep
+            _timeToSleep,
+            _velocityThreshold,
+            _baumgarte
         );
 
         islands.Sort((x, y) => y.Contacts.Count.CompareTo(x.Contacts.Count) + y.Joints.Count.CompareTo(x.Joints.Count));
@@ -550,7 +563,7 @@ public abstract partial class SharedPhysicsSystem
             var island = actualIslands[i];
 
             UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery, metaQuery);
-            SleepBodies(in island, in data, prediction, frameTime);
+            SleepBodies(in island, in data, prediction);
         }
 
         // Cleanup
@@ -639,11 +652,10 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var jointCount = island.Joints.Count;
+        var bodyQuery = GetEntityQuery<PhysicsComponent>();
 
         if (jointCount > 0)
         {
-            var bodyQuery = GetEntityQuery<PhysicsComponent>();
-
             for (var i = 0; i < island.Joints.Count; i++)
             {
                 var joint = island.Joints[i];
@@ -651,7 +663,7 @@ public abstract partial class SharedPhysicsSystem
 
                 var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
                 var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
-                joint.InitVelocityConstraints(data, bodyA, bodyB);
+                joint.InitVelocityConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
             }
         }
 
@@ -665,7 +677,9 @@ public abstract partial class SharedPhysicsSystem
                 if (!joint.Enabled)
                     continue;
 
-                joint.SolveVelocityConstraints(data);
+                var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
+                var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+                joint.SolveVelocityConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
 
                 var error = joint.Validate(data.InvDt);
 
@@ -716,7 +730,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints();
+            var contactsOkay = SolvePositionConstraints(data, in island, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (int j = 0; j < island.Joints.Count; ++j)
@@ -726,7 +740,9 @@ public abstract partial class SharedPhysicsSystem
                 if (!joint.Enabled)
                     continue;
 
-                var jointOkay = joint.SolvePositionConstraints(data);
+                var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
+                var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+                var jointOkay = joint.SolvePositionConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
 
                 jointsOkay = jointsOkay && jointOkay;
             }
@@ -822,7 +838,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void SleepBodies(in IslandData island, in SolverData data, bool prediction, float frameTime)
+    private void SleepBodies(in IslandData island, in SolverData data, bool prediction)
     {
         if (island.LoneIsland)
         {
@@ -842,7 +858,7 @@ public abstract partial class SharedPhysicsSystem
                     }
                     else
                     {
-                        SetSleepTime(body, body.SleepTime + frameTime);
+                        SetSleepTime(body, body.SleepTime + data.FrameTime);
                     }
 
                     if (body.SleepTime >= data.TimeToSleep && island.PositionSolved)
@@ -874,7 +890,7 @@ public abstract partial class SharedPhysicsSystem
                     }
                     else
                     {
-                        SetSleepTime(body, body.SleepTime + frameTime);
+                        SetSleepTime(body, body.SleepTime + data.FrameTime);
                         minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
                     }
                 }

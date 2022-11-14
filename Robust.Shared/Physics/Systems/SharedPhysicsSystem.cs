@@ -330,16 +330,6 @@ namespace Robust.Shared.Physics.Systems
             _traversal.ProcessMovement();
             _physicsManager.ClearTransforms();
         }
-
-        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
-        {
-            var batches = Math.Min(
-                (int) MathF.Ceiling((float) count / minimumBatchSize),
-                Math.Max(1, Environment.ProcessorCount));
-            var batchSize = (int) MathF.Ceiling((float) count / batches);
-
-            return (batches, batchSize);
-        }
     }
 
     [ByRefEvent]

@@ -158,7 +158,9 @@ stored in a single array since multiple arrays lead to multiple misses.
         bool SleepAllowed,
         float AngTolSqr,
         float LinTolSqr,
-        float TimeToSleep)
+        float TimeToSleep,
+        float VelocityThreshold,
+        float Baumgarte)
     {
         public readonly float FrameTime = FrameTime;
         public readonly float DtRatio = DtRatio;
@@ -175,5 +177,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         public readonly float AngTolSqr = AngTolSqr;
         public readonly float LinTolSqr = LinTolSqr;
         public readonly float TimeToSleep = TimeToSleep;
+        public readonly float VelocityThreshold = VelocityThreshold;
+        public readonly float Baumgarte = Baumgarte;
     }
 }

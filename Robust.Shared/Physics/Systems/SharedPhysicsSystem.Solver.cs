@@ -332,13 +332,14 @@ public abstract partial class SharedPhysicsSystem
     {
         var contactCount = island.Contacts.Count;
 
-        if (contactCount > data.VelocityConstraintsPerThread * data.VelocityConstraintsMinimumThreads)
+        if (contactCount > VelocityConstraintsPerThread * 2)
         {
-            var (batches, batchSize) = GetBatch(contactCount, data.VelocityConstraintsPerThread);
+            var batches = contactCount % VelocityConstraintsPerThread;
+
             Parallel.For(0, batches, i =>
             {
-                var start = i * batchSize;
-                var end = Math.Min(start + batchSize, contactCount);
+                var start = i * VelocityConstraintsPerThread;
+                var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
                 SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
             });
         }
@@ -659,15 +660,17 @@ public abstract partial class SharedPhysicsSystem
     {
         var contactCount = island.Contacts.Count;
 
-        if (contactCount > data.PositionConstraintsPerThread * data.PositionConstraintsPerThread)
+        // Parallel
+        if (contactCount > PositionConstraintsPerThread * 2)
         {
             var unsolved = 0;
+            var batches = contactCount % PositionConstraintsPerThread;
 
-            var (batches, batchSize) = GetBatch(contactCount, data.PositionConstraintsPerThread);
             Parallel.For(0, batches, i =>
             {
-                var start = i * batchSize;
-                var end = Math.Min(start + batchSize, contactCount);
+                var start = i * PositionConstraintsPerThread;
+                var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
+
                 if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
                     Interlocked.Increment(ref unsolved);
             });
@@ -675,6 +678,7 @@ public abstract partial class SharedPhysicsSystem
             return unsolved == 0;
         }
 
+        // No parallel
         return SolvePositionConstraints(data, 0, contactCount, positionConstraints, positions, angles);
     }
 

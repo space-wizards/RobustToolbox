@@ -107,8 +107,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        private int _contactMultithreadThreshold;
-        private int _contactMinimumThreads;
+        private const int ContactsPerThread = 32;
 
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
 
@@ -167,28 +166,12 @@ namespace Robust.Shared.Physics.Dynamics
             _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
-            configManager.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
 
             InitializePool();
         }
 
         public void Shutdown()
         {
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold);
-            configManager.UnsubValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads);
-        }
-
-        private void OnContactMultithreadThreshold(int value)
-        {
-            _contactMultithreadThreshold = value;
-        }
-
-        private void OnContactMinimumThreads(int value)
-        {
-            _contactMinimumThreads = value;
         }
 
         private void InitializePool()
@@ -545,14 +528,14 @@ namespace Robust.Shared.Physics.Dynamics
         {
             var wake = ArrayPool<bool>.Shared.Rent(count);
 
-            if (count > _contactMultithreadThreshold * _contactMinimumThreads)
+            if (count > ContactsPerThread * 2)
             {
-                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMultithreadThreshold);
+                var batches = count % ContactsPerThread;
 
                 Parallel.For(0, batches, i =>
                 {
-                    var start = i * batchSize;
-                    var end = Math.Min(start + batchSize, count);
+                    var start = i * ContactsPerThread;
+                    var end = Math.Min(start + ContactsPerThread, count);
                     UpdateContacts(contacts, start, end, status, wake);
                 });
 

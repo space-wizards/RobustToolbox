@@ -333,6 +333,9 @@ namespace Robust.Server.Console.Commands
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            // Due to lookup changes fixtureless bodies are invalid, so
+            var cShape = new PhysShapeCircle();
+            broadphaseSystem.CreateFixture(ground, cShape);
 
             var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
@@ -358,6 +361,8 @@ namespace Robust.Server.Console.Commands
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
             broadphaseSystem.CreateFixture(body, shape4, 20.0f, 2, 0);
 
+            physics.WakeBody(ground);
+            physics.WakeBody(body);
             var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
@@ -371,8 +376,6 @@ namespace Robust.Server.Console.Commands
             // you really want a profile.
             var count = 300;
             var mapManager = IoCManager.Resolve<IMapManager>();
-            physics.WakeBody(ground);
-            physics.WakeBody(body);
 
             for (var i = 0; i < count; i++)
             {

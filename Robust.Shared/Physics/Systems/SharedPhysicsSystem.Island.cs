@@ -696,8 +696,8 @@ public abstract partial class SharedPhysicsSystem
         // Integrate positions
         for (var i = 0; i < bodyCount; i++)
         {
-            var linearVelocity = linearVelocities[i];
-            var angularVelocity = angularVelocities[i];
+            var linearVelocity = linearVelocities[offset + i];
+            var angularVelocity = angularVelocities[offset + i];
 
             var position = positions[i];
             var angle = angles[i];
@@ -720,8 +720,8 @@ public abstract partial class SharedPhysicsSystem
             position += linearVelocity * data.FrameTime;
             angle += angularVelocity * data.FrameTime;
 
-            linearVelocities[i] = linearVelocity;
-            angularVelocities[i] = angularVelocity;
+            linearVelocities[offset + i] = linearVelocity;
+            angularVelocities[offset + i] = angularVelocity;
             positions[i] = position;
             angles[i] = angle;
         }

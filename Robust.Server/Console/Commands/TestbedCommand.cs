@@ -329,9 +329,10 @@ namespace Robust.Server.Console.Commands
         {
             var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var physics = entityManager.System<SharedPhysicsSystem>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            entityManager.AddComponent<PhysicsComponent>(groundUid);
+            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
             var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
@@ -370,6 +371,8 @@ namespace Robust.Server.Console.Commands
             // you really want a profile.
             var count = 300;
             var mapManager = IoCManager.Resolve<IMapManager>();
+            physics.WakeBody(ground);
+            physics.WakeBody(body);
 
             for (var i = 0; i < count; i++)
             {
@@ -383,6 +386,7 @@ namespace Robust.Server.Console.Commands
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
                     broadphaseSystem.CreateFixture(box, shape, 0.0625f, 2, 2);
+                    physics.WakeBody(box);
                 });
             }
         }

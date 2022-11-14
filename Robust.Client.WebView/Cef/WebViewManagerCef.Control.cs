@@ -360,27 +360,6 @@ namespace Robust.Client.WebView.Cef
                 return modifiers;
             }
 
-            public void TextEntered(GUITextEventArgs args)
-            {
-                if (_data == null)
-                    return;
-
-                var host = _data.Browser.GetHost();
-
-                Span<char> buf = stackalloc char[2];
-                var written = args.AsRune.EncodeToUtf16(buf);
-
-                for (var i = 0; i < written; i++)
-                {
-                    host.SendKeyEvent(new CefKeyEvent
-                    {
-                        EventType = CefKeyEventType.Char,
-                        WindowsKeyCode = buf[i],
-                        Character = buf[i],
-                        UnmodifiedCharacter = buf[i]
-                    });
-                }
-            }
 
             public void Resized()
             {

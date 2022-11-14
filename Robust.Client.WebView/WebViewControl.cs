@@ -76,12 +76,6 @@ namespace Robust.Client.WebView
             return _controlImpl.RawKeyEvent(guiRawEvent);
         }
 
-        protected internal override void TextEntered(GUITextEventArgs args)
-        {
-            base.TextEntered(args);
-
-            _controlImpl.TextEntered(args);
-        }
 
         protected override void Resized()
         {

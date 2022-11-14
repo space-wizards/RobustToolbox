@@ -106,9 +106,6 @@ namespace Robust.Client.WebView.Headless
                 return false;
             }
 
-            public void TextEntered(GUITextEventArgs args)
-            {
-            }
 
             public void Resized()
             {

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
@@ -1109,6 +1108,11 @@ namespace Robust.Shared
         public static readonly CVarDef<string> InterfaceTheme =
             CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// Set Interface default language
+        /// </summary>
+        public static readonly CVarDef<string> UILang =
+            CVarDef.Create("ui.lang", "en-US", CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1

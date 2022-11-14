@@ -7,20 +7,23 @@ namespace Robust.Shared.Console;
 
 public abstract class LocalizedCommands : IConsoleCommand
 {
-    [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
+    [Dependency] protected readonly SharedLocalizationManager LocalizationManager = default!;
 
     /// <inheritdoc />
     public abstract string Command { get; }
 
-    /// <inheritdoc />
-    public virtual string Description => LocalizationManager.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
+    protected virtual FText DescText => new($"cmd-{Command}-desc");
+    protected virtual FText HelpText => new($"cmd-{Command}-help");
 
     /// <inheritdoc />
-    public virtual string Help => LocalizationManager.TryGetString($"cmd-{Command}-help", out var val) ? val : "";
+    public virtual string Description => LocalizationManager.TryGetString(DescText, out var val) ? val : DescText.Name;
+
+    /// <inheritdoc />
+    public virtual string Help => LocalizationManager.TryGetString(HelpText, out var val) ? val : HelpText.Name;
 
     /// <inheritdoc />
     public abstract void Execute(IConsoleShell shell, string argStr, string[] args);
-    
+
     /// <inheritdoc />
     public virtual CompletionResult GetCompletion(IConsoleShell shell, string[] args) => CompletionResult.Empty;
 

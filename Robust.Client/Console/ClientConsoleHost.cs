@@ -269,8 +269,9 @@ namespace Robust.Client.Console
         private sealed class RemoteExecCommand : LocalizedCommands
         {
             public override string Command => ">";
-            public override string Description => LocalizationManager.GetString("cmd-remoteexec-desc");
-            public override string Help => LocalizationManager.GetString("cmd-remoteexec-help");
+
+            protected override FText DescText => new("cmd-remoteexec-desc");
+            protected override FText HelpText => new("cmd-remoteexec-help");
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {

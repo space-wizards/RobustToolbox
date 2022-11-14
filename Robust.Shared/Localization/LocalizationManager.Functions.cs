@@ -190,7 +190,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective subject pronoun (he, she, they, it) for the entity's gender.
         /// </summary>
-        private ILocValue FuncSubject(LocArgs args)
+        public ILocValue FuncSubject(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-subject-pronoun", ("ent", args.Args[0])));
         }

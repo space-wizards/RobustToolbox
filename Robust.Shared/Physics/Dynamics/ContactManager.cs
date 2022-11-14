@@ -530,7 +530,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (count > ContactsPerThread * 2)
             {
-                var batches = count % ContactsPerThread;
+                var batches = (int) Math.Ceiling((float) count / ContactsPerThread);
 
                 Parallel.For(0, batches, i =>
                 {

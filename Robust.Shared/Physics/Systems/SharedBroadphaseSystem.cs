@@ -42,7 +42,7 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         private float _broadphaseExpand;
 
-        private const int PairBufferParallel = 4;
+        private const int PairBufferParallel = 8;
 
         public override void Initialize()
         {

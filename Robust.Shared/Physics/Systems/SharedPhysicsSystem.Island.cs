@@ -300,7 +300,7 @@ public abstract partial class SharedPhysicsSystem
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var jointQuery = GetEntityQuery<JointComponent>();
-        var islandIndex = -1;
+        var islandIndex = 0;
         var loneIsland = new IslandData(
             islandIndex++,
             true,
@@ -518,7 +518,7 @@ public abstract partial class SharedPhysicsSystem
             _baumgarte
         );
 
-        islands.Sort((x, y) => y.Contacts.Count.CompareTo(x.Contacts.Count) + y.Joints.Count.CompareTo(x.Joints.Count));
+        islands.Sort((x, y) => x.Contacts.Count.CompareTo(y.Contacts.Count) + x.Joints.Count.CompareTo(y.Joints.Count));
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();

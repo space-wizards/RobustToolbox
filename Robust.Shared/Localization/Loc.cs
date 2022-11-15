@@ -20,6 +20,7 @@ namespace Robust.Shared.Localization
     /// </para>
     /// </remarks>
     [PublicAPI]
+    [Obsolete("Use LocalizationManager instead")]
     public static class Loc
     {
         private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
@@ -33,12 +34,12 @@ namespace Robust.Shared.Localization
         /// </returns>
         public static string GetString(string messageId)
         {
-            return LocalizationManager.GetString(messageId);
+            return LocalizationManager.GetString(new FText(messageId));
         }
 
         public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
         {
-            return LocalizationManager.TryGetString(messageId, out message);
+            return LocalizationManager.TryGetString(new FText(messageId), out message);
         }
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace Robust.Shared.Localization
         /// </summary>
         public static string GetString(string messageId, params (string,object)[] args)
         {
-            return LocalizationManager.GetString(messageId, args);
+            return LocalizationManager.GetString(new FText(messageId, args));
         }
 
         public static bool TryGetString(
@@ -54,7 +55,7 @@ namespace Robust.Shared.Localization
             [NotNullWhen(true)] out string? value,
             params (string, object)[] args)
         {
-            return LocalizationManager.TryGetString(messageId, out value, args);
+            return LocalizationManager.TryGetString(new FText(messageId, args), out value);
         }
     }
 }

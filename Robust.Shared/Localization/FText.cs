@@ -7,7 +7,7 @@ public readonly struct FText
     public readonly string Name;
     public readonly (string, object)[] Arguments;
 
-    public FText(string name, (string, object)[]? arguments = null)
+    public FText(string name, params (string, object)[]? arguments)
     {
         Name = name;
         Arguments = arguments ?? Array.Empty<(string, object)>();

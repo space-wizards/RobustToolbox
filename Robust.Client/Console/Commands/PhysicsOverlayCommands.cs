@@ -14,7 +14,7 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 1)
             {
-                shell.WriteError(Loc.GetString("shell-wrong-arguments-number-need-specific", ("properAmount", 1), ("currentAmount", args.Length)));
+                shell.WriteError(LocalizationManager.GetString(new FText("shell-wrong-arguments-number-need-specific", ("properAmount", 1), ("currentAmount", args.Length))));
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace Robust.Client.Console.Commands
                     system.Flags ^= PhysicsDebugFlags.Shapes;
                     break;
                 default:
-                    shell.WriteError(Loc.GetString("cmd-physics-overlay", ("overlay", args[0])));
+                    shell.WriteError(LocalizationManager.GetString(new FText("cmd-physics-overlay", ("overlay", args[0]))));
                     return;
             }
 

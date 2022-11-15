@@ -98,6 +98,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
+                systems.LoadExtraSystemType<PrototypeReloadSystem>();
             }
             else
             {
@@ -109,6 +110,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<JointSystem>();
                 systems.LoadExtraSystemType<PhysicsSystem>();
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
+                systems.LoadExtraSystemType<PrototypeReloadSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();

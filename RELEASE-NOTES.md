@@ -1,7 +1,35 @@
 ﻿# Release notes for RobustToolbox.
 
 <!--
-Template for new versions:
+NOTE: automatically updated sometimes by version.py.
+Don't change the format without looking at the script!
+-->
+
+<!--START TEMPLATE
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+END TEMPLATE-->
 
 ## Master
 
@@ -25,9 +53,49 @@ Template for new versions:
 
 *None yet*
 
--->
 
-## Master
+## 0.65.0.1
+
+### Bugfixes
+
+- Fix SetLocalPositionRotation raising 2 moveevents. This should help physics performance significantly.
+- Fix tpgrid responses and command error.
+
+
+## 0.65.0.0
+
+### Breaking changes
+
+* Rename transform lerping properties alongside other minor internal changes.
+
+### Bugfixes
+
+* Fix physics testbeds.
+* Force grids to always be collidable for now and stop them clipping.
+
+### Other
+
+* Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
+* Force non-collidable contacts to be destroyed. Previously these hung around until both entities became collidable again.
+
+### Internal
+
+* `Tools/version.py` has been updated to automatically update `RELEASE-NOTES.md`.
+* General cleanup to `Tools/version.py`.
+
+## 0.64.1.0
+
+### Bugfixes
+
+* Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
+
+## 0.64.0.0
+
+### Breaking changes
+
+* IMapLoader has been refactored into MapLoaderSystem. The API is similar for now but is subject to change in the future.
+
+## 0.63.0.0
 
 ### Breaking changes
 
@@ -54,6 +122,9 @@ Template for new versions:
 
 * Fixes erroneous literal "\\n" inside the Clyde debug panel.
 * Fixed Lidgren connection status changes potentially getting mislogged.
+* Fixed missing components not being correctly saved for maps
+* Fixed map saving sometimes not including new components.
+* Fix hot reload unit tests.
 
 ### Other
 

@@ -1153,6 +1153,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 netComps!.Add(netId);
         }
 
+        DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
         var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;

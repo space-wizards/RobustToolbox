@@ -870,6 +870,7 @@ namespace Robust.Shared.Map
                 return;
 
             // TODO: Move this to the component when we combine.
+            _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(GridEntityId);
             _mapManager.OnGridBoundsChange(GridEntityId, this);
             system?.RegenerateCollision(GridEntityId, chunkRectangles, removedChunks);
         }

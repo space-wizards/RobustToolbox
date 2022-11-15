@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Player;
 using Robust.Shared.Console;
@@ -15,8 +16,6 @@ namespace Robust.Server.Console.Commands
 {
     sealed class AddMapCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "addmap";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -26,12 +25,14 @@ namespace Robust.Server.Console.Commands
 
             var mapId = new MapId(int.Parse(args[0]));
 
-            if (!_map.MapExists(mapId))
+            var mapMgr = IoCManager.Resolve<IMapManager>();
+
+            if (!mapMgr.MapExists(mapId))
             {
-                _map.CreateMap(mapId);
+                mapMgr.CreateMap(mapId);
                 if (args.Length >= 2 && args[1] == "false")
                 {
-                    _map.AddUninitializedMap(mapId);
+                    mapMgr.AddUninitializedMap(mapId);
                 }
 
                 shell.WriteLine($"Map with ID {mapId} created.");
@@ -44,8 +45,6 @@ namespace Robust.Server.Console.Commands
 
     sealed class RemoveMapCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "rmmap";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -57,24 +56,21 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapId = new MapId(int.Parse(args[0]));
+            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (!_map.MapExists(mapId))
+            if (!mapManager.MapExists(mapId))
             {
                 shell.WriteError($"Map {mapId.Value} does not exist.");
                 return;
             }
 
-            _map.DeleteMap(mapId);
+            mapManager.DeleteMap(mapId);
             shell.WriteLine($"Map {mapId.Value} was removed.");
         }
     }
 
     public sealed class SaveGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IMapLoader _mapLoader = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-
         public override string Command => "savegrid";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -85,20 +81,22 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridId))
+            if (!EntityUid.TryParse(args[0], out var uid))
             {
                 shell.WriteError("Not a valid entity ID.");
                 return;
             }
 
+            var entManager = IoCManager.Resolve<IEntityManager>();
+
             // no saving default grid
-            if (!_map.TryGetGrid(gridId, out var grid))
+            if (!entManager.EntityExists(uid))
             {
                 shell.WriteError("That grid does not exist.");
                 return;
             }
 
-            _mapLoader.SaveGrid(gridId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().Save(uid, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -109,7 +107,8 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savebp-id"));
                 case 2:
-                    var opts = CompletionHelper.UserFilePath(args[1], _resourceManager.UserData);
+                    var res = IoCManager.Resolve<IResourceManager>();
+                    var opts = CompletionHelper.UserFilePath(args[1], res.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
             }
             return CompletionResult.Empty;
@@ -118,10 +117,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed class LoadGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IMapLoader _mapLoader = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-
         public override string Command => "loadgrid";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -147,7 +142,8 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!_map.MapExists(mapId))
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
             {
                 shell.WriteError("Target map does not exist.");
                 return;
@@ -193,21 +189,18 @@ namespace Robust.Server.Console.Commands
                 loadOptions.StoreMapUids = storeUids;
             }
 
-            _mapLoader.LoadGrid(mapId, args[1], loadOptions);
+            var mapLoader = IoCManager.Resolve<MapLoaderSystem>();
+            mapLoader.Load(mapId, args[1], loadOptions);
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return LoadMap.GetCompletionResult(_resourceManager, args);
+            return LoadMap.GetCompletionResult(shell, args);
         }
     }
 
     public sealed class SaveMap : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IMapLoader _mapLoader = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-
         public override string Command => "savemap";
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -217,7 +210,8 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
                 case 2:
-                    var opts = CompletionHelper.UserFilePath(args[1], _resourceManager.UserData);
+                    var res = IoCManager.Resolve<IResourceManager>();
+                    var opts = CompletionHelper.UserFilePath(args[1], res.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
                 case 3:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
@@ -245,13 +239,14 @@ namespace Robust.Server.Console.Commands
             if (mapId == MapId.Nullspace)
                 return;
 
-            if (!_map.MapExists(mapId))
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
             {
                 shell.WriteError(Loc.GetString("cmd-savemap-not-exist"));
                 return;
             }
 
-            if (_map.IsMapInitialized(mapId) &&
+            if (mapManager.IsMapInitialized(mapId) &&
                 ( args.Length < 3  || !bool.TryParse(args[2], out var force) || !force))
             {
                 shell.WriteError(Loc.GetString("cmd-savemap-init-warning"));
@@ -259,26 +254,23 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            _mapLoader.SaveMap(mapId, args[1]);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().SaveMap(mapId, args[1]);
             shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }
 
     public sealed class LoadMap : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IMapLoader _mapLoader = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-
         public override string Command => "loadmap";
 
-        public static CompletionResult GetCompletionResult(IResourceManager res, string[] args)
+        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
             {
                 case 1:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
                 case 2:
+                    var res = IoCManager.Resolve<IResourceManager>();
                     var opts = CompletionHelper.UserFilePath(args[1], res.UserData)
                         .Concat(CompletionHelper.ContentFilePath(args[1], res));
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
@@ -297,7 +289,7 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return GetCompletionResult(_resourceManager, args);
+            return GetCompletionResult(shell, args);
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -323,7 +315,8 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (_map.MapExists(mapId))
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (mapManager.MapExists(mapId))
             {
                 shell.WriteError(Loc.GetString("cmd-loadmap-exists", ("mapId", mapId)));
                 return;
@@ -375,9 +368,9 @@ namespace Robust.Server.Console.Commands
                 loadOptions.StoreMapUids = storeUids;
             }
 
-            _mapLoader.LoadMap(mapId, args[1], loadOptions);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>().TryLoad(mapId, args[1], out _, loadOptions);
 
-            if (_map.MapExists(mapId))
+            if (mapManager.MapExists(mapId))
                 shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));
             else
                 shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", args[1])));
@@ -386,8 +379,6 @@ namespace Robust.Server.Console.Commands
 
     sealed class LocationCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
         public override string Command => "loc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -397,48 +388,50 @@ namespace Robust.Server.Console.Commands
             if (pt == null)
                 return;
 
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var pos = pt.Coordinates;
 
             shell.WriteLine(
-                $"MapID:{pos.GetMapId(_entityManager)} GridUid:{pos.GetGridUid(_entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
+                $"MapID:{pos.GetMapId(entityManager)} GridUid:{pos.GetGridUid(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
     sealed class TpGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "tpgrid";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 3 || args.Length > 4)
+            if (args.Length is < 3 or > 4)
             {
-                shell.WriteError("Wrong number of args.");
+                shell.WriteError($"Usage: {Help}");
+                return;
             }
 
             var gridId = EntityUid.Parse(args[0]);
-            var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
+            var xPos = float.Parse(args[1], CultureInfo.InvariantCulture);
+            var yPos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
-            if (_map.TryGetGrid(gridId, out var grid))
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
+
+            if (!mapManager.TryGetGrid(gridId, out var grid))
             {
-                var gridXform = _entMan.GetComponent<TransformComponent>(grid.GridEntityId);
-                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
-
-                gridXform.Coordinates =
-                    new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xpos, ypos));
-
-                shell.WriteLine("Grid was teleported.");
+                shell.WriteError($"No grid found with id {args[0]}");
+                return;
             }
+
+            var gridXform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
+
+            gridXform.Coordinates = new EntityCoordinates(mapManager.GetMapEntityId(mapId), new Vector2(xPos, yPos));
+
+            shell.WriteLine("Grid was teleported.");
         }
     }
 
     sealed class RemoveGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "rmgrid";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -450,22 +443,21 @@ namespace Robust.Server.Console.Commands
             }
 
             var gridId = EntityUid.Parse(args[0]);
+            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (!_map.GridExists(gridId))
+            if (!mapManager.GridExists(gridId))
             {
                 shell.WriteError($"Grid {gridId} does not exist.");
                 return;
             }
 
-            _map.DeleteGrid(gridId);
+            mapManager.DeleteGrid(gridId);
             shell.WriteLine($"Grid {gridId} was removed.");
         }
     }
 
     internal sealed class RunMapInitCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "mapinit";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -476,42 +468,44 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
-            if (!_map.MapExists(mapId))
+            if (!mapManager.MapExists(mapId))
             {
                 shell.WriteError("Map does not exist!");
                 return;
             }
 
-            if (_map.IsMapInitialized(mapId))
+            if (mapManager.IsMapInitialized(mapId))
             {
                 shell.WriteError("Map is already initialized!");
                 return;
             }
 
-            _map.DoMapInitialize(mapId);
+            mapManager.DoMapInitialize(mapId);
         }
     }
 
     internal sealed class ListMapsCommand : LocalizedCommands
     {
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "lsmap";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
             var msg = new StringBuilder();
 
-            foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
+            foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
                 msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
-                    mapId, _map.IsMapInitialized(mapId),
-                    _map.IsMapPaused(mapId),
-                    _map.GetMapEntityId(mapId),
-                    string.Join(",", _map.GetAllMapGrids(mapId).Select(grid => grid.GridEntityId)));
+                    mapId, mapManager.IsMapInitialized(mapId),
+                    mapManager.IsMapPaused(mapId),
+                    mapManager.GetMapEntityId(mapId),
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.GridEntityId)));
             }
 
             shell.WriteLine(msg.ToString());
@@ -520,16 +514,16 @@ namespace Robust.Server.Console.Commands
 
     internal sealed class ListGridsCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-
         public override string Command => "lsgrid";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var msg = new StringBuilder();
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            foreach (var grid in _map.GetAllGrids().OrderBy(grid => grid.GridEntityId))
+            var msg = new StringBuilder();
+            var xformQuery = entManager.GetEntityQuery<TransformComponent>();
+
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.GridEntityId))
             {
                 var xform = xformQuery.GetComponent(grid.GridEntityId);
                 var worldPos = xform.WorldPosition;

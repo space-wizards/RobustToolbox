@@ -221,7 +221,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
-            container.Register<IParallelManager, ParallelManager>();
+            container.Register<IParallelManager, TestingParallelManager>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
@@ -241,9 +241,6 @@ namespace Robust.UnitTesting.Server
             configMan.LoadCVarsFromAssembly(typeof(Program).Assembly); // Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
             configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
-
-            var parallel = (IParallelManagerInternal)container.Resolve<IParallelManager>();
-            parallel.Initialize();
 
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));

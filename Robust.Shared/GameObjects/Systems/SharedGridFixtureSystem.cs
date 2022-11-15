@@ -34,9 +34,9 @@ namespace Robust.Shared.GameObjects
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
             Sawmill = Logger.GetSawmill("physics");
 
-            configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
-            configManager.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
-            configManager.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
+            _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
+            _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
+            _cfg.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
         }

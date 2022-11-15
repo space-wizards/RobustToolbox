@@ -9,17 +9,12 @@ namespace Robust.Server.Bql
 {
     public sealed partial class BqlQueryManager : IBqlQueryManager
     {
-        private readonly IReflectionManager _reflectionManager;
-        private readonly IComponentFactory _componentFactory;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly List<BqlQuerySelector> _instances = new();
         private readonly Dictionary<string, BqlQuerySelector> _queriesByToken = new();
-
-        public BqlQueryManager()
-        {
-            _reflectionManager = IoCManager.Resolve<IReflectionManager>();
-            _componentFactory = IoCManager.Resolve<IComponentFactory>();
-        }
 
         /// <summary>
         /// Automatically registers all query selectors with the parser/executor.

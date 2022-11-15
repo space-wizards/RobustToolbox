@@ -145,6 +145,7 @@ END TEMPLATE-->
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
 * Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
+* Most usages of `IoCManager.` statically have been removed in favor of dependency injection.
 
 ## 0.62.1.0
 

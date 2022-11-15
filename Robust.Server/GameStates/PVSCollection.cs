@@ -51,7 +51,7 @@ public interface IPVSCollection
 
 public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
-    [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+    private readonly IEntityManager _entityManager;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkIndices(Vector2 coordinates)
@@ -118,9 +118,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// </summary>
     private HashSet<IChunkIndexLocation> _dirtyChunks = new();
 
-    public PVSCollection()
+    public PVSCollection(IEntityManager entityManager)
     {
-        IoCManager.InjectDependencies(this);
+        _entityManager = entityManager;
     }
 
     public void Process()
@@ -138,7 +138,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             var location = RemoveIndexInternal(index);
             if (location == null)
                 continue;
-            
+
             if(location is GridChunkLocation or MapChunkLocation)
                 _dirtyChunks.Add((IChunkIndexLocation) location);
             _deletionHistory.Add((tick, index));

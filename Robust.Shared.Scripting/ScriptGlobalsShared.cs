@@ -26,6 +26,7 @@ namespace Robust.Shared.Scripting
         [field: Dependency] public IEntitySystemManager esm { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
+        [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
 
         public IEnumerable<T> protos<T>() where T : class, IPrototype
         {
@@ -76,7 +77,7 @@ namespace Robust.Shared.Scripting
 
         public T res<T>()
         {
-            return IoCManager.Resolve<T>();
+            return dependencies.Resolve<T>();
         }
 
         public T ressys<T>() where T : EntitySystem

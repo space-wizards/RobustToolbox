@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
 using Linguini.Bundle.Errors;
@@ -12,6 +11,7 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -19,6 +19,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Localization
 {
@@ -28,11 +29,11 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IPrototypeManager _prototype = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
-        private CultureInfo? _defaultCulture;
 
         void IPostInjectInit.PostInject()
         {
@@ -42,12 +43,10 @@ namespace Robust.Shared.Localization
 
         public string GetString(string messageId)
         {
-            if (_defaultCulture == null)
-                return messageId;
 
             if (!TryGetString(messageId, out var msg))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Name, messageId);
+                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", GetSelectedLang().Name, messageId);
                 msg = messageId;
             }
 
@@ -57,12 +56,9 @@ namespace Robust.Shared.Localization
 
         public string GetString(string messageId, params (string, object)[] args0)
         {
-            if (_defaultCulture == null)
-                return messageId;
-
             if (!TryGetString(messageId, out var msg, args0))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Name, messageId);
+                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", GetSelectedLang().Name, messageId);
                 msg = messageId;
             }
 
@@ -98,14 +94,14 @@ namespace Robust.Shared.Localization
                 var result = bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
                 foreach (var err in errs)
                 {
-                    _logSawmill.Error("{culture}/{messageId}: {error}", _defaultCulture!.Name, messageId, err);
+                    _logSawmill.Error("{culture}/{messageId}: {error}", GetSelectedLang().Name, messageId, err);
                 }
 
                 return result;
             }
             catch (Exception e)
             {
-                _logSawmill.Error("{culture}/{messageId}: {exception}", _defaultCulture!.Name, messageId, e);
+                _logSawmill.Error("{culture}/{messageId}: {exception}", GetSelectedLang().Name, messageId, e);
                 value = null;
                 return false;
             }
@@ -115,13 +111,8 @@ namespace Robust.Shared.Localization
             string messageId,
             [NotNullWhen(true)] out FluentBundle? bundle)
         {
-            if (_defaultCulture == null)
-            {
-                bundle = null;
-                return false;
-            }
 
-            bundle = _contexts[_defaultCulture];
+            bundle = _contexts[GetSelectedLang()];
             if (messageId.Contains('.'))
             {
                 var split = messageId.Split('.');
@@ -136,16 +127,11 @@ namespace Robust.Shared.Localization
             [NotNullWhen(true)] out FluentBundle? bundle,
             [NotNullWhen(true)] out AstMessage? message)
         {
-            if (_defaultCulture == null)
-            {
-                bundle = null;
-                message = null;
-                return false;
-            }
-
-            bundle = _contexts[_defaultCulture];
+            bundle = _contexts[GetSelectedLang()];
             return bundle.TryGetAstMessage(messageId, out message);
         }
+
+        public CultureInfo? DefaultCulture { get; set; } = CultureInfo.InvariantCulture;
 
         public void ReloadLocalizations()
         {
@@ -155,27 +141,6 @@ namespace Robust.Shared.Localization
             }
 
             FlushEntityCache();
-        }
-
-        public CultureInfo? DefaultCulture
-        {
-            get => _defaultCulture;
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (!_contexts.ContainsKey(value))
-                {
-                    throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));
-                }
-
-                _defaultCulture = value;
-                CultureInfo.CurrentCulture = value;
-                CultureInfo.CurrentUICulture = value;
-            }
         }
 
         public void LoadCulture(CultureInfo culture)
@@ -191,7 +156,6 @@ namespace Robust.Shared.Localization
             AddBuiltInFunctions(bundle);
 
             _loadData(_res, culture, bundle);
-            DefaultCulture ??= culture;
         }
 
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)

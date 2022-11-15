@@ -7,7 +7,7 @@ namespace Robust.Shared.Console;
 
 public abstract class LocalizedCommands : IConsoleCommand
 {
-    [Dependency] protected readonly SharedLocalizationManager LocalizationManager = default!;
+    [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
 
     /// <inheritdoc />
     public abstract string Command { get; }

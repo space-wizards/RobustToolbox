@@ -51,7 +51,6 @@ namespace Robust.Shared
             IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             IoCManager.Register<IParallelManager, ParallelManager>();
             IoCManager.Register<IParallelManagerInternal, ParallelManager>();
-            IoCManager.Register<SharedLocalizationManager, SharedLocalizationManager>();
         }
     }
 }

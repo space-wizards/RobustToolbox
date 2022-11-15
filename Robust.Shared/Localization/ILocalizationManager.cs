@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
+using Linguini.Bundle;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Serialization;
 
@@ -29,6 +32,7 @@ namespace Robust.Shared.Localization
         /// <returns>
         ///     The language appropriate message if available, otherwise the messageId is returned.
         /// </returns>
+        [Obsolete("Use `TryGetString(FText, out string?)` instead")]
         string GetString(string messageId);
 
         /// <summary>
@@ -38,11 +42,13 @@ namespace Robust.Shared.Localization
         ///     Does not log a warning if the message does not exist.
         ///     Does however log errors if any occur while formatting.
         /// </remarks>
+        [Obsolete("Use `TryGetString(FText, out string?)` instead")]
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value);
 
         /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
+        [Obsolete("Use `GetString(FText)` instead")]
         string GetString(string messageId, params (string, object)[] args);
 
         /// <summary>
@@ -52,7 +58,43 @@ namespace Robust.Shared.Localization
         ///     Does not log a warning if the message does not exist.
         ///     Does however log errors if any occur while formatting.
         /// </remarks>
+        [Obsolete("Use `GetString(FText, out string?)` instead")]
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] keyArgs);
+
+        /*
+         * FText interface
+         */
+        /// <summary>
+        /// Will retrieve currently selected language or fallback set to <see cref="CultureInfo.InvariantCulture"/>
+        /// </summary>
+        /// <returns>Currently selected language</returns>
+        CultureInfo GetSelectedLang();
+
+        /// <summary>
+        /// Will set currently selected to <see cref="CVars.UILang"/> language code or fallback to
+        /// to <see cref="CultureInfo.InvariantCulture"/>. It will also update Ui and current thread culture.
+        /// </summary>
+        /// <param name="uiLang"><see cref="CVarDef"/> of string type that represents the UiLang. Defaults to <see cref="CVars.UILang"/></param>
+        void SetSelectedLang(CVarDef<string>? uiLang = null);
+
+        /// <summary>
+        ///     Gets a language appropriate string represented by the supplied messageId.
+        /// </summary>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
+        /// <returns>
+        ///     The language appropriate message if available, otherwise the messageId is returned.
+        /// </returns>
+        string GetString(FText messageId);
+
+
+        /// <summary>
+        ///     Try- version of <see cref="GetString(FText, ValueTuple{string, object}[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(FText message, [NotNullWhen(true)] out string? bundle);
 
         /// <summary>
         ///     Default culture used by other methods when no culture is explicitly specified.
@@ -83,6 +125,14 @@ namespace Robust.Shared.Localization
         ///     Gets localization data for an entity prototype.
         /// </summary>
         EntityLocData GetEntityData(string prototypeId);
+
+        /// <summary>
+        ///     Lists all available localizations for applications. List is generated based on folders present in
+        ///    `/Resources/Locale/` folder. This action is potentially slow so it will cache its results between runs.
+        /// </summary>
+        /// <param name="forceUpdate">If true will rerun scan for existing localizations. Defaults to false</param>
+        /// <returns></returns>
+        public IEnumerable<CultureInfo> GetAvailableLocalizations(bool forceUpdate = false);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

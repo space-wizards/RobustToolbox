@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.65.0.1
+
+### Bugfixes
+
+- Fix SetLocalPositionRotation raising 2 moveevents. This should help physics performance significantly.
+- Fix tpgrid responses and command error.
+
+
 ## 0.65.0.0
 
 ### Breaking changes

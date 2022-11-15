@@ -11,8 +11,8 @@ public sealed class RobustRandomTest
     [Test]
     public void TestDieRandom()
     {
-        IRobustRandom compRandom = new RobustRandom(Seed);
-        IRobustRandom testRandom = new RobustRandom(Seed);
+        IRobustRandom compRandom = RobustRandom.FromSeed(Seed);
+        IRobustRandom testRandom = RobustRandom.FromSeed(Seed);
         var actual = testRandom.RollDice(1, 4);
         var expected = compRandom.Next(1, 4);
         Assert.That(actual, Is.EqualTo(expected));
@@ -27,8 +27,8 @@ public sealed class RobustRandomTest
     [TestCase(30,1000)]
     public void TestDiceRandom(int num, int faces)
     {
-        IRobustRandom compRandom = new RobustRandom(Seed);
-        IRobustRandom testRandom = new RobustRandom(Seed);
+        IRobustRandom compRandom = RobustRandom.FromSeed(Seed);
+        IRobustRandom testRandom = RobustRandom.FromSeed(Seed);
         var actual = testRandom.RollDice(num, faces);
         var sum = 0;
         for (uint i = 0; i < num; i++)
@@ -36,5 +36,26 @@ public sealed class RobustRandomTest
             sum += compRandom.Next(1, faces);
         }
         Assert.That(actual, Is.EqualTo(sum));
+    }
+
+    [Test]
+    public void TestRandomSeed()
+    {
+        var num = 2;
+        var faces = 20;
+        for (int l = 0; l < 50; l++)
+        {
+            var seed = new RobustRandom().Next();
+            IRobustRandom compRandom = RobustRandom.FromSeed(seed);
+            IRobustRandom testRandom = RobustRandom.FromSeed(seed);
+            var actual = testRandom.RollDice(num, faces);
+            var sum = 0;
+            for (uint i = 0; i < num; i++)
+            {
+                sum += compRandom.Next(1, faces);
+            }
+            Assert.That(actual, Is.EqualTo(sum));
+        }
+
     }
 }

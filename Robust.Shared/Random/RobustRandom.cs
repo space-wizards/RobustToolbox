@@ -1,21 +1,18 @@
 using System;
-using Prometheus;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random;
 
 public sealed class RobustRandom : IRobustRandom
 {
-    private readonly System.Random _random;
+    private System.Random _random = new();
 
-    public RobustRandom()
+    public static RobustRandom FromSeed(int seed)
     {
-        _random = new System.Random();
-    }
-
-    public RobustRandom(int seed)
-    {
-        _random = new System.Random(seed);
+        return new RobustRandom
+        {
+            _random = new System.Random(seed)
+        };
     }
 
     public float NextFloat()

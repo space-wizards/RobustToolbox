@@ -16,18 +16,20 @@ namespace Robust.Client.Graphics.Audio
     [UsedImplicitly]
     internal sealed class FallbackProxyClydeAudio : ProxyClydeAudio
     {
+        [Dependency] private readonly IDependencyCollection _deps = default!;
+
         public override bool InitializePostWindowing()
         {
             // Deliberate lack of base call here (see base implementation for comments as to why there even is a base)
 
             ActualImplementation = new ClydeAudio();
-            IoCManager.InjectDependencies(ActualImplementation);
+            _deps.InjectDependencies(ActualImplementation, true);
             if (ActualImplementation.InitializePostWindowing())
                 return true;
 
             // If we get here, that failed, so use the fallback
             ActualImplementation = new ClydeAudioHeadless();
-            IoCManager.InjectDependencies(ActualImplementation);
+            _deps.InjectDependencies(ActualImplementation, true);
             return ActualImplementation.InitializePostWindowing();
         }
     }

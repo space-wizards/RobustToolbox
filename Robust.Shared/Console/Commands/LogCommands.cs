@@ -7,6 +7,8 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed class LogSetLevelCommand : LocalizedCommands
 {
+    [Dependency] private readonly ILogManager _logManager = default!;
+
     public override string Command => "loglevel";
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -39,13 +41,11 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
-        var logMgr = IoCManager.Resolve<ILogManager>();
-
         switch (args.Length)
         {
             case 1:
                 return CompletionResult.FromHintOptions(
-                    logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c),
+                    _logManager.AllSawmills.Select(c => c.Name).OrderBy(c => c),
                     "<sawmill>");
             case 2:
                 return CompletionResult.FromHintOptions(
@@ -60,6 +60,8 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
 
 internal sealed class TestLog : LocalizedCommands
 {
+    [Dependency] private readonly ILogManager _logManager = default!;
+
     public override string Command => "testlog";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -86,13 +88,11 @@ internal sealed class TestLog : LocalizedCommands
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
-        var logMgr = IoCManager.Resolve<ILogManager>();
-
         switch (args.Length)
         {
             case 1:
                 return CompletionResult.FromHintOptions(
-                    logMgr.AllSawmills.Select(c => c.Name).OrderBy(c => c),
+                    _logManager.AllSawmills.Select(c => c.Name).OrderBy(c => c),
                     "<sawmill>");
             case 2:
                 return CompletionResult.FromHintOptions(

@@ -8,6 +8,8 @@ namespace Robust.Client.Console.Commands
 {
     public sealed class PhysicsOverlayCommands : LocalizedCommands
     {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
         public override string Command => "physics";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -18,7 +20,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugPhysicsSystem>();
+            var system = _entitySystems.GetEntitySystem<DebugPhysicsSystem>();
 
             switch (args[0])
             {

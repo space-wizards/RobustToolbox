@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Console;
 using Robust.Server.Debugging;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
@@ -222,6 +223,8 @@ namespace Robust.UnitTesting.Server
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
+            // Needed for grid fixture debugging.
+            container.Register<IConGroupController, ConGroupController>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();

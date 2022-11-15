@@ -13,6 +13,9 @@ namespace Robust.Client.Physics
 {
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
+        [Dependency] private readonly IOverlayManager _overlay = default!;
+        [Dependency] private readonly IMapManager _map = default!;
+
         public bool EnableDebug
         {
             get => _enableDebug;
@@ -22,17 +25,16 @@ namespace Robust.Client.Physics
 
                 Sawmill.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
-                var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(EntityManager, IoCManager.Resolve<IMapManager>(), this);
-                    overlayManager.AddOverlay(overlay);
+                    var overlay = new GridSplitNodeOverlay(EntityManager, _map, this);
+                    _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
                 else
                 {
-                    overlayManager.RemoveOverlay<GridSplitNodeOverlay>();
+                    _overlay.RemoveOverlay<GridSplitNodeOverlay>();
                     RaiseNetworkEvent(new StopGridNodesMessage());
                 }
             }

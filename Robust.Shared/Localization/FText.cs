@@ -6,13 +6,11 @@ public readonly struct FText
 {
     public readonly string Name;
     public readonly (string, object)[] Arguments;
-    public readonly bool IsCultureInvariant;
 
-    public FText(string name, (string, object)[]? arguments = null, bool isCultureInvariant = false)
+    public FText(string name, (string, object)[]? arguments = null)
     {
         Name = name;
         Arguments = arguments ?? Array.Empty<(string, object)>();
-        IsCultureInvariant = isCultureInvariant;
     }
 
     public bool NoArguments => Arguments.Length == 0;

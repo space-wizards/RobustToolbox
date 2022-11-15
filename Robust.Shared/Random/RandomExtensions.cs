@@ -80,5 +80,26 @@ namespace Robust.Shared.Random
 
             return random.NextDouble() <= chance;
         }
+
+        /// <summary>
+        /// Rolls <paramref name="numberOfDice"/> dice with <paramref name="facesPerDie"/>.
+        /// E.g. <c>2d4</c> would be called like <c>RollDice(2, 4)</c>
+        /// </summary>
+        /// <param name="random">The random instance to run on.</param>
+        /// <param name="numberOfDice">how many dice we roll</param>
+        /// <param name="facesPerDie">how many faces per die eg d6 die has 6 faces from 1 to 6</param>
+        /// <returns></returns>
+        public static int RollDice(this IRobustRandom random, int numberOfDice, int facesPerDie = 6)
+        {
+            DebugTools.Assert(numberOfDice >= 0 && facesPerDie > 0,
+                $"Number of dice ({numberOfDice}) must be greater than zero and faces per die ({facesPerDie}) must be greater than zero.");
+            var sum = 0;
+            for (int i = 0; i < numberOfDice; i++)
+            {
+                sum += random.Next(1, facesPerDie);
+            }
+
+            return sum;
+        }
     }
 }

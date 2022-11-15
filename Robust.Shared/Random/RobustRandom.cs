@@ -6,7 +6,17 @@ namespace Robust.Shared.Random;
 
 public sealed class RobustRandom : IRobustRandom
 {
-    private readonly System.Random _random = new();
+    private readonly System.Random _random;
+
+    public RobustRandom()
+    {
+        _random = new System.Random();
+    }
+
+    public RobustRandom(int seed)
+    {
+        _random = new System.Random(seed);
+    }
 
     public float NextFloat()
     {

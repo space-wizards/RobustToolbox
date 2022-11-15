@@ -44,6 +44,9 @@ namespace Robust.Shared.Physics.Systems
 
         private const int PairBufferParallel = 8;
 
+        private ObjectPool<List<FixtureProxy>> _bufferPool =
+            new DefaultObjectPool<List<FixtureProxy>>(new ListPolicy<FixtureProxy>(), 2048);
+
         public override void Initialize()
         {
             base.Initialize();
@@ -173,14 +176,14 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             var count = moveBuffer.Count;
-            var contactBuffer = new ValueList<FixtureProxy>[count];
+            var contactBuffer = ArrayPool<List<FixtureProxy>>.Shared.Rent(count);
             var pMoveBuffer = ArrayPool<(FixtureProxy Proxy, Box2 AABB)>.Shared.Rent(count);
 
             var idx = 0;
 
             foreach (var (proxy, aabb) in moveBuffer)
             {
-                contactBuffer[idx] = new ValueList<FixtureProxy>();
+                contactBuffer[idx] = _bufferPool.Get();
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
@@ -199,7 +202,7 @@ namespace Robust.Shared.Physics.Systems
                 for (var j = start; j < end; j++)
                 {
                     var (proxy, worldAABB) = pMoveBuffer[j];
-                    ref var buffer = ref contactBuffer[j];
+                    var buffer = contactBuffer[j];
 
                     var proxyBody = proxy.Fixture.Body;
                     DebugTools.Assert(!proxyBody.Deleted);
@@ -212,18 +215,18 @@ namespace Robust.Shared.Physics.Systems
                             SharedBroadphaseSystem system,
                             FixtureProxy proxy,
                             Box2 worldAABB,
-                            ValueList<FixtureProxy> pairBuffer,
+                            List<FixtureProxy> pairBuffer,
                             EntityQuery<TransformComponent> xformQuery,
                             EntityQuery<BroadphaseComponent> broadphaseQuery) tuple) =>
                         {
                             ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.GridEntityId, ref buffer, tuple.xformQuery, tuple.broadphaseQuery);
+                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.GridEntityId, buffer, tuple.xformQuery, tuple.broadphaseQuery);
                             return true;
                         });
 
                     // Struct ref moment, I have no idea what's fastest.
                     buffer = state.buffer;
-                    FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), ref buffer, xformQuery, broadphaseQuery);
+                    FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), buffer, xformQuery, broadphaseQuery);
                 }
             });
 
@@ -251,6 +254,12 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
+            for (var i = 0; i < count; i++)
+            {
+                _bufferPool.Return(contactBuffer[i]);
+            }
+
+            ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);
             ArrayPool<(FixtureProxy Proxy, Box2 AABB)>.Shared.Return(pMoveBuffer);
             moveBuffer.Clear();
             _mapManager.ClearMovedGrids(mapId);
@@ -341,7 +350,7 @@ namespace Robust.Shared.Physics.Systems
             FixtureProxy proxy,
             Box2 worldAABB,
             EntityUid broadphase,
-            ref ValueList<FixtureProxy> pairBuffer,
+            List<FixtureProxy> pairBuffer,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<BroadphaseComponent> broadphaseQuery)
         {
@@ -378,19 +387,19 @@ namespace Robust.Shared.Physics.Systems
             var broadphaseComp = broadphaseQuery.GetComponent(broadphase);
             var state = (pairBuffer, proxy);
 
-            QueryBroadphase(broadphaseComp.DynamicTree, ref state, aabb);
+            QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
 
             if ((proxy.Fixture.Body.BodyType & BodyType.Static) != 0x0)
                 return;
 
-            QueryBroadphase(broadphaseComp.StaticTree, ref state, aabb);
+            QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
             pairBuffer = state.pairBuffer;
         }
 
-        private void QueryBroadphase(IBroadPhase broadPhase, ref (ValueList<FixtureProxy>, FixtureProxy) state, Box2 aabb)
+        private void QueryBroadphase(IBroadPhase broadPhase, (List<FixtureProxy>, FixtureProxy) state, Box2 aabb)
         {
             broadPhase.QueryAabb(ref state, static (
-                ref (ValueList<FixtureProxy> pairBuffer, FixtureProxy proxy) tuple,
+                ref (List<FixtureProxy> pairBuffer, FixtureProxy proxy) tuple,
                 in FixtureProxy other) =>
             {
                 DebugTools.Assert(other.Fixture.Body.CanCollide);

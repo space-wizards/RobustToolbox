@@ -57,7 +57,7 @@ public partial class PrototypeManager
                 foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                 {
                     var type = node.GetNode("type").AsString();
-                    if (!_prototypeTypes.ContainsKey(type))
+                    if (!_kindNames.ContainsKey(type))
                     {
                         if (_ignoredPrototypeTypes.Contains(type))
                         {
@@ -69,7 +69,7 @@ public partial class PrototypeManager
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
                     mapping.Remove("type");
-                    var errorNodes = _serializationManager.ValidateNode(_prototypeTypes[type], mapping).GetErrors()
+                    var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
                         .ToHashSet();
                     if (errorNodes.Count == 0) continue;
                     if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
@@ -156,7 +156,7 @@ public partial class PrototypeManager
         Dictionary<Type, HashSet<string>>? changed = null)
     {
         var type = datanode.Get<ValueDataNode>("type").Value;
-        if (!_prototypeTypes.TryGetValue(type, out var prototypeType))
+        if (!_kindNames.TryGetValue(type, out var kind))
         {
             if (_ignoredPrototypeTypes.Contains(type))
                 return;
@@ -164,31 +164,33 @@ public partial class PrototypeManager
             throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
         }
 
+        var kindData = _kinds[kind];
+
         if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
             throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-        if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
+        if (!overwrite && kindData.Results.ContainsKey(idNode.Value))
             throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
 
-        _prototypeResults[prototypeType][idNode.Value] = datanode;
-        if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
+        kindData.Results[idNode.Value] = datanode;
+        if (kindData.Inheritance is { } inheritance)
         {
             if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
             {
                 var parents = _serializationManager.Read<string[]>(parentNode);
-                _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
+                inheritance.Add(idNode.Value, parents);
             }
             else
             {
-                _inheritanceTrees[prototypeType].Add(idNode.Value);
+                inheritance.Add(idNode.Value);
             }
         }
 
         if (changed == null)
             return;
 
-        if (!changed.TryGetValue(prototypeType, out var set))
-            changed[prototypeType] = set = new HashSet<string>();
+        if (!changed.TryGetValue(kind, out var set))
+            changed[kind] = set = new HashSet<string>();
 
         set.Add(idNode.Value);
     }
@@ -233,23 +235,20 @@ public partial class PrototypeManager
             foreach (var node in root.Cast<YamlMappingNode>())
             {
                 var typeString = node.GetNode("type").AsString();
-                if (!_prototypeTypes.TryGetValue(typeString, out var type))
+                if (!_kindNames.TryGetValue(typeString, out var kind))
                 {
                     continue;
                 }
 
+                var kindData = _kinds[kind];
+
                 var id = node.GetNode("id").AsString();
 
-                if (_inheritanceTrees.TryGetValue(type, out var tree))
-                {
+                if (kindData.Inheritance is { } tree)
                     tree.Remove(id, true);
-                }
 
-                if (_prototypes.TryGetValue(type, out var prototypeIds))
-                {
-                    prototypeIds.Remove(id);
-                    _prototypeResults[type].Remove(id);
-                }
+                kindData.Instances.Remove(id);
+                kindData.Results.Remove(id);
             }
         }
     }

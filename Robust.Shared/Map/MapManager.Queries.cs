@@ -36,6 +36,11 @@ internal partial class MapManager
             tuple.callback(data!);
             return true;
         }, worldAABB);
+
+        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
+        {
+            callback(grid.Grid);
+        }
     }
 
     public void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback)
@@ -54,6 +59,11 @@ internal partial class MapManager
             var data = tuple.gridTree.GetUserData(proxy);
             return tuple.callback(data!, ref tuple.state);
         }, worldAABB);
+
+        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
+        {
+            callback(grid.Grid, ref state);
+        }
 
         state = state2.state;
     }
@@ -90,7 +100,6 @@ internal partial class MapManager
                 tuple.grids.Add(tuple.gridTree.GetUserData(proxy)!);
                 return true;
             }, in aabb);
-
 
         if (!approx)
         {
@@ -132,6 +141,11 @@ internal partial class MapManager
 
                 grids.RemoveSwap(i);
             }
+        }
+
+        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
+        {
+            grids.Add((MapGrid) mapGrid.Grid);
         }
 
         return grids;

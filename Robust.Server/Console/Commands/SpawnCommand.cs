@@ -10,12 +10,14 @@ namespace Robust.Server.Console.Commands
 {
     public sealed class SpawnCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "spawn";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            var ent = IoCManager.Resolve<IServerEntityManager>();
+
             if (args.Length is < 1 or > 3)
             {
                 shell.WriteError("Incorrect number of arguments. " + Help);
@@ -25,21 +27,21 @@ namespace Robust.Server.Console.Commands
 
             if (args.Length == 1 && player != null && pAE != EntityUid.Invalid)
             {
-                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(pAE).Coordinates);
+                _entityManager.SpawnEntity(args[0], _entityManager.GetComponent<TransformComponent>(pAE).Coordinates);
             }
             else if (args.Length == 2)
             {
                 var uid = EntityUid.Parse(args[1]);
-                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(uid).Coordinates);
+                _entityManager.SpawnEntity(args[0], _entityManager.GetComponent<TransformComponent>(uid).Coordinates);
             }
             else if (player != null && pAE != EntityUid.Invalid)
             {
                 var coords = new MapCoordinates(
                     float.Parse(args[1], CultureInfo.InvariantCulture),
                     float.Parse(args[2], CultureInfo.InvariantCulture),
-                    ent.GetComponent<TransformComponent>(pAE).MapID);
+                    _entityManager.GetComponent<TransformComponent>(pAE).MapID);
 
-                ent.SpawnEntity(args[0], coords);
+                _entityManager.SpawnEntity(args[0], coords);
             }
         }
     }

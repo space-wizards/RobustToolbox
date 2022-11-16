@@ -9,13 +9,13 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class LsMonitorCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClyde _clyde = default!;
+
         public override string Command => "lsmonitor";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
-            foreach (var monitor in clyde.EnumerateMonitors())
+            foreach (var monitor in _clyde.EnumerateMonitors())
             {
                 shell.WriteLine(
                     $"[{monitor.Id}] {monitor.Name}: {monitor.Size.X}x{monitor.Size.Y}@{monitor.RefreshRate}Hz");
@@ -26,6 +26,8 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class MonitorInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClyde _clyde = default!;
+
         public override string Command => "monitorinfo";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -36,8 +38,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var clyde = IoCManager.Resolve<IClyde>();
-            var monitor = clyde.EnumerateMonitors().Single(c => c.Id == int.Parse(args[0]));
+            var monitor = _clyde.EnumerateMonitors().Single(c => c.Id == int.Parse(args[0]));
 
             shell.WriteLine($"{monitor.Id}: {monitor.Name}");
             shell.WriteLine($"Video modes:");
@@ -52,15 +53,15 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     public sealed class SetMonitorCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClyde _clyde = default!;
+
         public override string Command => "setmonitor";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             var id = int.Parse(args[0]);
-            var monitor = clyde.EnumerateMonitors().Single(m => m.Id == id);
-            clyde.SetWindowMonitor(monitor);
+            var monitor = _clyde.EnumerateMonitors().Single(m => m.Id == id);
+            _clyde.SetWindowMonitor(monitor);
         }
     }
 }

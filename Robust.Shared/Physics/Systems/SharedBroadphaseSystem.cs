@@ -19,6 +19,7 @@ namespace Robust.Shared.Physics.Systems
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
@@ -54,15 +55,14 @@ namespace Robust.Shared.Physics.Systems
 
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
+            _cfg.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
+
+            _cfg.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;

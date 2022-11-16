@@ -25,6 +25,7 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
         [IoC.Dependency] private readonly ProfManager _profManager = default!;
+        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -121,7 +122,7 @@ namespace Robust.Shared.GameObjects
 
             var excludedTypes = new HashSet<Type>();
 
-            _systemDependencyCollection = new(IoCManager.Instance!);
+            _systemDependencyCollection = new(_dependencyCollection);
             var subTypes = new Dictionary<Type, Type>();
             _systemTypes.Clear();
             IEnumerable<Type> systems;

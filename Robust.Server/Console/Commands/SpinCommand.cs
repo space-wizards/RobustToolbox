@@ -8,6 +8,8 @@ namespace Robust.Server.Console.Commands;
 
 public sealed class SpinCommand : LocalizedCommands
 {
+    [Dependency] private readonly IEntityManager _entities = default!;
+
     public override string Command => "spin";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -25,8 +27,6 @@ public sealed class SpinCommand : LocalizedCommands
             return;
         }
 
-        var entMan = IoCManager.Resolve<IEntityManager>();
-
         // get the target
         EntityUid target;
         if (args.Length == 3)
@@ -39,7 +39,7 @@ public sealed class SpinCommand : LocalizedCommands
         }
         else
         {
-            if (!entMan.TryGetComponent(shell.Player?.AttachedEntity, out TransformComponent? xform)
+            if (!_entities.TryGetComponent(shell.Player?.AttachedEntity, out TransformComponent? xform)
                 || xform.ParentUid is not EntityUid { Valid: true } parent)
             {
                 shell.WriteError($"Cannot find default entity (attached player's parent).");
@@ -49,7 +49,7 @@ public sealed class SpinCommand : LocalizedCommands
         }
 
         // Try get physics
-        if (!entMan.TryGetComponent(target, out PhysicsComponent? physics))
+        if (!_entities.TryGetComponent(target, out PhysicsComponent? physics))
         {
             shell.WriteError($"Target entity is incorporeal");
             return;

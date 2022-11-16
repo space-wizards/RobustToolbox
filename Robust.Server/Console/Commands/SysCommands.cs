@@ -9,42 +9,48 @@ namespace Robust.Server.Console.Commands
 {
     sealed class RestartCommand : LocalizedCommands
     {
+        [Dependency] private readonly IBaseServer _server = default!;
+
         public override string Command => "restart";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IBaseServer>().Restart();
+            _server.Restart();
         }
     }
 
     sealed class ShutdownCommand : LocalizedCommands
     {
+        [Dependency] private readonly IBaseServer _server = default!;
+
         public override string Command => "shutdown";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IBaseServer>().Shutdown(null);
+            _server.Shutdown(null);
         }
     }
 
     public sealed class SaveConfig : LocalizedCommands
     {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
         public override string Command => "saveconfig";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IConfigurationManager>().SaveToFile();
+            _cfg.SaveToFile();
         }
     }
 
     sealed class NetworkAuditCommand : LocalizedCommands
     {
+        [Dependency] private readonly INetManager _netManager = default!;
+
         public override string Command => "netaudit";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var network = (NetManager) IoCManager.Resolve<INetManager>();
-
-            var callbacks = network.CallbackAudit;
+            var callbacks = ((NetManager)_netManager).CallbackAudit;
 
             var sb = new StringBuilder();
 
@@ -62,12 +68,13 @@ namespace Robust.Server.Console.Commands
 
     sealed class ShowTimeCommand : LocalizedCommands
     {
+        [Dependency] private readonly IGameTiming _timing = default!;
+
         public override string Command => "showtime";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var timing = IoCManager.Resolve<IGameTiming>();
-            shell.WriteLine($"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
+            shell.WriteLine($"Paused: {_timing.Paused}, CurTick: {_timing.CurTick}, CurTime: {_timing.CurTime}, RealTime: {_timing.RealTime}");
         }
     }
 }

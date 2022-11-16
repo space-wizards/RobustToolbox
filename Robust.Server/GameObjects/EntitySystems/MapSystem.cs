@@ -12,6 +12,8 @@ namespace Robust.Server.GameObjects
 {
     public sealed class MapSystem : SharedMapSystem
     {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
         private bool _deleteEmptyGrids;
 
         public override void Initialize()
@@ -19,8 +21,7 @@ namespace Robust.Server.GameObjects
             base.Initialize();
             SubscribeLocalEvent<MapGridComponent, EmptyGridEvent>(HandleGridEmpty);
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
+            _cfg.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
         }
 
         protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
@@ -58,8 +59,8 @@ namespace Robust.Server.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion);
+
+            _cfg.UnsubValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion);
         }
 
         private void HandleGridEmpty(EntityUid uid, MapGridComponent component, EmptyGridEvent args)

@@ -41,8 +41,8 @@ namespace Robust.UnitTesting
         public void BaseSetup()
         {
             // Clear state across tests.
-            IoCManager.InitThread();
-            IoCManager.Clear();
+            var deps = IoCManager.InitThread();
+            deps.Clear();
 
             RegisterIoC();
 
@@ -62,7 +62,7 @@ namespace Robust.UnitTesting
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
-            var configurationManager = IoCManager.Resolve<IConfigurationManagerInternal>();
+            var configurationManager = deps.Resolve<IConfigurationManagerInternal>();
 
             configurationManager.Initialize(Project == UnitTestProject.Server);
 
@@ -80,7 +80,7 @@ namespace Robust.UnitTesting
 
             configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
 
-            var systems = IoCManager.Resolve<IEntitySystemManager>();
+            var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
             systems.LoadExtraSystemType<EntityLookupSystem>();
 
@@ -100,6 +100,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
+                systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
             }
             else
             {
@@ -112,13 +113,14 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PhysicsSystem>();
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
+                systems.LoadExtraSystemType<DebugPhysicsSystem>();
             }
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var entMan = deps.Resolve<IEntityManager>();
+            var mapMan = deps.Resolve<IMapManager>();
 
             // Required components for the engine to work
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var compFactory = deps.Resolve<IComponentFactory>();
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
             {
@@ -164,9 +166,9 @@ namespace Robust.UnitTesting
             mapMan.Initialize();
             systems.Initialize();
 
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+            deps.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
-            var modLoader = IoCManager.Resolve<TestingModLoader>();
+            var modLoader = deps.Resolve<TestingModLoader>();
             modLoader.Assemblies = contentAssemblies;
             modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 

@@ -49,8 +49,13 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly IIslandManager _islandManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
@@ -78,10 +83,9 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
 
-            IoCManager.Resolve<IIslandManager>().Initialize();
+            _islandManager.Initialize();
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _cfg.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
@@ -105,12 +109,12 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
-            IoCManager.InjectDependencies(component);
+            _deps.InjectDependencies(component);
             component.BroadphaseSystem = _broadphase;
-            component.ContactManager = new();
+            component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager, _cfg);
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
-            component.AutoClearForces = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.AutoClearForces);
+            component.AutoClearForces = _cfg.GetCVar(CVars.AutoClearForces);
 
             component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
         }
@@ -263,8 +267,7 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _cfg.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnWake(ref PhysicsWakeEvent @event)

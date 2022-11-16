@@ -39,6 +39,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -244,7 +245,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _sawmillOgl.Debug("Setting up RenderHandle...");
 
-            _renderHandle = new RenderHandle(this);
+            _renderHandle = new RenderHandle(this, _entityManager);
         }
 
         private (int major, int minor)? ParseGLOverrideVersion()

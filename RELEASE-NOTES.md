@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.65.0.1
+
+### Bugfixes
+
+- Fix SetLocalPositionRotation raising 2 moveevents. This should help physics performance significantly.
+- Fix tpgrid responses and command error.
+
+
 ## 0.65.0.0
 
 ### Breaking changes
@@ -137,6 +145,7 @@ END TEMPLATE-->
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
 * Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
+* Most usages of `IoCManager.` statically have been removed in favor of dependency injection.
 
 ## 0.62.1.0
 

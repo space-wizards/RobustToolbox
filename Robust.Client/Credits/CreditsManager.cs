@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -15,10 +17,18 @@ namespace Robust.Client.Credits
         /// <summary>
         ///     Gets a list of open source software used in the engine and their license.
         /// </summary>
+        [Obsolete("Use overload that takes in an explicit resource manager instead.")]
         public static IEnumerable<LicenseEntry> GetLicenses()
         {
-            var resM = IoCManager.Resolve<IResourceManager>();
-            using var file = resM.ContentFileRead("/EngineCredits/Libraries.yml");
+            return GetLicenses(IoCManager.Resolve<IResourceManager>());
+        }
+
+        /// <summary>
+        ///     Gets a list of open source software used in the engine and their license.
+        /// </summary>
+        public static IEnumerable<LicenseEntry> GetLicenses(IResourceManager resources)
+        {
+            using var file = resources.ContentFileRead("/EngineCredits/Libraries.yml");
             using var reader = new StreamReader(file);
             var yamlStream = new YamlStream();
             yamlStream.Load(reader);

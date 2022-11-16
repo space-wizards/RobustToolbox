@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -71,6 +73,16 @@ namespace Robust.Client.GameStates
         void ApplyGameState();
 
         /// <summary>
+        ///     Applies a given set of game states.
+        /// </summary>
+        IEnumerable<EntityUid> ApplyGameState(GameState curState, GameState? nextState);
+
+        /// <summary>
+        ///     Resets any entities that have changed while predicting future ticks.
+        /// </summary>
+        void ResetPredictedEntities();
+
+        /// <summary>
         ///     An input command has been dispatched.
         /// </summary>
         /// <param name="message">Message being dispatched.</param>
@@ -82,5 +94,7 @@ namespace Robust.Client.GameStates
         public void RequestFullState(EntityUid? missingEntity = null);
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
+
+        void UpdateFullRep(GameState state);
     }
 }

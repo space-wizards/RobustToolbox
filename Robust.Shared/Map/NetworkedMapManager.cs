@@ -62,8 +62,13 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
+            var gridXform = EntityManager.GetComponent<TransformComponent>(iGrid.GridEntityId);
+            var (worldPos, worldRot) = gridXform.GetWorldPositionRotation();
+
             var gridDatum = new GameStateMapData.GridDatum(
-                    chunkData.ToArray());
+                chunkData.ToArray(),
+                new MapCoordinates(worldPos, gridXform.MapID),
+                worldRot);
 
             gridDatums.Add(iGrid.GridEntityId, gridDatum);
         }
@@ -118,9 +123,15 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         if(GridExists(gridEuid))
                             continue;
 
-                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
+                        MapId gridMapId = default;
+                        foreach (var kvData in data.GridData)
+                        {
+                            if (kvData.Key != gridEuid)
+                                continue;
 
-                        var gridMapId = EntityManager.GetComponent<TransformComponent>(gridEuid).MapID;
+                            gridMapId = kvData.Value.Coordinates.MapId;
+                            break;
+                        }
 
                         DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridEuid}.");
 
@@ -150,9 +161,29 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             // Ok good all the grids and maps exist now.
             foreach (var (gridId, gridDatum) in data.GridData)
             {
+                var xformComp = EntityManager.GetComponent<TransformComponent>(gridId);
+                ApplyTransformState(xformComp, gridDatum);
+
                 var gridComp = EntityManager.GetComponent<MapGridComponent>(gridId);
                 MapGridComponent.ApplyMapGridState(this, gridComp, gridDatum.ChunkData);
             }
+        }
+    }
+
+    private static void ApplyTransformState(TransformComponent xformComp, GameStateMapData.GridDatum gridDatum)
+    {
+        if (xformComp.MapID != gridDatum.Coordinates.MapId)
+            throw new NotImplementedException("Moving grids between maps is not yet implemented");
+
+        // TODO: SHITCODE ALERT
+        if (xformComp.WorldPosition != gridDatum.Coordinates.Position)
+        {
+            xformComp.WorldPosition = gridDatum.Coordinates.Position;
+        }
+
+        if (xformComp.WorldRotation != gridDatum.Angle)
+        {
+            xformComp.WorldRotation = gridDatum.Angle;
         }
     }
 }

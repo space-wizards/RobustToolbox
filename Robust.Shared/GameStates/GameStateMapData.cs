@@ -20,12 +20,18 @@ namespace Robust.Shared.GameStates
         [Serializable, NetSerializable]
         public struct GridDatum
         {
+            // TransformComponent State
+            public readonly MapCoordinates Coordinates;
+            public readonly Angle Angle;
+
             // MapGridComponent State
             public readonly ChunkDatum[] ChunkData;
 
-            public GridDatum(ChunkDatum[] chunkData)
+            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates, Angle angle)
             {
                 ChunkData = chunkData;
+                Coordinates = coordinates;
+                Angle = angle;
             }
         }
 

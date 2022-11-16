@@ -336,7 +336,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                     if (!isClient)
                         entMan.DeleteEntity(entity);
                     else if (entMan.EntityExists(entity))
-                        Remove(entity, entMan, reparent: false, addToBroadphase: true, force: true);
+                        Remove(entity, entMan, reparent: false, force: true);
                 }
             }
 

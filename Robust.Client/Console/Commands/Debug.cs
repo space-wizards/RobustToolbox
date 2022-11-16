@@ -31,30 +31,31 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class DumpEntitiesCommand : IConsoleCommand
+    internal sealed class DumpEntitiesCommand : LocalizedCommands
     {
-        public string Command => "dumpentities";
-        public string Help => "Dump entity list";
-        public string Description => "Dumps entity list of UIDs and prototype.";
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "dumpentities";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            foreach (var e in entityManager.GetEntities().OrderBy(e => e))
+            foreach (var e in _entityManager.GetEntities().OrderBy(e => e))
             {
-                shell.WriteLine($"entity {e}, {entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
+                shell.WriteLine(
+                    $"entity {e}, {_entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {_entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
             }
         }
     }
 
-    internal sealed class GetComponentRegistrationCommand : IConsoleCommand
+    internal sealed class GetComponentRegistrationCommand : LocalizedCommands
     {
-        public string Command => "getcomponentregistration";
-        public string Help => "Usage: getcomponentregistration <componentName>";
-        public string Description => "Gets component registration information";
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+
+        public override string Command => "getcomponentregistration";
+
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
@@ -62,11 +63,9 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-
             try
             {
-                var registration = componentFactory.GetRegistration(args[0]);
+                var registration = _componentFactory.GetRegistration(args[0]);
 
                 var message = new StringBuilder($"'{registration.Name}': (type: {registration.Type}, ");
                 if (registration.NetID == null)
@@ -94,13 +93,14 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ToggleMonitorCommand : IConsoleCommand
+    internal sealed class ToggleMonitorCommand : LocalizedCommands
     {
-        public string Command => "monitor";
+        [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
 
-        public string Description => Loc.GetString("cmd-monitor-desc");
 
-        public string Help
+        public override string Command => "monitor";
+
+        public override string Help
         {
             get
             {
@@ -109,9 +109,9 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var monitors = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
+            var monitors = _uiMgr.DebugMonitors;
 
             if (args.Length != 1)
             {
@@ -149,7 +149,7 @@ namespace Robust.Client.Console.Commands
             monitors.ToggleMonitor(parsedMonitor);
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length == 1)
             {
@@ -167,38 +167,36 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ExceptionCommand : IConsoleCommand
+    internal sealed class ExceptionCommand : LocalizedCommands
     {
-        public string Command => "fuck";
-        public string Help => "Throws an exception";
-        public string Description => "Throws an exception";
+        public override string Command => "fuck";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             throw new InvalidOperationException("Fuck");
         }
     }
 
-    internal sealed class ShowPositionsCommand : IConsoleCommand
+    internal sealed class ShowPositionsCommand : LocalizedCommands
     {
-        public string Command => "showpos";
-        public string Help => "";
-        public string Description => "Enables debug drawing over all entity positions in the game.";
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "showpos";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugDrawingSystem>();
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
             mgr.DebugPositions = !mgr.DebugPositions;
         }
     }
 
-    internal sealed class ShowRayCommand : IConsoleCommand
+    internal sealed class ShowRayCommand : LocalizedCommands
     {
-        public string Command => "showrays";
-        public string Help => "Usage: showrays <raylifetime>";
-        public string Description => "Toggles debug drawing of physics rays. An integer for <raylifetime> must be provided";
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "showrays";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -212,35 +210,32 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mgr = EntitySystem.Get<DebugRayDrawingSystem>();
+            var mgr = _entitySystems.GetEntitySystem<DebugRayDrawingSystem>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays);
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
 
-    internal sealed class DisconnectCommand : IConsoleCommand
+    internal sealed class DisconnectCommand : LocalizedCommands
     {
-        public string Command => "disconnect";
-        public string Help => "";
-        public string Description => "Immediately disconnect from the server and go back to the main menu.";
+        [Dependency] private readonly IClientNetManager _netManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "disconnect";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
+            _netManager.ClientDisconnect("Disconnect command used.");
         }
     }
 
-    internal sealed class EntityInfoCommand : IConsoleCommand
+    internal sealed class EntityInfoCommand : LocalizedCommands
     {
-        public string Command => "entfo";
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public string Help =>
-            "entfo <entityuid>\nThe entity UID can be prefixed with 'c' to convert it to a client entity UID.";
+        public override string Command => "entfo";
 
-        public string Description => "Displays verbose diagnostics for an entity.";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -255,15 +250,17 @@ namespace Robust.Client.Console.Commands
             }
 
             var uid = EntityUid.Parse(args[0]);
-            var entmgr = IoCManager.Resolve<IEntityManager>();
+            var entmgr = _entityManager;
             if (!entmgr.EntityExists(uid))
             {
                 shell.WriteError("That entity does not exist. Sorry lad.");
                 return;
             }
+
             var meta = entmgr.GetComponent<MetaDataComponent>(uid);
             shell.WriteLine($"{uid}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
-            shell.WriteLine($"init/del/lmt: {meta.EntityInitialized}/{meta.EntityDeleted}/{meta.EntityLastModifiedTick}");
+            shell.WriteLine(
+                $"init/del/lmt: {meta.EntityInitialized}/{meta.EntityDeleted}/{meta.EntityLastModifiedTick}");
             foreach (var component in entmgr.GetComponents(uid))
             {
                 shell.WriteLine(component.ToString() ?? "");
@@ -283,13 +280,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SnapGridGetCell : IConsoleCommand
+    internal sealed class SnapGridGetCell : LocalizedCommands
     {
-        public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.";
-        public string Description => "Lists entities on a snap grid cell.";
+        [Dependency] private readonly IMapManager _map = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "sggcell";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -311,12 +308,11 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            if (mapMan.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(gridUid, out var grid))
             {
                 foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
-                    int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
-                    int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
+                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
+                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
                     shell.WriteLine(entity.ToString());
                 }
@@ -328,104 +324,103 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SetPlayerName : IConsoleCommand
+    internal sealed class SetPlayerName : LocalizedCommands
     {
-        public string Command => "overrideplayername";
-        public string Description => "Changes the name used when attempting to connect to the server.";
-        public string Help => Command + " <name>";
+        [Dependency] private readonly IBaseClient _baseClient = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "overrideplayername";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
                 shell.WriteLine(Help);
                 return;
             }
-            var client = IoCManager.Resolve<IBaseClient>();
-            client.PlayerNameOverride = args[0];
+
+            _baseClient.PlayerNameOverride = args[0];
 
             shell.WriteLine($"Overriding player name to \"{args[0]}\".");
         }
     }
 
-    internal sealed class LoadResource : IConsoleCommand
+    internal sealed class LoadResource : LocalizedCommands
     {
-        public string Command => "ldrsc";
-        public string Description => "Pre-caches a resource.";
-        public string Help => "ldrsc <path> <type>";
+        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IReflectionManager _reflection = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "ldrsc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
                 shell.WriteLine(Help);
                 return;
             }
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-            var reflection = IoCManager.Resolve<IReflectionManager>();
+
             Type type;
 
             try
             {
-                type = reflection.LooseGetType(args[1]);
+                type = _reflection.LooseGetType(args[1]);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 shell.WriteError("Unable to find type");
                 return;
             }
 
             var getResourceMethod =
-                resourceCache
+                _res
                     .GetType()
                     .GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] { args[0], true });
+            generic.Invoke(_res, new object[] { args[0], true });
         }
     }
 
-    internal sealed class ReloadResource : IConsoleCommand
+    internal sealed class ReloadResource : LocalizedCommands
     {
-        public string Command => "rldrsc";
-        public string Description => "Reloads a resource.";
-        public string Help => "rldrsc <path> <type>";
+        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IReflectionManager _reflection = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "rldrsc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
                 shell.WriteLine(Help);
                 return;
             }
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-            var reflection = IoCManager.Resolve<IReflectionManager>();
 
             Type type;
             try
             {
-                type = reflection.LooseGetType(args[1]);
+                type = _reflection.LooseGetType(args[1]);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 shell.WriteError("Unable to find type");
                 return;
             }
 
-            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
+            var getResourceMethod = _res.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] { args[0] });
+            generic.Invoke(_res, new object[] { args[0] });
         }
     }
 
-    internal sealed class GridTileCount : IConsoleCommand
+    internal sealed class GridTileCount : LocalizedCommands
     {
-        public string Command => "gridtc";
-        public string Description => "Gets the tile count of a grid";
-        public string Help => "Usage: gridtc <gridId>";
+        [Dependency] private readonly IMapManager _map = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "gridtc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -439,8 +434,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            if (mapManager.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(gridUid, out var grid))
             {
                 shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }
@@ -451,20 +445,18 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class GuiDumpCommand : IConsoleCommand
+    internal sealed class GuiDumpCommand : LocalizedCommands
     {
-        public string Command => "guidump";
-        public string Description => "Dump GUI tree to /guidump.txt in user data.";
-        public string Help => "guidump";
+        [Dependency] private readonly IUserInterfaceManager _ui = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "guidump";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
-            var res = IoCManager.Resolve<IResourceManager>();
+            using var writer = _res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
 
-            using var writer = res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
-
-            foreach (var root in uiMgr.AllRoots)
+            foreach (var root in _ui.AllRoots)
             {
                 writer.WriteLine($"ROOT: {root}");
                 _writeNode(root, 0, writer);
@@ -525,248 +517,107 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class UITestCommand : IConsoleCommand
+    internal sealed class SetClipboardCommand : LocalizedCommands
     {
-        public string Command => "uitest";
-        public string Description => "Open a dummy UI testing window";
-        public string Help => "uitest";
+        [Dependency] private readonly IClipboardManager _clipboard = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "setclipboard";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new DefaultWindow { MinSize = (500, 400)};
-            var tabContainer = new TabContainer();
-            window.Contents.AddChild(tabContainer);
-            var scroll = new ScrollContainer();
-            tabContainer.AddChild(scroll);
-            //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
-            var vBox = new BoxContainer
-            {
-                Orientation = LayoutOrientation.Vertical
-            };
-            scroll.AddChild(vBox);
-
-            var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
-            vBox.AddChild(progressBar);
-
-            var optionButton = new OptionButton();
-            optionButton.AddItem("Honk");
-            optionButton.AddItem("Foo");
-            optionButton.AddItem("Bar");
-            optionButton.AddItem("Baz");
-            optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
-            vBox.AddChild(optionButton);
-
-            var tree = new Tree { VerticalExpand = true };
-            var root = tree.CreateItem();
-            root.Text = "Honk!";
-            var child = tree.CreateItem();
-            child.Text = "Foo";
-            for (var i = 0; i < 20; i++)
-            {
-                child = tree.CreateItem();
-                child.Text = $"Bar {i}";
-            }
-
-            vBox.AddChild(tree);
-
-            var rich = new RichTextLabel();
-            var message = new FormattedMessage();
-            message.AddText("Foo\n");
-            message.PushColor(Color.Red);
-            message.AddText("Bar");
-            message.Pop();
-            rich.SetMessage(message);
-            vBox.AddChild(rich);
-
-            var itemList = new ItemList();
-            tabContainer.AddChild(itemList);
-            for (var i = 0; i < 10; i++)
-            {
-                itemList.AddItem(i.ToString());
-            }
-
-            var grid = new GridContainer { Columns = 3 };
-            tabContainer.AddChild(grid);
-            for (var y = 0; y < 3; y++)
-            {
-                for (var x = 0; x < 3; x++)
-                {
-                    grid.AddChild(new Button
-                    {
-                        MinSize = (50, 50),
-                        Text = $"{x}, {y}"
-                    });
-                }
-            }
-
-            var group = new ButtonGroup();
-            var vBoxRadioButtons = new BoxContainer
-            {
-                Orientation = LayoutOrientation.Vertical
-            };
-            for (var i = 0; i < 10; i++)
-            {
-                vBoxRadioButtons.AddChild(new Button
-                {
-                    Text = i.ToString(),
-                    Group = group
-                });
-
-                // ftftftftftftft
-            }
-
-            tabContainer.AddChild(vBoxRadioButtons);
-
-            TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
-
-            tabContainer.AddChild(new BoxContainer
-            {
-                Orientation = LayoutOrientation.Vertical,
-                Name = "Slider",
-                Children =
-                {
-                    new Slider()
-                }
-            });
-
-            tabContainer.AddChild(new SplitContainer
-            {
-                Orientation = SplitContainer.SplitOrientation.Horizontal,
-                Children =
-                {
-                    new PanelContainer
-                    {
-                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
-                        Children =
-                        {
-                            new Label{  Text = "FOOBARBAZ"},
-                        }
-                    },
-                    new PanelContainer
-                    {
-                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Blue},
-                        Children =
-                        {
-                            new Label{  Text = "FOOBARBAZ"},
-                        }
-                    },
-                }
-            });
-
-            window.OpenCentered();
+            _clipboard.SetText(args[0]);
         }
     }
 
-    internal sealed class SetClipboardCommand : IConsoleCommand
+    internal sealed class GetClipboardCommand : LocalizedCommands
     {
-        public string Command => "setclipboard";
-        public string Description => "Sets the system clipboard";
-        public string Help => "setclipboard <text>";
+        [Dependency] private readonly IClipboardManager _clipboard = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "getclipboard";
+
+        public override async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IClipboardManager>();
-            mgr.SetText(args[0]);
+            shell.WriteLine(await _clipboard.GetText());
         }
     }
 
-    internal sealed class GetClipboardCommand : IConsoleCommand
+    internal sealed class ToggleLight : LocalizedCommands
     {
-        public string Command => "getclipboard";
-        public string Description => "Gets the system clipboard";
-        public string Help => "getclipboard";
+        [Dependency] private readonly ILightManager _light = default!;
 
-        public async void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "togglelight";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IClipboardManager>();
-            shell.WriteLine(await mgr.GetText());
+            if (!_light.LockConsoleAccess)
+                _light.Enabled = !_light.Enabled;
         }
     }
 
-    internal sealed class ToggleLight : IConsoleCommand
+    internal sealed class ToggleFOV : LocalizedCommands
     {
-        public string Command => "togglelight";
-        public string Description => "Toggles light rendering.";
-        public string Help => "togglelight";
+        [Dependency] private readonly IEyeManager _eye = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "togglefov";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.Enabled = !mgr.Enabled;
+            _eye.CurrentEye.DrawFov = !_eye.CurrentEye.DrawFov;
         }
     }
 
-    internal sealed class ToggleFOV : IConsoleCommand
+    internal sealed class ToggleHardFOV : LocalizedCommands
     {
-        public string Command => "togglefov";
-        public string Description => "Toggles fov for client.";
-        public string Help => "togglefov";
+        [Dependency] private readonly ILightManager _light = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "togglehardfov";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-          var mgr = IoCManager.Resolve<IEyeManager>();
-          if (mgr.CurrentEye != null)
-              mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+            if (!_light.LockConsoleAccess)
+                _light.DrawHardFov = !_light.DrawHardFov;
         }
     }
 
-    internal sealed class ToggleHardFOV : IConsoleCommand
+    internal sealed class ToggleShadows : LocalizedCommands
     {
-        public string Command => "togglehardfov";
-        public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
-        public string Help => "togglehardfov";
+        [Dependency] private readonly ILightManager _light = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "toggleshadows";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawHardFov = !mgr.DrawHardFov;
+            if (!_light.LockConsoleAccess)
+                _light.DrawShadows = !_light.DrawShadows;
         }
     }
 
-    internal sealed class ToggleShadows : IConsoleCommand
+    internal sealed class ToggleLightBuf : LocalizedCommands
     {
-        public string Command => "toggleshadows";
-        public string Description => "Toggles shadow rendering.";
-        public string Help => "toggleshadows";
+        [Dependency] private readonly ILightManager _light = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawShadows = !mgr.DrawShadows;
-        }
-    }
-    internal sealed class ToggleLightBuf : IConsoleCommand
-    {
-        public string Command => "togglelightbuf";
-        public string Description => "Toggles lighting rendering. This includes shadows but not FOV.";
-        public string Help => "togglelightbuf";
+        public override string Command => "togglelightbuf";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawLighting = !mgr.DrawLighting;
+            if (!_light.LockConsoleAccess)
+                _light.DrawLighting = !_light.DrawLighting;
         }
     }
 
-    internal sealed class ChunkInfoCommand : IConsoleCommand
+    internal sealed class ChunkInfoCommand : LocalizedCommands
     {
-        public string Command => "chunkinfo";
-        public string Description => "Gets info about a chunk under your mouse cursor.";
-        public string Help => Command;
+        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
+        [Dependency] private readonly IInputManager _input = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "chunkinfo";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            var eyeMan = IoCManager.Resolve<IEyeManager>();
+            var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
 
-            var mousePos = eyeMan.ScreenToMap(inputMan.MouseScreenPosition);
-
-            if (!mapMan.TryFindGridAt(mousePos, out var grid))
+            if (!_map.TryFindGridAt(mousePos, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;
@@ -781,22 +632,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ReloadShadersCommand : IConsoleCommand
+    internal sealed class ReloadShadersCommand : LocalizedCommands
     {
+        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
 
-        public string Command => "rldshader";
-
-        public string Description => "Reloads all shaders";
-
-        public string Help => "rldshader";
+        public override string Command => "rldshader";
 
         public static Dictionary<string, FileSystemWatcher>? _watchers;
 
         public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new();
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IResourceCacheInternal resC;
+            var resC = _res;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -806,16 +655,16 @@ namespace Robust.Client.Console.Commands
                         shell.WriteLine("Already watching.");
                         return;
                     }
-                    resC = IoCManager.Resolve<IResourceCacheInternal>();
 
                     _watchers = new Dictionary<string, FileSystemWatcher>();
 
                     var stringComparer = PathHelpers.IsFileSystemCaseSensitive()
-                        ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+                        ? StringComparer.Ordinal
+                        : StringComparer.OrdinalIgnoreCase;
 
                     var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
 
-                    var taskManager = IoCManager.Resolve<ITaskManager>();
+                    var taskManager = _taskManager;
 
                     var shaderCount = 0;
                     var created = 0;
@@ -871,8 +720,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            IoCManager.Resolve<IResourceCache>()
-                                                .ReloadResource<ShaderSourceResource>(resPath);
+                                            resC.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -933,8 +781,6 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            resC = IoCManager.Resolve<IResourceCacheInternal>();
-
             foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {
                 try
@@ -949,26 +795,23 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Done.");
         }
-
     }
 
-    internal sealed class ClydeDebugLayerCommand : IConsoleCommand
+    internal sealed class ClydeDebugLayerCommand : LocalizedCommands
     {
-        public string Command => "cldbglyr";
-        public string Description => "Toggle fov and light debug layers";
-        public string Help => "cldbglyr <layer>: Toggle <layer>\ncldbglyr: Turn all Layers off";
+        [Dependency] private readonly IClydeInternal _clyde = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "cldbglyr";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-
             if (args.Length < 1)
             {
-                clyde.DebugLayers = ClydeDebugLayers.None;
+                _clyde.DebugLayers = ClydeDebugLayers.None;
                 return;
             }
 
-            clyde.DebugLayers = args[0] switch
+            _clyde.DebugLayers = args[0] switch
             {
                 "fov" => ClydeDebugLayers.Fov,
                 "light" => ClydeDebugLayers.Light,
@@ -977,13 +820,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class GetKeyInfoCommand : IConsoleCommand
+    internal sealed class GetKeyInfoCommand : LocalizedCommands
     {
-        public string Command => "keyinfo";
-        public string Description => "Keys key info for a key";
-        public string Help => "keyinfo <Key>";
+        [Dependency] private readonly IClydeInternal _clyde = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "keyinfo";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -991,13 +834,11 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-
             if (Enum.TryParse(typeof(Keyboard.Key), args[0], true, out var parsed))
             {
-                var key = (Keyboard.Key) parsed!;
+                var key = (Keyboard.Key)parsed!;
 
-                var name = clyde.GetKeyName(key);
+                var name = _clyde.GetKeyName(key);
 
                 shell.WriteLine($"name: '{name}' ");
             }

@@ -37,7 +37,7 @@ using System.Text;
 
 namespace SDL2
 {
-	public static class SDL
+	internal static unsafe class SDL
 	{
 		#region SDL2# Variables
 
@@ -1150,6 +1150,12 @@ namespace SDL2
 		public static extern void SDL_LogSetOutputFunction(
 			SDL_LogOutputFunction callback,
 			IntPtr userdata
+		);
+
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void SDL_LogSetOutputFunction(
+			delegate* unmanaged[Cdecl]<void*, int, SDL_LogPriority, byte*, void> callback,
+			void* userdata
 		);
 
 		#endregion
@@ -5540,12 +5546,24 @@ namespace SDL2
 			IntPtr userdata
 		);
 
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SDL_AddEventWatch(
+            delegate* unmanaged[Cdecl]<void*, SDL_Event*, int> filter,
+            void* userdata
+        );
+
 		/* userdata refers to a void* */
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void SDL_DelEventWatch(
 			SDL_EventFilter filter,
 			IntPtr userdata
 		);
+
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SDL_DelEventWatch(
+            delegate* unmanaged[Cdecl]<void*, SDL_Event*, int> filter,
+            void* userdata
+        );
 
 		/* userdata refers to a void* */
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]

@@ -339,7 +339,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // If this map has lighting disabled, return
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            if (!_entityManager.GetComponent<IMapComponent>(mapUid).LightingEnabled)
+            if (!_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
             {
                 return;
             }

@@ -18,6 +18,7 @@ namespace Robust.Shared.Physics.Systems
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
@@ -53,15 +54,14 @@ namespace Robust.Shared.Physics.Systems
 
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
+            _cfg.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
+
+            _cfg.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;
@@ -430,15 +430,7 @@ namespace Robust.Shared.Physics.Systems
 
         public void Refilter(Fixture fixture, TransformComponent? xform = null)
         {
-            // TODO: Call this method whenever collisionmask / collisionlayer changes
-            // TODO: This should never becalled when body is null.
-            DebugTools.Assert(fixture.Body != null);
-            if (fixture.Body == null)
-            {
-                return;
-            }
-
-            foreach (var (_, contact) in fixture.Contacts)
+            foreach (var contact in fixture.Contacts.Values)
             {
                 contact.Flags |= ContactFlags.Filter;
             }
@@ -462,11 +454,13 @@ namespace Robust.Shared.Physics.Systems
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var (broadphase, xform) in EntityManager.EntityQuery<BroadphaseComponent, TransformComponent>(true))
+            var enumerator = AllEntityQuery<BroadphaseComponent, TransformComponent>();
+
+            while (enumerator.MoveNext(out var broadphase, out var xform))
             {
                 if (xform.MapID != mapId) continue;
 
-                if (!EntityManager.TryGetComponent(broadphase.Owner, out IMapGridComponent? mapGrid))
+                if (!EntityManager.TryGetComponent(broadphase.Owner, out MapGridComponent? mapGrid))
                 {
                     yield return broadphase;
                     continue;

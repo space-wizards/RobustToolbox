@@ -7,13 +7,14 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class RemoveComponentCommand : IConsoleCommand
+    internal sealed class RemoveComponentCommand : LocalizedCommands
     {
-        public string Command => "rmcomp";
-        public string Description => "Removes a component from an entity.";
-        public string Help => $"{Command} <uid> <componentName>";
+        [Dependency] private readonly IComponentFactory _compFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "rmcomp";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -27,9 +28,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            if (!entityManager.EntityExists(uid))
+            if (!_entityManager.EntityExists(uid))
             {
                 shell.WriteLine($"No entity found with id {uid}.");
                 return;
@@ -37,23 +36,21 @@ namespace Robust.Server.Console.Commands
 
             var componentName = args[1];
 
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-
-            if (!compFactory.TryGetRegistration(componentName, out var registration, true))
+            if (!_compFactory.TryGetRegistration(componentName, out var registration, true))
             {
                 shell.WriteLine($"No component found with name {componentName}.");
                 return;
             }
 
-            if (!entityManager.HasComponent(uid, registration.Type))
+            if (!_entityManager.HasComponent(uid, registration.Type))
             {
-                shell.WriteLine($"No {componentName} component found on entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+                shell.WriteLine($"No {componentName} component found on entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
                 return;
             }
 
-            entityManager.RemoveComponent(uid, registration.Type);
+            _entityManager.RemoveComponent(uid, registration.Type);
 
-            shell.WriteLine($"Removed {componentName} component from entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+            shell.WriteLine($"Removed {componentName} component from entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
         }
     }
 }

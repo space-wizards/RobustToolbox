@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Robust.Shared;
@@ -27,16 +26,7 @@ internal sealed class HubManager
 
     private bool _active;
     private bool _firstAdvertisement = true;
-    private readonly HttpClient _httpClient;
-
-    public HubManager()
-    {
-        _httpClient = new HttpClient();
-
-        var assembly = typeof(HubManager).Assembly.GetName();
-        if (assembly is { Name: { } name, Version: { } version })
-            _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(name, version.ToString()));
-    }
+    private HttpClient? _httpClient;
 
     public async void Start()
     {
@@ -46,7 +36,7 @@ internal sealed class HubManager
         if (!activate)
             return;
 
-        _cfg.OnValueChanged(CVars.HubAdvertiseInterval, i => _interval = TimeSpan.FromSeconds(i), true);
+        _cfg.OnValueChanged(CVars.HubAdvertiseInterval, UpdateInterval, true);
         _cfg.OnValueChanged(CVars.HubMasterUrl, s => _masterUrl = s, true);
 
         var url = _cfg.GetCVar(CVars.HubServerUrl);
@@ -70,6 +60,21 @@ internal sealed class HubManager
         _advertiseUrl = url;
     }
 
+    private void UpdateInterval(int interval)
+    {
+        _interval = TimeSpan.FromSeconds(interval);
+        _httpClient?.Dispose();
+
+        _httpClient = new HttpClient(new SocketsHttpHandler
+        {
+            // Keep-alive connections stay open for longer than the advertise interval.
+            // This way the same HTTPS connection can be re-used.
+            PooledConnectionIdleTimeout = _interval + TimeSpan.FromSeconds(10),
+        });
+
+        HttpClientUserAgent.AddUserAgent(_httpClient);
+    }
+
     public void Heartbeat()
     {
         if (!_active || _advertiseUrl == null)
@@ -86,12 +91,13 @@ internal sealed class HubManager
     private async void SendPing()
     {
         DebugTools.AssertNotNull(_advertiseUrl);
+        DebugTools.AssertNotNull(_httpClient);
 
         var apiUrl = $"{_masterUrl}api/servers/advertise";
 
         try
         {
-            using var response = await _httpClient.PostAsJsonAsync(apiUrl, new AdvertiseRequest(_advertiseUrl!));
+            using var response = await _httpClient!.PostAsJsonAsync(apiUrl, new AdvertiseRequest(_advertiseUrl!));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -118,9 +124,11 @@ internal sealed class HubManager
 
     private async Task<string?> GuessAddress()
     {
+        DebugTools.AssertNotNull(_httpClient);
+
         var ipifyUrl = _cfg.GetCVar(CVars.HubIpifyUrl);
 
-        var req = await _httpClient.GetFromJsonAsync<IpResponse>(ipifyUrl);
+        var req = await _httpClient!.GetFromJsonAsync<IpResponse>(ipifyUrl);
 
         return $"ss14://{req!.Ip}:{_cfg.GetCVar(CVars.NetPort)}/";
     }

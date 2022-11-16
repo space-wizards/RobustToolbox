@@ -130,7 +130,7 @@ namespace Robust.Shared.Physics
 
             aabb ??= _extractAabb(item);
 
-            if (CheckNaNs(aabb.Value))
+            if (HasNaNs(aabb.Value))
             {
                 _nodeLookup[item] = DynamicTree.Proxy.Free;
                 return true;
@@ -185,7 +185,7 @@ namespace Robust.Shared.Physics
 
             newBox ??= _extractAabb(item);
 
-            if (CheckNaNs(newBox.Value))
+            if (HasNaNs(newBox.Value))
             {
                 if (proxy == DynamicTree.Proxy.Free)
                 {
@@ -327,9 +327,32 @@ namespace Robust.Shared.Physics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AddOrUpdate(T item, Box2? newAABB = null) => Update(item, newAABB) || Add(item, newAABB);
+        public void AddOrUpdate(T item, Box2? aabb = null)
+        {
+            aabb ??= _extractAabb(item);
+            if (!_nodeLookup.TryGetValue(item, out var proxy))
+            {
+                _nodeLookup[item] = HasNaNs(aabb.Value) ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, item);
+                return;
+            }
 
-        private static bool CheckNaNs(in Box2 box)
+            if (HasNaNs(aabb.Value))
+            {
+                if (proxy == DynamicTree.Proxy.Free)
+                    return;
+
+                _b2Tree.DestroyProxy(proxy);
+                _nodeLookup[item] = DynamicTree.Proxy.Free;
+                return;
+            }
+
+            if (proxy == DynamicTree.Proxy.Free)
+                _nodeLookup[item] = _b2Tree.CreateProxy(aabb.Value, item);
+            else
+                _b2Tree.MoveProxy(proxy, aabb.Value, Vector2.Zero);
+        }
+
+        private static bool HasNaNs(in Box2 box)
         {
             return float.IsNaN(box.Left)
                    || float.IsNaN(box.Top)

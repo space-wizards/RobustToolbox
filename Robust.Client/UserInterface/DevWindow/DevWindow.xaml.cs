@@ -28,13 +28,11 @@ namespace Robust.Client.UserInterface
     }
 
     [UsedImplicitly]
-    internal sealed class TestWindowCommand : IConsoleCommand
+    internal sealed class TestWindowCommand : LocalizedCommands
     {
-        public string Command => "devwindow";
-        public string Description => "A";
-        public string Help => "A";
+        public override string Command => "devwindow";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();
             var monitor = clyde.EnumerateMonitors().First();

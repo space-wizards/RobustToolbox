@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -465,7 +466,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to remove component from entity '{ToPrettyString(uid)}'");
+                    Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }
             }
 
@@ -951,7 +952,99 @@ namespace Robust.Shared.GameObjects
             return new NetComponentEnumerable(_netComponents[uid]);
         }
 
+        /// <inheritdoc />
+        public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
+        {
+            return _netComponents.TryGetValue(uid, out var data)
+                    ? new NetComponentEnumerable(data)
+                    : null;
+        }
+
         #region Join Functions
+
+        public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
+        where TComp1 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            return new AllEntityQueryEnumerator<TComp1>(trait1);
+        }
+
+        public AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : Component
+            where TComp2 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            return new AllEntityQueryEnumerator<TComp1, TComp2>(trait1, trait2);
+        }
+
+        public AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3);
+        }
+
+        public AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+            where TComp4 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
+            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4);
+        }
+
+        public EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
+            where TComp1 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
+            return new EntityQueryEnumerator<TComp1>(trait1, metaTraits);
+        }
+
+        public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : Component
+            where TComp2 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
+            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, metaTraits);
+        }
+
+        public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
+            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, metaTraits);
+        }
+
+        public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : Component
+            where TComp2 : Component
+            where TComp3 : Component
+            where TComp4 : Component
+        {
+            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
+            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
+            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
+            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, metaTraits);
+        }
 
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
@@ -1302,4 +1395,512 @@ namespace Robust.Shared.GameObjects
             return false;
         }
     }
+
+    #region Query
+
+    /// <summary>
+    /// Returns all matching unpaused components.
+    /// </summary>
+    public struct EntityQueryEnumerator<TComp1> : IDisposable
+        where TComp1 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _metaDict;
+
+        public EntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> metaDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _metaDict = metaDict;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching unpaused components.
+    /// </summary>
+    public struct EntityQueryEnumerator<TComp1, TComp2> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+        private readonly Dictionary<EntityUid, Component> _metaDict;
+
+        public EntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2,
+            Dictionary<EntityUid, Component> metaDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+            _metaDict = metaDict;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching unpaused components.
+    /// </summary>
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+        private readonly Dictionary<EntityUid, Component> _traitDict3;
+        private readonly Dictionary<EntityUid, Component> _metaDict;
+
+        public EntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2,
+            Dictionary<EntityUid, Component> traitDict3,
+            Dictionary<EntityUid, Component> metaDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+            _traitDict3 = traitDict3;
+            _metaDict = metaDict;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    comp3 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                comp3 = (TComp3)comp3Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching unpaused components.
+    /// </summary>
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+        private readonly Dictionary<EntityUid, Component> _traitDict3;
+        private readonly Dictionary<EntityUid, Component> _traitDict4;
+        private readonly Dictionary<EntityUid, Component> _metaDict;
+
+        public EntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2,
+            Dictionary<EntityUid, Component> traitDict3,
+            Dictionary<EntityUid, Component> traitDict4,
+            Dictionary<EntityUid, Component> metaDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+            _traitDict3 = traitDict3;
+            _traitDict4 = traitDict4;
+            _metaDict = metaDict;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    comp3 = null;
+                    comp4 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                comp3 = (TComp3)comp3Obj;
+                comp4 = (TComp4)comp4Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    #endregion
+
+    #region All query
+
+    /// <summary>
+    /// Returns all matching components, paused or not.
+    /// </summary>
+    public struct AllEntityQueryEnumerator<TComp1> : IDisposable
+        where TComp1 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+
+        public AllEntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching components, paused or not.
+    /// </summary>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+
+        public AllEntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching components, paused or not.
+    /// </summary>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+        private readonly Dictionary<EntityUid, Component> _traitDict3;
+
+        public AllEntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2,
+            Dictionary<EntityUid, Component> traitDict3)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+            _traitDict3 = traitDict3;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    comp3 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                comp3 = (TComp3)comp3Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Returns all matching components, paused or not.
+    /// </summary>
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        private Dictionary<EntityUid, Component>.Enumerator _traitDict;
+        private readonly Dictionary<EntityUid, Component> _traitDict2;
+        private readonly Dictionary<EntityUid, Component> _traitDict3;
+        private readonly Dictionary<EntityUid, Component> _traitDict4;
+
+        public AllEntityQueryEnumerator(
+            Dictionary<EntityUid, Component> traitDict,
+            Dictionary<EntityUid, Component> traitDict2,
+            Dictionary<EntityUid, Component> traitDict3,
+            Dictionary<EntityUid, Component> traitDict4)
+        {
+            _traitDict = traitDict.GetEnumerator();
+            _traitDict2 = traitDict2;
+            _traitDict3 = traitDict3;
+            _traitDict4 = traitDict4;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    comp1 = null;
+                    comp2 = null;
+                    comp3 = null;
+                    comp4 = null;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
+                {
+                    continue;
+                }
+
+                comp1 = (TComp1)current.Value;
+                comp2 = (TComp2)comp2Obj;
+                comp3 = (TComp3)comp3Obj;
+                comp4 = (TComp4)comp4Obj;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    #endregion
 }

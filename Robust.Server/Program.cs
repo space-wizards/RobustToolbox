@@ -49,49 +49,50 @@ namespace Robust.Server
         private static void ParsedMain(CommandLineArgs args, bool contentStart, ServerOptions options)
         {
             Thread.CurrentThread.Name = "Main Thread";
-            IoCManager.InitThread();
-            ServerIoC.RegisterIoC();
-            IoCManager.BuildGraph();
-            SetupLogging();
-            InitReflectionManager();
+            var deps = IoCManager.InitThread();
+            ServerIoC.RegisterIoC(deps);
+            deps.BuildGraph();
+            SetupLogging(deps);
+            InitReflectionManager(deps);
 
-            var server = IoCManager.Resolve<IBaseServerInternal>();
+            var server = deps.Resolve<IBaseServerInternal>();
+            var logger = deps.Resolve<ILogManager>().RootSawmill;
 
             server.ContentStart = contentStart;
             server.SetCommandLineArgs(args);
 
-            Logger.Info("Server -> Starting");
+            logger.Info("Server -> Starting");
 
             if (server.Start(options))
             {
-                Logger.Fatal("Server -> Can not start server");
+                logger.Fatal("Server -> Can not start server");
                 //Not like you'd see this, haha. Perhaps later for logging.
                 return;
             }
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
-            Logger.Info("Server Version " + strVersion + " -> Ready");
+            logger.Info("Server Version " + strVersion + " -> Ready");
 
             server.MainLoop();
 
-            Logger.Info("Goodbye.");
+            logger.Info("Goodbye.");
 
             // Used to dispose of systems that want to be disposed.
             // Such as the log manager.
-            IoCManager.Clear();
+            deps.Clear();
         }
 
-        internal static void InitReflectionManager()
+        internal static void InitReflectionManager(IDependencyCollection deps)
         {
             // gets a handle to the shared and the current (server) dll.
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
+            deps.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
                 Assembly.GetExecutingAssembly()
             });
         }
 
-        internal static void SetupLogging()
+        internal static void SetupLogging(IDependencyCollection deps)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -102,7 +103,7 @@ namespace Robust.Server
 #endif
             }
 
-            var mgr = IoCManager.Resolve<ILogManager>();
+            var mgr = deps.Resolve<ILogManager>();
             var handler = new ConsoleLogHandler();
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;

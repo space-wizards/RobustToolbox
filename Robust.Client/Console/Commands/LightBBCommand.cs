@@ -5,12 +5,11 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class LightDebugCommand : IConsoleCommand
+    internal sealed class LightDebugCommand : LocalizedCommands
     {
-        public string Command => "lightbb";
-        public string Description => "Toggles whether to show light bounding boxes";
-        public string Help => $"{Command}";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "lightbb";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             EntitySystem.Get<DebugLightTreeSystem>().Enabled ^= true;
         }

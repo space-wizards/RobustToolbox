@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -45,13 +46,12 @@ namespace Robust.Server.Maps
                     $"Someone tried deserializing a gridchunk without passing a value.");
             }
 
-            if (context is not MapLoader.MapContext mapContext)
-            {
-                throw new InvalidOperationException(
-                    $"Someone tried serializing a gridchunk without passing {nameof(MapLoader.MapContext)} as context.");
-            }
+            IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            var tileMap = mapContext.TileMap;
+            if (context is MapLoaderSystem.MapSerializationContext serContext)
+            {
+                tileMap = serContext.TileMap;
+            }
 
             if (tileMap == null)
             {
@@ -167,10 +167,10 @@ namespace Robust.Server.Maps
             }
 
             //TODO: Pass in options
-            if (context is not MapLoader.MapContext mapContext)
+            if (context is not MapLoaderSystem.MapSerializationContext)
             {
                 throw new InvalidOperationException(
-                    $"Someone tried serializing a mapgrid without passing {nameof(MapLoader.MapContext)} as context.");
+                    $"Someone tried serializing a mapgrid without passing {nameof(MapLoaderSystem.MapSerializationContext)} as context.");
             }
 
             if (grid == null) throw new NotImplementedException();

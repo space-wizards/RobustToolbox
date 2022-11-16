@@ -22,5 +22,10 @@ namespace Robust.Shared.GameObjects
         ///     (and then deserialized with <see cref="GetComponentData"/>)
         /// </summary>
         IEnumerable<string> GetExtraComponentTypes();
+
+        /// <summary>
+        ///     Checks whether a given component should be added to an entity. Used to prevent certain prototype components from being added while spawning an entity.
+        /// </summary>
+        bool ShouldSkipComponent(string compName);
     }
 }

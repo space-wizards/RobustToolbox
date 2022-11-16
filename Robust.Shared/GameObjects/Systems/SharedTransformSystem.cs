@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
 
         public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
-            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
+            if (EntityManager.HasComponent<MapGridComponent>(moveEvent.Sender))
                 _gridMoves.Enqueue(moveEvent);
             else
                 _otherMoves.Enqueue(moveEvent);

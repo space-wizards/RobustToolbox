@@ -65,9 +65,9 @@ internal partial class MapManager
 
     public virtual void ChunkRemoved(EntityUid gridId, MapChunk chunk) { }
 
-    public IMapGridComponent GetGridComp(EntityUid euid)
+    public MapGridComponent GetGridComp(EntityUid euid)
     {
-        return EntityManager.GetComponent<IMapGridComponent>(euid);
+        return EntityManager.GetComponent<MapGridComponent>(euid);
     }
 
     /// <inheritdoc />
@@ -77,7 +77,6 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(gridComponent.Owner);
 
         Logger.InfoS("map", $"Binding grid {mapGrid.GridEntityId} to entity {gridComponent.Owner}");
-        OnGridCreated?.Invoke(xform.MapID, mapGrid.GridEntityId);
     }
 
     public GridEnumerator GetAllGridsEnumerator()
@@ -121,12 +120,12 @@ internal partial class MapManager
 
     public bool IsGrid(EntityUid uid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(uid);
+        return EntityManager.HasComponent<MapGridComponent>(uid);
     }
 
     public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out IMapGrid grid)
     {
-        if (EntityManager.TryGetComponent(euid, out IMapGridComponent? comp))
+        if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
         {
             grid = comp.Grid;
             return true;
@@ -138,20 +137,22 @@ internal partial class MapManager
 
     public bool GridExists([NotNullWhen(true)] EntityUid? euid)
     {
-        return EntityManager.HasComponent<IMapGridComponent>(euid);
+        return EntityManager.HasComponent<MapGridComponent>(euid);
     }
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
-        return EntityManager.EntityQuery<IMapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Grid.GridEntityId).MapID == mapId)
+        return EntityManager.EntityQuery<MapGridComponent>(true)
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
             .Select(c => c.Grid);
     }
 
     public virtual void DeleteGrid(EntityUid euid)
     {
+        _grids.Remove(euid);
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -183,26 +184,8 @@ internal partial class MapManager
             EntityManager.DeleteEntity(entityId);
     }
 
-    public void TrueGridDelete(MapGrid grid)
-    {
-        grid.Deleting = true;
-        var xform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-
-        var mapId = xform.MapID;
-
-        _grids.Remove(grid.GridEntityId);
-
-        Logger.DebugS("map", $"Deleted grid {grid.GridEntityId}");
-
-        // TODO: Remove this trash
-        OnGridRemoved?.Invoke(mapId, grid.GridEntityId);
-    }
-
     /// <inheritdoc />
     public event EventHandler<TileChangedEventArgs>? TileChanged;
-
-    public event GridEventHandler? OnGridCreated;
-    public event GridEventHandler? OnGridRemoved;
 
     /// <summary>
     ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map

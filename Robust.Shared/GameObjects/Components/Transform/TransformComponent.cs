@@ -67,11 +67,17 @@ namespace Robust.Shared.GameObjects
 
         // used for lerping
 
-        internal Vector2? _nextPosition;
-        internal Angle? _nextRotation;
+        [ViewVariables]
+        public Vector2? NextPosition { get; internal set; }
 
-        internal Vector2 _prevPosition;
-        internal Angle _prevRotation;
+        [ViewVariables]
+        public Angle? NextRotation { get; internal set; }
+
+        [ViewVariables]
+        public Vector2 PrevPosition { get; internal set; }
+
+        [ViewVariables]
+        public Angle PrevRotation { get; internal set; }
 
         // Cache changes so we can distribute them after physics is done (better cache)
         internal EntityCoordinates? _oldCoords;
@@ -377,8 +383,8 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
             set
             {
-                // This will be set again when the transform starts, actually anchoring it.
-                if (LifeStage < ComponentLifeStage.Starting)
+                // This will be set again when the transform initializes, actually anchoring it.
+                if (!Initialized)
                 {
                     _anchored = value;
                 }
@@ -419,41 +425,16 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        [ViewVariables]
-        public Vector2? LerpDestination
-        {
-            get => _nextPosition;
-            internal set
-            {
-                _nextPosition = value;
-                ActivelyLerping = true;
-            }
-        }
-
-        [ViewVariables]
-        internal Angle? LerpAngle
-        {
-            get => _nextRotation;
-            set
-            {
-                _nextRotation = value;
-                ActivelyLerping = true;
-            }
-        }
-
-        [ViewVariables] internal Vector2 LerpSource => _prevPosition;
-        [ViewVariables] internal Angle LerpSourceAngle => _prevRotation;
-
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
         internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
         {
-            if (_entMan.HasComponent<IMapComponent>(Owner))
+            if (_entMan.HasComponent<MapComponent>(Owner))
             {
                 return null;
             }
 
-            if (_entMan.HasComponent<IMapGridComponent>(Owner))
+            if (_entMan.HasComponent<MapGridComponent>(Owner))
             {
                 return Owner;
             }
@@ -843,8 +824,17 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Data used to store information about the broad-phase that any given entity is currently on.
     /// </summary>
+    /// <remarks>
+    ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container).
+    ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
+    ///     not automatically be re-added by movement events..
+    /// </remarks>
     internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
     {
+        public bool IsValid() => Uid.IsValid();
+        public bool Valid => IsValid();
+        public readonly static BroadphaseData Invalid = default;
+
         // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }
 }

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
@@ -9,6 +10,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using MapSystem = Robust.Server.GameObjects.MapSystem;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -301,7 +304,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 container.Insert(containeeEnt);
 
                 // save the map
-                var mapLoader = IoCManager.Resolve<IMapLoader>();
+                var mapLoader = entMan.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
                 mapLoader.SaveMap(mapIdOne, "container_test.yml");
                 mapManager.DeleteMap(mapIdOne);
@@ -314,10 +317,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 var mapIdTwo = new MapId(2);
                 var mapManager = IoCManager.Resolve<IMapManager>();
-                var mapLoader = IoCManager.Resolve<IMapLoader>();
+                var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
 
                 // load the map
-                mapLoader.LoadMap(mapIdTwo, "container_test.yml");
+                mapLoader.Load(mapIdTwo, "container_test.yml");
                 Assert.That(mapManager.IsMapInitialized(mapIdTwo), Is.True); // Map Initialize-ness is saved in the map file.
             });
 

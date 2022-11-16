@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -127,7 +128,7 @@ namespace Robust.Client.UserInterface.Controls
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var formatStack = new Stack<FormattedMessage.Tag>(2);
 
-            foreach (var entry in _entries)
+            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
             {
                 if (entryOffset + entry.Height < 0)
                 {
@@ -178,11 +179,9 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             var font = _getFont();
             var sizeX = _getContentBox().Width;
-            for (var i = 0; i < _entries.Count; i++)
+            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
             {
-                var entry = _entries[i];
                 entry.Update(font, sizeX, UIScale);
-                _entries[i] = entry;
                 _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
             }
 
@@ -217,10 +216,9 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        private int _getScrollSpeed()
+        private float _getScrollSpeed()
         {
-            var font = _getFont();
-            return font.GetLineHeight(UIScale) * 2;
+            return GetScrollSpeed(_getFont(), UIScale);
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -235,6 +233,11 @@ namespace Robust.Client.UserInterface.Controls
             _invalidateEntries();
 
             base.UIScaleChanged();
+        }
+
+        internal static float GetScrollSpeed(Font font, float scale)
+        {
+            return font.GetLineHeight(scale) * 2;
         }
     }
 }

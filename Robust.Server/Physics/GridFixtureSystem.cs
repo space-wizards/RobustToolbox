@@ -25,6 +25,8 @@ namespace Robust.Server.Physics
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
@@ -47,16 +49,14 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             _logger = Logger.GetSawmill("gsplit");
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 #if !FULL_RELEASE
             // It makes mapping painful
-            configManager.OverrideDefault(CVars.GridSplitting, false);
+            _cfg.OverrideDefault(CVars.GridSplitting, false);
 #endif
-            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
+            _cfg.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 
         private void SetSplitAllowed(bool value) => SplitAllowed = value;
@@ -65,8 +65,7 @@ namespace Robust.Server.Physics
         {
             base.Shutdown();
             _subscribedSessions.Clear();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
+            _cfg.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
         /// <summary>
@@ -78,9 +77,10 @@ namespace Robust.Server.Physics
                 _nodes[uid] = new Dictionary<Vector2i, ChunkNodeGroup>();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        protected override void OnGridInit(GridInitializeEvent ev)
         {
             EnsureGrid(ev.EntityUid);
+            base.OnGridInit(ev);
         }
 
         private void OnGridRemoval(GridRemovalEvent ev)
@@ -92,10 +92,9 @@ namespace Robust.Server.Physics
 
         private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
         {
-            var adminManager = IoCManager.Resolve<IConGroupController>();
             var pSession = (PlayerSession) args.SenderSession;
 
-            if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
+            if (!_conGroup.CanCommand(pSession, ShowGridNodesCommand)) return;
 
             AddDebugSubscriber(args.SenderSession);
         }

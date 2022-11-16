@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 
             SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
@@ -199,6 +198,7 @@ namespace Robust.Shared.GameObjects
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState
                 || xform.Broadphase == null
+                || !xform.Broadphase.Value.IsValid()
                 || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
                 && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
         }
@@ -218,9 +218,9 @@ namespace Robust.Shared.GameObjects
                 return;
             DebugTools.Assert(!_mapManager.IsGrid(uid));
 
-            if (xform.Broadphase is not { } old)
+            if (xform.Broadphase is not { Valid: true } old)
                 return; // entity is not on any broadphase
-            
+
             xform.Broadphase = null;
 
             if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
@@ -232,12 +232,12 @@ namespace Robust.Shared.GameObjects
                 RemoveBroadTree(broadphase, fixtures, old.Static);
             else
                 (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
-            
+
             // Add to new broadphase
             if (body.CanCollide)
                 AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);
             else
-                AddSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
+                AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
         }
 
         private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
@@ -287,10 +287,10 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
                 throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
-            AddPhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
+            AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
         }
 
-        private void AddPhysicsTree(
+        private void AddOrUpdatePhysicsTree(
             EntityUid broadUid,
             BroadphaseComponent broadphase,
             TransformComponent broadphaseXform,
@@ -361,12 +361,12 @@ namespace Robust.Shared.GameObjects
             fixture.ProxyCount = count;
         }
 
-        private void AddSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
+        private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
         {
             DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
             DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, false, staticBody));
             xform.Broadphase ??= new(broadUid, false, staticBody);
-            (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Add(uid, aabb);
+            (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
         }
 
         private void OnEntityInit(EntityUid uid)
@@ -397,10 +397,23 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
         {
-            if (!TryGetCurrentBroadphase(xform, out var oldBroadphase))
-                return; // If the entity was not already in a broadphase, parent changes will not automatically add it.
+            var broadQuery = GetEntityQuery<BroadphaseComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
 
-            if (oldBroadphase != null && Transform(oldParent).MapID == MapId.Nullspace)
+            BroadphaseComponent? oldBroadphase = null;
+            if (xform.Broadphase != null)
+            {
+                if (!xform.Broadphase.Value.IsValid())
+                    return; // Entity is intentionally not on a broadphase (deferred updating?).
+
+                if (!broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
+                {
+                    // broadphase was probably deleted
+                    xform.Broadphase = null;
+                }
+            }
+
+            if (oldBroadphase != null && xformQuery.GetComponent(oldParent).MapID == MapId.Nullspace)
             {
                 oldBroadphase = null;
                 // Note that the parentXform.MapID != MapId.Nullspace is required because currently grids are not allowed to
@@ -412,12 +425,10 @@ namespace Robust.Shared.GameObjects
                 // generally save a component lookup.
             }
 
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var physicsQuery = GetEntityQuery<PhysicsComponent>();
-            var fixturesQuery = GetEntityQuery<FixturesComponent>();
             TryFindBroadphase(xform, broadQuery, xformQuery, out var newBroadphase);
 
+            var physicsQuery = GetEntityQuery<PhysicsComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
             if (oldBroadphase != null && oldBroadphase != newBroadphase)
             {
 
@@ -444,7 +455,7 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
             }
 
-            AddToEntityTree(
+            AddOrUpdateEntityTree(
                 newBroadphase.Owner,
                 newBroadphase,
                 newBroadphaseXform,
@@ -465,10 +476,21 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
-            if (!TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
-                return;
+            if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
+                AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
+        }
 
-            AddToEntityTree(broadphase, uid, xform, xformQuery);
+        public void FindAndAddToEntityTree(EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<ContainerManagerComponent> contQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            EntityQuery<BroadphaseComponent> broadQuery)
+        {
+            if (TryFindBroadphase(xform, broadQuery, xformQuery, out var broadphase))
+                AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, true);
         }
 
         /// <summary>
@@ -483,10 +505,10 @@ namespace Robust.Shared.GameObjects
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
-            AddToEntityTree(broadphase, uid, xform, xformQuery);
+            AddOrUpdateEntityTree(broadphase, uid, xform, xformQuery);
         }
 
-        private void AddToEntityTree(
+        private void AddOrUpdateEntityTree(
             BroadphaseComponent broadphase,
             EntityUid uid,
             TransformComponent xform,
@@ -498,6 +520,20 @@ namespace Robust.Shared.GameObjects
             var physicsQuery = GetEntityQuery<PhysicsComponent>();
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
+            AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery, recursive);
+        }
+
+        private void AddOrUpdateEntityTree(EntityUid broadUid,
+            BroadphaseComponent broadphase,
+            EntityUid uid,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<ContainerManagerComponent> contQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            EntityQuery<FixturesComponent> fixturesQuery,
+            bool recursive)
+        {
             var broadphaseXform = xformQuery.GetComponent(broadphase.Owner);
             if (!TryComp(broadphaseXform.MapUid, out SharedPhysicsMapComponent? physMap))
             {
@@ -505,8 +541,8 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
             }
 
-            AddToEntityTree(
-                broadphase.Owner,
+            AddOrUpdateEntityTree(
+                broadUid,
                 broadphase,
                 broadphaseXform,
                 physMap,
@@ -520,7 +556,7 @@ namespace Robust.Shared.GameObjects
                 recursive);
         }
 
-        private void AddToEntityTree(
+        private void AddOrUpdateEntityTree(
             EntityUid broadUid,
             BroadphaseComponent broadphase,
             TransformComponent broadphaseXform,
@@ -543,11 +579,11 @@ namespace Robust.Shared.GameObjects
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
                 var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
-                AddSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
+                AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
             }
             else
             {
-                AddPhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
+                AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
             }
 
             var childEnumerator = xform.ChildEnumerator;
@@ -559,7 +595,7 @@ namespace Robust.Shared.GameObjects
                 while (childEnumerator.MoveNext(out var child))
                 {
                     var childXform = xformQuery.GetComponent(child.Value);
-                    AddToEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
+                    AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
                 }
                 return;
             }
@@ -570,7 +606,7 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 var childXform = xformQuery.GetComponent(child.Value);
-                AddToEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, xformQuery, metaQuery, contQuery, physicsQuery, fixturesQuery);
             }
         }
 
@@ -613,19 +649,19 @@ namespace Robust.Shared.GameObjects
             EntityQuery<FixturesComponent> fixturesQuery,
             bool recursive = true)
         {
-            if (xform.Broadphase == null)
+            if (xform.Broadphase is not { Valid: true } old)
             {
                 // this entity was probably inside of a container during a recursive iteration. This should mean all of
                 // its own children are also not on any broadphase.
                 return;
             }
 
-            if (xform.Broadphase.Value.Uid != broadUid)
+            if (old.Uid != broadUid)
             {
                 // This may happen when the client has deferred broadphase updates, where maybe an entity from one
                 // broadphase was parented to one from another.
                 DebugTools.Assert(_netMan.IsClient);
-                broadUid = xform.Broadphase.Value.Uid;
+                broadUid = old.Uid;
                 broadphaseXform = xformQuery.GetComponent(broadUid);
                 if (broadphaseXform.MapID == MapId.Nullspace)
                     return;
@@ -638,9 +674,9 @@ namespace Robust.Shared.GameObjects
                 physicsMap = map;
             }
 
-            if (xform.Broadphase.Value.CanCollide)
-                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), xform.Broadphase.Value.Static);
-            else if (xform.Broadphase.Value.Static)
+            if (old.CanCollide)
+                RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), old.Static);
+            else if (old.Static)
                 broadphase.StaticSundriesTree.Remove(uid);
             else
                 broadphase.SundriesTree.Remove(uid);
@@ -668,12 +704,12 @@ namespace Robust.Shared.GameObjects
         public bool TryGetCurrentBroadphase(TransformComponent xform, [NotNullWhen(true)] out BroadphaseComponent? broadphase)
         {
             broadphase = null;
-            if (xform.Broadphase == null)
+            if (xform.Broadphase is not { Valid: true } old)
                 return false;
 
             if (!TryComp(xform.Broadphase.Value.Uid, out broadphase))
             {
-                // broadphase was probably deleted during
+                // broadphase was probably deleted
                 xform.Broadphase = null;
                 return false;
             }

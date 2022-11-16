@@ -1,4 +1,3 @@
-using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -9,6 +8,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
+using System.Linq;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -90,6 +90,54 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 calledCount++;
             }
+        }
+
+        [ComponentProtoName("AnchorOnInit")]
+        private sealed class AnchorOnInitComponent : Component { };
+
+        private sealed class AnchorOnInitTestSystem : EntitySystem
+        {
+            public override void Initialize()
+            {
+                base.Initialize();
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+            }
+        }
+
+        /// <summary>
+        ///     Ensures that if an entity gets added to lookups when anchored during init by some system.
+        /// </summary>
+        /// <remarks>
+        ///     See space-wizards/RobustToolbox/issues/3444
+        /// </remarks>
+        [Test]
+        public void OnInitAnchored_AddedToLookup()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterEntitySystems(f => f.LoadExtraSystemType<AnchorOnInitTestSystem>())
+                .RegisterComponents(f => f.RegisterClass<AnchorOnInitComponent>())
+                .InitializeInstance();
+
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+            mapMan.CreateMap(TestMapId);
+            var grid = mapMan.CreateGrid(TestMapId);
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+            var pos = grid.TileIndicesFor(coordinates);
+            grid.SetTile(pos, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coordinates);
+            Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
+            Assert.That(grid.GetAnchoredEntities(pos).Count() == 0);
+            entMan.DeleteEntity(ent1);
+
+            var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
+            entMan.AddComponent<AnchorOnInitComponent>(ent2);
+            entMan.InitializeAndStartEntity(ent2);
+            Assert.True(entMan.GetComponent<TransformComponent>(ent2).Anchored);
+            Assert.That(grid.GetAnchoredEntities(pos).Count(), Is.EqualTo(1));
+            Assert.That(grid.GetAnchoredEntities(pos).Contains(ent2));
         }
 
         /// <summary>

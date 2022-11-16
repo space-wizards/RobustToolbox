@@ -45,6 +45,9 @@ public sealed class DataRecordTest : SerializationTest
     [DataRecord]
     public record TwoIntStructHolder(IntStruct Struct1, IntStruct Struct2);
 
+    [DataRecord]
+    public record struct DataRecordStruct(IntStruct Struct, string String, int Integer);
+
     [Test]
     public void TwoIntRecordTest()
     {
@@ -56,16 +59,24 @@ public sealed class DataRecordTest : SerializationTest
 
         var val = Serialization.Read<TwoIntRecord>(mapping);
 
-        Assert.That(val.aTest, Is.EqualTo(1));
-        Assert.That(val.AnotherTest, Is.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.aTest, Is.EqualTo(1));
+            Assert.That(val.AnotherTest, Is.EqualTo(2));
+        });
 
         var newMapping = Serialization.WriteValueAs<MappingDataNode>(val);
 
-        Assert.That(newMapping.Count, Is.EqualTo(2));
-        Assert.That(newMapping.TryGet<ValueDataNode>("aTest", out var node1));
-        Assert.That(node1!.Value, Is.EqualTo("1"));
-        Assert.That(newMapping.TryGet<ValueDataNode>("anotherTest", out var node2));
-        Assert.That(node2!.Value.ToLower(), Is.EqualTo("2"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(newMapping, Has.Count.EqualTo(2));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("aTest", out var aTestNode));
+            Assert.That(aTestNode!.Value, Is.EqualTo("1"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("anotherTest", out var anotherTestNode));
+            Assert.That(anotherTestNode!.Value, Is.EqualTo("2"));
+        });
     }
 
     [Test]
@@ -74,8 +85,11 @@ public sealed class DataRecordTest : SerializationTest
         var mapping = new MappingDataNode {{"a", "1"}};
         var val = Serialization.Read<OneByteOneDefaultIntRecord>(mapping);
 
-        Assert.That(val.A, Is.EqualTo(1));
-        Assert.That(val.B, Is.EqualTo(5));
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.A, Is.EqualTo(1));
+            Assert.That(val.B, Is.EqualTo(5));
+        });
     }
 
     [Test]
@@ -137,6 +151,7 @@ public sealed class DataRecordTest : SerializationTest
     {
         var prototypes = IoCManager.Resolve<IPrototypeManager>();
         prototypes.Initialize();
+
         Assert.That(prototypes.HasVariant("emptyTestPrototypeRecord"), Is.True);
     }
 
@@ -177,7 +192,56 @@ public sealed class DataRecordTest : SerializationTest
         };
         var val = Serialization.Read<TwoIntStructHolder>(mapping);
 
-        Assert.That(val.Struct1.Value, Is.EqualTo(5));
-        Assert.That(val.Struct2.Value, Is.EqualTo(10));
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.Struct1.Value, Is.EqualTo(5));
+            Assert.That(val.Struct2.Value, Is.EqualTo(10));
+        });
+    }
+
+    [Test]
+    public void DataRecordStructTest()
+    {
+        var mapping = new MappingDataNode
+        {
+            {
+                "struct", new MappingDataNode
+                {
+                    {"value", "1"}
+                }
+            },
+            {
+                "string", new ValueDataNode("A")
+            },
+            {
+                "integer", new ValueDataNode("2")
+            }
+        };
+        var val = Serialization.Read<DataRecordStruct>(mapping);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.Struct.Value, Is.EqualTo(1));
+            Assert.That(val.String, Is.EqualTo("A"));
+            Assert.That(val.Integer, Is.EqualTo(2));
+        });
+
+        var newMapping = Serialization.WriteValueAs<MappingDataNode>(val);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(newMapping, Has.Count.EqualTo(3));
+
+            Assert.That(newMapping.TryGet<MappingDataNode>("struct", out var structNode));
+            Assert.That(structNode, Has.Count.EqualTo(1));
+            Assert.That(structNode!.TryGet<ValueDataNode>("value", out var structValueNode));
+            Assert.That(structValueNode!.Value, Is.EqualTo("1"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("string", out var stringNode));
+            Assert.That(stringNode!.Value, Is.EqualTo("A"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("integer", out var integerNode));
+            Assert.That(integerNode!.Value, Is.EqualTo("2"));
+        });
     }
 }

@@ -140,6 +140,10 @@ namespace Robust.Shared.Map.Components
         /// </summary>
         internal void RegenerateCollision(IReadOnlySet<MapChunk> chunks)
         {
+            // No-op coz no physics or localAABB
+            if (_entMan.HasComponent<MapComponent>(Owner))
+                return;
+
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
             var removedChunks = new List<MapChunk>();
             var fixtureSystem = _entMan.EntitySysManager.GetEntitySystem<FixtureSystem>();

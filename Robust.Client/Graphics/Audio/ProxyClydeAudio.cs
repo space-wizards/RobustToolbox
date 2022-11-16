@@ -68,5 +68,15 @@ namespace Robust.Client.Graphics.Audio
         {
             ActualImplementation.SetMasterVolume(newVolume);
         }
+
+        public void DisposeAllAudio()
+        {
+            ActualImplementation.DisposeAllAudio();
+        }
+
+        public void StopAllAudio()
+        {
+            ActualImplementation.StopAllAudio();
+        }
     }
 }

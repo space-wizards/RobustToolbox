@@ -4,7 +4,6 @@ using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
-using Robust.Client.Configuration;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;

@@ -141,16 +141,16 @@ namespace Robust.Shared.Containers
             // Implementation specific insert logic
             InternalInsert(toinsert, entMan);
 
-            // Raise container events (after re-parenting and internal remove).
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
-            entMan.EventBus.RaiseLocalEvent(toinsert, new EntGotInsertedIntoContainerMessage(toinsert, this), true);
-
             // The sheer number of asserts tells you about how little I trust container and parenting code.
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
             DebugTools.Assert(!transform.Anchored);
             DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
             DebugTools.Assert(transform.LocalRotation == Angle.Zero);
             DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || (!phys.Awake && !phys.CanCollide));
+
+            // Raise container events (after re-parenting and internal remove).
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
+            entMan.EventBus.RaiseLocalEvent(toinsert, new EntGotInsertedIntoContainerMessage(toinsert, this), true);
 
             entMan.Dirty(Manager);
             return true;

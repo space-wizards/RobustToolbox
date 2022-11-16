@@ -40,7 +40,7 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly IConfigurationManagerInternal _configurationManager = default!;
+        [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
@@ -72,6 +72,7 @@ namespace Robust.Client
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -124,14 +125,14 @@ namespace Robust.Client
                 _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
 
-            IoCManager.Resolve<ISerializationManager>().Initialize();
+            _serializationManager.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _resourceCache.PreloadTextures();
             _networkManager.Initialize(false);
-            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
+            _configurationManager.SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
@@ -650,7 +651,7 @@ namespace Robust.Client
                 return Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
             }
 
-            return UserDataDir.GetUserDataDir();
+            return UserDataDir.GetUserDataDir(this);
         }
 
 

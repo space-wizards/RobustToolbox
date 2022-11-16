@@ -34,7 +34,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
@@ -49,8 +48,10 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private readonly IEntityManager _entityManager;
+        private readonly IPhysicsManager _physicsManager;
+        private readonly IConfigurationManager _cfg;
+
         private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
         private SharedTransformSystem _transform = default!;
@@ -97,7 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private int ContactPoolInitialSize = 64;
 
-        private ObjectPool<Contact> _contactPool = new DefaultObjectPool<Contact>(new ContactPoolPolicy(), 1024);
+        private readonly ObjectPool<Contact> _contactPool;
 
         internal LinkedList<Contact> _activeContacts = new();
 
@@ -114,12 +115,20 @@ namespace Robust.Shared.Physics.Dynamics
 
         private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
         {
+            private readonly SharedDebugPhysicsSystem _debugPhysicsSystem;
+            private readonly IManifoldManager _manifoldManager;
+
+            public ContactPoolPolicy(SharedDebugPhysicsSystem debugPhysicsSystem, IManifoldManager manifoldManager)
+            {
+                _debugPhysicsSystem = debugPhysicsSystem;
+                _manifoldManager = manifoldManager;
+            }
+
             public Contact Create()
             {
-                var contact = new Contact();
-                IoCManager.InjectDependencies(contact);
+                var contact = new Contact(_manifoldManager);
 #if DEBUG
-                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = _debugPhysicsSystem;
 #endif
                 contact.Manifold = new Manifold
                 {
@@ -134,6 +143,22 @@ namespace Robust.Shared.Physics.Dynamics
                 SetContact(obj, null, 0, null, 0);
                 return true;
             }
+        }
+
+        public ContactManager(
+            SharedDebugPhysicsSystem debugPhysicsSystem,
+            IManifoldManager manifoldManager,
+            IEntityManager entityManager,
+            IPhysicsManager physicsManager,
+            IConfigurationManager cfg)
+        {
+            _entityManager = entityManager;
+            _physicsManager = physicsManager;
+            _cfg = cfg;
+
+            _contactPool = new DefaultObjectPool<Contact>(
+                new ContactPoolPolicy(debugPhysicsSystem, manifoldManager),
+                1024);
         }
 
         private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
@@ -163,22 +188,20 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void Initialize()
         {
-            IoCManager.InjectDependencies(this);
             _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
-            configManager.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
+
+            _cfg.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
+            _cfg.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
 
             InitializePool();
         }
 
         public void Shutdown()
         {
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold);
-            configManager.UnsubValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads);
+            _cfg.UnsubValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold);
+            _cfg.UnsubValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads);
         }
 
         private void OnContactMultithreadThreshold(int value)
@@ -362,6 +385,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
                     node = node.Next;
+                    Destroy(contact);
                     continue;
                 }
 

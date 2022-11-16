@@ -14,7 +14,6 @@ namespace Robust.Shared.GameObjects.Components.Localization
     [NetworkedComponent()]
     public sealed class GrammarComponent : Component
     {
-        [ViewVariables]
         [DataField("attributes")]
         public Dictionary<string, string> Attributes { get; } = new();
 

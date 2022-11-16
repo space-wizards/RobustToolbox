@@ -29,7 +29,6 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics.Collision.Shapes
 {
@@ -44,7 +43,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// This is public so engine code can manipulate it directly.
         /// NOTE! If you wish to manipulate this then you need to update the normals and centroid yourself!
         /// </summary>
-        [ViewVariables]
         [DataField("vertices")]
         public Vector2[] Vertices = Array.Empty<Vector2>();
 

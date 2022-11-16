@@ -72,7 +72,6 @@ namespace Robust.Shared.Physics.Dynamics
         [NonSerialized]
         public int ProxyCount = 0;
 
-        [ViewVariables]
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 

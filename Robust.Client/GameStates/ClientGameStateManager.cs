@@ -574,8 +574,12 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    if (component.NetSyncEnabled)
-                        compData.Add(netId, _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session));
+                    if (!component.NetSyncEnabled)
+                        continue;
+
+                    var state = _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session, GameTick.Zero);
+                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    compData.Add(netId, state);
                 }
             }
 

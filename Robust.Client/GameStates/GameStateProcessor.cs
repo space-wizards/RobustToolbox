@@ -177,11 +177,29 @@ namespace Robust.Client.GameStates
                 {
                     compData = new Dictionary<ushort, ComponentState>();
                     _lastStateFullRep.Add(entityState.Uid, compData);
+
+#if DEBUG
+                    foreach (var comp in entityState.ComponentChanges.Span)
+                    {
+                        DebugTools.Assert(comp.State is not IComponentDeltaState delta || delta.FullState);
+                    }
+#endif
                 }
 
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
-                    compData[change.NetID] = change.State;
+                    var compState = change.State;
+
+                    if (compState is IComponentDeltaState delta && !delta.FullState)
+                    {
+                        var ev = new ComponentMergeDeltaState(compData[change.NetID], compState);
+                        entMan.EventBus.RaiseComponentEvent(entMan.GetComponent(entityState.Uid, change.NetID), ref ev);
+                        DebugTools.AssertNotNull(ev.NewState);
+                        DebugTools.Assert(!ReferenceEquals(compData[change.NetID], ev.NewState));
+                        compState = ev.NewState!;
+                    }
+
+                    compData[change.NetID] = compState;
                 }
 
                 if (entityState.NetComponents == null)

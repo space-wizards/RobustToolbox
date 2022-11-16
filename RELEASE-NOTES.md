@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.65.1.0
+
+### New features
+
+* Implement value prototype id dictionary serializer.
+
+### Bugfixes
+
+* Fixes lerping clean up issue added in #3472.
+
+### Internal
+
+* Add test for (de)serializing data record structs.
+
+
 ## 0.65.0.1
 
 ### Bugfixes

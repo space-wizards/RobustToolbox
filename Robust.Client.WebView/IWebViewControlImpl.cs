@@ -15,9 +15,12 @@ namespace Robust.Client.WebView
         void MouseExited();
         void MouseWheel(GUIMouseWheelEventArgs args);
         bool RawKeyEvent(in GuiRawKeyEvent guiRawEvent);
+        void TextEntered(GUITextEnteredEventArgs args);
         void Resized();
         void Draw(DrawingHandleScreen handle);
         void AddBeforeBrowseHandler(Action<IBeforeBrowseContext> handler);
         void RemoveBeforeBrowseHandler(Action<IBeforeBrowseContext> handler);
+        void FocusEntered();
+        void FocusExited();
     }
 }

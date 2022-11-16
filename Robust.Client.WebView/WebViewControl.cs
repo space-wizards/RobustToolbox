@@ -1,7 +1,6 @@
 using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
-using Robust.Client.WebView.Cef;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
 
@@ -76,6 +75,26 @@ namespace Robust.Client.WebView
             return _controlImpl.RawKeyEvent(guiRawEvent);
         }
 
+        protected internal override void TextEntered(GUITextEnteredEventArgs args)
+        {
+            base.TextEntered(args);
+
+            _controlImpl.TextEntered(args);
+        }
+
+        protected internal override void KeyboardFocusEntered()
+        {
+            base.KeyboardFocusEntered();
+
+            _controlImpl.FocusEntered();
+        }
+
+        protected internal override void KeyboardFocusExited()
+        {
+            base.KeyboardFocusExited();
+
+            _controlImpl.FocusExited();
+        }
 
         protected override void Resized()
         {

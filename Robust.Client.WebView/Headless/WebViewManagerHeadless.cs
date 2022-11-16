@@ -106,6 +106,9 @@ namespace Robust.Client.WebView.Headless
                 return false;
             }
 
+            public void TextEntered(GUITextEnteredEventArgs args)
+            {
+            }
 
             public void Resized()
             {
@@ -120,6 +123,14 @@ namespace Robust.Client.WebView.Headless
             }
 
             public void RemoveBeforeBrowseHandler(Action<IBeforeBrowseContext> handler)
+            {
+            }
+
+            public void FocusEntered()
+            {
+            }
+
+            public void FocusExited()
             {
             }
         }

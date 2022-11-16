@@ -125,6 +125,7 @@ namespace Robust.Client
             deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
         }
     }
 }

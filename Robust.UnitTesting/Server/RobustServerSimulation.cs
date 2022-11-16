@@ -159,8 +159,11 @@ namespace Robust.UnitTesting.Server
             //Tier 1: System
             container.Register<ILogManager, LogManager>();
             container.Register<IRuntimeLog, RuntimeLog>();
-            container.Register<IConfigurationManager, ConfigurationManager>();
-            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            container.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<INetConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
+            container.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             container.Register<ILocalizationManager, LocalizationManager>();
@@ -227,8 +230,6 @@ namespace Robust.UnitTesting.Server
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<INetConfigurationManager, ServerNetConfigurationManager>();
-            container.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);

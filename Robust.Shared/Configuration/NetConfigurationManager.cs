@@ -37,8 +37,13 @@ namespace Robust.Shared.Configuration
         void FlushMessages();
     }
 
+    internal interface INetConfigurationManagerInternal : INetConfigurationManager, IConfigurationManagerInternal
+    {
+
+    }
+
     /// <inheritdoc cref="INetConfigurationManager"/>
-    internal abstract class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
+    internal abstract class NetConfigurationManager : ConfigurationManager, INetConfigurationManagerInternal
     {
         [Dependency] protected readonly INetManager NetManager = null!;
         [Dependency] protected readonly IGameTiming Timing = null!;

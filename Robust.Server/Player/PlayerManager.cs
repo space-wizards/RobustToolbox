@@ -411,6 +411,7 @@ namespace Robust.Server.Player
             var msgTimeBase = new MsgSyncTimeBase();
             (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
             _network.ServerSendMessage(msgTimeBase, args.Channel);
+
             _cfg.SyncConnectingClient(args.Channel);
         }
 

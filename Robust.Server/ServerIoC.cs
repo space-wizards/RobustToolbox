@@ -82,6 +82,7 @@ namespace Robust.Server
             deps.Register<INetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
         }
     }
 }

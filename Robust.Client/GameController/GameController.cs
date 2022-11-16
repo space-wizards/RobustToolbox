@@ -4,6 +4,7 @@ using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
+using Robust.Client.Configuration;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
@@ -40,7 +41,7 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly IClientNetConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;

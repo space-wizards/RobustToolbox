@@ -11,9 +11,4 @@ public interface IServerReplayRecordingManager : IReplayRecordingManager
     ///     once recording has started.
     /// </summary>
     void ToggleRecording();
-
-    /// <summary>
-    ///     Whether the server is currently recording replay data.
-    /// </summary>
-    bool Recording { get; }
 }

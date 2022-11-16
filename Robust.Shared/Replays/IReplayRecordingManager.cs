@@ -15,4 +15,9 @@ public interface IReplayRecordingManager
     ///     players (but still saved to replays).
     /// </remarks>
     void QueueReplayMessage(object args);
+
+    /// <summary>
+    ///     Whether the server is currently recording replay data.
+    /// </summary>
+    bool Recording { get; }
 }

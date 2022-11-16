@@ -9,4 +9,6 @@ public sealed class ReplayRecordingManager : IReplayRecordingManager
 {
     /// <inheritdoc/>
     public void QueueReplayMessage(object args) { }
+
+    public bool Recording => false;
 }

@@ -47,6 +47,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avalonia.Base", "Avalonia.B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzers.Tests", "Robust.Analyzers.Tests\Robust.Analyzers.Tests.csproj", "{A773F7D4-8EF5-4144-A0DF-3B393B4C1B3A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Packaging", "Robust.Packaging\Robust.Packaging.csproj", "{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -207,6 +209,14 @@ Global
 		{A773F7D4-8EF5-4144-A0DF-3B393B4C1B3A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A773F7D4-8EF5-4144-A0DF-3B393B4C1B3A}.Release|x64.ActiveCfg = Release|Any CPU
 		{A773F7D4-8EF5-4144-A0DF-3B393B4C1B3A}.Release|x64.Build.0 = Release|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Debug|x64.Build.0 = Debug|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Release|x64.ActiveCfg = Release|Any CPU
+		{ED52DDC3-90CB-441D-921E-E8A5AFC136FE}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

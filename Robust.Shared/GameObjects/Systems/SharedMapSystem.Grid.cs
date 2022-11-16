@@ -48,6 +48,9 @@ public abstract partial class SharedMapSystem
             _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
 
+        // Just in case.
+        _transform.SetGridId(xform, uid, xformQuery);
+
         var msg = new GridInitializeEvent(uid);
         RaiseLocalEvent(uid, msg, true);
     }

@@ -102,7 +102,7 @@ namespace Robust.Server.Scripting
 
             ScriptInstanceShared.InitDummy();
 
-            var instance = new ScriptInstance();
+            var instance = new ScriptInstance(_reflectionManager);
             instances.Add(message.ScriptSession, instance);
 
             reply.WasAccepted = true;
@@ -340,22 +340,22 @@ namespace Robust.Server.Scripting
 
             public (string[] imports, string code)? AutoImportRepeatBuffer;
 
-            public ScriptInstance()
+            public ScriptInstance(IReflectionManager reflection)
             {
-                Globals = new ScriptGlobalsImpl(this);
+                Globals = new ScriptGlobalsImpl(this, reflection);
             }
         }
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
-            [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+            private readonly IReflectionManager _reflectionManager;
 
             private readonly ScriptInstance _scriptInstance;
 
-            public ScriptGlobalsImpl(ScriptInstance scriptInstance)
+            public ScriptGlobalsImpl(ScriptInstance scriptInstance, IReflectionManager refl)
             {
+                _reflectionManager = refl;
                 _scriptInstance = scriptInstance;
-                IoCManager.InjectDependencies(this);
             }
 
             protected override void WriteSyntax(object toString)

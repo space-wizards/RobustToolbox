@@ -31,10 +31,10 @@ namespace Robust.Client.Graphics.Clyde
             // This will ensure some level of consistency between the backends.
             private bool _textInputActive;
 
-            public GlfwWindowingImpl(Clyde clyde)
+            public GlfwWindowingImpl(Clyde clyde, IDependencyCollection deps)
             {
                 _clyde = clyde;
-                IoCManager.InjectDependencies(this);
+                deps.InjectDependencies(this, true);
 
                 _sawmill = _logManager.GetSawmill("clyde.win");
                 _sawmillGlfw = _logManager.GetSawmill("clyde.win.glfw");

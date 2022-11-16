@@ -11,13 +11,16 @@ namespace Robust.Client.Console.Commands
 {
     internal sealed class LauncherAuthCommand : LocalizedCommands
     {
+        [Dependency] private readonly IAuthManager _auth = default!;
+        [Dependency] private readonly IGameControllerInternal _gameController = default!;
+
         public override string Command => "launchauth";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var wantName = args.Length > 0 ? args[0] : null;
 
-            var basePath = Path.GetDirectoryName(UserDataDir.GetUserDataDir())!;
+            var basePath = Path.GetDirectoryName(UserDataDir.GetUserDataDir(_gameController))!;
             var dbPath = Path.Combine(basePath, "launcher", "settings.db");
 
 #if USE_SYSTEM_SQLITE
@@ -48,9 +51,8 @@ namespace Robust.Client.Console.Commands
             var userName = reader.GetString(1);
             var token = reader.GetString(2);
 
-            var cfg = IoCManager.Resolve<IAuthManager>();
-            cfg.Token = token;
-            cfg.UserId = new NetUserId(userId);
+            _auth.Token = token;
+            _auth.UserId = new NetUserId(userId);
 
             shell.WriteLine($"Logged into account {userName}");
         }

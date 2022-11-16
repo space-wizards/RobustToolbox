@@ -239,7 +239,7 @@ namespace Robust.Client
 
         private void GameStoppedReset()
         {
-            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
+            _configManager.FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
             _entityManager.Shutdown();

@@ -27,18 +27,19 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ServerScriptCommand : LocalizedCommands
     {
+        [Dependency] private readonly IScriptClient _scriptClient = default!;
+
         public override string Command => "scsi";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IScriptClient>();
-            if (!mgr.CanScript)
+            if (!_scriptClient.CanScript)
             {
                 shell.WriteError("You do not have server side scripting permission.");
                 return;
             }
 
-            mgr.StartSession();
+            _scriptClient.StartSession();
         }
     }
 }

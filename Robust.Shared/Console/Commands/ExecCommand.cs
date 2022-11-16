@@ -12,12 +12,12 @@ namespace Robust.Shared.Console.Commands
     {
         private static readonly Regex CommentRegex = new Regex(@"^\s*#");
 
+        [Dependency] private readonly IResourceManager _resources = default!;
+
         public override string Command => "exec";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var res = IoCManager.Resolve<IResourceManager>();
-
             if (args.Length < 1)
             {
                 shell.WriteError("No file specified!");
@@ -25,13 +25,13 @@ namespace Robust.Shared.Console.Commands
             }
 
             var path = new ResourcePath(args[0]).ToRootedPath();
-            if (!res.UserData.Exists(path))
+            if (!_resources.UserData.Exists(path))
             {
                 shell.WriteError("File does not exist.");
                 return;
             }
 
-            using var text = res.UserData.OpenText(path);
+            using var text = _resources.UserData.OpenText(path);
             while (true)
             {
                 var line = text.ReadLine();
@@ -54,10 +54,8 @@ namespace Robust.Shared.Console.Commands
         {
             if (args.Length == 1)
             {
-                var res = IoCManager.Resolve<IResourceManager>();
-
                 var hint = Loc.GetString("cmd-exec-arg-filename");
-                var options = CompletionHelper.UserFilePath(args[0], res.UserData);
+                var options = CompletionHelper.UserFilePath(args[0], _resources.UserData);
 
                 return CompletionResult.FromHintOptions(options, hint);
             }

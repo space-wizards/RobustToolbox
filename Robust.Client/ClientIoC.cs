@@ -41,90 +41,90 @@ namespace Robust.Client
 {
     internal static class ClientIoC
     {
-        public static void RegisterIoC(GameController.DisplayMode mode)
+        public static void RegisterIoC(GameController.DisplayMode mode, IDependencyCollection deps)
         {
-            SharedIoC.RegisterIoC();
+            SharedIoC.RegisterIoC(deps);
 
-            IoCManager.Register<IGameTiming, ClientGameTiming>();
-            IoCManager.Register<IClientGameTiming, ClientGameTiming>();
-            IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
-            IoCManager.Register<IMapManager, NetworkedMapManager>();
-            IoCManager.Register<IMapManagerInternal, NetworkedMapManager>();
-            IoCManager.Register<INetworkedMapManager, NetworkedMapManager>();
-            IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-            IoCManager.Register<IConsoleHost, ClientConsoleHost>();
-            IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
-            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-            IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
-            IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
-            IoCManager.Register<GameController, GameController>();
-            IoCManager.Register<IGameController, GameController>();
-            IoCManager.Register<IGameControllerInternal, GameController>();
-            IoCManager.Register<IResourceManager, ResourceCache>();
-            IoCManager.Register<IResourceManagerInternal, ResourceCache>();
-            IoCManager.Register<IResourceCache, ResourceCache>();
-            IoCManager.Register<IResourceCacheInternal, ResourceCache>();
-            IoCManager.Register<IClientNetManager, NetManager>();
-            IoCManager.Register<EntityManager, ClientEntityManager>();
-            IoCManager.Register<ClientEntityManager>();
-            IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
-            IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();
-            IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
-            IoCManager.Register<IBaseClient, BaseClient>();
-            IoCManager.Register<IPlayerManager, PlayerManager>();
-            IoCManager.Register<ISharedPlayerManager, PlayerManager>();
-            IoCManager.Register<IStateManager, StateManager>();
-            IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
-            IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
-            IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
-            IoCManager.Register<IMidiManager, MidiManager>();
-            IoCManager.Register<IAuthManager, AuthManager>();
-            IoCManager.Register<ProfViewManager>();
-            IoCManager.Register<IPhysicsManager, PhysicsManager>();
+            deps.Register<IGameTiming, ClientGameTiming>();
+            deps.Register<IClientGameTiming, ClientGameTiming>();
+            deps.Register<IPrototypeManager, ClientPrototypeManager>();
+            deps.Register<IMapManager, NetworkedMapManager>();
+            deps.Register<IMapManagerInternal, NetworkedMapManager>();
+            deps.Register<INetworkedMapManager, NetworkedMapManager>();
+            deps.Register<IEntityManager, ClientEntityManager>();
+            deps.Register<IReflectionManager, ClientReflectionManager>();
+            deps.Register<IConsoleHost, ClientConsoleHost>();
+            deps.Register<IClientConsoleHost, ClientConsoleHost>();
+            deps.Register<IComponentFactory, ClientComponentFactory>();
+            deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
+            deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
+            deps.Register<GameController, GameController>();
+            deps.Register<IGameController, GameController>();
+            deps.Register<IGameControllerInternal, GameController>();
+            deps.Register<IResourceManager, ResourceCache>();
+            deps.Register<IResourceManagerInternal, ResourceCache>();
+            deps.Register<IResourceCache, ResourceCache>();
+            deps.Register<IResourceCacheInternal, ResourceCache>();
+            deps.Register<IClientNetManager, NetManager>();
+            deps.Register<EntityManager, ClientEntityManager>();
+            deps.Register<ClientEntityManager>();
+            deps.Register<IClientEntityManager, ClientEntityManager>();
+            deps.Register<IClientEntityManagerInternal, ClientEntityManager>();
+            deps.Register<IEntityNetworkManager, ClientEntityManager>();
+            deps.Register<IClientGameStateManager, ClientGameStateManager>();
+            deps.Register<IBaseClient, BaseClient>();
+            deps.Register<IPlayerManager, PlayerManager>();
+            deps.Register<ISharedPlayerManager, PlayerManager>();
+            deps.Register<IStateManager, StateManager>();
+            deps.Register<IUserInterfaceManager, UserInterfaceManager>();
+            deps.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
+            deps.Register<ILightManager, LightManager>();
+            deps.Register<IDiscordRichPresence, DiscordRichPresence>();
+            deps.Register<IMidiManager, MidiManager>();
+            deps.Register<IAuthManager, AuthManager>();
+            deps.Register<ProfViewManager>();
+            deps.Register<IPhysicsManager, PhysicsManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:
-                    IoCManager.Register<IClyde, ClydeHeadless>();
-                    IoCManager.Register<IClipboardManager, ClydeHeadless>();
-                    IoCManager.Register<IClydeInternal, ClydeHeadless>();
-                    IoCManager.Register<IClydeAudio, ClydeAudioHeadless>();
-                    IoCManager.Register<IClydeAudioInternal, ClydeAudioHeadless>();
-                    IoCManager.Register<IInputManager, InputManager>();
-                    IoCManager.Register<IFileDialogManager, DummyFileDialogManager>();
-                    IoCManager.Register<IUriOpener, UriOpenerDummy>();
+                    deps.Register<IClyde, ClydeHeadless>();
+                    deps.Register<IClipboardManager, ClydeHeadless>();
+                    deps.Register<IClydeInternal, ClydeHeadless>();
+                    deps.Register<IClydeAudio, ClydeAudioHeadless>();
+                    deps.Register<IClydeAudioInternal, ClydeAudioHeadless>();
+                    deps.Register<IInputManager, InputManager>();
+                    deps.Register<IFileDialogManager, DummyFileDialogManager>();
+                    deps.Register<IUriOpener, UriOpenerDummy>();
                     break;
                 case GameController.DisplayMode.Clyde:
-                    IoCManager.Register<IClyde, Clyde>();
-                    IoCManager.Register<IClipboardManager, Clyde>();
-                    IoCManager.Register<IClydeInternal, Clyde>();
-                    IoCManager.Register<IClydeAudio, FallbackProxyClydeAudio>();
-                    IoCManager.Register<IClydeAudioInternal, FallbackProxyClydeAudio>();
-                    IoCManager.Register<IInputManager, ClydeInputManager>();
-                    IoCManager.Register<IFileDialogManager, FileDialogManager>();
-                    IoCManager.Register<IUriOpener, UriOpener>();
+                    deps.Register<IClyde, Clyde>();
+                    deps.Register<IClipboardManager, Clyde>();
+                    deps.Register<IClydeInternal, Clyde>();
+                    deps.Register<IClydeAudio, FallbackProxyClydeAudio>();
+                    deps.Register<IClydeAudioInternal, FallbackProxyClydeAudio>();
+                    deps.Register<IInputManager, ClydeInputManager>();
+                    deps.Register<IFileDialogManager, FileDialogManager>();
+                    deps.Register<IUriOpener, UriOpener>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            IoCManager.Register<IFontManager, FontManager>();
-            IoCManager.Register<IFontManagerInternal, FontManager>();
-            IoCManager.Register<IEyeManager, EyeManager>();
-            IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<IOverlayManager, OverlayManager>();
-            IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
-            IoCManager.Register<IViewVariablesManager, ClientViewVariablesManager>();
-            IoCManager.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
-            IoCManager.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
-            IoCManager.Register<IClientConGroupController, ClientConGroupController>();
-            IoCManager.Register<IScriptClient, ScriptClient>();
-            IoCManager.Register<IConfigurationManager, ClientNetConfigurationManager>();
-            IoCManager.Register<INetConfigurationManager, ClientNetConfigurationManager>();
-            IoCManager.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
-            IoCManager.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<IFontManager, FontManager>();
+            deps.Register<IFontManagerInternal, FontManager>();
+            deps.Register<IEyeManager, EyeManager>();
+            deps.Register<IPlacementManager, PlacementManager>();
+            deps.Register<IOverlayManager, OverlayManager>();
+            deps.Register<IOverlayManagerInternal, OverlayManager>();
+            deps.Register<IViewVariablesManager, ClientViewVariablesManager>();
+            deps.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
+            deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
+            deps.Register<IClientConGroupController, ClientConGroupController>();
+            deps.Register<IScriptClient, ScriptClient>();
+            deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
         }
     }
 }

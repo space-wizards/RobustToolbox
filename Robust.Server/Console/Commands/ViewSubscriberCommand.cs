@@ -9,6 +9,8 @@ namespace Robust.Server.Console.Commands
 {
     public sealed class AddViewSubscriberCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entities = default!;
+
         public override string Command => "addview";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -33,19 +35,19 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
-
-            if (!entManager.EntityExists(uid))
+            if (!_entities.EntityExists(uid))
             {
                 shell.WriteError($"Unable to find entity {uid}");
                 return;
             }
 
-            EntitySystem.Get<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
+            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
         }
 
         public sealed class RemoveViewSubscriberCommand : LocalizedCommands
         {
+            [Dependency] private readonly IEntityManager _entities = default!;
+
             public override string Command => "removeview";
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -70,15 +72,13 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                var entManager = IoCManager.Resolve<IEntityManager>();
-
-                if (!entManager.EntityExists(uid))
+                if (!_entities.EntityExists(uid))
                 {
                     shell.WriteError($"Unable to find entity {uid}");
                     return;
                 }
 
-                EntitySystem.Get<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
+                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
             }
         }
     }

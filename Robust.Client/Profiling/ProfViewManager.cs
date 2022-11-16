@@ -123,12 +123,13 @@ public sealed class ProfViewManager
 
 public sealed class ProfSnapshotCommand : LocalizedCommands
 {
+    [Dependency] private readonly ProfViewManager _profView = default!;
+
     // ReSharper disable once StringLiteralTypo
     public override string Command => "profsnap";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var profViewManager = IoCManager.Resolve<ProfViewManager>();
-        profViewManager.Snap();
+        _profView.Snap();
     }
 }

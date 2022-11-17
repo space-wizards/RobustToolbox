@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.65.2.0
+
+### New features
+
+* Added ClydeAudio.StopAllAudio()
+* Expose more tick logic to content.
+
+### Bugfixes
+
+* Fix bad reference in WebView.
+
+### Internal
+
+* Add Robust.Packaging to solution.
+* Add WebView to solution.
+* Physics contacts are now parallel and much faster.
+
 ## 0.65.1.0
 
 ### New features

@@ -231,7 +231,17 @@ public interface IPrototypeManager
     /// </summary>
     /// <param name="protoClass">A prototype class type that implements IPrototype. This type also
     /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
+    [Obsolete("Prototype type is outdated naming, use *king* functions instead")]
     void RegisterType(Type protoClass);
+
+    /// <summary>
+    /// Loads a single prototype kind into the manager.
+    /// </summary>
+    /// <param name="kind">
+    /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also
+    /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.
+    /// </param>
+    void RegisterKind(Type kind);
 
     event Action<YamlStream, string>? LoadedData;
 

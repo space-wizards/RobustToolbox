@@ -343,7 +343,7 @@ namespace Robust.Shared.Prototypes
             Clear();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
-                RegisterType(type);
+                RegisterKind(type);
             }
         }
 
@@ -471,24 +471,25 @@ namespace Robust.Shared.Prototypes
             _ignoredPrototypeTypes.Add(name);
         }
 
-        /// <inheritdoc />
-        public void RegisterType(Type type)
+        void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
+
+        public void RegisterKind(Type kind)
         {
-            if (!(typeof(IPrototype).IsAssignableFrom(type)))
+            if (!(typeof(IPrototype).IsAssignableFrom(kind)))
                 throw new InvalidOperationException("Type must implement IPrototype.");
 
-            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(kind, typeof(PrototypeAttribute));
 
             if (attribute == null)
             {
-                throw new InvalidImplementationException(type,
+                throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
 
             if (_kindNames.ContainsKey(attribute.Type))
             {
-                throw new InvalidImplementationException(type,
+                throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
                     $"Duplicate prototype type ID: {attribute.Type}. Current: {_kindNames[attribute.Type]}");
             }
@@ -496,14 +497,14 @@ namespace Robust.Shared.Prototypes
             var foundIdAttribute = false;
             var foundParentAttribute = false;
             var foundAbstractAttribute = false;
-            foreach (var info in type.GetAllPropertiesAndFields())
+            foreach (var info in kind.GetAllPropertiesAndFields())
             {
                 var hasId = info.HasAttribute<IdDataFieldAttribute>();
                 var hasParent = info.HasAttribute<ParentDataFieldAttribute>();
                 if (hasId)
                 {
                     if (foundIdAttribute)
-                        throw new InvalidImplementationException(type,
+                        throw new InvalidImplementationException(kind,
                             typeof(IPrototype),
                             $"Found two {nameof(IdDataFieldAttribute)}");
 
@@ -513,7 +514,7 @@ namespace Robust.Shared.Prototypes
                 if (hasParent)
                 {
                     if (foundParentAttribute)
-                        throw new InvalidImplementationException(type,
+                        throw new InvalidImplementationException(kind,
                             typeof(IInheritingPrototype),
                             $"Found two {nameof(ParentDataFieldAttribute)}");
 
@@ -521,14 +522,14 @@ namespace Robust.Shared.Prototypes
                 }
 
                 if (hasId && hasParent)
-                    throw new InvalidImplementationException(type,
+                    throw new InvalidImplementationException(kind,
                         typeof(IPrototype),
-                        $"Prototype {type} has the Id- & ParentDatafield on single member {info.Name}");
+                        $"Prototype {kind} has the Id- & ParentDatafield on single member {info.Name}");
 
                 if (info.HasAttribute<AbstractDataFieldAttribute>())
                 {
                     if (foundAbstractAttribute)
-                        throw new InvalidImplementationException(type,
+                        throw new InvalidImplementationException(kind,
                             typeof(IInheritingPrototype),
                             $"Found two {nameof(AbstractDataFieldAttribute)}");
 
@@ -537,22 +538,22 @@ namespace Robust.Shared.Prototypes
             }
 
             if (!foundIdAttribute)
-                throw new InvalidImplementationException(type,
+                throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
                     $"Did not find any member annotated with the {nameof(IdDataFieldAttribute)}");
 
-            if (type.IsAssignableTo(typeof(IInheritingPrototype)) && (!foundParentAttribute || !foundAbstractAttribute))
-                throw new InvalidImplementationException(type,
+            if (kind.IsAssignableTo(typeof(IInheritingPrototype)) && (!foundParentAttribute || !foundAbstractAttribute))
+                throw new InvalidImplementationException(kind,
                     typeof(IInheritingPrototype),
                     $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
 
-            _kindNames[attribute.Type] = type;
-            _prototypePriorities[type] = attribute.LoadPriority;
+            _kindNames[attribute.Type] = kind;
+            _prototypePriorities[kind] = attribute.LoadPriority;
 
             var kindData = new KindData();
-            _kinds[type] = kindData;
+            _kinds[kind] = kindData;
 
-            if (type.IsAssignableTo(typeof(IInheritingPrototype)))
+            if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();
         }
 

@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
+* Move pinned font data over to Pinned Object Heap.
 
 ### Internal
 

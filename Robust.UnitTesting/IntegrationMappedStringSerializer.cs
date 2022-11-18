@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -71,6 +71,11 @@ namespace Robust.UnitTesting
         }
 
         public (byte[] mapHash, byte[] package) GeneratePackage()
+        {
+            throw new NotSupportedException();
+        }
+
+        public void SetPackage(byte[] hash, byte[] package)
         {
             throw new NotSupportedException();
         }

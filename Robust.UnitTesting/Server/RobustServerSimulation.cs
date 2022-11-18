@@ -36,6 +36,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Server.Configuration;
 
@@ -225,6 +226,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
+            container.Register<IParallelManager, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
 

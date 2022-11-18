@@ -16,6 +16,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
@@ -549,8 +550,9 @@ namespace Robust.Shared.Prototypes
         public void LoadDirectory(ResourcePath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
         {
             _hasEverBeenReloaded = true;
-            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+            var streams = Resources.ContentFindFiles(path)
+                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
+                .ToArray();
 
             foreach (var resourcePath in streams)
             {
@@ -645,32 +647,77 @@ namespace Robust.Shared.Prototypes
                 using var reader = ReadFile(file, !overwrite);
 
                 if (reader == null)
-                {
                     return;
-                }
 
-                var yamlStream = new YamlStream();
-                yamlStream.Load(reader);
+                // LoadedData?.Invoke(yamlStream, file.ToString());
 
-                LoadedData?.Invoke(yamlStream, file.ToString());
-
-                for (var i = 0; i < yamlStream.Documents.Count; i++)
+                var i = 0;
+                foreach (var document in DataNodeParser.ParseYamlStream(reader))
                 {
                     try
                     {
-                        LoadFromDocument(yamlStream.Documents[i], overwrite, changed);
+                        var seq = (SequenceDataNode)document.Root;
+                        foreach (var mapping in seq.Sequence)
+                        {
+                            LoadFromMapping((MappingDataNode) mapping, overwrite, changed);
+                        }
                     }
                     catch (Exception e)
                     {
                         Logger.ErrorS("eng", $"Exception whilst loading prototypes from {file}#{i}:\n{e}");
                     }
+
+                    i += 1;
                 }
             }
-            catch (YamlException e)
+            catch (Exception e)
             {
                 var sawmill = Logger.GetSawmill("eng");
                 sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
             }
+        }
+
+        private void LoadFromMapping(
+            MappingDataNode datanode,
+            bool overwrite = false,
+            Dictionary<Type, HashSet<string>>? changed = null)
+        {
+            var type = datanode.Get<ValueDataNode>("type").Value;
+            if (!_prototypeTypes.TryGetValue(type, out var prototypeType))
+            {
+                if (_ignoredPrototypeTypes.Contains(type))
+                    return;
+
+                throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+            }
+
+            if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
+                throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+
+            if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
+                throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
+
+            _prototypeResults[prototypeType][idNode.Value] = datanode;
+            if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
+            {
+                if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+                {
+                    var parents = _serializationManager.Read<string[]>(parentNode);
+                    _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
+                }
+                else
+                {
+                    _inheritanceTrees[prototypeType].Add(idNode.Value);
+                }
+            }
+
+            if (changed == null)
+                return;
+
+            if (!changed.TryGetValue(prototypeType, out var set))
+                changed[prototypeType] = set = new HashSet<string>();
+
+            set.Add(idNode.Value);
         }
 
         public void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
@@ -751,46 +798,7 @@ namespace Robust.Shared.Prototypes
             foreach (var node in rootNode.Cast<YamlMappingNode>())
             {
                 var datanode = node.ToDataNodeCast<MappingDataNode>();
-                var type = datanode.Get<ValueDataNode>("type").Value;
-                if (!_prototypeTypes.ContainsKey(type))
-                {
-                    if (_ignoredPrototypeTypes.Contains(type))
-                    {
-                        continue;
-                    }
-
-                    throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
-                }
-
-                var prototypeType = _prototypeTypes[type];
-
-                if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
-                    throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
-
-                if (!overwrite && _prototypeResults[prototypeType].ContainsKey(idNode.Value))
-                {
-                    throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
-                }
-
-                _prototypeResults[prototypeType][idNode.Value] = datanode;
-                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
-                {
-                    if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
-                    {
-                        var parents = _serializationManager.Read<string[]>(parentNode);
-                        _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
-                    }
-                    else
-                    {
-                        _inheritanceTrees[prototypeType].Add(idNode.Value);
-                    }
-                }
-
-                if (changed == null) continue;
-
-                if (!changed.TryGetValue(prototypeType, out var set))
-                    changed[prototypeType] = set = new HashSet<string>();
-                set.Add(idNode.Value);
+                LoadFromMapping(datanode, overwrite, changed);
             }
         }
 

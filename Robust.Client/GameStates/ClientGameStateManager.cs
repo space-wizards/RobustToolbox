@@ -192,7 +192,7 @@ namespace Robust.Client.GameStates
                 AckGameState(message.State.ToSequence);
         }
 
-        public void UpdateFullRep(GameState state) => _processor.UpdateFullRep(state);
+        public void UpdateFullRep(GameState state, bool cloneDelta = false) => _processor.UpdateFullRep(state, cloneDelta);
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {

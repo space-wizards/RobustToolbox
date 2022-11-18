@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Timing;
@@ -152,7 +151,7 @@ namespace Robust.Client.GameStates
             return applyNextState;
         }
 
-        public void UpdateFullRep(GameState state)
+        public void UpdateFullRep(GameState state, bool cloneDelta = false)
         {
             // Note: the most recently received server state currently doesn't include pvs-leave messages (detaching
             // transform to null-space). This is because a client should never predict an entity being moved back from
@@ -192,11 +191,18 @@ namespace Robust.Client.GameStates
 
                     if (compState is IComponentDeltaState delta && !delta.FullState)
                     {
-                        var ev = new ComponentMergeDeltaState(compData[change.NetID], compState);
-                        entMan.EventBus.RaiseComponentEvent(entMan.GetComponent(entityState.Uid, change.NetID), ref ev);
-                        DebugTools.AssertNotNull(ev.NewState);
-                        DebugTools.Assert(!ReferenceEquals(compData[change.NetID], ev.NewState));
-                        compState = ev.NewState!;
+                        var old = compData[change.NetID];
+
+                        if (cloneDelta)
+                        {
+                            compState = delta.CreateNewFullState(old);
+                        }
+                        else
+                        {
+                            delta.ApplyToFullState(old);
+                            compState = old;
+                        }
+                        DebugTools.Assert(compState is IComponentDeltaState newState && newState.FullState);
                     }
 
                     compData[change.NetID] = compState;

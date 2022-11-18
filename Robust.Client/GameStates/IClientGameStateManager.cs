@@ -95,6 +95,11 @@ namespace Robust.Client.GameStates
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
 
-        void UpdateFullRep(GameState state);
+        /// <summary>
+        ///     Updates the cached game sates that are used to reset predicted entities.
+        /// </summary>
+        /// <param name="cloneDelta">If true, this will clone old states while applying delta states, rather than
+        /// modifying them directly. Useful if they are still cached elsewhere (e.g., replays).</param>
+        void UpdateFullRep(GameState state, bool cloneDelta = false);
     }
 }

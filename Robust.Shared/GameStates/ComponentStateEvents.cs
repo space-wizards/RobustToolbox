@@ -17,20 +17,6 @@ namespace Robust.Shared.GameStates
         }
     }
 
-    [ByRefEvent, ComponentEvent]
-    public struct ComponentMergeDeltaState
-    {
-        public readonly ComponentState Delta;
-        public readonly ComponentState Current;
-        public ComponentState? NewState = null;
-
-        public ComponentMergeDeltaState(ComponentState current, ComponentState delta)
-        {
-            Current = current;
-            Delta = delta;
-        }
-    }
-
     /// <summary>
     ///     Component event for getting the component state for a specific player.
     /// </summary>

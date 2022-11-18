@@ -34,9 +34,8 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
         _replicatedCVars.Remove(e.Channel);
     }
 
-
     /// <inheritdoc />
-    public T GetClientCVar<T>(INetChannel channel, string name)
+    public override T GetClientCVar<T>(INetChannel channel, string name)
     {
         using var _ = Lock.ReadGuard();
 

@@ -115,4 +115,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
             ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    /// <inheritdoc />
+    public override T GetClientCVar<T>(INetChannel channel, string name) => GetCVar<T>(name);
 }

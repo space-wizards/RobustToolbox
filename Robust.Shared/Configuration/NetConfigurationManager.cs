@@ -35,6 +35,15 @@ namespace Robust.Shared.Configuration
         /// Flushes any NwCVar messages in the receive buffer.
         /// </summary>
         void FlushMessages();
+
+        /// <summary>
+        /// Get a replicated client CVar for a specific client. When used client-side, this simply returns the local cvar.
+        /// </summary>
+        /// <typeparam name="T">CVar type.</typeparam>
+        /// <param name="channel">channel of the connected client.</param>
+        /// <param name="name">Name of the CVar.</param>
+        /// <returns>Replicated CVar of the client.</returns>
+        T GetClientCVar<T>(INetChannel channel, string name);
     }
 
     internal interface INetConfigurationManagerInternal : INetConfigurationManager, IConfigurationManagerInternal
@@ -164,5 +173,8 @@ namespace Robust.Shared.Configuration
 
             return nwVars;
         }
+
+        /// <inheritdoc />
+        public abstract T GetClientCVar<T>(INetChannel channel, string name);
     }
 }

@@ -72,7 +72,7 @@ namespace Robust.UnitTesting
 
         public (byte[] mapHash, byte[] package) GeneratePackage()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         private sealed class TypeSerializerImpl : IStaticTypeSerializer

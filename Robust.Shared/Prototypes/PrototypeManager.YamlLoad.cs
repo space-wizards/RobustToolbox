@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -27,9 +26,52 @@ public partial class PrototypeManager
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
             .ToArray();
 
-        foreach (var resourcePath in streams)
+        var sawmill = _logManager.GetSawmill("eng");
+
+        var results = streams.AsParallel()
+            .Select<ResourcePath, (ResourcePath, IEnumerable<ExtractedMappingData>)>(file =>
+            {
+                try
+                {
+                    using var reader = ReadFile(file, !overwrite);
+
+                    if (reader == null)
+                        return (file, Array.Empty<ExtractedMappingData>());
+
+                    var extractedList = new List<ExtractedMappingData>();
+                    foreach (var document in DataNodeParser.ParseYamlStream(reader))
+                    {
+                        var seq = (SequenceDataNode)document.Root;
+                        foreach (var mapping in seq.Sequence)
+                        {
+                            var data = ExtractMapping((MappingDataNode)mapping);
+                            if (data != null)
+                                extractedList.Add(data);
+                        }
+                    }
+
+                    return (file, extractedList);
+                }
+                catch (Exception e)
+                {
+                    sawmill.Error($"Exception whilst loading prototypes from {file}:\n{e}");
+                    return (file, Array.Empty<ExtractedMappingData>());
+                }
+            });
+
+        foreach (var (file, result) in results)
         {
-            LoadFile(resourcePath, overwrite, changed);
+            foreach (var mapping in result)
+            {
+                try
+                {
+                    MergeMapping(mapping, overwrite, changed);
+                }
+                catch (Exception e)
+                {
+                    sawmill.Error($"Exception whilst loading prototypes from {file}:\n{e}");
+                }
+            }
         }
     }
 
@@ -103,7 +145,7 @@ public partial class PrototypeManager
                         throw;
                     }
 
-                    Logger.Error($"Error reloading prototypes in file {file}.", e);
+                    _sawmill.Error($"Error reloading prototypes in file {file}:\n{e}");
                     return null;
                 }
 
@@ -132,12 +174,16 @@ public partial class PrototypeManager
                     var seq = (SequenceDataNode)document.Root;
                     foreach (var mapping in seq.Sequence)
                     {
-                        LoadFromMapping((MappingDataNode)mapping, overwrite, changed);
+                        var extracted = ExtractMapping((MappingDataNode) mapping);
+                        if (extracted == null)
+                            continue;
+
+                        MergeMapping(extracted, overwrite, changed);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("eng", $"Exception whilst loading prototypes from {file}#{i}:\n{e}");
+                    _sawmill.Error($"Exception whilst loading prototypes from {file}#{i}:\n{e}");
                 }
 
                 i += 1;
@@ -145,68 +191,94 @@ public partial class PrototypeManager
         }
         catch (Exception e)
         {
-            var sawmill = Logger.GetSawmill("eng");
-            sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
+            _sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
         }
     }
 
-    private void LoadFromMapping(
-        MappingDataNode datanode,
-        bool overwrite = false,
-        Dictionary<Type, HashSet<string>>? changed = null)
+    private ExtractedMappingData? ExtractMapping(MappingDataNode dataNode)
     {
-        var type = datanode.Get<ValueDataNode>("type").Value;
+        var type = dataNode.Get<ValueDataNode>("type").Value;
         if (!_kindNames.TryGetValue(type, out var kind))
         {
             if (_ignoredPrototypeTypes.Contains(type))
-                return;
+                return null;
 
             throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
         }
 
         var kindData = _kinds[kind];
 
-        if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
+        if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
             throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
-        if (!overwrite && kindData.Results.ContainsKey(idNode.Value))
-            throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
+        var id = idNode.Value;
+        string[]? parents = null;
 
-        kindData.Results[idNode.Value] = datanode;
+        if (kindData.Inheritance != null)
+        {
+            if (dataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+            {
+                parents = _serializationManager.Read<string[]>(parentNode);
+            }
+        }
+
+        return new ExtractedMappingData(kind, id, parents, dataNode);
+    }
+
+    private void MergeMapping(
+        ExtractedMappingData mapping,
+        bool overwrite,
+        Dictionary<Type, HashSet<string>>? changed)
+    {
+        var (kind, id, parents, data) = mapping;
+
+        var kindData = _kinds[kind];
+
+        if (!overwrite && kindData.Results.ContainsKey(id))
+            throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}");
+
+        kindData.Results[id] = data;
+
         if (kindData.Inheritance is { } inheritance)
         {
-            if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+            if (parents != null)
             {
-                var parents = _serializationManager.Read<string[]>(parentNode);
-                inheritance.Add(idNode.Value, parents);
+                inheritance.Add(id, parents);
             }
             else
             {
-                inheritance.Add(idNode.Value);
+                inheritance.Add(id);
             }
         }
 
         if (changed == null)
             return;
 
-        if (!changed.TryGetValue(kind, out var set))
-            changed[kind] = set = new HashSet<string>();
-
-        set.Add(idNode.Value);
+        var set = changed.GetOrNew(kind);
+        set.Add(id);
     }
 
     public void LoadFromStream(TextReader stream, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
     {
         _hasEverBeenReloaded = true;
-        var yaml = new YamlStream();
-        yaml.Load(stream);
 
-        for (var i = 0; i < yaml.Documents.Count; i++)
+        var i = 0;
+        foreach (var document in DataNodeParser.ParseYamlStream(stream))
         {
             try
             {
-                LoadFromDocument(yaml.Documents[i], overwrite, changed);
+                var rootNode = (SequenceDataNode)document.Root;
+                foreach (var node in rootNode.Cast<MappingDataNode>())
+                {
+                    var extracted = ExtractMapping(node);
+                    if (extracted == null)
+                        continue;
+
+                    MergeMapping(extracted, overwrite, changed);
+                }
+
+                i += 1;
             }
             catch (Exception e)
             {
@@ -214,7 +286,7 @@ public partial class PrototypeManager
             }
         }
 
-        LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
+        // LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
     }
 
     public void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
@@ -225,16 +297,13 @@ public partial class PrototypeManager
     public void RemoveString(string prototypes)
     {
         var reader = new StringReader(prototypes);
-        var yaml = new YamlStream();
 
-        yaml.Load(reader);
-
-        foreach (var document in yaml.Documents)
+        foreach (var document in DataNodeParser.ParseYamlStream(reader))
         {
-            var root = (YamlSequenceNode)document.RootNode;
-            foreach (var node in root.Cast<YamlMappingNode>())
+            var root = (SequenceDataNode)document.Root;
+            foreach (var node in root.Cast<MappingDataNode>())
             {
-                var typeString = node.GetNode("type").AsString();
+                var typeString = node.Get<ValueDataNode>("type").Value;
                 if (!_kindNames.TryGetValue(typeString, out var kind))
                 {
                     continue;
@@ -242,7 +311,7 @@ public partial class PrototypeManager
 
                 var kindData = _kinds[kind];
 
-                var id = node.GetNode("id").AsString();
+                var id = node.Get<ValueDataNode>("id").Value;
 
                 if (kindData.Inheritance is { } tree)
                     tree.Remove(id, true);
@@ -253,15 +322,10 @@ public partial class PrototypeManager
         }
     }
 
-    private void LoadFromDocument(YamlDocument document, bool overwrite = false,
-        Dictionary<Type, HashSet<string>>? changed = null)
-    {
-        var rootNode = (YamlSequenceNode)document.RootNode;
-
-        foreach (var node in rootNode.Cast<YamlMappingNode>())
-        {
-            var datanode = node.ToDataNodeCast<MappingDataNode>();
-            LoadFromMapping(datanode, overwrite, changed);
-        }
-    }
+    // All these fields can be null in case the
+    private sealed record ExtractedMappingData(
+        Type Kind,
+        string Id,
+        string[]? Parents,
+        MappingDataNode Data);
 }

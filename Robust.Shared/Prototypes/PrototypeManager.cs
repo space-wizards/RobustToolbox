@@ -22,9 +22,12 @@ namespace Robust.Shared.Prototypes
         [Dependency] protected readonly IResourceManager Resources = default!;
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _prototypePriorities = new();
+
+        private ISawmill _sawmill = default!;
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
@@ -41,6 +44,8 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
             }
+
+            _sawmill = _logManager.GetSawmill("proto");
 
             _initialized = true;
             ReloadPrototypeKinds();

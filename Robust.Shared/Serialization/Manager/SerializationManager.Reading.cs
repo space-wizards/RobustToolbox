@@ -51,7 +51,7 @@ namespace Robust.Shared.Serialization.Manager
             if (node.Tag?.StartsWith("!type:") ?? false)
             {
                 var typeString = node.Tag.Substring(6);
-                value = ResolveConcreteType(value, typeString);
+                value = ResolveConcreteType(value, typeString, _reflectionManager);
             }
 
             return _readers.GetOrAdd((value, node.GetType()), static (tuple, vfArgument) =>

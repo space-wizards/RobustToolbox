@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -9,6 +8,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Server.GameObjects
 {
@@ -16,7 +16,6 @@ namespace Robust.Server.GameObjects
     [Obsolete("Use client-side systems, or appearance data & visualizers instead")]
     public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
-        [ViewVariables]
         [DataField("layers", priority: 2, readOnly: true)]
         private List<PrototypeLayerData> Layers = new();
 

@@ -35,7 +35,10 @@ namespace Robust.Client.Graphics
 
         public IFontFaceHandle Load(Stream stream)
         {
-            var face = new Face(_library, stream.CopyToArray(), 0);
+            // Freetype directly operates on the font memory managed by us.
+            // As such, the font data should be pinned in POH.
+            var fontData = stream.CopyToPinnedArray();
+            var face = new Face(_library, fontData, 0);
             var handle = new FontFaceHandle(face);
             return handle;
         }

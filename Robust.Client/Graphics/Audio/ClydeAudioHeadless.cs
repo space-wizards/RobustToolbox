@@ -66,5 +66,15 @@ namespace Robust.Client.Graphics.Audio
         {
             // Nada.
         }
+
+        public void DisposeAllAudio()
+        {
+            // Nada.
+        }
+
+        public void StopAllAudio()
+        {
+            // Nada.
+        }
     }
 }

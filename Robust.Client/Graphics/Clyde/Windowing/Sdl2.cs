@@ -25,10 +25,10 @@ internal partial class Clyde
         private readonly ISawmill _sawmill;
         private readonly ISawmill _sawmillSdl2;
 
-        public Sdl2WindowingImpl(Clyde clyde)
+        public Sdl2WindowingImpl(Clyde clyde, IDependencyCollection deps)
         {
             _clyde = clyde;
-            IoCManager.InjectDependencies(this);
+            deps.InjectDependencies(this, true);
 
             _sawmill = _logManager.GetSawmill("clyde.win");
             _sawmillSdl2 = _logManager.GetSawmill("clyde.win.sdl2");

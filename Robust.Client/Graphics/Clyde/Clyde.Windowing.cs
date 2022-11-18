@@ -113,10 +113,10 @@ namespace Robust.Client.Graphics.Clyde
             switch (windowingApi)
             {
                 case "glfw":
-                    winImpl = new GlfwWindowingImpl(this);
+                    winImpl = new GlfwWindowingImpl(this, _deps);
                     break;
                 case "sdl2":
-                    winImpl = new Sdl2WindowingImpl(this);
+                    winImpl = new Sdl2WindowingImpl(this, _deps);
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(

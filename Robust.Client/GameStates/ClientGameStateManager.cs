@@ -192,6 +192,8 @@ namespace Robust.Client.GameStates
                 AckGameState(message.State.ToSequence);
         }
 
+        public void UpdateFullRep(GameState state) => _processor.UpdateFullRep(state);
+
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
             _processor.AddLeavePvsMessage(message);
@@ -272,7 +274,7 @@ namespace Robust.Client.GameStates
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
                 {
-                    _processor.UpdateFullRep(curState, _entities);
+                    _processor.UpdateFullRep(curState);
                 }
 
                 IEnumerable<EntityUid> createdEntities;
@@ -440,7 +442,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private void ResetPredictedEntities()
+        public void ResetPredictedEntities()
         {
             PredictionNeedsResetting = false;
 
@@ -591,7 +593,7 @@ namespace Robust.Client.GameStates
             _network.ClientSendMessage(new MsgStateAck() { Sequence = sequence });
         }
 
-        private IEnumerable<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
+        public IEnumerable<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
             using var _ = _timing.StartStateApplicationArea();
 

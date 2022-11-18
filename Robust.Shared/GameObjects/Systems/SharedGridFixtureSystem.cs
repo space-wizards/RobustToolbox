@@ -19,6 +19,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         protected ISawmill Sawmill = default!;
         private bool _enabled;
@@ -32,11 +33,10 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
             Sawmill = Logger.GetSawmill("physics");
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 
-            configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
-            configManager.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
-            configManager.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
+            _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
+            _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
+            _cfg.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
         }
@@ -52,11 +52,9 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-
-            configManager.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
-            configManager.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
-            configManager.UnsubValueChanged(CVars.ConvexHullPolygons, SetConvexHulls);
+            _cfg.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
+            _cfg.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
+            _cfg.UnsubValueChanged(CVars.ConvexHullPolygons, SetConvexHulls);
         }
 
         private void SetEnabled(bool value) => _enabled = value;

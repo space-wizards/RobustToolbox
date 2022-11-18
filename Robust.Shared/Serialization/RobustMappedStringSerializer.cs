@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization
     /// send the constant value instead - and at the other end, the
     /// serializer can use the same mapping to recover the original string.
     /// </remarks>
-    public sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
+    internal sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
     {
         private static readonly Counter StringsHitMetric = Metrics.CreateCounter(
             "robust_net_string_hit",

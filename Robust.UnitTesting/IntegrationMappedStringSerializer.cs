@@ -11,7 +11,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting
 {
-    public sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
+    internal sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
     {
         [Dependency] private readonly INetManager _net = default!;
 

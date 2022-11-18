@@ -95,7 +95,9 @@ namespace Robust.Shared.Serialization
             */
         }
 
-        public byte[] TypesHash() => Convert.FromHexString(_serializer.GetSHA256());
+        public byte[] GetSerializableTypesHash() => Convert.FromHexString(_serializer.GetSHA256());
+
+        public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => _mappedStringSerializer.GeneratePackage();
 
         public void Serialize(Stream stream, object toSerialize)
         {

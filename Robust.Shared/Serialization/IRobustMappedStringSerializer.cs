@@ -11,7 +11,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Shared.Serialization
 {
     [PublicAPI]
-    public interface IRobustMappedStringSerializer
+    internal interface IRobustMappedStringSerializer
     {
         bool Locked { get; }
 

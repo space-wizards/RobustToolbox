@@ -50,6 +50,8 @@ namespace Robust.Shared.Serialization
 
         event Action ClientHandshakeComplete;
 
-        byte[] TypesHash();
+        byte[] GetSerializableTypesHash();
+
+        (byte[] Hash, byte[] Package) GetStringSerializerPackage();
     }
 }

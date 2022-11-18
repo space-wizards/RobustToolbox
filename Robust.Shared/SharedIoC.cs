@@ -38,7 +38,6 @@ namespace Robust.Shared
             deps.Register<IModLoader, ModLoader>();
             deps.Register<IModLoaderInternal, ModLoader>();
             deps.Register<INetManager, NetManager>();
-            deps.Register<IRobustSerializer, RobustSerializer>();
             deps.Register<IRuntimeLog, RuntimeLog>();
             deps.Register<ITaskManager, TaskManager>();
             deps.Register<TaskManager, TaskManager>();

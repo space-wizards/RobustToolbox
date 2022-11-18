@@ -98,5 +98,6 @@ namespace Robust.Shared.Serialization
         void Initialize();
 
         (byte[] mapHash, byte[] package) GeneratePackage();
+        void SetPackage(byte[] hash, byte[] package);
     }
 }

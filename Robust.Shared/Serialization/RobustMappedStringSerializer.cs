@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -130,6 +131,17 @@ namespace Robust.Shared.Serialization
         public ReadOnlySpan<byte> MappedStringsHash => _stringMapHash;
 
         public (byte[] mapHash, byte[] package) GeneratePackage() => _dict.GeneratePackage();
+
+        public void SetPackage(byte[] hash, byte[] package)
+        {
+            _dict.LoadFromPackage(package, out var hashResult);
+
+            if (!hashResult.SequenceEqual(hash!))
+            {
+                throw new InvalidOperationException("Hash mismatch when setting string package." +
+                                                    $"\n{ConvertToBase64Url(hashResult)} vs. {ConvertToBase64Url(hash)}");
+            }
+        }
 
         public bool EnableCaching { get; set; } = true;
 

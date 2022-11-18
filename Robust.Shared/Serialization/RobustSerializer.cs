@@ -13,11 +13,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
-
-    public sealed partial class RobustSerializer : IRobustSerializer
+    [Virtual]
+    internal partial class RobustSerializer : IRobustSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
+        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
 
@@ -78,11 +78,11 @@ namespace Robust.Shared.Serialization
 
             types.AddRange(AlwaysNetSerializable);
 
-            _mappedStringSerializer.Initialize();
+            MappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[] {MappedStringSerializer.TypeSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
@@ -97,7 +97,7 @@ namespace Robust.Shared.Serialization
 
         public byte[] GetSerializableTypesHash() => Convert.FromHexString(_serializer.GetSHA256());
 
-        public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => _mappedStringSerializer.GeneratePackage();
+        public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => MappedStringSerializer.GeneratePackage();
 
         public void Serialize(Stream stream, object toSerialize)
         {

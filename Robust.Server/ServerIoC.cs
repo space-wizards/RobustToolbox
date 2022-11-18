@@ -24,6 +24,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -76,6 +77,7 @@ namespace Robust.Server
             deps.Register<IPhysicsManager, PhysicsManager>();
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
+            deps.Register<IRobustSerializer, RobustSerializer>();
         }
     }
 }

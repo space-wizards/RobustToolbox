@@ -10,6 +10,7 @@ using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Scripting;
+using Robust.Server.Serialization;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
@@ -77,7 +78,7 @@ namespace Robust.Server
             deps.Register<IPhysicsManager, PhysicsManager>();
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
-            deps.Register<IRobustSerializer, RobustSerializer>();
+            deps.Register<IRobustSerializer, ServerRobustSerializer>();
         }
     }
 }

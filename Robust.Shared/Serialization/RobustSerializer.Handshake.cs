@@ -5,7 +5,7 @@ using Robust.Shared.Network;
 namespace Robust.Shared.Serialization
 {
 
-    internal partial class RobustSerializer
+    internal abstract partial class RobustSerializer
     {
         /// <summary>
         /// Initiates any sequence of handshake extensions that

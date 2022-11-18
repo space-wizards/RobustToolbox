@@ -13,8 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
-    [Virtual]
-    internal partial class RobustSerializer : IRobustSerializer
+    internal abstract partial class RobustSerializer : IRobustSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;

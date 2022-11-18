@@ -23,10 +23,5 @@ public interface IClientNetConfigurationManager : INetConfigurationManager
     /// </summary>
     void ClearReceivedInitialNwVars();
 
-    /// <summary>
-    ///     Applies networked Cvars to a client.
-    /// </summary>
-    void ApplyClientNetVarChange(List<(string name, object value)> networkedVars, GameTick tick);
-
     public event EventHandler ReceivedInitialNwVars;
 }

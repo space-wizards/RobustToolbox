@@ -96,7 +96,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         ApplyClientNetVarChange(networkedVars, tick);
     }
 
-    public void ApplyClientNetVarChange(List<(string name, object value)> networkedVars, GameTick tick)
+    private void ApplyClientNetVarChange(List<(string name, object value)> networkedVars, GameTick tick)
     {
         // Server sent us a CVar update.
         Sawmill.Debug($"Handling replicated cvars...");

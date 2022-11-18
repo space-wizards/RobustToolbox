@@ -1168,10 +1168,6 @@ public sealed class MapLoaderSystem : EntitySystem
     /// </summary>
     private sealed class MapData
     {
-        public YamlStream Stream { get; }
-
-        public YamlNode RootNode => Stream.Documents[0].RootNode;
-
         public MappingDataNode RootMappingNode { get; }
 
         public readonly MapId TargetMap;
@@ -1188,23 +1184,21 @@ public sealed class MapLoaderSystem : EntitySystem
 
         public MapData(MapId mapId, TextReader reader, MapLoadOptions options)
         {
-            var stream = new YamlStream();
-            stream.Load(reader);
+            var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
 
-            if (stream.Documents.Count < 1)
+            if (documents.Length < 1)
             {
                 throw new InvalidDataException("Stream has no YAML documents.");
             }
 
             // Kinda wanted to just make this print a warning and pick [0] but screw that.
             // What is this, a hug box?
-            if (stream.Documents.Count > 1)
+            if (documents.Length > 1)
             {
                 throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
             }
 
-            Stream = stream;
-            RootMappingNode = RootNode.ToDataNodeCast<MappingDataNode>();
+            RootMappingNode = (MappingDataNode) documents[0].Root!;
             Options = options;
             TargetMap = mapId;
         }

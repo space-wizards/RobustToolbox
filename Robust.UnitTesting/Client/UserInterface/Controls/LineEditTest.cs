@@ -19,12 +19,12 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var uiMgr = new Mock<IUserInterfaceManagerInternal>();
             var clyde = new ClydeHeadless();
 
-            IoCManager.InitThread();
-            IoCManager.Clear();
-            IoCManager.RegisterInstance<IUserInterfaceManagerInternal>(uiMgr.Object);
-            IoCManager.RegisterInstance<IUserInterfaceManager>(uiMgr.Object);
-            IoCManager.RegisterInstance<IClyde>(clyde);
-            IoCManager.BuildGraph();
+            var deps = IoCManager.InitThread();
+            deps.Clear();
+            deps.RegisterInstance<IUserInterfaceManagerInternal>(uiMgr.Object);
+            deps.RegisterInstance<IUserInterfaceManager>(uiMgr.Object);
+            deps.RegisterInstance<IClyde>(clyde);
+            deps.BuildGraph();
         }
 
         [Test]

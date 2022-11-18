@@ -9,18 +9,21 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     internal sealed class ClientSpawnCommand : LocalizedCommands
     {
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "cspawn";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var controlled = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
             if (controlled == EntityUid.Invalid)
             {
                 shell.WriteLine("You don't have an attached entity.");
                 return;
             }
 
-            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var entityManager = _entityManager;
             entityManager.SpawnEntity(args[0], entityManager.GetComponent<TransformComponent>(controlled).Coordinates);
         }
     }

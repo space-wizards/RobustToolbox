@@ -17,6 +17,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IUserInterfaceManager _userInterface = default!;
 
         private Label? _label;
 
@@ -34,11 +35,11 @@ namespace Robust.Client.Debugging
                 if (_enabled)
                 {
                     _label = new Label();
-                    IoCManager.Resolve<IUserInterfaceManager>().StateRoot.AddChild(_label);
+                    _userInterface.StateRoot.AddChild(_label);
                 }
                 else
                 {
-                    IoCManager.Resolve<IUserInterfaceManager>().StateRoot.RemoveChild(_label!);
+                    _userInterface.StateRoot.RemoveChild(_label!);
                     _label = null;
                     _hovered = null;
                 }

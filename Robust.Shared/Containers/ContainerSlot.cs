@@ -6,7 +6,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
@@ -28,7 +27,6 @@ namespace Robust.Shared.Containers
             }
         }
 
-        [ViewVariables]
         [DataField("ent")]
         public EntityUid? ContainedEntity
         {

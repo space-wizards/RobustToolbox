@@ -7,6 +7,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Server</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Try to fix sporadic errors against Robust.Packaging, apparently?? -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>

@@ -914,6 +914,8 @@ public sealed class MapLoaderSystem : EntitySystem
         var entities = new SequenceDataNode();
         rootNode.Add("entities", entities);
 
+        // As metadata isn't on components we'll special-case it.
+        var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
@@ -940,6 +942,8 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
                     }
+
+                    cache.GetOrNew(metadataName);
                 }
             }
 

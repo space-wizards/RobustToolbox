@@ -1153,7 +1153,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, player);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1187,7 +1187,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, player), component.LastModifiedTick));
             netComps.Add(netId);
         }
 

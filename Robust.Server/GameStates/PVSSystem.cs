@@ -1154,7 +1154,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
 
             var state = EntityManager.GetComponentState(bus, component, player, fromTick);
-            DebugTools.Assert(fromTick > GameTick.Zero || state is not IComponentDeltaState delta || delta.FullState);
+            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)

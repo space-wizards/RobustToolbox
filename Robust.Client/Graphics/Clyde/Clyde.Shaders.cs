@@ -269,7 +269,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    headerUniforms.AppendFormat("uniform {0} {1};\n", uniform.Type.GetNativeType(), uniform.Name);
+                    if (uniform.Type.IsArray)
+                    {
+                        headerUniforms.AppendFormat($"uniform {uniform.Type.GetNativeTypeWithoutArray()} {uniform.Name}[{uniform.Type.Count}];\n");
+                    }
+                    else
+                    {
+                        headerUniforms.AppendFormat("uniform {0} {1};\n", uniform.Type.GetNativeType(), uniform.Name);
+                    }
                 }
             }
 

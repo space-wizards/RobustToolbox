@@ -539,6 +539,7 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
                 _mapManager.CreateMap(data.TargetMap);
+                _mapManager.AddUninitializedMap(data.TargetMap);
                 mapNode = _mapManager.GetMapEntityId(data.TargetMap);
                 DebugTools.Assert(mapNode.IsValid());
             }
@@ -914,6 +915,8 @@ public sealed class MapLoaderSystem : EntitySystem
         var entities = new SequenceDataNode();
         rootNode.Add("entities", entities);
 
+        // As metadata isn't on components we'll special-case it.
+        var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
@@ -940,6 +943,8 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
                     }
+
+                    cache.GetOrNew(metadataName);
                 }
             }
 

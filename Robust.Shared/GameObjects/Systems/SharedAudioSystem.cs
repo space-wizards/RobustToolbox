@@ -1,4 +1,5 @@
 using Robust.Shared.Audio;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
@@ -11,7 +12,9 @@ public abstract class SharedAudioSystem : EntitySystem
 {
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
+    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
+    [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.

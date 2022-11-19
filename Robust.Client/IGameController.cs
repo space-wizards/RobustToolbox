@@ -1,4 +1,8 @@
-﻿namespace Robust.Client;
+using System;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Timing;
+
+namespace Robust.Client;
 
 public interface IGameController
 {
@@ -15,5 +19,12 @@ public interface IGameController
     /// <param name="address">The server address, such as "ss14://localhost:1212/".</param>
     /// <param name="text">Informational text on the cause of the reconnect. Empty or null gives a default reason.</param>
     void Redial(string address, string? text = null);
+
+    /// <summary>
+    ///     This event gets invoked prior to performing entity tick update logic. If this is null the game
+    ///     controller will simply call <see cref="IEntityManager.TickUpdate(float, bool, Prometheus.Histogram?)"/>.
+    ///     This exists to give content module more control over tick updating.
+    /// </summary>
+    event Action<FrameEventArgs>? ContentEntityTickUpdate;
 }
 

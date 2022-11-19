@@ -122,23 +122,50 @@ namespace Robust.Client.Graphics.Audio
             return true;
         }
 
-        private void _shutdownAudio()
+        public void StopAllAudio()
         {
-            foreach (var source in _audioSources.Values.ToArray())
+            foreach (var (key, source) in _audioSources)
             {
                 if (source.TryGetTarget(out var target))
                 {
-                    target.Dispose();
+                    target.StopPlaying();
                 }
             }
 
-            foreach (var source in _bufferedAudioSources.Values.ToArray())
+            foreach (var (key, source) in _bufferedAudioSources)
+            {
+                if (source.TryGetTarget(out var target))
+                {
+                    target.StopPlaying();
+                }
+            }
+        }
+
+        public void DisposeAllAudio()
+        {
+            foreach (var (key, source) in _audioSources)
             {
                 if (source.TryGetTarget(out var target))
                 {
                     target.Dispose();
                 }
             }
+            _audioSources.Clear();
+
+            foreach (var (key, source) in _bufferedAudioSources)
+            {
+                if (source.TryGetTarget(out var target))
+                {
+                    target.StopPlaying();
+                    target.Dispose();
+                }
+            }
+            _bufferedAudioSources.Clear();
+        }
+
+        private void _shutdownAudio()
+        {
+            DisposeAllAudio();
 
             if (_openALContext != ALContext.Null)
             {

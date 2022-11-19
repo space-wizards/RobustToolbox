@@ -11,7 +11,7 @@ namespace Robust.Client.GameStates;
 /// <summary>
 /// Tracks dirty entities on the client for the purposes of gamestatemanager.
 /// </summary>
-internal sealed class ClientDirtySystem : EntitySystem
+public sealed class ClientDirtySystem : EntitySystem
 {
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IComponentFactory _compFact = default!;
@@ -65,7 +65,7 @@ internal sealed class ClientDirtySystem : EntitySystem
             RemovedComponents.GetOrNew(comp.Owner).Add(netId.Value);
     }
 
-    internal void Reset()
+    public void Reset()
     {
         DirtyEntities.Clear();
         RemovedComponents.Clear();

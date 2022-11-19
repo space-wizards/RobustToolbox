@@ -121,7 +121,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (sound == null)
             return null;
 
-        var filter = Filter.Pvs(source, entityManager: EntityManager).RemoveWhereAttachedEntity(e => e == user);
+        var filter = Filter.Pvs(source, entityManager: EntityManager, playerManager: PlayerManager, cfgManager: CfgManager).RemoveWhereAttachedEntity(e => e == user);
         return Play(sound, filter, source, true, audioParams);
     }
 

@@ -1104,9 +1104,6 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            private static ValueDataNode InvalidUidNode = new (InvalidUidString);
-            private static string InvalidUidString = "<invalid>";
-
             public DataNode Write(ISerializationManager serializationManager, EntityUid value,
                 IDependencyCollection dependencies, bool alwaysWrite = false,
                 ISerializationContext? context = null)
@@ -1120,7 +1117,7 @@ namespace Robust.Server.Maps
                         Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
                     }
 
-                    return InvalidUidNode;
+                    return new ValueDataNode();
                 }
                 else
                 {
@@ -1134,7 +1131,7 @@ namespace Robust.Server.Maps
                 bool skipHook,
                 ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? instanceProvider = null)
             {
-                if (node.Value == InvalidUidString)
+                if (string.IsNullOrWhiteSpace(node.Value))
                 {
                     return EntityUid.Invalid;
                 }

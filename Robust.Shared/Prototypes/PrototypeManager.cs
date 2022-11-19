@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -25,7 +27,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Dictionary<string, Type> _kindNames = new();
-        private readonly Dictionary<Type, int> _prototypePriorities = new();
+        private readonly Dictionary<Type, int> _kindPriorities = new();
 
         private ISawmill _sawmill = default!;
 
@@ -183,7 +185,7 @@ namespace Robust.Shared.Prototypes
 
         private int SortPrototypesByPriority(Type a, Type b)
         {
-            return _prototypePriorities[b].CompareTo(_prototypePriorities[a]);
+            return _kindPriorities[b].CompareTo(_kindPriorities[a]);
         }
 
         protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
@@ -251,7 +253,7 @@ namespace Robust.Shared.Prototypes
 
                         foreach (var parent in parents)
                         {
-                            PushInheritance(type, id, parent);
+                            PushInstanceInheritance(type, id, parent);
                         }
                     }
 
@@ -278,67 +280,97 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         public void ResolveResults()
         {
-            var types = _kinds.Keys.ToList();
-            types.Sort(SortPrototypesByPriority);
-            foreach (var type in types)
+            // Run inheritance pushing concurrently to the rest of prototype loading.
+            // Use some basic tasks and .Wait() to make sure it's done by the time we get to the prototypes in question.
+            // The biggest prototypes by far in SS14 are entity prototypes.
+            // Entity prototypes have priority -1 right now, so they have to be read last. This works out great!
+            // We'll already be done pushing inheritance for them by the time we get to reading them.
+            var inheritanceTasks = new Dictionary<Type, Task>();
+            foreach (var (k, v) in _kinds)
             {
-                var typeData = _kinds[type];
-                if (typeData.Inheritance is { } tree)
+                if (v.Inheritance is not { } inheritance)
+                    continue;
+
+                var task = Task.Run(() =>
                 {
-                    var processed = new HashSet<string>();
-                    var workList = new Queue<string>(tree.RootNodes);
+                    PushKindInheritance(k, v);
+                });
 
-                    while (workList.TryDequeue(out var id))
-                    {
-                        processed.Add(id);
-                        if (tree.TryGetParents(id, out var parents))
-                        {
-                            foreach (var parent in parents)
-                            {
-                                PushInheritance(type, id, parent);
-                            }
-                        }
+                inheritanceTasks.Add(k, task);
+            }
 
-                        if (tree.TryGetChildren(id, out var children))
-                        {
-                            foreach (var child in children)
-                            {
-                                var childParents = tree.GetParents(child)!;
-                                if (childParents.All(p => processed.Contains(p)))
-                                    workList.Enqueue(child);
-                            }
-                        }
-                    }
-                }
+            var kinds = _kinds.Keys.ToList();
+            kinds.Sort(SortPrototypesByPriority);
+            foreach (var kind in kinds)
+            {
+                var kindData = _kinds[kind];
 
-                foreach (var (id, mapping) in typeData.Results)
+                if (inheritanceTasks.TryGetValue(kind, out var task))
+                    task.Wait();
+
+                foreach (var (id, mapping) in kindData.Results)
                 {
-                    TryReadPrototype(type, id, mapping);
+                    TryReadPrototype(kind, id, mapping);
                 }
             }
         }
 
-        private void TryReadPrototype(Type type, string id, MappingDataNode mapping)
+        private void TryReadPrototype(Type kind, string id, MappingDataNode mapping)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
                 return;
             try
             {
-                _kinds[type].Instances[id] = (IPrototype)_serializationManager.Read(type, mapping)!;
+                _kinds[kind].Instances[id] = (IPrototype)_serializationManager.Read(kind, mapping)!;
             }
             catch (Exception e)
             {
-                Logger.ErrorS("PROTO", $"Reading {type}({id}) threw the following exception: {e}");
+                _sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
             }
         }
 
-        private void PushInheritance(Type type, string id, string parent)
+        private void PushKindInheritance(Type kind, KindData data)
+        {
+            if (data.Inheritance is not { } tree)
+                return;
+
+            var processed = new HashSet<string>();
+            var workList = new Queue<string>(tree.RootNodes);
+
+            while (workList.TryDequeue(out var id))
+            {
+                processed.Add(id);
+                if (tree.TryGetParents(id, out var parents))
+                {
+                    foreach (var parent in parents)
+                    {
+                        PushInstanceInheritance(kind, id, parent);
+                    }
+                }
+
+                if (tree.TryGetChildren(id, out var children))
+                {
+                    foreach (var child in children)
+                    {
+                        var childParents = tree.GetParents(child)!;
+                        if (childParents.All(p => processed.Contains(p)))
+                            workList.Enqueue(child);
+                    }
+                }
+            }
+        }
+
+        private void PushInstanceInheritance(Type type, string id, string parent)
         {
             var kindData = _kinds[type];
 
-            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(type,
-                new[] { kindData.Results[parent] }, kindData.Results[id]);
+            ref var result = ref CollectionsMarshal.GetValueRefOrNullRef(kindData.Results, id);
+
+            result = _serializationManager.PushCompositionWithGenericNode(
+                type,
+                new[] { kindData.Results[parent] },
+                result);
         }
 
         #endregion IPrototypeManager members
@@ -553,7 +585,7 @@ namespace Robust.Shared.Prototypes
                     $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
 
             _kindNames[attribute.Type] = kind;
-            _prototypePriorities[kind] = attribute.LoadPriority;
+            _kindPriorities[kind] = attribute.LoadPriority;
 
             var kindData = new KindData();
             _kinds[kind] = kindData;

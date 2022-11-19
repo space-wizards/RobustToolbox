@@ -31,7 +31,13 @@ namespace Robust.Shared.GameStates
         public ComponentState? State { get; set; }
 
         /// <summary>
-        ///     Input parameter. The player the state is being sent to.
+        ///     If true, this state is intended for replays or some other server spectator entity, not for specific
+        ///     clients.
+        /// </summary>
+        public bool ReplayState => Player == null;
+
+        /// <summary>
+        ///     The player the state is being sent to. Null implies the state is for a replay or some spectator entity.
         /// </summary>
         public readonly ICommonSession? Player;
 

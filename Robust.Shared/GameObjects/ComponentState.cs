@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Whether this state is a delta or full state.
         /// </summary>
-        bool FullState => false;
+        bool FullState { get; }
 
         /// <summary>
         ///     This function will apply the current delta state to the provided full state, modifying it in the process.

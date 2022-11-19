@@ -8,6 +8,9 @@ namespace Robust.Shared.GameObjects
     [Virtual]
     public class ComponentState { }
 
+    /// <summary>
+    ///     Interface for components that support delta-states.
+    /// </summary>
     public interface IComponentDeltaState
     {
         /// <summary>
@@ -16,13 +19,13 @@ namespace Robust.Shared.GameObjects
         bool FullState => false;
 
         /// <summary>
-        ///     This function takes a full and a delta state and apply the delta to the full state.
+        ///     This function will apply the current delta state to the provided full state, modifying it in the process.
         /// </summary>
         public void ApplyToFullState(ComponentState fullState);
 
         /// <summary>
-        ///     This function takes a full and a delta state and returns a new full state without modifying the original
-        ///     full state.
+        ///     This function should take in a full state and return a new full state with the current delta applied,
+        ///     WITHOUT modifying the original input state.
         /// </summary>
         public ComponentState CreateNewFullState(ComponentState fullState);
     }

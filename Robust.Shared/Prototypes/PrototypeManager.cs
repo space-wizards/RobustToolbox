@@ -16,7 +16,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Prototypes
 {
     [Virtual]
-    public partial class PrototypeManager : IPrototypeManager
+    public partial class PrototypeManager : IPrototypeManagerInternal
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;

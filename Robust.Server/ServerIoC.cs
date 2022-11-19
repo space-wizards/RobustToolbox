@@ -57,6 +57,7 @@ namespace Robust.Server
             deps.Register<IPlayerManager, PlayerManager>();
             deps.Register<ISharedPlayerManager, PlayerManager>();
             deps.Register<IPrototypeManager, ServerPrototypeManager>();
+            deps.Register<IPrototypeManagerInternal, ServerPrototypeManager>();
             deps.Register<IResourceManager, ResourceManager>();
             deps.Register<IResourceManagerInternal, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();

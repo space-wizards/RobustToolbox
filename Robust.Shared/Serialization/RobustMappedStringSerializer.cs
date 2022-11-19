@@ -14,6 +14,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using static Robust.Shared.Utility.Base64Helpers;
@@ -546,6 +548,14 @@ namespace Robust.Shared.Serialization
             if (!_net.IsClient)
             {
                 _dict.AddStrings(yaml);
+            }
+        }
+
+        public void AddStrings(DataNode dataNode)
+        {
+            if (!_net.IsClient)
+            {
+                _dict.AddStrings(dataNode);
             }
         }
 

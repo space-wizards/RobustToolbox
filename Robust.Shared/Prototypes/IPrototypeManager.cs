@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
@@ -243,8 +244,6 @@ public interface IPrototypeManager
     /// </param>
     void RegisterKind(Type kind);
 
-    event Action<YamlStream, string>? LoadedData;
-
     /// <summary>
     ///     Fired when prototype are reloaded. The event args contain the modified prototypes.
     /// </summary>
@@ -252,6 +251,11 @@ public interface IPrototypeManager
     ///     This does NOT fire on initial prototype load.
     /// </remarks>
     event Action<PrototypesReloadedEventArgs> PrototypesReloaded;
+}
+
+internal interface IPrototypeManagerInternal : IPrototypeManager
+{
+    event Action<DataNodeDocument>? LoadedData;
 }
 
 public sealed record PrototypesReloadedEventArgs(

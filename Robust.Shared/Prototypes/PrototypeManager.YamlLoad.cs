@@ -15,7 +15,7 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public event Action<YamlStream, string>? LoadedData;
+    public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
     public void LoadDirectory(ResourcePath path, bool overwrite = false,
@@ -41,6 +41,8 @@ public partial class PrototypeManager
                     var extractedList = new List<ExtractedMappingData>();
                     foreach (var document in DataNodeParser.ParseYamlStream(reader))
                     {
+                        LoadedData?.Invoke(document);
+
                         var seq = (SequenceDataNode)document.Root;
                         foreach (var mapping in seq.Sequence)
                         {
@@ -164,11 +166,11 @@ public partial class PrototypeManager
             if (reader == null)
                 return;
 
-            // LoadedData?.Invoke(yamlStream, file.ToString());
-
             var i = 0;
             foreach (var document in DataNodeParser.ParseYamlStream(reader))
             {
+                LoadedData?.Invoke(document);
+
                 try
                 {
                     var seq = (SequenceDataNode)document.Root;
@@ -266,6 +268,8 @@ public partial class PrototypeManager
         var i = 0;
         foreach (var document in DataNodeParser.ParseYamlStream(stream))
         {
+            LoadedData?.Invoke(document);
+
             try
             {
                 var rootNode = (SequenceDataNode)document.Root;
@@ -285,8 +289,6 @@ public partial class PrototypeManager
                 throw new PrototypeLoadException($"Failed to load prototypes from document#{i}", e);
             }
         }
-
-        // LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
     }
 
     public void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)

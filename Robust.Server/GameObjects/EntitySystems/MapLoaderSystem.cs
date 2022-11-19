@@ -539,6 +539,7 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
                 _mapManager.CreateMap(data.TargetMap);
+                _mapManager.AddUninitializedMap(data.TargetMap);
                 mapNode = _mapManager.GetMapEntityId(data.TargetMap);
                 DebugTools.Assert(mapNode.IsValid());
             }

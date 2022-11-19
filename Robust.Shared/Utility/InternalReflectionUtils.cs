@@ -5,7 +5,7 @@ using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.Shared.Utility;
 
-public static class InternalReflectionUtils
+internal static class InternalReflectionUtils
 {
     internal delegate TValue AccessField<TTarget, TValue>(ref TTarget target);
 
@@ -20,6 +20,12 @@ public static class InternalReflectionUtils
                 rGenerator.Emit(OpCodes.Stfld, field.FieldInfo);
                 break;
             case SpecificPropertyInfo property:
+                if (property.GetBackingField() is { } backingField)
+                {
+                    rGenerator.Emit(OpCodes.Stfld, backingField.FieldInfo);
+                    break;
+                }
+
                 var setter = property.PropertyInfo.GetSetMethod(true) ?? throw new NullReferenceException();
 
                 var opCode = info.DeclaringType?.IsValueType ?? false
@@ -65,12 +71,14 @@ public static class InternalReflectionUtils
         return method.CreateDelegate(typeof(AccessField<,>).MakeGenericType(obj, fieldDefinition.BackingField.FieldType));
     }
 
-    internal static AssignField<T, object?> EmitFieldAssigner<T>(Type type, Type fieldType, AbstractFieldInfo backingField)
+    internal static object EmitFieldAssigner<TObj>(AbstractFieldInfo backingField, bool boxing = false)
     {
+        var fieldType = backingField.FieldType;
+
         var method = new DynamicMethod(
             "AssignField",
             typeof(void),
-            new[] {typeof(T).MakeByRefType(), typeof(object)},
+            new[] {typeof(TObj).MakeByRefType(), boxing ? typeof(object) : fieldType},
             true);
 
         method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -78,39 +86,22 @@ public static class InternalReflectionUtils
 
         var generator = method.GetILGenerator();
 
-        if (type.IsValueType)
-        {
-            generator.DeclareLocal(type);
-            generator.Emit(OpCodes.Ldarg_0);
+        generator.Emit(OpCodes.Ldarg_0);
+
+        if(!typeof(TObj).IsValueType)
             generator.Emit(OpCodes.Ldind_Ref);
-            generator.Emit(OpCodes.Unbox_Any, type);
-            generator.Emit(OpCodes.Stloc_0);
-            generator.Emit(OpCodes.Ldloca, 0);
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-            EmitSetField(generator, backingField);
+        generator.Emit(OpCodes.Ldarg_1);
 
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Ldloc_0);
-            generator.Emit(OpCodes.Box, type);
-            generator.Emit(OpCodes.Stind_Ref);
-
-            generator.Emit(OpCodes.Ret);
-        }
-        else
+        if (boxing)
         {
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Ldind_Ref);
-            generator.Emit(OpCodes.Castclass, type);
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Unbox_Any, fieldType);
-
-            EmitSetField(generator, backingField.GetBackingField() ?? backingField);
-
-            generator.Emit(OpCodes.Ret);
+            generator.Emit(fieldType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, fieldType);
         }
 
-        return method.CreateDelegate<AssignField<T, object?>>();
+        EmitSetField(generator, backingField);
+
+        generator.Emit(OpCodes.Ret);
+
+        return method.CreateDelegate(typeof(AssignField<,>).MakeGenericType(typeof(TObj), boxing ? typeof(object) : fieldType));
     }
 }

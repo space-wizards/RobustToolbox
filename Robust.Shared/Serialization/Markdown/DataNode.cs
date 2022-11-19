@@ -1,5 +1,4 @@
 using Robust.Shared.Serialization.Manager;
-using System;
 
 namespace Robust.Shared.Serialization.Markdown
 {
@@ -16,6 +15,7 @@ namespace Robust.Shared.Serialization.Markdown
         }
 
         public abstract bool IsEmpty { get; }
+        public virtual bool IsNull => false;
 
         public abstract DataNode Copy();
 

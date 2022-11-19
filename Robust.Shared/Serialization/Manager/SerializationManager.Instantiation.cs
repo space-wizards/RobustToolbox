@@ -83,13 +83,22 @@ public partial class SerializationManager
         generator.Emit(OpCodes.Ret);
     }
 
-    internal ISerializationManager.InstantiationDelegate<T> GetOrCreateInstantiator<T>(bool isDataRecord)
+    internal ISerializationManager.InstantiationDelegate<T> GetOrCreateInstantiator<T>(bool isDataRecord, Type? actualType = null)
     {
-        return (ISerializationManager.InstantiationDelegate<T>)_instantiators.GetOrAdd(typeof(T), static (type, isRecord) =>
+        if (actualType != null && !actualType.IsAssignableTo(typeof(T)))
+        {
+            throw new ArgumentException(
+                $"{nameof(actualType)} has to be a derived type of {typeof(T)} but was {actualType}!",
+                nameof(actualType));
+        }
+
+        var type = actualType ?? typeof(T);
+
+        return (ISerializationManager.InstantiationDelegate<T>)_instantiators.GetOrAdd(type, static (type, isRecord) =>
         {
             var method = new DynamicMethod(
                 "Instantiator",
-                typeof(T),
+                type,
                 Type.EmptyTypes,
                 true);
 
@@ -108,7 +117,7 @@ public partial class SerializationManager
                 CreateClassInstantiator(generator, type);
             }
 
-            return method.CreateDelegate<ISerializationManager.InstantiationDelegate<T>>();
+            return method.CreateDelegate(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(type));
         }, isDataRecord);
     }
 

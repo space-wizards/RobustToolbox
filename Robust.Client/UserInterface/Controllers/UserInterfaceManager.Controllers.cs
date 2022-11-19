@@ -220,7 +220,7 @@ internal partial class UserInterfaceManager
                     continue;
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                var assigner = InternalReflectionUtils.EmitFieldAssigner<UIController>(controllerType, fieldInfo.FieldType, backingField);
+                var assigner = (InternalReflectionUtils.AssignField<UIController, object?>)InternalReflectionUtils.EmitFieldAssigner<UIController>(backingField, true);
                 typeDict.Add(controllerType, assigner);
             }
 

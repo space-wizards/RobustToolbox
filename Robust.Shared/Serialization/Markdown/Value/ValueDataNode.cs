@@ -1,28 +1,51 @@
 using System;
 using System.Globalization;
 using JetBrains.Annotations;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Value
 {
     public sealed class ValueDataNode : DataNode<ValueDataNode>, IEquatable<ValueDataNode>
     {
+        public static ValueDataNode Null() => new((string?)null);
+
         public ValueDataNode() : this(string.Empty) {}
 
-        public ValueDataNode(string value) : base(NodeMark.Invalid, NodeMark.Invalid)
+        public ValueDataNode(string? value) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
-            Value = value;
+            Value = value ?? string.Empty;
+            IsNull = value == null;
         }
 
         public ValueDataNode(YamlScalarNode node) : base(node.Start, node.End)
         {
-            Value = node.Value ?? string.Empty;
+            IsNull = node.Style != ScalarStyle.DoubleQuoted &&
+                     (node.Value == null || IsNullLiteral(node.Value));
+            Value = IsNull ? string.Empty : node.Value ?? string.Empty;
             Tag = node.Tag.IsEmpty ? null : node.Tag.Value;
         }
 
-        public string Value { get; set; }
+        public static explicit operator YamlScalarNode(ValueDataNode node)
+        {
+            if (node.IsNull)
+            {
+                return new YamlScalarNode("null"){Tag = node.Tag};
+            }
 
-        public override bool IsEmpty => Value == string.Empty;
+            return new YamlScalarNode(node.Value)
+            {
+                Tag = node.Tag,
+                Style = IsNullLiteral(node.Value) ? ScalarStyle.DoubleQuoted : ScalarStyle.Any
+            };
+        }
+
+        public string Value { get; set; }
+        public override bool IsNull { get; }
+
+        public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+
+        private static bool IsNullLiteral(string value) => value.Trim().ToLower() is "null" || string.IsNullOrWhiteSpace(value);
 
         public override ValueDataNode Copy()
         {

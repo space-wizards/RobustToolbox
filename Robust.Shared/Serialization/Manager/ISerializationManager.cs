@@ -204,8 +204,7 @@ namespace Robust.Shared.Serialization.Manager
             Type serializer,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = null);
+            bool skipHook = false);
 
         public DataNode WriteWithCustomSerializer(
             Type type,

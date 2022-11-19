@@ -38,7 +38,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 var nodeVariable = Expression.Variable(typeof(DataNode));
-                var valueVariable = Expression.Variable(fieldDefinition.FieldType);
+                var nullable = fieldDefinition.FieldType.IsNullable();
+                var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
+                var valueVariable = Expression.Variable(fieldType);
                 Expression call;
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && (FieldInterfaceInfos[i].Reader.Value ||
                                                                                FieldInterfaceInfos[i].Reader.Sequence ||
@@ -52,7 +54,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (FieldInterfaceInfos[i].Reader.Value)
                     {
                         var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(ValueDataNode));
+                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(ValueDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, Expression.Call(
                             Expression.Constant(serializerInstance, serializerType),
@@ -62,14 +64,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             dependencyConst,
                             skipHookParam,
                             contextParam,
-                            Expression.Default(fieldDefinition.FieldType)))),
+                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))))),
                             Expression.Constant(typeof(ValueDataNode))));
                     }
 
                     if (FieldInterfaceInfos[i].Reader.Sequence)
                     {
                         var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(SequenceDataNode));
+                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(SequenceDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, Expression.Call(
                             Expression.Constant(serializerInstance, serializerType),
@@ -79,7 +81,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             dependencyConst,
                             skipHookParam,
                             contextParam,
-                            Expression.Default(fieldDefinition.FieldType)))),
+                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))))),
                             Expression.Constant(typeof(SequenceDataNode))));
                     }
 
@@ -87,7 +89,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     {
 
                         var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldDefinition.FieldType, typeof(MappingDataNode));
+                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(MappingDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, Expression.Call(
                                 Expression.Constant(serializerInstance, serializerType),
@@ -97,7 +99,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 dependencyConst,
                                 skipHookParam,
                                 contextParam,
-                                Expression.Default(fieldDefinition.FieldType)))),
+                                Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))))),
                             Expression.Constant(typeof(MappingDataNode))));
                     }
 
@@ -110,17 +112,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     call = Expression.Assign(valueVariable, Expression.Call(
                         managerConst,
                         "Read",
-                        new[] { fieldDefinition.FieldType },
+                        new[] { fieldType },
                         nodeVariable,
                         contextParam,
                         skipHookParam,
-                        Expression.Default(fieldDefinition.FieldType)));
+                        Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))));
                 }
 
                 call = Expression.Block(
                     new[] { valueVariable },
                     call,
-                    AssignExpression(i, targetParam, valueVariable));
+                    AssignIfNotDefaultExpression(i, targetParam, SerializationManager.WrapNullableIfNeededExpression(valueVariable, nullable, fieldType)));
 
 
                 if (fieldDefinition.Attribute is DataFieldAttribute dfa)
@@ -139,7 +141,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         call,
                         dfa.Required
                             ? ExpressionUtils.ThrowExpression<RequiredFieldNotMappedException>(fieldDefinition.FieldType, tagConst)
-                            : AssignExpression(i, targetParam, Expression.Constant(DefaultValues[i], fieldDefinition.FieldType))
+                            : AssignIfNotDefaultExpression(i, targetParam, Expression.Constant(DefaultValues[i], fieldDefinition.FieldType))
                     )));
                 }
                 else
@@ -192,6 +194,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 Expression call;
+                var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
@@ -199,12 +202,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
                     var dependencyConst = Expression.Constant(manager.DependencyCollection);
                     var serializerType =
-                        typeof(ITypeWriter<>).MakeGenericType(fieldDefinition.FieldType);
+                        typeof(ITypeWriter<>).MakeGenericType(fieldType);
                     call = Expression.Call(
                         Expression.Constant(serializerInstance, serializerType),
                         serializerType.GetMethod("Write")!,
                         managerConst,
-                        valueVar,
+                        Expression.Convert(valueVar, fieldType),
                         dependencyConst,
                         alwaysWriteParam,
                         contextParam);
@@ -214,8 +217,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     call = Expression.Call(
                         managerConst,
                         "WriteValue",
-                        new[] { fieldDefinition.FieldType },
-                        valueVar,
+                        new[] { fieldType },
+                        Expression.Convert(valueVar, fieldType),
                         alwaysWriteParam,
                         contextParam);
                 }
@@ -354,7 +357,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Assign(sourceVar, AccessExpression(i, sourceParam)),
                         Expression.Assign(targetValue, Expression.Default(fieldDefinition.FieldType)),
                         call,
-                        AssignExpression(i, targetParam, targetValue)
+                        AssignIfNotDefaultExpression(i, targetParam, targetValue)
                     )
                 );
             }
@@ -367,9 +370,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 skipHookParam).Compile();
         }
 
-        private Expression AssignExpression(int i, Expression obj, Expression value)
+        private Expression AssignIfNotDefaultExpression(int i, Expression obj, Expression value)
         {
-            return Expression.Invoke(Expression.Constant(FieldAssigners[i]), obj, Expression.Convert(value, typeof(object)));
+            return Expression.IfThen(
+                Expression.Not(ExpressionUtils.EqualExpression(
+                    Expression.Constant(DefaultValues[i], BaseFieldDefinitions[i].FieldType), value)),
+                Expression.Invoke(Expression.Constant(FieldAssigners[i]), obj, value));
         }
 
         private Expression AccessExpression(int i, Expression obj)

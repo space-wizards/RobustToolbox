@@ -33,13 +33,16 @@ namespace Robust.Shared.Serialization.Manager.Definition
             public readonly bool Writer;
             public readonly bool Copier;
             public readonly bool CopyCreator;
+            public readonly (bool Value, bool Sequence, bool Mapping) Validator;
 
-            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier, bool copyCreator)
+
+            public FieldInterfaceInfo((bool Value, bool Sequence, bool Mapping) reader, bool writer, bool copier, bool copyCreator, (bool Value, bool Sequence, bool Mapping) validator)
             {
                 Reader = reader;
                 Writer = writer;
                 Copier = copier;
                 CopyCreator = copyCreator;
+                Validator = validator;
             }
         }
 
@@ -73,7 +76,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             BaseFieldDefinitions = fields.ToImmutableArray();
 
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
-            var fieldAssigners = new InternalReflectionUtils.AssignField<T, object?>[BaseFieldDefinitions.Length];
+            var fieldAssigners = new object[BaseFieldDefinitions.Length];
             var fieldAccessors = new object[BaseFieldDefinitions.Length];
 
             var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
@@ -81,7 +84,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
-                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(typeof(T), fieldDefinition.FieldType, fieldDefinition.BackingField);
+                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(fieldDefinition.BackingField);
                 fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
@@ -91,6 +94,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var writer = false;
                     var copier = false;
                     var copyCreator = false;
+                    var validator = (false, false, false);
                     foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
                     {
                         var genericTypedef = @interface.GetGenericTypeDefinition();
@@ -122,24 +126,44 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
                                 {
                                     reader.Item1 = true;
-                                }else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                }
+                                else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
                                 {
                                     reader.Item2 = true;
-                                }else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                }
+                                else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
                                 {
                                     reader.Item3 = true;
                                 }
                             }
                         }
+                        else if (genericTypedef == typeof(ITypeValidator<,>))
+                        {
+                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                            {
+                                if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
+                                {
+                                    validator.Item1 = true;
+                                }
+                                else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                {
+                                    validator.Item2 = true;
+                                }
+                                else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                {
+                                    validator.Item3 = true;
+                                }
+                            }
+                        }
                     }
 
-                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier)
+                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier && !validator.Item1 && !validator.Item2 && !validator.Item3)
                     {
                         throw new InvalidOperationException(
                             $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {typeof(T)} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
                     }
 
-                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator);
+                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator, validator);
                 }
             }
 
@@ -157,8 +181,20 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 
-        private ImmutableArray<InternalReflectionUtils.AssignField<T, object?>> FieldAssigners { get; }
+        private ImmutableArray<object> FieldAssigners { get; }
         private ImmutableArray<object> FieldAccessors { get; }
+
+        private bool TryGetIndex(string tag, out int index)
+        {
+            for (index = 0; index < BaseFieldDefinitions.Length; index++)
+            {
+                if (BaseFieldDefinitions[index].Attribute is DataFieldAttribute dataFieldAttribute &&
+                    dataFieldAttribute.Tag == tag)
+                    return true;
+            }
+
+            return false;
+        }
 
         public ValidationNode Validate(
             ISerializationManager serialization,
@@ -175,8 +211,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute is DataFieldAttribute dataFieldAttribute && dataFieldAttribute.Tag == valueDataNode.Value);
-                if (field == null)
+                if (TryGetIndex(valueDataNode.Value, out var idx))
                 {
                     var error = new ErrorNode(
                         key,
@@ -187,10 +222,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
+                var field = BaseFieldDefinitions[idx];
+                var interfaceInfo = FieldInterfaceInfos[idx];
+
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
-                ValidationNode valValidated = field.Attribute.CustomTypeSerializer != null
-                    ? serialization.ValidateWithCustomSerializer(field.FieldType, field.Attribute.CustomTypeSerializer, val, context)
-                    : serialization.ValidateNode(field.FieldType, val, context);
+                ValidationNode valValidated = val switch
+                {
+                    ValueDataNode when interfaceInfo.Validator.Value => serialization.ValidateWithCustomSerializer(
+                        field.FieldType, field.Attribute.CustomTypeSerializer!, val, context),
+                    SequenceDataNode when interfaceInfo.Validator.Sequence =>
+                        serialization.ValidateWithCustomSerializer(field.FieldType,
+                            field.Attribute.CustomTypeSerializer!, val, context),
+                    MappingDataNode when interfaceInfo.Validator.Mapping => serialization.ValidateWithCustomSerializer(
+                        field.FieldType, field.Attribute.CustomTypeSerializer!, val, context),
+                    _ => serialization.ValidateNode(field.FieldType, val, context)
+                };
 
                 validatedMapping.Add(keyValidated, valValidated);
             }

@@ -9,17 +9,7 @@ namespace Robust.Shared.Serialization.Manager;
 public sealed partial class SerializationManager
 {
     //null values are the bane of my existence
-
-    private static Expression ValueSafeCoalesceExpression(Expression left, Expression right)
-    {
-        return left.Type.IsValueType &&
-               (!left.Type.IsGenericType || left.Type.GetGenericTypeDefinition() != typeof(Nullable<>))
-            ? Expression.Condition(
-                ExpressionUtils.EqualExpression(left, Expression.Default(left.Type)),
-                left,
-                right)
-            : Expression.Coalesce(left, right);
-    }
+    //todo paul expand our testing of null-handling in serv3
 
     private static Expression GetNullExpression(Expression managerConst, Type type)
     {
@@ -33,6 +23,13 @@ public sealed partial class SerializationManager
         return null;
     }
 
+    public static Expression WrapNullableIfNeededExpression(Expression expr, bool nullable, Type type)
+    {
+        if (nullable && type.IsValueType && !expr.Type.IsNullable())
+            return Expression.New(type.EnsureNullableType().GetConstructor(new[] { type })!, expr);
+        return expr;
+    }
+
     private T GetValueOrDefault<T>(object? value) where T : struct
     {
         return value as T? ?? default;
@@ -40,8 +37,8 @@ public sealed partial class SerializationManager
 
     private bool IsNull(DataNode node)
     {
-        return node is ValueDataNode valueDataNode && valueDataNode.Value.Trim().ToLower() is "null" or "";
+        return node.IsNull;
     }
 
-    public ValueDataNode NullNode() => new ValueDataNode("null");
+    public ValueDataNode NullNode() => ValueDataNode.Null();
 }

@@ -13,12 +13,6 @@ namespace Robust.Shared.Serialization.Manager
     {
         //todo paul serv3 find a non-hardcoded way for this
 
-        private delegate object? ReadSerializerDelegate(
-            DataNode node,
-            ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = null);
-
         private delegate DataNode WriteSerializerDelegate(
             object value,
             ISerializationContext? context = null,
@@ -41,7 +35,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly ConcurrentDictionary<Type, object> _customTypeSerializers = new();
 
-        private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ReadSerializerDelegate>
+        private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ReadBoxingDelegate>
             _customReadSerializerDelegates = new();
 
         private readonly ConcurrentDictionary<(Type value, Type serializer), WriteSerializerDelegate>
@@ -61,7 +55,7 @@ namespace Robust.Shared.Serialization.Manager
             return _customTypeSerializers.GetOrAdd(type, CreateSerializer);
         }
 
-        private ReadSerializerDelegate GetOrCreateReadCustomSerializerDelegate(Type value, Type node, Type serializer)
+        private ReadBoxingDelegate GetOrCreateReadCustomSerializerDelegate(Type value, Type node, Type serializer)
         {
             return _customReadSerializerDelegates.GetOrAdd((value, node, serializer), static (tuple, instance) =>
             {
@@ -69,7 +63,6 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                var valueParam = Expression.Parameter(typeof(object), "value");
 
                 var serializerInstance = instance.GetOrCreateCustomTypeSerializer(tuple.serializer);
                 var serializerConstant = Expression.Constant(serializerInstance);
@@ -84,20 +77,13 @@ namespace Robust.Shared.Serialization.Manager
                     dependencyConst,
                     skipHookParam,
                     contextParam,
-                    !tuple.value.IsValueType
-                        ? Expression.Convert(valueParam, tuple.value)
-                        : Expression.Call(
-                            instanceParam,
-                            nameof(GetValueOrDefault),
-                            new[] { tuple.value },
-                            valueParam));
+                    Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(tuple.value)));
 
-                return Expression.Lambda<ReadSerializerDelegate>(
+                return Expression.Lambda<ReadBoxingDelegate>(
                     Expression.Convert(call, typeof(object)),
                     nodeParam,
                     contextParam,
-                    skipHookParam,
-                    valueParam).Compile();
+                    skipHookParam).Compile();
             }, this);
         }
 
@@ -230,10 +216,9 @@ namespace Robust.Shared.Serialization.Manager
             Type serializer,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false,
-            object? value = null)
+            bool skipHook = false)
         {
-            return GetOrCreateReadCustomSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
+            return GetOrCreateReadCustomSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook);
         }
 
         public DataNode WriteWithCustomSerializer(

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Robust.Shared.Random;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -25,6 +26,9 @@ public partial class PrototypeManager
         var streams = Resources.ContentFindFiles(path)
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
             .ToArray();
+
+        // Shuffle to avoid input data patterns causing uneven thread workloads.
+        RandomExtensions.Shuffle(streams.AsSpan(), new System.Random());
 
         var sawmill = _logManager.GetSawmill("eng");
 

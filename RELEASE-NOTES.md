@@ -49,6 +49,7 @@ END TEMPLATE-->
 
 * Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
 * Move pinned font data over to Pinned Object Heap.
+* Improved shader code generation for uniform arrays to be more compatible.
 
 ### Internal
 

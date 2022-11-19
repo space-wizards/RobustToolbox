@@ -5,5 +5,7 @@
 
 /Robust.*/Audio/Midi/ @Zumorica
 
+/Robust.*/Serialization @DrSmugleaf
+
 # Be they Fluent translations or Freemarker templates, I know them both!
 *.ftl @RemieRichards

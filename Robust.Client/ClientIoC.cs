@@ -14,6 +14,7 @@ using Robust.Client.Player;
 using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
+using Robust.Client.Replays;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
@@ -32,6 +33,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -119,6 +121,7 @@ namespace Robust.Client
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
+            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
         }
     }
 }

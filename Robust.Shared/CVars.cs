@@ -190,7 +190,7 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states.
+        /// ZSTD compression level to use when compressing game states. Also used for replays.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
@@ -1359,5 +1359,37 @@ namespace Robust.Shared
         /// Index log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+
+        /*
+         * Replays
+         */
+
+        /// <summary>
+        /// The folder within the server data directory where a replay will be recorded. Note that existing files in
+        /// this directory will be removed when starting a new recording.
+        /// </summary>
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replay", CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size", 1024 * 100, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size", 1024 * 300, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
+        /// for one or more tick. Actual files may be slightly larger, this is just a lower threshold. After
+        /// compressing, the files are generally ~30% of their uncompressed size.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize", 1024, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether or not recording replays is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
     }
 }

@@ -1022,7 +1022,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         // no point sending an empty collection
@@ -1033,7 +1033,11 @@ internal sealed partial class PVSSystem : EntitySystem
         var slowPath = false;
         var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
 
-        if (!SeenAllEnts.Contains(player))
+        bool sendAll = player == null
+            ? fromTick == GameTick.Zero
+            : !SeenAllEnts.Contains(player);
+
+        if (sendAll)
         {
             // Give them E V E R Y T H I N G
             stateEntities = new List<EntityState>(EntityManager.EntityCount);
@@ -1116,12 +1120,12 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Generates a network entity state for the given entity.
     /// </summary>
-    /// <param name="player">The player to generate this state for.</param>
+    /// <param name="player">The player to generate this state for (null if this state is for replays)</param>
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
     /// <param name="meta">The entity's metadata component</param>
     /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
+    private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
@@ -1140,7 +1144,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != component.Owner)
                 continue;
 
             if (component.LastModifiedTick <= fromTick)

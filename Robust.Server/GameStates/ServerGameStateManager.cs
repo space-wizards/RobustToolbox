@@ -23,6 +23,7 @@ using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Players;
+using Robust.Server.Replays;
 
 namespace Robust.Server.GameStates
 {
@@ -42,6 +43,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
@@ -107,7 +109,7 @@ namespace Robust.Server.GameStates
             }
         }
 
-        private sealed class PvsThreadResources
+        internal sealed class PvsThreadResources
         {
             public ZStdCompressionContext CompressionContext;
 
@@ -225,11 +227,17 @@ namespace Robust.Server.GameStates
             }
 
             Parallel.For(
-                0, players.Length,
+                _replay.Recording ? -1 : 0, players.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
                 () => _threadResourcesPool.Get(),
                 (i, _, resource) =>
                 {
+                    if (i == -1)
+                    {
+                        _replay.SaveReplayData(mainThread, parentDeps, resource);
+                        return resource;
+                    }
+
                     try
                     {
                         SendStateUpdate(i, resource);

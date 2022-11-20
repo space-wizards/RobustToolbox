@@ -522,10 +522,24 @@ cmd-vvread-desc = Retrieve a path's value using VV (View Variables).
 cmd-vvread-desc = Usage: vvread <path>
 
 cmd-vvwrite-desc = Modify a path's value using VV (View Variables).
-cmd-vvwrite-desc = Usage: vvwrite <path>
+cmd-vvwrite-help = Usage: vvwrite <path>
 
 cmd-vv-desc = Opens View Variables (VV).
-cmd-vv-desc = Usage: vv <path|entity ID|guihover>
+cmd-vv-help = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
-cmd-vvinvoke-desc = Usage: vvinvoke <path> [arguments...]
+cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
+
+cmd-replaystart-desc = Starts a replay recording.
+cmd-replaystart-help = Usage: replaystart
+cmd-replaystart-success = Started recording a replay.
+cmd-replaystart-error = Already recording a replay
+
+cmd-replaystop-desc = Stops a replay recording.
+cmd-replaystop-help = Usage: replaystop
+cmd-replaystop-success = Stopped recording a replay.
+cmd-replaystop-error = Not currently recording a replay.
+
+cmd-replaystats-desc = Displays information about the current replay recording.
+cmd-replaystats-help = Usage: replaystats
+cmd-replaystats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.

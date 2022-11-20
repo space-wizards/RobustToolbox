@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
-    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
+    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>, ITypeCopyCreator<int>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -89,6 +89,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             }
 
             return flags;
+        }
+
+        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            return source;
         }
     }
 }

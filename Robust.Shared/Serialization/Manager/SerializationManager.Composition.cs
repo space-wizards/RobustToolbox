@@ -47,7 +47,6 @@ public partial class SerializationManager
             var (node, instance) = vfArgument;
 
             var instanceConst = Expression.Constant(instance);
-            var dependencyCollectionConst = Expression.Constant(instance.DependencyCollection);
 
             var typeParam = Expression.Parameter(typeof(Type), "type");
             var parentParam = Expression.Parameter(typeof(DataNode), "parent");
@@ -63,13 +62,12 @@ public partial class SerializationManager
                 var readerConst = Expression.Constant(handler, readerType);
 
                 expression = Expression.Call(
-                    readerConst,
-                    "PushInheritance",
-                    Type.EmptyTypes,
                     instanceConst,
-                    Expression.Convert(childParam, nodeType),
+                    nameof(PushInheritance),
+                    new []{value, nodeType},
+                    readerConst,
                     Expression.Convert(parentParam, nodeType),
-                    dependencyCollectionConst,
+                    Expression.Convert(childParam, nodeType),
                     contextParam);
             }
             else if (nodeType == typeof(MappingDataNode) && instance.TryGetDefinition(value, out var dataDefinition))
@@ -167,6 +165,21 @@ public partial class SerializationManager
         }
 
         return newMapping;
+    }
+
+    public TNode PushInheritance<TType, TNode>(ITypeInheritanceHandler<TType, TNode> inheritanceHandler,
+        TNode parent, TNode child,
+        ISerializationContext? context = null) where TNode : DataNode
+    {
+        return inheritanceHandler.PushInheritance(this, child, parent, DependencyCollection, context);
+    }
+
+    public TNode PushInheritance<TType, TNode, TInheritanceHandler>(TNode parent, TNode child,
+        ISerializationContext? context = null) where TNode : DataNode
+        where TInheritanceHandler : ITypeInheritanceHandler<TType, TNode>
+    {
+        return PushInheritance<TType, TNode>(GetOrCreateCustomTypeSerializer<TInheritanceHandler>(), parent, child,
+            context);
     }
 
 }

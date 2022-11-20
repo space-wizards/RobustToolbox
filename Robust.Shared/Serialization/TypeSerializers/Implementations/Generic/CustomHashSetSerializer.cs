@@ -28,7 +28,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
 
         foreach (var dataNode in node.Sequence)
         {
-            var value = serializationManager.ReadWithCustomSerializer(typeof(T), typeof(TCustomSerializer), dataNode, context, skipHook);
+            var value = serializationManager.Read<T, ValueDataNode, TCustomSerializer>((ValueDataNode)dataNode, context, skipHook);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 
@@ -44,7 +44,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         var list = new List<ValidationNode>();
         foreach (var elem in node.Sequence)
         {
-            list.Add(serializationManager.ValidateWithCustomSerializer(typeof(T), typeof(TCustomSerializer), elem, context));
+            list.Add(serializationManager.ValidateNode<T, ValueDataNode, TCustomSerializer>((ValueDataNode)elem, context));
         }
 
         return new ValidatedSequenceNode(list);
@@ -58,7 +58,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
 
         foreach (var elem in value)
         {
-            sequence.Add(serializationManager.WriteWithCustomSerializer(typeof(T), typeof(TCustomSerializer), elem, context, alwaysWrite));
+            sequence.Add(serializationManager.WriteValue<T, TCustomSerializer>(elem, alwaysWrite, context));
         }
 
         return sequence;

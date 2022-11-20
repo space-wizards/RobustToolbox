@@ -8,7 +8,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -47,62 +46,50 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var switchCases = new List<SwitchCase>();
                     var nullable = fieldDefinition.FieldType.IsNullable();
                     var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
-                    var dependencyConst = Expression.Constant(manager.DependencyCollection);
-                    var serializerInstance =
-                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
                     if (FieldInterfaceInfos[i].Reader.Value)
                     {
-                        var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(ValueDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
-                                Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                            Expression.Constant(serializerInstance, serializerType),
-                            serializerType.GetMethod("Read")!,
+                                Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(
+                                    Expression.Call(
                             managerConst,
+                            "Read",
+                            new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                             Expression.Convert(nodeVariable, typeof(ValueDataNode)),
-                            dependencyConst,
-                            skipHookParam,
                             contextParam,
+                            skipHookParam,
                             Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
                             Expression.Constant(typeof(ValueDataNode))));
                     }
 
                     if (FieldInterfaceInfos[i].Reader.Sequence)
                     {
-                        var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(SequenceDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                            Expression.Constant(serializerInstance, serializerType),
-                            serializerType.GetMethod("Read")!,
                             managerConst,
+                            "Read",
+                            new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                             Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
-                            dependencyConst,
-                            skipHookParam,
                             contextParam,
+                            skipHookParam,
                             Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
                             Expression.Constant(typeof(SequenceDataNode))));
                     }
 
                     if (FieldInterfaceInfos[i].Reader.Mapping)
                     {
-
-                        var serializerType =
-                            typeof(ITypeReader<,>).MakeGenericType(fieldType, typeof(MappingDataNode));
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                                Expression.Constant(serializerInstance, serializerType),
-                                serializerType.GetMethod("Read")!,
-                                managerConst,
+                                    managerConst,
+                                    "Read",
+                                    new []{fieldType, typeof(MappingDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                 Expression.Convert(nodeVariable, typeof(MappingDataNode)),
-                                dependencyConst,
+                                    contextParam,
                                 skipHookParam,
-                                contextParam,
                                 Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
                             Expression.Constant(typeof(MappingDataNode))));
                     }
 
-                    call = Expression.Switch(Expression.Call(nodeVariable, "GetType", Type.EmptyTypes),
+                    call = Expression.Switch(ExpressionUtils.GetTypeExpression(nodeVariable),
                         ExpressionUtils.ThrowExpression<InvalidOperationException>(),
                         switchCases.ToArray());
                 }
@@ -197,17 +184,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
-                    var serializerInstance =
-                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
-                    var dependencyConst = Expression.Constant(manager.DependencyCollection);
-                    var serializerType =
-                        typeof(ITypeWriter<>).MakeGenericType(fieldType);
                     call = Expression.Call(
-                        Expression.Constant(serializerInstance, serializerType),
-                        serializerType.GetMethod("Write")!,
                         managerConst,
+                        "Write",
+                        new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         Expression.Convert(valueVar, fieldType),
-                        dependencyConst,
                         alwaysWriteParam,
                         contextParam);
                 }
@@ -313,13 +294,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     var targetValue = Expression.Variable(fieldDefinition.FieldType);
 
-                    var serializerInstance =
-                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
-                    var serializerType = typeof(ITypeCopier<>).MakeGenericType(fieldDefinition.FieldType);
                     call = Expression.Call(
-                        Expression.Constant(serializerInstance, serializerType),
-                        serializerType.GetMethod("CopyTo")!,
                         managerConst,
+                        "CopyTo",
+                        new[]{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
                         targetValue,
                         skipHookParam,
@@ -341,13 +319,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
                 {
-                    var serializerInstance =
-                        manager.GetOrCreateCustomTypeSerializer(fieldDefinition.Attribute.CustomTypeSerializer);
-                    var serializerType = typeof(ITypeCopyCreator<>).MakeGenericType(fieldDefinition.FieldType);
                     call = Expression.Call(
-                        Expression.Constant(serializerInstance, serializerType),
-                        serializerType.GetMethod("CreateCopy")!,
                         managerConst,
+                        "CreateCopy",
+                        new []{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
                         skipHookParam,
                         contextParam);
@@ -372,6 +347,68 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 targetParam,
                 contextParam,
                 skipHookParam).Compile();
+        }
+
+        private ValidateFieldDelegate EmitFieldValidationDelegate(SerializationManager manager, int i)
+        {
+            var managerConst = Expression.Constant(manager);
+
+            var nodeParam = Expression.Parameter(typeof(DataNode));
+            var contextParam = Expression.Parameter(typeof(ISerializationContext));
+
+            var field = BaseFieldDefinitions[i];
+            var interfaceInfo = FieldInterfaceInfos[i];
+
+            var switchCases = new List<SwitchCase>();
+            if (interfaceInfo.Validator.Value)
+            {
+                switchCases.Add(Expression.SwitchCase(
+                    Expression.Call(
+                        managerConst,
+                        "ValidateNode",
+                        new []{field.FieldType, typeof(ValueDataNode), field.Attribute.CustomTypeSerializer!},
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                        contextParam),
+                    Expression.Constant(typeof(ValueDataNode))));
+            }
+
+            if (interfaceInfo.Validator.Sequence)
+            {
+                switchCases.Add(Expression.SwitchCase(
+                    Expression.Call(
+                        managerConst,
+                        "ValidateNode",
+                        new []{field.FieldType, typeof(SequenceDataNode), field.Attribute.CustomTypeSerializer!},
+                        Expression.Convert(nodeParam, typeof(SequenceDataNode)),
+                        contextParam),
+                    Expression.Constant(typeof(SequenceDataNode))));
+            }
+
+            if (interfaceInfo.Validator.Mapping)
+            {
+                switchCases.Add(Expression.SwitchCase(
+                    Expression.Call(
+                        managerConst,
+                        "ValidateNode",
+                        new []{field.FieldType, typeof(MappingDataNode), field.Attribute.CustomTypeSerializer!},
+                        Expression.Convert(nodeParam, typeof(MappingDataNode)),
+                        contextParam),
+                    Expression.Constant(typeof(MappingDataNode))));
+            }
+
+            var @switch = Expression.Switch(ExpressionUtils.GetTypeExpression(nodeParam),
+                Expression.Call(
+                    managerConst,
+                    "ValidateNode",
+                    new[] { field.FieldType },
+                    nodeParam,
+                    contextParam),
+                switchCases.ToArray());
+
+            return Expression.Lambda<ValidateFieldDelegate>(
+                @switch,
+                nodeParam,
+                contextParam).Compile();
         }
 
         private Expression AssignIfNotDefaultExpression(int i, Expression obj, Expression value)

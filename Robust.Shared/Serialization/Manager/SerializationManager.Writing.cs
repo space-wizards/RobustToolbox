@@ -70,15 +70,14 @@ public sealed partial class SerializationManager
             if (serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>), actualType, out var serializer))
             {
                 var serializerConst = Expression.Constant(serializer);
-                var depCollection = Expression.Constant(serializationManager.DependencyCollection);
                 call = Expression.Call(
-                    serializerConst,
-                    typeof(ITypeWriter<>).MakeGenericType(actualType).GetMethod("Write")!,
                     instanceParam,
+                    nameof(WriteValue),
+                    new []{actualType},
+                    serializerConst,
                     sameType ? objParam : Expression.Convert(objParam, actualType),
-                    depCollection,
-                    alwaysWriteParam,
-                    contextParam
+                    contextParam,
+                    alwaysWriteParam
                 );
             }
             else if (actualType.IsEnum)
@@ -135,7 +134,6 @@ public sealed partial class SerializationManager
 
             // check for customtypeserializer before anything
             var serializerType = typeof(ITypeWriter<>).MakeGenericType(actualType);
-            var dependencyConst = Expression.Constant(serializationManager.DependencyCollection);
             var serializerVar = Expression.Variable(serializerType);
             call = Expression.Block(
                 new[] { serializerVar },
@@ -149,13 +147,13 @@ public sealed partial class SerializationManager
                             new[] { serializerType, actualType },
                             serializerVar)),
                     Expression.Call(
-                        serializerVar,
-                        serializerType.GetMethod("Write")!,
                         instanceParam,
+                        nameof(WriteValue),
+                        new []{actualType},
+                        serializerVar,
                         sameType ? objParam : Expression.Convert(objParam, actualType),
-                        dependencyConst,
-                        alwaysWriteParam,
-                        contextParam),
+                        contextParam,
+                        alwaysWriteParam),
                     call));
 
             return Expression.Lambda<WriteGenericDelegate<T>>(
@@ -219,6 +217,20 @@ public sealed partial class SerializationManager
     public DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
     {
         return GetOrCreateWriteGenericDelegate(value)(value, alwaysWrite, context);
+    }
+
+    public DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        if (value == null) return NullNode();
+
+        return writer.Write(this, value, DependencyCollection, alwaysWrite, context);
+    }
+
+    public DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
+        where TWriter : ITypeWriter<T>
+    {
+        return WriteValue(GetOrCreateCustomTypeSerializer<TWriter>(), value, alwaysWrite, context);
     }
 
     public DataNode WriteValue(object? value, bool alwaysWrite = false,

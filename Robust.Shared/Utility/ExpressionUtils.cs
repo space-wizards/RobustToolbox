@@ -75,6 +75,9 @@ public static class ExpressionUtils
     public static Type ExpressionTypeOrType(object x) => x is Expression expr ? expr.Type : x.GetType();
     public static Expression ExpressionOrConstant(object x) => x is Expression expr ? expr : Expression.Constant(x);
 
+    public static MethodCallExpression GetTypeExpression(Expression obj) =>
+        Expression.Call(obj, "GetType", Type.EmptyTypes);
+
     public static Expression DefaultValueOrTypeDefault(ParameterInfo x) => x.HasDefaultValue
         ? Expression.Constant(x.DefaultValue, x.ParameterType)
         : Expression.Default(x.ParameterType);

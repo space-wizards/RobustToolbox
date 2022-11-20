@@ -106,30 +106,21 @@ namespace Robust.Benchmarks.Serialization.Write
         [BenchmarkCategory("flag")]
         public DataNode WriteFlagZero()
         {
-            return SerializationManager.WriteWithCustomSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagZero);
+            return SerializationManager.WriteValue<int, FlagSerializer<BenchmarkFlags>>((int)FlagZero);
         }
 
         [Benchmark]
         [BenchmarkCategory("flag")]
         public DataNode WriteThirtyOne()
         {
-            return SerializationManager.WriteWithCustomSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagThirtyOne);
+            return SerializationManager.WriteValue<int, FlagSerializer<BenchmarkFlags>>((int)FlagThirtyOne);
         }
 
         [Benchmark]
         [BenchmarkCategory("customTypeSerializer")]
         public DataNode WriteIntegerCustomSerializer()
         {
-            return SerializationManager.WriteWithCustomSerializer(
-                typeof(int),
-                typeof(BenchmarkIntSerializer),
-                Integer);
+            return SerializationManager.WriteValue<int, BenchmarkIntSerializer>(Integer);
         }
     }
 }

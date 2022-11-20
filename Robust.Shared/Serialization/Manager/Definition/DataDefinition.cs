@@ -78,6 +78,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
             var fieldAssigners = new object[BaseFieldDefinitions.Length];
             var fieldAccessors = new object[BaseFieldDefinitions.Length];
+            var fieldValidators = new ValidateFieldDelegate[BaseFieldDefinitions.Length];
 
             var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
 
@@ -86,6 +87,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var fieldDefinition = BaseFieldDefinitions[i];
                 fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(fieldDefinition.BackingField);
                 fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
+                fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {
@@ -170,6 +172,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
             FieldAssigners = fieldAssigners.ToImmutableArray();
             FieldAccessors = fieldAccessors.ToImmutableArray();
+            FieldValidators = fieldValidators.ToImmutableArray();
 
             Populate = EmitPopulateDelegate(manager);
             Serialize = EmitSerializeDelegate(manager);
@@ -183,6 +186,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private ImmutableArray<object> FieldAssigners { get; }
         private ImmutableArray<object> FieldAccessors { get; }
+
+        private ImmutableArray<ValidateFieldDelegate> FieldValidators { get; }
 
         private bool TryGetIndex(string tag, out int index)
         {
@@ -222,23 +227,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var field = BaseFieldDefinitions[idx];
-                var interfaceInfo = FieldInterfaceInfos[idx];
-
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
-                ValidationNode valValidated = val switch
-                {
-                    ValueDataNode when interfaceInfo.Validator.Value => serialization.ValidateWithCustomSerializer(
-                        field.FieldType, field.Attribute.CustomTypeSerializer!, val, context),
-                    SequenceDataNode when interfaceInfo.Validator.Sequence =>
-                        serialization.ValidateWithCustomSerializer(field.FieldType,
-                            field.Attribute.CustomTypeSerializer!, val, context),
-                    MappingDataNode when interfaceInfo.Validator.Mapping => serialization.ValidateWithCustomSerializer(
-                        field.FieldType, field.Attribute.CustomTypeSerializer!, val, context),
-                    _ => serialization.ValidateNode(field.FieldType, val, context)
-                };
 
-                validatedMapping.Add(keyValidated, valValidated);
+                validatedMapping.Add(keyValidated, FieldValidators[idx](val, context));
             }
 
             return new ValidatedMappingNode(validatedMapping);

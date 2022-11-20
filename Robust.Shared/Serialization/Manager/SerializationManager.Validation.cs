@@ -26,7 +26,6 @@ public sealed partial class SerializationManager
         return _validationDelegates.GetOrAdd((type, node), static (key, manager) =>
         {
             var managerConst = Expression.Constant(manager);
-            var typeConst = Expression.Constant(key.type);
             var nodeParam = Expression.Parameter(typeof(DataNode), "node");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
@@ -35,16 +34,14 @@ public sealed partial class SerializationManager
 
             if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeValidator<,>), key.type, key.node, out var serializer))
             {
-                var serializerConst = Expression.Constant(serializer, typeof(ITypeValidator<,>).MakeGenericType(key.type, key.node));
-                var depConst = Expression.Constant(manager.DependencyCollection);
+                var serializerConst = Expression.Constant(serializer);
 
                 call = Expression.Call(
-                    serializerConst,
-                    "Validate",
-                    Type.EmptyTypes,
                     managerConst,
+                    nameof(ValidateNode),
+                    new []{key.type, key.node},
+                    serializerConst,
                     Expression.Convert(nodeParam, key.node),
-                    depConst,
                     contextParam);
             }
             else if (key.type.IsArray)
@@ -188,6 +185,18 @@ public sealed partial class SerializationManager
     public ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null)
     {
         return ValidateNode(typeof(T), node, context);
+    }
+
+    public ValidationNode ValidateNode<T, TNode>(ITypeValidator<T, TNode> typeValidator, TNode node,
+        ISerializationContext? context = null) where TNode : DataNode
+    {
+        return typeValidator.Validate(this, node, DependencyCollection, context);
+    }
+
+    public ValidationNode ValidateNode<T, TNode, TValidator>(TNode node,
+        ISerializationContext? context = null) where TNode : DataNode where TValidator : ITypeValidator<T, TNode>
+    {
+        return ValidateNode(GetOrCreateCustomTypeSerializer<TValidator>(), node, context);
     }
 
     public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)

@@ -123,27 +123,21 @@ namespace Robust.Benchmarks.Serialization.Copy
         [BenchmarkCategory("flag")]
         public object? CopyFlagZero()
         {
-            return SerializationManager.CreateCopyWithCustomSerializer(
-                typeof(FlagSerializer<BenchmarkFlags>),
-                (int) FlagZero);
+            return SerializationManager.CreateCopy<int, FlagSerializer<BenchmarkFlags>>((int) FlagZero);
         }
 
         [Benchmark]
         [BenchmarkCategory("flag")]
         public object? CopyFlagThirtyOne()
         {
-            return SerializationManager.CreateCopyWithCustomSerializer(
-                typeof(FlagSerializer<BenchmarkFlags>),
-                (int) FlagThirtyOne);
+            return SerializationManager.CreateCopy<int, FlagSerializer<BenchmarkFlags>>((int) FlagThirtyOne);
         }
 
         [Benchmark]
         [BenchmarkCategory("customTypeSerializer")]
         public object? CopyIntegerCustomSerializer()
         {
-            return SerializationManager.CreateCopyWithCustomSerializer(
-                typeof(BenchmarkIntSerializer),
-                Integer);
+            return SerializationManager.CreateCopy<int, BenchmarkIntSerializer>(Integer);
         }
     }
 }

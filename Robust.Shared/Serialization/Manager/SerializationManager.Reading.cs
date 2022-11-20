@@ -54,6 +54,21 @@ namespace Robust.Shared.Serialization.Manager
                 static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, manager), this))(node, context, skipHook, instanceProvider);
         }
 
+        public T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
+            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null)
+            where TNode : DataNode
+        {
+            return reader.Read(this, node, DependencyCollection, skipHook, context, instanceProvider);
+        }
+
+        public T Read<T, TNode, TReader>(TNode node, ISerializationContext? context = null,
+            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null) where TNode : DataNode
+            where TReader : ITypeReader<T, TNode>
+        {
+            return Read(GetOrCreateCustomTypeSerializer<TReader>(), node, context, skipHook,
+                instanceProvider);
+        }
+
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
         {
             return GetOrCreateBoxingReadDelegate(type)(node, context, skipHook);
@@ -126,10 +141,15 @@ namespace Robust.Shared.Serialization.Manager
             {
                 var readerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
                 var readerConst = Expression.Constant(reader, readerType);
-                var depencencyConst = Expression.Constant(manager.DependencyCollection);
 
-                call = Expression.Call(readerConst, readerType.GetMethod("Read")!, managerConst,
-                    Expression.Convert(nodeParam, nodeType), depencencyConst, skipHookParam, contextParam,
+                call = Expression.Call(
+                    managerConst,
+                    nameof(Read),
+                    new[] { actualType, nodeType },
+                    readerConst,
+                    Expression.Convert(nodeParam, nodeType),
+                    contextParam,
+                    skipHookParam,
                     BaseInstantiatorToActual());
             }
             else if (actualType.IsArray)
@@ -233,7 +253,6 @@ namespace Robust.Shared.Serialization.Manager
 
             // check for customtypeserializer before anything
             var serializerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
-            var dependencyConst = Expression.Constant(manager.DependencyCollection);
             var serializerVar = Expression.Variable(serializerType);
             call = Expression.Block(new[] { serializerVar },
                 Expression.Condition(
@@ -242,9 +261,16 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Constant(null, typeof(ISerializationContext))),
                         Expression.Call(Expression.Property(contextParam, "SerializerProvider"),
                             "TryGetTypeNodeSerializer", new[] { serializerType, actualType, nodeType }, serializerVar)),
-                    WrapNullableIfNeededExpression(Expression.Call(serializerVar, serializerType.GetMethod("Read")!, managerConst,
-                        Expression.Convert(nodeParam, nodeType), dependencyConst, skipHookParam, contextParam,
-                        BaseInstantiatorToActual()), nullable, actualType),
+                    WrapNullableIfNeededExpression(
+                        Expression.Call(
+                            managerConst,
+                            nameof(Read),
+                            new []{actualType, nodeType},
+                            serializerVar,
+                            Expression.Convert(nodeParam, nodeType),
+                            contextParam,
+                            skipHookParam,
+                            BaseInstantiatorToActual()), nullable, actualType),
                     call));
 
             if (!nullable && !actualType.IsValueType)

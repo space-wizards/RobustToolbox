@@ -183,7 +183,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,
             SequenceDataNode parent,
-            IDependencyCollection dependencies, ISerializationContext context)
+            IDependencyCollection dependencies, ISerializationContext? context)
         {
             var componentFactory = dependencies.Resolve<IComponentFactory>();
             var newCompReg = child.Copy();

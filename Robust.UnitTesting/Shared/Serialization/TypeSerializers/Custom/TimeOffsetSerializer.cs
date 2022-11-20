@@ -26,7 +26,7 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
         Assert.That(curTime.TotalSeconds, Is.GreaterThan(0));
 
         var dataTime = curTime + TimeSpan.FromSeconds(2);
-        var node = serialization.WriteWithCustomSerializer(typeof(TimeSpan), typeof(TimeOffsetSerializer), dataTime);
+        var node = serialization.WriteValue<TimeSpan, TimeOffsetSerializer>(dataTime);
         Assert.That(((ValueDataNode) node).Value, Is.EqualTo("2"));
     }
 
@@ -43,8 +43,7 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
         var curTime = sim.ResolveDependency<IGameTiming>().CurTime;
 
         var node = new ValueDataNode("2");
-        var deserialized =
-            serialization.ReadWithCustomSerializer(typeof(TimeSpan), typeof(TimeOffsetSerializer), node);
+        var deserialized = serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(node);
 
         Assert.That(deserialized, Is.Not.EqualTo(null));
         var time = (TimeSpan) deserialized!;

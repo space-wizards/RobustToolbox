@@ -82,9 +82,15 @@ public sealed partial class SerializationManager
                 var copierConstant = Expression.Constant(copier, copierType);
 
                 call = Expression.Block(
-                    Expression.Call(copierConstant, copierType.GetMethod("CopyTo")!, instanceParam,
+                    Expression.Call(
+                        instanceParam,
+                        nameof(CopyTo),
+                        new []{actualType},
+                        copierConstant,
                         sourceVar,
-                        targetVar, skipHookParam, contextParam),
+                        targetVar,
+                        contextParam,
+                        skipHookParam),
                     Expression.Constant(true));
             }
             else
@@ -174,12 +180,13 @@ public sealed partial class SerializationManager
                     var serializerType = typeof(ITypeCopyCreator<>).MakeGenericType(type);
                     var copierConst = Expression.Constant(rawCopier, serializerType);
                     call = Expression.Call(
-                        copierConst,
-                        typeof(ITypeCopyCreator<>).MakeGenericType(type).GetMethod("CreateCopy")!,
                         instanceParam,
+                        nameof(CreateCopy),
+                        new []{type},
+                        copierConst,
                         sourceParamAccess,
-                        skipHookParam,
-                        contextParam);
+                        contextParam,
+                        skipHookParam);
                 }
                 else if (type.IsArray)
                 {
@@ -369,6 +376,29 @@ public sealed partial class SerializationManager
             hookres.AfterDeserialization();
     }
 
+    public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null,
+        bool skipHook = false)
+    {
+        if (source == null)
+        {
+            target = default;
+            return;
+        }
+
+        target ??= GetOrCreateInstantiator<T>(false)();
+
+        copier.CopyTo(this, source, ref target, skipHook, context);
+
+        if(!skipHook && target is ISerializationHooks hookres)
+            hookres.AfterDeserialization();
+    }
+
+    public void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false)
+        where TCopier : ITypeCopier<T>
+    {
+        CopyTo(GetOrCreateCustomTypeSerializer<TCopier>(), source, ref target, context, skipHook);
+    }
+
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
     {
         if (source == null)
@@ -388,5 +418,25 @@ public sealed partial class SerializationManager
         }
 
         return res;
+    }
+
+    public T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null,
+        bool skipHook = false)
+    {
+        if (source == null) return default!;
+
+        var res = copyCreator.CreateCopy(this, source, skipHook, context);
+        if (!skipHook && res is ISerializationHooks hooks)
+        {
+            hooks.AfterDeserialization();
+        }
+
+        return res;
+    }
+
+    public T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false)
+        where TCopyCreator : ITypeCopyCreator<T>
+    {
+        return CreateCopy(GetOrCreateCustomTypeSerializer<TCopyCreator>(), source, context, skipHook);
     }
 }

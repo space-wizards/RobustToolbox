@@ -11,8 +11,8 @@ public sealed class ReplayMessage
     public List<object> Messages = default!;
 
     // TODO REPLAYS
-    // figure out a way to just save NetMessage messages to replays doing this bullish to use IRobustSerializer as a
-    // crutch seems shitty.
+    // Figure out a way to just directly save NetMessage objects to replays. This just uses IRobustSerializer as a crutch.
+
     [Serializable, NetSerializable]
     public sealed class CvarChangeMsg
     {

@@ -76,8 +76,8 @@ public sealed partial class SerializationManager
                     new []{actualType},
                     serializerConst,
                     sameType ? objParam : Expression.Convert(objParam, actualType),
-                    contextParam,
-                    alwaysWriteParam
+                    alwaysWriteParam,
+                    contextParam
                 );
             }
             else if (actualType.IsEnum)
@@ -152,8 +152,8 @@ public sealed partial class SerializationManager
                         new []{actualType},
                         serializerVar,
                         sameType ? objParam : Expression.Convert(objParam, actualType),
-                        contextParam,
-                        alwaysWriteParam),
+                        alwaysWriteParam,
+                        contextParam),
                     call));
 
             return Expression.Lambda<WriteGenericDelegate<T>>(

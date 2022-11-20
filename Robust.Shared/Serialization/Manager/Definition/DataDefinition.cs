@@ -87,7 +87,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var fieldDefinition = BaseFieldDefinitions[i];
                 fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(fieldDefinition.BackingField);
                 fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
-                fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                 {
@@ -172,6 +171,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
             FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
             FieldAssigners = fieldAssigners.ToImmutableArray();
             FieldAccessors = fieldAccessors.ToImmutableArray();
+
+            for (int i = 0; i < BaseFieldDefinitions.Length; i++)
+            {
+                //has to be done after fieldinterfaceinfos are done
+                fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
+            }
+
             FieldValidators = fieldValidators.ToImmutableArray();
 
             Populate = EmitPopulateDelegate(manager);

@@ -186,7 +186,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     call = Expression.Call(
                         managerConst,
-                        "Write",
+                        "WriteValue",
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         Expression.Convert(valueVar, fieldType),
                         alwaysWriteParam,
@@ -324,8 +324,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         "CreateCopy",
                         new []{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
-                        skipHookParam,
-                        contextParam);
+                        contextParam,
+                        skipHookParam);
                 }
                 else
                 {

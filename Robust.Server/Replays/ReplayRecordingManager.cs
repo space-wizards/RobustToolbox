@@ -36,7 +36,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly INetConfigurationManager _netConf = default!;
-    
+
     private ISawmill _sawmill = default!;
     private PVSSystem _pvs = default!;
     private List<object> _queuedMessages = new();
@@ -148,6 +148,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
                 IoCManager.InitThread(new DependencyCollection(parentDeps), true);
 
             var lastAck = _firstTick ? GameTick.Zero : _timing.CurTick - 1;
+            _firstTick = false;
 
             var (entStates, deletions, _, __) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
             var playerStates = _playerMan.GetPlayerStates(lastAck);
@@ -163,7 +164,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             if (_curStream.Length > _tickBatchSize)
                 WriteFile(resource.CompressionContext);
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
             _sawmill.Log(LogLevel.Error, e, "Caught exception while saving replay data.");
             StopRecording();
@@ -234,7 +235,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _yamlMetadata["buildHash"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildHash));
 
             var timeBase = _timing.TimeBase;
-            _yamlMetadata["typeHash"] =  new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
+            _yamlMetadata["typeHash"] = new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
             _yamlMetadata["stringHash"] = new ValueDataNode(Convert.ToHexString(stringHash));
             _yamlMetadata["startTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
             _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
@@ -273,7 +274,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         var time = _timing.CurTime - _recordingStart.Time;
         _yamlMetadata["endTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
         _yamlMetadata["duration"] = new ValueDataNode(time.ToString());
-        _yamlMetadata["fileCount"] = new ValueDataNode((_index+1).ToString());
+        _yamlMetadata["fileCount"] = new ValueDataNode((_index + 1).ToString());
         _yamlMetadata["size"] = new ValueDataNode(_currentCompressedSize.ToString());
         _yamlMetadata["uncompressedSize"] = new ValueDataNode(_currentUncompressedSize.ToString());
 

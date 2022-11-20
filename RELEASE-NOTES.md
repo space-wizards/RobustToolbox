@@ -47,6 +47,22 @@ END TEMPLATE-->
 
 ### Other
 
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.65.2.1
+
+### Bugfixes
+
+* Fix empty MetaData components being serialized to map files.
+* Fix saving a grid as a map not marking it as pre-mapinit.
+
+### Other
+
 * Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
 * Move pinned font data over to Pinned Object Heap.
 * Improved shader code generation for uniform arrays to be more compatible.
@@ -54,7 +70,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove some unnecessary dependency resolves from filters making audio much more performant.
 
 
 ## 0.65.2.0

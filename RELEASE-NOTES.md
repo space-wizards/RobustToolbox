@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Script globals for C# interactive were not having dependencies injected correctly.
 
 ### Other
 

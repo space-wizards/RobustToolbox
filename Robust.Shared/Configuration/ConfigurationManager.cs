@@ -50,11 +50,11 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void LoadFromFile(string configFile)
+        public void LoadFromTomlStream(Stream file)
         {
             try
             {
-                var tblRoot = Toml.ReadFile(configFile);
+                var tblRoot = Toml.ReadStream(file);
 
                 var callbackEvents = new ValueList<ValueChangedInvoke>();
 
@@ -68,7 +68,20 @@ namespace Robust.Shared.Configuration
                 {
                     InvokeValueChanged(callback);
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.WarningS("cfg", "Unable to load configuration from stream:\n{0}", e);
+            }
+        }
 
+        /// <inheritdoc />
+        public void LoadFromFile(string configFile)
+        {
+            try
+            {
+                using var file = File.OpenRead(configFile);
+                LoadFromTomlStream(file);
                 _configFile = configFile;
                 Logger.InfoS("cfg", $"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
             }
@@ -132,6 +145,82 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
+        public void SaveToTomlStream(Stream stream, IEnumerable<string> cvars)
+        {
+            var tblRoot = Toml.Create();
+
+            using (Lock.ReadGuard())
+            {
+                foreach (var name in cvars)
+                {
+                    if (!_configVars.TryGetValue(name, out var cVar))
+                        continue;
+
+                    var value = cVar.Value;
+                    if (value == null && cVar.Registered)
+                    {
+                        value = cVar.DefaultValue;
+                    }
+
+                    if (value == null)
+                    {
+                        Logger.ErrorS("cfg",
+                            $"CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    var keyIndex = name.LastIndexOf(TABLE_DELIMITER);
+                    var tblPath = name.Substring(0, keyIndex).Split(TABLE_DELIMITER);
+                    var keyName = name.Substring(keyIndex + 1);
+
+                    // locate the Table in the config tree
+                    var table = tblRoot;
+                    foreach (var curTblName in tblPath)
+                    {
+                        if (!table.TryGetValue(curTblName, out TomlObject tblObject))
+                        {
+                            tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
+                        }
+
+                        table = tblObject as TomlTable ?? throw new InvalidConfigurationException(
+                            $"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
+                    }
+
+                    //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
+                    switch (value)
+                    {
+                        case Enum val:
+                            table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
+                            break;
+                        case int val:
+                            table.Add(keyName, val);
+                            break;
+                        case long val:
+                            table.Add(keyName, val);
+                            break;
+                        case bool val:
+                            table.Add(keyName, val);
+                            break;
+                        case string val:
+                            table.Add(keyName, val);
+                            break;
+                        case float val:
+                            table.Add(keyName, val);
+                            break;
+                        case double val:
+                            table.Add(keyName, val);
+                            break;
+                        default:
+                            Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
+                            break;
+                    }
+                }
+            }
+
+            Toml.WriteStream(tblRoot, stream);
+        }
+
+        /// <inheritdoc />
         public void SaveToFile()
         {
             if (_configFile == null)
@@ -142,82 +231,14 @@ namespace Robust.Shared.Configuration
 
             try
             {
-                var tblRoot = Toml.Create();
+                // Always write if it was present when reading from the config file, otherwise:
+                // Don't write if Archive flag is not set.
+                // Don't write if the cVar is the default value.
+                var cvars = _configVars.Where(x => x.Value.ConfigModified
+                    || ((x.Value.Flags & CVar.ARCHIVE) == 0 && x.Value.Value != null && !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
-                using (Lock.ReadGuard())
-                {
-                    foreach (var (name, cVar) in _configVars)
-                    {
-                        var value = cVar.Value;
-                        if (value == null && cVar.Registered)
-                        {
-                            value = cVar.DefaultValue;
-                        }
-
-                        if (value == null)
-                        {
-                            Logger.ErrorS("cfg",
-                                $"CVar {name} has no value or default value, was the default value registered as null?");
-                            continue;
-                        }
-
-                        // Don't write if Archive flag is not set.
-                        // Don't write if the cVar is the default value.
-                        if (!cVar.ConfigModified &&
-                            (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
-                        {
-                            continue;
-                        }
-
-                        var keyIndex = name.LastIndexOf(TABLE_DELIMITER);
-                        var tblPath = name.Substring(0, keyIndex).Split(TABLE_DELIMITER);
-                        var keyName = name.Substring(keyIndex + 1);
-
-                        // locate the Table in the config tree
-                        var table = tblRoot;
-                        foreach (var curTblName in tblPath)
-                        {
-                            if (!table.TryGetValue(curTblName, out TomlObject tblObject))
-                            {
-                                tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
-                            }
-
-                            table = tblObject as TomlTable ?? throw new InvalidConfigurationException(
-                                $"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
-                        }
-
-                        //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
-                        switch (value)
-                        {
-                            case Enum val:
-                                table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
-                                break;
-                            case int val:
-                                table.Add(keyName, val);
-                                break;
-                            case long val:
-                                table.Add(keyName, val);
-                                break;
-                            case bool val:
-                                table.Add(keyName, val);
-                                break;
-                            case string val:
-                                table.Add(keyName, val);
-                                break;
-                            case float val:
-                                table.Add(keyName, val);
-                                break;
-                            case double val:
-                                table.Add(keyName, val);
-                                break;
-                            default:
-                                Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
-                                break;
-                        }
-                    }
-                }
-
-                Toml.WriteFile(tblRoot, _configFile);
+                using var file = File.OpenWrite(_configFile);
+                SaveToTomlStream(file, cvars);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)

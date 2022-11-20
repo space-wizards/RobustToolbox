@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using JetBrains.Annotations;
+using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -40,6 +41,12 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null)
     {
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
+
+        if (context is MapSerializationContext mapContext)
+        {
+            curTime -= mapContext.PauseTime;
+        }
+
         return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }
 

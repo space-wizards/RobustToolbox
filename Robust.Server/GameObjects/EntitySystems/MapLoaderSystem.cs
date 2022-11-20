@@ -543,6 +543,7 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
                 _mapManager.CreateMap(data.TargetMap);
+                _mapManager.AddUninitializedMap(data.TargetMap);
                 mapNode = _mapManager.GetMapEntityId(data.TargetMap);
                 DebugTools.Assert(mapNode.IsValid());
             }
@@ -902,6 +903,8 @@ public sealed class MapLoaderSystem : EntitySystem
         var entities = new SequenceDataNode();
         rootNode.Add("entities", entities);
 
+        // As metadata isn't on components we'll special-case it.
+        var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
@@ -928,6 +931,8 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
                     }
+
+                    cache.GetOrNew(metadataName);
                 }
             }
 
@@ -1156,10 +1161,6 @@ public sealed class MapLoaderSystem : EntitySystem
     /// </summary>
     private sealed class MapData
     {
-        public YamlStream Stream { get; }
-
-        public YamlNode RootNode => Stream.Documents[0].RootNode;
-
         public MappingDataNode RootMappingNode { get; }
 
         public readonly MapId TargetMap;
@@ -1177,23 +1178,21 @@ public sealed class MapLoaderSystem : EntitySystem
 
         public MapData(MapId mapId, TextReader reader, MapLoadOptions options)
         {
-            var stream = new YamlStream();
-            stream.Load(reader);
+            var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
 
-            if (stream.Documents.Count < 1)
+            if (documents.Length < 1)
             {
                 throw new InvalidDataException("Stream has no YAML documents.");
             }
 
             // Kinda wanted to just make this print a warning and pick [0] but screw that.
             // What is this, a hug box?
-            if (stream.Documents.Count > 1)
+            if (documents.Length > 1)
             {
                 throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
             }
 
-            Stream = stream;
-            RootMappingNode = RootNode.ToDataNodeCast<MappingDataNode>();
+            RootMappingNode = (MappingDataNode) documents[0].Root!;
             Options = options;
             TargetMap = mapId;
         }

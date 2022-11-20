@@ -54,6 +54,57 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.65.2.1
+
+### Bugfixes
+
+* Fix empty MetaData components being serialized to map files.
+* Fix saving a grid as a map not marking it as pre-mapinit.
+
+### Other
+
+* Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
+* Move pinned font data over to Pinned Object Heap.
+* Improved shader code generation for uniform arrays to be more compatible.
+* Server now has server GC enabled by default.
+
+### Internal
+
+* Remove some unnecessary dependency resolves from filters making audio much more performant.
+
+
+## 0.65.2.0
+
+### New features
+
+* Added ClydeAudio.StopAllAudio()
+* Expose more tick logic to content.
+
+### Bugfixes
+
+* Fix bad reference in WebView.
+
+### Internal
+
+* Add Robust.Packaging to solution.
+* Add WebView to solution.
+* Physics contacts are now parallel and much faster.
+
+## 0.65.1.0
+
+### New features
+
+* Implement value prototype id dictionary serializer.
+
+### Bugfixes
+
+* Fixes lerping clean up issue added in #3472.
+
+### Internal
+
+* Add test for (de)serializing data record structs.
+
+
 ## 0.65.0.1
 
 ### Bugfixes

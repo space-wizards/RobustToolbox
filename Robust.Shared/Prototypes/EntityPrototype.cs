@@ -1,19 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
@@ -50,15 +44,12 @@ namespace Robust.Shared.Prototypes
         ///     You probably want <see cref="Name"/> instead.
         /// </summary>
         /// <seealso cref="Name"/>
-        [ViewVariables]
         [DataField("name")]
         public string? SetName { get; private set; }
 
-        [ViewVariables]
         [DataField("description")]
         public string? SetDesc { get; private set; }
 
-        [ViewVariables]
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
@@ -87,7 +78,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Fluent messageId used to lookup the entity's name and localization attributes.
         /// </summary>
-        [ViewVariables]
         [DataField("localizationId")]
         public string? CustomLocalizationID { get; private set; }
 
@@ -129,7 +119,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// True if this entity will be saved by the map loader.
         /// </summary>
-        [ViewVariables]
         [DataField("save")]
         public bool MapSavable { get; set; } = true;
 

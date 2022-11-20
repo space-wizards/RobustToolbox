@@ -25,6 +25,7 @@ internal static unsafe class GlibcBug
                 C.WriteLine($"!!!WARNING!!!: glibc {badVersion} or higher detected (you have {version}).");
                 C.WriteLine("If anything misbehaves (weird native crashes, library load failures), try setting GLIBC_TUNABLES=glibc.rtld.dynamic_sort=1 as environment variable.");
                 C.WriteLine("This is a severe glibc bug introduced in glibc 2.35. See https://github.com/space-wizards/RobustToolbox/issues/2563 for details");
+                C.WriteLine("We cannot detect if you are susceptible or whether you have correctly applied the fix. This warning cannot be removed.");
                 C.ResetColor();
             }
         }

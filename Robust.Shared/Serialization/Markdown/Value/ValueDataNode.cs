@@ -20,9 +20,9 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public ValueDataNode(YamlScalarNode node) : base(node.Start, node.End)
         {
-            IsNull = node.Style != ScalarStyle.DoubleQuoted &&
+            IsNull = node.Style != ScalarStyle.DoubleQuoted && node.Style != ScalarStyle.SingleQuoted &&
                      (node.Value == null || IsNullLiteral(node.Value));
-            Value = IsNull ? string.Empty : node.Value ?? string.Empty;
+            Value = node.Value ?? string.Empty;
             Tag = node.Tag.IsEmpty ? null : node.Tag.Value;
         }
 
@@ -41,7 +41,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
         }
 
         public string Value { get; set; }
-        public override bool IsNull { get; }
+        public override bool IsNull { get; init; }
 
         public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
 
@@ -53,7 +53,8 @@ namespace Robust.Shared.Serialization.Markdown.Value
             {
                 Tag = Tag,
                 Start = Start,
-                End = End
+                End = End,
+                IsNull = IsNull
             };
         }
 

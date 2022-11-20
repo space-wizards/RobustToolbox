@@ -47,11 +47,11 @@ namespace Robust.Shared.Serialization.Manager
                 return ((ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
                     (typeof(T), type, node.GetType()!),
                     static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, manager),
-                    this))(node, context, skipHook);
+                    this))(node, context, skipHook, instanceProvider);
             }
 
             return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!),
-                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, manager), this))(node, context, skipHook);
+                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, manager), this))(node, context, skipHook, instanceProvider);
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
@@ -187,20 +187,19 @@ namespace Robust.Shared.Serialization.Manager
             }
             else
             {
-                var definition = manager.GetDefinition(actualType);
-                var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
-
                 var hooksConst = Expression.Constant(actualType.IsAssignableTo(typeof(ISerializationHooks)));
 
                 if (nodeType == typeof(ValueDataNode))
                 {
                     call = Expression.Call(managerConst, nameof(ReadGenericValue), new[] { actualType },
-                        Expression.Convert(nodeParam, typeof(ValueDataNode)), definitionConst, hooksConst,
-                        contextParam, skipHookParam,
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)), hooksConst, skipHookParam,
                         instantiatorVariable);
                 }
                 else if (nodeType == typeof(MappingDataNode))
                 {
+                    var definition = manager.GetDefinition(actualType);
+                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
+
                     call = Expression.Call(managerConst, nameof(ReadGenericMapping), new[] { actualType },
                         Expression.Convert(nodeParam, typeof(MappingDataNode)), definitionConst, hooksConst,
                         contextParam, skipHookParam,
@@ -322,20 +321,13 @@ namespace Robust.Shared.Serialization.Manager
 
         private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
-            DataDefinition<TValue>? definition,
             bool hooks,
-            ISerializationContext? context,
             bool skipHook,
             ISerializationManager.InstantiationDelegate<TValue> instanceProvider)
             where TValue : notnull
         {
             var type = typeof(TValue);
             var instance = instanceProvider();
-
-            if (definition == null)
-            {
-                throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
-            }
 
             if (node.Value != string.Empty)
             {

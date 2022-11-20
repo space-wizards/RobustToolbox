@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.Markdown
         }
 
         public abstract bool IsEmpty { get; }
-        public virtual bool IsNull => false;
+        public virtual bool IsNull { get; init; } = false;
 
         public abstract DataNode Copy();
 

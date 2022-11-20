@@ -1131,7 +1131,7 @@ namespace Robust.Server.Maps
                 bool skipHook,
                 ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? instanceProvider = null)
             {
-                if (string.IsNullOrWhiteSpace(node.Value))
+                if (string.IsNullOrWhiteSpace(node.Value) || node.IsNull)
                 {
                     return EntityUid.Invalid;
                 }

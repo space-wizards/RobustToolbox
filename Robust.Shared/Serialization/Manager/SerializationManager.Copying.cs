@@ -165,6 +165,9 @@ public sealed partial class SerializationManager
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
+                var actualType = type;
+                type = type.EnsureNotNullableType(); //null values are already handled outside of the delegate
+                var sourceParamAccess = Expression.Convert(sourceParam, type);
                 Expression call;
                 if (manager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopyCreator<>), type, out var rawCopier))
                 {
@@ -174,9 +177,19 @@ public sealed partial class SerializationManager
                         copierConst,
                         typeof(ITypeCopyCreator<>).MakeGenericType(type).GetMethod("CreateCopy")!,
                         instanceParam,
-                        sourceParam,
+                        sourceParamAccess,
                         skipHookParam,
                         contextParam);
+                }
+                else if (type.IsArray)
+                {
+                    call = Expression.Call(
+                        instanceParam,
+                        nameof(CreateArrayCopy),
+                        new[]{type.GetElementType()!},
+                        sourceParamAccess,
+                        contextParam,
+                        skipHookParam);
                 }
                 else
                 {
@@ -196,7 +209,7 @@ public sealed partial class SerializationManager
                             instanceParam,
                             nameof(CreateCopyInternal),
                             new[] {type},
-                            sourceParam,
+                            sourceParamAccess,
                             contextParam,
                             skipHookParam,
                             Expression.Constant(manager.GetDefinition(type), typeof(DataDefinition<>).MakeGenericType(type)));
@@ -204,7 +217,7 @@ public sealed partial class SerializationManager
                 }
 
                 return Expression.Lambda<CreateCopyGenericDelegate<T>>(
-                    call,
+                    Expression.Convert(call, actualType),
                     sourceParam,
                     skipHookParam,
                     contextParam).Compile();
@@ -280,6 +293,17 @@ public sealed partial class SerializationManager
 
         definition.CopyTo(source, ref target, context, skipHook);
         return true;
+    }
+
+    private T[] CreateArrayCopy<T>(T[] source, ISerializationContext context, bool skipHook)
+    {
+        var copy = new T[source.Length];
+        for (int i = 0; i < source.Length; i++)
+        {
+            copy[i] = CreateCopy(source[i], context, skipHook);
+        }
+
+        return copy;
     }
 
     private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook, DataDefinition<T>? definition) where T : notnull

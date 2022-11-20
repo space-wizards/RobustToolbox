@@ -25,24 +25,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, Texture? value)
+            SerializationHookContext hookCtx, ISerializationContext? context, Texture? value = default)
         {
-            var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(node, hookCtx, context);
             return new Texture(path);
         }
 
         SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
+            SerializationHookContext hookCtx, ISerializationContext? context, SpriteSpecifier? value = default)
         {
-            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, skipHook, context, (Texture?)value);
+            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, hookCtx, context, (Texture?)value);
         }
 
         EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, EntityPrototype? value)
+            SerializationHookContext hookCtx, ISerializationContext? context, EntityPrototype? value = default)
         {
             return new EntityPrototype(node.Value);
         }
@@ -50,7 +50,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, Rsi? value)
+            SerializationHookContext hookCtx, ISerializationContext? context, Rsi? value = default)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -62,19 +62,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(pathNode, hookCtx, context);
             return new Rsi(path, valueDataNode.Value);
         }
 
         SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
+            SerializationHookContext hookCtx, ISerializationContext? context, SpriteSpecifier? value = default)
         {
             if (node.TryGet("entity", out var entityNode) && entityNode is ValueDataNode entityValueNode)
-                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, skipHook, context, (EntityPrototype?)value);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, hookCtx, context, (EntityPrototype?)value);
 
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Rsi?) value);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, hookCtx, context, (Rsi?) value);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -159,19 +159,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target, bool skipHook,
+        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
-        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source, EntityPrototype target,
-            bool skipHook, ISerializationContext? context = null)
+        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
+            EntityPrototype target,
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target, bool skipHook,
+        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
@@ -196,8 +199,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             };
         }
 
-        public SpriteSpecifier Copy(ISerializationManager serializationManager, SpriteSpecifier source, SpriteSpecifier target,
-            bool skipHook, ISerializationContext? context = null)
+        public SpriteSpecifier Copy(ISerializationManager serializationManager, SpriteSpecifier source,
+            SpriteSpecifier target,
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source switch
             {

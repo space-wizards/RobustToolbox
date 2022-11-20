@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,7 +20,8 @@ namespace Robust.Benchmarks.Serialization
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int _ = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, int _ = default)
         {
             return int.Parse(node.Value, CultureInfo.InvariantCulture);
         }
@@ -31,7 +33,8 @@ namespace Robust.Benchmarks.Serialization
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public int Copy(ISerializationManager serializationManager, int source, int target, bool skipHook,
+        public int Copy(ISerializationManager serializationManager, int source, int target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

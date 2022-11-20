@@ -23,7 +23,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 MappingDataNode mappingDataNode,
                 ISerializationManager serializationManager,
                 ISerializationContext? serializationContext,
-                bool skipHook,
+                SerializationHookContext hookCtx,
                 object?[] defaultValues)
             {
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
@@ -54,11 +54,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         })
                     {
                         result = serializationManager.ReadWithTypeSerializer(type,
-                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
+                            fieldDefinition.Attribute.CustomTypeSerializer, node, hookCtx, serializationContext);
                     }
                     else
                     {
-                        result = serializationManager.Read(type, node, serializationContext, skipHook);
+                        result = serializationManager.Read(type, node, hookCtx, serializationContext);
                     }
 
                     var defValue = defaultValues[i];

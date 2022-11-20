@@ -25,11 +25,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         [MustUseReturnValue]
-        IReadOnlyList<string> ITypeCopier<IReadOnlyList<string>>.Copy(
-            ISerializationManager serializationManager,
+        IReadOnlyList<string> ITypeCopier<IReadOnlyList<string>>.Copy(ISerializationManager serializationManager,
             IReadOnlyList<string> source,
             IReadOnlyList<string> target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context)
         {
             return new List<string>(source);
@@ -39,8 +38,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, IReadOnlyList<string>? rawValue)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, IReadOnlyList<string>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyList<string>)}. Ignoring...");
@@ -53,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
-                    skipHook,
+                    hookCtx,
                     context));
             }
 

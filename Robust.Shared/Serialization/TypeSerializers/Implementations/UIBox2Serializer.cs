@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public UIBox2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, UIBox2 value = default)
         {
             var args = node.Value.Split(',');
@@ -66,7 +66,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.Left, source.Top, source.Right, source.Bottom);

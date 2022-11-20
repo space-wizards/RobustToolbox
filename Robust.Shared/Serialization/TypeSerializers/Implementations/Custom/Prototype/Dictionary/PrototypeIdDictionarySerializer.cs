@@ -71,26 +71,29 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
         Dictionary<string, TValue> ITypeReader<Dictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            Dictionary<string, TValue>? value)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context,
+            Dictionary<string, TValue>? value = default)
         {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context, value);
+            return _dictionarySerializer.Read(serializationManager, node, dependencies, hookCtx, context, value);
         }
 
         SortedDictionary<string, TValue> ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            SortedDictionary<string, TValue>? value)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context,
+            SortedDictionary<string, TValue>? value = default)
         {
-            return ((ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
+            return ((ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, hookCtx, context, value);
         }
 
         IReadOnlyDictionary<string, TValue> ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
-            IReadOnlyDictionary<string, TValue>? value)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context,
+            IReadOnlyDictionary<string, TValue>? value = default)
         {
-            return ((ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
+            return ((ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, hookCtx, context, value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<string, TValue> value,
@@ -118,24 +121,25 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public Dictionary<string, TValue> Copy(ISerializationManager serializationManager,
-            Dictionary<string, TValue> source, Dictionary<string, TValue> target, bool skipHook,
+            Dictionary<string, TValue> source, Dictionary<string, TValue> target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
+            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
         }
 
         public SortedDictionary<string, TValue> Copy(ISerializationManager serializationManager,
             SortedDictionary<string, TValue> source, SortedDictionary<string, TValue> target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
+            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
         }
 
         public IReadOnlyDictionary<string, TValue> Copy(ISerializationManager serializationManager,
             IReadOnlyDictionary<string, TValue> source,
-            IReadOnlyDictionary<string, TValue> target, bool skipHook, ISerializationContext? context = null)
+            IReadOnlyDictionary<string, TValue> target, SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
-            return _dictionarySerializer.Copy(serializationManager, source, target, skipHook, context);
+            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
         }
     }
 }

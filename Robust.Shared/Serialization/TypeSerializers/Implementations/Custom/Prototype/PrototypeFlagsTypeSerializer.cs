@@ -39,8 +39,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            PrototypeFlags<T>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
@@ -65,8 +66,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new SequenceDataNode(value.ToArray());
         }
 
-        public PrototypeFlags<T> Copy(ISerializationManager serializationManager, PrototypeFlags<T> source, PrototypeFlags<T> target,
-            bool skipHook, ISerializationContext? context = null)
+        public PrototypeFlags<T> Copy(ISerializationManager serializationManager, PrototypeFlags<T> source,
+            PrototypeFlags<T> target,
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new PrototypeFlags<T>(source);
         }
@@ -78,8 +80,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            PrototypeFlags<T>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");

@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -29,7 +30,8 @@ namespace Robust.Server.Maps
         }
 
         public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapChunk? chunk = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, MapChunk? chunk = default)
         {
             var tileNode = (ValueDataNode)node["tiles"];
             var tileBytes = Convert.FromBase64String(tileNode.Value);
@@ -127,7 +129,8 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target, bool skipHook,
+        public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();
@@ -146,7 +149,8 @@ namespace Robust.Server.Maps
         }
 
         public MapGrid Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGrid? grid = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, MapGrid? grid = default)
         {
             var info = node.Get<MappingDataNode>("settings");
             var chunks = node.Get<SequenceDataNode>("chunks");
@@ -179,9 +183,9 @@ namespace Robust.Server.Maps
             foreach (var chunkNode in chunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) =
-                    serializationManager.Read<Vector2i>(chunkNode["ind"], context, skipHook);
+                    serializationManager.Read<Vector2i>(chunkNode["ind"], hookCtx, context);
                 var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
-                serializationManager.Read(typeof(MapChunkSerializer), chunkNode, context, skipHook, chunk);
+                serializationManager.Read(typeof(MapChunkSerializer), chunkNode, hookCtx, context, chunk);
             }
 
             return grid;
@@ -212,7 +216,8 @@ namespace Robust.Server.Maps
             return gridn;
         }
 
-        public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target, bool skipHook,
+        public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             throw new NotImplementedException();

@@ -18,8 +18,8 @@ namespace Robust.Client.Serialization
     {
         public AppearanceVisualizer Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context = null, AppearanceVisualizer? value = null)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null, AppearanceVisualizer? value = default)
         {
             Type? type = null;
             if (!node.TryGet("type", out var typeNode))
@@ -49,7 +49,7 @@ namespace Robust.Client.Serialization
 
             var newNode = node.Copy();
             newNode.Remove("type");
-            return (AppearanceVisualizer) serializationManager.Read(type, newNode, context, skipHook, value)!;
+            return (AppearanceVisualizer) serializationManager.Read(type, newNode, hookCtx, context, value)!;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -82,7 +82,7 @@ namespace Robust.Client.Serialization
         }
 
         public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
-            AppearanceVisualizer target, bool skipHook, ISerializationContext? context = null)
+            AppearanceVisualizer target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             serializationManager.Copy(source, ref target, context);
             return target;

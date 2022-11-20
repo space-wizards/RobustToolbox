@@ -151,9 +151,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             MappingDataNode mapping,
             ISerializationManager serialization,
             ISerializationContext? context,
-            bool skipHook)
+            SerializationHookContext hookCtx)
         {
-            return _populate(target, mapping, serialization, context, skipHook, DefaultValues);
+            return _populate(target, mapping, serialization, context, hookCtx, DefaultValues);
         }
 
         public MappingDataNode Serialize(

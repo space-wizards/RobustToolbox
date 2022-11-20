@@ -1132,8 +1132,8 @@ public sealed class MapLoaderSystem : EntitySystem
         EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, EntityUid _)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, EntityUid _ = default)
         {
             if (node.Value == "null")
             {
@@ -1155,7 +1155,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         [MustUseReturnValue]
         public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new((int)source);

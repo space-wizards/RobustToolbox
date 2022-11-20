@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, Box2 value = default)
         {
             var nodeValue = node.Value;
@@ -79,7 +79,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Box2 Copy(ISerializationManager serializationManager, Box2 source, Box2 target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.Left, source.Bottom, source.Right, source.Top);

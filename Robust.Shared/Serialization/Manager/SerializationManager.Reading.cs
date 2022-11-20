@@ -18,20 +18,44 @@ namespace Robust.Shared.Serialization.Manager
         private delegate object? ReadDelegate(
             Type type,
             DataNode node,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? value = null);
 
         private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            return (T)Read(typeof(T), node, context, skipHook, EqualityComparer<T>.Default.Equals(value, default) ? null : value)!;
+            return Read<T>(
+                node,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context,
+                value);
+        }
+
+        public T Read<T>(DataNode node, SerializationHookContext hookCtx, ISerializationContext? context = null, T? value = default) //todo paul this default should be null
+        {
+            return (T)Read(
+                typeof(T),
+                node,
+                hookCtx,
+                context,
+                EqualityComparer<T>.Default.Equals(value, default) ? null : value)!;
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
         {
-            var val = GetOrCreateReader(type, node)(type, node, context, skipHook, value);
+            return Read(type, node, SerializationHookContext.ForSkipHooks(skipHook), context, value);
+        }
+
+        public object? Read(
+            Type type,
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            object? value = null)
+        {
+            var val = GetOrCreateReader(type, node)(type, node, hookCtx, context, value);
             ReadNullCheck(type, val);
             return val;
         }
@@ -68,7 +92,7 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
-                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
                 var valueParam = Expression.Parameter(typeof(object), "value");
 
                 Expression call;
@@ -85,8 +109,8 @@ namespace Robust.Shared.Serialization.Manager
                                 nameof(ReadArrayValue),
                                 new[] { elementType },
                                 Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                                contextParam,
-                                skipHookParam);
+                                hookCtxParam,
+                                contextParam);
                             break;
                         case SequenceDataNode seqNode:
                             var isSealed = elementType.IsPrimitive || elementType.IsEnum ||
@@ -103,8 +127,8 @@ namespace Robust.Shared.Serialization.Manager
                                     new[] { elementType },
                                     Expression.Convert(nodeParam, typeof(SequenceDataNode)),
                                     readerConst,
-                                    contextParam,
-                                    skipHookParam);
+                                    hookCtxParam,
+                                    contextParam);
 
                                 break;
                             }
@@ -114,8 +138,8 @@ namespace Robust.Shared.Serialization.Manager
                                 nameof(ReadArraySequence),
                                 new[] { elementType },
                                 Expression.Convert(nodeParam, typeof(SequenceDataNode)),
-                                contextParam,
-                                skipHookParam);
+                                hookCtxParam,
+                                contextParam);
                             break;
                         default:
                             throw new ArgumentException($"Cannot read array from data node type {nodeType}");
@@ -169,8 +193,8 @@ namespace Robust.Shared.Serialization.Manager
                         new[] { value, nodeType },
                         Expression.Convert(nodeParam, nodeType),
                         readerConst,
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         valueParam);
                 }
                 else if (value.IsInterface || value.IsAbstract)
@@ -185,8 +209,6 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value, definition?.IsRecord ?? false);
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    var hooksConst = Expression.Constant(value.IsAssignableTo(typeof(ISerializationHooks)));
-
                     call = node switch
                     {
                         ValueDataNode => Expression.Call(
@@ -196,9 +218,8 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            hooksConst,
+                            hookCtxParam,
                             contextParam,
-                            skipHookParam,
                             valueParam),
                         MappingDataNode => Expression.Call(
                             instanceConst,
@@ -207,9 +228,8 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(MappingDataNode)),
                             instantiatorConst,
                             definitionConst,
-                            hooksConst,
+                            hookCtxParam,
                             contextParam,
-                            skipHookParam,
                             valueParam),
                         SequenceDataNode => throw new ArgumentException($"No mapping node provided for type {value} at line: {node.Start.Line}"),
                         _ => throw new ArgumentException($"Unknown node type {nodeType} provided. Expected mapping node at line: {node.Start.Line}")
@@ -236,8 +256,8 @@ namespace Robust.Shared.Serialization.Manager
                     call,
                     typeParam,
                     nodeParam,
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     valueParam).Compile();
             }, (node, this));
         }
@@ -254,24 +274,24 @@ namespace Robust.Shared.Serialization.Manager
 
         private T[] ReadArrayValue<T>(
             ValueDataNode value,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var array = new T[1];
-            array[0] = Read<T>(value, context, skipHook);
+            array[0] = Read<T>(value, hookCtx, context);
             return array;
         }
 
         private T[] ReadArraySequence<T>(
             SequenceDataNode node,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var array = new T[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
-                array[i] = Read<T>(node.Sequence[i], context, skipHook);
+                array[i] = Read<T>(node.Sequence[i], hookCtx, context);
             }
 
             return array;
@@ -280,8 +300,8 @@ namespace Robust.Shared.Serialization.Manager
         private T[] ReadArraySequenceSealed<T>(
             SequenceDataNode node,
             ReadDelegate elementReader,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var type = typeof(T);
             var array = new T[node.Sequence.Count];
@@ -289,7 +309,7 @@ namespace Robust.Shared.Serialization.Manager
             for (var i = 0; i < node.Sequence.Count; i++)
             {
                 var subNode = node.Sequence[i];
-                var result = elementReader(type, subNode, context, skipHook);
+                var result = elementReader(type, subNode, hookCtx, context);
                 ReadNullCheck(type, result);
                 array[i] = (T) result!;
             }
@@ -322,8 +342,8 @@ namespace Robust.Shared.Serialization.Manager
         private TValue ReadWithTypeReader<TValue, TNode>(
             TNode node,
             ITypeReader<TValue, TNode> reader,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? value = null)
             where TNode : DataNode
         {
@@ -333,16 +353,15 @@ namespace Robust.Shared.Serialization.Manager
                 reader = (ITypeReader<TValue, TNode>) readerUnCast;
             }
 
-            return reader.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (TValue) value);
+            return reader.Read(this, node, DependencyCollection, hookCtx, context, value == null ? default : (TValue) value);
         }
 
         private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool hooks,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? instance = null)
         {
             var type = typeof(TValue);
@@ -351,7 +370,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((typeof(TValue), typeof(ValueDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, ValueDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context, instance == null ? default : (TValue)instance);
+                return reader.Read(this, node, DependencyCollection, hookCtx, context, instance == null ? default : (TValue)instance);
             }
 
             if (definition == null)
@@ -366,10 +385,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
             }
 
-            if (!skipHook && hooks)
-            {
-                ((ISerializationHooks) instance).AfterDeserialization();
-            }
+            RunAfterHook(instance, hookCtx);
 
             return (TValue) instance;
         }
@@ -378,9 +394,8 @@ namespace Robust.Shared.Serialization.Manager
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
-            bool hooks,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? instance = null)
         {
             var type = typeof(TValue);
@@ -390,7 +405,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((type, typeof(MappingDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, MappingDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context, (TValue?) instance);
+                return reader.Read(this, node, DependencyCollection, hookCtx, context, (TValue?) instance);
             }
 
             if (definition == null)
@@ -398,12 +413,9 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
             }
 
-            var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;
+            var result = (TValue)definition.Populate(instance, node, this, context, hookCtx)!;
 
-            if (!skipHook && hooks)
-            {
-                ((ISerializationHooks) result).AfterDeserialization();
-            }
+            RunAfterHook(result, hookCtx);
 
             return result;
         }
@@ -411,7 +423,24 @@ namespace Robust.Shared.Serialization.Manager
         public object? ReadWithTypeSerializer(Type type, Type serializer, DataNode node, ISerializationContext? context = null,
             bool skipHook = false, object? value = null)
         {
-            return ReadWithSerializerRaw(type, node, serializer, context, skipHook, value);
+            return ReadWithTypeSerializer(
+                type,
+                serializer,
+                node,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context,
+                value);
+        }
+
+        public object? ReadWithTypeSerializer(
+            Type type,
+            Type serializer,
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            object? value = null)
+        {
+            return ReadWithSerializerRaw(type, node, serializer, hookCtx, context, value);
         }
     }
 }

@@ -24,8 +24,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context = null, ComponentRegistry? components = null)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null, ComponentRegistry? components = default)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
             components ??= new ComponentRegistry();
@@ -58,7 +58,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }
@@ -171,7 +171,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public ComponentRegistry Copy(ISerializationManager serializationManager, ComponentRegistry source,
-            ComponentRegistry target, bool skipHook, ISerializationContext? context = null)
+            ComponentRegistry target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);

@@ -9,7 +9,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
         TType Read(ISerializationManager serializationManager,
             TNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context = null, TType? value = default);
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            TType? value = default);
     }
 }

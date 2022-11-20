@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
         private delegate bool CopyDelegate(
             object source,
             ref object target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null);
 
         private readonly Dictionary<Type, object> _typeCopiers = new();
@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.Manager
                     var instanceParam = Expression.Constant(this);
                     var sourceParam = Expression.Parameter(typeof(object), "source");
                     var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
-                    var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                    var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
                     var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                     var targetCastVariable = Expression.Variable(tuple.targetType, "targetCastVariable");
@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.Manager
                         new[] {t, tuple.sourceType, tuple.targetType},
                         Expression.Convert(sourceParam, tuple.sourceType),
                         targetCastVariable,
-                        skipHookParam,
+                        hookCtxParam,
                         contextParam);
 
                     var block = Expression.Block(
@@ -58,7 +58,7 @@ namespace Robust.Shared.Serialization.Manager
                         block,
                         sourceParam,
                         targetParam,
-                        skipHookParam,
+                        hookCtxParam,
                         contextParam).Compile();
                 }, (sourceType, targetType));
         }
@@ -67,16 +67,16 @@ namespace Robust.Shared.Serialization.Manager
             Type type,
             object source,
             ref object target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
-            return GetOrCreateCopyDelegate(type, source.GetType(), target.GetType())(source, ref target, skipHook, context);
+            return GetOrCreateCopyDelegate(type, source.GetType(), target.GetType())(source, ref target, hookCtx, context);
         }
 
         private bool TryCopy<TCommon, TSource, TTarget>(
             TSource source,
             ref TTarget target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
             where TSource : TCommon
             where TTarget : TCommon
@@ -89,13 +89,13 @@ namespace Robust.Shared.Serialization.Manager
                 _typeCopiers.TryGetValue(typeof(TCommon), out rawCopier))
             {
                 var copier = (ITypeCopier<TCommon>) rawCopier;
-                target = (TTarget) copier.Copy(this, source, target, skipHook, context);
+                target = (TTarget) copier.Copy(this, source, target, hookCtx, context);
                 return true;
             }
 
             if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericCopier))
             {
-                target = (TTarget) genericCopier.Copy(this, source, target, skipHook, context);
+                target = (TTarget) genericCopier.Copy(this, source, target, hookCtx, context);
                 return true;
             }
 

@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public ResourcePath Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, ResourcePath? value = default)
         {
             return new ResourcePath(node.Value);
@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.ToString());

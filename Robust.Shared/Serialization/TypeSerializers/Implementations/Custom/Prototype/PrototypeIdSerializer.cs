@@ -32,7 +32,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public string Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, string? value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, string? value = default)
         {
             return node.Value;
         }
@@ -44,7 +45,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new ValueDataNode(value);
         }
 
-        public string Copy(ISerializationManager serializationManager, string source, string target, bool skipHook,
+        public string Copy(ISerializationManager serializationManager, string source, string target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

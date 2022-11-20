@@ -41,8 +41,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public HashSet<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            HashSet<string>? set = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            HashSet<string>? set = default)
         {
             set ??= new HashSet<string>();
 
@@ -52,7 +53,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
-                    skipHook,
+                    hookCtx,
                     context));
             }
 
@@ -72,7 +73,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new SequenceDataNode(list);
         }
 
-        public HashSet<string> Copy(ISerializationManager serializationManager, HashSet<string> source, HashSet<string> target, bool skipHook, ISerializationContext? context = null)
+        public HashSet<string> Copy(ISerializationManager serializationManager, HashSet<string> source,
+            HashSet<string> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source);
         }

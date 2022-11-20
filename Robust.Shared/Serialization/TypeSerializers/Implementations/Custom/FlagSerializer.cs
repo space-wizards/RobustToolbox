@@ -19,7 +19,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, int value = default)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
             return (int)Enum.Parse(flagType, node.Value);
@@ -60,7 +61,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return sequenceNode;
         }
 
-        public int Copy(ISerializationManager serializationManager, int source, int target, bool skipHook,
+        public int Copy(ISerializationManager serializationManager, int source, int target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;
@@ -81,7 +83,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, int value = default)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
             var flags = 0;

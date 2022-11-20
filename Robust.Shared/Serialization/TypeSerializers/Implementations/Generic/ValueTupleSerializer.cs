@@ -16,15 +16,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
     {
         public (T1, T2) Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, (T1, T2) val = default)
         {
             if (node.Children.Count != 1)
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook, val.Item1);
-            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook, val.Item2);
+            var v1 = serializationManager.Read<T1>(entry.Key, hookCtx, context, val.Item1);
+            var v2 = serializationManager.Read<T2>(entry.Value, hookCtx, context, val.Item2);
 
             return (v1, v2);
         }
@@ -62,13 +62,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public (T1, T2) Copy(ISerializationManager serializationManager, (T1, T2) source, (T1, T2) target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             var i1 = target.Item1;
             var i2 = target.Item2;
-            serializationManager.Copy(source.Item1, ref i1, context, skipHook);
-            serializationManager.Copy(source.Item2, ref i2, context, skipHook);
+            serializationManager.Copy(source.Item1, ref i1, hookCtx, context);
+            serializationManager.Copy(source.Item2, ref i2, hookCtx, context);
             return (i1, i2);
         }
     }

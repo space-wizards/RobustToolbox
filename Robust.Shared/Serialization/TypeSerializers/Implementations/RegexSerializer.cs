@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public Regex Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, Regex? value = default)
         {
             return new Regex(node.Value, RegexOptions.Compiled);
@@ -47,7 +47,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.ToString(), source.Options, source.MatchTimeout);

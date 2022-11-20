@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, TimeSpan value = default)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
@@ -41,7 +41,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

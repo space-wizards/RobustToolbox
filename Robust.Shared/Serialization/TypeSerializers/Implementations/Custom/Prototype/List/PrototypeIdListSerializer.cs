@@ -71,8 +71,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         List<string> ITypeReader<List<string>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, List<string>? list)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, List<string>? list = default)
         {
             list ??= new List<string>();
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
-                    skipHook,
+                    hookCtx,
                     context));
             }
 
@@ -98,11 +98,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
-        List<string> ITypeCopier<List<string>>.Copy(
-            ISerializationManager serializationManager,
+        List<string> ITypeCopier<List<string>>.Copy(ISerializationManager serializationManager,
             List<string> source,
             List<string> target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context)
         {
             return new(source);

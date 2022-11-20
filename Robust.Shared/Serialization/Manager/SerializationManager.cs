@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -456,7 +457,11 @@ namespace Robust.Shared.Serialization.Manager
             return WriteWithSerializerRaw(type, serializer, value!, context, alwaysWrite);
         }
 
-        private void CopyToTarget(object source, ref object target, ISerializationContext? context = null, bool skipHook = false)
+        private void CopyToTarget(
+            object source,
+            ref object target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             if (!TypeHelpers.TrySelectCommonType(source.GetType(), target.GetType(), out var commonType))
             {
@@ -486,14 +491,14 @@ namespace Robust.Shared.Serialization.Manager
 
                 for (var i = 0; i < sourceArray.Length; i++)
                 {
-                    newArray.SetValue(Copy(sourceArray.GetValue(i), context, skipHook), i);
+                    newArray.SetValue(Copy(sourceArray.GetValue(i), hookCtx, context), i);
                 }
 
                 target = newArray;
                 return;
             }
 
-            if (TryCopyRaw(commonType, source, ref target, skipHook, context))
+            if (TryCopyRaw(commonType, source, ref target, hookCtx, context))
             {
                 return;
             }
@@ -505,34 +510,57 @@ namespace Robust.Shared.Serialization.Manager
 
             target = dataDef.Copy(source, target, this, context);
 
-            if (!skipHook && target is ISerializationHooks afterHooks)
-            {
-                afterHooks.AfterDeserialization();
-            }
+            RunAfterHook(target, hookCtx);
         }
 
         public void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false)
         {
+            Copy(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context);
+        }
+
+        public void Copy(object? source, ref object? target, SerializationHookContext hookCtx, ISerializationContext? context = null)
+        {
             if (target == null || source == null)
             {
-                target = Copy(source, context, skipHook);
+                target = Copy(source, hookCtx, context);
             }
             else
             {
-                CopyToTarget(source, ref target, context, skipHook);
+                CopyToTarget(source, ref target, hookCtx, context);
             }
         }
 
         public void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false)
         {
+            Copy(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context);
+        }
+
+        public void Copy<T>(T source, ref T target, SerializationHookContext hookCtx, ISerializationContext? context = null)
+        {
             var temp = (object?)target;
-            Copy(source, ref temp, context, skipHook);
+            Copy(source, ref temp, hookCtx, context);
             target = (T)temp!;
         }
 
         [MustUseReturnValue]
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
+        {
+            return CopyWithTypeSerializer(
+                typeSerializer,
+                source,
+                target,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context);
+        }
+
+        [MustUseReturnValue]
+        public object? CopyWithTypeSerializer(
+            Type typeSerializer,
+            object? source,
+            object? target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             if (source == null)
                 return null;
@@ -558,10 +586,14 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
+            return CopyWithSerializerRaw(typeSerializer, source, ref target, hookCtx, context);
         }
 
-        private object CreateCopyInternal(Type type, object source, ISerializationContext? context = null, bool skipHook = false)
+        private object CreateCopyInternal(
+            Type type,
+            object source,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             if (ShouldReturnSource(type))
             {
@@ -569,19 +601,29 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var target = Activator.CreateInstance(source.GetType())!;
-            CopyToTarget(source, ref target, context, skipHook);
+            CopyToTarget(source, ref target, hookCtx, context);
             return target;
         }
 
         public object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false)
         {
+            return Copy(source, SerializationHookContext.ForSkipHooks(skipHook), context);
+        }
+
+        public object? Copy(object? source, SerializationHookContext hookCtx, ISerializationContext? context = null)
+        {
             if (source == null) return null;
-            return CreateCopyInternal(source.GetType(), source, context, skipHook);
+            return CreateCopyInternal(source.GetType(), source, hookCtx, context);
         }
 
         public T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false)
         {
-            return (T)Copy((object?)source, context, skipHook)!;
+            return Copy(source, SerializationHookContext.ForSkipHooks(skipHook), context);
+        }
+
+        public T Copy<T>(T source, SerializationHookContext hookCtx, ISerializationContext? context = null)
+        {
+            return (T)Copy((object?)source, hookCtx, context)!;
         }
 
         private bool ShouldReturnSource(Type type)
@@ -602,6 +644,21 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             return type;
+        }
+
+        private static void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
+        {
+#pragma warning disable CS0618
+            if (ctx.SkipHooks || instance is not ISerializationHooks hooks)
+#pragma warning restore CS0618
+                return;
+
+            DebugTools.Assert(typeof(TValue).IsClass, "ISerializationHooks must only be used on reference types");
+
+            if (ctx.DeferQueue != null)
+                ctx.DeferQueue.TryWrite(hooks);
+            else
+                hooks.AfterDeserialization();
         }
     }
 }

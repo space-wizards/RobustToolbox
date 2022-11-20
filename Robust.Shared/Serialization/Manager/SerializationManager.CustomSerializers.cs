@@ -13,8 +13,8 @@ namespace Robust.Shared.Serialization.Manager
     {
         private delegate object? ReadSerializerDelegate(
             DataNode node,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? value = null);
 
         private delegate DataNode WriteSerializerDelegate(
@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.Manager
         private delegate object CopySerializerDelegate(
             object source,
             ref object target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null);
 
         private readonly Dictionary<Type, object> _customTypeSerializers = new();
@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.Manager
                 var instanceParam = Expression.Constant(instance);
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
-                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
                 var valueParam = Expression.Parameter(typeof(object), "value");
 
                 var call = Expression.Call(
@@ -54,15 +54,15 @@ namespace Robust.Shared.Serialization.Manager
                     nameof(ReadWithSerializer),
                     new[] {tuple.value, tuple.node, tuple.serializer},
                     Expression.Convert(nodeParam, tuple.node),
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     valueParam);
 
                 return Expression.Lambda<ReadSerializerDelegate>(
                     Expression.Convert(call, typeof(object)),
                     nodeParam,
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     valueParam).Compile();
             }, this);
         }
@@ -133,23 +133,23 @@ namespace Robust.Shared.Serialization.Manager
             Type type,
             DataNode node,
             Type serializer,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? value = null)
         {
-            return GetOrCreateReadSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
+            return GetOrCreateReadSerializerDelegate(type, node.GetType(), serializer)(node, hookCtx, context, value);
         }
 
         private T ReadWithSerializer<T, TNode, TSerializer>(
             TNode node,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             object? value = default)
             where TSerializer : ITypeReader<T, TNode>
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (T)value);
+            return serializer.Read(this, node, DependencyCollection, hookCtx, context, value == null ? default : (T)value);
         }
 
         private DataNode WriteWithSerializerRaw(
@@ -172,27 +172,32 @@ namespace Robust.Shared.Serialization.Manager
             return serializer.Write(this, value, DependencyCollection, alwaysWrite, context);
         }
 
-        private object CopyWithSerializerRaw(Type serializer, object source, ref object target, bool skipHook, ISerializationContext? context = null)
+        private object CopyWithSerializerRaw(
+            Type serializer,
+            object source,
+            ref object target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var sourceType = source.GetType();
             var targetType = target.GetType();
             if(!TypeHelpers.TrySelectCommonType(sourceType, targetType, out var commonType))
                 throw new ArgumentException($"No common type found between {sourceType} and {targetType}");
 
-            return GetOrCreateCopySerializerDelegate(commonType, sourceType, targetType, serializer)(source, ref target, skipHook, context);
+            return GetOrCreateCopySerializerDelegate(commonType, sourceType, targetType, serializer)(source, ref target, hookCtx, context);
         }
 
         private TCommon CopyWithSerializer<TCommon, TSource, TTarget, TSerializer>(
             TSource source,
             ref TTarget target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
             where TSource : TCommon
             where TTarget : TCommon
             where TSerializer : ITypeCopier<TCommon>
         {
             var serializer = (ITypeCopier<TCommon>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Copy(this, source, target, skipHook, context);
+            return serializer.Copy(this, source, target, hookCtx, context);
         }
 
         private ValidationNode ValidateWithSerializer<T, TNode, TSerializer>(

@@ -31,11 +31,12 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
                 : new ErrorNode(x, $"Cannot cast node {x} to ValueDataNode.")).ToList());
     }
 
-    public string[] Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
-        bool skipHook, ISerializationContext? context = null, string[]? value = default)
+    public string[] Read(ISerializationManager serializationManager, SequenceDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx, ISerializationContext? context = null, string[]? value = default)
     {
         return node.Select(x =>
-                PrototypeSerializer.Read(serializationManager, (ValueDataNode)x, dependencies, skipHook, context))
+                PrototypeSerializer.Read(serializationManager, (ValueDataNode)x, dependencies, hookCtx, context))
             .ToArray();
     }
 
@@ -46,10 +47,11 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
         return serializationManager.WriteValue(value, alwaysWrite, context);
     }
 
-    public string[] Copy(ISerializationManager serializationManager, string[] source, string[] target, bool skipHook,
+    public string[] Copy(ISerializationManager serializationManager, string[] source, string[] target,
+        SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
-        serializationManager.Copy(source, ref target, context, skipHook);
+        serializationManager.Copy(source, ref target, hookCtx, context);
         return target;
     }
 
@@ -59,7 +61,7 @@ public class PrototypeIdArraySerializer<TPrototype> : ITypeSerializer<string[], 
 
     public string[] Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
-        bool skipHook, ISerializationContext? context = null, string[]? value = default) =>
-        new[] { PrototypeSerializer.Read(serializationManager, node, dependencies, skipHook, context) };
+        SerializationHookContext hookCtx, ISerializationContext? context = null, string[]? value = default) =>
+        new[] { PrototypeSerializer.Read(serializationManager, node, dependencies, hookCtx, context) };
 }
 

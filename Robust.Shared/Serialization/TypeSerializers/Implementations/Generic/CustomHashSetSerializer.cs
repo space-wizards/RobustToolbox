@@ -22,14 +22,14 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
         IDependencyCollection dependencies,
-        bool skipHook,
-        ISerializationContext? context, HashSet<T>? set)
+        SerializationHookContext hookCtx,
+        ISerializationContext? context, HashSet<T>? set = default)
     {
         set ??= new HashSet<T>();
 
         foreach (var dataNode in node.Sequence)
         {
-            var value = serializationManager.ReadWithTypeSerializer(typeof(T), typeof(TCustomSerializer), dataNode, context, skipHook);
+            var value = serializationManager.ReadWithTypeSerializer(typeof(T), typeof(TCustomSerializer), dataNode, hookCtx, context);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 
@@ -66,7 +66,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     }
 
     public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target,
-        bool skipHook,
+        SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
         target.Clear();
@@ -78,7 +78,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
             // Maybe this will change in the future.
             var A = new T();
 
-            var value = serializationManager.CopyWithTypeSerializer(typeof(TCustomSerializer), element, A, context, skipHook);
+            var value = serializationManager.CopyWithTypeSerializer(typeof(TCustomSerializer), element, A, hookCtx, context);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when copying using a custom hashset serializer.");
 

@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public Vector2i Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, Vector2i value = default)
         {
             if (!VectorSerializerUtility.TryParseArgs(node.Value, 2, out var args))
@@ -53,7 +53,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Vector2i Copy(ISerializationManager serializationManager, Vector2i source, Vector2i target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.X, source.Y);

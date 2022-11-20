@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public string Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, string? value = default)
         {
             return node.Value;
@@ -36,7 +36,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public string Copy(ISerializationManager serializationManager, string source, string target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

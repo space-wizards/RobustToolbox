@@ -75,6 +75,13 @@ namespace Robust.Shared.Serialization.Manager
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false,
             object? value = null);
 
+        public object? Read(
+            Type type,
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            object? value = null);
+
         /// <summary>
         ///     Deserializes a node into a populated object of the given generic type <see cref="T"/>
         /// </summary>
@@ -86,8 +93,18 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default);
 
+        T Read<T>(DataNode node, SerializationHookContext hookCtx, ISerializationContext? context = null, T? value = default);
+
         object? ReadWithTypeSerializer(Type type, Type serializer, DataNode node,
             ISerializationContext? context = null, bool skipHook = false, object? value = null);
+
+        object? ReadWithTypeSerializer(
+            Type type,
+            Type serializer,
+            DataNode node,
+            SerializationHookContext ctx,
+            ISerializationContext? context = null,
+            object? value = null);
 
         #endregion
 
@@ -140,6 +157,12 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         void Copy(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false);
 
+        void Copy(
+            object? source,
+            ref object? target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null);
+
         /// <summary>
         ///     Copies the values of one object into another.
         ///     This does not guarantee that the object passed as <see cref="target"/>
@@ -152,6 +175,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         void Copy<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false);
 
+        void Copy<T>(T source, ref T target, SerializationHookContext hookCtx, ISerializationContext? context = null);
+
         /// <summary>
         ///     Creates a copy of the given object.
         /// </summary>
@@ -161,6 +186,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
         object? Copy(object? source, ISerializationContext? context = null, bool skipHook = false);
+
+        [MustUseReturnValue]
+        object? Copy(object? source, SerializationHookContext hookCtx, ISerializationContext? context = null);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -174,8 +202,19 @@ namespace Robust.Shared.Serialization.Manager
         T Copy<T>(T source, ISerializationContext? context = null, bool skipHook = false);
 
         [MustUseReturnValue]
+        T Copy<T>(T source, SerializationHookContext hookCtx, ISerializationContext? context = null);
+
+        [MustUseReturnValue]
         object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false);
+
+        [MustUseReturnValue]
+        object? CopyWithTypeSerializer(
+            Type typeSerializer,
+            object? source,
+            object? target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null);
 
         #endregion
 

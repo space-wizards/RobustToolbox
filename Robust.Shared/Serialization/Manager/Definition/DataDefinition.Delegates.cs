@@ -9,7 +9,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             MappingDataNode mappingDataNode,
             ISerializationManager serializationManager,
             ISerializationContext? context,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             object?[] defaultValues);
 
         private delegate MappingDataNode SerializeDelegateSignature(

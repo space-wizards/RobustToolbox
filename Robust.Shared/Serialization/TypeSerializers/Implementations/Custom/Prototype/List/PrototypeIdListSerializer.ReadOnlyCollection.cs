@@ -28,8 +28,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, IReadOnlyCollection<string>? rawValue)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, IReadOnlyCollection<string>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<string>)}. Ignoring...");
@@ -42,7 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
-                    skipHook,
+                    hookCtx,
                     context));
             }
 
@@ -62,7 +62,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationManager serializationManager,
             IReadOnlyCollection<string> source,
             IReadOnlyCollection<string> target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context)
         {
             return new List<string>(source);

@@ -22,7 +22,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public decimal Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, decimal value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null, decimal value = default)
         {
             return Parse.Decimal(node.Value);
         }
@@ -34,7 +35,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public decimal Copy(ISerializationManager serializationManager, decimal source, decimal target, bool skipHook,
+        public decimal Copy(ISerializationManager serializationManager, decimal source, decimal target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

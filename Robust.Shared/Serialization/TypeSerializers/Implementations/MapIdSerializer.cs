@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public MapId Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, MapId value = default)
         {
             var val = Parse.Int32(node.Value);
@@ -43,7 +43,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.Value);

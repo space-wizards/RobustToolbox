@@ -23,8 +23,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public ImmutableList<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            ImmutableList<string>? rawValue = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ImmutableList<string>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<string>)}. Ignoring...");
@@ -37,7 +38,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
-                    skipHook,
+                    hookCtx,
                     context));
             }
 
@@ -51,8 +52,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
         }
 
-        public ImmutableList<string> Copy(ISerializationManager serializationManager, ImmutableList<string> source, ImmutableList<string> target,
-            bool skipHook, ISerializationContext? context = null)
+        public ImmutableList<string> Copy(ISerializationManager serializationManager, ImmutableList<string> source,
+            ImmutableList<string> target,
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return ImmutableList.CreateRange(source);
         }

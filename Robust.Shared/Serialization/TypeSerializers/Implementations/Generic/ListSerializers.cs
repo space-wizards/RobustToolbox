@@ -66,14 +66,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         List<T> ITypeReader<List<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, List<T>? list)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, List<T>? list = default)
         {
             list ??= new List<T>();
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                list.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return list;
@@ -120,7 +120,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyList<T> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyList<T>? rawValue)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            IReadOnlyList<T>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
@@ -129,7 +130,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                list.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return list;
@@ -138,7 +139,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyCollection<T>? rawValue)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            IReadOnlyCollection<T>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
@@ -147,7 +149,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                list.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return list;
@@ -156,7 +158,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ImmutableList<T> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, ImmutableList<T>? rawValue)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ImmutableList<T>? rawValue = default)
         {
             if(rawValue != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
@@ -165,7 +168,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                list.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return list.ToImmutable();
@@ -187,7 +190,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
         [MustUseReturnValue]
         public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return CopyInternal(serializationManager, source, target, context);
@@ -195,7 +198,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
         [MustUseReturnValue]
         public IReadOnlyList<T> Copy(ISerializationManager serializationManager, IReadOnlyList<T> source,
-            IReadOnlyList<T> target, bool skipHook, ISerializationContext? context = null)
+            IReadOnlyList<T> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             if (target is List<T> targetList)
             {
@@ -215,7 +218,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
         [MustUseReturnValue]
         public IReadOnlyCollection<T> Copy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
-            IReadOnlyCollection<T> target, bool skipHook, ISerializationContext? context = null)
+            IReadOnlyCollection<T> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             if (target is List<T> targetList)
             {
@@ -235,7 +238,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
         [MustUseReturnValue]
         public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
-            ImmutableList<T> target, bool skipHook, ISerializationContext? context = null)
+            ImmutableList<T> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             var builder = ImmutableList.CreateBuilder<T>();
 

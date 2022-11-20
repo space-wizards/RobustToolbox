@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public Color Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, Color value = default)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)
@@ -43,7 +43,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Color Copy(ISerializationManager serializationManager, Color source, Color target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.R, source.G, source.B, source.A);

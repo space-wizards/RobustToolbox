@@ -54,6 +54,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private int _currentUncompressedSize;
     private (GameTick Tick, TimeSpan Time) _recordingStart;
     private MappingDataNode? _yamlMetadata;
+    private bool _firstTick = true;
 
     /// <inheritdoc/>
     public void Initialize()
@@ -95,6 +96,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _currentCompressedSize = 0;
             _currentUncompressedSize = 0;
             _index = 0;
+            _firstTick = true;
             throw;
         }
     }
@@ -108,6 +110,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         _directory = _netConf.GetCVar(CVars.ReplayDirectory);
         _curStream = new(_tickBatchSize * 2);
         _index = 0;
+        _firstTick = true;
         WriteInitialMetadata();
         _recordingStart = (_timing.CurTick, _timing.CurTime);
 
@@ -144,7 +147,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             if (mainThread != Thread.CurrentThread)
                 IoCManager.InitThread(new DependencyCollection(parentDeps), true);
 
-            var lastAck = _index == 0 ? GameTick.Zero : _timing.CurTick - 1;
+            var lastAck = _firstTick ? GameTick.Zero : _timing.CurTick - 1;
 
             var (entStates, deletions, _, __) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
             var playerStates = _playerMan.GetPlayerStates(lastAck);
@@ -200,6 +203,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _currentCompressedSize = 0;
             _currentUncompressedSize = 0;
             _index = 0;
+            _firstTick = true;
         }
     }
 

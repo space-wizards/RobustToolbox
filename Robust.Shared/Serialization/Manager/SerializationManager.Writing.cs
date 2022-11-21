@@ -70,7 +70,12 @@ public sealed partial class SerializationManager
 
             //todo paul make nullable check in here
             actualType = actualType.EnsureNotNullableType();
-            var sameType = baseType == actualType;
+            var sameType = baseType.EnsureNotNullableType() == actualType;
+
+            Expression objAccess = baseType.IsNullable()
+                ? Expression.Convert(objParam, sameType ? baseType.EnsureNotNullableType() : actualType)
+                : sameType ? objParam : Expression.Convert(objParam, actualType);
+
             Expression call;
             if (serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>), actualType, out var serializer))
             {
@@ -80,7 +85,7 @@ public sealed partial class SerializationManager
                     nameof(WriteValue),
                     new []{actualType},
                     serializerConst,
-                    sameType ? objParam : Expression.Convert(objParam, actualType),
+                    objAccess,
                     alwaysWriteParam,
                     contextParam,
                     Expression.Constant(notNullableOverride)
@@ -120,7 +125,7 @@ public sealed partial class SerializationManager
                     instanceParam,
                     nameof(WriteValueInternal),
                     new[] { actualType },
-                    sameType ? objParam : Expression.Convert(objParam, actualType),
+                    objAccess,
                     Expression.Constant(serializationManager.GetDefinition(actualType), typeof(DataDefinition<>).MakeGenericType(actualType)),
                     alwaysWriteParam,
                     contextParam);
@@ -155,7 +160,7 @@ public sealed partial class SerializationManager
                         nameof(WriteValue),
                         new []{actualType},
                         serializerVar,
-                        sameType ? objParam : Expression.Convert(objParam, actualType),
+                        objAccess,
                         alwaysWriteParam,
                         contextParam,
                         Expression.Constant(notNullableOverride)),

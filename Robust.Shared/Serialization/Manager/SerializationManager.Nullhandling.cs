@@ -8,10 +8,9 @@ namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
 {
-    //null values are the bane of my existence
-    //todo paul expand our testing of null-handling in serv3
+    //null values are the bane of my existence ~<paul
 
-    private static Expression GetNullExpression(Expression managerConst, Type type)
+    public static Expression GetNullExpression(Expression managerConst, Type type)
     {
         return type.IsValueType
             ? Expression.Call(managerConst, nameof(GetNullable), new[] { type })
@@ -35,7 +34,7 @@ public sealed partial class SerializationManager
         return value as T? ?? default;
     }
 
-    private bool IsNull(DataNode node)
+    public static bool IsNull(DataNode node)
     {
         return node.IsNull;
     }

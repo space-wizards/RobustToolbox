@@ -36,6 +36,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
+                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+
                 var nodeVariable = Expression.Variable(typeof(DataNode));
                 var valueVariable = Expression.Variable(fieldDefinition.FieldType);
                 Expression call;
@@ -92,6 +94,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     call = Expression.Switch(ExpressionUtils.GetTypeExpression(nodeVariable),
                         ExpressionUtils.ThrowExpression<InvalidOperationException>(),
                         switchCases.ToArray());
+
+                    call = Expression.IfThenElse(
+                        Expression.Call(typeof(SerializationManager), "IsNull", Type.EmptyTypes, nodeVariable),
+                        nullableOverride
+                            ? Expression.Block(typeof(void),
+                                Expression.Assign(valueVariable,
+                                    SerializationManager.GetNullExpression(managerConst, fieldType)))
+                            : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
+                        call);
                 }
                 else
                 {
@@ -103,7 +114,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         contextParam,
                         skipHookParam,
                         Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldDefinition.FieldType)),
-                        Expression.Constant(false)));
+                        Expression.Constant(nullableOverride)));
                 }
 
                 call = Expression.Block(
@@ -166,7 +177,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     ExpressionUtils.NewExpression<MappingDataNode>()
                 ));
 
-            //todo paul sane nullhandling here pls
             for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
@@ -181,6 +191,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
+                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+
                 Expression call;
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
@@ -193,7 +205,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Convert(valueVar, fieldType),
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(false));
+                        Expression.Constant(nullableOverride));
                 }
                 else
                 {
@@ -204,7 +216,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         valueVar,
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(false));
+                        Expression.Constant(nullableOverride));
                 }
 
                 Expression writeExpression;

@@ -42,7 +42,17 @@ namespace Robust.Shared.Serialization.Manager
 
                 //!type tag overrides null value on default. i did this because i couldnt come up with a usecase where you'd specify the type but have a null value. yell at me if you found one -paul
                 if (node.IsEmpty || node.IsNull)
+                {
+                    if (instanceProvider != null)
+                    {
+                        var val = instanceProvider();
+                        //make this debug-only? -<paul
+                        if (val?.GetType() != type) throw new InvalidInstanceReturnedException(type, val?.GetType());
+                        return val;
+                    }
+
                     return GetOrCreateInstantiator<T>(false, type)();
+                }
 
                 return ((ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
                     (typeof(T), type, node.GetType()!, notNullableOverride),
@@ -106,7 +116,6 @@ namespace Robust.Shared.Serialization.Manager
         private static object ReadDelegateValueFactory(Type baseType, Type actualType, Type nodeType, bool notNullableOverride, SerializationManager manager)
         {
             var nullable = !notNullableOverride && actualType.IsNullable();
-            actualType = actualType.EnsureNotNullableType();
 
             var managerConst = Expression.Constant(manager);
 
@@ -115,19 +124,28 @@ namespace Robust.Shared.Serialization.Manager
             var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
             var instantiatorParam = Expression.Parameter(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(baseType), "instanceProvider");
 
-            var instantiatorVariable =
-                Expression.Variable(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(actualType));
+            actualType = actualType.EnsureNotNullableType();
 
             Expression BaseInstantiatorToActual()
             {
-                return nullable && baseType.IsValueType
+                Expression nonNullableInstantiator = nullable && baseType.IsValueType
                     ? Expression.Call(
                         managerConst,
                         nameof(UnwrapInstantiationDelegate),
                         new[] { baseType.EnsureNotNullableType() },
                         instantiatorParam)
-                    : Expression.Convert(instantiatorParam, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(actualType));
+                    : instantiatorParam;
+
+                return baseType.EnsureNotNullableType() == actualType
+                    ? nonNullableInstantiator
+                    : Expression.Call(managerConst,
+                        nameof(WrapBaseInstantiationDelegate),
+                        new []{actualType, baseType.EnsureNotNullableType()},
+                        instantiatorParam);
             }
+
+            var instantiatorVariable =
+                Expression.Variable(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(actualType));
 
             var instantiatorCoalesce = Expression.Assign(instantiatorVariable, Expression.Coalesce(
                 BaseInstantiatorToActual(),
@@ -266,7 +284,7 @@ namespace Robust.Shared.Serialization.Manager
             var returnValue = Expression.Variable(nullable ? actualType.EnsureNullableType() : actualType);
             call = Expression.Block(new[] { returnValue },
                 Expression.IfThenElse(
-                Expression.Call(managerConst, nameof(IsNull), Type.EmptyTypes, nodeParam),
+                Expression.Call(typeof(SerializationManager), nameof(IsNull), Type.EmptyTypes, nodeParam),
                 nullable
                     ? Expression.Block(typeof(void), Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
                     : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
@@ -299,6 +317,19 @@ namespace Robust.Shared.Serialization.Manager
                 var val = instantiationDelegate();
                 Debug.Assert(val.HasValue, $"{nameof(instantiationDelegate)} returned null value! This should NEVER be allowed to happen!");
                 return instantiationDelegate()!.Value;
+            };
+        }
+
+        private ISerializationManager.InstantiationDelegate<TActual>? WrapBaseInstantiationDelegate<TActual, TBase>(
+            ISerializationManager.InstantiationDelegate<TBase>? instantiationDelegate) where TActual : TBase
+        {
+            if (instantiationDelegate == null) return null;
+
+            return () =>
+            {
+                var val = instantiationDelegate();
+                Debug.Assert(val != null, $"{nameof(instantiationDelegate)} returned null value! This should NEVER be allowed to happen!");
+                return (TActual)val;
             };
         }
 

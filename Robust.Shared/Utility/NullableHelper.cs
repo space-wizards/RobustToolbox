@@ -45,9 +45,9 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="field"></param>
         /// <returns></returns>
-        public static bool IsMarkedAsNullable(FieldInfo field)
+        internal static bool IsMarkedAsNullable(AbstractFieldInfo field)
         {
-            if (GetUnderlyingType(field.FieldType) != null) return true;
+            if (Nullable.GetUnderlyingType(field.FieldType) != null) return true;
 
             var flags = GetNullableFlags(field);
             if (flags.Length != 0 && flags[0] != NotAnnotatedNullableFlag) return true;
@@ -75,7 +75,7 @@ namespace Robust.Shared.Utility
             return true;
         }
 
-        private static byte[] GetNullableFlags(FieldInfo field)
+        private static byte[] GetNullableFlags(AbstractFieldInfo field)
         {
             lock (_nullableAttributeTypeCache)
             {
@@ -91,8 +91,7 @@ namespace Robust.Shared.Utility
                     return new byte[]{0};
                 }
 
-                var nullableAttribute = field.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
-                if (nullableAttribute == null)
+                if (!field.TryGetAttribute(assemblyNullableEntry.Value.AttributeType, out var nullableAttribute))
                 {
                     return new byte[]{1};
                 }

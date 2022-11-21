@@ -22,9 +22,7 @@ public sealed partial class ManagerTests : SerializationTest
             NS => Null source (copyto)
             NT => Null target (copyto)
 
-    todo validate & pushcomposition
-
-    for each [write|read|copy|copycreate]
+    for each [write|read|copyto|copycreate]
     for each testcase except copyto, do:    NT_NV
                                             NT_RV
                                             RT_NV //only possible for class
@@ -48,9 +46,11 @@ public sealed partial class ManagerTests : SerializationTest
                 todo returnsource (copy, createcopy)
                 todo test the generic variants too
 
+    //todo figure out a way to tell which serializer we used for (create)copy
 
     //todo datarecords
-    //todo figure out a way to tell which serializer we used for (create)copy
+    //todo validate & pushcomposition
+    //todo prioritytests ([copybyref] <> null <> custom <> regular <> array/enum <> datadef)
     */
 
     #region DataSources
@@ -67,6 +67,30 @@ public sealed partial class ManagerTests : SerializationTest
                 false,
                 new Func<SelfSerializeClass, object>[] { x => x.TestValue }
             }, //ISelfSerialize
+            new object[]
+            {
+                new MappingDataNode(new Dictionary<DataNode, DataNode>
+                {
+                    { new ValueDataNode("one"), new ValueDataNode("valueOne") },
+                    { new ValueDataNode("two"), new SequenceDataNode("2", "3") },
+                }){Tag = $"!type:{nameof(DataDefClass)}"},
+                () => (IDataDefBaseInterface)new DataDefClass
+                {
+                    OneValue = "valueOne",
+                    TwoValue = new List<int> { 2, 3 }
+                },
+                () => (IDataDefBaseInterface)new DataDefClass
+                {
+                    OneValue = "anotherValueOne",
+                    TwoValue = new List<int> { 3, 4 }
+                },
+                false,
+                new Func<IDataDefBaseInterface, object>[]
+                {
+                    x => ((DataDefClass)x).OneValue,
+                    x => ((DataDefClass)x).TwoValue,
+                }
+            }, //DataDefinitionBaseType
         },
         TestableTypesClass
     }.SelectMany(x => x);
@@ -148,6 +172,30 @@ public sealed partial class ManagerTests : SerializationTest
                 false,
                 new Func<SelfSerializeStruct, object>[] { x => x.TestValue }
             }, //ISelfSerialize
+            /*new object[]
+            {
+                new MappingDataNode(new Dictionary<DataNode, DataNode>
+                {
+                    { new ValueDataNode("one"), new ValueDataNode("valueOne") },
+                    { new ValueDataNode("two"), new SequenceDataNode("2", "3") },
+                }){Tag = $"!type:{nameof(DataDefStruct)}"},
+                () => new DataDefStruct
+                {
+                    OneValue = "valueOne",
+                    TwoValue = new List<int> { 2, 3 }
+                } as IDataDefBaseInterface,
+                () => new DataDefStruct
+                {
+                    OneValue = "anotherValueOne",
+                    TwoValue = new List<int> { 3, 4 }
+                } as IDataDefBaseInterface,
+                false,
+                new Func<IDataDefBaseInterface, object>[]
+                {
+                    x => ((DataDefStruct)x).OneValue,
+                    x => ((DataDefStruct)x).TwoValue,
+                }
+            }, //DataDefinitionBaseType*/
         },
         TestableTypesStruct
     }.SelectMany(x => x!);
@@ -258,7 +306,7 @@ public sealed partial class ManagerTests : SerializationTest
         Assert.That(() => Serialization.WriteValue<T>(null!, context: Context(useContext), notNullableOverride: true), Throws.TypeOf<NullNotAllowedException>());
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
+    [TestCaseSource(nameof(ReadWriteTypesAll))]
     public void Write_RT_RV<T>(DataNode intendedNode, Func<T> value, Func<T> altValue, bool useContext, object[] _)
     {
         var resNode = Serialization.WriteValue<T>(value(), context: Context(useContext));
@@ -299,14 +347,14 @@ public sealed partial class ManagerTests : SerializationTest
         AssertEqual(val!, value(), valueExtractors);
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
+    [TestCaseSource(nameof(ReadWriteTypesAll))]
     public void Read_RT_NV<T>(DataNode node, Func<T> _, Func<T> __, bool useContext, object[] ___)
     {
         Assert.That(() => Serialization.Read<T>(ValueDataNode.Null(), context: Context(useContext), notNullableOverride: true),
             Throws.TypeOf<NullNotAllowedException>());
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
+    [TestCaseSource(nameof(ReadWriteTypesAll))]
     public void Read_RT_RV<T>(DataNode node, Func<T> value, Func<T> __, bool useContext, object[] valueExtractors)
     {
         var val = Serialization.Read<T>(node, context: Context(useContext));

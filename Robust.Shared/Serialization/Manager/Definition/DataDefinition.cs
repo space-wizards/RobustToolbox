@@ -235,6 +235,24 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
 
+                if (IsNull(val))
+                {
+                    if (!NullableHelper.IsMarkedAsNullable(BaseFieldDefinitions[idx].FieldInfo))
+                    {
+                        var error = new ErrorNode(
+                            val,
+                            $"Field \"{valueDataNode.Value}\" had null value despite not being annotated as nullable.");
+
+                        validatedMapping.Add(keyValidated, error);
+                    }
+                    else
+                    {
+                        validatedMapping.Add(keyValidated, new ValidatedValueNode(val));
+                    }
+
+                    continue;
+                }
+
                 validatedMapping.Add(keyValidated, FieldValidators[idx](val, context));
             }
 

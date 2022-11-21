@@ -577,9 +577,7 @@ public sealed class MapLoaderSystem : EntitySystem
         // After doing this, it should be 100% safe to use the MapManager API like normal.
 
         if (data.Version != BackwardsVersion)
-        {
             return;
-        }
 
         var yamlGrids = data.RootMappingNode.Get<SequenceDataNode>("grids");
 

@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Shared.Map
@@ -24,7 +23,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitIdleAsync();
 
-            var entMan = server.ResolveDependency<IEntityManager>();
             var mapMan = server.ResolveDependency<IMapManager>();
 
             await server.WaitAssertion(() =>

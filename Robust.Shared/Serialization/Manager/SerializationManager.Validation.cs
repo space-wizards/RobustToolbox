@@ -201,7 +201,7 @@ public sealed partial class SerializationManager
 
     public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
     {
-        var underlyingType = Nullable.GetUnderlyingType(type);
+        var underlyingType = type.GetUnderlyingType();
 
         if (underlyingType != null) // implies that type was nullable
         {

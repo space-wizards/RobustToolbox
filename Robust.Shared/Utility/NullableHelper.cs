@@ -15,6 +15,16 @@ namespace Robust.Shared.Utility
         private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?>
             _nullableContextAttributeTypeCache = new();
 
+        //todo paul remove this shitty hack once serv3 nullable reference is sane again
+        public static Type? GetUnderlyingType(this Type type)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType != null) return underlyingType;
+
+            return type.IsValueType ? null : type;
+        }
+
         public static Type EnsureNullableType(this Type type)
         {
             if (type.IsValueType)
@@ -27,7 +37,7 @@ namespace Robust.Shared.Utility
 
         public static Type EnsureNotNullableType(this Type type)
         {
-            return Nullable.GetUnderlyingType(type) ?? type;
+            return GetUnderlyingType(type) ?? type;
         }
 
         /// <summary>
@@ -37,7 +47,7 @@ namespace Robust.Shared.Utility
         /// <returns></returns>
         public static bool IsMarkedAsNullable(FieldInfo field)
         {
-            if (Nullable.GetUnderlyingType(field.FieldType) != null) return true;
+            if (GetUnderlyingType(field.FieldType) != null) return true;
 
             var flags = GetNullableFlags(field);
             if (flags.Length != 0 && flags[0] != NotAnnotatedNullableFlag) return true;
@@ -55,7 +65,7 @@ namespace Robust.Shared.Utility
 
         public static bool IsNullable(this Type type, [NotNullWhen(true)] out Type? underlyingType)
         {
-            underlyingType = Nullable.GetUnderlyingType(type);
+            underlyingType = GetUnderlyingType(type);
 
             if (underlyingType == null)
             {

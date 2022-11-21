@@ -49,6 +49,8 @@ public sealed partial class ManagerTests : SerializationTest
 
     //todo datadef emitter testing
     //todo datarecords
+    //todo test that no references are wrongfully copied
+    //todo test read valueprovider
     */
 
     public static IEnumerable<object[]> TestableTypesClass = new[]
@@ -205,8 +207,15 @@ public sealed partial class ManagerTests : SerializationTest
         Assert.That(resNode.IsNull);
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
-    public void Write_NT_RV<T>(DataNode intendedNode, Func<T> value, Func<T> _, bool useContext, object[] __)
+    [TestCaseSource(nameof(TestableTypesStruct))]
+    public void Write_NT_RV_Struct<T>(DataNode intendedNode, Func<T> value, Func<T> _, bool useContext, object[] __) where T : struct
+    {
+        var resNode = Serialization.WriteValue<T?>(value(), context: Context(useContext));
+        Assert.That(resNode.Equals(intendedNode));
+    }
+
+    [TestCaseSource(nameof(TestableTypesClass))]
+    public void Write_NT_RV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> _, bool useContext, object[] __) where T : class
     {
         var resNode = Serialization.WriteValue<T?>(value(), context: Context(useContext));
         Assert.That(resNode.Equals(intendedNode));
@@ -222,7 +231,7 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
 */
 
     [TestCaseSource(nameof(TestableTypesAll))]
-    public void Write_RT_RV<T>(DataNode intendedNode, Func<T> value, Func<T> altValue, bool useContext, object[] test)
+    public void Write_RT_RV<T>(DataNode intendedNode, Func<T> value, Func<T> altValue, bool useContext, object[] _)
     {
         var resNode = Serialization.WriteValue<T>(value(), context: Context(useContext));
         Assert.That(resNode.Equals(intendedNode));
@@ -233,23 +242,38 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
 
     #region Read
 
-    [TestCaseSource(nameof(TestableTypesAll))]
-    public void Read_NT_NV<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____)
+    [TestCaseSource(nameof(TestableTypesStruct))]
+    public void Read_NT_NV_Struct<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____) where T : struct
     {
         var val = Serialization.Read<T?>(ValueDataNode.Null(), context: Context(useContext));
         Assert.Null(val);
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
-    public void Read_NT_RV<T>(DataNode node, Func<T> value, Func<T> _, bool useContext, object[] __)
+    [TestCaseSource(nameof(TestableTypesClass))]
+    public void Read_NT_NV_Class<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____) where T : class
+    {
+        var val = Serialization.Read<T?>(ValueDataNode.Null(), context: Context(useContext));
+        Assert.Null(val);
+    }
+
+    [TestCaseSource(nameof(TestableTypesStruct))]
+    public void Read_NT_RV_Struct<T>(DataNode node, Func<T> value, Func<T> _, bool useContext, object[] valueExtractors) where T : struct
     {
         var val = Serialization.Read<T?>(node, context: Context(useContext));
         Assert.NotNull(val);
-        Assert.That(val, Is.EqualTo(value()));
+        AssertEqual(val!, value(), valueExtractors);
     }
 
-//todo paul uncomment when serv3 nullability for reference types is sane again
-//[TestCaseSource(nameof(TestableTypesAll))]
+    [TestCaseSource(nameof(TestableTypesClass))]
+    public void Read_NT_RV_Class<T>(DataNode node, Func<T> value, Func<T> _, bool useContext, object[] valueExtractors) where T : class
+    {
+        var val = Serialization.Read<T?>(node, context: Context(useContext));
+        Assert.NotNull(val);
+        AssertEqual(val!, value(), valueExtractors);
+    }
+
+    //todo paul uncomment when serv3 nullability for reference types is sane again
+    //[TestCaseSource(nameof(TestableTypesAll))]
     [TestCaseSource(nameof(TestableTypesStruct))]
     public void Read_RT_NV<T>(DataNode node, Func<T> _, Func<T> __, bool useContext, object[] ___)
     {
@@ -258,10 +282,10 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
     }
 
     [TestCaseSource(nameof(TestableTypesAll))]
-    public void Read_RT_RV<T>(DataNode node, Func<T> value, Func<T> __, bool useContext, object[] ___)
+    public void Read_RT_RV<T>(DataNode node, Func<T> value, Func<T> __, bool useContext, object[] valueExtractors)
     {
         var val = Serialization.Read<T>(node, context: Context(useContext));
-        Assert.That(val, Is.EqualTo(value()));
+        AssertEqual(val!, value(), valueExtractors);
     }
 
     #endregion
@@ -324,9 +348,19 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
         AssertEqual(target!, value(), valueExtractors);
     }
 
-    [TestCaseSource(nameof(TestableTypesAll))]
+    [TestCaseSource(nameof(TestableTypesStruct))]
     public void CopyTo_NT_RS_RT<T>(DataNode _, Func<T> value, Func<T> altValue, bool useContext,
-        object[] valueExtractors)
+        object[] valueExtractors) where T : struct
+    {
+        T? target = altValue();
+        Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
+        Assert.NotNull(target);
+        AssertEqual(target!, value(), valueExtractors);
+    }
+
+    [TestCaseSource(nameof(TestableTypesClass))]
+    public void CopyTo_NT_RS_RT_Class<T>(DataNode _, Func<T> value, Func<T> altValue, bool useContext,
+        object[] valueExtractors) where T : class
     {
         T? target = altValue();
         Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
@@ -427,7 +461,7 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
         {
             foreach (var extractor in valueExtractors.Cast<Func<T, object>>())
             {
-                Assert.That(extractor(a), Is.EqualTo(extractor(b)));
+                Assert.That(extractor(a).Equals(extractor(b)));
             }
         });
     }

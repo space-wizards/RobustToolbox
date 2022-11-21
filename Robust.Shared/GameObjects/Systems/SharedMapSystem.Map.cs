@@ -35,7 +35,7 @@ public abstract partial class SharedMapSystem
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
-        var msg = new MapChangedEvent(component.WorldMap, true);
+        var msg = new MapChangedEvent(uid, component.WorldMap, true);
         RaiseLocalEvent(uid, msg, true);
     }
 
@@ -45,7 +45,7 @@ public abstract partial class SharedMapSystem
 
         iMap.TrueDeleteMap(component.WorldMap);
 
-        var msg = new MapChangedEvent(component.WorldMap, false);
+        var msg = new MapChangedEvent(uid, component.WorldMap, false);
         RaiseLocalEvent(uid, msg, true);
     }
 }

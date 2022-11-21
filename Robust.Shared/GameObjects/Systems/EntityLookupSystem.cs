@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
         {
             if (ev.Created && ev.Map != MapId.Nullspace)
             {
-                EnsureComp<BroadphaseComponent>(_mapManager.GetMapEntityId(ev.Map));
+                EnsureComp<BroadphaseComponent>(ev.Uid);
             }
         }
 

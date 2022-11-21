@@ -8,6 +8,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.GameObjects;
@@ -482,6 +483,33 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region Parent
+
+    public void ReparentChildren(EntityUid oldUid, EntityUid uid)
+    {
+        ReparentChildren(oldUid, uid, GetEntityQuery<TransformComponent>());
+    }
+
+    /// <summary>
+    /// Re-parents all of the oldUid's children to the new entity.
+    /// </summary>
+    public void ReparentChildren(EntityUid oldUid, EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (oldUid == uid)
+        {
+            _logger.Error($"Tried to reparent entities from the same entity, {ToPrettyString(oldUid)}");
+            return;
+        }
+
+        var oldXform = xformQuery.GetComponent(oldUid);
+        var xform = xformQuery.GetComponent(uid);
+
+        foreach (var child in oldXform._children.ToArray())
+        {
+            SetParent(xformQuery.GetComponent(child), uid, xformQuery, xform);
+        }
+
+        DebugTools.Assert(oldXform.ChildCount == 0);
+    }
 
     public TransformComponent? GetParent(EntityUid uid)
     {

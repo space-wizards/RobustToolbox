@@ -79,7 +79,8 @@ namespace Robust.Shared.Map
         /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
         /// before the new one is set.
         /// </summary>
-        void SetMapEntity(MapId mapId, EntityUid newMapEntityId);
+        /// <param name="updateChildren">Should we re-parent children from the old map to the new one, or delete them.</param>
+        void SetMapEntity(MapId mapId, EntityUid newMapEntityId, bool updateChildren = true);
 
         /// <summary>
         /// Returns the map entity ID for a given map.

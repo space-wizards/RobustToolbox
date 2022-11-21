@@ -32,11 +32,14 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class MapChangedEvent : EntityEventArgs
     {
+        public EntityUid Uid;
+
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public MapChangedEvent(MapId map, bool created)
+        public MapChangedEvent(EntityUid uid, MapId map, bool created)
         {
+            Uid = uid;
             Map = map;
             Created = created;
         }

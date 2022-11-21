@@ -34,14 +34,18 @@ public sealed class Broadphase_Test
         var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+        var xform = entManager.GetComponent<TransformComponent>(ent);
         Assert.That(broadphase.SundriesTree, Does.Contain(ent));
 
-        var xform = entManager.GetComponent<TransformComponent>(ent);
+        var broadphaseData = xform.Broadphase;
+        Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.GridEntityId));
 
         xform.Coordinates = new EntityCoordinates(mapEnt, Vector2.One);
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(ent));
 
         Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).SundriesTree, Does.Contain(ent));
+        broadphaseData = xform.Broadphase;
+        Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(mapEnt));
     }
 
     /// <summary>
@@ -66,9 +70,11 @@ public sealed class Broadphase_Test
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
         var physics = entManager.AddComponent<PhysicsComponent>(ent);
+        var xform = entManager.GetComponent<TransformComponent>(ent);
 
         // If we're not collidable we're still on the sundries tree.
         Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
+        Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(grid.GridEntityId));
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
@@ -82,11 +88,10 @@ public sealed class Broadphase_Test
 
         Assert.That(broadphase.StaticTree.GetProxy(fixture.Proxies[0].ProxyId)!.Equals(fixture.Proxies[0]));
 
-        var xform = entManager.GetComponent<TransformComponent>(ent);
-
         // Now check we go to the map's tree correctly.
         xform.Coordinates = new EntityCoordinates(mapEnt, Vector2.One);
         Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).StaticTree.GetProxy(fixture.Proxies[0].ProxyId)!.Equals(fixture.Proxies[0]));
+        Assert.That(xform.Broadphase!.Value.Uid.Equals(mapEnt));
     }
 
     /// <summary>

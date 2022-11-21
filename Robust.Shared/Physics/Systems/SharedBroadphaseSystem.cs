@@ -212,7 +212,7 @@ namespace Robust.Shared.Physics.Systems
 
                     // Get every broadphase we may be intersecting.
                     _mapManager.FindGridsIntersectingApprox(mapId, worldAABB.Enlarged(_broadphaseExpand), ref state,
-                        static (IMapGrid grid, ref (
+                        static (MapGridComponent grid, ref (
                             SharedBroadphaseSystem system,
                             FixtureProxy proxy,
                             Box2 worldAABB,

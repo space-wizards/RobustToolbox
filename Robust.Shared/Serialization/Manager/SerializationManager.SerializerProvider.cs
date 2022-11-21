@@ -212,6 +212,8 @@ public sealed partial class SerializationManager
             return obj;
         }
 
+        public T? RegisterSerializer<T>() => (T?)RegisterSerializer(typeof(T));
+
         public object? RegisterSerializer(Type type)
         {
             if (type.IsGenericTypeDefinition)

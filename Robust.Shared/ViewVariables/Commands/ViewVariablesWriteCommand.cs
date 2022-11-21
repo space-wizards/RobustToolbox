@@ -2,11 +2,9 @@ using Robust.Shared.Console;
 
 namespace Robust.Shared.ViewVariables.Commands;
 
-public sealed class ViewVariablesWriteCommand : ViewVariablesBaseCommand, IConsoleCommand
+public sealed class ViewVariablesWriteCommand : ViewVariablesBaseCommand
 {
     public override string Command => "vvwrite";
-    public override string Description => "Modify a path's value using VV.";
-    public override string Help => $"{Command} <path> <value>";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

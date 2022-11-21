@@ -1,15 +1,17 @@
-using System.Collections.Generic;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Client.GameStates;
 
 /// <summary>
 /// Tracks dirty entities on the client for the purposes of gamestatemanager.
 /// </summary>
-internal sealed class ClientDirtySystem : EntitySystem
+public sealed class ClientDirtySystem : EntitySystem
 {
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IComponentFactory _compFact = default!;
@@ -23,6 +25,7 @@ internal sealed class ClientDirtySystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+        SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
         EntityManager.EntityDirtied += OnEntityDirty;
         EntityManager.ComponentRemoved += OnCompRemoved;
     }
@@ -33,6 +36,15 @@ internal sealed class ClientDirtySystem : EntitySystem
         EntityManager.EntityDirtied -= OnEntityDirty;
         EntityManager.ComponentRemoved -= OnCompRemoved;
         Reset();
+    }
+
+    private void OnTerminate(ref EntityTerminatingEvent ev)
+    {
+        if (!_timing.InPrediction || ev.Entity.IsClientSide())
+            return;
+
+        // Client-side entity deletion is not supported and will cause errors.
+        Logger.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity)}. Trace: {Environment.StackTrace}");
     }
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
@@ -53,7 +65,7 @@ internal sealed class ClientDirtySystem : EntitySystem
             RemovedComponents.GetOrNew(comp.Owner).Add(netId.Value);
     }
 
-    internal void Reset()
+    public void Reset()
     {
         DirtyEntities.Clear();
         RemovedComponents.Clear();

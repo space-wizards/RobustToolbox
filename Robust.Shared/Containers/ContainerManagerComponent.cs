@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -11,7 +10,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
@@ -27,7 +25,6 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly INetManager _netMan = default!;
 
-        [ViewVariables]
         [DataField("containers")]
         public Dictionary<string, IContainer> Containers = new();
 
@@ -138,7 +135,6 @@ namespace Robust.Shared.Containers
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
             bool reparent = true,
-            bool addToBroadphase = true,
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
@@ -146,7 +142,7 @@ namespace Robust.Shared.Containers
             foreach (var containers in Containers.Values)
             {
                 if (containers.Contains(toremove))
-                    return containers.Remove(toremove, _entMan, xform, meta, reparent, addToBroadphase, force, destination, localRotation);
+                    return containers.Remove(toremove, _entMan, xform, meta, reparent, force, destination, localRotation);
             }
 
             return true; // If we don't contain the entity, it will always be removed

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -133,6 +134,8 @@ namespace Robust.Shared.Network
 
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
+        private readonly HttpClient _httpClient = new();
+
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
 
@@ -238,6 +241,8 @@ namespace Robust.Shared.Network
             {
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
+
+            HttpClientUserAgent.AddUserAgent(_httpClient);
 
             SynchronizeNetTime();
 
@@ -680,11 +685,11 @@ namespace Robust.Shared.Network
         private void HandleStatusChanged(NetPeerData peer, NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
-            msg.ReadByte();
+            var newStatus = (NetConnectionStatus) msg.ReadByte();
             var reason = msg.ReadString();
             Logger.DebugS("net",
                 "{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
-                sender.RemoteEndPoint, sender.Status, reason);
+                sender.RemoteEndPoint, newStatus, reason);
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
@@ -694,7 +699,7 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            switch (sender.Status)
+            switch (newStatus)
             {
                 case NetConnectionStatus.Connected:
                     if (IsServer)

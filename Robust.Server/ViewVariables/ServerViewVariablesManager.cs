@@ -25,6 +25,8 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();
@@ -186,26 +188,26 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesIoCSelector ioCSelector:
                 {
-                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+                    var reflectionManager = _reflectionManager;
                     if (!reflectionManager.TryLooseGetType(ioCSelector.TypeName, out var type))
                     {
                         Deny(ViewVariablesResponseCode.InvalidRequest);
                         return;
                     }
 
-                    theObject = IoCManager.ResolveType(type);
+                    theObject = _dependencyCollection.ResolveType(type);
                     break;
                 }
                 case ViewVariablesEntitySystemSelector esSelector:
                 {
-                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+                    var reflectionManager = _reflectionManager;
                     if (!reflectionManager.TryLooseGetType(esSelector.TypeName, out var type))
                     {
                         Deny(ViewVariablesResponseCode.InvalidRequest);
                         return;
                     }
 
-                    theObject = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type);
+                    theObject = _entityManager.EntitySysManager.GetEntitySystem(type);
                     break;
                 }
                 case ViewVariablesPathSelector paSelector:
@@ -270,12 +272,10 @@ namespace Robust.Server.ViewVariables
             switch (input)
             {
                 case ViewVariablesBlobMembers.PrototypeReferenceToken token:
-                    var protoMan = IoCManager.Resolve<IPrototypeManager>();
-
-                    if (!protoMan.TryGetVariantType(token.Variant, out var variantType))
+                    if (!_prototypeManager.TryGetVariantType(token.Variant, out var variantType))
                         return false;
 
-                    if (!protoMan.TryIndex(variantType, token.ID, out var prototype))
+                    if (!_prototypeManager.TryIndex(variantType, token.ID, out var prototype))
                         return false;
 
                     output = prototype;

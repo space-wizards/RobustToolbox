@@ -50,7 +50,8 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
-        public event Action<TextEventArgs>? TextEntered { add { } remove { } }
+        public event Action<TextEnteredEventArgs>? TextEntered { add { } remove { } }
+        public event Action<TextEditingEventArgs>? TextEditing { add { } remove { } }
         public event Action<MouseMoveEventArgs>? MouseMove { add { } remove { } }
         public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave { add { } remove { } }
         public event Action<KeyEventArgs>? KeyUp { add { } remove { } }
@@ -226,6 +227,21 @@ namespace Robust.Client.Graphics.Clyde
             _windows.Add(window);
 
             return window;
+        }
+
+        public void TextInputSetRect(UIBox2i rect)
+        {
+            // Nada.
+        }
+
+        public void TextInputStart()
+        {
+            // Nada.
+        }
+
+        public void TextInputStop()
+        {
+            // Nada.
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)

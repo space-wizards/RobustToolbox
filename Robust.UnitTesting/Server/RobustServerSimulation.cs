@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Console;
 using Robust.Server.Debugging;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
@@ -23,6 +24,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
@@ -34,6 +36,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
@@ -218,6 +221,10 @@ namespace Robust.UnitTesting.Server
             container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
+            container.Register<ITileDefinitionManager, TileDefinitionManager>();
+            container.Register<IParallelManager, TestingParallelManager>();
+            // Needed for grid fixture debugging.
+            container.Register<IConGroupController, ConGroupController>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
@@ -246,6 +253,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
             compFactory.RegisterClass<MapComponent>();
+            compFactory.RegisterClass<MapLightComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();

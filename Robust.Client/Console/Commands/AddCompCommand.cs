@@ -6,13 +6,14 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddCompCommand : IConsoleCommand
+    internal sealed class AddCompCommand : LocalizedCommands
     {
-        public string Command => "addcompc";
-        public string Description => "Adds a component to an entity on the client";
-        public string Help => "addcompc <uid> <componentName>";
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "addcompc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
 
             if (args.Length != 2)
@@ -24,25 +25,23 @@ namespace Robust.Client.Console.Commands
             var entity = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var component = (Component) compFactory.GetComponent(componentName);
+            var component = (Component) _componentFactory.GetComponent(componentName);
 
             component.Owner = entity;
 
-            entityManager.AddComponent(entity, component);
+            _entityManager.AddComponent(entity, component);
         }
     }
 
     [UsedImplicitly]
-    internal sealed class RemoveCompCommand : IConsoleCommand
+    internal sealed class RemoveCompCommand : LocalizedCommands
     {
-        public string Command => "rmcompc";
-        public string Description => "Removes a component from an entity.";
-        public string Help => "rmcompc <uid> <componentName>";
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "rmcompc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -53,12 +52,9 @@ namespace Robust.Client.Console.Commands
             var entityUid = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var registration = _componentFactory.GetRegistration(componentName);
 
-            var registration = compFactory.GetRegistration(componentName);
-
-            entManager.RemoveComponent(entityUid, registration.Type);
+            _entityManager.RemoveComponent(entityUid, registration.Type);
         }
     }
 }

@@ -53,16 +53,42 @@ namespace Robust.Client.Input
         }
     }
 
-    [Virtual]
-    public class TextEventArgs : EventArgs
-    {
-        public TextEventArgs(uint codePoint)
-        {
-            CodePoint = codePoint;
-        }
+    /// <summary>
+    /// Information about text that has been typed by the user.
+    /// </summary>
+    /// <param name="Text">The typed text.</param>
+    public sealed record TextEnteredEventArgs(string Text);
 
-        public uint CodePoint { get; }
-        public Rune AsRune => new Rune(CodePoint);
+    /// <summary>
+    /// Information about an in-progress IME composition.
+    /// </summary>
+    /// <remarks>
+    /// https://wiki.libsdl.org/Tutorials-TextInput
+    /// </remarks>
+    /// <param name="Text"></param>
+    /// <param name="Start">The position in the composition at which the cursor should be placed. This is in runes, not chars.</param>
+    /// <param name="Length">This is in runes, not chars.</param>
+    public sealed record TextEditingEventArgs(string Text, int Start, int Length)
+    {
+        /// <summary>
+        /// Get <see cref="Start"/> but in chars instead of runes.
+        /// </summary>
+        public int GetStartChars()
+        {
+            var chars = 0;
+            var count = 0;
+
+            foreach (var rune in Text.EnumerateRunes())
+            {
+                if (count >= Start)
+                    break;
+
+                count += 1;
+                chars += rune.Utf16SequenceLength;
+            }
+
+            return chars;
+        }
     }
 
     [Virtual]

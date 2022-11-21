@@ -6,7 +6,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
@@ -28,7 +27,6 @@ namespace Robust.Shared.Containers
             }
         }
 
-        [ViewVariables]
         [DataField("ent")]
         public EntityUid? ContainedEntity
         {
@@ -107,7 +105,7 @@ namespace Robust.Shared.Containers
             if (!isClient)
                 entMan.DeleteEntity(entity);
             else if (entMan.EntityExists(entity))
-                Remove(entity, entMan, reparent: false, addToBroadphase: true, force: true);
+                Remove(entity, entMan, reparent: false, force: true);
         }
     }
 }

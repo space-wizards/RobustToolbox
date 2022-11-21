@@ -12,6 +12,8 @@ namespace Robust.UnitTesting
         public GameControllerOptions Options { get; } = new();
         public bool ContentStart { get; set; }
 
+        public event Action<FrameEventArgs>? ContentEntityTickUpdate;
+
         public void Shutdown(string? reason = null)
         {
         }
@@ -49,7 +51,7 @@ namespace Robust.UnitTesting
         {
         }
 
-        public void TextEntered(TextEventArgs textEvent)
+        public void TextEntered(TextEnteredEventArgs textEnteredEvent)
         {
         }
 

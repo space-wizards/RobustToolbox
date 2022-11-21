@@ -13,8 +13,6 @@ namespace Robust.Shared.Map
         IGameTiming GameTiming { get; }
         IEntityManager EntityManager { get; }
 
-        void OnComponentRemoved(MapGridComponent comp);
-
         void ChunkRemoved(EntityUid gridId, MapChunk chunk);
 
         /// <summary>
@@ -46,7 +44,6 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
-        void TrueGridDelete(MapGrid grid);
         void TrueDeleteMap(MapId mapId);
         void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid);
         void OnGridBoundsChange(EntityUid uid, MapGrid grid);

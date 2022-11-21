@@ -1,32 +1,11 @@
 ﻿# Release notes for RobustToolbox.
 
 <!--
-Template for new versions:
-
-## Master
-
-### Breaking changes
-
-*None yet*
-
-### New features
-
-*None yet*
-
-### Bugfixes
-
-* Made entity deletion more resilient against exceptions. Should fix several bugs.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
-
+NOTE: automatically updated sometimes by version.py.
+Don't change the format without looking at the script!
 -->
 
+<!--START TEMPLATE
 ## Master
 
 ### Breaking changes
@@ -48,6 +27,268 @@ Template for new versions:
 ### Internal
 
 *None yet*
+
+
+END TEMPLATE-->
+
+## Master
+
+### Breaking changes
+
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+* Script globals for C# interactive were not having dependencies injected correctly.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.65.2.1
+
+### Bugfixes
+
+* Fix empty MetaData components being serialized to map files.
+* Fix saving a grid as a map not marking it as pre-mapinit.
+
+### Other
+
+* Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
+* Move pinned font data over to Pinned Object Heap.
+* Improved shader code generation for uniform arrays to be more compatible.
+* Server now has server GC enabled by default.
+
+### Internal
+
+* Remove some unnecessary dependency resolves from filters making audio much more performant.
+
+
+## 0.65.2.0
+
+### New features
+
+* Added ClydeAudio.StopAllAudio()
+* Expose more tick logic to content.
+
+### Bugfixes
+
+* Fix bad reference in WebView.
+
+### Internal
+
+* Add Robust.Packaging to solution.
+* Add WebView to solution.
+* Physics contacts are now parallel and much faster.
+
+## 0.65.1.0
+
+### New features
+
+* Implement value prototype id dictionary serializer.
+
+### Bugfixes
+
+* Fixes lerping clean up issue added in #3472.
+
+### Internal
+
+* Add test for (de)serializing data record structs.
+
+
+## 0.65.0.1
+
+### Bugfixes
+
+- Fix SetLocalPositionRotation raising 2 moveevents. This should help physics performance significantly.
+- Fix tpgrid responses and command error.
+
+
+## 0.65.0.0
+
+### Breaking changes
+
+* Rename transform lerping properties alongside other minor internal changes.
+
+### Bugfixes
+
+* Fix physics testbeds.
+* Force grids to always be collidable for now and stop them clipping.
+
+### Other
+
+* Slight optimization to `OutputPanel`'s handling of internal `RichTextEntry`s.
+* Force non-collidable contacts to be destroyed. Previously these hung around until both entities became collidable again.
+
+### Internal
+
+* `Tools/version.py` has been updated to automatically update `RELEASE-NOTES.md`.
+* General cleanup to `Tools/version.py`.
+
+## 0.64.1.0
+
+### Bugfixes
+
+* Word-wrapping in `OutputPanel` and `RichTextLabel` has been fixed.
+
+## 0.64.0.0
+
+### Breaking changes
+
+* IMapLoader has been refactored into MapLoaderSystem. The API is similar for now but is subject to change in the future.
+
+## 0.63.0.0
+
+### Breaking changes
+
+* Thanks to new IME support with SDL2, `IClyde.TextInputStart()` and `IClyde.TextInputStop()` must now be appropriately called to start/stop receiving text input when focusing/unfocusing a UI control. This restriction is applied even on the (default) GLFW backend, to enforce consistent usage of these APIs.
+* `[GUI]TextEventArgs` have been renamed to `[GUI]TextEnteredEventArgs`, turned into records, and made to carry a `string` rather than a single text `Rune`.
+* IoC and `DependencyCollection` `Register` methods now have a `TInterface : class` constraint.
+* [ABI] `IoCManager.InitThread` now returns the `IDependencyCollection`.
+
+### New features
+
+* Fixes for compiling & running on .NET 7. You'll still have to edit a bunch of project files to enable this though.
+* `FormattedMessage.EnumerateRunes()`
+* `OSWindow.Shown()` virtual function for child classes to hook into.
+* `IUserInterfaceManager.DeferAction(...)` for running UI logic "not right now because that would cause an enumeration exception".
+* New `TextEdit` control for multi-line editable text, complete with word-wrapping!
+* `Rope` data structure for representing large editable text, used by the new `TextEdit`.
+* Robust now has IME support matching SDL2's API. This only works on the SDL2 backend (which is not currently enabled by default) but the API is there:
+    * `IClyde.TextInputStart()`, `IClyde.TextInputStop()`, `IClyde.TextInputSetRect()` APIs to control text input behavior.
+    * `TextEditing` events for reporting in-progress IME compositions.
+    * `LineEdit` and `TextEdit` have functional IME support when the game is running on SDL2. If you provide a font file with the relevant glyphs, CJK text input should now be usable.
+* `Register<T>` (single type parameter) extension method for `IDependencyCollection`.
+
+### Bugfixes
+
+* Fixes erroneous literal "\\n" inside the Clyde debug panel.
+* Fixed Lidgren connection status changes potentially getting mislogged.
+* Fixed missing components not being correctly saved for maps
+* Fixed map saving sometimes not including new components.
+* Fix hot reload unit tests.
+
+### Other
+
+* Properly re-use `HttpClient` in `NetManager` meaning we properly pool connections to the auth server, improving performance.
+* Hub advertisements have extended keep-alive pool timeout, so the connection can be kept active between advertisements.
+* All HTTP requests from the engine now have appropriate `User-Agent` header.
+* `bind` command has been made somewhat more clear thanks to a bit of help text and some basic completions.
+* `BoundKeyEventArgs` and derivatives now have a `[DebuggerDisplay]`.
+* Text cursors now have a fancy blinking animation.
+* `SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH` is set on the SDL2 windowing backend, so clicking on the game window to focus it will pass clicks through into the game itself, matching GLFW's behavior.
+* Windows clipboard history paste now works.
+* Improved multi-window UI keyboard focusing system: a single focused control is now tracked per UI root (OS window), and is saved/restored when switching between focused window. This means that you (ideally) only ever have a UI control focused on the current OS window.
+
+### Internal
+
+* `uitest2` is a new command that's like `uitest` but opens an OS window instead. It can also be passed an argument to open a specific tab immediately.
+* Word-wrapping logic has been split off from `RichTextEntry`, into a new helper struct `WordWrap`.
+* Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
+* SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
+* Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
+* Most usages of `IoCManager.` statically have been removed in favor of dependency injection.
+
+## 0.62.1.0
+
+### Bugfixes
+
+* Fixed a PVS issue causing entities to be sent to clients without first sending their parents.
+* Improved client-side state handling exception tolerance.
+
+### Other
+
+* Removed null-space map entities.
+
+### Internal
+
+* Added some more anchoring tests.
+
+## 0.62.0.1
+
+### Bugfixes
+
+* Fixed sprites not animating when directly toggling layer visibility,
+* Fixed anchored entities not being added to the anchored lookups.
+
+## 0.62.0.0
+
+### Breaking changes
+
+* Removed some obsolete map event handlers.
+
+### New features
+
+* Added entity query struct enumerators
+
+### Bugfixes
+
+* Improved error tolerance during client state application.
+* Added better error logs when a client deletes a predicted entity.
+* Fixes command permissions not getting sent to clients.
+* Fixes a broad-phase bug were entities were not properly updating their positions.
+
+### Other
+
+* Added the LocalizedCommands class, which automatically infer help and description loc strings from the commands name.
+
+## 0.61.0.0
+
+### Breaking changes
+
+* IMap and IMapGrid have been removed. Just use the associated components directly.
+
+### Other
+
+* AudioSystem has been refactored.
+
+## 0.60.0.0
+
+### Breaking changes
+
+* ISerializationHooks.BeforeSerialization() has been removed. Use custom type serializers instead.
+
+### New features
+
+* Added function to UserInterfaceSystem that returns list of BUIs that a client has open.
+
+### Bugfixes
+
+* Fixed various container related broadphase bugs which could result in entities getting stuck with a null-broadphase.
+* Fixed client fixture state handling bug that caused the client to incorrectly disable collision.
+
+### Other
+
+* Misc PVS optimisations
+
+### Internal
+
+* Removed redundant grid-init physics logic
+* Modified garbage collection for entity spawning profiling.
+
+## 0.59.0.0
+
+### Breaking changes
+
+* Various transform related methods have been removed from MapGrids
+* TransformSystem.SetCoordinates() arguments have changed and now allow an entity to be sent to nullspace
+
+### Bugfixes
+
+* Fixed an entity lookup bug that sometimes failed to return entities in StaticSundriesTrees
+
+### Other
+
+* The EntitySystem.Resolve<> methods have been change to protected
 
 ## 0.58.1.1
 

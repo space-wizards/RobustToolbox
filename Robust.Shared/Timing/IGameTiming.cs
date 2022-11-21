@@ -152,6 +152,12 @@ namespace Robust.Shared.Timing
 
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 
+        /// <summary>
+        /// Statically-accessible version of <see cref="TickStamp"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is intended as a debugging aid, and should not be used in regular committed code.
+        /// </remarks>
         static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;
 
         /// <summary>

@@ -25,6 +25,8 @@ namespace Robust.Server.Physics
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
@@ -47,16 +49,14 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             _logger = Logger.GetSawmill("gsplit");
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 #if !FULL_RELEASE
             // It makes mapping painful
-            configManager.OverrideDefault(CVars.GridSplitting, false);
+            _cfg.OverrideDefault(CVars.GridSplitting, false);
 #endif
-            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
+            _cfg.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 
         private void SetSplitAllowed(bool value) => SplitAllowed = value;
@@ -65,8 +65,7 @@ namespace Robust.Server.Physics
         {
             base.Shutdown();
             _subscribedSessions.Clear();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
+            _cfg.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
         /// <summary>
@@ -78,9 +77,10 @@ namespace Robust.Server.Physics
                 _nodes[uid] = new Dictionary<Vector2i, ChunkNodeGroup>();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        protected override void OnGridInit(GridInitializeEvent ev)
         {
             EnsureGrid(ev.EntityUid);
+            base.OnGridInit(ev);
         }
 
         private void OnGridRemoval(GridRemovalEvent ev)
@@ -92,10 +92,9 @@ namespace Robust.Server.Physics
 
         private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
         {
-            var adminManager = IoCManager.Resolve<IConGroupController>();
             var pSession = (PlayerSession) args.SenderSession;
 
-            if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
+            if (!_conGroup.CanCommand(pSession, ShowGridNodesCommand)) return;
 
             AddDebugSubscriber(args.SenderSession);
         }
@@ -247,18 +246,19 @@ namespace Robust.Server.Physics
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
                 var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
                 var newGrids = new EntityUid[grids.Count - 1];
+                var mapId = oldGridXform.MapID;
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
+                    var splitGrid = _mapManager.CreateGrid(mapId);
+                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     newGrids[i] = splitGrid.GridEntityId;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    splitGrid.WorldPosition = gridPos;
-                    splitGrid.WorldRotation = gridRot;
+                    splitXform.WorldPosition = gridPos;
+                    splitXform.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
-                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 

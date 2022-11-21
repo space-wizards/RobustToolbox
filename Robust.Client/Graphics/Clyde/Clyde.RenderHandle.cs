@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using OpenToolkit.Graphics.OpenGL4;
 
@@ -17,13 +16,15 @@ namespace Robust.Client.Graphics.Clyde
         private sealed class RenderHandle : IRenderHandle
         {
             private readonly Clyde _clyde;
+            private readonly IEntityManager _entities;
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
 
-            public RenderHandle(Clyde clyde)
+            public RenderHandle(Clyde clyde, IEntityManager entities)
             {
                 _clyde = clyde;
+                _entities = entities;
 
                 DrawingHandleScreen = new DrawingHandleScreenImpl(this);
                 DrawingHandleWorld = new DrawingHandleWorldImpl(this);
@@ -114,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                 return clydeTexture;
             }
 
-            public void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default)
+            public void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
             {
                 _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
             }
@@ -126,14 +127,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
-                if (entMan.Deleted(entity))
+                if (_entities.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = entMan.GetComponent<SpriteComponent>(entity);
+                var sprite = _entities.GetComponent<SpriteComponent>(entity);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
@@ -166,7 +165,7 @@ namespace Robust.Client.Graphics.Clyde
                     DrawingHandleWorld,
                     Angle.Zero,
                     overrideDirection == null
-                        ? entMan.GetComponent<TransformComponent>(entity).WorldRotation
+                        ? _entities.GetComponent<TransformComponent>(entity).WorldRotation
                         : Angle.Zero,
                     overrideDirection);
 
@@ -274,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(@from, to, color * Modulate);
                 }
 
-                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
                 {
                     _renderHandle.RenderInRenderTarget(target, a, clearColor);
                 }
@@ -368,7 +367,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(@from, to, color * Modulate);
                 }
 
-                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
                 {
                     _renderHandle.RenderInRenderTarget(target, a, clearColor);
                 }

@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects
 {
-    internal sealed class MapSystem : SharedMapSystem
+    public sealed class MapSystem : SharedMapSystem
     {
         protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
         {

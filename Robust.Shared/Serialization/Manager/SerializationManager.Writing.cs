@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager;
 
@@ -64,6 +65,7 @@ public sealed partial class SerializationManager
             var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
+            actualType = actualType.EnsureNotNullableType();
             var sameType = baseType == actualType;
             Expression call;
             if (serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>), actualType, out var serializer))
@@ -214,6 +216,8 @@ public sealed partial class SerializationManager
 
     public DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
     {
+        if(value == null) return ValueDataNode.Null();
+
         return GetOrCreateWriteGenericDelegate(value)(value, alwaysWrite, context);
     }
 

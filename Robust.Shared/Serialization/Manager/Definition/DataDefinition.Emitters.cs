@@ -180,10 +180,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 Expression call;
-                var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
+                    var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
                     call = Expression.Call(
                         managerConst,
                         "WriteValue",
@@ -197,8 +197,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     call = Expression.Call(
                         managerConst,
                         "WriteValue",
-                        new[] { fieldType },
-                        Expression.Convert(valueVar, fieldType),
+                        new[] { fieldDefinition.FieldType },
+                        valueVar,
                         alwaysWriteParam,
                         contextParam);
                 }

@@ -300,8 +300,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new[]{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
                         targetValue,
-                        skipHookParam,
-                        contextParam);
+                        contextParam,
+                        skipHookParam);
 
                     expressions.Add(Expression.Block(
                         new[] { targetValue },
@@ -359,6 +359,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             var field = BaseFieldDefinitions[i];
             var interfaceInfo = FieldInterfaceInfos[i];
 
+            var fieldType = field.FieldType.EnsureNotNullableType();
+
+            //todo paul validate null values
             var switchCases = new List<SwitchCase>();
             if (interfaceInfo.Validator.Value)
             {
@@ -366,7 +369,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     Expression.Call(
                         managerConst,
                         "ValidateNode",
-                        new []{field.FieldType, typeof(ValueDataNode), field.Attribute.CustomTypeSerializer!},
+                        new []{fieldType, typeof(ValueDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(ValueDataNode)),
                         contextParam),
                     Expression.Constant(typeof(ValueDataNode))));
@@ -378,7 +381,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     Expression.Call(
                         managerConst,
                         "ValidateNode",
-                        new []{field.FieldType, typeof(SequenceDataNode), field.Attribute.CustomTypeSerializer!},
+                        new []{fieldType, typeof(SequenceDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(SequenceDataNode)),
                         contextParam),
                     Expression.Constant(typeof(SequenceDataNode))));
@@ -390,7 +393,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     Expression.Call(
                         managerConst,
                         "ValidateNode",
-                        new []{field.FieldType, typeof(MappingDataNode), field.Attribute.CustomTypeSerializer!},
+                        new []{fieldType, typeof(MappingDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(MappingDataNode)),
                         contextParam),
                     Expression.Constant(typeof(MappingDataNode))));
@@ -400,7 +403,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 Expression.Call(
                     managerConst,
                     "ValidateNode",
-                    new[] { field.FieldType },
+                    new[] { fieldType },
                     nodeParam,
                     contextParam),
                 switchCases.ToArray());

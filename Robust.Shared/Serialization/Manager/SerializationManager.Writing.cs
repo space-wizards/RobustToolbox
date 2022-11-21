@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -121,15 +120,13 @@ public sealed partial class SerializationManager
 
                 if (!sameType)
                 {
-                    var mappingVar = Expression.Variable(typeof(MappingDataNode));
+                    var nodeVar = Expression.Variable(typeof(DataNode));
                     call = Expression.Block(
-                        new[] { mappingVar },
-                        Expression.Assign(mappingVar, call),
-                        Expression.Assign(Expression.Field(mappingVar, "Tag"), Expression.Constant($"!type:{actualType.Name}")),
-                        mappingVar);
+                        new[] { nodeVar },
+                        Expression.Assign(nodeVar, call),
+                        Expression.Assign(Expression.Field(nodeVar, "Tag"), Expression.Constant($"!type:{actualType.Name}")),
+                        nodeVar);
                 }
-
-                call = Expression.Convert(call, typeof(DataNode));
             }
 
             // check for customtypeserializer before anything
@@ -197,7 +194,7 @@ public sealed partial class SerializationManager
         return sequenceNode;
     }
 
-    private MappingDataNode WriteValueInternal<T>(
+    private DataNode WriteValueInternal<T>(
         T value,
         DataDefinition<T>? definition,
         bool alwaysWrite,
@@ -209,6 +206,7 @@ public sealed partial class SerializationManager
             throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
 
         var mapping = definition.Serialize(value, context, alwaysWrite);
+
         return mapping;
     }
 

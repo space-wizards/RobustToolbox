@@ -88,7 +88,7 @@ public static class ExpressionUtils
             throw new InvalidOperationException(
                 $"Left & Right Expression Types dont match ({left.Type}, {right.Type})");
 
-        if (left.Type.IsPrimitive || left.Type == typeof(string) || left.Type.GetMethod("op_Equality", BindingFlags.Instance) != null)
+        if (left.Type.IsPrimitive || left.Type == typeof(string))
         {
             return Expression.Equal(left, right);
         }

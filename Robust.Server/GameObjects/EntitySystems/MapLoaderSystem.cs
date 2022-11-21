@@ -647,7 +647,6 @@ public sealed class MapLoaderSystem : EntitySystem
     private void StartupEntities(MapData data)
     {
         _stopwatch.Restart();
-        DebugTools.Assert(data.Entities.Count == data.Entities.Count);
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var rootEntity = data.Entities[0];
         var mapQuery = GetEntityQuery<MapComponent>();
@@ -667,21 +666,15 @@ public sealed class MapLoaderSystem : EntitySystem
             }
         }
 
-        var isRoot = true;
-
         for (var i = 1; i < data.Entities.Count; i++)
         {
             var entity = data.Entities[i];
 
-            if (isRoot && xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
+            if (xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
                 xform._localRotation += data.Options.Rotation;
-            }
-            else
-            {
-                isRoot = false;
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);

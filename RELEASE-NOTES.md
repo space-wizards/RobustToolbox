@@ -43,7 +43,23 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Script globals for C# interactive were not having dependencies injected correctly.
+
+### Other
+
 *None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.65.2.1
+
+### Bugfixes
+
+* Fix empty MetaData components being serialized to map files.
+* Fix saving a grid as a map not marking it as pre-mapinit.
 
 ### Other
 
@@ -54,7 +70,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove some unnecessary dependency resolves from filters making audio much more performant.
 
 
 ## 0.65.2.0

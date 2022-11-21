@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -16,7 +17,7 @@ namespace Robust.Shared.Serialization.Manager
             bool alwaysWrite,
             ISerializationContext? context);
 
-        private readonly Dictionary<Type, object> _typeWriters = new();
+        private readonly Dictionary<Type, object?> _typeWriters = new();
         private readonly ConcurrentDictionary<Type, WriteDelegate> _writerDelegates = new();
 
         private WriteDelegate GetOrCreateWriteDelegate(Type type)
@@ -58,18 +59,29 @@ namespace Robust.Shared.Serialization.Manager
             return GetOrCreateWriteDelegate(type)(obj, out node, alwaysWrite, context);
         }
 
-        private bool TryGetWriter<T>(
-            ISerializationContext? context,
-            [NotNullWhen(true)] out ITypeWriter<T>? writer)
+        private ITypeWriter<T>? GetWriter<T>(ISerializationContext? context)
         {
-            if (context != null && context.TypeWriters.TryGetValue(typeof(T), out var rawTypeWriter) ||
-                _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
+            if (context != null && context.TypeWriters.TryGetValue(typeof(T), out var rawTypeWriter))
+                return (ITypeWriter<T>)rawTypeWriter;
+
+            using (_serializerLock.ReadGuard())
             {
-                writer = (ITypeWriter<T>) rawTypeWriter;
-                return true;
+                if (_typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
+                    return (ITypeWriter<T>?)rawTypeWriter;
             }
 
-            return TryGetGenericWriter(out writer);
+            using (_serializerLock.WriteGuard())
+            {
+                // Check again, in case it got added after releasing the read lock.
+                if (_typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
+                    return (ITypeWriter<T>?)rawTypeWriter;
+
+                if (TryGetGenericWriter<T>(out var writer))
+                    return writer;
+
+                _typeWriters.Add(typeof(T), null);
+                return null;
+            }
         }
 
         private bool TryWrite<T>(
@@ -79,7 +91,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
         {
             node = default;
-            if (TryGetWriter<T>(context, out var writer))
+            if (GetWriter<T>(context) is { } writer)
             {
                 node = writer.Write(this, obj, DependencyCollection, alwaysWrite, context);
                 return true;

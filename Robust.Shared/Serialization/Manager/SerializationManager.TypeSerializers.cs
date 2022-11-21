@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
+        private readonly ReaderWriterLockSlim _serializerLock = new();
+
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericReaderTypes = new();
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericInheritanceHandlerTypes = new();
         private readonly Dictionary<Type, Type> _genericWriterTypes = new();
@@ -17,6 +21,8 @@ namespace Robust.Shared.Serialization.Manager
 
         private void InitializeTypeSerializers(IEnumerable<Type> typeSerializers)
         {
+            using var _ = _serializerLock.WriteGuard();
+
             foreach (var type in typeSerializers)
             {
                 RegisterSerializer(type);
@@ -28,15 +34,21 @@ namespace Robust.Shared.Serialization.Manager
             if (type.IsGenericTypeDefinition)
                 throw new ArgumentException("TypeSerializer cannot be TypeDefinition!", nameof(type));
 
-            if (_customTypeSerializers.TryGetValue(type, out var obj)) return obj;
+            lock (_customTypeSerializers)
+            {
+                if (_customTypeSerializers.TryGetValue(type, out var obj))
+                    return obj;
 
-            obj = Activator.CreateInstance(type)!;
-            _customTypeSerializers[type] = obj;
-            return obj;
+                obj = Activator.CreateInstance(type)!;
+                _customTypeSerializers[type] = obj;
+                return obj;
+            }
         }
 
         private object? RegisterSerializer(Type type)
         {
+            DebugTools.Assert(_serializerLock.IsWriteLockHeld);
+
             var writerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeWriter<>)).ToArray();
             var readerInterfaces = type.GetInterfaces()
@@ -46,7 +58,8 @@ namespace Robust.Shared.Serialization.Manager
             var validatorInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeValidator<,>)).ToArray();
             var inheritanceHandlerInterfaces = type.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeInheritanceHandler<,>)).ToArray();
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeInheritanceHandler<,>))
+                .ToArray();
 
             if (readerInterfaces.Length == 0 &&
                 writerInterfaces.Length == 0 &&
@@ -66,7 +79,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     var targetType = genericInterface.GetGenericArguments()[0];
                     var readTypeArgs = targetType.GetGenericArguments();
-                    if(genArgs.Length != readTypeArgs.Length)
+                    if (genArgs.Length != readTypeArgs.Length)
                         throw new InvalidOperationException(
                             $"Generic Argcount mismatch! (Target={targetType}, Interface={genericInterface}, Type={type})");
 
@@ -82,7 +95,8 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     GenericArgumentsCheck(writerInterface);
                     if (!_genericWriterTypes.TryAdd(writerInterface.GetGenericArguments()[0], type))
-                        Logger.ErrorS(LogCategory, $"Tried registering generic writer for type {writerInterface.GetGenericArguments()[0]} twice");
+                        _sawmill.Error(
+                            $"Tried registering generic writer for type {writerInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var readerInterface in readerInterfaces)
@@ -93,28 +107,36 @@ namespace Robust.Shared.Serialization.Manager
                     var nodeType = genericArguments[1];
 
                     if (!_genericReaderTypes.TryAdd((readType, nodeType), type))
-                        Logger.ErrorS(LogCategory, $"Tried registering generic reader for type {readType} and node {nodeType} twice");
+                        _sawmill.Error(
+                            $"Tried registering generic reader for type {readType} and node {nodeType} twice");
                 }
 
                 foreach (var copierInterface in copierInterfaces)
                 {
                     GenericArgumentsCheck(copierInterface);
                     if (!_genericCopierTypes.TryAdd(copierInterface.GetGenericArguments()[0], type))
-                        Logger.ErrorS(LogCategory, $"Tried registering generic copier for type {copierInterface.GetGenericArguments()[0]} twice");
+                        _sawmill.Error(
+                            $"Tried registering generic copier for type {copierInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var validatorInterface in validatorInterfaces)
                 {
                     GenericArgumentsCheck(validatorInterface);
-                    if (!_genericValidatorTypes.TryAdd((validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]), type))
-                        Logger.ErrorS(LogCategory, $"Tried registering generic reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
+                    if (!_genericValidatorTypes.TryAdd(
+                            (validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]),
+                            type))
+                        _sawmill.Error(
+                            $"Tried registering generic reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
                 }
 
                 foreach (var inheritanceHandlerInterface in inheritanceHandlerInterfaces)
                 {
                     GenericArgumentsCheck(inheritanceHandlerInterface);
-                    if (!_genericInheritanceHandlerTypes.TryAdd((inheritanceHandlerInterface.GetGenericArguments()[0], inheritanceHandlerInterface.GetGenericArguments()[1]), type))
-                        Logger.ErrorS(LogCategory, $"Tried registering generic reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
+                    if (!_genericInheritanceHandlerTypes.TryAdd(
+                            (inheritanceHandlerInterface.GetGenericArguments()[0],
+                                inheritanceHandlerInterface.GetGenericArguments()[1]), type))
+                        _sawmill.Error(
+                            $"Tried registering generic reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
                 }
 
                 return null;
@@ -126,31 +148,42 @@ namespace Robust.Shared.Serialization.Manager
                 foreach (var writerInterface in writerInterfaces)
                 {
                     if (!_typeWriters.TryAdd(writerInterface.GetGenericArguments()[0], serializer))
-                        Logger.ErrorS(LogCategory, $"Tried registering writer for type {writerInterface.GetGenericArguments()[0]} twice");
+                        _sawmill.Error(
+                            $"Tried registering writer for type {writerInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var readerInterface in readerInterfaces)
                 {
-                    if (!_typeReaders.TryAdd((readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]), serializer))
-                        Logger.ErrorS(LogCategory, $"Tried registering reader for type {readerInterface.GetGenericArguments()[0]} and node {readerInterface.GetGenericArguments()[1]} twice");
+                    if (!_typeReaders.TryAdd(
+                            (readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]),
+                            serializer))
+                        _sawmill.Error(
+                            $"Tried registering reader for type {readerInterface.GetGenericArguments()[0]} and node {readerInterface.GetGenericArguments()[1]} twice");
                 }
 
                 foreach (var copierInterface in copierInterfaces)
                 {
                     if (!_typeCopiers.TryAdd(copierInterface.GetGenericArguments()[0], serializer))
-                        Logger.ErrorS(LogCategory, $"Tried registering copier for type {copierInterface.GetGenericArguments()[0]} twice");
+                        _sawmill.Error(
+                            $"Tried registering copier for type {copierInterface.GetGenericArguments()[0]} twice");
                 }
 
                 foreach (var validatorInterface in validatorInterfaces)
                 {
-                    if (!_typeValidators.TryAdd((validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]), serializer))
-                        Logger.ErrorS(LogCategory, $"Tried registering reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
+                    if (!_typeValidators.TryAdd(
+                            (validatorInterface.GetGenericArguments()[0], validatorInterface.GetGenericArguments()[1]),
+                            serializer))
+                        _sawmill.Error(
+                            $"Tried registering reader for type {validatorInterface.GetGenericArguments()[0]} and node {validatorInterface.GetGenericArguments()[1]} twice");
                 }
 
                 foreach (var inheritanceHandlerInterface in inheritanceHandlerInterfaces)
                 {
-                    if (!_typeInheritanceHandlers.TryAdd((inheritanceHandlerInterface.GetGenericArguments()[0], inheritanceHandlerInterface.GetGenericArguments()[1]), serializer))
-                        Logger.ErrorS(LogCategory, $"Tried registering reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
+                    if (!_typeInheritanceHandlers.TryAdd(
+                            (inheritanceHandlerInterface.GetGenericArguments()[0],
+                                inheritanceHandlerInterface.GetGenericArguments()[1]), serializer))
+                        _sawmill.Error(
+                            $"Tried registering reader for type {inheritanceHandlerInterface.GetGenericArguments()[0]} and node {inheritanceHandlerInterface.GetGenericArguments()[1]} twice");
                 }
 
                 return serializer;

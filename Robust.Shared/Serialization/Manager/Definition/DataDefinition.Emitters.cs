@@ -14,10 +14,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private PopulateDelegateSignature EmitPopulateDelegate(IDependencyCollection collection)
+        private PopulateDelegateSignature EmitPopulateDelegate(bool isServer)
         {
-            var isServer = collection.Resolve<INetManager>().IsServer;
-
             object PopulateDelegate(
                 object target,
                 MappingDataNode mappingDataNode,
@@ -77,7 +75,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return PopulateDelegate;
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate(IDependencyCollection collection)
+        private SerializeDelegateSignature EmitSerializeDelegate(bool isServer)
         {
             MappingDataNode SerializeDelegate(
                 object obj,
@@ -102,8 +100,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         continue; //this node was already written by a type higher up the includetree
                     }
 
-                    if (fieldDefinition.Attribute.ServerOnly &&
-                        !collection.Resolve<INetManager>().IsServer)
+                    if (fieldDefinition.Attribute.ServerOnly && !isServer)
                     {
                         continue;
                     }

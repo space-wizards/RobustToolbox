@@ -1,26 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager;
 
 public partial class SerializationManager
 {
-    private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeInheritanceHandlers = new();
+    private readonly Dictionary<(Type Type, Type DataNodeType), object?> _typeInheritanceHandlers = new();
 
     private object? GetTypeInheritanceHandler(Type value, Type node)
     {
-        if (_typeInheritanceHandlers.TryGetValue((value, node), out var handler))
+        using (_serializerLock.ReadGuard())
         {
-            return handler;
+            if (_typeInheritanceHandlers.TryGetValue((value, node), out var handler))
+                return handler;
         }
 
-        if (TryGetGenericInheritanceHandler(value, node, out handler))
+        using (_serializerLock.WriteGuard())
         {
-            return handler;
-        }
+            // Check again, in case it got added after releasing the read lock.
+            if (_typeInheritanceHandlers.TryGetValue((value, node), out var handler))
+                return handler;
 
-        return null;
+            if (TryGetGenericInheritanceHandler(value, node, out handler))
+                return handler;
+
+            _typeInheritanceHandlers.Add((value, node), null);
+            return null;
+        }
     }
 
     private bool TryGetTypeInheritanceHandler(Type value, Type node, [NotNullWhen(true)] out object? handler)

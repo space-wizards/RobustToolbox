@@ -99,7 +99,7 @@ namespace Robust.Shared.Serialization.Manager
                 var instanceParam = Expression.Constant(this);
                 var sourceParam = Expression.Parameter(typeof(object), "source");
                 var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
-                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                 var targetCastVariable = Expression.Variable(tuple.target, "targetCastVariable");
@@ -110,7 +110,7 @@ namespace Robust.Shared.Serialization.Manager
                     new[] {tuple.common, tuple.source, tuple.target, tuple.serializer},
                     Expression.Convert(sourceParam, tuple.source),
                     targetCastVariable,
-                    skipHookParam,
+                    hookCtxParam,
                     contextParam);
 
                 var block = Expression.Block(
@@ -124,7 +124,7 @@ namespace Robust.Shared.Serialization.Manager
                     block,
                     sourceParam,
                     targetParam,
-                    skipHookParam,
+                    hookCtxParam,
                     contextParam).Compile();
             }, (common, source, target, serializer));
         }

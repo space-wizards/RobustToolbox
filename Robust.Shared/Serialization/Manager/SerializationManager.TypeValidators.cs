@@ -7,12 +7,13 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeValidators = new();
+        private readonly Dictionary<(Type Type, Type DataNodeType), object?> _typeValidators = new();
 
         private bool TryValidateWithTypeValidator(
             Type type,
@@ -45,9 +46,9 @@ namespace Robust.Shared.Serialization.Manager
             [NotNullWhen(true)] out ValidationNode? valid)
             where TNode : DataNode
         {
-            if (TryGetValidator<T, TNode>(null, out var reader))
+            if (GetValidator<T, TNode>(null) is { } validator)
             {
-                valid = reader.Validate(this, node, dependencies, context);
+                valid = validator.Validate(this, node, dependencies, context);
                 return true;
             }
 
@@ -55,19 +56,35 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryGetValidator<T, TNode>(
-            ISerializationContext? context,
-            [NotNullWhen(true)] out ITypeValidator<T, TNode>? reader)
+        private ITypeValidator<T, TNode>? GetValidator<T, TNode>(ISerializationContext? context)
             where TNode : DataNode
         {
-            if (context != null && context.TypeValidators.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeValidator) ||
-                _typeValidators.TryGetValue((typeof(T), typeof(TNode)), out rawTypeValidator))
+            var key = (typeof(T), typeof(TNode));
+
+            if (context != null &&
+                context.TypeValidators.TryGetValue(key, out var rawTypeValidator))
             {
-                reader = (ITypeReader<T, TNode>) rawTypeValidator;
-                return true;
+                return (ITypeValidator<T, TNode>) rawTypeValidator;
             }
 
-            return TryGetGenericValidator(out reader);
+            using (_serializerLock.ReadGuard())
+            {
+                if (_typeValidators.TryGetValue(key, out rawTypeValidator))
+                    return (ITypeReader<T, TNode>?)rawTypeValidator;
+            }
+
+            using (_serializerLock.WriteGuard())
+            {
+                // Check again, in case it got added after releasing the read lock.
+                if (_typeValidators.TryGetValue(key, out rawTypeValidator))
+                    return (ITypeReader<T, TNode>?)rawTypeValidator;
+
+                if (TryGetGenericValidator<T, TNode>(out var reader))
+                    return reader;
+
+                _typeValidators.Add(key, null);
+                return null;
+            }
         }
 
         private bool TryGetGenericValidator<T, TNode>([NotNullWhen(true)] out ITypeValidator<T, TNode>? rawReader)

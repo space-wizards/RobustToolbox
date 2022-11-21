@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
@@ -10,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -257,7 +259,7 @@ namespace Robust.Shared.Prototypes
                         }
                     }
 
-                    TryReadPrototype(type, id, typeData.Results[id]);
+                    TryReadPrototype(type, id, typeData.Results[id], SerializationHookContext.DontSkipHooks);
 
                     pushedSet.Add(id);
                 }
@@ -308,21 +310,55 @@ namespace Robust.Shared.Prototypes
                 if (inheritanceTasks.TryGetValue(kind, out var task))
                     task.Wait();
 
-                foreach (var (id, mapping) in kindData.Results)
+                var channelOptions = new UnboundedChannelOptions
+                    { SingleReader = true, SingleWriter = true };
+                var channel = Channel.CreateUnbounded<ISerializationHooks>(channelOptions);
+                var hookCtx = new SerializationHookContext(channel.Writer, false);
+
+                var prototypes = kindData.Results.AsParallel()
+                    .Select(item =>
+                    {
+                        var (id, mapping) = item;
+                        if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
+                            abstractNode.AsBool())
+                            return (id, (IPrototype?)null);
+
+                        try
+                        {
+                            var prototype = (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
+                            return (id, prototype);
+                        }
+                        catch (Exception e)
+                        {
+                            _sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
+                            return (id, null);
+                        }
+                    });
+
+                foreach (var (id, prototype) in prototypes)
                 {
-                    TryReadPrototype(kind, id, mapping);
+                    if (prototype == null)
+                        continue;
+
+                    kindData.Instances[id] = prototype;
+                }
+
+                var channelReader = channel.Reader;
+                while (channelReader.TryRead(out var hooks))
+                {
+                    hooks.AfterDeserialization();
                 }
             }
         }
 
-        private void TryReadPrototype(Type kind, string id, MappingDataNode mapping)
+        private void TryReadPrototype(Type kind, string id, MappingDataNode mapping, SerializationHookContext hookCtx)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
                 return;
             try
             {
-                _kinds[kind].Instances[id] = (IPrototype)_serializationManager.Read(kind, mapping)!;
+                _kinds[kind].Instances[id] = (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
             }
             catch (Exception e)
             {

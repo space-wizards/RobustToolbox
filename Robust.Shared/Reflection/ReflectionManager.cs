@@ -24,8 +24,7 @@ namespace Robust.Shared.Reflection
 
         public event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 
-        [ViewVariables]
-        public IReadOnlyList<Assembly> Assemblies => assemblies;
+        [ViewVariables] public IReadOnlyList<Assembly> Assemblies => assemblies;
 
         private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
 
@@ -80,7 +79,7 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in typeSet)
                 {
-                    var attribute = (ReflectAttribute?) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
+                    var attribute = (ReflectAttribute?)Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
 
                     if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
                         continue;
@@ -133,53 +132,56 @@ namespace Robust.Shared.Reflection
 
         public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
         {
-            if (_looseTypeCache.TryGetValue(name, out type))
-                return true;
-
-            // Check standard types first.
-            switch (name)
+            lock (_looseTypeCache)
             {
-                case "Byte":
-                    type = typeof(byte);
-                    _looseTypeCache[name] = type;
+                if (_looseTypeCache.TryGetValue(name, out type))
                     return true;
-                case "Bool":
-                    type = typeof(bool);
-                    _looseTypeCache[name] = type;
-                    return true;
-                case "Double":
-                    type = typeof(double);
-                    _looseTypeCache[name] = type;
-                    return true;
-                case "SByte":
-                    type = typeof(sbyte);
-                    _looseTypeCache[name] = type;
-                    return true;
-                case "Single":
-                    type = typeof(float);
-                    _looseTypeCache[name] = type;
-                    return true;
-                case "String":
-                    type = typeof(string);
-                    _looseTypeCache[name] = type;
-                    return true;
-            }
 
-            foreach (var assembly in assemblies)
-            {
-                foreach (var tryType in assembly.DefinedTypes)
+                // Check standard types first.
+                switch (name)
                 {
-                    if (tryType.FullName!.EndsWith(name))
-                    {
-                        type = tryType;
+                    case "Byte":
+                        type = typeof(byte);
                         _looseTypeCache[name] = type;
                         return true;
+                    case "Bool":
+                        type = typeof(bool);
+                        _looseTypeCache[name] = type;
+                        return true;
+                    case "Double":
+                        type = typeof(double);
+                        _looseTypeCache[name] = type;
+                        return true;
+                    case "SByte":
+                        type = typeof(sbyte);
+                        _looseTypeCache[name] = type;
+                        return true;
+                    case "Single":
+                        type = typeof(float);
+                        _looseTypeCache[name] = type;
+                        return true;
+                    case "String":
+                        type = typeof(string);
+                        _looseTypeCache[name] = type;
+                        return true;
+                }
+
+                foreach (var assembly in assemblies)
+                {
+                    foreach (var tryType in assembly.DefinedTypes)
+                    {
+                        if (tryType.FullName!.EndsWith(name))
+                        {
+                            type = tryType;
+                            _looseTypeCache[name] = type;
+                            return true;
+                        }
                     }
                 }
-            }
 
-            type = default;
-            return false;
+                type = default;
+                return false;
+            }
         }
 
         /// <inheritdoc />
@@ -204,119 +206,129 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public string GetEnumReference(Enum @enum)
         {
-            if (_reverseEnumCache.TryGetValue(@enum, out var reference))
-                return reference;
-
-            // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
-            // but if possible we want to avoid that and use a shorter string.
-
-            var fullName = @enum.GetType().FullName!;
-            var dotIndex = fullName.LastIndexOf('.');
-            if (dotIndex > 0 && dotIndex != fullName.Length)
+            lock (_enumCache)
             {
-                var name = fullName.Substring(dotIndex + 1);
-                reference = $"enum.{name}.{@enum}";
-
-                if (TryParseEnumReference(reference, out var resolvedEnum, false) && resolvedEnum == @enum)
-                {
-                    // TryParse will have filled in the cache already.
+                if (_reverseEnumCache.TryGetValue(@enum, out var reference))
                     return reference;
-                }
-            }
 
-            // If that failed, just use the full name.
-            reference = $"enum.{fullName}.{@enum}";
-            _reverseEnumCache[@enum] = reference;
-            _enumCache[reference] = @enum;
-            return reference;
+                // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
+                // but if possible we want to avoid that and use a shorter string.
+
+                var fullName = @enum.GetType().FullName!;
+                var dotIndex = fullName.LastIndexOf('.');
+                if (dotIndex > 0 && dotIndex != fullName.Length)
+                {
+                    var name = fullName.Substring(dotIndex + 1);
+                    reference = $"enum.{name}.{@enum}";
+
+                    if (TryParseEnumReference(reference, out var resolvedEnum, false) && resolvedEnum == @enum)
+                    {
+                        // TryParse will have filled in the cache already.
+                        return reference;
+                    }
+                }
+
+                // If that failed, just use the full name.
+                reference = $"enum.{fullName}.{@enum}";
+                _reverseEnumCache[@enum] = reference;
+                _enumCache[reference] = @enum;
+                return reference;
+            }
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum, bool shouldThrow = true)
+        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum,
+            bool shouldThrow = true)
         {
-            if (!reference.StartsWith("enum."))
+            lock (_enumCache)
             {
-                @enum = default;
+                if (!reference.StartsWith("enum."))
+                {
+                    @enum = default;
+                    return false;
+                }
+
+                reference = reference.Substring(5);
+
+                if (_enumCache.TryGetValue(reference, out @enum))
+                    return true;
+
+                var dotIndex = reference.LastIndexOf('.');
+                var typeName = reference.Substring(0, dotIndex);
+
+                var value = reference.Substring(dotIndex + 1);
+
+                foreach (var assembly in assemblies)
+                {
+                    foreach (var type in assembly.DefinedTypes)
+                    {
+                        if (!type.IsEnum || !(
+                                type.FullName!.Equals(typeName) ||
+                                type.FullName!.EndsWith("." + typeName) ||
+                                type.FullName!.EndsWith("+" + typeName)))
+                        {
+                            continue;
+                        }
+
+                        @enum = (Enum)Enum.Parse(type, value);
+                        _enumCache[reference] = @enum;
+                        _reverseEnumCache[@enum] = reference;
+                        return true;
+                    }
+                }
+
+                if (shouldThrow)
+                    throw new ArgumentException($"Could not resolve enum reference: {reference}.");
                 return false;
             }
-
-            reference = reference.Substring(5);
-
-            if (_enumCache.TryGetValue(reference, out @enum))
-                return true;
-
-            var dotIndex = reference.LastIndexOf('.');
-            var typeName = reference.Substring(0, dotIndex);
-
-            var value = reference.Substring(dotIndex + 1);
-
-            foreach (var assembly in assemblies)
-            {
-                foreach (var type in assembly.DefinedTypes)
-                {
-                    if (!type.IsEnum || !(
-                            type.FullName!.Equals(typeName) ||
-                            type.FullName!.EndsWith("." + typeName) ||
-                            type.FullName!.EndsWith("+" + typeName)))
-                    {
-                        continue;
-                    }
-
-                    @enum = (Enum) Enum.Parse(type, value);
-                    _enumCache[reference] = @enum;
-                    _reverseEnumCache[@enum] = reference;
-                    return true;
-                }
-            }
-
-            if (shouldThrow)
-                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
-            return false;
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)
         {
-            if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
+            lock (_yamlTypeTagCache)
             {
-                return type;
-            }
-
-            Type? found = null;
-            foreach (var derivedType in GetAllChildren(baseType))
-            {
-                if (!derivedType.IsPublic)
+                if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
                 {
-                    continue;
+                    return type;
                 }
 
-                if (derivedType.Name == typeName)
+                Type? found = null;
+                foreach (var derivedType in GetAllChildren(baseType))
                 {
-                    found = derivedType;
-                    break;
+                    if (!derivedType.IsPublic)
+                    {
+                        continue;
+                    }
+
+                    if (derivedType.Name == typeName)
+                    {
+                        found = derivedType;
+                        break;
+                    }
+
+                    var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                    if (serializedAttribute != null &&
+                        serializedAttribute.SerializeName == typeName)
+                    {
+                        found = derivedType;
+                        break;
+                    }
                 }
 
-                var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
-
-                if (serializedAttribute != null &&
-                    serializedAttribute.SerializeName == typeName)
+                // Fallback
+                if (found == null)
                 {
-                    found = derivedType;
-                    break;
+                    TryLooseGetType(typeName, out found);
+
+                    // If we may have gotten the type but it's still abstract then don't return it.
+                    if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
+                        found = null;
                 }
+
+                _yamlTypeTagCache.Add((baseType, typeName), found);
+                return found;
             }
-
-            // Fallback
-            if (found == null)
-            {
-                TryLooseGetType(typeName, out found);
-
-                // If we may have gotten the type but it's still abstract then don't return it.
-                if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
-                    found = null;
-            }
-
-            _yamlTypeTagCache.Add((baseType, typeName), found);
-            return found;
         }
     }
 }

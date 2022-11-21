@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Serialization.Manager
             SerializationHookContext hookCtx,
             ISerializationContext? context = null);
 
-        private readonly Dictionary<Type, object> _typeCopiers = new();
+        private readonly Dictionary<Type, object?> _typeCopiers = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, CopyDelegate>> _copyDelegates = new();
 
         private CopyDelegate GetOrCreateCopyDelegate(Type commonType, Type sourceType, Type targetType)
@@ -82,24 +83,38 @@ namespace Robust.Shared.Serialization.Manager
             where TTarget : TCommon
             where TCommon : notnull
         {
-            object? rawCopier;
-
-            if (context != null &&
-                context.TypeCopiers.TryGetValue(typeof(TCommon), out rawCopier) ||
-                _typeCopiers.TryGetValue(typeof(TCommon), out rawCopier))
+            if (GetTypeCopier<TCommon>(context) is { } copier)
             {
-                var copier = (ITypeCopier<TCommon>) rawCopier;
                 target = (TTarget) copier.Copy(this, source, target, hookCtx, context);
                 return true;
             }
 
-            if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericCopier))
+            return false;
+        }
+
+        private ITypeCopier<T>? GetTypeCopier<T>(ISerializationContext? context)
+        {
+            if (context != null && context.TypeCopiers.TryGetValue(typeof(T), out var rawCopier))
+                return (ITypeCopier<T>?)rawCopier;
+
+            using (_serializerLock.ReadGuard())
             {
-                target = (TTarget) genericCopier.Copy(this, source, target, hookCtx, context);
-                return true;
+                if (_typeCopiers.TryGetValue(typeof(T), out rawCopier))
+                    return (ITypeCopier<T>?)rawCopier;
             }
 
-            return false;
+            using (_serializerLock.WriteGuard())
+            {
+                // Check again, in case it got added after releasing the read lock.
+                if (_typeCopiers.TryGetValue(typeof(T), out rawCopier))
+                    return (ITypeCopier<T>?)rawCopier;
+
+                if (TryGetGenericCopier(out ITypeCopier<T>? genericCopier))
+                    return genericCopier;
+
+                _typeCopiers.Add(typeof(T), null);
+                return null;
+            }
         }
 
         private bool TryGetGenericCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? rawCopier)

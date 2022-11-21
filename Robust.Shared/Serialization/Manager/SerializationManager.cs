@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -29,6 +30,8 @@ namespace Robust.Shared.Serialization.Manager
     public sealed partial class SerializationManager : ISerializationManager
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private readonly ILogManager _logManager = default!;
+        [IoC.Dependency] private readonly INetManager _netManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -44,6 +47,8 @@ namespace Robust.Shared.Serialization.Manager
         [field: IoC.Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
 
+        private ISawmill _sawmill = default!;
+
         public void Initialize()
         {
             if (_initializing)
@@ -51,6 +56,8 @@ namespace Robust.Shared.Serialization.Manager
 
             if (_initialized)
                 throw new InvalidOperationException($"{nameof(SerializationManager)} has already been initialized.");
+
+            _sawmill = _logManager.GetSawmill(LogCategory);
 
             _initializing = true;
 
@@ -116,13 +123,11 @@ namespace Robust.Shared.Serialization.Manager
                     records[type] = 0;
             });
 
-            var sawmill = Logger.GetSawmill(LogCategory);
-
             Parallel.ForEach(registrations, type =>
             {
                 if (type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition)
                 {
-                    sawmill.Debug(
+                    _sawmill.Debug(
                         $"Skipping registering data definition for type {type} since it is abstract or an interface");
                     return;
                 }
@@ -130,12 +135,12 @@ namespace Robust.Shared.Serialization.Manager
                 var isRecord = records.ContainsKey(type);
                 if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor())
                 {
-                    sawmill.Debug(
+                    _sawmill.Debug(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     return;
                 }
 
-                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection, isRecord));
+                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, isRecord));
             });
 
             var duplicateErrors = new StringBuilder();
@@ -224,9 +229,9 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection, bool isRecord)
+        private DataDefinition CreateDataDefinition(Type t, bool isRecord)
         {
-            return new(t, collection, GetOrCreateInstantiator(t, isRecord), isRecord);
+            return new(t, GetOrCreateInstantiator(t, isRecord), isRecord, _netManager.IsServer, _sawmill);
         }
 
         public void Shutdown()

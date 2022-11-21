@@ -6,11 +6,13 @@ namespace Robust.Client.Console.Commands
 {
     internal sealed class ReloadLocalizationsCommand : LocalizedCommands
     {
+        [Dependency] private readonly ILocalizationManager _loc = default!;
+
         public override string Command => "rldloc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<ILocalizationManager>().ReloadLocalizations();
+            _loc.ReloadLocalizations();
 
             shell.RemoteExecuteCommand("sudo rldloc");
         }

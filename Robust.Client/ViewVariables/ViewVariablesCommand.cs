@@ -12,6 +12,8 @@ namespace Robust.Client.ViewVariables
     public sealed class ViewVariablesCommand : ViewVariablesBaseCommand
     {
         [Dependency] private readonly IClientViewVariablesManager _cvvm = default!;
+        [Dependency] private readonly IUserInterfaceManager _ui = default!;
+        [Dependency] private readonly IEntityManager _entities = default!;
 
         public override string Command => "vv";
 
@@ -50,7 +52,7 @@ namespace Robust.Client.ViewVariables
             if (valArg.StartsWith("guihover"))
             {
                 // UI element.
-                var obj = IoCManager.Resolve<IUserInterfaceManager>().CurrentlyHovered;
+                var obj = _ui.CurrentlyHovered;
                 if (obj == null)
                 {
                     shell.WriteLine("Not currently hovering any control.");
@@ -67,8 +69,7 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            if (!entityManager.EntityExists(entity))
+            if (!_entities.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist locally. Attempting to open remote view...");
                 _cvvm.OpenVV(new ViewVariablesEntitySelector(entity));

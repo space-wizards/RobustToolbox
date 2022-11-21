@@ -8,6 +8,9 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     internal sealed class AddCompCommand : LocalizedCommands
     {
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "addcompc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -22,20 +25,20 @@ namespace Robust.Client.Console.Commands
             var entity = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var component = (Component) compFactory.GetComponent(componentName);
+            var component = (Component) _componentFactory.GetComponent(componentName);
 
             component.Owner = entity;
 
-            entityManager.AddComponent(entity, component);
+            _entityManager.AddComponent(entity, component);
         }
     }
 
     [UsedImplicitly]
     internal sealed class RemoveCompCommand : LocalizedCommands
     {
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "rmcompc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -49,12 +52,9 @@ namespace Robust.Client.Console.Commands
             var entityUid = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var registration = _componentFactory.GetRegistration(componentName);
 
-            var registration = compFactory.GetRegistration(componentName);
-
-            entManager.RemoveComponent(entityUid, registration.Type);
+            _entityManager.RemoveComponent(entityUid, registration.Type);
         }
     }
 }

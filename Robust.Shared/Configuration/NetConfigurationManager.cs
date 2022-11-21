@@ -72,8 +72,13 @@ namespace Robust.Shared.Configuration
         public event EventHandler ReceivedInitialNwVars;
     }
 
+    internal interface INetConfigurationManagerInternal : INetConfigurationManager, IConfigurationManagerInternal
+    {
+
+    }
+
     /// <inheritdoc cref="INetConfigurationManager"/>
-    internal sealed class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
+    internal sealed class NetConfigurationManager : ConfigurationManager, INetConfigurationManagerInternal
     {
         [Dependency] private readonly INetManager _netManager = null!;
         [Dependency] private readonly IGameTiming _timing = null!;

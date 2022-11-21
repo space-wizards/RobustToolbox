@@ -859,7 +859,7 @@ public abstract partial class SharedTransformSystem
             xform._localPosition = pos;
 
         if (!xform.NoLocalRotation)
-            xform.LocalRotation = rot;
+            xform._localRotation = rot;
 
         Dirty(xform);
 

@@ -73,14 +73,13 @@ namespace Robust.Client.GameObjects
             for (var i = 0; i < _lerpingTransforms.Count; i++)
             {
                 var transform = _lerpingTransforms[i];
-                if (transform.Deleted)
-                    continue;
                 var found = false;
 
                 // Only lerp if parent didn't change.
                 // E.g. entering lockers would do it.
-                if (transform.LerpParent == transform.ParentUid &&
-                    transform.ParentUid.IsValid())
+                if (transform.LerpParent == transform.ParentUid
+                    && transform.ParentUid.IsValid()
+                    && !transform.Deleted)
                 {
                     if (transform.NextPosition != null)
                     {

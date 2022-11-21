@@ -45,6 +45,7 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
         [Dependency] private readonly IConsoleHost _console = default!;
+        [Dependency] private readonly ISerializationManager _serialization = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -127,7 +128,6 @@ namespace Robust.Client.Input
         public void SaveToUserData()
         {
             var mapping = new MappingDataNode();
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -151,8 +151,8 @@ namespace Robust.Client.Input
                 .ToArray();
 
             mapping.Add("version", new ValueDataNode("1"));
-            mapping.Add("binds", serializationManager.WriteValue(modifiedBindings));
-            mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
+            mapping.Add("binds", _serialization.WriteValue(modifiedBindings));
+            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = _resourceMan.UserData.OpenWriteText(path);
@@ -486,18 +486,14 @@ namespace Robust.Client.Input
                 reader = _resourceMan.ContentFileReadText(file);
             }
 
-            var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
+            using var _ = reader;
 
-            var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
+            var documents = DataNodeParser.ParseYamlStream(reader).First();
+            var mapping = (MappingDataNode) documents.Root;
 
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
-            var robustMapping = mapping.ToDataNode() as MappingDataNode;
-            if (robustMapping == null) throw new InvalidOperationException();
-
-            if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
+            if (mapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -524,9 +520,9 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData && robustMapping.TryGet("leaveEmpty", out var node))
+            if (userData && mapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.Read<BoundKeyFunction[]>(node);
+                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {

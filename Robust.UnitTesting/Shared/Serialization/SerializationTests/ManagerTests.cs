@@ -40,19 +40,19 @@ public sealed partial class ManagerTests : SerializationTest
     testcases:  array
                 ISelfSerialize (only read/write)
                 DataDefinitionSameType (struct, class)
-                TypeSerializer (primitive, reference)
-                ContextTypeSerializer (primitive, reference)
+                TypeSerializer (struct, reference)
+                ContextTypeSerializer (struct, reference)
+                enum
 
                 todo DataDefinitionBaseType (struct, class) //means: should use !type
-                todo enum (write, read)
                 todo returnsource (copy, createcopy)
 
-    //todo datadef emitter testing
+
     //todo datarecords
-    //todo test that no references are wrongfully copied
-    //todo test read valueprovider
     //todo figure out a way to tell which serializer we used for (create)copy
     */
+
+    #region DataSources
 
     public static IEnumerable<object[]> ReadWriteTypesClass => new[]
     {
@@ -201,6 +201,14 @@ public sealed partial class ManagerTests : SerializationTest
                 x => x.TwoValue,
             }
         }, //CustomTypeSerializer
+        new object[]
+        {
+            new ValueDataNode("C"),
+            () => TestEnum.C,
+            () => TestEnum.B,
+            false,
+            new Func<TestEnum, object>[]{ x => x }
+        }
     };
 
     public static IEnumerable<object[]> TestableTypesAll =>
@@ -208,6 +216,8 @@ public sealed partial class ManagerTests : SerializationTest
 
     public static IEnumerable<object[]> ReadWriteTypesAll =>
         new[] { ReadWriteTypesClass, ReadWriteTypesStruct }.SelectMany(x => x);
+
+    #endregion
 
     #region Write
 
@@ -258,7 +268,6 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
     }
 
     #endregion
-
 
     #region Read
 
@@ -431,7 +440,6 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
 
     #endregion
 
-
     #region CreateCopy
 
     [TestCaseSource(nameof(TestableTypesStruct))]
@@ -477,6 +485,76 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
     {
         var copy = Serialization.CreateCopy<T>(value(), context: Context(useContext));
         AssertEqual(copy, value(), valueExtractors);
+    }
+
+    #endregion
+
+    #region CopyByRef
+
+    [Test]
+    public void CopyTo_CopyByRef_Class()
+    {
+        CopyByRefTestClass? target = null;
+        var source = new CopyByRefTestClass();
+        Serialization.CopyTo(source, ref target);
+        Assert.NotNull(target);
+        Assert.That(target!, Is.SameAs(source));
+    }
+
+    [Test]
+    public void CopyTo_CopyByRef_NV_Class()
+    {
+        CopyByRefTestClass? target = null;
+        Serialization.CopyTo(null, ref target);
+        Assert.Null(target);
+    }
+
+    [Test]
+    public void CreateCopy_CopyByRef_Class()
+    {
+        var source = new CopyByRefTestClass();
+        var copy = Serialization.CreateCopy(source);
+        Assert.That(copy, Is.SameAs(source));
+    }
+
+    [Test]
+    public void CreateCopy_CopyByRef_NV_Class()
+    {
+        var copy = Serialization.CreateCopy<CopyByRefTestClass?>(null);
+        Assert.Null(copy);
+    }
+
+    [Test]
+    public void CopyTo_CopyByRef_Struct()
+    {
+        CopyByRefTestStruct? target = null;
+        var source = new CopyByRefTestStruct{ID = 5};
+        Serialization.CopyTo(source, ref target);
+        Assert.NotNull(target);
+        Assert.That(target!.Value.ID, Is.EqualTo(source.ID));
+    }
+
+    [Test]
+    public void CopyTo_CopyByRef_NV_Struct()
+    {
+        CopyByRefTestStruct? target = null;
+        Serialization.CopyTo(null, ref target);
+        Assert.Null(target);
+    }
+
+    [Test]
+    public void CreateCopy_CopyByRef_Struct()
+    {
+        var source = new CopyByRefTestStruct{ID = 5};
+        var copy = Serialization.CreateCopy(source);
+        Assert.That(copy.ID, Is.EqualTo(source.ID));
+    }
+
+    [Test]
+    public void CreateCopy_CopyByRef_NV_Struct()
+    {
+        var copy = Serialization.CreateCopy<CopyByRefTestStruct?>(null);
+        Assert.Null(copy);
     }
 
     #endregion

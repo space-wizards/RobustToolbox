@@ -236,10 +236,31 @@ namespace Robust.Shared.Serialization.Manager
                     call);
             }
 
+            // check for customtypeserializer
+            var serializerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
+            var serializerVar = Expression.Variable(serializerType);
+            call = Expression.Block(new[] { serializerVar },
+                Expression.Condition(
+                    Expression.AndAlso(
+                        Expression.ReferenceNotEqual(contextParam,
+                            Expression.Constant(null, typeof(ISerializationContext))),
+                        Expression.Call(Expression.Property(contextParam, "SerializerProvider"),
+                            "TryGetTypeNodeSerializer", new[] { serializerType, actualType, nodeType }, serializerVar)),
+                    Expression.Call(
+                            managerConst,
+                            nameof(Read),
+                            new []{actualType, nodeType},
+                            serializerVar,
+                            Expression.Convert(nodeParam, nodeType),
+                            contextParam,
+                            skipHookParam,
+                            BaseInstantiatorToActual()),
+                    call));
+
             //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue
             call = WrapNullableIfNeededExpression(call, nullable, actualType);
 
-            // early-out null
+            // early-out null before anything
             var returnValue = Expression.Variable(nullable ? actualType.EnsureNullableType() : actualType);
             call = Expression.Block(new[] { returnValue },
                 Expression.IfThenElse(
@@ -250,28 +271,6 @@ namespace Robust.Shared.Serialization.Manager
                 Expression.Block(typeof(void),
                     Expression.Assign(returnValue, call))),
                 returnValue);
-
-            // check for customtypeserializer before anything
-            var serializerType = typeof(ITypeReader<,>).MakeGenericType(actualType, nodeType);
-            var serializerVar = Expression.Variable(serializerType);
-            call = Expression.Block(new[] { serializerVar },
-                Expression.Condition(
-                    Expression.AndAlso(
-                        Expression.ReferenceNotEqual(contextParam,
-                            Expression.Constant(null, typeof(ISerializationContext))),
-                        Expression.Call(Expression.Property(contextParam, "SerializerProvider"),
-                            "TryGetTypeNodeSerializer", new[] { serializerType, actualType, nodeType }, serializerVar)),
-                    WrapNullableIfNeededExpression(
-                        Expression.Call(
-                            managerConst,
-                            nameof(Read),
-                            new []{actualType, nodeType},
-                            serializerVar,
-                            Expression.Convert(nodeParam, nodeType),
-                            contextParam,
-                            skipHookParam,
-                            BaseInstantiatorToActual()), nullable, actualType),
-                    call));
 
             if (!nullable && !actualType.IsValueType)
             {

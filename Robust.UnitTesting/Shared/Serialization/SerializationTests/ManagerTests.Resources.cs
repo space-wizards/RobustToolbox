@@ -183,6 +183,22 @@ public sealed partial class ManagerTests : ISerializationContext
 
     #region Other TypeDefinitions
 
+    [CopyByRef]
+    private class CopyByRefTestClass {}
+
+    [CopyByRef]
+    private struct CopyByRefTestStruct
+    {
+        public int ID;
+    }
+
+    private enum TestEnum
+    {
+        A,
+        B,
+        C
+    }
+
     private struct SelfSerializeStruct : ISelfSerialize
     {
         public string TestValue;

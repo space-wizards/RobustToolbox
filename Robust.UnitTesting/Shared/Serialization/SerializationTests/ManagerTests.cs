@@ -22,7 +22,7 @@ public sealed partial class ManagerTests : SerializationTest
             NS => Null source (copyto)
             NT => Null target (copyto)
 
-    specialcase validate & pushcomposition
+    todo validate & pushcomposition
 
     for each [write|read|copy|copycreate]
     for each testcase except copyto, do:    NT_NV
@@ -43,9 +43,9 @@ public sealed partial class ManagerTests : SerializationTest
                 TypeSerializer (primitive, reference)
                 ContextTypeSerializer (primitive, reference)
 
-                DataDefinitionBaseType (struct, class) //means: should use !type
-                enum (write, read)
-                returnsource (copy, createcopy)
+                todo DataDefinitionBaseType (struct, class) //means: should use !type
+                todo enum (write, read)
+                todo returnsource (copy, createcopy)
 
     //todo datadef emitter testing
     //todo datarecords

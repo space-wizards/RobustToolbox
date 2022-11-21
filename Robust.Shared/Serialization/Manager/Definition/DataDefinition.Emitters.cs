@@ -165,6 +165,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     ExpressionUtils.NewExpression<MappingDataNode>()
                 ));
 
+            //todo paul sane nullhandling here pls
             for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];

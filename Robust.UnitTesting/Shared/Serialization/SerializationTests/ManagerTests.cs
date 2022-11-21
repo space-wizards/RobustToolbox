@@ -46,6 +46,7 @@ public sealed partial class ManagerTests : SerializationTest
 
                 todo DataDefinitionBaseType (struct, class) //means: should use !type
                 todo returnsource (copy, createcopy)
+                todo test the generic variants too
 
 
     //todo datarecords
@@ -251,14 +252,11 @@ public sealed partial class ManagerTests : SerializationTest
         Assert.That(resNode.Equals(intendedNode));
     }
 
-/*
-//todo paul uncomment when serv3 nullability for reference types is sane again
-[TestCaseSource(nameof(ReadWriteTypesClass))]
-private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> _, bool useContext) where T : class
-{
-    Assert.That(() => Serialization.WriteValue<T>(null!, context: Context(useContext)), Throws.TypeOf<NullNotAllowedException>());
-}
-*/
+    [TestCaseSource(nameof(ReadWriteTypesClass))]
+    public void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> altValue, bool useContext, object[] _) where T : class
+    {
+        Assert.That(() => Serialization.WriteValue<T>(null!, context: Context(useContext), notNullableOverride: true), Throws.TypeOf<NullNotAllowedException>());
+    }
 
     [TestCaseSource(nameof(TestableTypesAll))]
     public void Write_RT_RV<T>(DataNode intendedNode, Func<T> value, Func<T> altValue, bool useContext, object[] _)
@@ -301,12 +299,10 @@ private void Write_RT_NV_Class<T>(DataNode intendedNode, Func<T> value, Func<T> 
         AssertEqual(val!, value(), valueExtractors);
     }
 
-    //todo paul uncomment when serv3 nullability for reference types is sane again
-    //[TestCaseSource(nameof(TestableTypesAll))]
-    [TestCaseSource(nameof(ReadWriteTypesStruct))]
+    [TestCaseSource(nameof(TestableTypesAll))]
     public void Read_RT_NV<T>(DataNode node, Func<T> _, Func<T> __, bool useContext, object[] ___)
     {
-        Assert.That(() => Serialization.Read<T>(ValueDataNode.Null(), context: Context(useContext)),
+        Assert.That(() => Serialization.Read<T>(ValueDataNode.Null(), context: Context(useContext), notNullableOverride: true),
             Throws.TypeOf<NullNotAllowedException>());
     }
 

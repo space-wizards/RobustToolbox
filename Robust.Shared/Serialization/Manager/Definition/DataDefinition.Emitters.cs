@@ -102,7 +102,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         nodeVariable,
                         contextParam,
                         skipHookParam,
-                        Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldDefinition.FieldType))));
+                        Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldDefinition.FieldType)),
+                        Expression.Constant(false)));
                 }
 
                 call = Expression.Block(
@@ -191,7 +192,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         Expression.Convert(valueVar, fieldType),
                         alwaysWriteParam,
-                        contextParam);
+                        contextParam,
+                        Expression.Constant(false));
                 }
                 else
                 {
@@ -201,7 +203,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new[] { fieldDefinition.FieldType },
                         valueVar,
                         alwaysWriteParam,
-                        contextParam);
+                        contextParam,
+                        Expression.Constant(false));
                 }
 
                 Expression writeExpression;

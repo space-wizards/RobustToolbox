@@ -26,11 +26,11 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook = false,
             ISerializationManager.InstantiationDelegate<T>? instanceProvider = null);
 
-        private readonly ConcurrentDictionary<Type, ReadBoxingDelegate> _readBoxingDelegates = new();
-        private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node), object> _readGenericBaseDelegates = new();
-        private readonly ConcurrentDictionary<(Type value, Type node), object> _readGenericDelegates = new();
+        private readonly ConcurrentDictionary<(Type type, bool notNullableOverride), ReadBoxingDelegate> _readBoxingDelegates = new();
+        private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node, bool notNullableOverride), object> _readGenericBaseDelegates = new();
+        private readonly ConcurrentDictionary<(Type value, Type node, bool notNullableOverride), object> _readGenericDelegates = new();
 
-        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null)
+        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
         {
             if (node.Tag?.StartsWith("!type:") ?? false)
             {
@@ -45,13 +45,13 @@ namespace Robust.Shared.Serialization.Manager
                     return GetOrCreateInstantiator<T>(false, type)();
 
                 return ((ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
-                    (typeof(T), type, node.GetType()!),
-                    static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, manager),
+                    (typeof(T), type, node.GetType()!, notNullableOverride),
+                    static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, tuple.notNullableOverride, manager),
                     this))(node, context, skipHook, instanceProvider);
             }
 
-            return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!),
-                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, manager), this))(node, context, skipHook, instanceProvider);
+            return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),
+                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, tuple.notNullableOverride, manager), this))(node, context, skipHook, instanceProvider);
         }
 
         public T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
@@ -69,15 +69,16 @@ namespace Robust.Shared.Serialization.Manager
                 instanceProvider);
         }
 
-        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         {
-            return GetOrCreateBoxingReadDelegate(type)(node, context, skipHook);
+            return GetOrCreateBoxingReadDelegate(type, notNullableOverride)(node, context, skipHook);
         }
 
-        private ReadBoxingDelegate GetOrCreateBoxingReadDelegate(Type type)
+        private ReadBoxingDelegate GetOrCreateBoxingReadDelegate(Type type, bool notNullableOverride = false)
         {
-            return _readBoxingDelegates.GetOrAdd(type, static (type, manager) =>
+            return _readBoxingDelegates.GetOrAdd((type, notNullableOverride), static (tuple, manager) =>
             {
+                var type = tuple.type;
                 var managerConst = Expression.Constant(manager);
 
                 var nodeParam = Expression.Variable(typeof(DataNode));
@@ -91,7 +92,8 @@ namespace Robust.Shared.Serialization.Manager
                     nodeParam,
                     contextParam,
                     skipHookParam,
-                    Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(type))), typeof(object));
+                    Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(type)),
+                    Expression.Constant(tuple.notNullableOverride)), typeof(object));
 
                 return Expression.Lambda<ReadBoxingDelegate>(
                     call,
@@ -101,9 +103,9 @@ namespace Robust.Shared.Serialization.Manager
             }, this);
         }
 
-        private static object ReadDelegateValueFactory(Type baseType, Type actualType, Type nodeType, SerializationManager manager)
+        private static object ReadDelegateValueFactory(Type baseType, Type actualType, Type nodeType, bool notNullableOverride, SerializationManager manager)
         {
-            var nullable = actualType.IsNullable();
+            var nullable = !notNullableOverride && actualType.IsNullable();
             actualType = actualType.EnsureNotNullableType();
 
             var managerConst = Expression.Constant(manager);

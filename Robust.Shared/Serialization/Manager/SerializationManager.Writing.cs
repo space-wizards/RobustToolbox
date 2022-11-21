@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -25,14 +26,15 @@ public sealed partial class SerializationManager
         bool alwaysWrite,
         ISerializationContext? context);
 
-    private readonly ConcurrentDictionary<Type, WriteBoxingDelegate> _writeBoxingDelegates = new();
-    private readonly ConcurrentDictionary<(Type baseType, Type actualType), object> _writeGenericBaseDelegates = new();
-    private readonly ConcurrentDictionary<Type, object> _writeGenericDelegates = new();
+    private readonly ConcurrentDictionary<(Type, bool), WriteBoxingDelegate> _writeBoxingDelegates = new();
+    private readonly ConcurrentDictionary<(Type baseType, Type actualType, bool), object> _writeGenericBaseDelegates = new();
+    private readonly ConcurrentDictionary<(Type, bool), object> _writeGenericDelegates = new();
 
-    private WriteBoxingDelegate GetOrCreateWriteBoxingDelegate(Type type)
+    private WriteBoxingDelegate GetOrCreateWriteBoxingDelegate(Type type, bool notNullableOverride)
     {
-        return _writeBoxingDelegates.GetOrAdd(type, static (type, manager) =>
+        return _writeBoxingDelegates.GetOrAdd((type, notNullableOverride), static (tuple, manager) =>
         {
+            var type = tuple.Item1;
             var managerConst = Expression.Constant(manager);
 
             var valueParam = Expression.Variable(typeof(object));
@@ -45,7 +47,8 @@ public sealed partial class SerializationManager
                 new[] { type },
                 Expression.Convert(valueParam, type),
                 alwaysWrite,
-                contextParam);
+                contextParam,
+                Expression.Constant(tuple.Item2));
 
             return Expression.Lambda<WriteBoxingDelegate>(
                 call,
@@ -56,15 +59,16 @@ public sealed partial class SerializationManager
 
     }
 
-    private WriteGenericDelegate<T> GetOrCreateWriteGenericDelegate<T>(T value)
+    private WriteGenericDelegate<T> GetOrCreateWriteGenericDelegate<T>(T value, bool notNullableOverride)
     {
-        static object ValueFactory(Type baseType, Type actualType, SerializationManager serializationManager)
+        static object ValueFactory(Type baseType, Type actualType, bool notNullableOverride, SerializationManager serializationManager)
         {
             var instanceParam = Expression.Constant(serializationManager);
             var objParam = Expression.Parameter(baseType, "value");
             var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
+            //todo paul make nullable check in here
             actualType = actualType.EnsureNotNullableType();
             var sameType = baseType == actualType;
             Expression call;
@@ -78,7 +82,8 @@ public sealed partial class SerializationManager
                     serializerConst,
                     sameType ? objParam : Expression.Convert(objParam, actualType),
                     alwaysWriteParam,
-                    contextParam
+                    contextParam,
+                    Expression.Constant(notNullableOverride)
                 );
             }
             else if (actualType.IsEnum)
@@ -152,7 +157,8 @@ public sealed partial class SerializationManager
                         serializerVar,
                         sameType ? objParam : Expression.Convert(objParam, actualType),
                         alwaysWriteParam,
-                        contextParam),
+                        contextParam,
+                        Expression.Constant(notNullableOverride)),
                     call));
 
             return Expression.Lambda<WriteGenericDelegate<T>>(
@@ -165,12 +171,12 @@ public sealed partial class SerializationManager
         var type = typeof(T);
         if (type.IsAbstract || type.IsInterface)
         {
-            return (WriteGenericDelegate<T>)_writeGenericBaseDelegates.GetOrAdd((type, value!.GetType()),
-                static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, manager), this);
+            return (WriteGenericDelegate<T>)_writeGenericBaseDelegates.GetOrAdd((type, value!.GetType(), notNullableOverride),
+                static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, tuple.Item3, manager), this);
         }
 
         return (WriteGenericDelegate<T>) _writeGenericDelegates
-            .GetOrAdd(type, static (type, manager) => ValueFactory(type, type, manager), this);
+            .GetOrAdd((type, notNullableOverride), static (tuple, manager) => ValueFactory(tuple.Item1, tuple.Item1, tuple.Item2, manager), this);
     }
 
     private DataNode WriteConvertible(IConvertible obj)
@@ -214,39 +220,64 @@ public sealed partial class SerializationManager
 
     #endregion
 
-    public DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
+    public DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false)
     {
-        if(value == null) return ValueDataNode.Null();
+        if(value == null)
+        {
+            WriteNullCheck(typeof(T), notNullableOverride);
+            return ValueDataNode.Null();
+        }
 
-        return GetOrCreateWriteGenericDelegate(value)(value, alwaysWrite, context);
+        return GetOrCreateWriteGenericDelegate(value, notNullableOverride)(value, alwaysWrite, context);
     }
 
     public DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        ISerializationContext? context = null, bool notNullableOverride = false)
     {
-        if (value == null) return NullNode();
+        if (value == null)
+        {
+            WriteNullCheck(typeof(T), notNullableOverride);
+            return NullNode();
+        }
 
         return writer.Write(this, value, DependencyCollection, alwaysWrite, context);
     }
 
-    public DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
+    public DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false)
         where TWriter : ITypeWriter<T>
     {
-        return WriteValue(GetOrCreateCustomTypeSerializer<TWriter>(), value, alwaysWrite, context);
+        return WriteValue(GetOrCreateCustomTypeSerializer<TWriter>(), value, alwaysWrite, context, notNullableOverride);
     }
 
     public DataNode WriteValue(object? value, bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        ISerializationContext? context = null, bool notNullableOverride = false)
     {
-        if (value == null) return NullNode();
+        if (value == null)
+        {
+            if (notNullableOverride) throw new NullNotAllowedException();
+            return NullNode();
+        }
 
         return WriteValue(value.GetType(), value, alwaysWrite, context);
     }
 
-    public DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null)
+    public DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false)
     {
-        if (value == null) return NullNode();
+        if (value == null)
+        {
+            WriteNullCheck(type, notNullableOverride);
 
-        return GetOrCreateWriteBoxingDelegate(type)(value, alwaysWrite, context);
+            return NullNode();
+        }
+
+        return GetOrCreateWriteBoxingDelegate(type, notNullableOverride)(value, alwaysWrite, context);
+    }
+
+    private void WriteNullCheck(Type type, bool notNullableOverride)
+    {
+        if (!type.IsNullable() || notNullableOverride)
+        {
+            throw new NullNotAllowedException();
+        }
     }
 }

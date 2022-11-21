@@ -66,7 +66,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>The deserialized object or null.</returns>
-        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
         ///     Deserializes a node into a populated object of the given generic type <see cref="T"/>
@@ -77,7 +77,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="instanceProvider">The valueProvider which can provide a value to read into. If none is supplied, a new object will be created.</param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null);
+        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false);
 
         /// <summary>
         /// todo paul docs
@@ -111,7 +111,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <typeparam name="T">The type to serialize.</typeparam>
         /// <returns>A serialized datanode created from the given <see cref="value"/>.</returns>
-        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null);
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
         /// <summary>
         /// todo paul docs
@@ -122,9 +122,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false, ISerializationContext? context = null);
+        DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
-        DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null) where TWriter : ITypeWriter<T>;
+        DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false) where TWriter : ITypeWriter<T>;
 
         /// <summary>
         ///     Serializes a value into a node.
@@ -140,7 +140,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A serialized datanode created from the given <see cref="value"/>
         ///     of type <see cref="type"/>.
         /// </returns>
-        DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
+        DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
         /// <summary>
         ///     Serializes a value into a node.
@@ -155,7 +155,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A serialized datanode created from the given <see cref="value"/>
         ///     of type <see cref="type"/>.
         /// </returns>
-        DataNode WriteValue(object? value, bool alwaysWrite = false, ISerializationContext? context = null);
+        DataNode WriteValue(object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
         #endregion
 

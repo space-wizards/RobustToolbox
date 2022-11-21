@@ -303,7 +303,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         contextParam,
                         skipHookParam);
 
-                    expressions.Add(Expression.Block(
+                    call = Expression.Block(
                         new[] { targetValue },
                         Expression.Assign(targetValue,
                             SerializationManager.WrapNullableIfNeededExpression(
@@ -311,13 +311,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 fieldDefinition.FieldType.IsNullable(),
                                 fieldDefinition.FieldType.EnsureNotNullableType())),
                         call,
-                        targetValue));
-
-                    continue;
+                        targetValue);
                 }
-
-
-                if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
+                else if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
                 {
                     call = Expression.Call(
                         managerConst,

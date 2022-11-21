@@ -33,11 +33,6 @@ public sealed partial class ManagerTests : ISerializationContext
 
     private record struct SerializerStruct(string OneValue, List<int> TwoValue)
     {
-        public readonly bool Equals(SerializerStruct other)
-        {
-            return OneValue == other.OneValue && EqualLists(TwoValue, other.TwoValue);
-        }
-
         public static SerializerStruct SerializerReturn() => new ("testValue", new List<int> { 2, 3 });
         public static SerializerStruct SerializerReturnAlt() => new ("anotherTestValue", new List<int> { 3, 4 });
         public static SerializerStruct SerializerCustomReturn() => new ("testValueCustom", new List<int> { 6, 17 });
@@ -69,13 +64,14 @@ public sealed partial class ManagerTests : ISerializationContext
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
             bool skipHook, ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            target.OneValue = source.OneValue;
+            target.TwoValue = source.TwoValue;
         }
 
         public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, bool skipHook,
             ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            return new SerializerStruct(source.OneValue, source.TwoValue);
         }
     }
 
@@ -103,13 +99,14 @@ public sealed partial class ManagerTests : ISerializationContext
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
             bool skipHook, ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            target.OneValue = source.OneValue;
+            target.TwoValue = source.TwoValue;
         }
 
         public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, bool skipHook,
             ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            return new SerializerStruct(source.OneValue, source.TwoValue);
         }
     }
 
@@ -119,15 +116,6 @@ public sealed partial class ManagerTests : ISerializationContext
 
     private record SerializerClass(string OneValue, List<int> TwoValue)
     {
-        public virtual bool Equals(SerializerClass? other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return OneValue == other.OneValue && EqualLists(TwoValue, other.TwoValue);
-        }
-
         public static SerializerClass SerializerReturn() => new ("testValue", new List<int> { 2, 3 });
         public static SerializerClass SerializerReturnAlt() => new ("anotherTestValue", new List<int> { 3, 4 });
         public static SerializerClass SerializerCustomReturn() => new ("testValueCustom", new List<int> { 6, 17 });
@@ -135,7 +123,7 @@ public sealed partial class ManagerTests : ISerializationContext
     };
 
     [TypeSerializer]
-    private sealed class RegularTypeSerializerClass : ITypeSerializer<SerializerClass, ValueDataNode>, ITypeCopier<SerializerClass>, ITypeCopyCreator<SerializerClass>
+    private sealed class RegularTypeSerializerClass : ITypeSerializer<SerializerClass, ValueDataNode>, ITypeCopyCreator<SerializerClass>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -156,20 +144,14 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, SerializerClass source, ref SerializerClass target,
-            bool skipHook, ISerializationContext? context = null)
-        {
-            throw new NotImplementedException();
-        }
-
         public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, bool skipHook,
             ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            return new SerializerClass(source.OneValue, source.TwoValue);
         }
     }
 
-    private sealed class CustomTypeSerializerClass : ITypeSerializer<SerializerClass, ValueDataNode>, ITypeCopier<SerializerClass>, ITypeCopyCreator<SerializerClass>
+    private sealed class CustomTypeSerializerClass : ITypeSerializer<SerializerClass, ValueDataNode>, ITypeCopyCreator<SerializerClass>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -190,16 +172,10 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanCustomDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, SerializerClass source, ref SerializerClass target,
-            bool skipHook, ISerializationContext? context = null)
-        {
-            throw new NotImplementedException();
-        }
-
         public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, bool skipHook,
             ISerializationContext? context = null)
         {
-            throw new NotImplementedException();
+            return new SerializerClass(source.OneValue, source.TwoValue);
         }
     }
 
@@ -207,7 +183,7 @@ public sealed partial class ManagerTests : ISerializationContext
 
     #region Other TypeDefinitions
 
-    private struct SelfSerializeStruct : ISelfSerialize, IEquatable<SelfSerializeStruct>
+    private struct SelfSerializeStruct : ISelfSerialize
     {
         public string TestValue;
 
@@ -220,19 +196,9 @@ public sealed partial class ManagerTests : ISerializationContext
         {
             return TestValue;
         }
-
-        public bool Equals(SelfSerializeStruct other)
-        {
-            return TestValue == other.TestValue;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is SelfSerializeStruct other && Equals(other);
-        }
     }
 
-    private sealed class SelfSerializeClass : ISelfSerialize, IEquatable<SelfSerializeClass>
+    private sealed class SelfSerializeClass : ISelfSerialize
     {
         public string TestValue = string.Empty;
 
@@ -245,76 +211,25 @@ public sealed partial class ManagerTests : ISerializationContext
         {
             return TestValue;
         }
-
-        public bool Equals(SelfSerializeClass? other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return TestValue == other.TestValue;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return ReferenceEquals(this, obj) || obj is SelfSerializeClass other && Equals(other);
-        }
     }
 
     private interface IDataDefBaseInterface{}
 
     [DataDefinition]
-    private struct DataDefStruct : IDataDefBaseInterface, IEquatable<DataDefStruct>
+    private struct DataDefStruct : IDataDefBaseInterface
     {
         [DataField("one")] public string OneValue;
 
         [DataField("two")] public List<int> TwoValue;
-
-        public bool Equals(DataDefStruct other)
-        {
-            return OneValue == other.OneValue && EqualLists(TwoValue, other.TwoValue);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is DataDefStruct other && Equals(other);
-        }
     }
 
     [DataDefinition]
-    private sealed class DataDefClass : IDataDefBaseInterface, IEquatable<DataDefClass>
+    private sealed class DataDefClass : IDataDefBaseInterface
     {
         [DataField("one")] public string OneValue = string.Empty;
 
         [DataField("two")] public List<int> TwoValue = new();
-
-        public bool Equals(DataDefClass? other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return OneValue == other.OneValue && EqualLists(TwoValue, other.TwoValue);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return ReferenceEquals(this, obj) || obj is DataDefClass other && Equals(other);
-        }
     }
 
     #endregion
-
-    private static bool EqualLists(List<int> a, List<int> b)
-    {
-        if (a.Count != b.Count)
-            return false;
-
-        for (int i = 0; i < a.Count; i++)
-        {
-            if (a[i] != b[i]) return false;
-        }
-
-        return true;
-    }
 }

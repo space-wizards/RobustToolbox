@@ -91,10 +91,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="TNode"></typeparam>
         /// <returns></returns>
         T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
-            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null) where TNode : DataNode;
+            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode;
 
         T Read<T, TNode, TReader>(TNode node, ISerializationContext? context = null,
-            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null) where TNode : DataNode where TReader : ITypeReader<T, TNode>;
+            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode where TReader : ITypeReader<T, TNode>;
 
         #endregion
 
@@ -170,7 +170,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        void CopyTo(object source, ref object? target, ISerializationContext? context = null, bool skipHook = false);
+        void CopyTo(object source, ref object? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
         ///     Copies the values of one object into another.
@@ -182,7 +182,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false);
+        void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
         /// todo paul docs
@@ -193,9 +193,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context"></param>
         /// <param name="skipHook"></param>
         /// <typeparam name="T"></typeparam>
-        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null, bool skipHook = false);
+        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
-        void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false) where TCopier : ITypeCopier<T>;
+        void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -205,7 +205,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false);
+        object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -216,7 +216,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false);
+        T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
         /// todo paul docs
@@ -228,10 +228,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         [MustUseReturnValue]
-        T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null, bool skipHook = false);
+        T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         [MustUseReturnValue]
-        T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false) where TCopyCreator : ITypeCopyCreator<T>;
+        T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopyCreator : ITypeCopyCreator<T>;
 
         #endregion
 

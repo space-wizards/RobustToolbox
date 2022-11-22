@@ -441,14 +441,12 @@ public sealed partial class ManagerTests : SerializationTest
         AssertEqual(target!, value(), valueExtractors);
     }
 
-    //todo paul uncomment when serv3 nullability for reference types is sane again
-    /*
     [TestCaseSource(nameof(TestableTypesClass))]
     public void CopyTo_RT_NS_NT_Class<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____)
         where T : class
     {
         T? target = null;
-        Assert.That(() => { Serialization.CopyTo<T>(null!, ref target, context: Context(useContext)); },
+        Assert.That(() => { Serialization.CopyTo<T>(null!, ref target, context: Context(useContext), notNullableOverride: true); },
             Throws.TypeOf<NullNotAllowedException>());
     }
 
@@ -457,10 +455,9 @@ public sealed partial class ManagerTests : SerializationTest
         where T : class
     {
         T? target = value();
-        Assert.That(() => { Serialization.CopyTo<T>(null!, ref target, context: Context(useContext)); },
+        Assert.That(() => { Serialization.CopyTo<T>(null!, ref target, context: Context(useContext), notNullableOverride: true); },
             Throws.TypeOf<NullNotAllowedException>());
     }
-    */
 
 
     [TestCaseSource(nameof(TestableTypesClass))]
@@ -511,17 +508,15 @@ public sealed partial class ManagerTests : SerializationTest
         AssertEqual(copy!, value(), valueExtractors);
     }
 
-    //todo paul uncomment when serv3 nullability for reference types is sane again
-    /*
     [TestCaseSource(nameof(TestableTypesClass))]
     public void CreateCopy_RT_NV_Class<T>(DataNode _, Func<T> value, Func<T> altValue, bool useContext,
         object[] valueExtractors) where T : class
     {
         Assert.That(() =>
         {
-            var __ = Serialization.CreateCopy<T>(null!, context: Context(useContext));
+            var __ = Serialization.CreateCopy<T>(null!, context: Context(useContext), notNullableOverride: true);
         }, Throws.TypeOf<NullNotAllowedException>());
-    }*/
+    }
 
     [TestCaseSource(nameof(TestableTypesAll))]
     public void CreateCopy_RT_RV<T>(DataNode _, Func<T> value, Func<T> altValue, bool useContext,

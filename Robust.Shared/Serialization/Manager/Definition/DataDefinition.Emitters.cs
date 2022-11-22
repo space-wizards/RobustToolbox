@@ -59,7 +59,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             Expression.Convert(nodeVariable, typeof(ValueDataNode)),
                             contextParam,
                             skipHookParam,
-                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
+                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                            Expression.Constant(!isNullable)), nullable, fieldType))),
                             Expression.Constant(typeof(ValueDataNode))));
                     }
 
@@ -73,7 +74,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
                             contextParam,
                             skipHookParam,
-                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
+                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                            Expression.Constant(!isNullable)), nullable, fieldType))),
                             Expression.Constant(typeof(SequenceDataNode))));
                     }
 
@@ -87,7 +89,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 Expression.Convert(nodeVariable, typeof(MappingDataNode)),
                                     contextParam,
                                 skipHookParam,
-                                Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType))), nullable, fieldType))),
+                                Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                                    Expression.Constant(!isNullable)), nullable, fieldType))),
                             Expression.Constant(typeof(MappingDataNode))));
                     }
 
@@ -195,6 +198,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 Expression call;
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
+                //todo paul make this work sanely with nullable<t>
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
                     var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
@@ -304,6 +308,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
+                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+
                 Expression call;
                 //todo paul make this work sanely with nullable<t>
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
@@ -317,7 +323,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         AccessExpression(i, sourceParam),
                         targetValue,
                         contextParam,
-                        skipHookParam);
+                        skipHookParam,
+                        Expression.Constant(!nullableOverride));
 
                     call = Expression.Block(
                         new[] { targetValue },
@@ -337,7 +344,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new []{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
                         contextParam,
-                        skipHookParam);
+                        skipHookParam,
+                        Expression.Constant(!nullableOverride));
                 }
                 else
                 {
@@ -347,7 +355,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new[] { fieldDefinition.FieldType },
                         AccessExpression(i, sourceParam),
                         contextParam,
-                        skipHookParam);
+                        skipHookParam,
+                        Expression.Constant(!nullableOverride));
                 }
 
                 expressions.Add(AssignIfNotDefaultExpression(i, targetParam, call));

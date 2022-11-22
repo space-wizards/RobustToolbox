@@ -65,18 +65,20 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         public T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
-            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null)
+            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
             where TNode : DataNode
         {
-            return reader.Read(this, node, DependencyCollection, skipHook, context, instanceProvider);
+            var val = reader.Read(this, node, DependencyCollection, skipHook, context, instanceProvider);
+            if(notNullableOverride) Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+            return val;
         }
 
         public T Read<T, TNode, TReader>(TNode node, ISerializationContext? context = null,
-            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null) where TNode : DataNode
+            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode
             where TReader : ITypeReader<T, TNode>
         {
             return Read(GetOrCreateCustomTypeSerializer<TReader>(), node, context, skipHook,
-                instanceProvider);
+                instanceProvider, notNullableOverride);
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
@@ -170,7 +172,8 @@ namespace Robust.Shared.Serialization.Manager
                     Expression.Convert(nodeParam, nodeType),
                     contextParam,
                     skipHookParam,
-                    BaseInstantiatorToActual());
+                    BaseInstantiatorToActual(),
+                    Expression.Constant(notNullableOverride));
             }
             else if (actualType.IsArray)
             {
@@ -274,7 +277,8 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, nodeType),
                             contextParam,
                             skipHookParam,
-                            BaseInstantiatorToActual()),
+                            BaseInstantiatorToActual(),
+                            Expression.Constant(notNullableOverride)),
                     call));
 
             //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue

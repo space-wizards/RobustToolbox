@@ -92,6 +92,9 @@ internal partial class MapManager
 
     private void OnGridInit(GridInitializeEvent args)
     {
+        if (EntityManager.HasComponent<MapComponent>(args.EntityUid))
+            return;
+
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
         var mapId = xform.MapID;
 
@@ -103,6 +106,7 @@ internal partial class MapManager
 
     private void AddGrid(MapGridComponent grid, MapId mapId)
     {
+        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(grid.Owner));
         var aabb = GetWorldAABB(grid);
         var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
         DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
@@ -113,6 +117,9 @@ internal partial class MapManager
 
     private void OnGridRemove(GridRemovalEvent args)
     {
+        if (EntityManager.HasComponent<MapComponent>(args.EntityUid))
+            return;
+
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
         // Can't check for free proxy because DetachParentToNull gets called first woo!
@@ -142,6 +149,9 @@ internal partial class MapManager
 
     private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)
     {
+        if (EntityManager.HasComponent<MapComponent>(uid))
+            return;
+
         var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
 
         // oh boy

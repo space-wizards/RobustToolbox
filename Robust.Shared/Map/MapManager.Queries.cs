@@ -40,7 +40,7 @@ internal partial class MapManager
 
         if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
         {
-            callback(grid.Grid);
+            callback(grid);
         }
     }
 
@@ -63,7 +63,7 @@ internal partial class MapManager
 
         if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
         {
-            callback(grid.Grid, ref state);
+            callback(grid, ref state);
         }
 
         state = state2.state;
@@ -146,7 +146,7 @@ internal partial class MapManager
 
         if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
         {
-            grids.Add((MapGrid) mapGrid.Grid);
+            grids.Add(mapGrid);
         }
 
         return grids;

@@ -87,6 +87,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
+            InitializeGrid();
         }
 
         public override void Shutdown()
@@ -122,6 +123,7 @@ namespace Robust.Shared.GameObjects
         private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
         {
             component.DynamicTree = new DynamicTreeBroadPhase();
+            component.GridTree = new DynamicTreeBroadPhase();
             component.StaticTree = new DynamicTreeBroadPhase();
             component.StaticSundriesTree = new DynamicTree<EntityUid>(
                 (in EntityUid value) => GetTreeAABB(value, component.Owner));

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {
@@ -27,5 +29,15 @@ namespace Robust.Shared.Physics
         /// Stores all other static entities not in another tree.
         /// </summary>
         public DynamicTree<EntityUid> StaticSundriesTree = default!;
+
+        /// <summary>
+        /// Stores all grid-bodies.
+        /// </summary>
+        public DynamicTree<EntityUid> GridTree = default!;
+
+        /// <summary>
+        /// Stores the grids that have moved this tick.
+        /// </summary>
+        public readonly Dictionary<EntityUid, Box2> GridMoveBuffer = new();
     }
 }

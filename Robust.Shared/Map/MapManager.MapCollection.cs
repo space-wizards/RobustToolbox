@@ -67,7 +67,6 @@ internal partial class MapManager
         if (mapId != MapId.Nullspace)
         {
             var args = new MapEventArgs(mapId);
-            OnMapDestroyedGridTree(args);
             MapDestroyed?.Invoke(this, args);
             _mapEntities.Remove(mapId);
         }
@@ -174,7 +173,6 @@ internal partial class MapManager
         if (raiseEvent)
         {
             var args = new MapEventArgs(mapId);
-            OnMapCreatedGridTree(args);
             var ev = new MapChangedEvent(mapId, true);
             EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
         }
@@ -280,7 +278,6 @@ internal partial class MapManager
         }
 
         var args = new MapEventArgs(actualId);
-        OnMapCreatedGridTree(args);
         MapCreated?.Invoke(this, args);
 
         return actualId;

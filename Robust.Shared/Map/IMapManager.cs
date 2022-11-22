@@ -26,16 +26,6 @@ namespace Robust.Shared.Map
         bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
-        /// Get the set of grids that have moved on this map in this tick.
-        /// </summary>
-        HashSet<MapGridComponent> GetMovedGrids(MapId mapId);
-
-        /// <summary>
-        /// Clear the set of grids that have moved on this map in this tick.
-        /// </summary>
-        void ClearMovedGrids(MapId mapId);
-
-        /// <summary>
         ///     Starts up the map system.
         /// </summary>
         void Initialize();

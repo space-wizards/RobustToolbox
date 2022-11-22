@@ -149,7 +149,7 @@ namespace Robust.Shared.Physics.Systems
         internal void FindNewContacts(SharedPhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
-            var movedGrids = _mapManager.GetMovedGrids(mapId);
+            var movedGrids = Comp<BroadphaseComponent>(_mapManager.GetMapEntityId(mapId)).GridMoveBuffer;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 
             var broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
@@ -263,7 +263,7 @@ namespace Robust.Shared.Physics.Systems
             ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);
             ArrayPool<(FixtureProxy Proxy, Box2 AABB)>.Shared.Return(pMoveBuffer);
             moveBuffer.Clear();
-            _mapManager.ClearMovedGrids(mapId);
+            movedGrids.Clear();
         }
 
         private void HandleGridCollisions(
@@ -436,18 +436,13 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var proxy in fixture.Proxies)
             {
-                AddToMoveBuffer(mapId, proxy, broadphasePos.TransformBox(proxy.AABB));
+                if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+                    return;
+
+                DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+
+                physicsMap.MoveBuffer[proxy] = aabb;
             }
-        }
-
-        private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
-        {
-            if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
-                return;
-
-            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
-
-            physicsMap.MoveBuffer[proxy] = aabb;
         }
 
         public void Refilter(Fixture fixture, TransformComponent? xform = null)

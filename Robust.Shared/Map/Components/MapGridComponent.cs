@@ -192,7 +192,6 @@ namespace Robust.Shared.Map.Components
 
             // TODO: Move this to the component when we combine.
             _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(Owner);
-            _mapManager.OnGridBoundsChange(Owner, this);
             system?.RegenerateCollision(Owner, chunkRectangles, removedChunks);
         }
 

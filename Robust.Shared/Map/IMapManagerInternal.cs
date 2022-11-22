@@ -44,6 +44,5 @@ namespace Robust.Shared.Map
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
         void TrueDeleteMap(MapId mapId);
-        void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

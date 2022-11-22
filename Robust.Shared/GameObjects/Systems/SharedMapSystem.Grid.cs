@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -24,6 +27,51 @@ public abstract partial class SharedMapSystem
             return;
 
         component.ChunkSize = state.ChunkSize;
+
+        MapManager.SuppressOnTileChanged = true;
+        var modified = new List<(Vector2i position, Tile tile)>();
+
+        foreach (var chunkData in chunkUpdates)
+        {
+            if (chunkData.IsDeleted())
+                continue;
+
+            var chunk = gridComp.GetChunk(chunkData.Index);
+            chunk.SuppressCollisionRegeneration = true;
+            DebugTools.Assert(chunkData.TileData.Length == gridComp.ChunkSize * gridComp.ChunkSize);
+
+            var counter = 0;
+            for (ushort x = 0; x < gridComp.ChunkSize; x++)
+            {
+                for (ushort y = 0; y < gridComp.ChunkSize; y++)
+                {
+                    var tile = chunkData.TileData[counter++];
+                    if (chunk.GetTile(x, y) == tile)
+                        continue;
+
+                    chunk.SetTile(x, y, tile);
+                    modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y), tile));
+                }
+            }
+        }
+
+        if (modified.Count != 0)
+            MapManager.InvokeGridChanged(networkedMapManager, gridComp, modified);
+
+        foreach (var chunkData in chunkUpdates)
+        {
+            if (chunkData.IsDeleted())
+            {
+                gridComp.RemoveChunk(chunkData.Index);
+                continue;
+            }
+
+            var chunk = gridComp.GetChunk(chunkData.Index);
+            chunk.SuppressCollisionRegeneration = false;
+            gridComp.RegenerateCollision(chunk);
+        }
+
+        networkedMapManager.SuppressOnTileChanged = false;
     }
 
     private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)

@@ -82,54 +82,6 @@ namespace Robust.Shared.Map.Components
                 _entMan.EventBus.RaiseLocalEvent(Owner, new EmptyGridEvent { GridId = Owner }, true);
         }
 
-        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, MapGridComponent gridComp,
-            GameStateMapData.ChunkDatum[] chunkUpdates)
-        {
-            networkedMapManager.SuppressOnTileChanged = true;
-            var modified = new List<(Vector2i position, Tile tile)>();
-            foreach (var chunkData in chunkUpdates)
-            {
-                if (chunkData.IsDeleted())
-                    continue;
-
-                var chunk = gridComp.GetChunk(chunkData.Index);
-                chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(chunkData.TileData.Length == gridComp.ChunkSize * gridComp.ChunkSize);
-
-                var counter = 0;
-                for (ushort x = 0; x < gridComp.ChunkSize; x++)
-                {
-                    for (ushort y = 0; y < gridComp.ChunkSize; y++)
-                    {
-                        var tile = chunkData.TileData[counter++];
-                        if (chunk.GetTile(x, y) == tile)
-                            continue;
-
-                        chunk.SetTile(x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y), tile));
-                    }
-                }
-            }
-
-            if (modified.Count != 0)
-                MapManager.InvokeGridChanged(networkedMapManager, gridComp, modified);
-
-            foreach (var chunkData in chunkUpdates)
-            {
-                if (chunkData.IsDeleted())
-                {
-                    gridComp.RemoveChunk(chunkData.Index);
-                    continue;
-                }
-
-                var chunk = gridComp.GetChunk(chunkData.Index);
-                chunk.SuppressCollisionRegeneration = false;
-                gridComp.RegenerateCollision(chunk);
-            }
-
-            networkedMapManager.SuppressOnTileChanged = false;
-        }
-
         /// <summary>
         /// Regenerate collision for multiple chunks at once; faster than doing it individually.
         /// </summary>

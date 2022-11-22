@@ -82,118 +82,12 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
     public void CullDeletionHistory(GameTick upToTick)
     {
-        var query = EntityManager.EntityQueryEnumerator<MapGridComponent>();
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent>();
 
         while (query.MoveNext(out var grid))
         {
             var chunks = grid.ChunkDeletionHistory;
             chunks.RemoveAll(t => t.tick < upToTick);
-        }
-    }
-
-    private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
-    private List<(MapId mapId, EntityUid euid, ushort chunkSize)> _newGrids = new();
-
-    public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
-    {
-        // Setup new maps and grids
-        {
-            // search for any newly created map components
-            foreach (var entityState in entityStates)
-            {
-                foreach (var compChange in entityState.ComponentChanges.Span)
-                {
-                    if (compChange.State is MapComponentState mapCompState)
-                    {
-                        var mapEuid = entityState.Uid;
-                        var mapId = mapCompState.MapId;
-
-                        // map already exists from a previous state.
-                        if (MapExists(mapId))
-                            continue;
-
-                        _newMaps.Add((mapId, mapEuid));
-                    }
-                    else if (data != null && data.GridData != null && compChange.State is MapGridComponentState gridCompState)
-                    {
-                        var gridEuid = entityState.Uid;
-                        var chunkSize = gridCompState.ChunkSize;
-
-                        // grid already exists from a previous state
-                        if(GridExists(gridEuid))
-                            continue;
-
-                        // Existing ent?
-                        // I love NetworkedMapManager
-                        if (EntityManager.EntityExists(gridEuid))
-                        {
-                            EntityManager.AddComponent<MapGridComponent>(gridEuid);
-                            continue;
-                        }
-
-                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
-
-                        MapId gridMapId = default;
-                        foreach (var kvData in data.GridData)
-                        {
-                            if (kvData.Key != gridEuid)
-                                continue;
-
-                            gridMapId = kvData.Value.Coordinates.MapId;
-                            break;
-                        }
-
-                        DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridEuid}.");
-
-                        _newGrids.Add((gridMapId, gridEuid, chunkSize));
-                    }
-                }
-            }
-
-            // create all the new maps
-            foreach (var (mapId, euid) in _newMaps)
-            {
-                CreateMap(mapId, euid);
-            }
-            _newMaps.Clear();
-
-            // create all the new grids
-            foreach (var (mapId, euid, chunkSize) in _newGrids)
-            {
-                CreateGrid(mapId, chunkSize, euid);
-            }
-            _newGrids.Clear();
-        }
-
-        // Process all grid updates.
-        if (data != null && data.GridData != null)
-        {
-            // Ok good all the grids and maps exist now.
-            foreach (var (gridId, gridDatum) in data.GridData)
-            {
-                var xformComp = EntityManager.GetComponent<TransformComponent>(gridId);
-                ApplyTransformState(xformComp, gridDatum);
-
-                var gridComp = EntityManager.GetComponent<MapGridComponent>(gridId);
-                MapGridComponent.ApplyMapGridState(this, gridComp, gridDatum.ChunkData);
-            }
-        }
-    }
-
-    private static void ApplyTransformState(TransformComponent xformComp, GameStateMapData.GridDatum gridDatum)
-    {
-        if (xformComp.MapID != gridDatum.Coordinates.MapId)
-            throw new NotImplementedException("Moving grids between maps is not yet implemented");
-
-        // TODO: SHITCODE ALERT -> When we get proper ECS we can delete this.
-        if (xformComp.WorldPosition != gridDatum.Coordinates.Position)
-        {
-            xformComp.WorldPosition = gridDatum.Coordinates.Position;
-        }
-
-        if (xformComp.WorldRotation != gridDatum.Angle)
-        {
-            xformComp.WorldRotation = gridDatum.Angle;
         }
     }
 }

@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map.Components;
 using System.Linq;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 

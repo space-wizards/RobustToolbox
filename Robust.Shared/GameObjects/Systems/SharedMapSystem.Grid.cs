@@ -53,6 +53,16 @@ public abstract partial class SharedMapSystem
                 _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
 
+        // Force networkedmapmanager to send it due to non-ECS legacy code.
+        var curTick = _timing.CurTick;
+
+        foreach (var chunk in component.Chunks.Values)
+        {
+            chunk.LastTileModifiedTick = curTick;
+        }
+
+        component.LastTileModifiedTick = curTick;
+
         // Just in case.
         _transform.SetGridId(xform, uid, xformQuery);
 

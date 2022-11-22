@@ -899,15 +899,20 @@ namespace Robust.Shared.Map.Components
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
-        public ushort ChunkSize { get; }
+        public ushort ChunkSize;
+
+        /// <summary>
+        /// Networked chunk data.
+        /// </summary>
+        public List<ChunkDatum>? ChunkData;
 
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
-        /// <param name="chunkSize">The size of the chunks in the map grid.</param>
-        public MapGridComponentState(ushort chunkSize)
+        public MapGridComponentState(ushort chunkSize, List<ChunkDatum>? chunkData)
         {
             ChunkSize = chunkSize;
+            ChunkData = chunkData;
         }
     }
 }

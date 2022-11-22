@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -22,10 +23,10 @@ public sealed partial class SerializationManager
         return null;
     }
 
-    public static Expression WrapNullableIfNeededExpression(Expression expr, bool nullable, Type type)
+    public static Expression WrapNullableIfNeededExpression(Expression expr, bool nullable)
     {
-        if (nullable && type.IsValueType && !expr.Type.IsNullable())
-            return Expression.New(type.EnsureNullableType().GetConstructor(new[] { type })!, expr);
+        if (nullable && expr.Type.IsValueType && !expr.Type.IsNullable())
+            return Expression.New(expr.Type.EnsureNullableType().GetConstructor(new[] { expr.Type })!, expr);
         return expr;
     }
 
@@ -40,4 +41,11 @@ public sealed partial class SerializationManager
     }
 
     public ValueDataNode NullNode() => ValueDataNode.Null();
+
+    public static Expression StructNullHasValue(Expression valueExpression)
+    {
+        Debug.Assert(valueExpression.Type.IsValueType);
+        Debug.Assert(valueExpression.Type.IsNullable());
+        return Expression.Property(valueExpression, "HasValue");
+    }
 }

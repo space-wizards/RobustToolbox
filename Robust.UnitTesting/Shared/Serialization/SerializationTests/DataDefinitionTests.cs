@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
@@ -12,88 +11,16 @@ using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.UnitTesting.Shared.Serialization.SerializationTests;
 
-public sealed class DataDefinitionTests : SerializationTest
+public sealed partial class DataDefinitionTests : SerializationTest
 {
     //todo test that no references are wrongfully copied
 
     //includedatafields get their own tests (cts/regular), null out of the question since they get the og mapping
 
-    //todo do customtypeserializers
-
     //for datafields of type primitive, struct, class, do:
     //read: null <> cts(v/s/m)/regular
     //write: null <> cts/regular
     //copy: null <> cts(cc(+nt), c)/regular(c)
-
-    [CopyByRef]
-    public struct DataDummyStruct : ISelfSerialize, IEquatable<DataDummyStruct>
-    {
-        public string Value;
-        public void Deserialize(string value)
-        {
-            Value = value;
-        }
-
-        public string Serialize()
-        {
-            return Value;
-        }
-
-        public bool Equals(DataDummyStruct other)
-        {
-            return Value == other.Value;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is DataDummyStruct other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
-    }
-
-    [CopyByRef]
-    public class DataDummyClass : ISelfSerialize, IEquatable<DataDummyClass>
-    {
-        public string Value = string.Empty;
-        public void Deserialize(string value)
-        {
-            Value = value;
-        }
-
-        public string Serialize()
-        {
-            return Value;
-        }
-
-        public bool Equals(DataDummyClass? other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return Value == other.Value;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            if (obj.GetType() != this.GetType())
-                return false;
-            return Equals((DataDummyClass) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
-    }
 
     [DataDefinition]
     public class DataDefTestDummy
@@ -105,12 +32,26 @@ public sealed class DataDefinitionTests : SerializationTest
         [DataField("nb")] public DataDummyStruct? nb = new(){Value = "default"};
         [DataField("nc")] public DataDummyClass? nc = new(){Value = "default"};
 
-        [DataField("ac")] public int ac = Int32.MaxValue;
-        [DataField("bc")] public DataDummyStruct bc = new(){Value = "default"};
-        [DataField("cc")] public DataDummyClass cc = new(){Value = "default"};
-        [DataField("nac")] public int? nac = Int32.MaxValue;
-        [DataField("nbc")] public DataDummyStruct? nbc = new(){Value = "default"};
-        [DataField("ncc")] public DataDummyClass? ncc = new(){Value = "default"};
+        [DataField("acv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public int acv = Int32.MaxValue;
+        [DataField("bcv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public DataDummyStruct bcv = new(){Value = "default"};
+        [DataField("ccv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public DataDummyClass ccv = new(){Value = "default"};
+        [DataField("nacv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public int? nacv = Int32.MaxValue;
+        [DataField("nbcv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public DataDummyStruct? nbcv = new(){Value = "default"};
+        [DataField("nccv", customTypeSerializer:typeof(DataDefinitionValueCustomTypeSerializer))] public DataDummyClass? nccv = new(){Value = "default"};
+
+        [DataField("acs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public int acs = Int32.MaxValue;
+        [DataField("bcs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public DataDummyStruct bcs = new(){Value = "default"};
+        [DataField("ccs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public DataDummyClass ccs = new(){Value = "default"};
+        [DataField("nacs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public int? nacs = Int32.MaxValue;
+        [DataField("nbcs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public DataDummyStruct? nbcs = new(){Value = "default"};
+        [DataField("nccs", customTypeSerializer:typeof(DataDefinitionSequenceCustomTypeSerializer))] public DataDummyClass? nccs = new(){Value = "default"};
+
+        [DataField("acm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public int acm = Int32.MaxValue;
+        [DataField("bcm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyStruct bcm = new(){Value = "default"};
+        [DataField("ccm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyClass ccm = new(){Value = "default"};
+        [DataField("nacm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public int? nacm = Int32.MaxValue;
+        [DataField("nbcm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyStruct? nbcm = new(){Value = "default"};
+        [DataField("nccm", customTypeSerializer:typeof(DataDefinitionMappingCustomTypeSerializer))] public DataDummyClass? nccm = new(){Value = "default"};
     }
 
     private static IEnumerable<object?[]> BaseFieldData = new[]
@@ -138,26 +79,61 @@ public sealed class DataDefinitionTests : SerializationTest
         }
     };
 
+    private static Dictionary<Type, object> _returnMap => new()
+    {
+        { typeof(int), static () => SerializerReturnInt },
+        { typeof(DataDummyStruct), static () => SerializerReturnStruct },
+        { typeof(DataDummyClass), static () => SerializerReturnClass },
+    };
+
     public static IEnumerable<object?[]> NullableFieldsData => BaseFieldData.SelectMany(x =>
     {
+        var type = x[2]!.GetType().GetGenericArguments()[0];
+
         //nullable
         var nul = (object?[])x.Clone();
         nul[0] = $"n{nul[0]}";
 
         //nullable cts
-        var nulcts = (object?[])x.Clone();
-        nulcts[0] = $"n{nulcts[0]}c";
+        var nulctsv = (object?[])x.Clone();
+        nulctsv[0] = $"n{nulctsv[0]}cv";
+        nulctsv[1] = SerializerValueDataNode;
+        nulctsv[2] = _returnMap[type];
 
-        return new[] { nul, nulcts };
+        var nulctss = (object?[])x.Clone();
+        nulctss[0] = $"n{nulctss[0]}cs";
+        nulctss[1] = SerializerSequenceDataNode;
+        nulctss[2] = _returnMap[type];
+
+        var nulctsm = (object?[])x.Clone();
+        nulctsm[0] = $"n{nulctsm[0]}cm";
+        nulctsm[1] = SerializerMappingDataNode;
+        nulctsm[2] = _returnMap[type];
+
+        return new[] { nul, nulctsv, nulctss, nulctsm };
     });
 
     public static IEnumerable<object?[]> RegularFieldsData => BaseFieldData.SelectMany(x =>
     {
-        //regular cts
-        var cts = (object?[])x.Clone();
-        cts[0] = $"{cts[0]}c";
+        var type = x[2]!.GetType().GetGenericArguments()[0];
 
-        return new[] { x, cts };
+        //regular cts
+        var ctsv = (object?[])x.Clone();
+        ctsv[0] = $"{ctsv[0]}c";
+        ctsv[1] = SerializerValueDataNode;
+        ctsv[2] = _returnMap[type];
+
+        var ctss = (object?[])x.Clone();
+        ctss[0] = $"{ctss[0]}c";
+        ctss[1] = SerializerSequenceDataNode;
+        ctss[2] = _returnMap[type];
+
+        var ctsm = (object?[])x.Clone();
+        ctsm[0] = $"{ctsm[0]}c";
+        ctsm[1] = SerializerMappingDataNode;
+        ctsm[2] = _returnMap[type];
+
+        return new[] { x, ctsv, ctss, ctsm };
     });
 
     public static IEnumerable<object?[]> AllFieldsData =>
@@ -210,7 +186,7 @@ public sealed class DataDefinitionTests : SerializationTest
         var mapping = Serialization.WriteValueAs<MappingDataNode>(dataDef);
         Assert.That(mapping, Has.Count.EqualTo(1));
         Assert.That(mapping.Has(fieldName));
-        Assert.That(mapping[fieldName], Is.TypeOf<ValueDataNode>());
+        Assert.That(mapping[fieldName], Is.TypeOf(node.GetType()));
         Assert.That(mapping[fieldName], Is.EqualTo(node));
     }
 

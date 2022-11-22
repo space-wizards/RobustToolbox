@@ -53,14 +53,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(
                                     Expression.Call(
-                            managerConst,
-                            "Read",
-                            new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
-                            Expression.Convert(nodeVariable, typeof(ValueDataNode)),
-                            contextParam,
-                            skipHookParam,
-                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
-                            Expression.Constant(!isNullable)), nullable, fieldType))),
+                                        managerConst,
+                                        "Read",
+                                        new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
+                                        Expression.Convert(nodeVariable, typeof(ValueDataNode)),
+                                        contextParam,
+                                        skipHookParam,
+                                        Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                                        Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(ValueDataNode))));
                     }
 
@@ -68,14 +68,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     {
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                            managerConst,
-                            "Read",
-                            new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
-                            Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
-                            contextParam,
-                            skipHookParam,
-                            Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
-                            Expression.Constant(!isNullable)), nullable, fieldType))),
+                                    managerConst,
+                                    "Read",
+                                    new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
+                                    Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
+                                    contextParam,
+                                    skipHookParam,
+                                    Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                                    Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(SequenceDataNode))));
                     }
 
@@ -86,11 +86,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                     managerConst,
                                     "Read",
                                     new []{fieldType, typeof(MappingDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
-                                Expression.Convert(nodeVariable, typeof(MappingDataNode)),
+                                    Expression.Convert(nodeVariable, typeof(MappingDataNode)),
                                     contextParam,
-                                skipHookParam,
-                                Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
-                                    Expression.Constant(!isNullable)), nullable, fieldType))),
+                                    skipHookParam,
+                                    Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
+                                    Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(MappingDataNode))));
                     }
 
@@ -194,7 +194,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+                var isNullable = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
 
                 Expression call;
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
@@ -202,14 +202,35 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
                     var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
+                    Expression valueAccess = fieldDefinition.FieldType.IsValueType && isNullable
+                        ? Expression.Variable(fieldType)
+                        : Expression.Convert(valueVar, fieldType);
+
                     call = Expression.Call(
                         managerConst,
                         "WriteValue",
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
-                        Expression.Convert(valueVar, fieldType),
+                        valueAccess,
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(!nullableOverride));
+                        Expression.Constant(!isNullable));
+
+                    if (fieldDefinition.FieldType.IsValueType && isNullable)
+                    {
+                        var nodeVar = Expression.Variable(typeof(DataNode));
+                        call = Expression.Block(
+                            new []{nodeVar},
+                            Expression.IfThenElse(
+                                SerializationManager.StructNullHasValue(valueVar),
+                                Expression.Block(
+                                    new[] { (ParameterExpression)valueAccess },
+                                    Expression.Assign(valueAccess, Expression.Convert(valueVar, fieldType)),
+                                    Expression.Assign(nodeVar, SerializationManager.WrapNullableIfNeededExpression(call, true))),
+                                isNullable
+                                    ? Expression.Assign(nodeVar, Expression.Constant(ValueDataNode.Null()))
+                                    : ExpressionUtils.ThrowExpression<NullNotAllowedException>()),
+                            nodeVar);
+                    }
                 }
                 else
                 {
@@ -220,7 +241,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         valueVar,
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(!nullableOverride));
+                        Expression.Constant(!isNullable));
                 }
 
                 Expression writeExpression;
@@ -308,33 +329,52 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+                var isNullable = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
 
                 Expression call;
                 //todo paul make this work sanely with nullable<t>
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
                 {
-                    var targetValue = Expression.Variable(fieldDefinition.FieldType);
+                    var targetValue = Expression.Variable(fieldDefinition.FieldType.EnsureNotNullableType());
+                    var finalTargetValue = Expression.Variable(fieldDefinition.FieldType);
+                    var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
 
-                    call = Expression.Call(
+                    var sourceAccess = fieldType.IsValueType && isNullable
+                        ? Expression.Variable(fieldType)
+                        : AccessExpression(i, sourceParam);
+
+                    call = Expression.Block(
+                        Expression.Call(
                         managerConst,
                         "CopyTo",
-                        new[]{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
-                        AccessExpression(i, sourceParam),
+                        new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
+                        sourceAccess,
                         targetValue,
                         contextParam,
                         skipHookParam,
-                        Expression.Constant(!nullableOverride));
+                        Expression.Constant(!isNullable)),
+                        Expression.Assign(finalTargetValue, Expression.Convert(targetValue, fieldDefinition.FieldType)));
+
+                    //null check for non-value types is handled in copyto. we are just making sure the types match up
+                    if (isNullable && fieldType.IsValueType)
+                    {
+                        var sourceValue = Expression.Variable(fieldDefinition.FieldType);
+                        call = Expression.Block(
+                            new[] { sourceValue, (ParameterExpression)sourceAccess },
+                            Expression.Assign(sourceValue, AccessExpression(i, sourceParam)),
+                            Expression.IfThenElse(SerializationManager.StructNullHasValue(sourceValue),
+                                Expression.Block(
+                                    Expression.Assign(sourceAccess, Expression.Convert(sourceValue, fieldType)),
+                                    call),
+                                Expression.Assign(finalTargetValue,
+                                    SerializationManager.GetNullExpression(managerConst, fieldType))));
+                    }
 
                     call = Expression.Block(
-                        new[] { targetValue },
-                        Expression.Assign(targetValue,
-                            SerializationManager.WrapNullableIfNeededExpression(
-                                manager.InstantiationExpression(managerConst, fieldDefinition.FieldType.EnsureNotNullableType()),
-                                fieldDefinition.FieldType.IsNullable(),
-                                fieldDefinition.FieldType.EnsureNotNullableType())),
+                        new[] { finalTargetValue, targetValue },
+                        Expression.Assign(targetValue, manager.InstantiationExpression(managerConst, fieldDefinition.FieldType.EnsureNotNullableType())),
                         call,
-                        targetValue);
+                        finalTargetValue);
                 }
                 else if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].CopyCreator)
                 {
@@ -345,7 +385,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         AccessExpression(i, sourceParam),
                         contextParam,
                         skipHookParam,
-                        Expression.Constant(!nullableOverride));
+                        Expression.Constant(!isNullable));
                 }
                 else
                 {
@@ -356,7 +396,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         AccessExpression(i, sourceParam),
                         contextParam,
                         skipHookParam,
-                        Expression.Constant(!nullableOverride));
+                        Expression.Constant(!isNullable));
                 }
 
                 expressions.Add(AssignIfNotDefaultExpression(i, targetParam, call));

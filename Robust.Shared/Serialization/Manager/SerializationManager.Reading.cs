@@ -282,7 +282,7 @@ namespace Robust.Shared.Serialization.Manager
                     call));
 
             //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue
-            call = WrapNullableIfNeededExpression(call, nullable, actualType);
+            call = WrapNullableIfNeededExpression(call, nullable);
 
             // early-out null before anything
             var returnValue = Expression.Variable(nullable ? actualType.EnsureNullableType() : actualType);

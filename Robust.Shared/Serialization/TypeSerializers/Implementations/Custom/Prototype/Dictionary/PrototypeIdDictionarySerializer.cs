@@ -5,7 +5,6 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary
@@ -25,7 +24,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         ITypeValidator<IReadOnlyDictionary<string, TValue>, MappingDataNode>
         where TPrototype : class, IPrototype
     {
-        private readonly DictionarySerializer<string, TValue> _dictionarySerializer = new();
         protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
         private ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)

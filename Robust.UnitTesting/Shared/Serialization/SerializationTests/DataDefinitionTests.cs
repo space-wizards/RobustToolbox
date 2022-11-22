@@ -119,17 +119,17 @@ public sealed partial class DataDefinitionTests : SerializationTest
 
         //regular cts
         var ctsv = (object?[])x.Clone();
-        ctsv[0] = $"{ctsv[0]}c";
+        ctsv[0] = $"{ctsv[0]}cv";
         ctsv[1] = SerializerValueDataNode;
         ctsv[2] = _returnMap[type];
 
         var ctss = (object?[])x.Clone();
-        ctss[0] = $"{ctss[0]}c";
+        ctss[0] = $"{ctss[0]}cs";
         ctss[1] = SerializerSequenceDataNode;
         ctss[2] = _returnMap[type];
 
         var ctsm = (object?[])x.Clone();
-        ctsm[0] = $"{ctsm[0]}c";
+        ctsm[0] = $"{ctsm[0]}cm";
         ctsm[1] = SerializerMappingDataNode;
         ctsm[2] = _returnMap[type];
 
@@ -282,7 +282,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, value());
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, null);
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.That(GetValue(target!, fieldName), Is.EqualTo(value()));
     }
@@ -290,13 +290,11 @@ public sealed partial class DataDefinitionTests : SerializationTest
     [TestCaseSource(nameof(RegularFieldsData))]
     public void CopyTo_RT_RS_RT<T>(string fieldName, DataNode node, Func<T> value, Func<T> altValue)
     {
-        if(typeof(T).IsValueType) return;
-
         var source = new DataDefTestDummy();
         SetValue(source, fieldName, value());
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, altValue());
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.That(GetValue(target!, fieldName), Is.EqualTo(value()));
     }

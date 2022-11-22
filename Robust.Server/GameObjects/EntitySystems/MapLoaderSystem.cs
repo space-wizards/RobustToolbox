@@ -45,6 +45,7 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -60,7 +61,7 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
-        _context = new MapSerializationContext(_factory, EntityManager, _serManager);
+        _context = new MapSerializationContext();
     }
 
     #region Public
@@ -406,12 +407,22 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (data.TryGet("components", out SequenceDataNode? componentList))
         {
+            var prototype = meta.EntityPrototype;
+            _context.CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                _context.CurrentReadingEntityComponents[value] = datanode;
+                var compType = _componentFactory.GetRegistration(value).Type;
+                if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
+                {
+                    datanode =
+                        _serManager.PushCompositionWithGenericNode(
+                            compType,
+                            new[] { protData.Mapping }, datanode, _context);
+                }
+                _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
             }
         }
 
@@ -622,8 +633,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
-                _serManager.Read(chunkNode, _context, value: chunk);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetChunk(chunkOffsetX, chunkOffsetY));
             }
         }
     }
@@ -1000,18 +1010,11 @@ public sealed class MapLoaderSystem : EntitySystem
     internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
         ITypeSerializer<EntityUid, ValueDataNode>
     {
-        private readonly IComponentFactory _factory;
-        private readonly IEntityManager _entityManager;
-        private readonly ISerializationManager _serializationManager;
-
-        public Dictionary<(Type, Type), object> TypeReaders { get; }
-        public Dictionary<Type, object> TypeWriters { get; }
-        public Dictionary<Type, object> TypeCopiers => TypeWriters;
-        public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
+        public SerializationManager.SerializerProvider SerializerProvider => new();
 
         // Run-specific data
         public Dictionary<ushort, string>? TileMap;
-        public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
+        public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
         public HashSet<string> CurrentlyIgnoredComponents = new();
         public string? CurrentWritingComponent;
         public EntityUid? CurrentWritingEntity;
@@ -1019,20 +1022,9 @@ public sealed class MapLoaderSystem : EntitySystem
         private Dictionary<int, EntityUid> _uidEntityMap = new();
         private Dictionary<EntityUid, int> _entityUidMap = new();
 
-        public MapSerializationContext(IComponentFactory factory, IEntityManager entityManager, ISerializationManager serializationManager)
+        public MapSerializationContext()
         {
-            _factory = factory;
-            _entityManager = entityManager;
-            _serializationManager = serializationManager;
-
-            TypeWriters = new Dictionary<Type, object>()
-            {
-                {typeof(EntityUid), this}
-            };
-            TypeReaders = new Dictionary<(Type, Type), object>()
-            {
-                {(typeof(EntityUid), typeof(ValueDataNode)), this}
-            };
+            SerializerProvider.RegisterSerializer(this);
         }
 
         public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
@@ -1050,29 +1042,14 @@ public sealed class MapLoaderSystem : EntitySystem
         }
 
         // Create custom object serializers that will correctly allow data to be overriden by the map file.
-        MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
-            MappingDataNode? protoData)
+        bool IEntityLoadContext.TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
         {
-            if (CurrentReadingEntityComponents == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-
-            if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
-            {
-                if (protoData == null) return mapping.Copy();
-
-                return _serializationManager.PushCompositionWithGenericNode(
-                    _factory.GetRegistration(componentName).Type, new[] { protoData }, mapping, this);
-            }
-
-            return protoData ?? new MappingDataNode();
+            return CurrentReadingEntityComponents.TryGetValue(componentName, out component);
         }
 
         public IEnumerable<string> GetExtraComponentTypes()
         {
-            return CurrentReadingEntityComponents!.Keys;
+            return CurrentReadingEntityComponents.Keys;
         }
 
         public bool ShouldSkipComponent(string compName)
@@ -1118,7 +1095,7 @@ public sealed class MapLoaderSystem : EntitySystem
             ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, EntityUid _)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? _)
         {
             if (node.Value == "null")
             {

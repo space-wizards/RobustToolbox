@@ -319,20 +319,7 @@ namespace Robust.Shared.Prototypes
                     .Select(item =>
                     {
                         var (id, mapping) = item;
-                        if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
-                            abstractNode.AsBool())
-                            return (id, (IPrototype?)null);
-
-                        try
-                        {
-                            var prototype = (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
-                            return (id, prototype);
-                        }
-                        catch (Exception e)
-                        {
-                            _sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
-                            return (id, null);
-                        }
+                        return (id, TryReadPrototype(kind, id, mapping, hookCtx));
                     });
 
                 foreach (var (id, prototype) in prototypes)
@@ -351,18 +338,20 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private void TryReadPrototype(Type kind, string id, MappingDataNode mapping, SerializationHookContext hookCtx)
+        private IPrototype? TryReadPrototype(Type kind, string id, MappingDataNode mapping, SerializationHookContext hookCtx)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
-                return;
+                return null;
+
             try
             {
-                _kinds[kind].Instances[id] = (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
+                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
             }
             catch (Exception e)
             {
                 _sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
+                return null;
             }
         }
 

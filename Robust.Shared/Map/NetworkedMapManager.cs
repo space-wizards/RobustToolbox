@@ -177,7 +177,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         if (xformComp.MapID != gridDatum.Coordinates.MapId)
             throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
-        // TODO: SHITCODE ALERT
+        // TODO: SHITCODE ALERT -> When we get proper ECS we can delete this.
         if (xformComp.WorldPosition != gridDatum.Coordinates.Position)
         {
             xformComp.WorldPosition = gridDatum.Coordinates.Position;

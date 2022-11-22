@@ -12,9 +12,9 @@ namespace Robust.Benchmarks.Serialization
     {
         public SerializationBenchmark()
         {
-            IoCManager.InitThread();
-            ServerIoC.RegisterIoC();
-            IoCManager.BuildGraph();
+            var deps = IoCManager.InitThread();
+            ServerIoC.RegisterIoC(deps);
+            deps.BuildGraph();
 
             var assemblies = new[]
             {
@@ -25,12 +25,12 @@ namespace Robust.Benchmarks.Serialization
 
             foreach (var assembly in assemblies)
             {
-                IoCManager.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
+                deps.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
             }
 
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+            deps.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
-            SerializationManager = IoCManager.Resolve<ISerializationManager>();
+            SerializationManager = deps.Resolve<ISerializationManager>();
         }
 
         protected ISerializationManager SerializationManager { get; }

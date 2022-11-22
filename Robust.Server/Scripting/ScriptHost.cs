@@ -35,6 +35,7 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IConGroupController _conGroupController = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
 
         readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
             new();
@@ -102,7 +103,7 @@ namespace Robust.Server.Scripting
 
             ScriptInstanceShared.InitDummy();
 
-            var instance = new ScriptInstance();
+            var instance = new ScriptInstance(_reflectionManager, _dependencyCollection);
             instances.Add(message.ScriptSession, instance);
 
             reply.WasAccepted = true;
@@ -340,22 +341,26 @@ namespace Robust.Server.Scripting
 
             public (string[] imports, string code)? AutoImportRepeatBuffer;
 
-            public ScriptInstance()
+            public ScriptInstance(IReflectionManager reflection, IDependencyCollection dependency)
             {
-                Globals = new ScriptGlobalsImpl(this);
+                Globals = new ScriptGlobalsImpl(this, reflection, dependency);
             }
         }
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
-            [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+            private readonly IReflectionManager _reflectionManager;
 
             private readonly ScriptInstance _scriptInstance;
 
-            public ScriptGlobalsImpl(ScriptInstance scriptInstance)
+            public ScriptGlobalsImpl(
+                ScriptInstance scriptInstance,
+                IReflectionManager refl,
+                IDependencyCollection dependency)
+                : base(dependency)
             {
+                _reflectionManager = refl;
                 _scriptInstance = scriptInstance;
-                IoCManager.InjectDependencies(this);
             }
 
             protected override void WriteSyntax(object toString)
@@ -392,5 +397,8 @@ namespace Robust.Server.Scripting
     [PublicAPI]
     public abstract class ScriptGlobals : ScriptGlobalsShared
     {
+        protected ScriptGlobals(IDependencyCollection dependencies) : base(dependencies)
+        {
+        }
     }
 }

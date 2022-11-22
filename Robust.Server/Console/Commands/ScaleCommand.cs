@@ -10,12 +10,12 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
-public sealed class ScaleCommand : IConsoleCommand
+public sealed class ScaleCommand : LocalizedCommands
 {
-    public string Command => "scale";
-    public string Description => "Increases or decreases an entity's size naively";
-    public string Help => $"{Command} <entityUid> <float>";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
+    public override string Command => "scale";
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)
         {
@@ -43,19 +43,17 @@ public sealed class ScaleCommand : IConsoleCommand
 
         // Event for content to use
         // We'll just set engine stuff here
-        var entManager = IoCManager.Resolve<IEntityManager>();
-
-        entManager.EnsureComponent<ScaleVisualsComponent>(uid);
+        _entityManager.EnsureComponent<ScaleVisualsComponent>(uid);
         var @event = new ScaleEntityEvent();
-        entManager.EventBus.RaiseLocalEvent(uid, ref @event);
+        _entityManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        var appearanceComponent = entManager.EnsureComponent<ServerAppearanceComponent>(uid);
+        var appearanceComponent = _entityManager.EnsureComponent<ServerAppearanceComponent>(uid);
         if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
             oldScale = Vector2.One;
 
         appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
 
-        if (entManager.TryGetComponent(uid, out FixturesComponent? manager))
+        if (_entityManager.TryGetComponent(uid, out FixturesComponent? manager))
         {
             foreach (var (_, fixture) in manager.Fixtures)
             {
@@ -86,7 +84,7 @@ public sealed class ScaleCommand : IConsoleCommand
                 }
             }
 
-            entManager.EntitySysManager.GetEntitySystem<FixtureSystem>().FixtureUpdate(manager);
+            _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>().FixtureUpdate(manager);
         }
     }
 

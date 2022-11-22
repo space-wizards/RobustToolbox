@@ -121,16 +121,15 @@ public sealed class ProfViewManager
     }
 }
 
-public sealed class ProfSnapshotCommand : IConsoleCommand
+public sealed class ProfSnapshotCommand : LocalizedCommands
 {
-    // ReSharper disable once StringLiteralTypo
-    public string Command => "profsnap";
-    public string Description => "Make a profiling snapshot";
-    public string Help => "";
+    [Dependency] private readonly ProfViewManager _profView = default!;
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    // ReSharper disable once StringLiteralTypo
+    public override string Command => "profsnap";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var profViewManager = IoCManager.Resolve<ProfViewManager>();
-        profViewManager.Snap();
+        _profView.Snap();
     }
 }

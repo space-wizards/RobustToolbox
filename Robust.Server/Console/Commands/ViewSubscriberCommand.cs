@@ -7,12 +7,13 @@ using Robust.Shared.Players;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class AddViewSubscriberCommand : IConsoleCommand
+    public sealed class AddViewSubscriberCommand : LocalizedCommands
     {
-        public string Command => "addview";
-        public string Description => $"Allows you to subscribe to an entity's view for debugging purposes";
-        public string Help => $"{Command} <entityUid>";
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        [Dependency] private readonly IEntityManager _entities = default!;
+
+        public override string Command => "addview";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var session = shell.Player;
 
@@ -34,24 +35,22 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
-
-            if (!entManager.EntityExists(uid))
+            if (!_entities.EntityExists(uid))
             {
                 shell.WriteError($"Unable to find entity {uid}");
                 return;
             }
 
-            EntitySystem.Get<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
+            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
         }
 
-        public sealed class RemoveViewSubscriberCommand : IConsoleCommand
+        public sealed class RemoveViewSubscriberCommand : LocalizedCommands
         {
-            public string Command => "removeview";
-            public string Description => $"Allows you to unsubscribe to an entity's view for debugging purposes";
-            public string Help => $"{Command} <entityUid>";
+            [Dependency] private readonly IEntityManager _entities = default!;
 
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            public override string Command => "removeview";
+
+            public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var session = shell.Player;
 
@@ -73,15 +72,13 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                var entManager = IoCManager.Resolve<IEntityManager>();
-
-                if (!entManager.EntityExists(uid))
+                if (!_entities.EntityExists(uid))
                 {
                     shell.WriteError($"Unable to find entity {uid}");
                     return;
                 }
 
-                EntitySystem.Get<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
+                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
             }
         }
     }

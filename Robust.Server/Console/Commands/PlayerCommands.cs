@@ -13,13 +13,13 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal sealed class TeleportCommand : IConsoleCommand
+    internal sealed class TeleportCommand : LocalizedCommands
     {
-        public string Command => "tp";
-        public string Description => "Teleports a player to any location in the round.";
-        public string Help => "tp <x> <y> [<mapID>]";
+        [Dependency] private readonly IMapManager _map = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "tp";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame)
@@ -35,8 +35,6 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var mapMgr = IoCManager.Resolve<IMapManager>();
-
             var position = new Vector2(posX, posY);
 
             transform.AttachToGridOrMap();
@@ -47,13 +45,13 @@ namespace Robust.Server.Console.Commands
             else
                 mapId = transform.MapID;
 
-            if (!mapMgr.MapExists(mapId))
+            if (!_map.MapExists(mapId))
             {
                 shell.WriteError($"Map {mapId} doesn't exist!");
                 return;
             }
 
-            if (mapMgr.TryFindGridAt(mapId, position, out var grid))
+            if (_map.TryFindGridAt(mapId, position, out var grid))
             {
                 var gridPos = grid.WorldToLocal(position);
 
@@ -61,7 +59,7 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                var mapEnt = mapMgr.GetMapEntityIdOrThrow(mapId);
+                var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
                 transform.WorldPosition = position;
                 transform.AttachParent(mapEnt);
             }
@@ -70,23 +68,21 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class TeleportToCommand : IConsoleCommand
+    public sealed class TeleportToCommand : LocalizedCommands
     {
-        public string Command => "tpto";
-        public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
-        public string Help => "tpto <username|uid> [username|uid]...";
+        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private readonly IEntityManager _entities = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "tpto";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length == 0)
                 return;
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            var playerMan = IoCManager.Resolve<IPlayerManager>();
-
             var target = args[^1];
 
-            if (!TryGetTransformFromUidOrUsername(target, shell, entMan, playerMan, out var targetTransform))
+            if (!TryGetTransformFromUidOrUsername(target, shell, _entities, _players, out var targetTransform))
                 return;
 
             var targetCoords = targetTransform.Coordinates;
@@ -100,7 +96,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent? playerTransform))
+                if (!_entities.TryGetComponent(player.AttachedEntity, out TransformComponent? playerTransform))
                 {
                     shell.WriteError("You don't have an entity.");
                     return;
@@ -116,7 +112,7 @@ namespace Robust.Server.Console.Commands
                     if (victim == target)
                         continue;
 
-                    if (!TryGetTransformFromUidOrUsername(victim, shell, entMan, playerMan, out var victimTransform))
+                    if (!TryGetTransformFromUidOrUsername(victim, shell, _entities, _players, out var victimTransform))
                         return;
 
                     victimTransform.Coordinates = targetCoords;
@@ -145,13 +141,12 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class ListPlayers : IConsoleCommand
+    public sealed class ListPlayers : LocalizedCommands
     {
-        public string Command => "listplayers";
-        public string Description => "Lists all players currently connected";
-        public string Help => "listplayers";
+        [Dependency] private readonly IPlayerManager _players = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "listplayers";
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
@@ -159,7 +154,7 @@ namespace Robust.Server.Console.Commands
 
             var sb = new StringBuilder();
 
-            var players = IoCManager.Resolve<IPlayerManager>().ServerSessions;
+            var players = _players.ServerSessions;
             sb.AppendLine($"{"Player Name",20} {"Status",12} {"Playing Time",14} {"Ping",9} {"IP EndPoint",20}");
             sb.AppendLine("-------------------------------------------------------------------------------");
 
@@ -177,19 +172,19 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal sealed class KickCommand : IConsoleCommand
+    internal sealed class KickCommand : LocalizedCommands
     {
-        public string Command => "kick";
-        public string Description => "Kicks a connected player out of the server, disconnecting them.";
-        public string Help => "kick <PlayerIndex> [<Reason>]";
+        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private readonly IServerNetManager _netManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "kick";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var players = IoCManager.Resolve<IPlayerManager>();
             if (args.Length < 1)
             {
                 var player = shell.Player as IPlayerSession;
-                var toKickPlayer = player ?? players.ServerSessions.FirstOrDefault();
+                var toKickPlayer = player ?? _players.ServerSessions.FirstOrDefault();
                 if (toKickPlayer == null)
                 {
                     shell.WriteLine("You need to provide a player to kick.");
@@ -201,26 +196,23 @@ namespace Robust.Server.Console.Commands
 
             var name = args[0];
 
-            if (players.TryGetSessionByUsername(name, out var target))
+            if (_players.TryGetSessionByUsername(name, out var target))
             {
-                var network = IoCManager.Resolve<IServerNetManager>();
-
                 string reason;
                 if (args.Length >= 2)
                     reason = $"Kicked by console: {string.Join(' ', args[1..])}";
                 else
                     reason = "Kicked by console";
 
-                network.DisconnectChannel(target.ConnectedClient, reason);
+                _netManager.DisconnectChannel(target.ConnectedClient, reason);
             }
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             if (args.Length == 1)
             {
-                var playerManager = IoCManager.Resolve<IPlayerManager>();
-                var options = playerManager.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
+                var options = _players.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
 
                 return CompletionResult.FromHintOptions(options, "<PlayerIndex>");
             }

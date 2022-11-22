@@ -4,30 +4,28 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class DumpEventTablesCommand : IConsoleCommand
+internal sealed class DumpEventTablesCommand : LocalizedCommands
 {
-    public string Command => "dump_event_tables";
-    public string Description => Loc.GetString("cmd-dump_event_tables-desc");
-    public string Help => Loc.GetString("cmd-dump_event_tables-help");
+    [Dependency] private readonly EntityManager _entities = default!;
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "dump_event_tables";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var entMgr = IoCManager.Resolve<EntityManager>();
-        var compFactory = IoCManager.Resolve<IComponentFactory>();
-
         if (args.Length < 1)
         {
             shell.WriteError(Loc.GetString("cmd-dump_event_tables-missing-arg-entity"));
             return;
         }
 
-        if (!EntityUid.TryParse(args[0], out var entity) || !entMgr.EntityExists(entity))
+        if (!EntityUid.TryParse(args[0], out var entity) || !_entities.EntityExists(entity))
         {
             shell.WriteError(Loc.GetString("cmd-dump_event_tables-error-entity"));
             return;
         }
 
-        var eventBus = (EntityEventBus)entMgr.EventBus;
+        var eventBus = (EntityEventBus)_entities.EventBus;
 
         var table = eventBus._entEventTables[entity];
         foreach (var (evType, comps) in table.EventIndices)
@@ -40,13 +38,13 @@ internal sealed class DumpEventTablesCommand : IConsoleCommand
                 ref var entry = ref table.ComponentLists[idx];
                 idx = entry.Next;
 
-                var reg = compFactory.IdxToType(entry.Component);
+                var reg = _componentFactory.IdxToType(entry.Component);
                 shell.WriteLine($"    {reg.Name}");
             }
         }
     }
 
-    public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
             return CompletionResult.FromHint(Loc.GetString("cmd-dump_event_tables-arg-entity"));

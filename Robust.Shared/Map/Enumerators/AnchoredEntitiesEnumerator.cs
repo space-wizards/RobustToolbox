@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.Map;
+namespace Robust.Shared.Map.Enumerators;
 
 public struct AnchoredEntitiesEnumerator : IDisposable
 {

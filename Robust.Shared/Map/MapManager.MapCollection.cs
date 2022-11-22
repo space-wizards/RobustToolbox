@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -228,6 +229,9 @@ internal partial class MapManager
 
     protected MapId CreateMap(MapId? mapId, EntityUid entityUid)
     {
+        if (mapId == MapId.Nullspace)
+            throw new InvalidOperationException("Attempted to create a null-space map.");
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -280,25 +284,5 @@ internal partial class MapManager
         MapCreated?.Invoke(this, args);
 
         return actualId;
-    }
-
-    private void EnsureNullspaceExistsAndClear()
-    {
-        if (!MapExists(MapId.Nullspace))
-            CreateMap(MapId.Nullspace);
-        else
-        {
-            // nullspace ent may not have been allocated, but the mapId does exist, so we are done here
-            if (!_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId) || mapEntId == EntityUid.Invalid)
-                return;
-
-            // the point of this is to completely clear the map without remaking the allocated entity, which would invalidate the
-            // euid which I'm sure some code has cached. Notice this does not touch the map ent itself, so any comps added to it are not removed,
-            // so i guess don't do that?
-            foreach (var childTransform in EntityManager.GetComponent<TransformComponent>(mapEntId).Children.ToArray())
-            {
-                EntityManager.DeleteEntity(childTransform.Owner);
-            }
-        }
     }
 }

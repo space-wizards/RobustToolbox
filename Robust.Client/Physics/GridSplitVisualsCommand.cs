@@ -4,14 +4,15 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Physics;
 
-public sealed class GridSplitVisualCommand : IConsoleCommand
+public sealed class GridSplitVisualCommand : LocalizedCommands
 {
-    public string Command => SharedGridFixtureSystem.ShowGridNodesCommand;
-    public string Description => "Shows the nodes for grid split purposes";
-    public string Help => $"{Command}";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+
+    public override string Command => SharedGridFixtureSystem.ShowGridNodesCommand;
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var system = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
+        var system = _systemManager.GetEntitySystem<GridFixtureSystem>();
         system.EnableDebug ^= true;
         shell.WriteLine($"Toggled gridsplit node visuals to {system.EnableDebug}");
     }

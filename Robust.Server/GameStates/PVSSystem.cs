@@ -13,6 +13,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -97,7 +98,6 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
-    private readonly List<MapGrid> _gridsPool = new(8);
 
     private ISawmill _sawmill = default!;
 
@@ -288,7 +288,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>();
+        var collection = new PVSCollection<TIndex>(EntityManager);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -339,7 +339,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component, xformQuery);
-        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
+        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false, ev.ParentChanged);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ref TransformStartupEvent args)
@@ -357,10 +357,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component, xformQuery);
-        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
+        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false, false);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover, bool forceDirty)
     {
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
@@ -372,9 +372,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
         if (xform.GridUid != null)
-            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices);
+            _entityPvsCollection.UpdateIndex(uid, xform.GridUid.Value, indices, forceDirty: forceDirty);
         else
-            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices);
+            _entityPvsCollection.UpdateIndex(uid, xform.MapID, indices, forceDirty: forceDirty);
 
         var children = xform.ChildEnumerator;
 
@@ -384,7 +384,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // directly.
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
+            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true, forceDirty);
         }
     }
 
@@ -545,38 +545,46 @@ internal sealed partial class PVSSystem : EntitySystem
                     _gridIndices[visMask] = gridDict;
                 }
 
-                _gridsPool.Clear();
+                var state = (i, transformQuery, viewPos, range, visMask, gridDict, playerChunks, _chunkList);
 
-                foreach (var mapGrid in _mapManager.FindGridsIntersecting(
-                             mapId,
-                             new Box2(viewPos - range, viewPos + range),
-                             _gridsPool,
-                             xformQuery,
-                             physicsQuery,
-                             true))
-                {
-                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
-
-                    var gridChunkEnumerator =
-                        new ChunkIndicesEnumerator(localPos, range, ChunkSize);
-
-                    while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                _mapManager.FindGridsIntersectingApprox(mapId, new Box2(viewPos - range, viewPos + range),
+                    ref state, static (
+                        MapGridComponent mapGrid,
+                        ref (int i,
+                            EntityQuery<TransformComponent> transformQuery,
+                            Vector2 viewPos,
+                            float range,
+                            uint visMask,
+                            Dictionary<GridChunkLocation, int> gridDict,
+                            HashSet<int>[] playerChunks,
+                            List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
-                        var entry = (visMask, chunkLocation);
+                        {
+                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
-                        if (gridDict.TryGetValue(chunkLocation, out var indexOf))
-                        {
-                            playerChunks[i].Add(indexOf);
+                            var gridChunkEnumerator =
+                                new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
+
+                            while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                            {
+                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
+                                var entry = (tuple.visMask, chunkLocation);
+
+                                if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
+                                {
+                                    tuple.playerChunks[tuple.i].Add(indexOf);
+                                }
+                                else
+                                {
+                                    tuple.playerChunks[tuple.i].Add(tuple._chunkList.Count);
+                                    tuple.gridDict.Add(chunkLocation, tuple._chunkList.Count);
+                                    tuple._chunkList.Add(entry);
+                                }
+                            }
+
+                            return true;
                         }
-                        else
-                        {
-                            playerChunks[i].Add(_chunkList.Count);
-                            gridDict.Add(chunkLocation, _chunkList.Count);
-                            _chunkList.Add(entry);
-                        }
-                    }
-                }
+                    });
             }
         }
 
@@ -734,7 +742,7 @@ internal sealed partial class PVSSystem : EntitySystem
         var entStateCount = 0;
 
         var stack = _stackPool.Get();
-        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop0in less visible.
+        // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
         foreach (var i in chunkIndices)
         {
             var cache = chunkCache[i];
@@ -827,7 +835,7 @@ internal sealed partial class PVSSystem : EntitySystem
 #if !FULL_RELEASE
                 // This happens relatively frequently for the current TickBuffer value, and doesn't really provide any
                 // useful info when not debugging/testing locally. Hence disabled on FULL_RELEASE.
-                _sawmill.Warning($"Client {session} exceeded tick buffer.");
+                _sawmill.Debug($"Client {session} exceeded tick buffer.");
 #endif
             }
             else if (oldEntry.Value.Value != lastAcked)
@@ -1153,6 +1161,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 netComps!.Add(netId);
         }
 
+        DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
         var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;

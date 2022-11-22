@@ -11,6 +11,7 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         internal BroadphaseData? Broadphase;
 
-        internal bool MatricesDirty = false;
+        internal bool MatricesDirty = true;
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
@@ -67,11 +68,17 @@ namespace Robust.Shared.GameObjects
 
         // used for lerping
 
-        internal Vector2? _nextPosition;
-        internal Angle? _nextRotation;
+        [ViewVariables]
+        public Vector2? NextPosition { get; internal set; }
 
-        internal Vector2 _prevPosition;
-        internal Angle _prevRotation;
+        [ViewVariables]
+        public Angle? NextRotation { get; internal set; }
+
+        [ViewVariables]
+        public Vector2 PrevPosition { get; internal set; }
+
+        [ViewVariables]
+        public Angle PrevRotation { get; internal set; }
 
         // Cache changes so we can distribute them after physics is done (better cache)
         internal EntityCoordinates? _oldCoords;
@@ -377,8 +384,8 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
             set
             {
-                // This will be set again when the transform starts, actually anchoring it.
-                if (LifeStage < ComponentLifeStage.Starting)
+                // This will be set again when the transform initializes, actually anchoring it.
+                if (!Initialized)
                 {
                     _anchored = value;
                 }
@@ -418,31 +425,6 @@ namespace Robust.Shared.GameObjects
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;
-
-        [ViewVariables]
-        public Vector2? LerpDestination
-        {
-            get => _nextPosition;
-            internal set
-            {
-                _nextPosition = value;
-                ActivelyLerping = true;
-            }
-        }
-
-        [ViewVariables]
-        internal Angle? LerpAngle
-        {
-            get => _nextRotation;
-            set
-            {
-                _nextRotation = value;
-                ActivelyLerping = true;
-            }
-        }
-
-        [ViewVariables] internal Vector2 LerpSource => _prevPosition;
-        [ViewVariables] internal Angle LerpSourceAngle => _prevRotation;
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 

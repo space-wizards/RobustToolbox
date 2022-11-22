@@ -7,13 +7,14 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddComponentCommand : IConsoleCommand
+    internal sealed class AddComponentCommand : LocalizedCommands
     {
-        public string Command => "addcomp";
-        public string Description => "Adds a component to an entity";
-        public string Help => $"{Command} <uid> <componentName>";
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "addcomp";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -27,9 +28,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            if (!entityManager.EntityExists(uid))
+            if (!_entityManager.EntityExists(uid))
             {
                 shell.WriteLine($"No entity found with id {uid}.");
                 return;
@@ -37,25 +36,23 @@ namespace Robust.Server.Console.Commands
 
             var componentName = args[1];
 
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-
-            if (!compFactory.TryGetRegistration(componentName, out var registration, true))
+            if (!_componentFactory.TryGetRegistration(componentName, out var registration, true))
             {
                 shell.WriteLine($"No component found with name {componentName}.");
                 return;
             }
 
-            if (entityManager.HasComponent(uid, registration.Type))
+            if (_entityManager.HasComponent(uid, registration.Type))
             {
-                shell.WriteLine($"Entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName} already has a {componentName} component.");
+                shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName} already has a {componentName} component.");
             }
 
-            var component = (Component) compFactory.GetComponent(registration.Type);
+            var component = (Component) _componentFactory.GetComponent(registration.Type);
 
             component.Owner = uid;
-            entityManager.AddComponent(uid, component);
+            _entityManager.AddComponent(uid, component);
 
-            shell.WriteLine($"Added {componentName} component to entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+            shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
         }
     }
 }

@@ -4,15 +4,15 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class ReloadLocalizationsCommand : IConsoleCommand
+    internal sealed class ReloadLocalizationsCommand : LocalizedCommands
     {
-        public string Command => "rldloc";
-        public string Description => "Reloads localization (client & server)";
-        public string Help => "Usage: rldloc";
+        [Dependency] private readonly ILocalizationManager _loc = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "rldloc";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<ILocalizationManager>().ReloadLocalizations();
+            _loc.ReloadLocalizations();
 
             shell.RemoteExecuteCommand("sudo rldloc");
         }

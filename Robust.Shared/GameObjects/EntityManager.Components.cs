@@ -466,7 +466,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to remove component from entity '{ToPrettyString(uid)}'");
+                    Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }
             }
 
@@ -950,6 +950,14 @@ namespace Robust.Shared.GameObjects
         public NetComponentEnumerable GetNetComponents(EntityUid uid)
         {
             return new NetComponentEnumerable(_netComponents[uid]);
+        }
+
+        /// <inheritdoc />
+        public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
+        {
+            return _netComponents.TryGetValue(uid, out var data)
+                    ? new NetComponentEnumerable(data)
+                    : null;
         }
 
         #region Join Functions

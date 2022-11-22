@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Timing;
 
 namespace Robust.Server.Maps;
 
@@ -29,6 +30,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
         IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
     {
+        var ind = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], context, skipHook)!;
         var tileNode = (ValueDataNode)node["tiles"];
         var tileBytes = Convert.FromBase64String(tileNode.Value);
 
@@ -38,19 +40,22 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         var mapManager = dependencies.Resolve<IMapManager>();
         mapManager.SuppressOnTileChanged = true;
 
-        if (instantiationDelegate == null)
+        ushort size = 16;
+
+        // TODO: This should be on the context I think?
+        if (node.TryGet("size", out ValueDataNode? sizeNode))
         {
-            throw new InvalidOperationException(
-                $"Someone tried deserializing a gridchunk without passing an instantiationDelegate.");
+            size = (ushort) serializationManager.Read(typeof(ushort), sizeNode, context)!;
         }
 
-        if (context is not MapLoader.MapContext mapContext)
-        {
-            throw new InvalidOperationException(
-                $"Someone tried serializing a gridchunk without passing {nameof(MapLoader.MapContext)} as context.");
-        }
+        var chunk = instantiationDelegate != null ? instantiationDelegate() : new MapChunk(ind.X, ind.Y, size);
 
-        var tileMap = mapContext.TileMap;
+        IReadOnlyDictionary<ushort, string>? tileMap = null;
+
+        if (context is MapLoaderSystem.MapSerializationContext serContext)
+        {
+            tileMap = serContext.TileMap;
+        }
 
         if (tileMap == null)
         {
@@ -58,7 +63,6 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                 $"Someone tried deserializing a gridchunk before deserializing the tileMap.");
         }
 
-        var chunk = instantiationDelegate();
         chunk.SuppressCollisionRegeneration = true;
 
         var tileDefinitionManager = dependencies.Resolve<ITileDefinitionManager>();
@@ -125,95 +129,5 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         }
 
         return Convert.ToBase64String(barr);
-    }
-
-    public MapChunk Copy(ISerializationManager serializationManager, MapChunk source, MapChunk target, bool skipHook,
-        ISerializationContext? context = null)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-//todo paul make this be used
-[TypeSerializer]
-internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
-{
-    public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, ISerializationContext? context = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public MapGrid Read(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<MapGrid>? instantiationDelegate = null)
-    {
-        var info = node.Get<MappingDataNode>("settings");
-        var chunks = node.Get<SequenceDataNode>("chunks");
-        ushort csz = 0;
-        ushort tsz = 0;
-        float sgsz = 0.0f;
-
-        foreach (var kvInfo in info.Cast<KeyValuePair<ValueDataNode, ValueDataNode>>())
-        {
-            var key = kvInfo.Key.Value;
-            var val = kvInfo.Value.Value;
-            if (key == "chunksize")
-                csz = ushort.Parse(val);
-            else if (key == "tilesize")
-                tsz = ushort.Parse(val);
-            else if (key == "snapsize")
-                sgsz = float.Parse(val, CultureInfo.InvariantCulture);
-        }
-
-        //TODO: Pass in options
-        if (context is not MapLoader.MapContext mapContext)
-        {
-            throw new InvalidOperationException(
-                $"Someone tried serializing a mapgrid without passing {nameof(MapLoader.MapContext)} as context.");
-        }
-
-        if (instantiationDelegate == null) throw new NotImplementedException();
-        var grid = instantiationDelegate();
-        //todo paul grid ??= dependencies.Resolve<MapManager>().CreateUnboundGrid(mapContext.TargetMap);
-
-        foreach (var chunkNode in chunks.Cast<MappingDataNode>())
-        {
-            var (chunkOffsetX, chunkOffsetY) =
-                serializationManager.Read<Vector2i>(chunkNode["ind"], context, skipHook);
-            serializationManager.Read<MapChunk>(chunkNode, context, skipHook, () => grid.GetChunk(chunkOffsetX, chunkOffsetY));
-        }
-
-        return grid;
-    }
-
-    public DataNode Write(ISerializationManager serializationManager, MapGrid value,
-        IDependencyCollection dependencies, bool alwaysWrite = false,
-        ISerializationContext? context = null)
-    {
-        var gridn = new MappingDataNode();
-        var info = new MappingDataNode();
-        var chunkSeq = new SequenceDataNode();
-
-        gridn.Add("uid", serializationManager.WriteValue(value.GridEntityId, alwaysWrite, context));
-        gridn.Add("settings", info);
-        gridn.Add("chunks", chunkSeq);
-
-        info.Add("chunksize", value.ChunkSize.ToString(CultureInfo.InvariantCulture));
-        info.Add("tilesize", value.TileSize.ToString(CultureInfo.InvariantCulture));
-
-        var chunks = value.GetMapChunks();
-        foreach (var chunk in chunks)
-        {
-            var chunkNode = serializationManager.WriteValue(chunk.Value);
-            chunkSeq.Add(chunkNode);
-        }
-
-        return gridn;
-    }
-
-    public MapGrid Copy(ISerializationManager serializationManager, MapGrid source, MapGrid target, bool skipHook,
-        ISerializationContext? context = null)
-    {
-        throw new NotImplementedException();
     }
 }

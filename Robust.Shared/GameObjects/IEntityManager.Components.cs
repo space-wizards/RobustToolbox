@@ -359,6 +359,14 @@ namespace Robust.Shared.GameObjects
         NetComponentEnumerable GetNetComponents(EntityUid uid);
 
         /// <summary>
+        ///     Returns ALL networked components on an entity, including deleted ones. Returns null if the entity does
+        ///     not exist.
+        /// </summary>
+        /// <param name="uid">Entity UID to look on.</param>
+        /// <returns>All components that have a network ID.</returns>
+        public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid);
+
+        /// <summary>
         ///     Gets a component state.
         /// </summary>
         /// <param name="eventBus">A reference to the event bus instance.</param>

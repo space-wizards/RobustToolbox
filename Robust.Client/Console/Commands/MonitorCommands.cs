@@ -7,17 +7,15 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class LsMonitorCommand : IConsoleCommand
+    public sealed class LsMonitorCommand : LocalizedCommands
     {
-        public string Command => "lsmonitor";
-        public string Description => "";
-        public string Help => "";
+        [Dependency] private readonly IClyde _clyde = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "lsmonitor";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
-            foreach (var monitor in clyde.EnumerateMonitors())
+            foreach (var monitor in _clyde.EnumerateMonitors())
             {
                 shell.WriteLine(
                     $"[{monitor.Id}] {monitor.Name}: {monitor.Size.X}x{monitor.Size.Y}@{monitor.RefreshRate}Hz");
@@ -26,13 +24,13 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public sealed class MonitorInfoCommand : IConsoleCommand
+    public sealed class MonitorInfoCommand : LocalizedCommands
     {
-        public string Command => "monitorinfo";
-        public string Description => "";
-        public string Help => "Usage: monitorinfo <id>";
+        [Dependency] private readonly IClyde _clyde = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "monitorinfo";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
@@ -40,8 +38,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var clyde = IoCManager.Resolve<IClyde>();
-            var monitor = clyde.EnumerateMonitors().Single(c => c.Id == int.Parse(args[0]));
+            var monitor = _clyde.EnumerateMonitors().Single(c => c.Id == int.Parse(args[0]));
 
             shell.WriteLine($"{monitor.Id}: {monitor.Name}");
             shell.WriteLine($"Video modes:");
@@ -54,19 +51,17 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public sealed class SetMonitorCommand : IConsoleCommand
+    public sealed class SetMonitorCommand : LocalizedCommands
     {
-        public string Command => "setmonitor";
-        public string Description => "";
-        public string Help => "Usage: setmonitor <id>";
+        [Dependency] private readonly IClyde _clyde = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "setmonitor";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             var id = int.Parse(args[0]);
-            var monitor = clyde.EnumerateMonitors().Single(m => m.Id == id);
-            clyde.SetWindowMonitor(monitor);
+            var monitor = _clyde.EnumerateMonitors().Single(m => m.Id == id);
+            _clyde.SetWindowMonitor(monitor);
         }
     }
 }

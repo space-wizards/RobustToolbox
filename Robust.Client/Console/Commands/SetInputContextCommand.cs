@@ -6,13 +6,13 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class SetInputContextCommand : IConsoleCommand
+    public sealed class SetInputContextCommand : LocalizedCommands
     {
-        public string Command => "setinputcontext";
-        public string Description => "Sets the active input context.";
-        public string Help => "setinputcontext <context>";
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override string Command => "setinputcontext";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -20,15 +20,13 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var inputMan = IoCManager.Resolve<IInputManager>();
-
-            if (!inputMan.Contexts.Exists(args[0]))
+            if (!_inputManager.Contexts.Exists(args[0]))
             {
                 shell.WriteLine("Context not found!");
                 return;
             }
 
-            inputMan.Contexts.SetActiveContext(args[0]);
+            _inputManager.Contexts.SetActiveContext(args[0]);
         }
     }
 }

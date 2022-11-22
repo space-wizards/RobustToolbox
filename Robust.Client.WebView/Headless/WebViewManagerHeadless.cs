@@ -106,7 +106,7 @@ namespace Robust.Client.WebView.Headless
                 return false;
             }
 
-            public void TextEntered(GUITextEventArgs args)
+            public void TextEntered(GUITextEnteredEventArgs args)
             {
             }
 
@@ -123,6 +123,14 @@ namespace Robust.Client.WebView.Headless
             }
 
             public void RemoveBeforeBrowseHandler(Action<IBeforeBrowseContext> handler)
+            {
+            }
+
+            public void FocusEntered()
+            {
+            }
+
+            public void FocusExited()
             {
             }
         }

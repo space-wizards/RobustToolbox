@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
+using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -36,6 +37,7 @@ namespace Robust.Server.Player
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly INetConfigurationManager _cfg = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 
@@ -410,7 +412,7 @@ namespace Robust.Server.Player
             (msgTimeBase.Time, msgTimeBase.Tick) = _timing.TimeBase;
             _network.ServerSendMessage(msgTimeBase, args.Channel);
 
-            IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
+            _cfg.SyncConnectingClient(args.Channel);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -514,6 +516,18 @@ namespace Robust.Server.Player
         public bool HasPlayerData(NetUserId userId)
         {
             return _playerData.ContainsKey(userId);
+        }
+
+        public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            if (!_entityManager.TryGetComponent(uid, out ActorComponent? actor))
+            {
+                session = null;
+                return false;
+            }
+
+            session = actor.PlayerSession;
+            return true;
         }
     }
 

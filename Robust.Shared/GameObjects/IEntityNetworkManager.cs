@@ -25,7 +25,8 @@ namespace Robust.Shared.GameObjects
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
         /// <param name="message">Message that should be sent.</param>
-        void SendSystemNetworkMessage(EntityEventArgs message);
+        /// <param name="recordReplay">Whether or not this message should be saved to replays.</param>
+        void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true);
 
         void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {

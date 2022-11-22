@@ -115,9 +115,8 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var client = new HttpClient();
                     var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    var joinedRespJson = await client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    var joinedRespJson = await _httpClient.GetFromJsonAsync<HasJoinedResponse>(url);
 
                     if (joinedRespJson is not {IsValid: true})
                     {

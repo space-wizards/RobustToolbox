@@ -11,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -25,6 +26,8 @@ namespace Robust.Server.Physics
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
@@ -47,16 +50,14 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             _logger = Logger.GetSawmill("gsplit");
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
 #if !FULL_RELEASE
             // It makes mapping painful
-            configManager.OverrideDefault(CVars.GridSplitting, false);
+            _cfg.OverrideDefault(CVars.GridSplitting, false);
 #endif
-            configManager.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
+            _cfg.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 
         private void SetSplitAllowed(bool value) => SplitAllowed = value;
@@ -65,8 +66,7 @@ namespace Robust.Server.Physics
         {
             base.Shutdown();
             _subscribedSessions.Clear();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
+            _cfg.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
         /// <summary>
@@ -78,9 +78,10 @@ namespace Robust.Server.Physics
                 _nodes[uid] = new Dictionary<Vector2i, ChunkNodeGroup>();
         }
 
-        private void OnGridInit(GridInitializeEvent ev)
+        protected override void OnGridInit(GridInitializeEvent ev)
         {
             EnsureGrid(ev.EntityUid);
+            base.OnGridInit(ev);
         }
 
         private void OnGridRemoval(GridRemovalEvent ev)
@@ -92,10 +93,9 @@ namespace Robust.Server.Physics
 
         private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
         {
-            var adminManager = IoCManager.Resolve<IConGroupController>();
             var pSession = (PlayerSession) args.SenderSession;
 
-            if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
+            if (!_conGroup.CanCommand(pSession, ShowGridNodesCommand)) return;
 
             AddDebugSubscriber(args.SenderSession);
         }
@@ -337,7 +337,7 @@ namespace Robust.Server.Physics
 
                     // Set tiles on old grid
                     mapGrid.SetTiles(tileData);
-                    GenerateSplitNodes((IMapGridInternal) splitGrid);
+                    GenerateSplitNodes((MapGridComponent) splitGrid);
                     SendNodeDebug(splitGrid.GridEntityId);
                 }
 
@@ -367,7 +367,7 @@ namespace Robust.Server.Physics
             SendNodeDebug(mapGrid.GridEntityId);
         }
 
-        private void GenerateSplitNodes(IMapGridInternal grid)
+        private void GenerateSplitNodes(MapGridComponent grid)
         {
             foreach (var (_, chunk) in grid.GetMapChunks())
             {
@@ -379,7 +379,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Creates all of the splitting nodes within this chunk; also consider neighbor chunks.
         /// </summary>
-        private ChunkNodeGroup CreateNodes(EntityUid gridEuid, IMapGridInternal grid, MapChunk chunk)
+        private ChunkNodeGroup CreateNodes(EntityUid gridEuid, MapGridComponent grid, MapChunk chunk)
         {
             var group = new ChunkNodeGroup
             {
@@ -586,7 +586,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = (IMapGridInternal) _mapManager.GetGrid(gridEuid);
+            var grid = _mapManager.GetGrid(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

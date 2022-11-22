@@ -9,14 +9,13 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Configuration
 {
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class CVarCommand : IConsoleCommand
+    internal sealed class CVarCommand : LocalizedCommands
     {
-        public string Command => "cvar";
-        public string Description => Loc.GetString("cmd-cvar-desc");
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
-        public string Help => Loc.GetString("cmd-cvar-help");
+        public override string Command => "cvar";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length is < 1 or > 2)
             {
@@ -24,17 +23,16 @@ namespace Robust.Shared.Configuration
                 return;
             }
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
             var name = args[0];
 
             if (name == "?")
             {
-                var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
+                var cvars = _cfg.GetRegisteredCVars().OrderBy(c => c);
                 shell.WriteLine(string.Join("\n", cvars));
                 return;
             }
 
-            if (!configManager.IsCVarRegistered(name))
+            if (!_cfg.IsCVarRegistered(name))
             {
                 shell.WriteError(Loc.GetString("cmd-cvar-not-registered", ("cvar", name)));
                 return;
@@ -43,18 +41,18 @@ namespace Robust.Shared.Configuration
             if (args.Length == 1)
             {
                 // Read CVar
-                var value = configManager.GetCVar<object>(name);
+                var value = _cfg.GetCVar<object>(name);
                 shell.WriteLine(value.ToString()!);
             }
             else
             {
                 // Write CVar
                 var value = args[1];
-                var type = configManager.GetCVarType(name);
+                var type = _cfg.GetCVarType(name);
                 try
                 {
                     var parsed = ParseObject(type, value);
-                    configManager.SetCVar(name, parsed);
+                    _cfg.SetCVar(name, parsed);
                 }
                 catch (FormatException)
                 {
@@ -63,26 +61,25 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            var cfg = IoCManager.Resolve<IConfigurationManager>();
             if (args.Length == 1)
             {
                 var helpQuestion = Loc.GetString("cmd-cvar-compl-list");
 
                 return CompletionResult.FromHintOptions(
-                    cfg.GetRegisteredCVars()
-                        .Select(c => new CompletionOption(c, GetCVarValueHint(cfg, c)))
+                    _cfg.GetRegisteredCVars()
+                        .Select(c => new CompletionOption(c, GetCVarValueHint(_cfg, c)))
                         .Union(new[] { new CompletionOption("?", helpQuestion) })
                         .OrderBy(c => c.Value),
                     Loc.GetString("cmd-cvar-arg-name"));
             }
 
             var cvar = args[0];
-            if (!cfg.IsCVarRegistered(cvar))
+            if (!_cfg.IsCVarRegistered(cvar))
                 return CompletionResult.Empty;
 
-            var type = cfg.GetCVarType(cvar);
+            var type = _cfg.GetCVarType(cvar);
             return CompletionResult.FromHint($"<{type.Name}>");
         }
 

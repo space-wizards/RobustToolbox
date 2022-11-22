@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -48,15 +46,12 @@ namespace Robust.Shared.Prototypes
         ///     You probably want <see cref="Name"/> instead.
         /// </summary>
         /// <seealso cref="Name"/>
-        [ViewVariables]
         [DataField("name")]
         public string? SetName { get; private set; }
 
-        [ViewVariables]
         [DataField("description")]
         public string? SetDesc { get; private set; }
 
-        [ViewVariables]
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
@@ -85,7 +80,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Fluent messageId used to lookup the entity's name and localization attributes.
         /// </summary>
-        [ViewVariables]
         [DataField("localizationId")]
         public string? CustomLocalizationID { get; private set; }
 
@@ -127,7 +121,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// True if this entity will be saved by the map loader.
         /// </summary>
-        [ViewVariables]
         [DataField("save")]
         public bool MapSavable { get; set; } = true;
 
@@ -188,60 +181,6 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public void UpdateEntity(EntityUid entity)
-        {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var metaData = entityManager.GetComponent<MetaDataComponent>(entity);
-            if (ID != metaData.EntityPrototype?.ID)
-            {
-                Logger.Error(
-                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
-                return;
-            }
-
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            var oldPrototype = metaData.EntityPrototype;
-
-            var oldPrototypeComponents = oldPrototype?.Components.Keys
-                .Where(n => n != "Transform" && n != "MetaData")
-                .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList() ?? new List<(string name, Type Type)>();
-            var newPrototypeComponents = Components.Keys
-                .Where(n => n != "Transform" && n != "MetaData")
-                .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList();
-
-            var ignoredComponents = new List<string>();
-
-            // Find components to be removed, and remove them
-            foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
-            {
-                if (Components.Keys.Contains(name))
-                {
-                    ignoredComponents.Add(name);
-                    continue;
-                }
-
-                entityManager.RemoveComponent(entity, type);
-            }
-
-            entityManager.CullRemovedComponents();
-
-
-            // Add new components
-            foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
-                .Except(oldPrototypeComponents))
-            {
-                var data = Components[name];
-                var component = (Component) factory.GetComponent(name);
-                component.Owner = entity;
-                entityManager.AddComponent(entity, component);
-            }
-
-            // Update entity metadata
-            metaData.EntityPrototype = this;
-        }
-
         internal static void LoadEntity(
             EntityPrototype? prototype,
             EntityUid entity,
@@ -254,6 +193,9 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, entry) in prototype.Components)
                 {
+                    if (context != null && context.ShouldSkipComponent(name))
+                        continue;
+
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
                     EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
@@ -262,7 +204,7 @@ namespace Robust.Shared.Prototypes
 
             if (context != null)
             {
-                foreach (var name in context.GetAvailableComponents())
+                foreach (var name in context.GetExtraComponentTypes())
                 {
                     if (prototype != null && prototype.Components.ContainsKey(name))
                     {

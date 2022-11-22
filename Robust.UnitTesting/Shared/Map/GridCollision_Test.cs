@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -24,15 +25,14 @@ namespace Robust.UnitTesting.Shared.Map
             var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             MapId mapId;
-            IMapGrid? gridId1 = null;
-            IMapGrid? gridId2 = null;
+            MapGridComponent? gridId1 = null;
+            MapGridComponent? gridId2 = null;
             PhysicsComponent? physics1 = null;
             PhysicsComponent? physics2 = null;
             EntityUid? gridEnt1;
             EntityUid? gridEnt2;
 
-            await server.WaitPost(() =>
-            {
+            await server.WaitPost(() => {
                 mapId = mapManager.CreateMap();
                 gridId1 = mapManager.CreateGrid(mapId);
                 gridId2 = mapManager.CreateGrid(mapId);
@@ -84,6 +84,9 @@ namespace Robust.UnitTesting.Shared.Map
                 {
                     var contact = node.Value;
                     node = node.Next;
+
+                    if (!contact.IsTouching)
+                        continue;
 
                     var bodyA = contact.FixtureA!.Body;
                     var bodyB = contact.FixtureB!.Body;

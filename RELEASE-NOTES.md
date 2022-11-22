@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.1.2
+
+### Bugfixes
+
+* Fix some mapgrids not being marked as dirty and never being sent to clients (thanks checkraze).
+
+
 ## 0.67.1.1
 
 ### Bugfixes

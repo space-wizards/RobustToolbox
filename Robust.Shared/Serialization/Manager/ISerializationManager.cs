@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.Manager
         #region Validation
 
         /// <summary>
-        ///     Validates that a node has all the properties required by a certain type with its serializer.
+        ///     Validates that a node has all the properties required by a certain type.
         /// </summary>
         /// <param name="type">The type to check for.</param>
         /// <param name="node">The node to check.</param>
@@ -38,26 +38,45 @@ namespace Robust.Shared.Serialization.Manager
         ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         /// <summary>
-        ///     Validates that a node has all the properties required by a certain type with its serializer.
+        ///     Validates that a node has all the properties required by a certain type.
         /// </summary>
         /// <param name="node">The node to check.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <typeparam name="T">The type this node should be able to be read into.</typeparam>
         /// <returns>
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
         ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
 
-        //todo paul docs
+        /// <summary>
+        ///     Validates that a node has all the properties required by a certain type using a specified <see cref="ITypeValidator{TType,TNode}"/> instance.
+        /// </summary>
+        /// <param name="typeValidator">The <see cref="ITypeValidator{TType,TNode}"/> instance to use.</param>
+        /// <param name="node">The node to check.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <typeparam name="T">The type this node should be able to be read into.</typeparam>
+        /// <typeparam name="TNode">The node type</typeparam>
+        /// <returns></returns>
         ValidationNode ValidateNode<T, TNode>(ITypeValidator<T, TNode> typeValidator, TNode node,
             ISerializationContext? context = null) where TNode : DataNode;
 
+        /// <summary>
+        ///     Validates that a node has all the properties required by a certain type using a specified <see cref="ITypeValidator{TType,TNode}"/> type.
+        /// </summary>
+        /// <param name="node">The node to check.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <typeparam name="T">The type this node should be able to be read into.</typeparam>
+        /// <typeparam name="TNode">The node type</typeparam>
+        /// <typeparam name="TValidator">The type of the <see cref="ITypeValidator{TType,TNode}"/>.</typeparam>
+        /// <returns></returns>
         ValidationNode ValidateNode<T, TNode, TValidator>(TNode node,
             ISerializationContext? context = null) where TNode : DataNode where TValidator : ITypeValidator<T, TNode>;
 
         #endregion
 
         #region Read
+
         /// <summary>
         ///     Deserializes a node into an object, populating it.
         /// </summary>
@@ -65,6 +84,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <returns>The deserialized object or null.</returns>
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
@@ -75,24 +95,39 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <param name="instanceProvider">The valueProvider which can provide a value to read into. If none is supplied, a new object will be created.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false);
 
+
         /// <summary>
-        /// todo paul docs
+        ///     Deserializes a node into a populated object of the given generic type <see cref="T"/> using the provided <see cref="ITypeReader{TType,TNode}"/> instance.
         /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="node"></param>
-        /// <param name="context"></param>
-        /// <param name="skipHook"></param>
-        /// <param name="instanceProvider"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="TNode"></typeparam>
-        /// <returns></returns>
+        /// <param name="reader">The <see cref="ITypeReader{TType,TNode}"/> instance to use.</param>
+        /// <param name="node">The node to deserialize.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="instanceProvider">The valueProvider which can provide a value to read into. If none is supplied, a new object will be created.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of object to create and populate.</typeparam>
+        /// <typeparam name="TNode">The node type that will be returned by the <see cref="ITypeReader{TType,TNode}"/></typeparam>
+        /// <returns>The deserialized object, or null.</returns>
         T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
             bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode;
 
+        /// <summary>
+        ///     Deserializes a node into a populated object of the given generic type <see cref="T"/> using the provided <see cref="ITypeReader{TType,TNode}"/> type.
+        /// </summary>
+        /// <param name="node">The node to deserialize.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="instanceProvider">The valueProvider which can provide a value to read into. If none is supplied, a new object will be created.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of object to create and populate.</typeparam>
+        /// <typeparam name="TNode">The node type that will be returned by the <see cref="ITypeReader{TType,TNode}"/></typeparam>
+        /// <typeparam name="TReader">The type of the <see cref="ITypeReader{TType,TNode}"/>.</typeparam>
+        /// <returns>The deserialized object, or null.</returns>
         T Read<T, TNode, TReader>(TNode node, ISerializationContext? context = null,
             bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode where TReader : ITypeReader<T, TNode>;
 
@@ -109,21 +144,39 @@ namespace Robust.Shared.Serialization.Manager
         ///     even if they are the default.
         /// </param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type to serialize.</typeparam>
-        /// <returns>A serialized datanode created from the given <see cref="value"/>.</returns>
+        /// <returns>A <see cref="DataNode"/> created from the given <see cref="value"/>.</returns>
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
         /// <summary>
-        /// todo paul docs
+        ///     Serializes a value into a node using a <see cref="ITypeWriter{TType}"/> instance.
         /// </summary>
-        /// <param name="writer"></param>
-        /// <param name="value"></param>
-        /// <param name="alwaysWrite"></param>
-        /// <param name="context"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <param name="writer">The <see cref="ITypeWriter{TType}"/> to use for serializing the value.</param>
+        /// <param name="value">The value to serialize.</param>
+        /// <param name="alwaysWrite">
+        ///     Whether or not to always write the given values into the resulting node,
+        ///     even if they are the default.
+        /// </param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type to serialize.</typeparam>
+        /// <returns>A serialized datanode created from the given <see cref="value"/> by using the typewriter.</returns>
         DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
+        /// <summary>
+        ///     Serializes a value into a node using a <see cref="ITypeWriter{TType}"/> type.
+        /// </summary>
+        /// <param name="value">The value to serialize.</param>
+        /// <param name="alwaysWrite">
+        ///     Whether or not to always write the given values into the resulting node,
+        ///     even if they are the default.
+        /// </param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type to serialize.</typeparam>
+        /// <typeparam name="TWriter">The type of the <see cref="ITypeWriter{TType}"/>.</typeparam>
+        /// <returns>A serialized datanode created from the given <see cref="value"/> by using the typewriter.</returns>
         DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false) where TWriter : ITypeWriter<T>;
 
         /// <summary>
@@ -136,6 +189,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     even if they are the default.
         /// </param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <returns>
         ///     A serialized datanode created from the given <see cref="value"/>
         ///     of type <see cref="type"/>.
@@ -151,9 +205,9 @@ namespace Robust.Shared.Serialization.Manager
         ///     even if they are the default.
         /// </param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <returns>
-        ///     A serialized datanode created from the given <see cref="value"/>
-        ///     of type <see cref="type"/>.
+        ///     A serialized datanode created from the given <see cref="value"/>.
         /// </returns>
         DataNode WriteValue(object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
@@ -170,6 +224,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         void CopyTo(object source, ref object? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
@@ -181,20 +236,36 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
-        /// todo paul docs
+        ///     Copies the values of one object into another using a specified <see cref="ITypeCopier{TType}"/> instance.
+        ///     This does not guarantee that the object passed as <see cref="target"/>
+        ///     is actually mutated.
         /// </summary>
-        /// <param name="copier"></param>
-        /// <param name="source"></param>
-        /// <param name="target"></param>
-        /// <param name="context"></param>
-        /// <param name="skipHook"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="copier">the <see cref="ITypeCopier{TType}"/> instance to use</param>
+        /// <param name="source">The object to copy values from.</param>
+        /// <param name="target">The object to copy values into.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
+        /// <summary>
+        ///     Copies the values of one object into another using a specified <see cref="ITypeCopier{TType}"/> type.
+        ///     This does not guarantee that the object passed as <see cref="target"/>
+        ///     is actually mutated.
+        /// </summary>
+        /// <param name="source">The object to copy values from.</param>
+        /// <param name="target">The object to copy values into.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
+        /// <typeparam name="TCopier">The type of the <see cref="ITypeCopier{TType}"/>.</typeparam>
         void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
 
         /// <summary>
@@ -203,6 +274,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="source">The object to copy.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
         object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
@@ -213,23 +285,35 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="source">The object to copy.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
         T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
         /// <summary>
-        /// todo paul docs
+        ///     Creates a copy of the given object using a specified <see cref="ITypeCopyCreator{TType}"/> instance.
         /// </summary>
-        /// <param name="copyCreator"></param>
-        /// <param name="source"></param>
-        /// <param name="context"></param>
-        /// <param name="skipHook"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <param name="copyCreator">The <see cref="ITypeCopyCreator{TType}"/> instance.</param>
+        /// <param name="source">The object to copy.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of the object to copy.</typeparam>
+        /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
         T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
 
+        /// <summary>
+        ///     Creates a copy of the given object using a specified <see cref="ITypeCopyCreator{TType}"/> type.
+        /// </summary>
+        /// <param name="source">The object to copy.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
+        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
+        /// <typeparam name="T">The type of the object to copy.</typeparam>
+        /// <typeparam name="TCopyCreator">The type of the <see cref="ITypeCopier{TType}"/> to use.</typeparam>
+        /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
         T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopyCreator : ITypeCopyCreator<T>;
 

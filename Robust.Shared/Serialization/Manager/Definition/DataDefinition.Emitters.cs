@@ -198,7 +198,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 Expression call;
                 var valueVar = Expression.Variable(fieldDefinition.FieldType);
-                //todo paul make this work sanely with nullable<t>
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Writer)
                 {
                     var fieldType = fieldDefinition.FieldType.EnsureNotNullableType();
@@ -332,7 +331,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var isNullable = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
 
                 Expression call;
-                //todo paul make this work sanely with nullable<t>
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null && FieldInterfaceInfos[i].Copier)
                 {
                     var targetValue = Expression.Variable(fieldDefinition.FieldType.EnsureNotNullableType());

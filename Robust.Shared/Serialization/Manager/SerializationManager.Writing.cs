@@ -68,7 +68,6 @@ public sealed partial class SerializationManager
             var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
-            //todo paul make nullable check in here
             actualType = actualType.EnsureNotNullableType();
             var sameType = baseType.EnsureNotNullableType() == actualType;
 

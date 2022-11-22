@@ -50,7 +50,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
         internal readonly SerializeDelegateSignature Serialize;
         internal readonly CopyDelegateSignature CopyTo;
 
-        //todo paul InstantiationDelegate
         [UsedImplicitly]
         internal DataDefinition(SerializationManager manager, bool isRecord)
         {

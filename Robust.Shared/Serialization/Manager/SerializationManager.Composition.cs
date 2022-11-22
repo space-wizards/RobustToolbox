@@ -51,7 +51,6 @@ public partial class SerializationManager
             var typeParam = Expression.Parameter(typeof(Type), "type");
             var parentParam = Expression.Parameter(typeof(DataNode), "parent");
             var childParam = Expression.Parameter(typeof(DataNode), "child");
-            //todo paul serializers in the context should also override default serializers for array etc
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
             Expression expression;

@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.2.0
+
+### New features
+
+* Add submenu support to menubar controls.
+
+### Bugfixes
+
+* Fix gridtree returning mapgrid maps twice.
+
+
 ## 0.67.1.3
 
 ### Bugfixes

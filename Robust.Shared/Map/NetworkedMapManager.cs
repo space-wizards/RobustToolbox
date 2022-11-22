@@ -123,6 +123,8 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         if(GridExists(gridEuid))
                             continue;
 
+                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
+
                         MapId gridMapId = default;
                         foreach (var kvData in data.GridData)
                         {

@@ -577,9 +577,7 @@ public sealed class MapLoaderSystem : EntitySystem
         // After doing this, it should be 100% safe to use the MapManager API like normal.
 
         if (data.Version != BackwardsVersion)
-        {
             return;
-        }
 
         var yamlGrids = data.RootMappingNode.Get<SequenceDataNode>("grids");
 
@@ -676,21 +674,15 @@ public sealed class MapLoaderSystem : EntitySystem
             }
         }
 
-        var isRoot = true;
-
         for (var i = 1; i < data.Entities.Count; i++)
         {
             var entity = data.Entities[i];
 
-            if (isRoot && xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
+            if (xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
                 xform._localRotation += data.Options.Rotation;
-            }
-            else
-            {
-                isRoot = false;
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);

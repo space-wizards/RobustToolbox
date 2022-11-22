@@ -24,7 +24,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitIdleAsync();
 
-            var entMan = server.ResolveDependency<IEntityManager>();
             var mapMan = server.ResolveDependency<IMapManager>();
 
             await server.WaitAssertion(() =>

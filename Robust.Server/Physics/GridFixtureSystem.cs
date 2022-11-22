@@ -586,7 +586,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = (MapGridComponent) _mapManager.GetGrid(gridEuid);
+            var grid = _mapManager.GetGrid(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

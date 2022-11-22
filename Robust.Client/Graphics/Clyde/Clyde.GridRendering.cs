@@ -42,9 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 if (!_mapChunkData.ContainsKey(mapGrid.GridEntityId))
-                {
                     continue;
-                }
 
                 var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
@@ -53,16 +51,12 @@ namespace Robust.Client.Graphics.Clyde
                 while (enumerator.MoveNext(out var chunk))
                 {
                     if (_isChunkDirty(mapGrid, chunk))
-                    {
                         _updateChunkMesh(mapGrid, chunk);
-                    }
 
                     var datum = _mapChunkData[mapGrid.GridEntityId][chunk.Indices];
 
                     if (datum.TileCount == 0)
-                    {
                         continue;
-                    }
 
                     BindVertexArray(datum.VAO);
                     CheckGlError();

@@ -29,6 +29,11 @@ namespace Robust.Shared.Scripting
         [field: Dependency] public IMapManager map { get; } = default!;
         [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
 
+        protected ScriptGlobalsShared(IDependencyCollection dependencies)
+        {
+            dependencies.InjectDependencies(this);
+        }
+
         public IEnumerable<T> protos<T>() where T : class, IPrototype
         {
             return prot.EnumeratePrototypes<T>();

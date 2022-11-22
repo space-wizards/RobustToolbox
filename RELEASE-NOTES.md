@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.1.1
+
+### Bugfixes
+
+* Fix some merge artifacts from mapgrid support for maps.
+
+
 ## 0.67.1.0
 
 ### New features

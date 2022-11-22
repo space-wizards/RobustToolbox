@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.0.0
+
+### Breaking changes
+
+* MapGrid is deprecated and has been merged into MapGridComponent. This is subject to further changes as it gets ECSd more in future.
+* The `grids` yaml node on map files is deprecated and has been merged onto MapGridComponent. Loading maps is backwards compatible for now but is subject to change in future. Saving maps will save in the new format.
+
+
 ## 0.66.0.0
 
 ### Breaking changes

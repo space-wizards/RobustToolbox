@@ -11,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -48,7 +49,8 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 2;
+    private const int MapFormatVersion = 3;
+    private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
     private Stopwatch _stopwatch = new();
@@ -305,11 +307,13 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var meta = data.RootMappingNode.Get<MappingDataNode>("meta");
         var ver = meta.Get<ValueDataNode>("format").AsInt();
-        if (ver != MapFormatVersion)
+        if (ver != MapFormatVersion && ver != BackwardsVersion)
         {
             _logLoader.Error($"Cannot handle this map file version, found {ver} and require {MapFormatVersion}");
             return false;
         }
+
+        data.Version = ver;
 
         if (meta.TryGet<ValueDataNode>("postmapinit", out var mapInitNode))
         {
@@ -572,6 +576,9 @@ public sealed class MapLoaderSystem : EntitySystem
         // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
         // After doing this, it should be 100% safe to use the MapManager API like normal.
 
+        if (data.Version != BackwardsVersion)
+            return;
+
         var yamlGrids = data.RootMappingNode.Get<SequenceDataNode>("grids");
 
         // There were no new grids, nothing to do here.
@@ -621,7 +628,7 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
     {
         // sane defaults
         ushort csz = 16;
@@ -639,9 +646,10 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue; // obsolete
         }
 
-        var grid = gridComp.AllocMapGrid(csz, tsz);
+        gridComp.ChunkSize = csz;
+        gridComp.TileSize = tsz;
 
-        return grid;
+        return gridComp;
     }
 
     private void StartupEntities(MapData data)
@@ -771,7 +779,6 @@ public sealed class MapLoaderSystem : EntitySystem
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         _context.Set(uidEntityMap, entityUidMap);
-        WriteGridSection(data, entities);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);
@@ -879,26 +886,6 @@ public sealed class MapLoaderSystem : EntitySystem
         while (enumerator.MoveNext(out var child))
         {
             RecursivePopulate(child.Value, entities, uidEntityMap, withoutUid, metaQuery, transformQuery, saveCompQuery);
-        }
-    }
-
-    private void WriteGridSection(MappingDataNode rootNode, List<EntityUid> entities)
-    {
-        // TODO: Shitcode
-        var grids = new SequenceDataNode();
-        rootNode.Add("grids", grids);
-        var mapGridQuery = GetEntityQuery<MapGridComponent>();
-
-        int index = 0;
-        foreach (var entity in entities)
-        {
-            if (!mapGridQuery.TryGetComponent(entity, out var grid))
-                continue;
-
-            grid.GridIndex = index;
-            var entry = _serManager.WriteValue((MapGrid) grid.Grid, context: _context);
-            grids.Add(entry);
-            index++;
         }
     }
 
@@ -1172,6 +1159,7 @@ public sealed class MapLoaderSystem : EntitySystem
         public bool MapIsPostInit;
         public bool MapIsPaused;
         public readonly MapLoadOptions Options;
+        public int Version;
 
         // Loading data
         public readonly List<EntityUid> Entities = new();

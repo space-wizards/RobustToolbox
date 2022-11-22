@@ -13,6 +13,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -548,7 +549,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
                 _mapManager.FindGridsIntersectingApprox(mapId, new Box2(viewPos - range, viewPos + range),
                     ref state, static (
-                        IMapGrid mapGrid,
+                        MapGridComponent mapGrid,
                         ref (int i,
                             EntityQuery<TransformComponent> transformQuery,
                             Vector2 viewPos,

@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -133,7 +134,7 @@ namespace Robust.Server.Placement
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
-            IMapGrid? grid;
+            MapGridComponent? grid;
 
             _mapManager.TryGetGrid(coordinates.EntityId, out grid);
 

@@ -2,6 +2,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects;
 

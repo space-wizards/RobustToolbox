@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* AudioSystem functions for playing audio have changed. Functions that take in filters now require an additional argument that will determine whether sounds are recorded by replays. Additionally, there are several new overrides that take in a recipient session or entity.
+*None yet*
 
 ### New features
 
@@ -43,13 +43,28 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Script globals for C# interactive were not having dependencies injected correctly.
-* GetWorldPosition() now returns the correct positions even prior to transform initialization.
-* Fix map loading not properly offsetting some entities that were directly parented to the map.
+*None yet*
 
 ### Other
 
 *None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.66.0.0
+
+### Breaking changes
+
+* AudioSystem functions for playing audio have changed. Functions that take in filters now require an additional argument that will determine whether sounds are recorded by replays. Additionally, there are several new overrides that take in a recipient session or entity.
+
+### Bugfixes
+
+* Script globals for C# interactive were not having dependencies injected correctly.
+* GetWorldPosition() now returns the correct positions even prior to transform initialization.
+* Fix map loading not properly offsetting some entities that were directly parented to the map.
 
 ### Internal
 

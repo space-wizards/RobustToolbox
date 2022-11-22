@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.1.3
+
+### Bugfixes
+
+* Fix Map regression so now they can be MapGrids again without the client crashing.
+
+
 ## 0.67.1.2
 
 ### Bugfixes

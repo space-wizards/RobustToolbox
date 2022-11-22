@@ -1,5 +1,6 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
@@ -22,19 +23,28 @@ namespace Robust.Shared.GameStates
     [ByRefEvent, ComponentEvent]
     public struct ComponentGetState
     {
+        public GameTick FromTick { get; }
+
         /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
 
         /// <summary>
-        ///     Input parameter. The player the state is being sent to.
+        ///     If true, this state is intended for replays or some other server spectator entity, not for specific
+        ///     clients.
+        /// </summary>
+        public bool ReplayState => Player == null;
+
+        /// <summary>
+        ///     The player the state is being sent to. Null implies the state is for a replay or some spectator entity.
         /// </summary>
         public readonly ICommonSession? Player;
 
-        public ComponentGetState(ICommonSession? player)
+        public ComponentGetState(ICommonSession? player, GameTick fromTick)
         {
             Player = player;
+            FromTick = fromTick;
             State = null;
         }
     }

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.1.0
+
+### New features
+
+- Maps can now have MapGridComponent added to them.
+
+
 ## 0.67.0.0
 
 ### Breaking changes

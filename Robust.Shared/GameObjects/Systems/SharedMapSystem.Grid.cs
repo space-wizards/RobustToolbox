@@ -58,6 +58,7 @@ public abstract partial class SharedMapSystem
 
         foreach (var chunk in component.Chunks.Values)
         {
+            chunk.TileModified += component.OnTileModified;
             chunk.LastTileModifiedTick = curTick;
         }
 

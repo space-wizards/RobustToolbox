@@ -115,7 +115,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private static object ReadDelegateValueFactory(Type baseType, Type actualType, Type nodeType, bool notNullableOverride, SerializationManager manager)
         {
-            var nullable = !notNullableOverride && actualType.IsNullable();
+            var nullable = actualType.IsNullable();
 
             var managerConst = Expression.Constant(manager);
 
@@ -128,7 +128,7 @@ namespace Robust.Shared.Serialization.Manager
 
             Expression BaseInstantiatorToActual()
             {
-                Expression nonNullableInstantiator = nullable && baseType.IsValueType
+                Expression nonNullableInstantiator = baseType.IsNullable() && baseType.IsValueType
                     ? Expression.Call(
                         managerConst,
                         nameof(UnwrapInstantiationDelegate),
@@ -285,7 +285,7 @@ namespace Robust.Shared.Serialization.Manager
             call = Expression.Block(new[] { returnValue },
                 Expression.IfThenElse(
                 Expression.Call(typeof(SerializationManager), nameof(IsNull), Type.EmptyTypes, nodeParam),
-                nullable
+                nullable && !notNullableOverride
                     ? Expression.Block(typeof(void), Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
                     : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
                 Expression.Block(typeof(void),

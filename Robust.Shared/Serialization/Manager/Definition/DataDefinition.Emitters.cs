@@ -36,7 +36,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var nullableOverride = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
+                var isNullable = NullableHelper.IsMarkedAsNullable(fieldDefinition.FieldInfo);
 
                 var nodeVariable = Expression.Variable(typeof(DataNode));
                 var valueVariable = Expression.Variable(fieldDefinition.FieldType);
@@ -97,7 +97,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     call = Expression.IfThenElse(
                         Expression.Call(typeof(SerializationManager), "IsNull", Type.EmptyTypes, nodeVariable),
-                        nullableOverride
+                        isNullable
                             ? Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable,
                                     SerializationManager.GetNullExpression(managerConst, fieldType)))
@@ -114,7 +114,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         contextParam,
                         skipHookParam,
                         Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldDefinition.FieldType)),
-                        Expression.Constant(nullableOverride)));
+                        Expression.Constant(!isNullable)));
                 }
 
                 call = Expression.Block(
@@ -205,7 +205,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.Convert(valueVar, fieldType),
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(nullableOverride));
+                        Expression.Constant(!nullableOverride));
                 }
                 else
                 {
@@ -216,7 +216,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         valueVar,
                         alwaysWriteParam,
                         contextParam,
-                        Expression.Constant(nullableOverride));
+                        Expression.Constant(!nullableOverride));
                 }
 
                 Expression writeExpression;

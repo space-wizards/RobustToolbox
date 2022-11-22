@@ -229,7 +229,7 @@ public sealed partial class SerializationManager
     {
         if(value == null)
         {
-            WriteNullCheck(typeof(T), notNullableOverride);
+            CanWriteNullCheck(typeof(T), notNullableOverride);
             return ValueDataNode.Null();
         }
 
@@ -241,7 +241,7 @@ public sealed partial class SerializationManager
     {
         if (value == null)
         {
-            WriteNullCheck(typeof(T), notNullableOverride);
+            CanWriteNullCheck(typeof(T), notNullableOverride);
             return NullNode();
         }
 
@@ -270,7 +270,7 @@ public sealed partial class SerializationManager
     {
         if (value == null)
         {
-            WriteNullCheck(type, notNullableOverride);
+            CanWriteNullCheck(type, notNullableOverride);
 
             return NullNode();
         }
@@ -278,7 +278,7 @@ public sealed partial class SerializationManager
         return GetOrCreateWriteBoxingDelegate(type, notNullableOverride)(value, alwaysWrite, context);
     }
 
-    private void WriteNullCheck(Type type, bool notNullableOverride)
+    private void CanWriteNullCheck(Type type, bool notNullableOverride)
     {
         if (!type.IsNullable() || notNullableOverride)
         {

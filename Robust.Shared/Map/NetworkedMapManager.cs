@@ -123,6 +123,14 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         if(GridExists(gridEuid))
                             continue;
 
+                        // Existing ent?
+                        // I love NetworkedMapManager
+                        if (EntityManager.EntityExists(gridEuid))
+                        {
+                            EntityManager.AddComponent<MapGridComponent>(gridEuid);
+                            continue;
+                        }
+
                         DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
 
                         MapId gridMapId = default;

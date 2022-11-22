@@ -66,9 +66,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             var (worldPos, worldRot) = gridXform.GetWorldPositionRotation();
 
             var gridDatum = new GameStateMapData.GridDatum(
-                    chunkData.ToArray(),
-                    new MapCoordinates(worldPos, gridXform.MapID),
-                    worldRot);
+                chunkData.ToArray(),
+                new MapCoordinates(worldPos, gridXform.MapID),
+                worldRot);
 
             gridDatums.Add(iGrid.GridEntityId, gridDatum);
         }
@@ -177,7 +177,15 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         if (xformComp.MapID != gridDatum.Coordinates.MapId)
             throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
-        xformComp.WorldPosition = gridDatum.Coordinates.Position;
-        xformComp.WorldRotation = gridDatum.Angle;
+        // TODO: SHITCODE ALERT -> When we get proper ECS we can delete this.
+        if (xformComp.WorldPosition != gridDatum.Coordinates.Position)
+        {
+            xformComp.WorldPosition = gridDatum.Coordinates.Position;
+        }
+
+        if (xformComp.WorldRotation != gridDatum.Angle)
+        {
+            xformComp.WorldRotation = gridDatum.Angle;
+        }
     }
 }

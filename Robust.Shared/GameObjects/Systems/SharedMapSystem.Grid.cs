@@ -46,7 +46,11 @@ public abstract partial class SharedMapSystem
 
         if (MapManager.HasMapEntity(mapId))
         {
-            _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
+            var mapUid = MapManager.GetMapEntityIdOrThrow(mapId);
+
+            // Mapgrid moment
+            if (mapUid != uid)
+                _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
 
         // Just in case.

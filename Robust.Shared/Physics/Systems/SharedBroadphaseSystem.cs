@@ -221,7 +221,7 @@ namespace Robust.Shared.Physics.Systems
                             EntityQuery<BroadphaseComponent> broadphaseQuery) tuple) =>
                         {
                             ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.GridEntityId, buffer, tuple.xformQuery, tuple.broadphaseQuery);
+                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.Owner, buffer, tuple.xformQuery, tuple.broadphaseQuery);
                             return true;
                         });
 

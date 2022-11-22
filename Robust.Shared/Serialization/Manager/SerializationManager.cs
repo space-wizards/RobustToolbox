@@ -263,9 +263,9 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        private static Type ResolveConcreteType(Type baseType, string typeName)
+        private Type ResolveConcreteType(Type baseType, string typeName)
         {
-            var type = reflection.YamlTypeTagLookup(baseType, typeName);
+            var type = ReflectionManager.YamlTypeTagLookup(baseType, typeName);
             if (type == null)
             {
                 throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");

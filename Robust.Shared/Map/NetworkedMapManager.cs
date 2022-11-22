@@ -127,7 +127,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         // I love NetworkedMapManager
                         if (EntityManager.EntityExists(gridEuid))
                         {
-                            EntityManager.EnsureComponent<MapGridComponent>(gridEuid);
+                            EntityManager.AddComponent<MapGridComponent>(gridEuid);
                             continue;
                         }
 

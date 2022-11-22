@@ -40,11 +40,11 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
+        public Filter AddPlayersByPvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
         {
-            IoCManager.Resolve(ref entityManager);
+            IoCManager.Resolve(ref entityManager, ref playerMan, ref cfgMan);
             var transform = entityManager.GetComponent<TransformComponent>(origin);
-            return AddPlayersByPvs(transform.MapPosition, rangeMultiplier);
+            return AddPlayersByPvs(transform.MapPosition, rangeMultiplier, entityManager, playerMan, cfgMan);
         }
 
         /// <summary>
@@ -63,14 +63,14 @@ namespace Robust.Shared.Player
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
             IoCManager.Resolve(ref entityMan, ref playerMan);
-            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, playerMan);
+            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, entityMan, playerMan);
         }
 
         /// <summary>
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
+        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entManager = null, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
         {
             IoCManager.Resolve(ref playerMan, ref cfgMan);
 
@@ -80,7 +80,7 @@ namespace Robust.Shared.Player
 
             var pvsRange = cfgMan.GetCVar(CVars.NetMaxUpdateRange) * rangeMultiplier;
 
-            return AddInRange(origin, pvsRange, playerMan);
+            return AddInRange(origin, pvsRange, playerMan, entManager);
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
+            IoCManager.Resolve(ref playerMan, ref entMan);
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
 
             return AddWhere(session =>
@@ -325,9 +325,9 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     A filter with every player whose PVS overlaps this entity.
         /// </summary>
-        public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
+        public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null, ISharedPlayerManager? playerManager = null, IConfigurationManager? cfgManager = null)
         {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityManager);
+            return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityManager, playerManager, cfgManager);
         }
 
         /// <summary>

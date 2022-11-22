@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -47,8 +48,8 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // This will also check for grid splits if applicable.
-            var iGrid = (IMapGridInternal) Comp<MapGridComponent>(ev.EntityUid).Grid;
-            iGrid.RegenerateCollision(iGrid.GetMapChunks().Values.ToHashSet());
+            var grid = Comp<MapGridComponent>(ev.EntityUid);
+            grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
         }
 
         public override void Shutdown()

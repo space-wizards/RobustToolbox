@@ -151,7 +151,14 @@ namespace Robust.Client.Graphics
 
         public string GetNativeType()
         {
-            string? precision = Precision switch
+            var typeName = GetNativeTypeWithoutArray();
+
+            return IsArray ? $"{typeName}[{Count}]" : typeName;
+        }
+
+        public string GetNativeTypeWithoutArray()
+        {
+            var precision = Precision switch
             {
                 ShaderPrecisionQualifier.Low => "ARRAY_LOWP ",
                 ShaderPrecisionQualifier.Medium => "ARRAY_MEDIUMP ",
@@ -159,7 +166,7 @@ namespace Robust.Client.Graphics
                 _ => null,
             };
 
-            return IsArray ? $"{precision}{Type.GetNativeType()}[{Count}]" : $"{precision}{Type.GetNativeType()}";
+            return $"{precision}{Type.GetNativeType()}";
         }
 
         public bool TypePrecisionConsistent()

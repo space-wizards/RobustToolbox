@@ -152,7 +152,7 @@ namespace Robust.Client.GameStates
             return applyNextState;
         }
 
-        public void UpdateFullRep(GameState state, IEntityManager entMan)
+        public void UpdateFullRep(GameState state)
         {
             // Note: the most recently received server state currently doesn't include pvs-leave messages (detaching
             // transform to null-space). This is because a client should never predict an entity being moved back from

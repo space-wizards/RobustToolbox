@@ -11,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -48,7 +49,8 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 2;
+    private const int MapFormatVersion = 3;
+    private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
     private Stopwatch _stopwatch = new();
@@ -305,11 +307,13 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var meta = data.RootMappingNode.Get<MappingDataNode>("meta");
         var ver = meta.Get<ValueDataNode>("format").AsInt();
-        if (ver != MapFormatVersion)
+        if (ver != MapFormatVersion && ver != BackwardsVersion)
         {
             _logLoader.Error($"Cannot handle this map file version, found {ver} and require {MapFormatVersion}");
             return false;
         }
+
+        data.Version = ver;
 
         if (meta.TryGet<ValueDataNode>("postmapinit", out var mapInitNode))
         {
@@ -539,6 +543,7 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
                 _mapManager.CreateMap(data.TargetMap);
+                _mapManager.AddUninitializedMap(data.TargetMap);
                 mapNode = _mapManager.GetMapEntityId(data.TargetMap);
                 DebugTools.Assert(mapNode.IsValid());
             }
@@ -570,6 +575,9 @@ public sealed class MapLoaderSystem : EntitySystem
         // MapGrids already contain their assigned GridId from their ctor, and the MapComponents just got deserialized.
         // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
         // After doing this, it should be 100% safe to use the MapManager API like normal.
+
+        if (data.Version != BackwardsVersion)
+            return;
 
         var yamlGrids = data.RootMappingNode.Get<SequenceDataNode>("grids");
 
@@ -620,7 +628,7 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
     {
         // sane defaults
         ushort csz = 16;
@@ -638,15 +646,15 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue; // obsolete
         }
 
-        var grid = gridComp.AllocMapGrid(csz, tsz);
+        gridComp.ChunkSize = csz;
+        gridComp.TileSize = tsz;
 
-        return grid;
+        return gridComp;
     }
 
     private void StartupEntities(MapData data)
     {
         _stopwatch.Restart();
-        DebugTools.Assert(data.Entities.Count == data.Entities.Count);
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var rootEntity = data.Entities[0];
         var mapQuery = GetEntityQuery<MapComponent>();
@@ -666,21 +674,15 @@ public sealed class MapLoaderSystem : EntitySystem
             }
         }
 
-        var isRoot = true;
-
         for (var i = 1; i < data.Entities.Count; i++)
         {
             var entity = data.Entities[i];
 
-            if (isRoot && xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
+            if (xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
                 xform._localRotation += data.Options.Rotation;
-            }
-            else
-            {
-                isRoot = false;
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);
@@ -777,7 +779,6 @@ public sealed class MapLoaderSystem : EntitySystem
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         _context.Set(uidEntityMap, entityUidMap);
-        WriteGridSection(data, entities);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);
@@ -888,32 +889,14 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private void WriteGridSection(MappingDataNode rootNode, List<EntityUid> entities)
-    {
-        // TODO: Shitcode
-        var grids = new SequenceDataNode();
-        rootNode.Add("grids", grids);
-        var mapGridQuery = GetEntityQuery<MapGridComponent>();
-
-        int index = 0;
-        foreach (var entity in entities)
-        {
-            if (!mapGridQuery.TryGetComponent(entity, out var grid))
-                continue;
-
-            grid.GridIndex = index;
-            var entry = _serManager.WriteValue((MapGrid) grid.Grid, context: _context);
-            grids.Add(entry);
-            index++;
-        }
-    }
-
     private void WriteEntitySection(MappingDataNode rootNode, Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
     {
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var entities = new SequenceDataNode();
         rootNode.Add("entities", entities);
 
+        // As metadata isn't on components we'll special-case it.
+        var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
@@ -940,6 +923,8 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
                     }
+
+                    cache.GetOrNew(metadataName);
                 }
             }
 
@@ -1168,16 +1153,13 @@ public sealed class MapLoaderSystem : EntitySystem
     /// </summary>
     private sealed class MapData
     {
-        public YamlStream Stream { get; }
-
-        public YamlNode RootNode => Stream.Documents[0].RootNode;
-
         public MappingDataNode RootMappingNode { get; }
 
         public readonly MapId TargetMap;
         public bool MapIsPostInit;
         public bool MapIsPaused;
         public readonly MapLoadOptions Options;
+        public int Version;
 
         // Loading data
         public readonly List<EntityUid> Entities = new();
@@ -1188,23 +1170,21 @@ public sealed class MapLoaderSystem : EntitySystem
 
         public MapData(MapId mapId, TextReader reader, MapLoadOptions options)
         {
-            var stream = new YamlStream();
-            stream.Load(reader);
+            var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
 
-            if (stream.Documents.Count < 1)
+            if (documents.Length < 1)
             {
                 throw new InvalidDataException("Stream has no YAML documents.");
             }
 
             // Kinda wanted to just make this print a warning and pick [0] but screw that.
             // What is this, a hug box?
-            if (stream.Documents.Count > 1)
+            if (documents.Length > 1)
             {
                 throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
             }
 
-            Stream = stream;
-            RootMappingNode = RootNode.ToDataNodeCast<MappingDataNode>();
+            RootMappingNode = (MappingDataNode) documents[0].Root!;
             Options = options;
             TargetMap = mapId;
         }

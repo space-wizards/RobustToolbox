@@ -44,6 +44,9 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void OnGridInit(GridInitializeEvent ev)
         {
+            if (HasComp<MapComponent>(ev.EntityUid))
+                return;
+
             // This will also check for grid splits if applicable.
             var grid = Comp<MapGridComponent>(ev.EntityUid);
             grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
@@ -63,11 +66,6 @@ namespace Robust.Shared.GameObjects
         private void SetEnlargement(float value) => _fixtureEnlargement = value;
 
         private void SetConvexHulls(bool value) => _convexHulls = value;
-
-        internal void ProcessGrid(MapGridComponent grid)
-        {
-            grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
-        }
 
         internal void RegenerateCollision(
             EntityUid gridEuid,

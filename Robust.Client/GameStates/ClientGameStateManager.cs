@@ -602,11 +602,6 @@ namespace Robust.Client.GameStates
                 _config.TickProcessMessages();
             }
 
-            using (_prof.Group("Map Pre"))
-            {
-                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
-            }
-
             (IEnumerable<EntityUid> Created, List<EntityUid> Detached) output;
             using (_prof.Group("Entity"))
             {
@@ -824,7 +819,7 @@ namespace Robust.Client.GameStates
             SharedTransformSystem xformSys)
         {
             // Processing deletions is non-trivial, because by default deletions will also delete all child entities.
-            // 
+            //
             // Naively: easy, just apply server states to process any transform states before deleting, right? But now
             // that PVS detach messages are sent separately & processed over time, the entity may have left our view,
             // but not yet been moved to null-space. In that case, the server would not send us transform states, and
@@ -1195,7 +1190,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <summary>
-        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space. 
+        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space.
         /// </summary>
         private void ResetAllEnts(IConsoleShell shell, string argStr, string[] args)
         {

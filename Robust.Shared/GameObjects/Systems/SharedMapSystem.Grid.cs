@@ -29,11 +29,10 @@ public abstract partial class SharedMapSystem
 
         component.ChunkSize = state.ChunkSize;
 
-        MapManager.SuppressOnTileChanged = true;
-        var modified = new List<(Vector2i position, Tile tile)>();
-
         if (state.ChunkData != null)
         {
+            var modified = new List<(Vector2i position, Tile tile)>();
+            MapManager.SuppressOnTileChanged = true;
             foreach (var chunkData in state.ChunkData)
             {
                 if (chunkData.IsDeleted())
@@ -72,6 +71,11 @@ public abstract partial class SharedMapSystem
             }
 
             MapManager.SuppressOnTileChanged = false;
+
+            if (modified.Count != 0)
+            {
+                RaiseLocalEvent(uid, new GridModifiedEvent(component, modified), true);
+            }
         }
     }
 
@@ -79,7 +83,7 @@ public abstract partial class SharedMapSystem
     {
         // TODO: Actual deltas.
         List<ChunkDatum>? chunkData;
-        GameTick fromTick = args.FromTick;
+        var fromTick = args.FromTick;
 
         if (component.LastTileModifiedTick < fromTick)
         {
@@ -119,6 +123,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
+        // TODO: Mark it as delta proper
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
     }
 

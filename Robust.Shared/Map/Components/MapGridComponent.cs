@@ -873,6 +873,7 @@ namespace Robust.Shared.Map.Components
             var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
             mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            _entMan.Dirty(this);
 
             // The map serializer currently sets tiles of unbound grids as part of the deserialization process
             // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.

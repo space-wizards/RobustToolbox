@@ -100,37 +100,6 @@ namespace Robust.Shared.GameObjects
             CheckSplit(gridEuid, mapChunks, removedChunks);
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
-        {
-            if (!_enabled) return;
-
-            if (chunk.FilledTiles == 0)
-            {
-                CheckSplit(gridEuid, chunk, rectangles);
-                return;
-            }
-
-            if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
-            {
-                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
-                return;
-            }
-
-            if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
-            {
-                Sawmill.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
-                return;
-            }
-
-            if (UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent))
-            {
-                _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures}, true);
-
-                CheckSplit(gridEuid, chunk, rectangles);
-            }
-        }
-
         internal virtual void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks,
             List<MapChunk> removedChunks) {}
 

@@ -80,7 +80,11 @@ namespace Robust.Client
             deps.Register<IUserInterfaceManager, UserInterfaceManager>();
             deps.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             deps.Register<ILightManager, LightManager>();
+#if !FULL_RELEASE
+            deps.Register<IDiscordRichPresence, DummyDiscordRichpresence>();
+#else
             deps.Register<IDiscordRichPresence, DiscordRichPresence>();
+#endif
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();

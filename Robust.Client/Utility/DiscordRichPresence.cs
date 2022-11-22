@@ -8,6 +8,30 @@ using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {
+    internal sealed class DummyDiscordRichpresence : IDiscordRichPresence
+    {
+        public void Dispose()
+        {
+            return;
+        }
+
+        public void Initialize()
+        {
+            return;
+        }
+
+        public void Update(string serverName, string username, string maxUser)
+        {
+            return;
+        }
+
+        public void ClearPresence()
+        {
+            return;
+        }
+    }
+
+    // ReSharper disable once UnusedType.Global
     internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
         private static readonly RichPresence _defaultPresence = new()
@@ -52,7 +76,7 @@ namespace Robust.Client.Utility
                     _stop();
                 }
             });
-            
+
             if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.2.1
+
+### Bugfixes
+
+* Fix MapChunks not being subscribed to by MapGridComponents in some instances.
+
+
 ## 0.67.2.0
 
 ### New features

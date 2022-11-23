@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -23,81 +21,56 @@ internal interface INetworkedMapManager : IMapManagerInternal
 
 internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
-    private readonly Dictionary<EntityUid, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
-
-    public override void DeleteGrid(EntityUid gridId)
-    {
-        base.DeleteGrid(gridId);
-        // No point syncing chunk removals anymore!
-        _chunkDeletionHistory.Remove(gridId);
-    }
-
-    public override void ChunkRemoved(EntityUid gridId, MapChunk chunk)
-    {
-        base.ChunkRemoved(gridId, chunk);
-        if (!_chunkDeletionHistory.TryGetValue(gridId, out var chunks))
-        {
-            chunks = new List<(GameTick tick, Vector2i indices)>();
-            _chunkDeletionHistory[gridId] = chunks;
-        }
-
-        chunks.Add((GameTiming.CurTick, chunk.Indices));
-    }
-
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<EntityUid, GameStateMapData.GridDatum>();
-        var enumerator = GetAllGridsEnumerator();
+        var enumerator = EntityManager.AllEntityQueryEnumerator<MapGridComponent>();
 
         while (enumerator.MoveNext(out var iGrid))
         {
-            var grid = (MapGrid)iGrid;
-
-            if (grid.LastTileModifiedTick < fromTick)
+            if (iGrid.LastTileModifiedTick < fromTick)
                 continue;
 
             var chunkData = new List<GameStateMapData.ChunkDatum>();
+            var chunks = iGrid.ChunkDeletionHistory;
 
-            if (_chunkDeletionHistory.TryGetValue(grid.GridEntityId, out var chunks))
+            foreach (var (tick, indices) in chunks)
             {
-                foreach (var (tick, indices) in chunks)
-                {
-                    if (tick < fromTick)
-                        continue;
+                if (tick < fromTick)
+                    continue;
 
-                    chunkData.Add(GameStateMapData.ChunkDatum.CreateDeleted(indices));
-                }
+                chunkData.Add(GameStateMapData.ChunkDatum.CreateDeleted(indices));
             }
 
-            foreach (var (index, chunk) in grid.GetMapChunks())
+            foreach (var (index, chunk) in iGrid.GetMapChunks())
             {
                 if (chunk.LastTileModifiedTick < fromTick)
                     continue;
 
-                var tileBuffer = new Tile[grid.ChunkSize * (uint)grid.ChunkSize];
+                var tileBuffer = new Tile[iGrid.ChunkSize * (uint) iGrid.ChunkSize];
 
                 // Flatten the tile array.
                 // NetSerializer doesn't do multi-dimensional arrays.
                 // This is probably really expensive.
-                for (var x = 0; x < grid.ChunkSize; x++)
+                for (var x = 0; x < iGrid.ChunkSize; x++)
                 {
-                    for (var y = 0; y < grid.ChunkSize; y++)
+                    for (var y = 0; y < iGrid.ChunkSize; y++)
                     {
-                        tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
+                        tileBuffer[x * iGrid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                     }
                 }
                 chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
-            var gridXform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var gridXform = EntityManager.GetComponent<TransformComponent>(iGrid.GridEntityId);
             var (worldPos, worldRot) = gridXform.GetWorldPositionRotation();
 
             var gridDatum = new GameStateMapData.GridDatum(
-                    chunkData.ToArray(),
-                    new MapCoordinates(worldPos, gridXform.MapID),
-                    worldRot);
+                chunkData.ToArray(),
+                new MapCoordinates(worldPos, gridXform.MapID),
+                worldRot);
 
-            gridDatums.Add(grid.GridEntityId, gridDatum);
+            gridDatums.Add(iGrid.GridEntityId, gridDatum);
         }
 
         // no point sending empty collections
@@ -109,11 +82,12 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
     public void CullDeletionHistory(GameTick upToTick)
     {
-        foreach (var (gridId, chunks) in _chunkDeletionHistory.ToArray())
+        var query = EntityManager.EntityQueryEnumerator<MapGridComponent>();
+
+        while (query.MoveNext(out var grid))
         {
+            var chunks = grid.ChunkDeletionHistory;
             chunks.RemoveAll(t => t.tick < upToTick);
-            if (chunks.Count == 0)
-                _chunkDeletionHistory.Remove(gridId);
         }
     }
 
@@ -148,6 +122,14 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         // grid already exists from a previous state
                         if(GridExists(gridEuid))
                             continue;
+
+                        // Existing ent?
+                        // I love NetworkedMapManager
+                        if (EntityManager.EntityExists(gridEuid))
+                        {
+                            EntityManager.AddComponent<MapGridComponent>(gridEuid);
+                            continue;
+                        }
 
                         DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridEuid}.");
 
@@ -203,7 +185,15 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         if (xformComp.MapID != gridDatum.Coordinates.MapId)
             throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
-        xformComp.WorldPosition = gridDatum.Coordinates.Position;
-        xformComp.WorldRotation = gridDatum.Angle;
+        // TODO: SHITCODE ALERT -> When we get proper ECS we can delete this.
+        if (xformComp.WorldPosition != gridDatum.Coordinates.Position)
+        {
+            xformComp.WorldPosition = gridDatum.Coordinates.Position;
+        }
+
+        if (xformComp.WorldRotation != gridDatum.Angle)
+        {
+            xformComp.WorldRotation = gridDatum.Angle;
+        }
     }
 }

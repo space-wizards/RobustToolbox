@@ -2,6 +2,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects;
 
@@ -45,8 +46,26 @@ public abstract partial class SharedMapSystem
 
         if (MapManager.HasMapEntity(mapId))
         {
-            _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
+            var mapUid = MapManager.GetMapEntityIdOrThrow(mapId);
+
+            // Mapgrid moment
+            if (mapUid != uid)
+                _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
+
+        // Force networkedmapmanager to send it due to non-ECS legacy code.
+        var curTick = _timing.CurTick;
+
+        foreach (var chunk in component.Chunks.Values)
+        {
+            chunk.TileModified += component.OnTileModified;
+            chunk.LastTileModifiedTick = curTick;
+        }
+
+        component.LastTileModifiedTick = curTick;
+
+        // Just in case.
+        _transform.SetGridId(xform, uid, xformQuery);
 
         var msg = new GridInitializeEvent(uid);
         RaiseLocalEvent(uid, msg, true);

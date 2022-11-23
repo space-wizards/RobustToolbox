@@ -87,6 +87,7 @@ namespace Robust.Shared.Map.Components
         {
             networkedMapManager.SuppressOnTileChanged = true;
             var modified = new List<(Vector2i position, Tile tile)>();
+
             foreach (var chunkData in chunkUpdates)
             {
                 if (chunkData.IsDeleted())
@@ -914,13 +915,13 @@ namespace Robust.Shared.Map.Components
                 rotation, worldPos).CalcBoundingBox();
         }
 
-        private void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
+        internal void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
             bool shapeChanged)
         {
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
             var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
-            mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            mapChunk.LastTileModifiedTick = _timing.CurTick;
+            LastTileModifiedTick = _timing.CurTick;
 
             // The map serializer currently sets tiles of unbound grids as part of the deserialization process
             // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.

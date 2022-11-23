@@ -409,7 +409,7 @@ public sealed partial class SerializationManager
     public void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopier : ITypeCopier<T>
     {
-        CopyTo(GetOrCreateCustomTypeSerializer<TCopier>(), source, ref target, context, skipHook);
+        CopyTo(GetOrCreateCustomTypeSerializer<TCopier>(), source, ref target, context, skipHook, notNullableOverride);
     }
 
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
@@ -461,6 +461,6 @@ public sealed partial class SerializationManager
     public T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopyCreator : ITypeCopyCreator<T>
     {
-        return CreateCopy(GetOrCreateCustomTypeSerializer<TCopyCreator>(), source, context, skipHook);
+        return CreateCopy(GetOrCreateCustomTypeSerializer<TCopyCreator>(), source, context, skipHook, notNullableOverride);
     }
 }

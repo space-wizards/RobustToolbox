@@ -1010,7 +1010,7 @@ public sealed class MapLoaderSystem : EntitySystem
     internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
         ITypeSerializer<EntityUid, ValueDataNode>
     {
-        public SerializationManager.SerializerProvider SerializerProvider => new();
+        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
         // Run-specific data
         public Dictionary<ushort, string>? TileMap;

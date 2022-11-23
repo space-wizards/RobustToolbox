@@ -1,4 +1,5 @@
 using Robust.Shared.Configuration;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -60,6 +61,12 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
 
             flags = cVar.Flags;
+        }
+
+        if ((flags & CVar.CLIENT) != 0)
+        {
+            Sawmill.Warning($"Only clients can change the '{name}' cvar.");
+            return;
         }
 
         // Actually set the CVar

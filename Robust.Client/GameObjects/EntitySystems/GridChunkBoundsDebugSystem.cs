@@ -3,6 +3,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -71,12 +72,11 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
             {
-                var gridInternal = (IMapGridInternal)grid;
                 var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId).WorldMatrix;
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
 
-                var chunkEnumerator = gridInternal.GetMapChunks(viewport);
+                var chunkEnumerator = grid.GetMapChunks(viewport);
 
                 while (chunkEnumerator.MoveNext(out var chunk))
                 {

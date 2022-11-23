@@ -15,6 +15,7 @@ using Robust.Client.Player;
 using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
+using Robust.Client.Replays;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
@@ -34,6 +35,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -71,6 +73,7 @@ namespace Robust.Client
             deps.Register<IClientEntityManager, ClientEntityManager>();
             deps.Register<IClientEntityManagerInternal, ClientEntityManager>();
             deps.Register<IEntityNetworkManager, ClientEntityManager>();
+            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IClientGameStateManager, ClientGameStateManager>();
             deps.Register<IBaseClient, BaseClient>();
             deps.Register<IPlayerManager, PlayerManager>();

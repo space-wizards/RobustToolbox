@@ -14,6 +14,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -549,7 +550,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
                 _mapManager.FindGridsIntersectingApprox(mapId, new Box2(viewPos - range, viewPos + range),
                     ref state, static (
-                        IMapGrid mapGrid,
+                        MapGridComponent mapGrid,
                         ref (int i,
                             EntityQuery<TransformComponent> transformQuery,
                             Vector2 viewPos,
@@ -560,14 +561,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))

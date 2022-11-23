@@ -10,6 +10,7 @@ using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
+using Robust.Server.Replays;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
@@ -26,6 +27,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -65,6 +67,7 @@ namespace Robust.Server
             deps.Register<IServerEntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
+            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IServerNetManager, NetManager>();
             deps.Register<IStatusHost, StatusHost>();
             deps.Register<ISystemConsoleManager, SystemConsoleManager>();

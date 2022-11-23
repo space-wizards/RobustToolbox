@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Map
 {

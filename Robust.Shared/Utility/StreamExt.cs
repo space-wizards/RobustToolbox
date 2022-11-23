@@ -22,6 +22,21 @@ namespace Robust.Shared.Utility
             }
         }
 
+        /// <summary>
+        /// <see cref="CopyToArray"/> but to the Pinned Object Heap.
+        /// </summary>
+        internal static byte[] CopyToPinnedArray(this Stream stream)
+        {
+            var ms = new MemoryStream();
+            stream.CopyTo(ms);
+
+            var count = (int)ms.Length;
+            var array = GC.AllocateUninitializedArray<byte>(count, pinned: true);
+            ms.GetBuffer().AsSpan(0, count).CopyTo(array);
+
+            return array;
+        }
+
         internal static MemoryStream ConsumeToMemoryStream(this Stream stream)
         {
             var ms = stream.CopyToMemoryStream();

@@ -103,6 +103,15 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
 
         foreach (var (name, value) in networkedVars)
         {
+            if (!_configVars.TryGetValue(name, out var cVar))
+            {
+                Sawmill.Warning($"Server sent an unknown replicated CVar '{name}.'");
+                continue;
+            }
+
+            if ((cVar.Flags & CVar.CLIENT) != 0)
+                continue; // ignore the server specified value.
+
             // Actually set the CVar
             SetCVarInternal(name, value, tick);
 

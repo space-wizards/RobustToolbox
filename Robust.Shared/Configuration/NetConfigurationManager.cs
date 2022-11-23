@@ -163,8 +163,16 @@ namespace Robust.Shared.Configuration
                 if ((cVar.Flags & CVar.REPLICATED) == 0)
                     continue;
 
-                if (NetManager.IsClient && (cVar.Flags & CVar.SERVER) != 0)
-                    continue;
+                if (NetManager.IsClient)
+                {
+                    if ((cVar.Flags & CVar.SERVER) != 0)
+                        continue;
+                }
+                else
+                {
+                    if ((cVar.Flags & CVar.CLIENT) != 0)
+                        continue;
+                }
 
                 nwVars.Add((cVar.Name, GetConfigVarValue(cVar)));
 

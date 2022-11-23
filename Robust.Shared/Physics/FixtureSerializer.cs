@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -50,11 +52,14 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
         if (value.Count == 0)
             return seq;
 
-        var body = value[0].Body.Owner;
-
-        // Don't write grid fixtures because it bloats mapfiles a lot and we re-calculate it anyway.
-        if (dependencies.Resolve<IEntityManager>().HasComponent<MapGridComponent>(body))
-            return seq;
+        if (context is MapSerializationContext mapContext)
+        {
+            // Don't serialize mapgrid fixtures because it's bloat and we'll just generate them at runtime.
+            if (dependencies.Resolve<IEntityManager>().HasComponent<MapGridComponent>(mapContext.CurrentWritingEntity))
+            {
+                return seq;
+            }
+        }
 
         foreach (var fixture in value)
         {

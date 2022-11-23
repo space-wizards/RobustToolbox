@@ -14,16 +14,18 @@ namespace Robust.Client.UserInterface.Controls
     public class MenuBar : PanelContainer
     {
         private readonly List<Menu> _menus = new();
-        private readonly List<MenuBarTopButton> _buttons = new();
+        private readonly List<MenuTopButton> _buttons = new();
         private readonly BoxContainer _hBox;
         private readonly Popup _popup;
         private readonly BoxContainer _popupVBox;
         private bool _popupOpen;
+        private bool _isSubmenu = false;
 
         public IList<Menu> Menus { get; }
 
-        public MenuBar()
+        public MenuBar(bool isSubmenu = false)
         {
+            _isSubmenu = isSubmenu;
             _popup = new Popup
             {
                 Children =
@@ -47,7 +49,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void AddMenu(Menu menu)
         {
-            var button = new MenuBarTopButton(menu);
+            MenuTopButton button = _isSubmenu ? new SubMenuTopButton(menu) : new MenuBarTopButton(menu);
             _menus.Add(menu);
             _buttons.Add(button);
             _hBox.AddChild(button);
@@ -63,14 +65,14 @@ namespace Robust.Client.UserInterface.Controls
             };
         }
 
-        private void OpenPopupFor(MenuBarTopButton button)
+        private void OpenPopupFor(MenuTopButton button)
         {
             _popupVBox.RemoveAllChildren();
-            var menu = button.Menu;
+            var menu = button.ChildMenu;
             ConstructMenu(menu, _popupVBox);
 
             var globalPos = button.GlobalPosition;
-            globalPos += (0, button.Height);
+            globalPos += (_isSubmenu ? button.Width : 0, _isSubmenu ? 0 : button.Height);
             _popup.Open(UIBox2.FromDimensions(globalPos, _popupVBox.Size));
 
             // Set this after running open so that if this is called from MouseEntered,
@@ -125,6 +127,25 @@ namespace Robust.Client.UserInterface.Controls
                     case MenuSeparator _:
                         var control = new Control {MinSize = (0, 6)};
                         container.AddChild(control);
+                        break;
+
+                    case SubMenu submenuButton:
+                        var subButton = new MenuBar(true);
+                        container.AddChild(subButton);
+                        container.OnChildRemoved += _ =>
+                        {
+                            if (subButton._popupOpen)
+                            {
+                                subButton._popup.RemoveAllChildren();
+                            }
+                        };
+
+                        var subButtonMenu = new Menu(){
+                            Title = submenuButton.Text
+                        };
+                        subButtonMenu.Entries.AddRange(submenuButton.Entries);
+                        subButton.Menus.Add(subButtonMenu);
+
                         break;
                 }
             }
@@ -199,18 +220,15 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public sealed class MenuBarTopButton : PanelContainer
+        public abstract class MenuTopButton : PanelContainer
         {
             public const string StylePseudoClassHover = "hover";
+            public Menu ChildMenu;
 
-            public Label Label { get; }
-            public Menu Menu { get; }
-
-            public MenuBarTopButton(Menu menu)
+            public MenuTopButton(Menu menu)
             {
                 MouseFilter = MouseFilterMode.Pass;
-                Menu = menu;
-                AddChild(Label = new Label {Text = menu.Title});
+                ChildMenu = menu;
             }
 
             protected internal override void MouseEntered()
@@ -225,6 +243,37 @@ namespace Robust.Client.UserInterface.Controls
                 base.MouseExited();
 
                 SetOnlyStylePseudoClass(null);
+            }
+        }
+
+        public sealed class MenuBarTopButton : MenuTopButton
+        {
+            public Label Label { get; }
+
+            public MenuBarTopButton(Menu menu) : base(menu)
+            {
+               AddChild(Label = new Label {Text = menu.Title});
+            }
+        }
+
+        public sealed class SubMenuTopButton : MenuTopButton
+        {
+            public Button Button { get; } //basically just replicating the style of the other menu elements
+
+            public SubMenuTopButton(Menu menu) : base(menu)
+            {
+                Button = new Button {
+                    Text = menu.Title,
+                    MinSize = (300, 0),
+                    MouseFilter = MouseFilterMode.Pass
+                };
+
+                Label arrowLabel =  new Label {Text = ">", HorizontalAlignment = HAlignment.Right};
+                Button.AddChild(arrowLabel);
+
+
+                AddChild(Button);
+
             }
         }
 
@@ -261,5 +310,13 @@ namespace Robust.Client.UserInterface.Controls
         public sealed class MenuSeparator : MenuEntry
         {
         }
+
+        public sealed class SubMenu : MenuEntry
+        {
+            public string? Text { get; set; }
+
+            public List<MenuEntry> Entries { get; set; } = new();
+        }
     }
+
 }

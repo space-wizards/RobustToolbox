@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -24,8 +25,8 @@ namespace Robust.UnitTesting.Shared.Map
             var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             MapId mapId;
-            IMapGrid? gridId1 = null;
-            IMapGrid? gridId2 = null;
+            MapGridComponent? gridId1 = null;
+            MapGridComponent? gridId2 = null;
             PhysicsComponent? physics1 = null;
             PhysicsComponent? physics2 = null;
             EntityUid? gridEnt1;

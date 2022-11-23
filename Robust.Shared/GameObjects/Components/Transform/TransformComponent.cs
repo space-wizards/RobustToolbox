@@ -11,6 +11,7 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         internal BroadphaseData? Broadphase;
 
-        internal bool MatricesDirty = false;
+        internal bool MatricesDirty = true;
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 

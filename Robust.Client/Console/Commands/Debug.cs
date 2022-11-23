@@ -21,6 +21,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Reflection;
@@ -623,12 +624,10 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var internalGrid = (IMapGridInternal)grid;
-
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = internalGrid.GetChunk(chunkIndex);
+            var chunk = grid.GetChunk(chunkIndex);
 
-            shell.WriteLine($"worldBounds: {internalGrid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
+            shell.WriteLine($"worldBounds: {grid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
         }
     }
 

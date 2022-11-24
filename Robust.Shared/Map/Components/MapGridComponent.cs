@@ -447,7 +447,7 @@ namespace Robust.Shared.Map.Components
             var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
             newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
 
-            if (LifeStage > ComponentLifeStage.Initializing)
+            if (Initialized)
                 newChunk.TileModified += OnTileModified;
 
             return Chunks[chunkIndices] = newChunk;

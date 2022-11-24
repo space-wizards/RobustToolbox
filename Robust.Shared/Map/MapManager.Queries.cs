@@ -185,7 +185,7 @@ internal partial class MapManager
 
             if (!iGrid.HasChunk(chunkIndices)) return true;
 
-            var chunk = iGrid.GetChunk(chunkIndices);
+            var chunk = iGrid.GetOrAddChunk(chunkIndices);
             Vector2i indices = chunk.GridTileToChunkTile(tile);
             var chunkTile = chunk.GetTile((ushort)indices.X, (ushort)indices.Y);
 

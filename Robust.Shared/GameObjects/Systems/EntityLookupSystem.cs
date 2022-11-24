@@ -72,12 +72,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
 
-        private ISawmill _sawmill = default!;
-
         public override void Initialize()
         {
             base.Initialize();
-            _sawmill = Logger.GetSawmill("lookup");
 
             SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);

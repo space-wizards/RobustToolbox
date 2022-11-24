@@ -72,9 +72,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
 
+        private ISawmill _sawmill = default!;
+
         public override void Initialize()
         {
             base.Initialize();
+            _sawmill = Logger.GetSawmill("lookup");
 
             SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
@@ -444,6 +447,16 @@ namespace Robust.Shared.GameObjects
 
             if (newBroadphase == null)
                 return;
+
+            // Old broadphase was deleted so make sure fixture proxies are cleared
+            if (oldBroadphase == null && fixturesQuery.TryGetComponent(uid, out var fixtures))
+            {
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    fixture.ProxyCount = 0;
+                    fixture.Proxies = Array.Empty<FixtureProxy>();
+                }
+            }
 
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             var contQuery = GetEntityQuery<ContainerManagerComponent>();

@@ -16,7 +16,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Server.Maps;
 
 [TypeSerializer]
-internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>
+internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>, ITypeCopyCreator<MapChunk>
 {
     public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -126,5 +126,29 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         }
 
         return Convert.ToBase64String(barr);
+    }
+
+    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, bool skipHook,
+        ISerializationContext? context = null)
+    {
+        var mapManager = ((SerializationManager)serializationManager).DependencyCollection.Resolve<IMapManager>();
+        mapManager.SuppressOnTileChanged = true;
+        var chunk = new MapChunk(source.X, source.Y, source.ChunkSize)
+        {
+            SuppressCollisionRegeneration = true
+        };
+
+        for (ushort y = 0; y < chunk.ChunkSize; y++)
+        {
+            for (ushort x = 0; x < chunk.ChunkSize; x++)
+            {
+                chunk.SetTile(x, y, source.GetTile(x, y));
+            }
+        }
+
+        mapManager.SuppressOnTileChanged = false;
+        chunk.SuppressCollisionRegeneration = false;
+
+        return chunk;
     }
 }

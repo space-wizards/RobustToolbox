@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using JetBrains.Annotations;
 using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Value
@@ -24,6 +25,13 @@ namespace Robust.Shared.Serialization.Markdown.Value
                      (node.Value == null || IsNullLiteral(node.Value));
             Value = node.Value ?? string.Empty;
             Tag = node.Tag.IsEmpty ? null : node.Tag.Value;
+        }
+
+        public ValueDataNode(Scalar scalar) : base(scalar.Start, scalar.End)
+        {
+            IsNull = scalar.Style != ScalarStyle.DoubleQuoted && scalar.Style != ScalarStyle.SingleQuoted && IsNullLiteral(scalar.Value);
+            Value = scalar.Value;
+            Tag = scalar.Tag.IsEmpty ? null : scalar.Tag.Value;
         }
 
         public static explicit operator YamlScalarNode(ValueDataNode node)

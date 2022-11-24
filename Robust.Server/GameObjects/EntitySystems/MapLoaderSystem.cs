@@ -1085,7 +1085,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
                 }
 
-                return new ValueDataNode("null");
+                return new ValueDataNode("invalid");
             }
 
             return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
@@ -1097,7 +1097,7 @@ public sealed class MapLoaderSystem : EntitySystem
             bool skipHook,
             ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? _)
         {
-            if (node.Value == "null")
+            if (node.Value == "invalid")
             {
                 return EntityUid.Invalid;
             }

@@ -622,7 +622,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+                var chunk = grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY);
                 _serManager.Read(chunkNode, _context, value: chunk);
             }
         }

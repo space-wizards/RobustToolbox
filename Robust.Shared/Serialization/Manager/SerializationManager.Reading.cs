@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
@@ -288,10 +289,13 @@ namespace Robust.Shared.Serialization.Manager
             var returnValue = Expression.Variable(nullable ? actualType.EnsureNullableType() : actualType);
             call = Expression.Block(new[] { returnValue },
                 Expression.IfThenElse(
-                Expression.Call(typeof(SerializationManager), nameof(IsNull), Type.EmptyTypes, nodeParam),
-                nullable && !notNullableOverride
-                    ? Expression.Block(typeof(void), Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
-                    : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
+                    Expression.Call(typeof(SerializationManager), nameof(IsNull), Type.EmptyTypes, nodeParam),
+                    nullable && !notNullableOverride
+                        ? Expression.Block(typeof(void),
+                            Expression.Assign(returnValue, GetNullExpression(managerConst, actualType)))
+                        : actualType == typeof(EntityUid) //todo paul make this not hardcoded
+                            ? Expression.Assign(returnValue, Expression.Constant(EntityUid.Invalid))
+                            : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
                 Expression.Block(typeof(void),
                     Expression.Assign(returnValue, call))),
                 returnValue);

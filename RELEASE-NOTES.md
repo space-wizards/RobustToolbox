@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.67.2.2
+
+### Bugfixes
+
+* Fix double MapGrid chunk subscription.
+* Fix grid contacts short-circuiting collision.
+
+
 ## 0.67.2.1
 
 ### Bugfixes

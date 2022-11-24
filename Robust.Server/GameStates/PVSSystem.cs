@@ -403,7 +403,7 @@ internal sealed partial class PVSSystem : EntitySystem
             return;
         }
 
-        if (e.NewStatus != SessionStatus.Disconnected)
+        if (e.NewStatus != SessionStatus.Disconnected || e.OldStatus != SessionStatus.InGame)
             return;
 
         foreach (var pvsCollection in _pvsCollections)

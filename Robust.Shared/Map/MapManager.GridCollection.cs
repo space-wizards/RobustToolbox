@@ -127,7 +127,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(((Component) c).Owner).MapID == mapId)
             .Select(c => c);
     }
 
@@ -212,6 +212,6 @@ internal partial class MapManager
     protected internal static void InvokeGridChanged(MapManager mapManager, MapGridComponent mapGrid, IReadOnlyCollection<(Vector2i position, Tile tile)> changedTiles)
     {
         mapManager.GridChanged?.Invoke(mapManager, new GridChangedEventArgs(mapGrid, changedTiles));
-        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.GridEntityId, new GridModifiedEvent(mapGrid, changedTiles), true);
+        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.Owner, new GridModifiedEvent(mapGrid, changedTiles), true);
     }
 }

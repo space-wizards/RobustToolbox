@@ -30,15 +30,15 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGrid(mapId);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
-        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.GridEntityId));
-        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
+        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.Owner));
+        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
         var xform = entManager.GetComponent<TransformComponent>(ent);
         Assert.That(broadphase.SundriesTree, Does.Contain(ent));
 
         var broadphaseData = xform.Broadphase;
-        Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.GridEntityId));
+        Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.Owner));
 
         xform.Coordinates = new EntityCoordinates(mapEnt, Vector2.One);
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(ent));
@@ -65,16 +65,16 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGrid(mapId);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
-        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.GridEntityId));
-        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
+        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.Owner));
+        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
         var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var xform = entManager.GetComponent<TransformComponent>(ent);
 
         // If we're not collidable we're still on the sundries tree.
         Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
-        Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(grid.GridEntityId));
+        Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(grid.Owner));
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
@@ -110,7 +110,7 @@ public sealed class Broadphase_Test
         var mapId1 = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId1);
-        var xform = entManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        var xform = entManager.GetComponent<TransformComponent>(grid.Owner);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
@@ -143,12 +143,12 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGrid(mapId);
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
-        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.GridEntityId);
+        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.GridEntityId, new Vector2(0.5f, 0.5f)));
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
 
         var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);

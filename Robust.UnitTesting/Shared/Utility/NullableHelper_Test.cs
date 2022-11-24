@@ -30,6 +30,15 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        public void NullableContextTest()
+        {
+            foreach (var field in typeof(NullableTestContextClass).GetAllFields())
+            {
+                Assert.That(NullableHelper.IsMarkedAsNullable((SpecificFieldInfo)field), Is.EqualTo(!field.FieldType.IsValueType), $"{field}");
+            }
+        }
+
+        [Test]
         public void IsNotNullableTest()
         {
             var fields = typeof(NotNullableTestClass).GetAllFields();
@@ -50,6 +59,15 @@ namespace Robust.UnitTesting.Shared.Utility
         public INullableTestInterface? Itest;
         public NullableTestClass? nTc;
         private char? c;
+    }
+
+    //this provokes the nullablecontext optimization
+    public sealed class NullableTestContextClass
+    {
+        public INullableTestInterface? Itest;
+        public NullableTestClass? nTc;
+        public object? o;
+        private int i;
     }
 
     public sealed class NotNullableTestClass

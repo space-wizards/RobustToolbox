@@ -47,12 +47,13 @@ namespace Robust.Shared.Utility
         /// <returns></returns>
         internal static bool IsMarkedAsNullable(AbstractFieldInfo field)
         {
+            //to understand whats going on here, read https://github.com/dotnet/roslyn/blob/main/docs/features/nullable-metadata.md
             if (Nullable.GetUnderlyingType(field.FieldType) != null) return true;
 
             var flags = GetNullableFlags(field);
             if (flags.Length != 0 && flags[0] != NotAnnotatedNullableFlag) return true;
 
-            if (field.DeclaringType == null) return false;
+            if (field.DeclaringType == null || field.FieldType.IsValueType) return false;
 
             var cflag = GetNullableContextFlag(field.DeclaringType);
             return cflag != NotAnnotatedNullableFlag;

@@ -23,6 +23,10 @@ namespace Robust.Client.UserInterface.Controls
 
         public IList<Menu> Menus { get; }
 
+        public MenuBar() : this(false)
+        {
+        }
+
         public MenuBar(bool isSubmenu = false)
         {
             _isSubmenu = isSubmenu;

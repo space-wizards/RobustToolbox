@@ -91,10 +91,7 @@ namespace Robust.Client.GameObjects
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
-            if (!_stateMan.IsPredictionEnabled)
-                return;
-
-            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
+            DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
 
             var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
             EventBus.RaiseEvent(EventSource.Local, msg);

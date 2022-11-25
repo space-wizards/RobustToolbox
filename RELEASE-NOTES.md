@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed the `restart` command, since it never worked properly and just confused people.
 
 ### Internal
 

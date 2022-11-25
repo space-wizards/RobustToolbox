@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -253,10 +254,11 @@ namespace Robust.Shared.Physics.Systems
         {
             var guid = ev.EntityUid;
 
-            if (!EntityManager.EntityExists(guid) || HasComp<PhysicsComponent>(guid))
+            // If it's mapgrid then no physics.
+            if (HasComp<MapComponent>(guid))
                 return;
 
-            var body = AddComp<PhysicsComponent>(guid);
+            var body = EnsureComp<PhysicsComponent>(guid);
             SetCanCollide(body, true);
             SetBodyType(body, BodyType.Static);
         }

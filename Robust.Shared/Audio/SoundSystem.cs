@@ -11,6 +11,9 @@ namespace Robust.Shared.Audio
     /// </summary>
     public static class SoundSystem
     {
+        // These functions are obsolete and I CBF adding new arguments to them.
+        private static bool _recordReplay = false;
+
         /// <summary>
         /// Play an audio file globally, without position.
         /// </summary>
@@ -24,7 +27,7 @@ namespace Robust.Shared.Audio
 
             // Some timers try to play audio after the system has shut down?
             entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
-            return audio?.PlayGlobal(filename, playerFilter, audioParams);
+            return audio?.PlayGlobal(filename, playerFilter, _recordReplay, audioParams);
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace Robust.Shared.Audio
 
             // Some timers try to play audio after the system has shut down?
             entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
-            return audio?.Play(filename, playerFilter, uid, audioParams);
+            return audio?.Play(filename, playerFilter, uid, _recordReplay, audioParams);
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace Robust.Shared.Audio
 
             // Some timers try to play audio after the system has shut down?
             entSystMan.TryGetEntitySystem(out SharedAudioSystem? audio);
-            return audio?.Play(filename, playerFilter, coordinates, audioParams);
+            return audio?.Play(filename, playerFilter, coordinates, _recordReplay, audioParams);
         }
     }
 }

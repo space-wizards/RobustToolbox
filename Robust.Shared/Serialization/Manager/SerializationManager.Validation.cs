@@ -85,12 +85,12 @@ public sealed partial class SerializationManager
             }
             else if (manager.TryGetDefinition(key.type, out var dataDefinition))
             {
-                var dataDefConst = Expression.Constant(dataDefinition);
+                var dataDefConst = Expression.Constant(dataDefinition, typeof(DataDefinition<>).MakeGenericType(key.type));
 
                 call = Expression.Call(
                     managerConst,
                     nameof(ValidateDataDefinition),
-                    Type.EmptyTypes,
+                    new []{key.type},
                     nodeParam,
                     dataDefConst,
                     contextParam);
@@ -106,14 +106,14 @@ public sealed partial class SerializationManager
                 //insert a nullcheck at the beginning, but ONLY if we are actually found a way of validating this node
                 call = Expression.Condition(
                     Expression.Call(
-                        managerConst,
+                        typeof(SerializationManager),
                         nameof(IsNull),
                         Type.EmptyTypes,
                         nodeParam),
-                    key.type.IsNullable()
+                    Expression.Convert(key.type.IsNullable()
                         ? manager.ValidateNodeExpression(nodeParam)
-                        : manager.ErrorNodeExpression(nodeParam, "Non-nullable field contained a null value", true),
-                    call);
+                        : manager.ErrorNodeExpression(nodeParam, "Non-nullable field contained a null value", true), typeof(ValidationNode)),
+                    Expression.Convert(call, typeof(ValidationNode)));
             }
 
 
@@ -131,7 +131,7 @@ public sealed partial class SerializationManager
 
     private Expression ValidateNodeExpression(ParameterExpression nodeParam)
     {
-        return ExpressionUtils.NewExpression<ValidatedMappingNode>(nodeParam);
+        return ExpressionUtils.NewExpression<ValidatedValueNode>(nodeParam);
     }
 
     private ValidationNode ValidateArray<TElem>(SequenceDataNode sequenceDataNode, ISerializationContext? context)

@@ -6,6 +6,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -206,12 +207,51 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return false;
         }
 
+        private bool TryGetIncludeMappingPair(List<ValidatedMappingNode> includeValidations, string key, out KeyValuePair<ValidationNode, ValidationNode> pair)
+        {
+            foreach (var includeValidation in includeValidations)
+            {
+                if (includeValidation.Mapping.TryFirstOrNull(x =>
+                        x.Key is ValidatedValueNode valVal && valVal.DataNode is ValueDataNode valNode &&
+                        valNode.Value == key, out var validatedPair))
+                {
+                    pair = validatedPair.Value;
+                    return true;
+                }
+            }
+
+            pair = default;
+            return false;
+        }
+
         public ValidationNode Validate(
             ISerializationManager serialization,
             MappingDataNode mapping,
             ISerializationContext? context)
         {
             var validatedMapping = new Dictionary<ValidationNode, ValidationNode>();
+
+            var includeValidations = new List<ValidatedMappingNode>();
+
+            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+            {
+                var fieldDefinition = BaseFieldDefinitions[i];
+                if (fieldDefinition.Attribute is not IncludeDataFieldAttribute) continue;
+
+                var validationNode = FieldValidators[i](mapping, context);
+                if (validationNode is ErrorNode errorNode)
+                {
+                    validatedMapping.Add(new InconclusiveNode(new ValueDataNode($"<{nameof(IncludeDataFieldAttribute)}={fieldDefinition.FieldInfo.Name}>")), errorNode);
+                    continue;
+                }
+
+                if (validationNode is not ValidatedMappingNode validationMapping)
+                {
+                    throw new InvalidValidationNodeReturnedException<ValidatedMappingNode>(validationNode);
+                }
+
+                includeValidations.Add(validationMapping);
+            }
 
             foreach (var (key, val) in mapping.Children)
             {
@@ -221,12 +261,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                if (TryGetIndex(valueDataNode.Value, out var idx))
+                if (!TryGetIndex(valueDataNode.Value, out var idx))
                 {
-                    var error = new ErrorNode(
-                        key,
-                        $"Field \"{valueDataNode.Value}\" not found in \"{typeof(T)}\".",
-                        false);
+                    if (TryGetIncludeMappingPair(includeValidations, valueDataNode.Value, out var validatedNotFoundPair))
+                    {
+                        validatedMapping.Add(validatedNotFoundPair.Key, validatedNotFoundPair.Value);
+                        continue;
+                    }
+
+                    var error = new FieldNotFoundErrorNode(valueDataNode, typeof(T));
 
                     validatedMapping.Add(error, new InconclusiveNode(val));
                     continue;
@@ -234,6 +277,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 var keyValidated = serialization.ValidateNode(typeof(string), key, context);
 
+                ValidationNode valNode;
                 if (IsNull(val))
                 {
                     if (!NullableHelper.IsMarkedAsNullable(BaseFieldDefinitions[idx].FieldInfo))
@@ -243,16 +287,27 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             $"Field \"{valueDataNode.Value}\" had null value despite not being annotated as nullable.");
 
                         validatedMapping.Add(keyValidated, error);
-                    }
-                    else
-                    {
-                        validatedMapping.Add(keyValidated, new ValidatedValueNode(val));
+                        continue;
                     }
 
+                    valNode = new ValidatedValueNode(val);
+                }
+                else
+                {
+                    valNode = FieldValidators[idx](val, context);
+                }
+
+                //include node errors override successful nodes on the main datadef
+                if (valNode is not ErrorNode && TryGetIncludeMappingPair(includeValidations, valueDataNode.Value, out var validatedPair))
+                {
+                    if (validatedPair.Value is ErrorNode)
+                    {
+                        validatedMapping.Add(validatedPair.Key, validatedPair.Value);
+                    }
                     continue;
                 }
 
-                validatedMapping.Add(keyValidated, FieldValidators[idx](val, context));
+                validatedMapping.Add(keyValidated, valNode);
             }
 
             return new ValidatedMappingNode(validatedMapping);

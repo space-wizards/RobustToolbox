@@ -420,7 +420,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var fieldType = field.FieldType.EnsureNotNullableType();
 
-            //todo paul validate null values
             var switchCases = new List<SwitchCase>();
             if (interfaceInfo.Validator.Value)
             {

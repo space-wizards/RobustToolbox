@@ -21,17 +21,22 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public ValueDataNode(YamlScalarNode node) : base(node.Start, node.End)
         {
-            IsNull = node.Style != ScalarStyle.DoubleQuoted && node.Style != ScalarStyle.SingleQuoted &&
-                     (node.Value == null || IsNullLiteral(node.Value));
+            IsNull = CalculateIsNullValue(node.Value, node.Tag, node.Style);
             Value = node.Value ?? string.Empty;
             Tag = node.Tag.IsEmpty ? null : node.Tag.Value;
         }
 
         public ValueDataNode(Scalar scalar) : base(scalar.Start, scalar.End)
         {
-            IsNull = scalar.Style != ScalarStyle.DoubleQuoted && scalar.Style != ScalarStyle.SingleQuoted && IsNullLiteral(scalar.Value);
+            IsNull = CalculateIsNullValue(scalar.Value, scalar.Tag, scalar.Style);
             Value = scalar.Value;
             Tag = scalar.Tag.IsEmpty ? null : scalar.Tag.Value;
+        }
+
+        private bool CalculateIsNullValue(string? content, TagName tag, ScalarStyle style)
+        {
+            return style != ScalarStyle.DoubleQuoted && style != ScalarStyle.SingleQuoted &&
+                   (IsNullLiteral(content) || string.IsNullOrWhiteSpace(content) && tag.IsEmpty);
         }
 
         public static explicit operator YamlScalarNode(ValueDataNode node)
@@ -44,7 +49,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
             return new YamlScalarNode(node.Value)
             {
                 Tag = node.Tag,
-                Style = IsNullLiteral(node.Value) ? ScalarStyle.DoubleQuoted : ScalarStyle.Any
+                Style = IsNullLiteral(node.Value) || string.IsNullOrWhiteSpace(node.Value) ? ScalarStyle.DoubleQuoted : ScalarStyle.Any
             };
         }
 
@@ -53,7 +58,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
 
-        private static bool IsNullLiteral(string value) => value.Trim().ToLower() is "null" || string.IsNullOrWhiteSpace(value);
+        private static bool IsNullLiteral(string? value) => value != null && value.Trim().ToLower() is "null" ;
 
         public override ValueDataNode Copy()
         {

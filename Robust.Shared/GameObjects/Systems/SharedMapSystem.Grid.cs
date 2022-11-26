@@ -38,7 +38,7 @@ public abstract partial class SharedMapSystem
                 if (chunkData.IsDeleted())
                     continue;
 
-                var chunk = component.GetChunk(chunkData.Index);
+                var chunk = component.GetOrAddChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = true;
                 DebugTools.Assert(chunkData.TileData.Length == component.ChunkSize * component.ChunkSize);
 
@@ -65,7 +65,7 @@ public abstract partial class SharedMapSystem
                     continue;
                 }
 
-                var chunk = component.GetChunk(chunkData.Index);
+                var chunk = component.GetOrAddChunk(chunkData.Index);
                 chunk.SuppressCollisionRegeneration = false;
                 component.RegenerateCollision(chunk);
             }

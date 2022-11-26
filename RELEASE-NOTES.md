@@ -47,11 +47,29 @@ END TEMPLATE-->
 
 ### Other
 
-* Removed the `restart` command, since it never worked properly and just confused people.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.68.0.0
+
+### Breaking changes
+
+* Updated yml schema validator to remove the `grids` node.
+
+### Bugfixes
+
+* Fixed position-less audio playing.
+* Stop mapgrids from serializing their fixtures.
+
+### Other
+
+* Removed the `restart` command, since it never worked properly and just confused people.
+* Add virtual to some UIScreen methods.
+* Add public parameterless ctor to MenuBar.
 
 
 ## 0.67.2.2

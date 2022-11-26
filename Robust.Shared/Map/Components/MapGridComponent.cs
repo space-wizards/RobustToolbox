@@ -379,9 +379,9 @@ namespace Robust.Shared.Map.Components
         public int ChunkCount => Chunks.Count;
 
         /// <inheritdoc />
-        internal MapChunk GetChunk(int xIndex, int yIndex)
+        internal MapChunk GetOrAddChunk(int xIndex, int yIndex)
         {
-            return GetChunk(new Vector2i(xIndex, yIndex));
+            return GetOrAddChunk(new Vector2i(xIndex, yIndex));
         }
 
         internal bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
@@ -390,14 +390,17 @@ namespace Robust.Shared.Map.Components
         }
 
         /// <inheritdoc />
-        internal MapChunk GetChunk(Vector2i chunkIndices)
+        internal MapChunk GetOrAddChunk(Vector2i chunkIndices)
         {
             if (Chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
             var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
             newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            newChunk.TileModified += OnTileModified;
+
+            if (Initialized)
+                newChunk.TileModified += OnTileModified;
+
             return Chunks[chunkIndices] = newChunk;
         }
 
@@ -595,7 +598,7 @@ namespace Robust.Shared.Map.Components
         private (MapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
         {
             var gridChunkIndices = GridTileToChunkIndices(pos);
-            var chunk = GetChunk(gridChunkIndices);
+            var chunk = GetOrAddChunk(gridChunkIndices);
             var chunkTile = chunk.GridTileToChunkTile(pos);
             return (chunk, chunkTile);
         }
@@ -866,7 +869,7 @@ namespace Robust.Shared.Map.Components
                 rotation, worldPos).CalcBoundingBox();
         }
 
-        private void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
+        internal void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
             bool shapeChanged)
         {
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.

@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
         EntityUid Owner { get; }
 
         /// <summary>
-        /// Component has been properly initialized.
+        /// Component has been (or is currently being) initialized.
         /// </summary>
         bool Initialized { get; }
 

@@ -51,7 +51,7 @@ namespace Robust.Server.Maps
 
             IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-            if (context is MapLoaderSystem.MapSerializationContext serContext)
+            if (context is MapSerializationContext serContext)
             {
                 tileMap = serContext.TileMap;
             }

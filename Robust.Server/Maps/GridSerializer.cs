@@ -49,7 +49,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         IReadOnlyDictionary<ushort, string>? tileMap = null;
 
-        if (context is MapLoaderSystem.MapSerializationContext serContext)
+        if (context is MapSerializationContext serContext)
         {
             tileMap = serContext.TileMap;
         }

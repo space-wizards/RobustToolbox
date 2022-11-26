@@ -179,11 +179,11 @@ public abstract class UIScreen : LayoutContainer
         }
     }
 
-    protected void OnLoaded()
+    protected virtual void OnLoaded()
     {
     }
 
-    protected void OnUnloaded()
+    protected virtual void OnUnloaded()
     {
     }
 }

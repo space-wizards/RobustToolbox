@@ -171,7 +171,7 @@ namespace Robust.Shared.GameObjects
             AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
         }
 
-        internal void DestroyProxies(Fixture fixture, TransformComponent xform, SharedPhysicsMapComponent physicsMap, BroadphaseComponent broadphase)
+        internal void DestroyProxies(Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase, SharedPhysicsMapComponent? physicsMap)
         {
             DebugTools.AssertNotNull(xform.Broadphase);
             DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
@@ -186,7 +186,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var tree = xform.Broadphase.Value.Static ? broadphase.StaticTree : broadphase.DynamicTree;
-            DestroyProxies(fixture, tree, physicsMap.MoveBuffer);
+            DestroyProxies(fixture, tree, physicsMap);
         }
 
         #endregion
@@ -250,29 +250,23 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Lookup does not exist?");
             }
 
-            var map = lookupXform.MapUid;
-            if (map == null)
-            {
-                // See the comments in UpdateParent()
-                throw new NotSupportedException("Nullspace lookups are not supported.");
-            }
-
             var tree = staticBody ? lookup.StaticTree : lookup.DynamicTree;
-            var moveBuffer = Comp<SharedPhysicsMapComponent>(map.Value).MoveBuffer;
+            TryComp(lookupXform.MapUid, out SharedPhysicsMapComponent? map);
 
             foreach (var fixture in manager.Fixtures.Values)
             {
-                DestroyProxies(fixture, tree, moveBuffer);
+                DestroyProxies(fixture, tree, map);
             }
         }
 
-        private void DestroyProxies(Fixture fixture, IBroadPhase tree, Dictionary<FixtureProxy, Box2> moveBuffer)
+        private void DestroyProxies(Fixture fixture, IBroadPhase tree, SharedPhysicsMapComponent? map)
         {
+            var buffer = map?.MoveBuffer;
             for (var i = 0; i < fixture.ProxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
                 tree.RemoveProxy(proxy.ProxyId);
-                moveBuffer.Remove(proxy);
+                buffer?.Remove(proxy);
             }
 
             fixture.ProxyCount = 0;

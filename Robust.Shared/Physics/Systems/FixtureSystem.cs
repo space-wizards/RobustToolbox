@@ -197,23 +197,18 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var xform = Transform(body.Owner);
-            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+            if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
-                if (updates)
-                    FixtureUpdate(manager, body);
-                return;
-            }
-
-            var map = Transform(broadphase.Owner).MapUid;
-
-            if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
-            {
-                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                var map = Transform(broadphase.Owner).MapUid;
+                if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
                 {
-                    physicsMap.ContactManager.Destroy(contact);
+                    foreach (var contact in fixture.Contacts.Values.ToArray())
+                    {
+                        physicsMap.ContactManager.Destroy(contact);
+                    }
                 }
+                _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
 
-                _lookup.DestroyProxies(fixture, xform, physicsMap, broadphase);
             }
 
             if (updates)

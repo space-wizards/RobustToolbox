@@ -171,18 +171,21 @@ namespace Robust.Shared.GameObjects
             AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
         }
 
-        internal void DestroyProxies(Fixture fixture, TransformComponent xform, SharedPhysicsMapComponent physicsMap)
+        internal void DestroyProxies(Fixture fixture, TransformComponent xform, SharedPhysicsMapComponent physicsMap, BroadphaseComponent broadphase)
         {
+            DebugTools.AssertNotNull(xform.Broadphase);
+            DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
+
+            if (!xform.Broadphase.Value.CanCollide || xform.GridUid == xform.Owner)
+                return;
+
             if (fixture.ProxyCount == 0)
             {
                 Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(fixture.Body.Owner)} that already has no proxies?");
                 return;
             }
 
-            if (!TryGetCurrentBroadphase(xform, out var broadphase))
-                return;
-
-            var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+            var tree = xform.Broadphase.Value.Static ? broadphase.StaticTree : broadphase.DynamicTree;
             DestroyProxies(fixture, tree, physicsMap.MoveBuffer);
         }
 

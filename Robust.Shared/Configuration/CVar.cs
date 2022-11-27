@@ -66,5 +66,10 @@ namespace Robust.Shared.Configuration
         /// This currently hides the content of the cvar in the "cvar" command completions.
         /// </remarks>
         CONFIDENTIAL = 256,
+
+        /// <summary>
+        /// Only the client can change this variable.
+        /// </summary>
+        CLIENT = 512,
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -254,6 +255,18 @@ namespace Robust.Client.Player
             LocalPlayer.SwitchState(SessionStatus.InGame);
 
             PlayerListUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            if (LocalPlayer?.ControlledEntity == uid)
+            {
+                session = LocalPlayer.Session;
+                return true;
+            }
+
+            session = null;
+            return false;
         }
     }
 }

@@ -21,6 +21,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientGameStateManager _stateMan = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
@@ -90,10 +91,7 @@ namespace Robust.Client.GameObjects
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
-            if (!_stateMan.IsPredictionEnabled)
-                return;
-
-            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted);
+            DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
 
             var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
             EventBus.RaiseEvent(EventSource.Local, msg);
@@ -132,7 +130,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
         {
             SendSystemNetworkMessage(message, default(uint));
         }

@@ -127,13 +127,13 @@ namespace Robust.Shared
         /// If off, simulation input commands will not fire and most entity methods will not run update.
         /// </remarks>
         public static readonly CVarDef<bool> NetPredict =
-            CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
+            CVarDef.Create("net.predict", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Extra amount of ticks to run-ahead for prediction on the client.
         /// </summary>
         public static readonly CVarDef<int> NetPredictTickBias =
-            CVarDef.Create("net.predict_tick_bias", 1, CVar.CLIENTONLY);
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
         // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
@@ -147,10 +147,10 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
                 "net.predict_lag_bias",
                 OperatingSystem.IsWindows() ? 0.016f : 0,
-                CVar.CLIENTONLY);
+                CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
-            CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
+            CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to cull entities sent to clients from the server.
@@ -173,7 +173,7 @@ namespace Robust.Shared
         /// spawning isn't hot garbage, this can be increased.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
-            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
         /// <summary>
         /// This limits the number of entities that can re-enter a client's view in a single game state. This exists to
@@ -181,7 +181,7 @@ namespace Robust.Shared
         /// tick. Ideally this would just be handled client-side somehow.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityEnterBudget =
-            CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED);
+            CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
         /// <summary>
         /// The amount of pvs-exiting entities that a client will process in a single tick.
@@ -553,6 +553,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Description of the game server in the launcher.
+        /// </summary>
+        public static readonly CVarDef<string> GameDesc =
+            CVarDef.Create("game.desc", "Just another server, don't mind me!", CVar.SERVERONLY);
 
         /// <summary>
         /// If a grid is shrunk to include no more tiles should it be deleted.

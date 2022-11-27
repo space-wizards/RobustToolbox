@@ -7,7 +7,9 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 
 namespace Robust.Shared.GameObjects
 {
@@ -21,6 +23,8 @@ namespace Robust.Shared.GameObjects
     public abstract partial class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly EntityManager EntityManager;
+        [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
+        [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -90,12 +94,32 @@ namespace Robust.Shared.GameObjects
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
         }
 
-        protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter)
+        protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session)
         {
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+        }
+
+        /// <summary>
+        ///     Raises a networked event with some filter.
+        /// </summary>
+        /// <param name="message">The event to send</param>
+        /// <param name="filter">The filter that specifies recipients</param>
+        /// <param name="recordReplay">Optional bool specifying whether or not to save this event to replays.</param>
+        protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter, bool recordReplay = true)
+        {
+            if (recordReplay)
+                _replayMan.QueueReplayMessage(message);
+
             foreach (var session in filter.Recipients)
             {
                 EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
             }
+        }
+
+        protected void RaiseNetworkEvent(EntityEventArgs message, EntityUid recipient)
+        {
+            if (_playerMan.TryGetSessionByEntity(recipient, out var session))
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)

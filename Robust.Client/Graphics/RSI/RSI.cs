@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -11,6 +12,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Type to handle Robust Station Image (RSI) files.
     /// </summary>
+    [CopyByRef]
     public sealed partial class RSI : IEnumerable<RSI.State>
     {
         /// <summary>

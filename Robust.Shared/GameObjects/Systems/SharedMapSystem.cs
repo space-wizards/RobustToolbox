@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map.Components;
 using System.Linq;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -144,7 +146,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Grid being changed.
         /// </summary>
-        public IMapGrid Grid { get; }
+        public MapGridComponent Grid { get; }
 
         /// <summary>
         /// Set of tiles that were modified.
@@ -154,7 +156,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridModifiedEvent(IMapGrid grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
+        public GridModifiedEvent(MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
         {
             Grid = grid;
             Modified = modified;

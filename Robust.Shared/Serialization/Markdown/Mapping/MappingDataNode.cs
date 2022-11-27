@@ -57,7 +57,13 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         public DataNode this[string index]
         {
             get => Get(index);
-            set => Add(new ValueDataNode(index), value);
+            set => Add(index, value);
+        }
+
+        public MappingDataNode Add(string key, DataNode node)
+        {
+            _children.Add(new ValueDataNode(key), node);
+            return this;
         }
 
         private static ValueDataNode GetFetchNode(string key)
@@ -291,7 +297,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
             // Given that keys are unique and we do not care about the ordering, we know that if removing identical
             // key-value pairs leaves us with an empty list then the mappings are equal.
-            return Except(other) == null;
+            return Except(other) == null && Tag == other.Tag;
         }
 
         public override MappingDataNode PushInheritance(MappingDataNode node)

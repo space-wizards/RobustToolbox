@@ -96,5 +96,17 @@ namespace Robust.Client.GameStates
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
 
         void UpdateFullRep(GameState state);
+
+        /// <summary>
+        ///     This will perform some setup in order to reset the game to an earlier state by deleting entities and
+        ///     marking ensuring component states will get applied properly. <see cref="ApplyGameState(GameState,
+        ///     GameState?)"/> Still needs to be called separately after this is run.
+        /// </summary>
+        /// <param name="state">The state to reset to.</param>
+        /// <param name="resetAllEnts">Whether to apply component states to all entities, or only those that have been
+        /// modified some time after the state's to-sequence</param>
+        /// <param name="deleteClientSideEnts">Whether to delete all client-side entities (which are never part of the
+        /// networked game state).</param>
+        void StateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts);
     }
 }

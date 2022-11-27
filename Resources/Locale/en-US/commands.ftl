@@ -530,8 +530,8 @@ cmd-vv-help = Usage: vv <path|entity ID|guihover>
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
 
-cmd-replaystart-desc = Starts a replay recording.
-cmd-replaystart-help = Usage: replaystart
+cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
+cmd-replaystart-help = Usage: replaystart [minutes]
 cmd-replaystart-success = Started recording a replay.
 cmd-replaystart-error = Already recording a replay
 

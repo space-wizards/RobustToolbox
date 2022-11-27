@@ -1,12 +1,13 @@
 using Robust.Shared.Console;
 using Robust.Shared.Replays;
+using System;
 
 namespace Robust.Server.Replays;
 
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
     void ToggleRecording();
-    void StartRecording();
+    void StartRecording(TimeSpan? duration = null);
     void StopRecording();
 
     /// <summary>

@@ -1,6 +1,7 @@
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using System;
 
 namespace Robust.Server.Replays;
 
@@ -12,13 +13,27 @@ internal sealed class ReplayStartCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        if (!_replay.Recording)
+        if (_replay.Recording)
+        {
+            shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
+            return;
+        }
+
+        if (args.Length == 0)
         {
             _replay.StartRecording();
             shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
+            return;
         }
-        else
-            shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
+
+        if (!float.TryParse(args[0], out var minutes))
+        {
+            shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[0])));
+            return;
+        }
+
+        _replay.StartRecording(TimeSpan.FromMinutes(minutes));
+        shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
     }
 }
 

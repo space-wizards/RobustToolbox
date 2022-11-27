@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Timers;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using static Robust.Server.GameStates.ServerGameStateManager;
@@ -46,13 +47,13 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private int _tickBatchSize;
     private bool _enabled;
     private string _directory = string.Empty;
-
     public bool Recording => _curStream != null;
     private int _index = 0;
     private MemoryStream? _curStream;
     private int _currentCompressedSize;
     private int _currentUncompressedSize;
     private (GameTick Tick, TimeSpan Time) _recordingStart;
+    private TimeSpan? _recordingEnd;
     private MappingDataNode? _yamlMetadata;
     private bool _firstTick = true;
 
@@ -97,12 +98,13 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _currentUncompressedSize = 0;
             _index = 0;
             _firstTick = true;
+            _recordingEnd = null;
             throw;
         }
     }
 
     /// <inheritdoc/>
-    public void StartRecording()
+    public void StartRecording(TimeSpan? duration = null)
     {
         if (!_enabled || _curStream != null)
             return;
@@ -113,6 +115,8 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         _firstTick = true;
         WriteInitialMetadata();
         _recordingStart = (_timing.CurTick, _timing.CurTime);
+        if (duration != null)
+            _recordingEnd = _timing.CurTime + duration.Value;
 
         _sawmill.Info("Started recording replay...");
     }
@@ -161,8 +165,12 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _seri.SerializeDirect(_curStream, new ReplayMessage() { Messages = _queuedMessages });
             _queuedMessages.Clear();
 
-            if (_curStream.Length > _tickBatchSize)
-                WriteFile(resource.CompressionContext);
+            bool continueRecording = _recordingEnd == null || _recordingEnd.Value >= _timing.CurTime;
+            if (!continueRecording)
+                _sawmill.Info("Reached requested replay recording length. Stopping recording.");
+
+            if (!continueRecording || _curStream.Length > _tickBatchSize)
+                WriteFile(resource.CompressionContext, continueRecording);
         }
         catch (Exception e)
         {
@@ -205,6 +213,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _currentUncompressedSize = 0;
             _index = 0;
             _firstTick = true;
+            _recordingEnd = null;
         }
     }
 
@@ -240,6 +249,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _yamlMetadata["startTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
             _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
             _yamlMetadata["timeBaseTimespan"] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
+            _yamlMetadata["recordingStartTime"] = new ValueDataNode(_recordingStart.ToString());
 
             StartingRecording?.Invoke((_yamlMetadata, extraData));
 
@@ -274,9 +284,10 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         var time = _timing.CurTime - _recordingStart.Time;
         _yamlMetadata["endTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
         _yamlMetadata["duration"] = new ValueDataNode(time.ToString());
-        _yamlMetadata["fileCount"] = new ValueDataNode((_index + 1).ToString());
+        _yamlMetadata["fileCount"] = new ValueDataNode(_index.ToString());
         _yamlMetadata["size"] = new ValueDataNode(_currentCompressedSize.ToString());
         _yamlMetadata["uncompressedSize"] = new ValueDataNode(_currentUncompressedSize.ToString());
+        _yamlMetadata["recordingEndTime"] = new ValueDataNode(_timing.CurTime.ToString());
 
         // this just overwrites the previous yml with additional data.
         var dir = new ResourcePath(_directory).ToRootedPath();

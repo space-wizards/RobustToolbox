@@ -12,12 +12,13 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>
+    public sealed class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>, ITypeCopyCreator<Vector4>
     {
         public Vector4 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, Vector4 value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Vector4>? instanceProvider = null)
         {
             if (!VectorSerializerUtility.TryParseArgs(node.Value, 4, out var args))
             {
@@ -59,7 +60,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                                      $"{value.W.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector4 Copy(ISerializationManager serializationManager, Vector4 source, Vector4 target,
+        public Vector4 CreateCopy(ISerializationManager serializationManager, Vector4 source,
             bool skipHook,
             ISerializationContext? context = null)
         {

@@ -372,6 +372,7 @@ namespace Robust.Shared.Physics.Dynamics
             while (node != null)
             {
                 var contact = node.Value;
+                node = node.Next;
 
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
@@ -384,7 +385,6 @@ namespace Robust.Shared.Physics.Dynamics
                 // Do not try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
-                    node = node.Next;
                     Destroy(contact);
                     continue;
                 }
@@ -395,7 +395,6 @@ namespace Robust.Shared.Physics.Dynamics
                     // Should these bodies collide?
                     if (_physics.ShouldCollide(bodyB, bodyA) == false)
                     {
-                        node = node.Next;
                         Destroy(contact);
                         continue;
                     }
@@ -403,21 +402,9 @@ namespace Robust.Shared.Physics.Dynamics
                     // Check default filtering
                     if (ShouldCollide(fixtureA, fixtureB) == false)
                     {
-                        node = node.Next;
                         Destroy(contact);
                         continue;
                     }
-
-                    // Check user filtering.
-                    /*
-                    if (ContactFilter != null && ContactFilter(fixtureA, fixtureB) == false)
-                    {
-                        Contact cNuke = c;
-                        c = c.Next;
-                        Destroy(cNuke);
-                        continue;
-                    }
-                    */
 
                     // Clear the filtering flag.
                     contact.Flags &= ~ContactFlags.Filter;
@@ -429,7 +416,6 @@ namespace Robust.Shared.Physics.Dynamics
                 // At least one body must be awake and it must be dynamic or kinematic.
                 if (activeA == false && activeB == false)
                 {
-                    node = node.Next;
                     continue;
                 }
 
@@ -451,7 +437,6 @@ namespace Robust.Shared.Physics.Dynamics
                         contacts[index++] = contact;
                     }
 
-                    node = node.Next;
                     continue;
                 }
 
@@ -482,13 +467,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (!overlap)
                 {
-                    node = node.Next;
                     Destroy(contact);
                     continue;
                 }
 
                 contacts[index++] = contact;
-                node = node.Next;
             }
 
             var status = ArrayPool<ContactStatus>.Shared.Rent(index);

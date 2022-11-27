@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Timers;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using static Robust.Server.GameStates.ServerGameStateManager;

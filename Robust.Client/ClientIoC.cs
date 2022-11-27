@@ -71,6 +71,7 @@ namespace Robust.Client
             deps.Register<IClientEntityManager, ClientEntityManager>();
             deps.Register<IClientEntityManagerInternal, ClientEntityManager>();
             deps.Register<IEntityNetworkManager, ClientEntityManager>();
+            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IClientGameStateManager, ClientGameStateManager>();
             deps.Register<IBaseClient, BaseClient>();
             deps.Register<IPlayerManager, PlayerManager>();

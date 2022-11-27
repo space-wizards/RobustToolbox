@@ -52,7 +52,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     }
 
     /// <inheritdoc />
-    public override void SetCVar(string name, object value)
+    public override void SetCVar(string name, object value, bool force)
     {
         CVar flags;
         using (Lock.ReadGuard())
@@ -63,14 +63,14 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             flags = cVar.Flags;
         }
 
-        if ((flags & CVar.CLIENT) != 0)
+        if (!force && (flags & CVar.CLIENT) != 0)
         {
             Sawmill.Warning($"Only clients can change the '{name}' cvar.");
             return;
         }
 
         // Actually set the CVar
-        base.SetCVar(name, value);
+        base.SetCVar(name, value, force);
 
         if ((flags & CVar.REPLICATED) == 0)
             return;

@@ -43,7 +43,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
     }
 
     /// <inheritdoc />
-    public override void SetCVar(string name, object value)
+    public override void SetCVar(string name, object value, bool force = false)
     {
         CVar flags;
         using (Lock.ReadGuard())
@@ -52,13 +52,13 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
 
             flags = cVar.Flags;
-            if (NetManager.IsConnected && (cVar.Flags & CVar.NOT_CONNECTED) != 0)
+            if (!force && NetManager.IsConnected && (cVar.Flags & CVar.NOT_CONNECTED) != 0)
             {
                 Sawmill.Warning($"'{name}' can only be changed when not connected to a server.");
                 return;
             }
 
-            if (((cVar.Flags & CVar.SERVER) != 0) && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
+            if (!force && ((cVar.Flags & CVar.SERVER) != 0) && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
             {
                 Sawmill.Warning($"Only the server can change '{name}'.");
                 return;
@@ -66,7 +66,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         }
 
         // Actually set the CVar
-        base.SetCVar(name, value);
+        base.SetCVar(name, value, force);
 
         if ((flags & CVar.REPLICATED) == 0)
             return;

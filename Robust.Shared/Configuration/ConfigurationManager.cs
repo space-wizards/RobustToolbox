@@ -403,7 +403,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public virtual void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value, bool force)
         {
             SetCVarInternal(name, value, _gameTiming.CurTick);
         }
@@ -435,9 +435,9 @@ namespace Robust.Shared.Configuration
                 InvokeValueChanged(invoke.Value);
         }
 
-        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull
         {
-            SetCVar(def.Name, value);
+            SetCVar(def.Name, value, force);
         }
 
         public void OverrideDefault(string name, object value)

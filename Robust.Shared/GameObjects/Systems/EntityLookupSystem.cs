@@ -724,7 +724,7 @@ namespace Robust.Shared.GameObjects
             {
                 // broadphase was probably deleted
 
-                Logger.Error($"Encountered deleted broadphase for entity {ToPrettyString(xform.Owner)}");
+                DebugTools.Assert(Deleted(xform.Broadphase.Value.Uid) || Terminating(xform.Broadphase.Value.Uid));
 
                 if (TryComp(xform.Owner, out FixturesComponent? fixtures))
                 {

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
@@ -47,6 +46,11 @@ namespace Robust.Shared.Utility
         public bool Add(string flag, IPrototypeManager prototypeManager)
         {
             return !prototypeManager.TryIndex<T>(flag, out _) && _flags.Add(flag);
+        }
+
+        internal void UnionWith(PrototypeFlags<T> flags)
+        {
+            _flags.UnionWith(flags._flags);
         }
 
         /// <summary>

@@ -625,7 +625,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = grid.GetChunk(chunkIndex);
+            var chunk = grid.GetOrAddChunk(chunkIndex);
 
             shell.WriteLine($"worldBounds: {grid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
         }

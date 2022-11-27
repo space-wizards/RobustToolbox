@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
-    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
+    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>, ITypeCopyCreator<int>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -19,7 +19,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
             return (int)Enum.Parse(flagType, node.Value);
@@ -60,12 +61,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return sequenceNode;
         }
 
-        public int Copy(ISerializationManager serializationManager, int source, int target, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return source;
-        }
-
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
@@ -81,7 +76,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
             var flags = 0;
@@ -93,6 +89,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             }
 
             return flags;
+        }
+
+        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            return source;
         }
     }
 }

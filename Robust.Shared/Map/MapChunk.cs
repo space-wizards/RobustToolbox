@@ -155,6 +155,10 @@ namespace Robust.Shared.Map
             _tiles[xIndex, yIndex] = tile;
 
             var tileIndices = new Vector2i(xIndex, yIndex);
+
+            // God I hate C# events sometimes.
+            DebugTools.Assert(TileModified == null || TileModified.GetInvocationList().Length <= 1);
+
             TileModified?.Invoke(this, tileIndices, tile, oldTile, shapeChanged);
         }
 

@@ -177,7 +177,7 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
     public IPlayingAudioStream? PlayPvs(SoundSpecifier? sound, EntityUid uid, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayPvs(GetSound(sound), uid, audioParams);
+        return sound == null ? null : PlayPvs(GetSound(sound), uid, audioParams ?? sound.Params);
     }
 
     /// <summary>

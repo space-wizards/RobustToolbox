@@ -266,7 +266,7 @@ namespace Robust.Client.GameStates
                     _processor.LastFullStateRequested = null;
                     _timing.LastProcessedTick = curState.ToSequence;
                     DebugTools.Assert(curState.FromSequence == GameTick.Zero);
-                    StateReset(curState, true, true);
+                    PartialStateReset(curState, true, true);
                 }
                 else
                     _timing.LastProcessedTick += 1;
@@ -776,7 +776,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public void StateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts)
+        public void PartialStateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts)
         {
             using var _ = _timing.StartStateApplicationArea();
 

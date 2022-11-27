@@ -107,6 +107,6 @@ namespace Robust.Client.GameStates
         /// modified some time after the state's to-sequence</param>
         /// <param name="deleteClientSideEnts">Whether to delete all client-side entities (which are never part of the
         /// networked game state).</param>
-        void StateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts);
+        void PartialStateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts);
     }
 }

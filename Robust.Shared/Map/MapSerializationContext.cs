@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -7,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -17,17 +16,11 @@ namespace Robust.Shared.Map;
 internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
     ITypeSerializer<EntityUid, ValueDataNode>
 {
-    private readonly IComponentFactory _factory;
-    private readonly ISerializationManager _serializationManager;
-
-    public Dictionary<(Type, Type), object> TypeReaders { get; }
-    public Dictionary<Type, object> TypeWriters { get; }
-    public Dictionary<Type, object> TypeCopiers => TypeWriters;
-    public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
+    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
     // Run-specific data
     public Dictionary<ushort, string>? TileMap;
-    public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
+    public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
     public HashSet<string> CurrentlyIgnoredComponents = new();
     public string? CurrentWritingComponent;
     public EntityUid? CurrentWritingEntity;
@@ -35,19 +28,9 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     private Dictionary<int, EntityUid> _uidEntityMap = new();
     private Dictionary<EntityUid, int> _entityUidMap = new();
 
-    public MapSerializationContext(IComponentFactory factory, ISerializationManager serializationManager)
+    public MapSerializationContext()
     {
-        _factory = factory;
-        _serializationManager = serializationManager;
-
-        TypeWriters = new Dictionary<Type, object>()
-        {
-            {typeof(EntityUid), this}
-        };
-        TypeReaders = new Dictionary<(Type, Type), object>()
-        {
-            {(typeof(EntityUid), typeof(ValueDataNode)), this}
-        };
+        SerializerProvider.RegisterSerializer(this);
     }
 
     public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
@@ -65,24 +48,9 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     }
 
     // Create custom object serializers that will correctly allow data to be overriden by the map file.
-    MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
-        MappingDataNode? protoData)
+    bool IEntityLoadContext.TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
     {
-        if (CurrentReadingEntityComponents == null)
-        {
-            throw new InvalidOperationException();
-        }
-
-
-        if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
-        {
-            if (protoData == null) return mapping.Copy();
-
-            return _serializationManager.PushCompositionWithGenericNode(
-                _factory.GetRegistration(componentName).Type, new[] { protoData }, mapping, this);
-        }
-
-        return protoData ?? new MappingDataNode();
+        return CurrentReadingEntityComponents.TryGetValue(componentName, out component);
     }
 
     public IEnumerable<string> GetExtraComponentTypes()
@@ -123,7 +91,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
                 Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
             }
 
-            return new ValueDataNode("null");
+            return new ValueDataNode("invalid");
         }
 
         return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
@@ -133,9 +101,9 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         ValueDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context, EntityUid _)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
-        if (node.Value == "null")
+        if (node.Value == "invalid")
         {
             return EntityUid.Invalid;
         }

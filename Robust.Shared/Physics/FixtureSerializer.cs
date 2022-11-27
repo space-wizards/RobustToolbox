@@ -31,9 +31,9 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
     }
 
     public List<Fixture> Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
-        bool skipHook, ISerializationContext? context = null, List<Fixture>? value = default)
+        bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<List<Fixture>>? instantiation = default)
     {
-        value ??= new List<Fixture>(node.Count);
+        var value = instantiation != null ? instantiation() : new List<Fixture>(node.Count);
 
         foreach (var subNode in node)
         {
@@ -67,20 +67,5 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
         }
 
         return seq;
-    }
-
-    public List<Fixture> Copy(ISerializationManager serializationManager, List<Fixture> source, List<Fixture> target, bool skipHook,
-        ISerializationContext? context = null)
-    {
-        target.Clear();
-        target.EnsureCapacity(source.Count);
-
-        foreach (var fixture in source)
-        {
-            var nFixture = serializationManager.Copy(fixture, context, skipHook);
-            target.Add(nFixture);
-        }
-
-        return target;
     }
 }

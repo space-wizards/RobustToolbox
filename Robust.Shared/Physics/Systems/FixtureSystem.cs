@@ -198,7 +198,11 @@ namespace Robust.Shared.Physics.Systems
 
             var xform = Transform(body.Owner);
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+            {
+                if (updates)
+                    FixtureUpdate(manager, body);
                 return;
+            }
 
             var map = Transform(broadphase.Owner).MapUid;
 

@@ -403,7 +403,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public virtual void SetCVar(string name, object value, bool force)
+        public virtual void SetCVar(string name, object value, bool force = false)
         {
             SetCVarInternal(name, value, _gameTiming.CurTick);
         }

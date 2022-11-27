@@ -1,13 +1,11 @@
-﻿using JetBrains.Annotations;
-using Robust.Shared.Serialization.Manager;
+﻿using Robust.Shared.Serialization.Manager;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
+namespace Robust.Shared.Serialization.TypeSerializers.Interfaces;
+
+public interface ITypeCopier<TType> : BaseSerializerInterfaces.ITypeInterface<TType>
 {
-    public interface ITypeCopier<TType>
-    {
-        [MustUseReturnValue]
-        TType Copy(ISerializationManager serializationManager, TType source, TType target,
-            bool skipHook,
-            ISerializationContext? context = null);
-    }
+    void CopyTo(ISerializationManager serializationManager, TType source, ref TType target,
+        bool skipHook,
+        ISerializationContext? context = null);
+
 }

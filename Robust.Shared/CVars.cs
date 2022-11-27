@@ -555,6 +555,12 @@ namespace Robust.Shared
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Description of the game server in the launcher.
+        /// </summary>
+        public static readonly CVarDef<string> GameDesc =
+            CVarDef.Create("game.desc", "Just another server, don't mind me!", CVar.SERVERONLY);
+
+        /// <summary>
         /// If a grid is shrunk to include no more tiles should it be deleted.
         /// </summary>
         public static readonly CVarDef<bool> GameDeleteEmptyGrids =

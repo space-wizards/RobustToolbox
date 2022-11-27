@@ -50,8 +50,9 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void LoadFromTomlStream(Stream file)
+        public HashSet<string> LoadFromTomlStream(Stream file)
         {
+            var loaded = new HashSet<string>();
             try
             {
                 var tblRoot = Toml.ReadStream(file);
@@ -61,7 +62,7 @@ namespace Robust.Shared.Configuration
                 // Ensure callbacks are raised OUTSIDE the write lock.
                 using (Lock.WriteGuard())
                 {
-                    ProcessTomlObject(tblRoot, ref callbackEvents);
+                    ProcessTomlObject(tblRoot, ref callbackEvents, loaded);
                 }
 
                 foreach (var callback in callbackEvents)
@@ -71,23 +72,28 @@ namespace Robust.Shared.Configuration
             }
             catch (Exception e)
             {
+                loaded.Clear();
                 Logger.WarningS("cfg", "Unable to load configuration from stream:\n{0}", e);
             }
+
+            return loaded;
         }
 
         /// <inheritdoc />
-        public void LoadFromFile(string configFile)
+        public HashSet<string> LoadFromFile(string configFile)
         {
             try
             {
                 using var file = File.OpenRead(configFile);
-                LoadFromTomlStream(file);
+                var result = LoadFromTomlStream(file);
                 _configFile = configFile;
                 Logger.InfoS("cfg", $"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                return result;
             }
             catch (Exception e)
             {
                 Logger.WarningS("cfg", "Unable to load configuration file:\n{0}", e);
+                return new HashSet<string>(0);
             }
         }
 
@@ -105,6 +111,7 @@ namespace Robust.Shared.Configuration
         private void ProcessTomlObject(
             TomlObject obj,
             ref ValueList<ValueChangedInvoke> changedInvokes,
+            HashSet<string> loadedCvars,
             string tablePath = "")
         {
             if (obj is TomlTable table) // this is a table
@@ -118,7 +125,7 @@ namespace Robust.Shared.Configuration
                     else
                         newPath = tablePath + kvTml.Key;
 
-                    ProcessTomlObject(kvTml.Value, ref changedInvokes, newPath);
+                    ProcessTomlObject(kvTml.Value, ref changedInvokes, loadedCvars, newPath);
                 }
             }
             else // this is a key, add CVar
@@ -129,6 +136,7 @@ namespace Robust.Shared.Configuration
                 {
                     // overwrite the value with the saved one
                     cfgVar.Value = tomlValue;
+                    loadedCvars.Add(cfgVar.Name);
                     if (SetupInvokeValueChanged(cfgVar, tomlValue) is { } invoke)
                         changedInvokes.Add(invoke);
                 }
@@ -138,6 +146,7 @@ namespace Robust.Shared.Configuration
                     //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
                     cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
                     _configVars.Add(tablePath, cfgVar);
+                    loadedCvars.Add(cfgVar.Name);
                 }
 
                 cfgVar.ConfigModified = true;

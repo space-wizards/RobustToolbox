@@ -50,7 +50,7 @@ namespace Robust.Shared.Configuration
         /// </summary>
         void SaveToTomlStream(Stream stream, IEnumerable<string> cvars);
 
-        void LoadFromTomlStream(Stream stream);
+        HashSet<string> LoadFromTomlStream(Stream stream);
 
         /// <summary>
         /// Register a CVar with the system. This must be done before the CVar is accessed.

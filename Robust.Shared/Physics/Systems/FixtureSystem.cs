@@ -317,6 +317,8 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
+            // TODO add a DestroyFixture() override that takes in a list.
+            // reduced broadphase lookups
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;

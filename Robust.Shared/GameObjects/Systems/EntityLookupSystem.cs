@@ -103,12 +103,8 @@ namespace Robust.Shared.GameObjects
             var physicsMapQuery = GetEntityQuery<SharedPhysicsMapComponent>();
             var xform = xformQuery.GetComponent(uid);
             var map = xform.MapUid;
-            if (map != uid)
-            {
-                physicsMapQuery.TryGetComponent(map, out var physMap);
-                RemoveChildrenFromTerminatingBroadphase(xform, component, physMap, xformQuery, fixtureQuery, physicsMapQuery);
-            }
-
+            physicsMapQuery.TryGetComponent(map, out var physMap);
+            RemoveChildrenFromTerminatingBroadphase(xform, component, physMap, xformQuery, fixtureQuery, physicsMapQuery);
             RemComp(uid, component);
         }
 
@@ -124,6 +120,9 @@ namespace Robust.Shared.GameObjects
             while (childEnum.MoveNext(out var child))
             {
                 if (!xformQuery.TryGetComponent(child.Value, out var childXform))
+                    continue;
+
+                if (childXform.GridUid == child)
                     continue;
 
                 if (childXform.Broadphase == null)

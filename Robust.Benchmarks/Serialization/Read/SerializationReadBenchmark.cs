@@ -68,30 +68,21 @@ namespace Robust.Benchmarks.Serialization.Read
         [BenchmarkCategory("flag")]
         public object? ReadFlagZero()
         {
-            return SerializationManager.ReadWithTypeSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagZero);
+            return SerializationManager.Read<int, ValueDataNode, FlagSerializer<BenchmarkFlags>>(FlagZero);
         }
 
         [Benchmark]
         [BenchmarkCategory("flag")]
         public object? ReadThirtyOne()
         {
-            return SerializationManager.ReadWithTypeSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagThirtyOne);
+            return SerializationManager.Read<int, ValueDataNode, FlagSerializer<BenchmarkFlags>>(FlagThirtyOne);
         }
 
         [Benchmark]
         [BenchmarkCategory("customTypeSerializer")]
         public object? ReadIntegerCustomSerializer()
         {
-            return SerializationManager.ReadWithTypeSerializer(
-                typeof(int),
-                typeof(BenchmarkIntSerializer),
-                IntNode);
+            return SerializationManager.Read<int, ValueDataNode, BenchmarkIntSerializer>(IntNode);
         }
     }
 }

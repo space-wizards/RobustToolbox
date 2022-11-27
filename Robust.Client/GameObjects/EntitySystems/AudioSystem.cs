@@ -145,7 +145,18 @@ public sealed class AudioSystem : SharedAudioSystem
                 }
 
                 if (mapPos == null || mapPos.Value.MapId == MapId.Nullspace)
-                    mapPos = stream.TrackingFallbackCoordinates?.ToMap(EntityManager);
+                {
+                    // Positionless audio
+                    if (stream.TrackingFallbackCoordinates == null)
+                    {
+                        validIndices[validCount] = streamIndexOut;
+                        validCount++;
+                    }
+                    else
+                    {
+                        mapPos = stream.TrackingFallbackCoordinates?.ToMap(EntityManager);
+                    }
+                }
 
                 if (mapPos != null && mapPos.Value.MapId != MapId.Nullspace)
                 {
@@ -203,8 +214,12 @@ public sealed class AudioSystem : SharedAudioSystem
             if (stream.OcclusionValidTemporary)
                 stream.Source.SetOcclusion(stream.OcclusionTemporary);
 
-            if (pos.MapId != _eyeManager.CurrentMap)
-                stream.Source.SetVolume(-10000000);
+            if (stream.Source.IsGlobal)
+            {
+                stream.Source.SetVolume(stream.Volume);
+            }
+            else if (pos.MapId != _eyeManager.CurrentMap)
+                stream.Source.SetVolumeDirect(0f);
             else
             {
                 var sourceRelative = ourPos - pos.Position;
@@ -213,7 +228,7 @@ public sealed class AudioSystem : SharedAudioSystem
                 // this is what all current code that uses MaxDistance expects and because
                 // we don't need the OpenAL behaviour.
                 if (sourceRelative.Length > stream.MaxDistance)
-                    stream.Source.SetVolume(-10000000);
+                    stream.Source.SetVolumeDirect(0f);
                 else
                 {
                     // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull

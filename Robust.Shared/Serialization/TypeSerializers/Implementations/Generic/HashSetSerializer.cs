@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
@@ -17,15 +15,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
     [TypeSerializer]
     public sealed class HashSetSerializer<T> :
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
-        ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
+        ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>,
+        ITypeCopier<HashSet<T>>,
+        ITypeCopyCreator<ImmutableHashSet<T>>
     {
         HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, HashSet<T>? set)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
         {
-            set ??= new HashSet<T>();
+            var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
             foreach (var dataNode in node.Sequence)
             {
@@ -86,9 +86,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, ImmutableHashSet<T>? rawValue)
+            ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
             var set = ImmutableHashSet.CreateBuilder<T>();
 
@@ -100,36 +101,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return set.ToImmutable();
         }
 
-        [MustUseReturnValue]
-        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target,
-            bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target, bool skipHook,
             ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
-            foreach (var element in source)
+            foreach (var val in source)
             {
-                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
-                target.Add(elementCopy);
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
-
-            return target;
         }
 
-        [MustUseReturnValue]
-        public ImmutableHashSet<T> Copy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
-            ImmutableHashSet<T> target, bool skipHook, ISerializationContext? context = null)
+        public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source, bool skipHook,
+            ISerializationContext? context = null)
         {
-            var builder = ImmutableHashSet.CreateBuilder<T>();
+            var target = new HashSet<T>();
+            target.EnsureCapacity(source.Count);
 
-            foreach (var element in source)
+            foreach (var val in source)
             {
-                var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
-                builder.Add(elementCopy);
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
 
-            return builder.ToImmutable();
+            return target.ToImmutableHashSet();
         }
     }
 }

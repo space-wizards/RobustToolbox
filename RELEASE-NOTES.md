@@ -39,7 +39,10 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `game.desc` CVar for a server description to show in the launcher.
+* New system for exposing links to e.g. a Discord in the launcher.
+  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
+  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
 
 ### Bugfixes
 
@@ -52,6 +55,35 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.69.0.0
+
+
+## 0.68.0.0
+
+### Breaking changes
+
+* Updated yml schema validator to remove the `grids` node.
+
+### Bugfixes
+
+* Fixed position-less audio playing.
+* Stop mapgrids from serializing their fixtures.
+
+### Other
+
+* Removed the `restart` command, since it never worked properly and just confused people.
+* Add virtual to some UIScreen methods.
+* Add public parameterless ctor to MenuBar.
+
+
+## 0.67.2.2
+
+### Bugfixes
+
+* Fix double MapGrid chunk subscription.
+* Fix grid contacts short-circuiting collision.
 
 
 ## 0.67.2.1

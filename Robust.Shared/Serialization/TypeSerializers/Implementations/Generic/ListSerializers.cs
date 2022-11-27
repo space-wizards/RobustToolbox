@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using JetBrains.Annotations;
+using System.Runtime.InteropServices;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
@@ -17,7 +17,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<List<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
-        ITypeSerializer<ImmutableList<T>, SequenceDataNode>
+        ITypeSerializer<ImmutableList<T>, SequenceDataNode>,
+        ITypeCopier<List<T>>,
+        ITypeCopyCreator<IReadOnlyList<T>>,
+        ITypeCopyCreator<IReadOnlyCollection<T>>,
+        ITypeCopyCreator<ImmutableList<T>>
     {
         private DataNode WriteInternal(ISerializationManager serializationManager, IEnumerable<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
@@ -67,9 +71,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context, List<T>? list)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<List<T>>? instanceProvider = null)
         {
-            list ??= new List<T>();
+            var list = instanceProvider != null ? instanceProvider() : new List<T>();
 
             foreach (var dataNode in node.Sequence)
             {
@@ -120,9 +124,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyList<T> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyList<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<IReadOnlyList<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
 
             var list = new List<T>();
@@ -138,9 +143,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, IReadOnlyCollection<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<IReadOnlyCollection<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
 
             var list = new List<T>();
@@ -156,9 +162,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ImmutableList<T> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context, ImmutableList<T>? rawValue)
+            bool skipHook, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<ImmutableList<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
 
             var list = ImmutableList.CreateBuilder<T>();
@@ -171,81 +178,58 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list.ToImmutable();
         }
 
-        [MustUseReturnValue]
-        private TList CopyInternal<TList>(ISerializationManager serializationManager, IEnumerable<T> source, TList target, ISerializationContext? context = null) where TList : IList<T>
+        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target, bool skipHook,
+            ISerializationContext? context = null)
         {
             target.Clear();
+            target.EnsureCapacity(source.Count);
 
-            foreach (var element in source)
+            var sourceSpan = CollectionsMarshal.AsSpan(source);
+            for (var i = 0; i < sourceSpan.Length; i++)
             {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                target.Add(elementCopy);
+                ref var val = ref sourceSpan[i];
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+        }
+
+        public IReadOnlyList<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyList<T> source,
+            bool skipHook,
+            ISerializationContext? context = null)
+        {
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
 
             return target;
         }
 
-        [MustUseReturnValue]
-        public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target,
-            bool skipHook,
+        public IReadOnlyCollection<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyCollection<T> source, bool skipHook,
             ISerializationContext? context = null)
         {
-            return CopyInternal(serializationManager, source, target, context);
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+            }
+
+            return target;
         }
 
-        [MustUseReturnValue]
-        public IReadOnlyList<T> Copy(ISerializationManager serializationManager, IReadOnlyList<T> source,
-            IReadOnlyList<T> target, bool skipHook, ISerializationContext? context = null)
+        public ImmutableList<T> CreateCopy(ISerializationManager serializationManager, ImmutableList<T> source, bool skipHook,
+            ISerializationContext? context = null)
         {
-            if (target is List<T> targetList)
+            var target = new List<T>(source.Count);
+
+            foreach (var val in source)
             {
-                return CopyInternal(serializationManager, source, targetList);
+                target.Add(serializationManager.CreateCopy(val, context, skipHook));
             }
 
-            var list = new List<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                list.Add(elementCopy);
-            }
-
-            return list;
-        }
-
-        [MustUseReturnValue]
-        public IReadOnlyCollection<T> Copy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
-            IReadOnlyCollection<T> target, bool skipHook, ISerializationContext? context = null)
-        {
-            if (target is List<T> targetList)
-            {
-                return CopyInternal(serializationManager, source, targetList, context);
-            }
-
-            var list = new List<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                list.Add(elementCopy);
-            }
-
-            return list;
-        }
-
-        [MustUseReturnValue]
-        public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
-            ImmutableList<T> target, bool skipHook, ISerializationContext? context = null)
-        {
-            var builder = ImmutableList.CreateBuilder<T>();
-
-            foreach (var element in source)
-            {
-                var elementCopy = serializationManager.Copy(element, context)!;
-                builder.Add(elementCopy);
-            }
-
-            return builder.ToImmutable();
+            return target.ToImmutableList();
         }
     }
 }

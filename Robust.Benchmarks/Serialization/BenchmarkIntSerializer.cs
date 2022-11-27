@@ -8,7 +8,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Benchmarks.Serialization
 {
-    public sealed class BenchmarkIntSerializer : ITypeSerializer<int, ValueDataNode>
+    public sealed class BenchmarkIntSerializer : ITypeSerializer<int, ValueDataNode>, ITypeCopyCreator<int>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -19,7 +19,8 @@ namespace Robust.Benchmarks.Serialization
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int _ = default)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             return int.Parse(node.Value, CultureInfo.InvariantCulture);
         }
@@ -31,7 +32,7 @@ namespace Robust.Benchmarks.Serialization
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public int Copy(ISerializationManager serializationManager, int source, int target, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
             ISerializationContext? context = null)
         {
             return source;

@@ -244,7 +244,7 @@ namespace Robust.Shared.Physics.Systems
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
             if (EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
-                foreach (var (_, fixture) in component.Fixtures)
+                foreach (var fixture in component.Fixtures.Values)
                 {
                     fixture.Body = body;
                 }

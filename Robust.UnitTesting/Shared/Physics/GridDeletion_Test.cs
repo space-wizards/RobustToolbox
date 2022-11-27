@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -29,7 +30,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
 
         PhysicsComponent physics = default!;
-        IMapGrid grid = default!;
+        MapGridComponent grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>

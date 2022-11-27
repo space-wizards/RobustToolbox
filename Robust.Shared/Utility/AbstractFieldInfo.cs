@@ -11,6 +11,7 @@ namespace Robust.Shared.Utility
         internal abstract MemberInfo MemberInfo { get; }
         public abstract Type FieldType { get; }
         public abstract Type? DeclaringType { get; }
+        public abstract Module Module { get; }
 
         public abstract object? GetValue(object? obj);
         public abstract void SetValue(object? obj, object? value);
@@ -19,6 +20,7 @@ namespace Robust.Shared.Utility
         public abstract IEnumerable<T> GetAttributes<T>(bool includeBacking = false) where T : Attribute;
         public abstract bool HasAttribute<T>(bool includeBacking = false) where T : Attribute;
         public abstract bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : Attribute;
+        public abstract bool TryGetAttribute(Type type, [NotNullWhen(true)] out Attribute? attribute, bool includeBacking = false);
         public abstract bool IsBackingField();
         public abstract bool HasBackingField();
         public abstract SpecificFieldInfo? GetBackingField();

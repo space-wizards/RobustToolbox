@@ -14,6 +14,7 @@ namespace Robust.Shared.Utility
 
         public override Type FieldType => FieldInfo.FieldType;
         public override Type? DeclaringType => FieldInfo.DeclaringType;
+        public override Module Module => FieldInfo.Module;
 
         public SpecificFieldInfo(FieldInfo fieldInfo)
         {
@@ -42,6 +43,11 @@ namespace Robust.Shared.Utility
         public override bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : class
         {
             return FieldInfo.TryGetCustomAttribute(out attribute);
+        }
+
+        public override bool TryGetAttribute(Type type, [NotNullWhen(true)] out Attribute? attribute, bool includeBacking = false)
+        {
+            return FieldInfo.TryGetCustomAttribute(type, out attribute);
         }
 
         public override bool IsBackingField()

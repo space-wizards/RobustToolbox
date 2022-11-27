@@ -402,6 +402,7 @@ namespace Robust.Shared.GameObjects
         {
             var broadQuery = GetEntityQuery<BroadphaseComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
             BroadphaseComponent? oldBroadphase = null;
             if (xform.Broadphase != null)
@@ -411,7 +412,20 @@ namespace Robust.Shared.GameObjects
 
                 if (!broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
                 {
-                    // broadphase was probably deleted
+                    // broadphase was probably deleted. This generally should happen.
+                    // In this case, this is probably some entity trying to dodge out of a grid deletion.
+                    // Currently that is **technically** allowed, but I'm going to log a warning anyways.
+                    Logger.Warning($"Encountered deleted broadphase while reparenting {ToPrettyString(uid)}");
+
+                    if (fixturesQuery.TryGetComponent(uid, out var fixtures))
+                    {
+                        foreach (var fixture in fixtures.Fixtures.Values)
+                        {
+                            fixture.ProxyCount = 0;
+                            fixture.Proxies = Array.Empty<FixtureProxy>();
+                        }
+                    }
+
                     xform.Broadphase = null;
                 }
             }
@@ -431,7 +445,6 @@ namespace Robust.Shared.GameObjects
             TryFindBroadphase(xform, broadQuery, xformQuery, out var newBroadphase);
 
             var physicsQuery = GetEntityQuery<PhysicsComponent>();
-            var fixturesQuery = GetEntityQuery<FixturesComponent>();
             if (oldBroadphase != null && oldBroadphase != newBroadphase)
             {
 
@@ -713,6 +726,18 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(xform.Broadphase.Value.Uid, out broadphase))
             {
                 // broadphase was probably deleted
+
+                DebugTools.Assert(Deleted(xform.Broadphase.Value.Uid) || Terminating(xform.Broadphase.Value.Uid));
+
+                if (TryComp(xform.Owner, out FixturesComponent? fixtures))
+                {
+                    foreach (var fixture in fixtures.Fixtures.Values)
+                    {
+                        fixture.ProxyCount = 0;
+                        fixture.Proxies = Array.Empty<FixtureProxy>();
+                    }
+                }
+
                 xform.Broadphase = null;
                 return false;
             }

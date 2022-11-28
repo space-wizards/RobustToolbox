@@ -506,7 +506,6 @@ public sealed class MapLoaderSystem : EntitySystem
                 if (data.Options.LoadMap)
                 {
                     _logLoader.Info($"Loading map file with a root node onto an existing map!");
-                    data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
                 // Otherwise just ignore the map in the file.

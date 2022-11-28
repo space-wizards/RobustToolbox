@@ -524,7 +524,6 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 Del(oldRootUid);
-                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
             }
             else
             {

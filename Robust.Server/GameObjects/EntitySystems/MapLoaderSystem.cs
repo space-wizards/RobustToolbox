@@ -133,7 +133,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (!TryGetReader(resPath, out var reader))
         {
-            rootUids = new List<EntityUid>(0);
+            rootUids = new List<EntityUid>();
             return false;
         }
 

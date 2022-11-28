@@ -7,6 +7,8 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
+    /*
+    // Disabled for now since it doesn't actually work.
     sealed class RestartCommand : LocalizedCommands
     {
         [Dependency] private readonly IBaseServer _server = default!;
@@ -18,6 +20,7 @@ namespace Robust.Server.Console.Commands
             _server.Restart();
         }
     }
+    */
 
     sealed class ShutdownCommand : LocalizedCommands
     {

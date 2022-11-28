@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;

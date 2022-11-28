@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
+using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -515,6 +516,18 @@ namespace Robust.Server.Player
         public bool HasPlayerData(NetUserId userId)
         {
             return _playerData.ContainsKey(userId);
+        }
+
+        public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            if (!_entityManager.TryGetComponent(uid, out ActorComponent? actor))
+            {
+                session = null;
+                return false;
+            }
+
+            session = actor.PlayerSession;
+            return true;
         }
     }
 

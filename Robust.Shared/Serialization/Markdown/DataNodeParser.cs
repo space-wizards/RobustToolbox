@@ -78,10 +78,7 @@ public static class DataNodeParser
     private static ValueDataNode ParseValue(Parser parser, DocumentState state)
     {
         var ev = parser.Consume<Scalar>();
-        var node = new ValueDataNode(ev.Value);
-        node.Tag = ConvertTag(ev.Tag);
-        node.Start = ev.Start;
-        node.End = ev.End;
+        var node = new ValueDataNode(ev){Tag = ConvertTag(ev.Tag)};
 
         NodeParsed(node, ev, false, state);
 

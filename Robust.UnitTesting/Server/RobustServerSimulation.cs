@@ -38,6 +38,9 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Server.Replays;
+using Robust.Shared.Replays;
+using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Server
 {
@@ -232,7 +235,11 @@ namespace Robust.UnitTesting.Server
             container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
+            container.RegisterInstance<ISharedPlayerManager>(new Mock<ISharedPlayerManager>().Object);
             container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
+            container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
+            container.RegisterInstance<IServerReplayRecordingManager>(new Mock<IServerReplayRecordingManager>().Object);
+            container.RegisterInstance<IInternalReplayRecordingManager>(new Mock<IInternalReplayRecordingManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -252,9 +259,9 @@ namespace Robust.UnitTesting.Server
 
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
+            compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapLightComponent>();
-            compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();

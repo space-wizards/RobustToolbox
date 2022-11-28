@@ -922,6 +922,14 @@ namespace Robust.Shared.Network
             return true;
         }
 
+        public void DispatchLocalNetMessage(NetMessage message)
+        {
+            if (!_messages.TryGetValue(message.MsgName, out var msgDat))
+                return;
+
+            msgDat.Callback!.Invoke(message);
+        }
+
         private void CacheNetMsgIndex(int id, string name)
         {
             if (!_messages.TryGetValue(name, out var msgDat))

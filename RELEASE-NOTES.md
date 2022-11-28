@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Changed default for `net.buffer_size` to `2`.
 
 ### New features
 

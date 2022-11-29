@@ -7,6 +7,8 @@ namespace Robust.Server.Console.Commands
 {
     public sealed class DeleteCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "delete";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -17,21 +19,19 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var ent = IoCManager.Resolve<IServerEntityManager>();
-
             if (!EntityUid.TryParse(args[0], out var entity))
             {
                 shell.WriteLine("Invalid entity UID.");
                 return;
             }
 
-            if (!ent.EntityExists(entity))
+            if (!_entityManager.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist.");
                 return;
             }
 
-            ent.DeleteEntity(entity);
+            _entityManager.DeleteEntity(entity);
         }
     }
 }

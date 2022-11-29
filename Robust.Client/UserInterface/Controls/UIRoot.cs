@@ -22,6 +22,8 @@ namespace Robust.Client.UserInterface.Controls
 
         internal Color ActualBgColor => BackgroundColor ?? _styleBgColor;
 
+        internal Control? StoredKeyboardFocus;
+
         protected override void StylePropertiesChanged()
         {
             base.StylePropertiesChanged();

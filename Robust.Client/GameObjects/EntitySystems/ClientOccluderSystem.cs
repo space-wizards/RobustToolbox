@@ -4,6 +4,8 @@ using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
@@ -74,7 +76,7 @@ namespace Robust.Client.GameObjects
         private void OnOccluderDirty(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            IMapGrid? grid;
+            MapGridComponent? grid;
             var occluderQuery = GetEntityQuery<ClientOccluderComponent>();
 
             if (EntityManager.EntityExists(sender) &&

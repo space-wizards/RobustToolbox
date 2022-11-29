@@ -24,7 +24,7 @@ namespace Robust.Shared.ContentPack
         void CreateDir(ResourcePath path);
 
         /// <summary>
-        /// Deletes a file or empty directory. If the file or directory
+        /// Deletes a file or directory. If the file or directory
         /// does not exist, does nothing.
         /// </summary>
         /// <param name="path">Path of object to delete.</param>

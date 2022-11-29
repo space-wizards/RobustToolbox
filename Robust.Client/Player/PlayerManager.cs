@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -111,7 +112,8 @@ namespace Robust.Client.Player
                 // This happens when the server says "nothing changed!"
                 return;
             }
-            DebugTools.Assert(_network.IsConnected, "Received player state without being connected?");
+            DebugTools.Assert(_network.IsConnected ||  _client.RunLevel == ClientRunLevel.SinglePlayerGame // replays use state application.
+                , "Received player state without being connected?");
             DebugTools.Assert(LocalPlayer != null, "Call Startup()");
             DebugTools.Assert(LocalPlayer!.Session != null, "Received player state before Session finished setup.");
 
@@ -213,7 +215,8 @@ namespace Robust.Client.Player
                 // clear slot, player left
                 if (!hitSet.Contains(existing))
                 {
-                    DebugTools.Assert(LocalPlayer!.UserId != existing, "I'm still connected to the server, but i left?");
+                    DebugTools.Assert(LocalPlayer!.UserId != existing || _client.RunLevel == ClientRunLevel.SinglePlayerGame, // replays apply player states.
+                        "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);
                     dirty = true;
                 }
@@ -252,6 +255,18 @@ namespace Robust.Client.Player
             LocalPlayer.SwitchState(SessionStatus.InGame);
 
             PlayerListUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
+        {
+            if (LocalPlayer?.ControlledEntity == uid)
+            {
+                session = LocalPlayer.Session;
+                return true;
+            }
+
+            session = null;
+            return false;
         }
     }
 }

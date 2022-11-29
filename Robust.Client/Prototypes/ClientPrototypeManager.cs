@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -107,7 +107,7 @@ namespace Robust.Client.Prototypes
                     {
                         var file = new ResourcePath(args.FullPath);
 
-                        foreach (var root in IoCManager.Resolve<IResourceManager>().GetContentRoots())
+                        foreach (var root in Resources.GetContentRoots())
                         {
                             if (!file.TryRelativeTo(root, out var relative))
                             {

@@ -45,6 +45,7 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
         [Dependency] private readonly IConsoleHost _console = default!;
+        [Dependency] private readonly ISerializationManager _serialization = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -127,7 +128,6 @@ namespace Robust.Client.Input
         public void SaveToUserData()
         {
             var mapping = new MappingDataNode();
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -151,8 +151,8 @@ namespace Robust.Client.Input
                 .ToArray();
 
             mapping.Add("version", new ValueDataNode("1"));
-            mapping.Add("binds", serializationManager.WriteValue(modifiedBindings));
-            mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
+            mapping.Add("binds", _serialization.WriteValue(modifiedBindings));
+            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = _resourceMan.UserData.OpenWriteText(path);
@@ -486,18 +486,14 @@ namespace Robust.Client.Input
                 reader = _resourceMan.ContentFileReadText(file);
             }
 
-            var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
+            using var _ = reader;
 
-            var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
+            var documents = DataNodeParser.ParseYamlStream(reader).First();
+            var mapping = (MappingDataNode) documents.Root;
 
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
-            var robustMapping = mapping.ToDataNode() as MappingDataNode;
-            if (robustMapping == null) throw new InvalidOperationException();
-
-            if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
+            if (mapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -524,9 +520,9 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData && robustMapping.TryGet("leaveEmpty", out var node))
+            if (userData && mapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.Read<BoundKeyFunction[]>(node);
+                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {
@@ -909,43 +905,33 @@ namespace Robust.Client.Input
     [UsedImplicitly]
     internal sealed class BindCommand : LocalizedCommands
     {
+        [Dependency] private readonly IInputManager _inputManager = default!;
+
         public override string Command => "bind";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 3)
+            if (args.Length != 3)
             {
-                shell.WriteLine("Too few arguments.");
-                return;
-            }
-
-            if (args.Length > 3)
-            {
-                shell.WriteLine("Too many arguments.");
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
                 return;
             }
 
             var keyName = args[0];
 
-            if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
+            if (!Enum.TryParse<Key>(keyName, true, out var keyId))
             {
                 shell.WriteLine($"Key '{keyName}' is unrecognized.");
                 return;
             }
 
-            var keyId = (Key) keyIdObj!;
-
-            if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
+            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var keyMode))
             {
                 shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
                 return;
             }
 
-            var keyMode = (KeyBindingType) keyModeObj!;
-
             var inputCommand = args[2];
-
-            var inputMan = IoCManager.Resolve<IInputManager>();
 
             var registration = new KeyBindingRegistration
             {
@@ -954,19 +940,52 @@ namespace Robust.Client.Input
                 Type = keyMode
             };
 
-            inputMan.RegisterBinding(registration);
+            _inputManager.RegisterBinding(registration);
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                var options = Enum.GetNames<Key>();
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-key"));
+            }
+
+            if (args.Length == 2)
+            {
+                var options = Enum.GetNames<KeyBindingType>().Except(new []{nameof(KeyBindingType.Unknown)});
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-mode"));
+            }
+
+            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var type))
+                return CompletionResult.Empty;
+
+            if (args.Length == 3)
+            {
+                if (type == KeyBindingType.Command)
+                {
+                    // Don't show completions for key functions if mode is command, it wouldn't make sense.
+                    return CompletionResult.FromHint(Loc.GetString("cmd-bind-arg-command"));
+                }
+
+                var options = _inputManager.NetworkBindMap.AllKeyFunctions.Select(x => x.FunctionName);
+                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-command"));
+            }
+
+            return CompletionResult.Empty;
         }
     }
 
     [UsedImplicitly]
     internal sealed class SaveBindCommand : LocalizedCommands
     {
+        [Dependency] private readonly IInputManager _inputManager = default!;
+
         public override string Command => "svbind";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IInputManager>()
-                .SaveToUserData();
+            _inputManager.SaveToUserData();
         }
     }
 }

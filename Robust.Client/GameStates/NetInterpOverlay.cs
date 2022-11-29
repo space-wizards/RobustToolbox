@@ -43,7 +43,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it
-                if(transform.LerpDestination == null)
+                if(transform.NextPosition == null)
                     continue;
 
                 var aabb = boundingBox.GetWorldAABB();
@@ -54,7 +54,7 @@ namespace Robust.Client.GameStates
 
                 timing.InSimulation = true;
 
-                var boxOffset = transform.LerpDestination.Value - transform.LocalPosition;
+                var boxOffset = transform.NextPosition.Value - transform.LocalPosition;
                 var boxPosWorld = transform.WorldPosition + boxOffset;
 
                 timing.InSimulation = false;

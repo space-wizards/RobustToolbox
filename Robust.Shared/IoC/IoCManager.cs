@@ -59,14 +59,17 @@ namespace Robust.Shared.IoC
         /// This will create a new instance of a <see cref="IDependencyCollection"/> for this thread,
         /// otherwise it will do nothing if one already exists.
         /// </remarks>
-        public static void InitThread()
+        /// <returns>The dependency collection for this thread.</returns>
+        public static IDependencyCollection InitThread()
         {
             if (_container.IsValueCreated)
             {
-                return;
+                return _container.Value!;
             }
 
-            _container.Value = new DependencyCollection();
+            var deps = new DependencyCollection();
+            _container.Value = deps;
+            return deps;
         }
 
         /// <summary>
@@ -101,6 +104,7 @@ namespace Robust.Shared.IoC
         /// </exception>
         public static void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
@@ -141,6 +145,7 @@ namespace Robust.Shared.IoC
         /// </exception>
         public static void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
@@ -166,6 +171,7 @@ namespace Robust.Shared.IoC
         ///     that don't exist yet because you have not called BuildGraph, set this to true.
         /// </param>
         public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+            where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 

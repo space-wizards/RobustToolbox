@@ -9,7 +9,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using static Robust.Shared.Serialization.Manager.Definition.DataDefinition;
 
 // ReSharper disable once CheckNamespace
 namespace Robust.Client.UserInterface;
@@ -22,7 +21,7 @@ internal partial class UserInterfaceManager
     private readonly Dictionary<Type, UIController> _uiControllers = new();
 
     /// <summary>
-    ///     Dependency collection holding UI controllers, IoC services and entity systems
+    ///     Dependency collection holding UI controllers and IoC services
     /// </summary>
     private DependencyCollection _dependencies = default!;
 
@@ -53,7 +52,7 @@ internal partial class UserInterfaceManager
     /// <summary>
     ///     Field -> Controller -> Field assigner delegate
     /// </summary>
-    private readonly Dictionary<Type, Dictionary<Type, AssignField<UIController, object?>>> _assignerRegistry = new();
+    private readonly Dictionary<Type, Dictionary<Type, InternalReflectionUtils.AssignField<UIController, object?>>> _assignerRegistry = new();
 
     private delegate void StateChangedCaller(object controller, State.State state);
 
@@ -221,7 +220,7 @@ internal partial class UserInterfaceManager
                     continue;
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                var assigner = EmitFieldAssigner<UIController>(controllerType, fieldInfo.FieldType, backingField);
+                var assigner = (InternalReflectionUtils.AssignField<UIController, object?>)InternalReflectionUtils.EmitFieldAssigner<UIController>(backingField, true);
                 typeDict.Add(controllerType, assigner);
             }
 

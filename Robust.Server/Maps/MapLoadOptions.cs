@@ -30,7 +30,7 @@ namespace Robust.Server.Maps
         /// <summary>
         ///     Rotation to apply to the loaded objects as a collective, around 0, 0.
         /// </summary>
-        /// <remarks>Setting this overrides <</remarks>
+        /// <remarks>Setting this overrides </remarks>
         public Angle Rotation
         {
             get => _rotation;

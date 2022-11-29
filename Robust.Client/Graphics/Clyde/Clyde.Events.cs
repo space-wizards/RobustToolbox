@@ -61,6 +61,9 @@ namespace Robust.Client.Graphics.Clyde
                 case DEventText(var args):
                     TextEntered?.Invoke(args);
                     break;
+                case DEventTextEditing(var args):
+                    TextEditing?.Invoke(args);
+                    break;
                 case DEventWindowClosed(var reg, var args):
                     reg.RequestClosed?.Invoke(args);
                     CloseWindow?.Invoke(args);
@@ -126,9 +129,14 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventWindowFocus(ev));
         }
 
-        private void SendText(TextEventArgs ev)
+        private void SendText(TextEnteredEventArgs ev)
         {
             _eventDispatchQueue.Enqueue(new DEventText(ev));
+        }
+
+        private void SendTextEditing(TextEditingEventArgs ev)
+        {
+            _eventDispatchQueue.Enqueue(new DEventTextEditing(ev));
         }
 
         private void SendMouseMove(MouseMoveEventArgs ev)
@@ -158,7 +166,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventWindowFocus(WindowFocusedEventArgs Args) : DEventBase;
 
-        private sealed record DEventText(TextEventArgs Args) : DEventBase;
+        private sealed record DEventText(TextEnteredEventArgs Args) : DEventBase;
+        private sealed record DEventTextEditing(TextEditingEventArgs Args) : DEventBase;
 
         private sealed record DEventMouseMove(MouseMoveEventArgs Args) : DEventBase;
         private sealed record DEventMouseEnterLeave(MouseEnterLeaveEventArgs Args) : DEventBase;

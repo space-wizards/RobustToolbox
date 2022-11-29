@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -133,6 +134,8 @@ namespace Robust.Shared.Network
 
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
+        private readonly HttpClient _httpClient = new();
+
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
 
@@ -238,6 +241,8 @@ namespace Robust.Shared.Network
             {
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
+
+            HttpClientUserAgent.AddUserAgent(_httpClient);
 
             SynchronizeNetTime();
 
@@ -915,6 +920,14 @@ namespace Robust.Shared.Network
             }
 
             return true;
+        }
+
+        public void DispatchLocalNetMessage(NetMessage message)
+        {
+            if (!_messages.TryGetValue(message.MsgName, out var msgDat))
+                return;
+
+            msgDat.Callback!.Invoke(message);
         }
 
         private void CacheNetMsgIndex(int id, string name)

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -23,13 +22,13 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         SequenceDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context, HashSet<T>? set)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
     {
-        set ??= new HashSet<T>();
+        var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
         foreach (var dataNode in node.Sequence)
         {
-            var value = serializationManager.ReadWithTypeSerializer(typeof(T), typeof(TCustomSerializer), dataNode, context, skipHook);
+            var value = serializationManager.Read<T, ValueDataNode, TCustomSerializer>((ValueDataNode)dataNode, context, skipHook);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 
@@ -45,7 +44,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         var list = new List<ValidationNode>();
         foreach (var elem in node.Sequence)
         {
-            list.Add(serializationManager.ValidateNodeWith(typeof(T), typeof(TCustomSerializer), elem, context));
+            list.Add(serializationManager.ValidateNode<T, ValueDataNode, TCustomSerializer>((ValueDataNode)elem, context));
         }
 
         return new ValidatedSequenceNode(list);
@@ -59,33 +58,10 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
 
         foreach (var elem in value)
         {
-            sequence.Add(serializationManager.WriteWithTypeSerializer(typeof(T), typeof(TCustomSerializer), elem, alwaysWrite, context));
+            sequence.Add(serializationManager.WriteValue<T, TCustomSerializer>(elem, alwaysWrite, context));
         }
 
         return sequence;
-    }
-
-    public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        target.Clear();
-        target.EnsureCapacity(source.Count);
-
-        foreach (var element in source)
-        {
-            // we have to create a new instance of T, even if this instance is never actually used?
-            // Maybe this will change in the future.
-            var A = new T();
-
-            var value = serializationManager.CopyWithTypeSerializer(typeof(TCustomSerializer), element, A, context, skipHook);
-            if (value == null)
-                throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when copying using a custom hashset serializer.");
-
-            target.Add((T) value);
-        }
-
-        return target;
     }
 }
 

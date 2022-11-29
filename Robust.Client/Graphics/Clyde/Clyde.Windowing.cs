@@ -41,7 +41,8 @@ namespace Robust.Client.Graphics.Clyde
         private bool _threadWindowBlit;
         private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
 
-        public event Action<TextEventArgs>? TextEntered;
+        public event Action<TextEnteredEventArgs>? TextEntered;
+        public event Action<TextEditingEventArgs>? TextEditing;
         public event Action<MouseMoveEventArgs>? MouseMove;
         public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
@@ -112,10 +113,10 @@ namespace Robust.Client.Graphics.Clyde
             switch (windowingApi)
             {
                 case "glfw":
-                    winImpl = new GlfwWindowingImpl(this);
+                    winImpl = new GlfwWindowingImpl(this, _deps);
                     break;
                 case "sdl2":
-                    winImpl = new Sdl2WindowingImpl(this);
+                    winImpl = new Sdl2WindowingImpl(this, _deps);
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(
@@ -463,6 +464,27 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.AssertNotNull(_windowing);
 
             _windowing!.RunOnWindowThread(a);
+        }
+
+        public void TextInputSetRect(UIBox2i rect)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.TextInputSetRect(rect);
+        }
+
+        public void TextInputStart()
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.TextInputStart();
+        }
+
+        public void TextInputStop()
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.TextInputStop();
         }
 
         private abstract class WindowReg

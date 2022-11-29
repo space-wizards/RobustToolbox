@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
     /// <summary>
-    ///     A square section of a <see cref="IMapGrid"/>.
+    ///     A square section of a <see cref="MapGridComponent"/>.
     /// </summary>
     internal sealed class MapChunk
     {
@@ -20,6 +22,7 @@ namespace Robust.Shared.Map
 
         private readonly Vector2i _gridIndices;
 
+        [ViewVariables]
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
@@ -34,6 +37,7 @@ namespace Robust.Shared.Map
         /// <remarks>
         /// This will always be between 1 and <see cref="ChunkSize"/>^2.
         /// </remarks>
+        [ViewVariables]
         internal int FilledTiles { get; private set; }
 
         /// <summary>
@@ -49,6 +53,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
         /// </summary>
+        [ViewVariables]
         public GameTick LastTileModifiedTick { get; set; }
 
         /// <summary>
@@ -58,7 +63,7 @@ namespace Robust.Shared.Map
         public bool SuppressCollisionRegeneration { get; set; }
 
         /// <summary>
-        ///     Constructs an instance of a MapGrid chunk.
+        ///     Constructs an instance of a MapChunk.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -78,17 +83,17 @@ namespace Robust.Shared.Map
         public ushort ChunkSize { get; }
 
         /// <summary>
-        ///     The X index of this chunk inside the <see cref="IMapGrid"/>.
+        ///     The X index of this chunk inside the <see cref="MapGridComponent"/>.
         /// </summary>
         public int X => _gridIndices.X;
 
         /// <summary>
-        ///     The Y index of this chunk inside the <see cref="IMapGrid"/>.
+        ///     The Y index of this chunk inside the <see cref="MapGridComponent"/>.
         /// </summary>
         public int Y => _gridIndices.Y;
 
         /// <summary>
-        ///     The positional indices of this chunk in the <see cref="IMapGrid"/>.
+        ///     The positional indices of this chunk in the <see cref="MapGridComponent"/>.
         /// </summary>
         public Vector2i Indices => _gridIndices;
 
@@ -150,6 +155,10 @@ namespace Robust.Shared.Map
             _tiles[xIndex, yIndex] = tile;
 
             var tileIndices = new Vector2i(xIndex, yIndex);
+
+            // God I hate C# events sometimes.
+            DebugTools.Assert(TileModified == null || TileModified.GetInvocationList().Length <= 1);
+
             TileModified?.Invoke(this, tileIndices, tile, oldTile, shapeChanged);
         }
 

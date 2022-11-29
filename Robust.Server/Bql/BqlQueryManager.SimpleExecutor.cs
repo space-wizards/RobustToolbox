@@ -14,19 +14,18 @@ namespace Robust.Server.Bql
             var parsed = SimpleQuery.Parse(query);
             if (parsed.Success)
             {
-                var entityManager = IoCManager.Resolve<IEntityManager>();
                 var selectors = parsed.Value.Item1.ToArray();
                 if (selectors.Length == 0)
                 {
-                    return (entityManager.GetEntities(), parsed.Value.Item2);
+                    return (_entityManager.GetEntities(), parsed.Value.Item2);
                 }
 
                 var entities = _queriesByToken[selectors[0].Token]
-                    .DoInitialSelection(selectors[0].Arguments, selectors[0].Inverted, entityManager);
+                    .DoInitialSelection(selectors[0].Arguments, selectors[0].Inverted, _entityManager);
 
                 foreach (var sel in selectors[1..])
                 {
-                    entities = _queriesByToken[sel.Token].DoSelection(entities, sel.Arguments, sel.Inverted, entityManager);
+                    entities = _queriesByToken[sel.Token].DoSelection(entities, sel.Arguments, sel.Inverted, _entityManager);
                 }
 
                 return (entities, parsed.Value.Item2);

@@ -1,18 +1,19 @@
-using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Physics
 {
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
+        [Dependency] private readonly IOverlayManager _overlay = default!;
+        [Dependency] private readonly IMapManager _map = default!;
+
         public bool EnableDebug
         {
             get => _enableDebug;
@@ -22,17 +23,16 @@ namespace Robust.Client.Physics
 
                 Sawmill.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
-                var overlayManager = IoCManager.Resolve<IOverlayManager>();
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(EntityManager, IoCManager.Resolve<IMapManager>(), this);
-                    overlayManager.AddOverlay(overlay);
+                    var overlay = new GridSplitNodeOverlay(EntityManager, _map, this);
+                    _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
                 else
                 {
-                    overlayManager.RemoveOverlay<GridSplitNodeOverlay>();
+                    _overlay.RemoveOverlay<GridSplitNodeOverlay>();
                     RaiseNetworkEvent(new StopGridNodesMessage());
                 }
             }
@@ -91,8 +91,7 @@ namespace Robust.Client.Physics
 
                     var gridXform = xformQuery.GetComponent(iGrid.GridEntityId);
                     worldHandle.SetTransform(gridXform.WorldMatrix);
-                    var grid = (MapGrid)iGrid;
-                    var chunkEnumerator = grid.GetMapChunks(args.WorldBounds);
+                    var chunkEnumerator = iGrid.GetMapChunks(args.WorldBounds);
 
                     while (chunkEnumerator.MoveNext(out var chunk))
                     {

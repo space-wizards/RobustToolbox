@@ -4,7 +4,7 @@ using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
-    public interface ITypeWriter<TType>
+    public interface ITypeWriter<TType> : BaseSerializerInterfaces.ITypeInterface<TType>
     {
         DataNode Write(ISerializationManager serializationManager, TType value, IDependencyCollection dependencies,
             bool alwaysWrite = false,

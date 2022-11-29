@@ -12,13 +12,14 @@ namespace Robust.Client.Graphics
         bool IsPlaying { get; }
 
         bool IsLooping { get; set; }
+        bool IsGlobal { get; }
 
         [MustUseReturnValue]
         bool SetPosition(Vector2 position);
         void SetPitch(float pitch);
         void SetGlobal();
         void SetVolume(float decibels);
-        void SetVolumeDirect(float decibels);
+        void SetVolumeDirect(float gain);
         void SetMaxDistance(float maxDistance);
         void SetRolloffFactor(float rolloffFactor);
         void SetReferenceDistance(float refDistance);

@@ -155,6 +155,7 @@ namespace Robust.Server
         {
             Options = options;
             _config.Initialize(true);
+            CVarDefaultOverrides.OverrideServer(_config);
 
             if (Options.LoadConfigAndUserData)
             {

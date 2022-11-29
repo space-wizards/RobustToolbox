@@ -10,16 +10,10 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
+    /// <seealso cref="CVarDefaultOverrides"/>
     [CVarDefs]
     public abstract class CVars
     {
-#if FULL_RELEASE
-        private const bool ConstFullRelease = true;
-#else
-        private const bool ConstFullRelease = false;
-#endif
-
-
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -1359,11 +1353,11 @@ namespace Robust.Shared
         /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);
 
         /// <summary>
         /// Index log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
     }
 }

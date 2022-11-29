@@ -128,12 +128,12 @@ public sealed class MapLoaderSystem : EntitySystem
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
-        rootUids = new List<EntityUid>();
 
         var resPath = new ResourcePath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
+            rootUids = new List<EntityUid>();
             return false;
         }
 
@@ -149,8 +149,17 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            rootUids = data.Entities;
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var rootEnts = new List<EntityUid>();
+            foreach (var ent in data.Entities)
+            {
+               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                    rootEnts.Add(ent);
+            }
+            rootUids = rootEnts;
         }
 
         _context.Clear();

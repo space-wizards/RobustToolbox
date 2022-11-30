@@ -42,6 +42,7 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -57,7 +58,7 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
-        _context = new MapSerializationContext(_factory, _serManager);
+        _context = new MapSerializationContext();
     }
 
     #region Public
@@ -127,12 +128,12 @@ public sealed class MapLoaderSystem : EntitySystem
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
-        rootUids = new List<EntityUid>();
 
         var resPath = new ResourcePath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
+            rootUids = new List<EntityUid>();
             return false;
         }
 
@@ -148,8 +149,17 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            rootUids = data.Entities;
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var rootEnts = new List<EntityUid>();
+            foreach (var ent in data.Entities)
+            {
+               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                    rootEnts.Add(ent);
+            }
+            rootUids = rootEnts;
         }
 
         _context.Clear();
@@ -403,12 +413,22 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (data.TryGet("components", out SequenceDataNode? componentList))
         {
+            var prototype = meta.EntityPrototype;
+            _context.CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                _context.CurrentReadingEntityComponents[value] = datanode;
+                var compType = _componentFactory.GetRegistration(value).Type;
+                if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
+                {
+                    datanode =
+                        _serManager.PushCompositionWithGenericNode(
+                            compType,
+                            new[] { protData.Mapping }, datanode, _context);
+                }
+                _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
             }
         }
 
@@ -513,7 +533,6 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 Del(oldRootUid);
-                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
             }
             else
             {
@@ -619,8 +638,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                var chunk = grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY);
-                _serManager.Read(chunkNode, _context, value: chunk);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY));
             }
         }
     }

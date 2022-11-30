@@ -1,12 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Timing;
-using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom;
 
@@ -28,7 +26,7 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
         Assert.That(curTime.TotalSeconds, Is.GreaterThan(0));
 
         var dataTime = curTime + TimeSpan.FromSeconds(2);
-        var node = serialization.WriteWithTypeSerializer(typeof(TimeSpan), typeof(TimeOffsetSerializer), dataTime);
+        var node = serialization.WriteValue<TimeSpan, TimeOffsetSerializer>(dataTime);
         Assert.That(((ValueDataNode) node).Value, Is.EqualTo("2"));
     }
 
@@ -45,8 +43,7 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
         var curTime = sim.ResolveDependency<IGameTiming>().CurTime;
 
         var node = new ValueDataNode("2");
-        var deserialized =
-            serialization.ReadWithTypeSerializer(typeof(TimeSpan), typeof(TimeOffsetSerializer), node);
+        var deserialized = serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(node);
 
         Assert.That(deserialized, Is.Not.EqualTo(null));
         var time = (TimeSpan) deserialized!;

@@ -95,7 +95,8 @@ namespace Robust.Server.ServerStatus
             {
                 ["connect_address"] = _cfg.GetCVar(CVars.StatusConnectAddress),
                 ["auth"] = authInfo,
-                ["build"] = buildInfo
+                ["build"] = buildInfo,
+                ["desc"] = _serverDescCache,
             };
 
             OnInfoRequest?.Invoke(jObject);

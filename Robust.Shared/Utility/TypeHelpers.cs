@@ -192,6 +192,11 @@ namespace Robust.Shared.Utility
             return (attribute = memberInfo.GetCustomAttribute<T>()) != null;
         }
 
+        public static bool TryGetCustomAttribute(this MemberInfo memberInfo, Type type, [NotNullWhen(true)] out Attribute? attribute)
+        {
+            return (attribute = memberInfo.GetCustomAttribute(type)) != null;
+        }
+
         internal static bool HasParameterlessConstructor(this Type type)
         {
             return type

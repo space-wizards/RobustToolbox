@@ -1,4 +1,3 @@
-using Linguini.Syntax.Ast;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -6,7 +5,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using System;
 using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
@@ -18,9 +16,9 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         SequenceDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context, Queue<T>? queue)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider = null)
     {
-        queue ??= new Queue<T>();
+        var queue = instanceProvider != null ? instanceProvider() : new Queue<T>();
 
         foreach (var dataNode in node.Sequence)
         {
@@ -55,21 +53,5 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         }
 
         return sequence;
-    }
-
-    public Queue<T> Copy(ISerializationManager serializationManager, Queue<T> source, Queue<T> target,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        target.Clear();
-        target.EnsureCapacity(source.Count);
-
-        foreach (var element in source)
-        {
-            var elementCopy = serializationManager.Copy(element, context) ?? throw new NullReferenceException();
-            target.Enqueue(elementCopy);
-        }
-
-        return target;
     }
 }

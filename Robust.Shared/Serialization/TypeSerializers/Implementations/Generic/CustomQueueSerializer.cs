@@ -1,14 +1,12 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
@@ -18,19 +16,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 public sealed class CustomQueueSerializer<T, TCustomSerializer>
     : ITypeSerializer<Queue<T>, SequenceDataNode>
     where TCustomSerializer : ITypeSerializer<T, ValueDataNode>
-    where T : new() // required for copying.
 {
     Queue<T> ITypeReader<Queue<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context, Queue<T>? queue)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider = null)
     {
-        queue ??= new Queue<T>();
+        var queue = instanceProvider != null ? instanceProvider() : new Queue<T>();
 
         foreach (var dataNode in node.Sequence)
         {
-            var value = serializationManager.ReadWithTypeSerializer(typeof(T), typeof(TCustomSerializer), dataNode, context, skipHook);
+            var value = serializationManager.Read<T, ValueDataNode, TCustomSerializer>((ValueDataNode)dataNode, context, skipHook);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 
@@ -46,7 +43,7 @@ public sealed class CustomQueueSerializer<T, TCustomSerializer>
         var list = new List<ValidationNode>();
         foreach (var elem in node.Sequence)
         {
-            list.Add(serializationManager.ValidateNodeWith(typeof(T), typeof(TCustomSerializer), elem, context));
+            list.Add(serializationManager.ValidateNode<T, ValueDataNode, TCustomSerializer>((ValueDataNode)elem, context));
         }
 
         return new ValidatedSequenceNode(list);
@@ -60,29 +57,10 @@ public sealed class CustomQueueSerializer<T, TCustomSerializer>
 
         foreach (var elem in value)
         {
-            sequence.Add(serializationManager.WriteWithTypeSerializer(typeof(T), typeof(TCustomSerializer), elem, alwaysWrite, context));
+            sequence.Add(serializationManager.WriteValue<T, TCustomSerializer>(elem, alwaysWrite, context));
         }
 
         return sequence;
-    }
-
-    public Queue<T> Copy(ISerializationManager serializationManager, Queue<T> source, Queue<T> target,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        target.Clear();
-        target.EnsureCapacity(source.Count);
-
-        foreach (var element in source)
-        {
-            var value = serializationManager.CopyWithTypeSerializer(typeof(TCustomSerializer), element, new T(), context, skipHook);
-            if (value == null)
-                throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when copying using a custom queue serializer.");
-
-            target.Enqueue((T) value);
-        }
-
-        return target;
     }
 }
 

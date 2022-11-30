@@ -16,7 +16,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     : ITypeSerializer<HashSet<T>, SequenceDataNode>
     where TCustomSerializer : ITypeSerializer<T, ValueDataNode>
-    where T : new() // required for copying.
 {
     HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
@@ -32,7 +31,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 
-            set.Add((T)value);
+            set.Add(value);
         }
 
         return set;

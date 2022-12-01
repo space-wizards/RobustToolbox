@@ -45,21 +45,26 @@ END TEMPLATE-->
   * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
 * `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
 * A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
+* `IConfigurationManager` has new functions for reading and writing CVar directly from a TOML file `Stream`.
 * New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
 * Added new serializers to support Queue<T> data-fields.
+* Added a `FromParent()` function to `IDependencyCollection`, enabling dependencies to be passed to parallel threads.
+* `IClientStateManager` now has a `PartialStateReset()` function to make it easier for content to rewind to previous game states.
+* Added `IClientNetManager.DispatchLocalNetMessage()`, which allows a client to raise a local message that triggers networked event subscriptions.
 
 ### Bugfixes
 
-*None yet*
+* `IPlayerSession.OnConnect()` now actually gets called when players connect.
+* `MapLoaderSystem.TryLoad(.., out rootUids)` now properly only returns entities parented to the map.
 
 ### Other
 
-*None yet*
+* Invalid placement types for the entity spawn menu now log warnings.
+* Slightly improved sprite y-sorting performance.
 
 ### Internal
 
-*None yet*
-
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs. 
 
 ## 0.69.0.0
 

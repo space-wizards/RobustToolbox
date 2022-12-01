@@ -206,7 +206,9 @@ namespace Robust.Server.GameStates
 
                 transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
                 metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-                Parallel.For(0, chunkBatches, i =>
+                Parallel.For(0, chunkBatches,
+                new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
+                i =>
                 {
                     var start = i * ChunkBatchSize;
                     var end = Math.Min(start + ChunkBatchSize, chunksCount);

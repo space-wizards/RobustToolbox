@@ -43,6 +43,7 @@ END TEMPLATE-->
 * New system for exposing links to e.g. a Discord in the launcher.
   * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
   * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* Added new serializers to support Queue<T> data-fields.
 
 ### Bugfixes
 

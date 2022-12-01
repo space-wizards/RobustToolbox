@@ -46,6 +46,7 @@ END TEMPLATE-->
 * `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
 * A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
 * New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
+* Added new serializers to support Queue<T> data-fields.
 
 ### Bugfixes
 

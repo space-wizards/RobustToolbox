@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 [TypeSerializer]
-public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataNode>
+public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataNode>,  ITypeCopier<Queue<T>>
 {
     Queue<T> ITypeReader<Queue<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
@@ -53,5 +53,16 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         }
 
         return sequence;
+    }
+
+    public void CopyTo(ISerializationManager serializationManager, Queue<T> source, ref Queue<T> target, bool skipHook, ISerializationContext? context = null)
+    {
+        target.Clear();
+        target.EnsureCapacity(source.Count);
+
+        foreach (var val in source)
+        {
+            target.Enqueue(serializationManager.CreateCopy(val, context, skipHook));
+        }
     }
 }

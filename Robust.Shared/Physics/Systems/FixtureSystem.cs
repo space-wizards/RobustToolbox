@@ -197,19 +197,18 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var xform = Transform(body.Owner);
-            var map = xform.MapUid;
-
-            if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
+            if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
-                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                var map = Transform(broadphase.Owner).MapUid;
+                if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
                 {
-                    physicsMap.ContactManager.Destroy(contact);
+                    foreach (var contact in fixture.Contacts.Values.ToArray())
+                    {
+                        physicsMap.ContactManager.Destroy(contact);
+                    }
                 }
+                _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
 
-                if (body.CanCollide && xform.GridUid != xform.Owner)
-                {
-                    _lookup.DestroyProxies(fixture, xform, physicsMap);
-                }
             }
 
             if (updates)
@@ -318,6 +317,8 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
+            // TODO add a DestroyFixture() override that takes in a list.
+            // reduced broadphase lookups
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;

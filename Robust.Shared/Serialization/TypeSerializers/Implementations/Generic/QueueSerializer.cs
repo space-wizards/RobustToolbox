@@ -34,7 +34,7 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         var list = new List<ValidationNode>();
         foreach (var elem in node.Sequence)
         {
-            list.Add(serializationManager.ValidateNode(typeof(T), elem, context));
+            list.Add(serializationManager.ValidateNode<T>(elem, context));
         }
 
         return new ValidatedSequenceNode(list);
@@ -49,7 +49,7 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
 
         foreach (var elem in value)
         {
-            sequence.Add(serializationManager.WriteValue(typeof(T), elem, alwaysWrite, context));
+            sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
         }
 
         return sequence;

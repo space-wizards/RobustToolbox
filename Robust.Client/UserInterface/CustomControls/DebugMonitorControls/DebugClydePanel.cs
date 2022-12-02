@@ -50,6 +50,8 @@ Version: {info.VersionString}");
             if (info.Overriding)
                 _textBuilder.Append($"Version override: {info.OpenGLVersion}\n");
 
+            _textBuilder.Append($"Windowing: {info.WindowingApi}\n");
+
             _textBuilder.Append($@"Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
 Batches: {stats.LastBatches} Max size: ({stats.LargestBatchSize.vertices} vtx, {stats.LargestBatchSize.vertices} idx)
 Lights: {stats.TotalLights}");

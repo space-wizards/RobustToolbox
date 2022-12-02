@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
 
 ### Internal
 

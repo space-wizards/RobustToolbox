@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so the bigger of the two is used. The new default for `net.max_connections` is `256`, so this means any servers previously configuring `game.maxplayers` will now (probably) have a higher maximum.
+*None yet*
 
 ### New features
 
@@ -47,7 +47,8 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
+* The new default for `net.max_connections` is 256.
 
 ### Internal
 

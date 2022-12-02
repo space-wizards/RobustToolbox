@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so the bigger of the two is used. The new default for `net.max_connections` is `256`, so this means any servers previously configuring `game.maxplayers` will now (probably) have a higher maximum.
 
 ### New features
 
@@ -83,7 +83,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs. 
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs.
 
 ## 0.69.0.0
 

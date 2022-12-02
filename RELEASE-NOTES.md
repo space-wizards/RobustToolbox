@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Debug monitors (F3) now have margin between them.
 
 ### Internal
 

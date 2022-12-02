@@ -25,6 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
         {
             Visible = false;
 
+            SeparationOverride = 2;
             Orientation = LayoutOrientation.Vertical;
 
             Add(DebugMonitor.Fps, new FpsCounter(gameTiming));

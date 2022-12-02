@@ -11,9 +11,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Timing;
 
-namespace Robust.Client.UserInterface.CustomControls
+namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
     internal sealed class DebugMonitors : BoxContainer, IDebugMonitors
     {

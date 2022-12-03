@@ -281,7 +281,7 @@ namespace Robust.Shared.Serialization.Manager
 #pragma warning restore CS0618
                 return;
 
-            DebugTools.Assert(typeof(TValue).IsClass, "ISerializationHooks must only be used on reference types");
+            DebugTools.Assert(!typeof(TValue).IsValueType, "ISerializationHooks must only be used on reference types");
 
             if (ctx.DeferQueue != null)
                 ctx.DeferQueue.TryWrite(hooks);

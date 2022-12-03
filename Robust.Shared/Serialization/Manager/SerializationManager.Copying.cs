@@ -56,8 +56,8 @@ public sealed partial class SerializationManager
             return Expression.Lambda<CopyToBoxingDelegate>(
                 block,
                 sourceParam,
-                hookCtxParam,
                 targetParam,
+                hookCtxParam,
                 contextParam).Compile();
         }, this);
     }
@@ -313,18 +313,18 @@ public sealed partial class SerializationManager
         return true;
     }
 
-    private T[] CreateArrayCopy<T>(T[] source, ISerializationContext context, bool skipHook)
+    private T[] CreateArrayCopy<T>(T[] source, SerializationHookContext hookCtx, ISerializationContext context)
     {
         var copy = new T[source.Length];
         for (int i = 0; i < source.Length; i++)
         {
-            copy[i] = CreateCopy(source[i], context, skipHook);
+            copy[i] = CreateCopy(source[i], hookCtx, context);
         }
 
         return copy;
     }
 
-    private T CreateCopyInternal<T>(T source, ISerializationContext context, SerializationHookContext hookCtx, DataDefinition<T>? definition) where T : notnull
+    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull
     {
         if (ShouldReturnSource(typeof(T)))
             return source;

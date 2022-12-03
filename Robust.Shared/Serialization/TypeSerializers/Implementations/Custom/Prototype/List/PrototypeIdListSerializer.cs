@@ -2,7 +2,6 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -16,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
     }
 
     [Virtual]
-    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
+    public partial class PrototypeIdListSerializer<T> : ITypeValidator<List<string>, SequenceDataNode> where T : class, IPrototype
     {
         protected virtual PrototypeIdSerializer<T> PrototypeSerializer => new();
 
@@ -40,71 +39,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             }
 
             return new ValidatedSequenceNode(list);
-        }
-
-        private DataNode WriteInternal(
-            ISerializationManager serializationManager,
-            IEnumerable<string> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite,
-            ISerializationContext? context)
-        {
-            var list = new List<DataNode>();
-
-            foreach (var str in value)
-            {
-                list.Add(PrototypeSerializer.Write(serializationManager, str, dependencies, alwaysWrite, context));
-            }
-
-            return new SequenceDataNode(list);
-        }
-
-        ValidationNode ITypeValidator<List<string>, SequenceDataNode>.Validate(
-            ISerializationManager serializationManager,
-            SequenceDataNode node,
-            IDependencyCollection dependencies,
-            ISerializationContext? context)
-        {
-            return ValidateInternal(serializationManager, node, dependencies, context);
-        }
-
-        List<string> ITypeReader<List<string>, SequenceDataNode>.Read(ISerializationManager serializationManager,
-            SequenceDataNode node,
-            IDependencyCollection dependencies,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context, List<string>? list = default)
-        {
-            list ??= new List<string>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                list.Add(PrototypeSerializer.Read(
-                    serializationManager,
-                    (ValueDataNode) dataNode,
-                    dependencies,
-                    hookCtx,
-                    context));
-            }
-
-            return list;
-        }
-
-        DataNode ITypeWriter<List<string>>.Write(ISerializationManager serializationManager,
-            List<string> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite,
-            ISerializationContext? context)
-        {
-            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        List<string> ITypeCopier<List<string>>.Copy(ISerializationManager serializationManager,
-            List<string> source,
-            List<string> target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context)
-        {
-            return new(source);
         }
     }
 }

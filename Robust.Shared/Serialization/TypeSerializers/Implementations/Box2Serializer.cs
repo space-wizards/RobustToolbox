@@ -14,7 +14,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
+    public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>, ITypeCopyCreator<Box2>
     {
         private static void NextOrThrow(ref SpanSplitExtensions.Enumerator<char> enumerator, string value)
         {
@@ -25,7 +25,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, Box2 value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Box2>? instanceProvider = null)
         {
             var nodeValue = node.Value;
             var args = nodeValue.AsSpan().Split(',').GetEnumerator();
@@ -78,7 +79,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Box2 Copy(ISerializationManager serializationManager, Box2 source, Box2 target,
+        public Box2 CreateCopy(ISerializationManager serializationManager, Box2 source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

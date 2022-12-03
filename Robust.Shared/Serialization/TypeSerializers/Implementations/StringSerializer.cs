@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -15,7 +14,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public string Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, string? value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<string>? instanceProvider = null)
         {
             return node.Value;
         }
@@ -32,14 +32,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value);
-        }
-
-        [MustUseReturnValue]
-        public string Copy(ISerializationManager serializationManager, string source, string target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return source;
         }
     }
 }

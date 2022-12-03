@@ -1,10 +1,7 @@
 using System;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -20,12 +17,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
         ITypeSerializer<SpriteSpecifier, MappingDataNode>,
-        ITypeSerializer<SpriteSpecifier, ValueDataNode>
+        ITypeSerializer<SpriteSpecifier, ValueDataNode>,
+        ITypeCopyCreator<SpriteSpecifier>,
+        ITypeCopyCreator<Rsi>,
+        ITypeCopyCreator<Texture>,
+        ITypeCopyCreator<EntityPrototype>,
+        ITypeCopier<Rsi>,
+        ITypeCopier<Texture>
     {
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            SerializationHookContext hookCtx, ISerializationContext? context, Texture? value = default)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<Texture>? instanceProvider = null)
         {
             var path = serializationManager.Read<ResourcePath>(node, hookCtx, context);
             return new Texture(path);
@@ -34,15 +38,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            SerializationHookContext hookCtx, ISerializationContext? context, SpriteSpecifier? value = default)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
         {
-            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, hookCtx, context, (Texture?)value);
+            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<Texture>?)instanceProvider);
         }
 
         EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            SerializationHookContext hookCtx, ISerializationContext? context, EntityPrototype? value = default)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<EntityPrototype>? instanceProvider = null)
         {
             return new EntityPrototype(node.Value);
         }
@@ -50,7 +56,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            SerializationHookContext hookCtx, ISerializationContext? context, Rsi? value = default)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<Rsi>? instanceProvider = null)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -69,12 +76,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            SerializationHookContext hookCtx, ISerializationContext? context, SpriteSpecifier? value = default)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
         {
             if (node.TryGet("entity", out var entityNode) && entityNode is ValueDataNode entityValueNode)
-                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, hookCtx, context, (EntityPrototype?)value);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<EntityPrototype>?)instanceProvider);
 
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, hookCtx, context, (Rsi?) value);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<Rsi>?)instanceProvider);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -159,22 +167,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target,
-            SerializationHookContext hookCtx,
+        public Texture CreateCopy(ISerializationManager serializationManager, Texture source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
-        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
-            EntityPrototype target,
+        public EntityPrototype CreateCopy(ISerializationManager serializationManager, EntityPrototype source,
             SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target,
-            SerializationHookContext hookCtx,
+        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
@@ -199,23 +204,35 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             };
         }
 
-        public SpriteSpecifier Copy(ISerializationManager serializationManager, SpriteSpecifier source,
-            SpriteSpecifier target,
+        public SpriteSpecifier CreateCopy(ISerializationManager serializationManager, SpriteSpecifier source,
             SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source switch
             {
                 Rsi rsi
-                    => new Rsi(rsi.RsiPath, rsi.RsiState),
+                    => CreateCopy(serializationManager, rsi, hookCtx, context),
 
                 Texture texture
-                    => new Texture(texture.TexturePath),
+                    => CreateCopy(serializationManager, texture, hookCtx, context),
 
                 EntityPrototype entityPrototype
-                    => new EntityPrototype(entityPrototype.EntityPrototypeId),
+                    => CreateCopy(serializationManager, entityPrototype, hookCtx, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };
+        }
+
+        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
+        {
+            target.RsiPath = source.RsiPath;
+            target.RsiState = source.RsiState;
+        }
+
+        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
+        {
+            target.TexturePath = source.TexturePath;
         }
     }
 }

@@ -11,12 +11,13 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
+    public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>, ITypeCopyCreator<Color>
     {
         public Color Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, Color value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Color>? instanceProvider = null)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)
                 ? color :
@@ -42,7 +43,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Color Copy(ISerializationManager serializationManager, Color source, Color target,
+        public Color CreateCopy(ISerializationManager serializationManager, Color source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

@@ -1,32 +1,31 @@
-﻿using Robust.Shared.Serialization.Markdown.Mapping;
+﻿using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public partial class DataDefinition
+    internal partial class DataDefinition<T>
     {
-        private delegate object PopulateDelegateSignature(
-            object target,
+        //todo paul make these use the mngr delegates
+        public delegate void PopulateDelegateSignature(
+            ref T target,
             MappingDataNode mappingDataNode,
-            ISerializationManager serializationManager,
-            ISerializationContext? context,
             SerializationHookContext hookCtx,
-            object?[] defaultValues);
-
-        private delegate MappingDataNode SerializeDelegateSignature(
-            object obj,
-            ISerializationManager serializationManager,
-            ISerializationContext? context,
-            bool alwaysWrite,
-            object?[] defaultValues);
-
-        private delegate object CopyDelegateSignature(
-            object source,
-            object target,
-            ISerializationManager serializationManager,
             ISerializationContext? context);
 
-        private delegate TValue AccessField<TTarget, TValue>(ref TTarget target);
+        public delegate MappingDataNode SerializeDelegateSignature(
+            T obj,
+            ISerializationContext? context,
+            bool alwaysWrite);
 
-        internal delegate void AssignField<TTarget, TValue>(ref TTarget target, TValue? value);
+        public delegate void CopyDelegateSignature(
+            T source,
+            ref T target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context);
+
+        private delegate ValidationNode ValidateFieldDelegate(
+            DataNode node,
+            ISerializationContext? context);
     }
 }

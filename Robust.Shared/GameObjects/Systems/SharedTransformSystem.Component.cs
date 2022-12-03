@@ -9,6 +9,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects;
 
@@ -29,8 +30,8 @@ public abstract partial class SharedTransformSystem
         EntityQuery<TransformComponent> xformQuery)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
-        oldGrid.Grid.RemoveFromSnapGridCell(tilePos, xform.Owner);
-        newGrid.Grid.AddToSnapGridCell(tilePos, xform.Owner);
+        oldGrid.RemoveFromSnapGridCell(tilePos, xform.Owner);
+        newGrid.AddToSnapGridCell(tilePos, xform.Owner);
         // TODO: Could do this re-parent way better.
         // Unfortunately we don't want any anchoring events to go out hence... this.
         xform._anchored = false;
@@ -60,7 +61,7 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(xform.Owner, ref ev);
     }
 
-    public bool AnchorEntity(TransformComponent xform, IMapGrid grid, Vector2i tileIndices)
+    public bool AnchorEntity(TransformComponent xform, MapGridComponent grid, Vector2i tileIndices)
     {
         if (!grid.AddToSnapGridCell(tileIndices, xform.Owner))
             return false;
@@ -84,7 +85,7 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
-    public bool AnchorEntity(TransformComponent xform, IMapGrid grid)
+    public bool AnchorEntity(TransformComponent xform, MapGridComponent grid)
     {
         var tileIndices = grid.TileIndicesFor(xform.Coordinates);
         return AnchorEntity(xform, grid, tileIndices);
@@ -112,8 +113,8 @@ public abstract partial class SharedTransformSystem
 
         if (TryComp(xform.GridUid, out MapGridComponent? grid))
         {
-            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+            var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+            grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
         }
         else if (xform.Initialized)
         {
@@ -247,12 +248,12 @@ public abstract partial class SharedTransformSystem
         if (!component._anchored)
             return;
 
-        IMapGrid? grid;
+        MapGridComponent? grid;
 
         // First try find grid via parent:
         if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
         {
-            grid = gridComp.Grid;
+            grid = gridComp;
         }
         else
         {
@@ -570,8 +571,8 @@ public abstract partial class SharedTransformSystem
                 // remove from any old grid lookups
                 if (xform.Anchored && TryComp(xform.ParentUid, out MapGridComponent? grid))
                 {
-                    var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-                    grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+                    var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+                    grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
                 }
 
                 // Set anchor state true during the move event unless the entity wasn't and isn't being anchored. This avoids unnecessary entity lookup changes.
@@ -588,8 +589,8 @@ public abstract partial class SharedTransformSystem
                 {
                     if (xform.ParentUid == xform.GridUid && TryComp(xform.GridUid, out MapGridComponent? newGrid))
                     {
-                        var tileIndices = newGrid.Grid.TileIndicesFor(xform.Coordinates);
-                        newGrid.Grid.AddToSnapGridCell(tileIndices, xform.Owner);
+                        var tileIndices = newGrid.TileIndicesFor(xform.Coordinates);
+                        newGrid.AddToSnapGridCell(tileIndices, xform.Owner);
                     }
                     else
                     {
@@ -959,8 +960,8 @@ public abstract partial class SharedTransformSystem
         if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
             var grid = Comp<MapGridComponent>(xform.GridUid.Value);
-            var tileIndices = grid.Grid.TileIndicesFor(xform.Coordinates);
-            grid.Grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
+            var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+            grid.RemoveFromSnapGridCell(tileIndices, xform.Owner);
             xform._anchored = false;
             var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
             RaiseLocalEvent(xform.Owner, ref anchorStateChangedEvent, true);

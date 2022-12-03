@@ -12,12 +12,13 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
+    public sealed class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>, ITypeCopyCreator<Angle>
     {
         public Angle Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, Angle value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<Angle>? instanceProvider = null)
         {
             var nodeContents = node.Value;
 
@@ -47,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public Angle Copy(ISerializationManager serializationManager, Angle source, Angle target,
+        public Angle CreateCopy(ISerializationManager serializationManager, Angle source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

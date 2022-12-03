@@ -173,7 +173,7 @@ public sealed unsafe class ZStdCompressionContext : IDisposable
     }
 }
 
-internal sealed class ZStdDecompressStream : Stream
+public sealed class ZStdDecompressStream : Stream
 {
     private readonly Stream _baseStream;
     private readonly bool _ownStream;
@@ -330,7 +330,7 @@ internal sealed class ZStdDecompressStream : Stream
     }
 }
 
-internal sealed class ZStdCompressStream : Stream
+public sealed class ZStdCompressStream : Stream
 {
     private readonly Stream _baseStream;
     private readonly bool _ownStream;

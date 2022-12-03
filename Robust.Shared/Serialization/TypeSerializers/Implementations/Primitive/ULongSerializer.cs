@@ -22,8 +22,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public ulong Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context = null, ulong value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<ulong>? instanceProvider = null)
         {
             return Parse.UInt64(node.ToString());
         }
@@ -33,13 +33,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
-        }
-
-        public ulong Copy(ISerializationManager serializationManager, ulong source, ulong target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return source;
         }
     }
 }

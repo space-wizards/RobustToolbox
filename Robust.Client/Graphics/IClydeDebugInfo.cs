@@ -8,5 +8,6 @@ namespace Robust.Client.Graphics
         string Vendor { get; }
         string VersionString { get; }
         bool Overriding { get; }
+        string WindowingApi { get; }
     }
 }

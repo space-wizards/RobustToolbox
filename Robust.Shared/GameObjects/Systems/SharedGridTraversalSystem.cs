@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.GameObjects
@@ -15,7 +16,7 @@ namespace Robust.Shared.GameObjects
         public Stack<MoveEvent> QueuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
 
-        private List<MapGrid> _gridBuffer = new();
+        private List<MapGridComponent> _gridBuffer = new();
 
         public override void Initialize()
         {

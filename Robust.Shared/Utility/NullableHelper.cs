@@ -15,6 +15,16 @@ namespace Robust.Shared.Utility
         private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?>
             _nullableContextAttributeTypeCache = new();
 
+        //todo paul remove this shitty hack once serv3 nullable reference is sane again
+        public static Type? GetUnderlyingType(this Type type)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType != null) return underlyingType;
+
+            return type.IsValueType ? null : type;
+        }
+
         public static Type EnsureNullableType(this Type type)
         {
             if (type.IsValueType)
@@ -27,7 +37,7 @@ namespace Robust.Shared.Utility
 
         public static Type EnsureNotNullableType(this Type type)
         {
-            return Nullable.GetUnderlyingType(type) ?? type;
+            return GetUnderlyingType(type) ?? type;
         }
 
         /// <summary>
@@ -35,14 +45,15 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="field"></param>
         /// <returns></returns>
-        public static bool IsMarkedAsNullable(FieldInfo field)
+        internal static bool IsMarkedAsNullable(AbstractFieldInfo field)
         {
+            //to understand whats going on here, read https://github.com/dotnet/roslyn/blob/main/docs/features/nullable-metadata.md
             if (Nullable.GetUnderlyingType(field.FieldType) != null) return true;
 
             var flags = GetNullableFlags(field);
             if (flags.Length != 0 && flags[0] != NotAnnotatedNullableFlag) return true;
 
-            if (field.DeclaringType == null) return false;
+            if (field.DeclaringType == null || field.FieldType.IsValueType) return false;
 
             var cflag = GetNullableContextFlag(field.DeclaringType);
             return cflag != NotAnnotatedNullableFlag;
@@ -55,7 +66,7 @@ namespace Robust.Shared.Utility
 
         public static bool IsNullable(this Type type, [NotNullWhen(true)] out Type? underlyingType)
         {
-            underlyingType = Nullable.GetUnderlyingType(type);
+            underlyingType = GetUnderlyingType(type);
 
             if (underlyingType == null)
             {
@@ -65,7 +76,7 @@ namespace Robust.Shared.Utility
             return true;
         }
 
-        private static byte[] GetNullableFlags(FieldInfo field)
+        private static byte[] GetNullableFlags(AbstractFieldInfo field)
         {
             lock (_nullableAttributeTypeCache)
             {
@@ -81,8 +92,7 @@ namespace Robust.Shared.Utility
                     return new byte[]{0};
                 }
 
-                var nullableAttribute = field.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
-                if (nullableAttribute == null)
+                if (!field.TryGetAttribute(assemblyNullableEntry.Value.AttributeType, out var nullableAttribute))
                 {
                     return new byte[]{1};
                 }

@@ -436,7 +436,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(body.Owner))
                     return false;
 
-                if (Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount == 0 && !_mapMan.IsGrid(body.Owner))
+                if ((!Resolve(body.Owner, ref fixtures) || fixtures.FixtureCount == 0) && !_mapMan.IsGrid(body.Owner))
                     return false;
             }
             else

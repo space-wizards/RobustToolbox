@@ -2,12 +2,9 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary
@@ -22,12 +19,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
     [Virtual]
     public class PrototypeIdValueDictionarySerializer<TValue, TPrototype> :
-        ITypeSerializer<Dictionary<TValue, string>, MappingDataNode>,
-        ITypeSerializer<SortedDictionary<TValue, string>, MappingDataNode>,
-        ITypeSerializer<IReadOnlyDictionary<TValue, string>, MappingDataNode>
+        ITypeValidator<Dictionary<TValue, string>, MappingDataNode>,
+        ITypeValidator<SortedDictionary<TValue, string>, MappingDataNode>,
+        ITypeValidator<IReadOnlyDictionary<TValue, string>, MappingDataNode>
         where TPrototype : class, IPrototype where TValue : notnull
     {
-        private readonly DictionarySerializer<TValue, string> _dictionarySerializer = new();
         protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
         private ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
@@ -67,79 +63,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, dependencies, context);
-        }
-
-        Dictionary<TValue, string> ITypeReader<Dictionary<TValue, string>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context,
-            Dictionary<TValue, string>? value = default)
-        {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, hookCtx, context, value);
-        }
-
-        SortedDictionary<TValue, string> ITypeReader<SortedDictionary<TValue, string>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context,
-            SortedDictionary<TValue, string>? value = default)
-        {
-            return ((ITypeReader<SortedDictionary<TValue, string>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, hookCtx, context, value);
-        }
-
-        IReadOnlyDictionary<TValue, string> ITypeReader<IReadOnlyDictionary<TValue, string>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context,
-            IReadOnlyDictionary<TValue, string>? value = default)
-        {
-            return ((ITypeReader<IReadOnlyDictionary<TValue, string>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, hookCtx, context, value);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, Dictionary<TValue, string> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, SortedDictionary<TValue, string> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, IReadOnlyDictionary<TValue, string> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Write(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public Dictionary<TValue, string> Copy(ISerializationManager serializationManager,
-            Dictionary<TValue, string> source, Dictionary<TValue, string> target, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
-        }
-
-        public SortedDictionary<TValue, string> Copy(ISerializationManager serializationManager,
-            SortedDictionary<TValue, string> source, SortedDictionary<TValue, string> target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
-        }
-
-        public IReadOnlyDictionary<TValue, string> Copy(ISerializationManager serializationManager,
-            IReadOnlyDictionary<TValue, string> source,
-            IReadOnlyDictionary<TValue, string> target, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return _dictionarySerializer.Copy(serializationManager, source, target, hookCtx, context);
         }
     }
 }

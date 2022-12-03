@@ -12,6 +12,7 @@ namespace Robust.Shared.ContentPack
     public abstract class BaseModLoader
     {
         [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencies = default!;
 
         private readonly List<ModuleTestingCallbacks> _testingCallbacks = new();
 
@@ -38,6 +39,7 @@ namespace Robust.Shared.ContentPack
             foreach (var entryPoint in entryPoints)
             {
                 var entryPointInstance = (GameShared) Activator.CreateInstance(entryPoint)!;
+                entryPointInstance.Dependencies = _dependencies;
                 if (_testingCallbacks != null)
                 {
                     entryPointInstance.SetTestingCallbacks(_testingCallbacks);

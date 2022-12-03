@@ -15,12 +15,13 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
+    public sealed class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>, ITypeCopyCreator<ResourcePath>
     {
         public ResourcePath Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, ResourcePath? value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<ResourcePath>? instanceProvider = null)
         {
             return new ResourcePath(node.Value);
         }
@@ -74,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target,
+        public ResourcePath CreateCopy(ISerializationManager serializationManager, ResourcePath source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

@@ -3,7 +3,6 @@ using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Shared.Analyzers;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -107,30 +106,21 @@ namespace Robust.Benchmarks.Serialization.Write
         [BenchmarkCategory("flag")]
         public DataNode WriteFlagZero()
         {
-            return SerializationManager.WriteWithTypeSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagZero);
+            return SerializationManager.WriteValue<int, FlagSerializer<BenchmarkFlags>>((int)FlagZero);
         }
 
         [Benchmark]
         [BenchmarkCategory("flag")]
         public DataNode WriteThirtyOne()
         {
-            return SerializationManager.WriteWithTypeSerializer(
-                typeof(int),
-                typeof(FlagSerializer<BenchmarkFlags>),
-                FlagThirtyOne);
+            return SerializationManager.WriteValue<int, FlagSerializer<BenchmarkFlags>>((int)FlagThirtyOne);
         }
 
         [Benchmark]
         [BenchmarkCategory("customTypeSerializer")]
         public DataNode WriteIntegerCustomSerializer()
         {
-            return SerializationManager.WriteWithTypeSerializer(
-                typeof(int),
-                typeof(BenchmarkIntSerializer),
-                Integer);
+            return SerializationManager.WriteValue<int, BenchmarkIntSerializer>(Integer);
         }
     }
 }

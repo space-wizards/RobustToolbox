@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -13,13 +14,12 @@ namespace Robust.Shared.GameObjects
     internal interface IEntityLoadContext
     {
         /// <summary>
-        ///     Gets the serializer used to ExposeData a specific component.
+        ///     Tries getting the data of the provided component
         /// </summary>
-        MappingDataNode GetComponentData(string componentName, MappingDataNode? protoData);
+        bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
-        ///     Gets extra component names that must also be instantiated on top of the ones defined in the prototype,
-        ///     (and then deserialized with <see cref="GetComponentData"/>)
+        ///     Gets all components registered for the entityloadcontext, overrides as well as extra components
         /// </summary>
         IEnumerable<string> GetExtraComponentTypes();
 

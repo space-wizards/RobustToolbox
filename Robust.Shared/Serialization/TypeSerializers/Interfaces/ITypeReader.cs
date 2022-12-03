@@ -11,6 +11,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            TType? value = default);
+            ISerializationManager.InstantiationDelegate<TType>? instanceProvider = null);
     }
 }

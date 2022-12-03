@@ -11,6 +11,7 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         internal BroadphaseData? Broadphase;
 
-        internal bool MatricesDirty = false;
+        internal bool MatricesDirty = true;
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
@@ -829,7 +830,7 @@ namespace Robust.Shared.GameObjects
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
     ///     not automatically be re-added by movement events..
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, EntityUid MapUid, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();

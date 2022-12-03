@@ -12,12 +12,13 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
+    public sealed class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>, ITypeCopyCreator<UIBox2>
     {
         public UIBox2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, UIBox2 value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<UIBox2>? instanceProvider = null)
         {
             var args = node.Value.Split(',');
 
@@ -65,7 +66,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target,
+        public UIBox2 CreateCopy(ISerializationManager serializationManager, UIBox2 source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

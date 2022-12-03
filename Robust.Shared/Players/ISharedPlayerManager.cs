@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Players
@@ -12,6 +13,8 @@ namespace Robust.Shared.Players
         IEnumerable<ICommonSession> NetworkedSessions { get; }
 
         IEnumerable<ICommonSession> Sessions { get; }
+
+        bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session);
 
         /// <summary>
         ///     Number of players currently connected to this server.

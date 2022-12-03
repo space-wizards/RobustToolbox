@@ -12,12 +12,13 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
+    public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>, ITypeCopyCreator<TimeSpan>
     {
         public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, TimeSpan value = default)
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
             return TimeSpan.FromSeconds(seconds);
@@ -40,7 +41,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         [MustUseReturnValue]
-        public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
+        public TimeSpan CreateCopy(ISerializationManager serializationManager, TimeSpan source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

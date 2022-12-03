@@ -22,8 +22,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public double Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context = null, double value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<double>? instanceProvider = null)
         {
             return Parse.Double(node.Value);
         }
@@ -33,13 +33,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
-        }
-
-        public double Copy(ISerializationManager serializationManager, double source, double target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return source;
         }
     }
 }

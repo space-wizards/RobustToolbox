@@ -1,62 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
-using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
     public partial class PrototypeIdListSerializer<T> :
-        ITypeSerializer<ImmutableList<string>, SequenceDataNode>
+        ITypeValidator<ImmutableList<string>, SequenceDataNode>
         where T : class, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
             return ValidateInternal(serializationManager, node, dependencies, context);
-        }
-
-        public ImmutableList<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context = null,
-            ImmutableList<string>? rawValue = default)
-        {
-            if(rawValue != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<string>)}. Ignoring...");
-
-            var builder = ImmutableList.CreateBuilder<string>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                builder.Add(PrototypeSerializer.Read(
-                    serializationManager,
-                    (ValueDataNode) dataNode,
-                    dependencies,
-                    hookCtx,
-                    context));
-            }
-
-            return builder.ToImmutable();
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, ImmutableList<string> value,
-            IDependencyCollection dependencies, bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            return WriteInternal(serializationManager, value, dependencies, alwaysWrite, context);
-        }
-
-        public ImmutableList<string> Copy(ISerializationManager serializationManager, ImmutableList<string> source,
-            ImmutableList<string> target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
-        {
-            return ImmutableList.CreateRange(source);
         }
     }
 }

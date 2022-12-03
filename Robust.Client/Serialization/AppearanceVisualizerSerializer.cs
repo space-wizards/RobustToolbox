@@ -19,37 +19,26 @@ namespace Robust.Client.Serialization
         public AppearanceVisualizer Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null, AppearanceVisualizer? value = default)
+            ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<AppearanceVisualizer>? instanceProvider = null)
         {
             Type? type = null;
             if (!node.TryGet("type", out var typeNode))
             {
-                if (value == null)
-                    throw new InvalidMappingException("No type specified for AppearanceVisualizer!");
-
-                type = value.GetType();
+                throw new InvalidMappingException("No type specified for AppearanceVisualizer!");
             }
-            else
-            {
-                if (typeNode is not ValueDataNode typeValueDataNode)
-                    throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
 
-                type = dependencies.Resolve<IReflectionManager>()
-                    .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
-                if (type == null)
-                    throw new InvalidMappingException(
-                        $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
+            if (typeNode is not ValueDataNode typeValueDataNode)
+                throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
 
-                if(value != null && !type.IsInstanceOfType(value))
-                {
-                    throw new InvalidMappingException(
-                        $"Specified Type does not match type of provided Value for AppearanceVisualizer! (TypeOfValue: {value.GetType()}, ProvidedValue: {type})");
-                }
-            }
+            type = dependencies.Resolve<IReflectionManager>()
+                .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
+            if (type == null)
+                throw new InvalidMappingException(
+                    $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
 
             var newNode = node.Copy();
             newNode.Remove("type");
-            return (AppearanceVisualizer) serializationManager.Read(type, newNode, hookCtx, context, value)!;
+            return (AppearanceVisualizer) serializationManager.Read(type, newNode, hookCtx, context)!;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -79,13 +68,6 @@ namespace Robust.Client.Serialization
             var mapping = serializationManager.WriteValueAs<MappingDataNode>(value.GetType(), value, alwaysWrite, context);
             mapping.Add("type", new ValueDataNode(value.GetType().Name));
             return mapping;
-        }
-
-        public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
-            AppearanceVisualizer target, SerializationHookContext hookCtx, ISerializationContext? context = null)
-        {
-            serializationManager.Copy(source, ref target, context);
-            return target;
         }
     }
 }

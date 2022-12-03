@@ -21,8 +21,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public sbyte Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx,
-            ISerializationContext? context = null, sbyte value = default)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<sbyte>? instanceProvider = null)
         {
             return sbyte.Parse(node.Value, CultureInfo.InvariantCulture);
         }
@@ -32,13 +32,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
-        }
-
-        public sbyte Copy(ISerializationManager serializationManager, sbyte source, sbyte target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            return source;
         }
     }
 }

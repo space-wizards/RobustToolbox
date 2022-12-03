@@ -26,8 +26,8 @@ public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
     }
 
     public Enum Read(ISerializationManager serializationManager, ValueDataNode node,
-        IDependencyCollection dependencies, SerializationHookContext hookCtx,
-        ISerializationContext? context = null, Enum? value = default)
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<Enum>? instanceProvider = null)
     {
         if (serializationManager.ReflectionManager.TryParseEnumReference(node.Value, out var @enum))
             return @enum;
@@ -40,13 +40,6 @@ public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>
         ISerializationContext? context = null)
     {
         return new ValueDataNode(serializationManager.ReflectionManager.GetEnumReference(value));
-    }
-
-    public Enum Copy(ISerializationManager serializationManager, Enum source, Enum target,
-        SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
-    {
-        return source;
     }
 }
 

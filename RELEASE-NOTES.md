@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
 
 ### New features
 
@@ -49,6 +49,9 @@ END TEMPLATE-->
 
 * The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
 * The new default for `net.max_connections` is 256.
+* Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
+* Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
 
 ### Internal
 

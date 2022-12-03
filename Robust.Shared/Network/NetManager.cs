@@ -588,7 +588,7 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
-                netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
+                netConfig.MaximumConnections = _config.GetEffectiveMaxConnections();
             }
             else
             {

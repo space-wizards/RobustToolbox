@@ -490,16 +490,15 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 var linearVelocity = velocities[i];
                 var velSqr = linearVelocity.LengthSquared;
+
                 if (velSqr > vLimSqr)
                 {
                     linearVelocity *= vLimit / MathF.Sqrt(velSqr);
+                    // TODO: is this actually required?
                     velocities[i] = linearVelocity;
                 }
 
-                velocities[i] += linearVelocity * frameTime;
-
-                // TODO: is this actually required?
-                velocities[i] = linearVelocity;
+                positions[i] += linearVelocity * frameTime;
             }
         }
 
@@ -523,7 +522,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     var v = Sse.LoadVector128(vPtr + i);
                     var x = Sse.LoadVector128(xPtr + i);
                     v = Sse.Max(Sse.Min(v, maxV), minV);
-                    Sse.Store(xPtr + i, Fma.MultiplyAdd(x, time, x));
+                    Sse.Store(xPtr + i, Fma.MultiplyAdd(v, time, x));
 
                     // TODO: is this actually required?
                     Sse.Store(vPtr + i, v);

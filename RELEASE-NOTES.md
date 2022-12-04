@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `csi` doesn't throw a `NullReferenceException` anymore.
 
 ### Other
 

@@ -22,8 +22,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Robust.Shared.Configuration;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -31,7 +31,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -427,34 +426,9 @@ stored in a single array since multiple arrays lead to multiple misses.
             // Store for warm starting.
             _contactSolver.StoreImpulses();
 
-            var maxVel = _maxTranslation / frameTime;
-            var maxVelSq = maxVel * maxVel;
-            var maxAngVel = _maxRotation / frameTime;
-            var maxAngVelSq = maxAngVel * maxAngVel;
-
-            // Apply velocity limits and Integrate positions
-            for (var i = 0; i < BodyCount; i++)
-            {
-                var linearVelocity = _linearVelocities[i];
-                var angularVelocity = _angularVelocities[i];
-
-                var velSqr = linearVelocity.LengthSquared;
-                if (velSqr > maxVelSq)
-                {
-                    linearVelocity *= maxVel / MathF.Sqrt(velSqr);
-                    _linearVelocities[i] = linearVelocity;
-                }
-
-                if (angularVelocity * angularVelocity > maxAngVelSq)
-                {
-                    angularVelocity *= maxAngVel / MathF.Abs(angularVelocity);
-                    _angularVelocities[i] = angularVelocity;
-                }
-
-                // Integrate
-                _positions[i] += linearVelocity * frameTime;
-                _angles[i] += angularVelocity * frameTime;
-            }
+            // Update positions & cap velocities
+            IntegratePositions(_linearVelocities, _positions, _maxTranslation / frameTime, frameTime);
+            IntegrateRotation(_angularVelocities, _angles, _maxRotation / frameTime, frameTime);
 
             _positionSolved = false;
 
@@ -480,6 +454,89 @@ stored in a single array since multiple arrays lead to multiple misses.
                     _positionSolved = true;
                     break;
                 }
+            }
+        }
+
+        private static unsafe void IntegratePositions(
+            Vector2[] velocities,
+            Vector2[] positions,
+            float vLimit,
+            float frameTime)
+        {
+            var time = Vector128.Create(frameTime);
+            var maxV = Vector128.Create(vLimit);
+            var minV = Vector128.Create(-vLimit);
+
+            int i = 0;
+            var count = velocities.Length / 2 * 4;
+            fixed (float* vPtr = &velocities[0].X)
+            fixed (float* xPtr = &positions[0].X)
+            {
+                for (; i < count; i += 4)
+                {
+                    var v = Sse.LoadVector128(vPtr + i);
+                    var x = Sse.LoadVector128(xPtr + i);
+                    v = Sse.Max(Sse.Min(v, maxV), minV);
+                    Sse.Store(xPtr + i, Fma.MultiplyAdd(v, time, x));
+
+                    // TODO: is this actually required?
+                    Sse.Store(vPtr + i, v);
+                }
+            }
+
+            var vLimSqr = vLimit * vLimit;
+            i /= 2;
+            for (; i < velocities.Length; i++)
+            {
+                var linearVelocity = velocities[i];
+                var velSqr = linearVelocity.LengthSquared;
+                if (velSqr > vLimSqr)
+                {
+                    linearVelocity *= vLimit / MathF.Sqrt(velSqr);
+                    velocities[i] = linearVelocity;
+                }
+
+                velocities[i] += linearVelocity * frameTime;
+
+                // TODO: is this actually required?
+                velocities[i] = linearVelocity;
+            }
+        }
+
+        static private unsafe void IntegrateRotation(
+            float[] velocities,
+            float[] rotations,
+            float vLimit,
+            float frameTime)
+        {
+            var time = Vector128.Create(frameTime);
+            var maxV = Vector128.Create(vLimit);
+            var minV = Vector128.Create(-vLimit);
+
+            int i = 0;
+            var count = velocities.Length / 4 * 4;
+            fixed (float* vPtr = &velocities[0])
+            fixed (float* xPtr = &rotations[0])
+            {
+                for (; i < count; i += 4)
+                {
+                    var v = Sse.LoadVector128(vPtr + i);
+                    var x = Sse.LoadVector128(xPtr + i);
+                    v = Sse.Max(Sse.Min(v, maxV), minV);
+                    Sse.Store(xPtr + i, Fma.MultiplyAdd(x, time, x));
+
+                    // TODO: is this actually required?
+                    Sse.Store(vPtr + i, v);
+                }
+            }
+
+            for (; i < velocities.Length; i++)
+            {
+                var v = Math.Clamp(velocities[i], -vLimit, vLimit);
+                rotations[i] += frameTime * v;
+
+                // TODO: is this actually required?
+                velocities[i] = v;
             }
         }
 
@@ -514,6 +571,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var angle = _angles[i];
 
                 // Temporary NaN guards until PVS is fixed.
+                // uhh.. is it fixed yet?
                 if (!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y))
                 {
                     var q = new Quaternion2D(angle);

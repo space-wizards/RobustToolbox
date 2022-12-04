@@ -16,10 +16,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>, ITypeCopyCreator<Box2>
     {
-        private static void NextOrThrow(ref SpanSplitExtensions.Enumerator<char> enumerator, string value)
+        private static void NextOrThrow(
+            ref ReadOnlySpan<char> source,
+            out ReadOnlySpan<char> splitValue,
+            string errValue)
         {
-            if (!enumerator.MoveNext())
-                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{value}'");
+            if (!SpanSplitExtensions.SplitFindNext(ref source, ',', out splitValue))
+                throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{errValue}'");
         }
 
         public Box2 Read(ISerializationManager serializationManager, ValueDataNode node,
@@ -28,20 +31,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<Box2>? instanceProvider = null)
         {
-            var nodeValue = node.Value;
-            var args = nodeValue.AsSpan().Split(',').GetEnumerator();
-            NextOrThrow(ref args, nodeValue);
+            var nodeValue = node.Value.AsSpan();
+            NextOrThrow(ref nodeValue, out var current, node.Value);
 
-            var l = Parse.Float(args.Current);
-            NextOrThrow(ref args, nodeValue);
+            var l = Parse.Float(current);
+            NextOrThrow(ref nodeValue, out current, node.Value);
 
-            var b = Parse.Float(args.Current);
-            NextOrThrow(ref args, nodeValue);
+            var b = Parse.Float(current);
+            NextOrThrow(ref nodeValue, out current, node.Value);
 
-            var r = Parse.Float(args.Current);
-            NextOrThrow(ref args, nodeValue);
+            var r = Parse.Float(current);
+            NextOrThrow(ref nodeValue, out current, node.Value);
 
-            var t = Parse.Float(args.Current);
+            var t = Parse.Float(current);
 
             return new Box2(l, b, r, t);
         }

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -32,6 +34,9 @@ namespace Robust.Shared.Reflection
 
         private readonly Dictionary<string, Enum> _enumCache = new();
         private readonly Dictionary<Enum, string> _reverseEnumCache = new();
+
+        private readonly ReaderWriterLockSlim _enumCacheLock = new();
+        private readonly ReaderWriterLockSlim _yamlTypeTagCacheLock = new();
 
         private readonly List<Type> _getAllTypesCache = new();
 
@@ -206,7 +211,13 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public string GetEnumReference(Enum @enum)
         {
-            lock (_enumCache)
+            using (_enumCacheLock.ReadGuard())
+            {
+                if (_reverseEnumCache.TryGetValue(@enum, out var reference))
+                    return reference;
+            }
+
+            using (_enumCacheLock.WriteGuard())
             {
                 if (_reverseEnumCache.TryGetValue(@enum, out var reference))
                     return reference;
@@ -236,20 +247,29 @@ namespace Robust.Shared.Reflection
             }
         }
 
+
         /// <inheritdoc />
         public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum,
             bool shouldThrow = true)
         {
-            lock (_enumCache)
+            if (!reference.StartsWith("enum."))
             {
-                if (!reference.StartsWith("enum."))
-                {
-                    @enum = default;
-                    return false;
-                }
+                @enum = default;
+                return false;
+            }
 
-                reference = reference.Substring(5);
+            reference = reference.Substring(5);
 
+            using (_enumCacheLock.ReadGuard())
+            {
+                if (_enumCache.TryGetValue(reference, out @enum))
+                    return true;
+            }
+
+            // Doesn't exist, add it.
+            using (_enumCacheLock.WriteGuard())
+            {
+                // In case it got added in a race condition.
                 if (_enumCache.TryGetValue(reference, out @enum))
                     return true;
 
@@ -285,13 +305,16 @@ namespace Robust.Shared.Reflection
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)
         {
-            lock (_yamlTypeTagCache)
+            using (_yamlTypeTagCacheLock.ReadGuard())
             {
                 if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
-                {
                     return type;
-                }
+            }
 
+            using (_yamlTypeTagCacheLock.WriteGuard())
+            {
+                if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
+                    return type;
                 Type? found = null;
                 foreach (var derivedType in GetAllChildren(baseType))
                 {

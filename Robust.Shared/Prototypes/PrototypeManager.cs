@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
@@ -15,6 +15,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
@@ -253,10 +254,11 @@ namespace Robust.Shared.Prototypes
 
                         if (nonPushedParent) continue;
 
-                        foreach (var parent in parents)
+                        // TODO DON'T FORGET TO FIX THIS
+                        /*foreach (var parent in parents)
                         {
                             PushInstanceInheritance(type, id, parent);
-                        }
+                        }*/
                     }
 
                     TryReadPrototype(type, id, typeData.Results[id], SerializationHookContext.DontSkipHooks);
@@ -290,44 +292,55 @@ namespace Robust.Shared.Prototypes
             var inheritanceTasks = new Dictionary<Type, Task>();
             foreach (var (k, v) in _kinds)
             {
-                if (v.Inheritance is not { } inheritance)
+                if (v.Inheritance == null)
                     continue;
 
-                var task = Task.Run(() =>
-                {
-                    PushKindInheritance(k, v);
-                });
+                var task = Task.Run(() => PushKindInheritance(k, v));
 
                 inheritanceTasks.Add(k, task);
             }
 
-            var kinds = _kinds.Keys.ToList();
-            kinds.Sort(SortPrototypesByPriority);
-            foreach (var kind in kinds)
+            var priorities = _kinds.Keys.GroupBy(k => _kindPriorities[k]).OrderByDescending(k => k.Key);
+            foreach (var group in priorities)
             {
-                var kindData = _kinds[kind];
+                // TODO: async
+                foreach (var k in group)
+                {
+                    if (inheritanceTasks.TryGetValue(k, out var task))
+                        task.Wait();
+                }
 
-                if (inheritanceTasks.TryGetValue(kind, out var task))
-                    task.Wait();
+                var allResults = group.Select(k => new
+                {
+                    Kind = k,
+                    KindData = _kinds[k],
+                }).SelectMany(k => k.KindData.Results, (data, pair) => new
+                {
+                    data.Kind,
+                    data.KindData,
+                    Id = pair.Key,
+                    Mapping = pair.Value
+                });
 
                 var channelOptions = new UnboundedChannelOptions
                     { SingleReader = true, SingleWriter = true };
                 var channel = Channel.CreateUnbounded<ISerializationHooks>(channelOptions);
                 var hookCtx = new SerializationHookContext(channel.Writer, false);
 
-                var prototypes = kindData.Results.AsParallel()
-                    .Select(item =>
+                var prototypes = allResults.AsParallel()
+                    .Select(item => new
                     {
-                        var (id, mapping) = item;
-                        return (id, TryReadPrototype(kind, id, mapping, hookCtx));
+                        item.KindData,
+                        item.Id,
+                        Prototype = TryReadPrototype(item.Kind, item.Id, item.Mapping, hookCtx)
                     });
 
-                foreach (var (id, prototype) in prototypes)
+                foreach (var item in prototypes)
                 {
-                    if (prototype == null)
+                    if (item.Prototype == null)
                         continue;
 
-                    kindData.Instances[id] = prototype;
+                    item.KindData.Instances[item.Id] = item.Prototype;
                 }
 
                 var channelReader = channel.Reader;
@@ -338,7 +351,11 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private IPrototype? TryReadPrototype(Type kind, string id, MappingDataNode mapping, SerializationHookContext hookCtx)
+        private IPrototype? TryReadPrototype(
+            Type kind,
+            string id,
+            MappingDataNode mapping,
+            SerializationHookContext hookCtx)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
@@ -355,46 +372,93 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private void PushKindInheritance(Type kind, KindData data)
+        private async Task PushKindInheritance(Type kind, KindData data)
         {
             if (data.Inheritance is not { } tree)
                 return;
 
-            var processed = new HashSet<string>();
-            var workList = new Queue<string>(tree.RootNodes);
+            var sw = RStopwatch.StartNew();
 
-            while (workList.TryDequeue(out var id))
+            var results = new Dictionary<string, InheritancePushDatum>(
+                data.Results.Select(k => new KeyValuePair<string, InheritancePushDatum>(
+                    k.Key,
+                    new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key))))
+                );
+
+            using var countDown = new CountdownEvent(results.Count);
+
+            foreach (var root in tree.RootNodes)
             {
-                processed.Add(id);
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    ProcessItem(root, results[root]);
+                });
+            }
+
+            void ProcessItem(string id, InheritancePushDatum datum)
+            {
                 if (tree.TryGetParents(id, out var parents))
                 {
-                    foreach (var parent in parents)
+                    var parentNodes = new MappingDataNode[parents.Length];
+                    for (var i = 0; i < parents.Length; i++)
                     {
-                        PushInstanceInheritance(kind, id, parent);
+                        parentNodes[i] = results[parents[i]].Result;
                     }
+
+                    datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                        kind,
+                        parentNodes,
+                        datum.Result);
                 }
 
                 if (tree.TryGetChildren(id, out var children))
                 {
                     foreach (var child in children)
                     {
-                        var childParents = tree.GetParents(child)!;
-                        if (childParents.All(p => processed.Contains(p)))
-                            workList.Enqueue(child);
+                        var childDatum = results[child];
+                        var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
+                        if (val == 0)
+                        {
+                            ThreadPool.QueueUserWorkItem(_ =>
+                            {
+                                ProcessItem(child, childDatum);
+                            });
+                        }
                     }
                 }
+
+                // ReSharper disable once AccessToDisposedClosure
+                countDown.Signal();
+            }
+
+            await WaitHandleHelpers.WaitOneAsync(countDown.WaitHandle);
+
+            data.Results.Clear();
+            foreach (var (k, v) in results)
+            {
+                data.Results[k] = v.Result;
+            }
+
+            _sawmill.Debug($"Inheritance {kind}: {sw.Elapsed}");
+        }
+
+        private sealed class InheritancePushDatum
+        {
+            public MappingDataNode Result;
+            public int CountParentsRemaining;
+
+            public InheritancePushDatum(MappingDataNode result, int countParentsRemaining)
+            {
+                Result = result;
+                CountParentsRemaining = countParentsRemaining;
             }
         }
 
-        private void PushInstanceInheritance(Type type, string id, string parent)
+        private MappingDataNode PushInstanceInheritance(Type type, MappingDataNode result, MappingDataNode[] parents)
         {
-            var kindData = _kinds[type];
-
-            ref var result = ref CollectionsMarshal.GetValueRefOrNullRef(kindData.Results, id);
-
-            result = _serializationManager.PushCompositionWithGenericNode(
+            return _serializationManager.PushCompositionWithGenericNode(
                 type,
-                new[] { kindData.Results[parent] },
+                parents,
                 result);
         }
 

@@ -28,27 +28,7 @@ internal static class RsiLoading
 
     internal static RsiMetadata LoadRsiMetadata(Stream manifestFile)
     {
-        RsiJsonMetadata? manifestJson;
-
-        if (manifestFile.CanSeek && manifestFile.Length <= 4096)
-        {
-            // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
-            // Avoids a ton of allocations with stream reader etc
-            // because System.Text.Json can process it directly.
-            Span<byte> buf = stackalloc byte[4096];
-            var totalRead = manifestFile.ReadToEnd(buf);
-            buf = buf[..totalRead];
-            buf = BomUtil.SkipBom(buf);
-
-            manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(buf, SerializerOptions);
-        }
-        else
-        {
-            using var reader = new StreamReader(manifestFile, leaveOpen: true);
-
-            string manifestContents = reader.ReadToEnd();
-            manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
-        }
+        var manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestFile, SerializerOptions);
 
         if (manifestJson == null)
             throw new RSILoadException($"Manifest JSON failed to deserialize!");

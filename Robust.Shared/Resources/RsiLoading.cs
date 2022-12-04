@@ -14,10 +14,7 @@ internal static class RsiLoading
 {
     private static readonly float[] OneArray = {1};
 
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
-        {
-            AllowTrailingCommas = true
-        };
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     /// <summary>
     ///     The minimum version of RSI we can load.

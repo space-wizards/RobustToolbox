@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
 
 ### New features
 

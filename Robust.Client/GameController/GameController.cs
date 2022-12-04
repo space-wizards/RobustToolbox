@@ -137,13 +137,9 @@ namespace Robust.Client
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.Initialize();
-            var loadDirs = RStopwatch.StartNew();
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            System.Console.WriteLine($"{loadDirs.Elapsed}");
-            var resolve = RStopwatch.StartNew();
             _prototypeManager.ResolveResults();
-            System.Console.WriteLine($"{resolve.Elapsed}");
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();

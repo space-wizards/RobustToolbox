@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Configuration
@@ -43,6 +44,22 @@ namespace Robust.Shared.Configuration
         /// Saves the configuration file to disk.
         /// </summary>
         void SaveToFile();
+
+        /// <summary>
+        /// Serializes a list of cvars to a toml.
+        /// </summary>
+        void SaveToTomlStream(Stream stream, IEnumerable<string> cvars);
+
+        HashSet<string> LoadFromTomlStream(Stream stream);
+
+        /// <summary>
+        /// Load a TOML config file and use the CVar values specified as an <see cref="OverrideDefault"/>.
+        /// </summary>
+        /// <remarks>
+        /// All CVars in the TOML file must be registered when this function is called.
+        /// </remarks>
+        /// <returns>A set of all CVars touched.</returns>
+        HashSet<string> LoadDefaultsFromTomlStream(Stream stream);
 
         /// <summary>
         /// Register a CVar with the system. This must be done before the CVar is accessed.

@@ -30,6 +30,8 @@ namespace Robust.Shared.IoC
     /// <seealso cref="IReflectionManager"/>
     public interface IDependencyCollection
     {
+        IDependencyCollection FromParent(IDependencyCollection parentCollection);
+
         /// <summary>
         /// Enumerates over all registered types.
         /// </summary>

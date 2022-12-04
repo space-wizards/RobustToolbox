@@ -77,6 +77,11 @@ namespace Robust.Client.Graphics.Clyde
                 // Not currently used
             }
 
+            public string GetDescription()
+            {
+                return $"GLFW {GLFW.GetVersionString()}";
+            }
+
             private void ReInitKeyMap(bool onValueChanged)
             {
                 InitKeyMap();

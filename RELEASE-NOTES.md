@@ -35,14 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
 
 ### New features
 
-* `game.desc` CVar for a server description to show in the launcher.
-* New system for exposing links to e.g. a Discord in the launcher.
-  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
-  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+*None yet*
 
 ### Bugfixes
 
@@ -50,12 +47,47 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
+* The new default for `net.max_connections` is 256.
+* Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
+* Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
 
 ### Internal
 
 *None yet*
 
+
+## 0.70.0.0
+
+### New features
+
+* `game.desc` CVar for a server description to show in the launcher.
+* New system for exposing links to e.g. a Discord in the launcher.
+  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
+  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
+* A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
+* `IConfigurationManager` has new functions for reading and writing CVar directly from a TOML file `Stream`.
+* New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
+* Added new serializers to support Queue<T> data-fields.
+* Added a `FromParent()` function to `IDependencyCollection`, enabling dependencies to be passed to parallel threads.
+* `IClientStateManager` now has a `PartialStateReset()` function to make it easier for content to rewind to previous game states.
+* Added `IClientNetManager.DispatchLocalNetMessage()`, which allows a client to raise a local message that triggers networked event subscriptions.
+
+### Bugfixes
+
+* `IPlayerSession.OnConnect()` now actually gets called when players connect.
+* `MapLoaderSystem.TryLoad(.., out rootUids)` now properly only returns entities parented to the map.
+
+### Other
+
+* Invalid placement types for the entity spawn menu now log warnings.
+* Slightly improved sprite y-sorting performance.
+
+### Internal
+
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs.
 
 ## 0.69.0.0
 

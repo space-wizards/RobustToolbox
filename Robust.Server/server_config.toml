@@ -33,7 +33,7 @@ enabled = true
 [game]
 hostname = "MyServer"
 # map = "Saltern"
-maxplayers = 64
+max_connections = 256
 welcomemsg = "Welcome to the server!"
 
 [console]

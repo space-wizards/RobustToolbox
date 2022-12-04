@@ -10,6 +10,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -284,6 +285,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         public void ResolveResults()
         {
+            // Oh god I butchered this poor method in the name of my Ryzen CPU.
+
             // Run inheritance pushing concurrently to the rest of prototype loading.
             // Use some basic tasks and .Wait() to make sure it's done by the time we get to the prototypes in question.
             // The biggest prototypes by far in SS14 are entity prototypes.
@@ -300,16 +303,19 @@ namespace Robust.Shared.Prototypes
                 inheritanceTasks.Add(k, task);
             }
 
+            var rand = new System.Random();
             var priorities = _kinds.Keys.GroupBy(k => _kindPriorities[k]).OrderByDescending(k => k.Key);
             foreach (var group in priorities)
             {
-                // TODO: async
+                // Wait for all inheritance pushing in this group to finish.
+                // This isn't ideal, but since entity prototypes are the big ones in SS14 it's fine.
                 foreach (var k in group)
                 {
                     if (inheritanceTasks.TryGetValue(k, out var task))
                         task.Wait();
                 }
 
+                // Process all prototypes in this group in a single parallel operation.
                 var allResults = group.Select(k => new
                 {
                     Kind = k,
@@ -320,34 +326,71 @@ namespace Robust.Shared.Prototypes
                     data.KindData,
                     Id = pair.Key,
                     Mapping = pair.Value
+                }).ToArray();
+
+                // Randomize to remove any patterns that could cause uneven load.
+                RandomExtensions.Shuffle(allResults.AsSpan(), rand);
+
+                // Create channel that all AfterDeserialization hooks in this group will be sent into.
+                var hooksChannelOptions = new UnboundedChannelOptions
+                {
+                    SingleReader = true,
+                    SingleWriter = false,
+                    // Don't use an async job to unblock the read task.
+                    AllowSynchronousContinuations = true
+                };
+#pragma warning disable CS0618
+                var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
+#pragma warning restore CS0618
+                var hookCtx = new SerializationHookContext(hooksChannel.Writer, false);
+
+                var mergeTask = Task.Run(() =>
+                {
+                    // Start a thread pool job that will Parallel.ForEach the list of prototype instances.
+                    // When the list of prototype instances is processed, merge them into the instances on the KindData.
+                    try
+                    {
+                        var protoChannel =
+                            Channel.CreateUnbounded<(KindData KindData, string Id, IPrototype Prototype)>(
+                                new UnboundedChannelOptions
+                                {
+                                    SingleReader = true,
+                                    SingleWriter = false
+                                });
+
+                        Parallel.ForEach(allResults, item =>
+                        {
+                            var prototype = TryReadPrototype(item.Kind, item.Id, item.Mapping, hookCtx);
+                            if (prototype != null)
+                                protoChannel.Writer.TryWrite((item.KindData, item.Id, prototype));
+                        });
+
+                        while (protoChannel.Reader.TryRead(out var item))
+                        {
+                            item.KindData.Instances[item.Id] = item.Prototype;
+                        }
+                    }
+                    finally
+                    {
+                        // Mark the hooks channel as complete so the game thread unblocks.
+                        hooksChannel.Writer.Complete();
+                    }
                 });
 
-                var channelOptions = new UnboundedChannelOptions
-                    { SingleReader = true, SingleWriter = true };
-                var channel = Channel.CreateUnbounded<ISerializationHooks>(channelOptions);
-                var hookCtx = new SerializationHookContext(channel.Writer, false);
-
-                var prototypes = allResults.AsParallel()
-                    .Select(item => new
+                // On the game thread: process AfterDeserialization hooks from the channel.
+                var channelReader = hooksChannel.Reader;
+#pragma warning disable RA0004
+                while (channelReader.WaitToReadAsync().AsTask().Result)
+#pragma warning restore RA0004
+                {
+                    while (channelReader.TryRead(out var hooks))
                     {
-                        item.KindData,
-                        item.Id,
-                        Prototype = TryReadPrototype(item.Kind, item.Id, item.Mapping, hookCtx)
-                    });
-
-                foreach (var item in prototypes)
-                {
-                    if (item.Prototype == null)
-                        continue;
-
-                    item.KindData.Instances[item.Id] = item.Prototype;
+                        hooks.AfterDeserialization();
+                    }
                 }
 
-                var channelReader = channel.Reader;
-                while (channelReader.TryRead(out var hooks))
-                {
-                    hooks.AfterDeserialization();
-                }
+                // Join task in case an exception was raised.
+                mergeTask.Wait();
             }
         }
 
@@ -383,16 +426,13 @@ namespace Robust.Shared.Prototypes
                 data.Results.Select(k => new KeyValuePair<string, InheritancePushDatum>(
                     k.Key,
                     new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key))))
-                );
+            );
 
             using var countDown = new CountdownEvent(results.Count);
 
             foreach (var root in tree.RootNodes)
             {
-                ThreadPool.QueueUserWorkItem(_ =>
-                {
-                    ProcessItem(root, results[root]);
-                });
+                ThreadPool.QueueUserWorkItem(_ => { ProcessItem(root, results[root]); });
             }
 
             void ProcessItem(string id, InheritancePushDatum datum)
@@ -419,10 +459,7 @@ namespace Robust.Shared.Prototypes
                         var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
                         if (val == 0)
                         {
-                            ThreadPool.QueueUserWorkItem(_ =>
-                            {
-                                ProcessItem(child, childDatum);
-                            });
+                            ThreadPool.QueueUserWorkItem(_ => { ProcessItem(child, childDatum); });
                         }
                     }
                 }

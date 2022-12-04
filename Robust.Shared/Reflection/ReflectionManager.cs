@@ -267,40 +267,37 @@ namespace Robust.Shared.Reflection
             }
 
             // Doesn't exist, add it.
-            using (_enumCacheLock.WriteGuard())
+            var dotIndex = reference.LastIndexOf('.');
+            var typeName = reference.Substring(0, dotIndex);
+
+            var value = reference.Substring(dotIndex + 1);
+
+            foreach (var assembly in assemblies)
             {
-                // In case it got added in a race condition.
-                if (_enumCache.TryGetValue(reference, out @enum))
-                    return true;
-
-                var dotIndex = reference.LastIndexOf('.');
-                var typeName = reference.Substring(0, dotIndex);
-
-                var value = reference.Substring(dotIndex + 1);
-
-                foreach (var assembly in assemblies)
+                foreach (var type in assembly.DefinedTypes)
                 {
-                    foreach (var type in assembly.DefinedTypes)
+                    if (!type.IsEnum || !(
+                            type.FullName!.Equals(typeName) ||
+                            type.FullName!.EndsWith("." + typeName) ||
+                            type.FullName!.EndsWith("+" + typeName)))
                     {
-                        if (!type.IsEnum || !(
-                                type.FullName!.Equals(typeName) ||
-                                type.FullName!.EndsWith("." + typeName) ||
-                                type.FullName!.EndsWith("+" + typeName)))
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
+                    using (_enumCacheLock.WriteGuard())
+                    {
                         @enum = (Enum)Enum.Parse(type, value);
                         _enumCache[reference] = @enum;
                         _reverseEnumCache[@enum] = reference;
-                        return true;
                     }
-                }
 
-                if (shouldThrow)
-                    throw new ArgumentException($"Could not resolve enum reference: {reference}.");
-                return false;
+                    return true;
+                }
             }
+
+            if (shouldThrow)
+                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
+            return false;
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)

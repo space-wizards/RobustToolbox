@@ -45,10 +45,9 @@ namespace Robust.Client.Console
         {
             Title = "Robust C# Interactive (CLIENT)";
             ScriptInstanceShared.InitDummy();
+            IoCManager.InjectDependencies(this);
 
             _globals = new ScriptGlobalsImpl(this);
-
-            IoCManager.InjectDependencies(this);
 
             OutputPanel.AddText("Robust C# interactive console (CLIENT).");
             OutputPanel.AddText(">");

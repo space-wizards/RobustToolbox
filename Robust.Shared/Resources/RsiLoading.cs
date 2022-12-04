@@ -96,6 +96,12 @@ internal static class RsiLoading
         return new RsiMetadata(size, states);
     }
 
+    public static void Warmup()
+    {
+        // Just a random RSI I pulled from SS14.
+        const string warmupJson = @"{""version"":1,""license"":""CC-BY-SA-3.0"",""copyright"":""Space Wizards Federation"",""size"":{""x"":32,""y"":32},""states"":[{""name"":""mono""}]}";
+        JsonSerializer.Deserialize<RsiJsonMetadata>(warmupJson, SerializerOptions);
+    }
 
     internal sealed class RsiMetadata
     {

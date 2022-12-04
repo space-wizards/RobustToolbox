@@ -45,6 +45,8 @@ namespace Robust.Client
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart, IMainArgs? loaderArgs, GameControllerOptions options)
         {
+            ClientWarmup.RunWarmup();
+
             var deps = IoCManager.InitThread();
             var mode = args.Headless ? DisplayMode.Headless : DisplayMode.Clyde;
 

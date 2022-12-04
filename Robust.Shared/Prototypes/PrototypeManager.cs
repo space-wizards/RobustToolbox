@@ -420,7 +420,7 @@ namespace Robust.Shared.Prototypes
             if (data.Inheritance is not { } tree)
                 return;
 
-            var sw = RStopwatch.StartNew();
+            // var sw = RStopwatch.StartNew();
 
             var results = new Dictionary<string, InheritancePushDatum>(
                 data.Results.Select(k => new KeyValuePair<string, InheritancePushDatum>(
@@ -476,7 +476,7 @@ namespace Robust.Shared.Prototypes
                 data.Results[k] = v.Result;
             }
 
-            _sawmill.Debug($"Inheritance {kind}: {sw.Elapsed}");
+            // _sawmill.Debug($"Inheritance {kind}: {sw.Elapsed}");
         }
 
         private sealed class InheritancePushDatum

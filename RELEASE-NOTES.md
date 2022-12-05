@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
 
 ### New features
 
@@ -43,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `csi` doesn't throw a `NullReferenceException` anymore.
 
 ### Other
 
@@ -52,6 +53,7 @@ END TEMPLATE-->
 * Debug monitors (F3) now have margin between them.
 * F3 (clyde monitor) now lists the windowing API and version in use.
 * Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
+* The engine now warns when loading `.png` textures inside a `.rsi`. This will be blocked in the future.
 
 ### Internal
 

@@ -12,6 +12,7 @@ enabled = false
 tickrate = 60
 port = 1212
 bindto = "::,0.0.0.0"
+max_connections = 256
 # Automatic port forwarding!
 # Disabled by default because you may not want to do this.
 # upnp = true
@@ -33,7 +34,6 @@ enabled = true
 [game]
 hostname = "MyServer"
 # map = "Saltern"
-max_connections = 256
 welcomemsg = "Welcome to the server!"
 
 [console]

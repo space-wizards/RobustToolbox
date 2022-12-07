@@ -309,12 +309,13 @@ namespace Robust.Client
             var userDataDir = GetUserDataDir();
 
             _configurationManager.Initialize(false);
-            CVarDefaultOverrides.OverrideClient(_configurationManager);
 
             // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
             // So SECURE CVars are blacklisted from config.
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
             _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
+            CVarDefaultOverrides.OverrideClient(_configurationManager);
 
             if (Options.LoadConfigAndUserData)
             {

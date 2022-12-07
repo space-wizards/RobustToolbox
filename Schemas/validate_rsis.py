@@ -32,13 +32,14 @@ def main() -> int:
 
     return 1 if errors else 0
 
+
 def check_dir(dir: str, schema: Draft7Validator):
     for rsi_rel in iglob("**/*.rsi", root_dir=dir, recursive=True):
         rsi_path = os.path.join(dir, rsi_rel)
-        #try:
-        check_rsi(rsi_path, schema)
-        #except Exception as e:
-        #    add_error(rsi_path, f"Failed to validate RSI (script bug): {e}")
+        try:
+            check_rsi(rsi_path, schema)
+        except Exception as e:
+            add_error(rsi_path, f"Failed to validate RSI (script bug): {e}")
 
 
 def check_rsi(rsi: str, schema: Draft7Validator):

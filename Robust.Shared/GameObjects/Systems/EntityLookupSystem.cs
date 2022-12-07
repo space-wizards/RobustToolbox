@@ -3,6 +3,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -419,7 +420,11 @@ namespace Robust.Shared.GameObjects
         private void OnMove(ref MoveEvent args)
         {
             if (args.Component.GridUid == args.Sender)
+            {
+                if (args.ParentChanged) // grid changed maps, need to update children and clear the move buffer.
+                    OnGridChangedMap(args);
                 return;
+            }
             DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
 
             if (args.Component.MapUid == args.Sender)
@@ -430,6 +435,84 @@ namespace Robust.Shared.GameObjects
                 UpdateParent(args.Sender, args.Component, args.OldPosition.EntityId);
             else
                 UpdateEntityTree(args.Sender, args.Component);
+        }
+
+        private void OnGridChangedMap(MoveEvent args)
+        {
+            var newMap = args.NewPosition.EntityId;
+            var oldMap = args.OldPosition.EntityId;
+
+            if (Terminating(oldMap))
+                return;
+
+            // We need to recursively update the cached data and remove children from the move buffer
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var fixturesQuery = GetEntityQuery<FixturesComponent>();
+
+            DebugTools.Assert(HasComp<MapGridComponent>(args.Sender));
+            DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
+            DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
+
+            var oldBuffer = CompOrNull<SharedPhysicsMapComponent>(oldMap)?.MoveBuffer;
+            var newBuffer = CompOrNull<SharedPhysicsMapComponent>(newMap)?.MoveBuffer;
+
+            var enumerator = args.Component.ChildEnumerator;
+            while (enumerator.MoveNext(out var child))
+            {
+                RecursiveOnGridChangedMap(child.Value, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
+            }
+        }
+
+        private void RecursiveOnGridChangedMap(
+            EntityUid uid,
+            EntityUid oldMap,
+            EntityUid newMap,
+            Dictionary<FixtureProxy, Box2>? oldBuffer,
+            Dictionary<FixtureProxy, Box2>? newBuffer,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<FixturesComponent> fixturesQuery)
+        {
+            if (!xformQuery.TryGetComponent(uid, out var xform))
+                return;
+
+            var enumerator = xform.ChildEnumerator;
+            while (enumerator.MoveNext(out var child))
+            {
+                RecursiveOnGridChangedMap(child.Value, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
+            }
+
+            if (xform.Broadphase == null || !xform.Broadphase.Value.CanCollide)
+                return;
+
+            DebugTools.Assert(_netMan.IsClient || !xform.Broadphase.Value.MapUid.IsValid() || xform.Broadphase.Value.MapUid == oldMap);
+            xform.Broadphase = xform.Broadphase.Value with { MapUid = newMap };
+
+            if (!fixturesQuery.TryGetComponent(uid, out var fixtures))
+                return;
+
+            if (oldBuffer != null)
+            {
+                foreach (var fix in fixtures.Fixtures.Values)
+                    foreach (var prox in fix.Proxies)
+                    {
+                        oldBuffer.Remove(prox);
+                    }
+            }
+
+            if (newBuffer == null)
+                return;
+
+            // TODO PERFORMANCE
+            // track world position while recursively iterating down through children.
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
+            var mapTransform = new Transform(worldPos, worldRot);
+
+            foreach (var fixture in fixtures.Fixtures.Values)
+                for (var i = 0; i < fixture.ProxyCount; i++)
+                {
+                    var proxy = fixture.Proxies[i];
+                    newBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+                }
         }
 
         private void UpdateParent(EntityUid uid, TransformComponent xform, EntityUid oldParent)
@@ -483,7 +566,7 @@ namespace Robust.Shared.GameObjects
             var physicsQuery = GetEntityQuery<PhysicsComponent>();
             if (oldBroadphase != null && oldBroadphase != newBroadphase)
             {
-                RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+                RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, ref oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
             }
 
             if (newBroadphase == null)
@@ -672,7 +755,7 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
             }
 
-            RemoveFromEntityTree(broadphase.Owner, broadphase, physMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+            RemoveFromEntityTree(broadphase.Owner, broadphase, ref physMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
         }
 
         /// <summary>
@@ -681,7 +764,7 @@ namespace Robust.Shared.GameObjects
         private void RemoveFromEntityTree(
             EntityUid broadUid,
             BroadphaseComponent broadphase,
-            SharedPhysicsMapComponent? physicsMap,
+            ref SharedPhysicsMapComponent? physicsMap,
             EntityUid uid,
             TransformComponent xform,
             EntityQuery<TransformComponent> xformQuery,
@@ -703,17 +786,17 @@ namespace Robust.Shared.GameObjects
                 // parented to one from another.
                 DebugTools.Assert(_netMan.IsClient);
                 broadUid = old.Uid;
-                TryComp(old.MapUid, out physicsMap);
-                if (old.MapUid.IsValid() && physicsMap == null)
-                {
-                    throw new InvalidOperationException(
-                        $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadUid)}");
-                }
+            }
+
+            if (old.MapUid.IsValid() && physicsMap?.Owner != old.MapUid)
+            {
+                if (!TryComp(old.MapUid, out physicsMap))
+                    Logger.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
             }
 
             if (old.CanCollide)
             {
-                DebugTools.Assert(old.MapUid == physicsMap?.Owner);
+                DebugTools.Assert(old.MapUid == (physicsMap?.Owner ?? default));
                 RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), old.Static, physicsMap);
             }
             else if (old.Static)
@@ -731,7 +814,7 @@ namespace Robust.Shared.GameObjects
                 RemoveFromEntityTree(
                     broadUid,
                     broadphase,
-                    physicsMap,
+                    ref physicsMap,
                     child.Value,
                     xformQuery.GetComponent(child.Value),
                     xformQuery,

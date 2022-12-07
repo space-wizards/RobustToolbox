@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -16,7 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
-using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems
 {
@@ -364,6 +362,7 @@ namespace Robust.Shared.Physics.Systems
 
             // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
             Box2 aabb;
+            DebugTools.AssertNotNull(xform.Broadphase);
             if (!_lookup.TryGetCurrentBroadphase(xform, out var proxyBroad))
             {
                 _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
@@ -391,7 +390,6 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
-            pairBuffer = state.pairBuffer;
         }
 
         private void QueryBroadphase(IBroadPhase broadPhase, (List<FixtureProxy>, FixtureProxy) state, Box2 aabb)

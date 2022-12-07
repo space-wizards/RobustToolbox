@@ -11,6 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
+        public readonly ScrollContainer OptionsScroll;
 
         private readonly List<ButtonData> _buttonData = new();
         private readonly Dictionary<int, int> _idMap = new();
@@ -57,12 +58,22 @@ namespace Robust.Client.UserInterface.Controls
             };
             AddChild(hBox);
 
-            _popup = new Popup();
             _popupVBox = new BoxContainer
             {
                 Orientation = LayoutOrientation.Vertical
             };
-            _popup.AddChild(_popupVBox);
+
+            OptionsScroll = new()
+            {
+                Children = { _popupVBox },
+                ReturnMeasure = true,
+                MaxHeight = 300
+            };
+
+            _popup = new Popup()
+            {
+                Children = { OptionsScroll }
+            };
             _popup.OnPopupHide += OnPopupHide;
 
             _label = new Label
@@ -126,8 +137,8 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
-                _popupVBox.Measure(Vector2.Infinity);
-                var (minX, minY) = _popupVBox.DesiredSize;
+                OptionsScroll.Measure(Window?.Size ?? Vector2.Infinity);
+                var (minX, minY) = OptionsScroll.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);
                 _popup.Open(box);

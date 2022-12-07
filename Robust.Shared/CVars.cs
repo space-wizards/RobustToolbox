@@ -24,6 +24,15 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Hard max-cap of concurrent connections for the main game networking.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxConnections =
+            CVarDef.Create("net.max_connections", 256, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
         /// UDP port to bind to for main game networking.
         /// Each address specified in <c>net.bindto</c> is bound with this port.
         /// </summary>
@@ -539,8 +548,9 @@ namespace Robust.Shared
         /// <remarks>
         /// This cannot be bypassed in any way, since it is used by Lidgren internally.
         /// </remarks>
+        [Obsolete("Use net.max_connections instead")]
         public static readonly CVarDef<int> GameMaxPlayers =
-            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("game.maxplayers", 0, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Name of the game server. This shows up in the launcher and potentially parts of the UI.

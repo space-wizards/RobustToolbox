@@ -112,7 +112,7 @@ namespace Robust.Server
         public ServerOptions Options { get; private set; } = new();
 
         /// <inheritdoc />
-        public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
+        public int MaxPlayers => _config.GetEffectiveMaxConnections();
 
         /// <inheritdoc />
         public string ServerName => _config.GetCVar(CVars.GameHostName);

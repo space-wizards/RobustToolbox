@@ -403,7 +403,10 @@ internal sealed partial class PVSSystem : EntitySystem
             return;
         }
 
-        if (e.NewStatus != SessionStatus.Disconnected || e.OldStatus != SessionStatus.InGame)
+        if (e.NewStatus != SessionStatus.Disconnected)
+            return;
+
+        if (!_playerVisibleSets.Remove(e.Session, out var data))
             return;
 
         foreach (var pvsCollection in _pvsCollections)
@@ -411,9 +414,6 @@ internal sealed partial class PVSSystem : EntitySystem
             if (!pvsCollection.RemovePlayer(e.Session))
                 _sawmill.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
         }
-
-        if (!_playerVisibleSets.Remove(e.Session, out var data))
-            return;
 
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);

@@ -7,6 +7,9 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
+// Avoid accidentally mixing up overloads.
+// ReSharper disable RedundantTypeArgumentsOfMethod
+
 namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
@@ -382,7 +385,7 @@ public sealed partial class SerializationManager
 
     public void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
     {
-        CopyTo(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+        CopyTo<T>(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
     }
 
     public void CopyTo<T>(
@@ -416,7 +419,7 @@ public sealed partial class SerializationManager
     public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null,
         bool skipHook = false, bool notNullableOverride = false)
     {
-        CopyTo(
+        CopyTo<T>(
             copier,
             source,
             ref target,
@@ -450,7 +453,7 @@ public sealed partial class SerializationManager
     public void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopier : ITypeCopier<T>
     {
-        CopyTo(
+        CopyTo<T, TCopier>(
             source,
             ref target,
             SerializationHookContext.ForSkipHooks(skipHook),
@@ -515,7 +518,7 @@ public sealed partial class SerializationManager
     public T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null,
         bool skipHook = false, bool notNullableOverride = false)
     {
-        return CreateCopy(
+        return CreateCopy<T>(
             copyCreator,
             source,
             SerializationHookContext.ForSkipHooks(skipHook),
@@ -545,7 +548,11 @@ public sealed partial class SerializationManager
     public T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopyCreator : ITypeCopyCreator<T>
     {
-        return CreateCopy(source, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+        return CreateCopy<T, TCopyCreator>(
+            source,
+            SerializationHookContext.ForSkipHooks(skipHook),
+            context,
+            notNullableOverride);
     }
 
     public T CreateCopy<T, TCopyCreator>(

@@ -12,6 +12,9 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
+// Avoid accidentally mixing up overloads.
+// ReSharper disable RedundantTypeArgumentsOfMethod
+
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
@@ -33,7 +36,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
         {
-            return Read(
+            return Read<T>(
                 node,
                 SerializationHookContext.ForSkipHooks(skipHook),
                 context,
@@ -85,7 +88,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
             where TNode : DataNode
         {
-            return Read(
+            return Read<T, TNode>(
                 reader,
                 node,
                 SerializationHookContext.ForSkipHooks(skipHook),
@@ -114,7 +117,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode
             where TReader : ITypeReader<T, TNode>
         {
-            return Read(
+            return Read<T, TNode, TReader>(
                 node,
                 SerializationHookContext.ForSkipHooks(skipHook),
                 context,

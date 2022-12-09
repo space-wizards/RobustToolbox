@@ -650,6 +650,7 @@ namespace Robust.UnitTesting
                 {
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
+                    (CVars.SysGCCollectStart.Name, "false"),
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
@@ -816,6 +817,8 @@ namespace Robust.UnitTesting
 
                     // Avoid preloading textures.
                     (CVars.ResTexturePreloadingEnabled.Name, "false"),
+
+                    (CVars.SysGCCollectStart.Name, "false"),
 
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });

@@ -160,8 +160,11 @@ namespace Robust.Client
 
             _authManager.LoadFromEnv();
 
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
+            if (_configurationManager.GetCVar(CVars.SysGCCollectStart))
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+            }
 
             // Setup main loop
             if (_mainLoop == null)

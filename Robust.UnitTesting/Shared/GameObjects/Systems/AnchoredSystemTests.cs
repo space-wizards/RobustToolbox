@@ -514,7 +514,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = false;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(gridId)));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(gridId));
             Assert.That(calledCount, Is.EqualTo(0));
             void ParentChangedHandler(ref EntParentChangedMessage ev)
             {

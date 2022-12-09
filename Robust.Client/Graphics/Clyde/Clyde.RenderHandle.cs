@@ -350,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
                         var endPos = new Vector2(MathF.Cos(arcLength * (i+1)) * radius, MathF.Sin(arcLength * (i + 1)) * radius);
 
                         if(!filled)
-                            _renderHandle.DrawLine(startPos, endPos, colorReal);
+                            _renderHandle.DrawLine(startPos + position, endPos + position, colorReal);
                         else
                         {
                             filledTriangle[0] = new DrawVertexUV2DColor(startPos + position, colorReal);

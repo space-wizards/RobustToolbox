@@ -8,7 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
-    internal sealed class MsgConVars : NetMessage
+    public sealed class MsgConVars : NetMessage
     {
         // Max buffer could potentially be 255 * 128 * 1024 = ~33MB, so if MaxMessageSize starts being a problem it can be increased.
         private const int MaxMessageSize = 0x4000; // Arbitrarily chosen as a 'sane' value as the maximum size of the entire message.

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
@@ -32,16 +33,11 @@ namespace Robust.Client.GameObjects
 
             base.Initialize();
         }
-        public override void Shutdown()
-        {
-            using var _ = _gameTiming.StartStateApplicationArea();
-            base.Shutdown();
-        }
 
-        public override void Cleanup()
+        public override void FlushEntities()
         {
             using var _ = _gameTiming.StartStateApplicationArea();
-            base.Cleanup();
+            base.FlushEntities();
         }
 
         EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)

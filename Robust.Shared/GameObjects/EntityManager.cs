@@ -215,7 +215,7 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
-            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
+            if (_mapManager.TryFindGridAt(coordinates, out var grid))
             {
                 coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
                 _xforms.SetCoordinates(transform, coords, unanchor: false);

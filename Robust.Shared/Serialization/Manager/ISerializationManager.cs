@@ -98,7 +98,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false);
+        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
 
         /// <summary>

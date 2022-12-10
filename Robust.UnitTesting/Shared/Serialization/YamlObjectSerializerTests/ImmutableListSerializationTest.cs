@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             // Arrange
             var data = _serializableList;
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var sequence = (SequenceDataNode) serMan.WriteValue(data);
+            var sequence = (SequenceDataNode) serMan.WriteValue(data, notNullableOverride: true);
             var mapping = new MappingDataNode();
             mapping.Add("datalist", sequence);
 

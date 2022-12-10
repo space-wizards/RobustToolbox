@@ -208,7 +208,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, null);
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, null);
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.Null(GetValue(target!, fieldName));
     }
@@ -220,7 +220,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, null);
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, altValue());
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.Null(GetValue(target!, fieldName));
     }
@@ -232,7 +232,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, value());
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, null);
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.That(GetValue(target!, fieldName), Is.EqualTo(value()));
     }
@@ -244,7 +244,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, value());
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, altValue());
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.That(GetValue(target!, fieldName), Is.EqualTo(value()));
     }
@@ -258,7 +258,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, null);
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, null);
-        Assert.That(() => Serialization.CopyTo(source, ref target), Throws.InstanceOf<NullNotAllowedException>());
+        Assert.That(() => Serialization.CopyTo(source, ref target, notNullableOverride: true), Throws.InstanceOf<NullNotAllowedException>());
     }
 
     [TestCaseSource(nameof(RegularFieldsData))]
@@ -270,7 +270,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(source, fieldName, null);
         var target = new DataDefTestDummy();
         SetValue(target, fieldName, altValue());
-        Assert.That(() => Serialization.CopyTo(source, ref target), Throws.InstanceOf<NullNotAllowedException>());
+        Assert.That(() => Serialization.CopyTo(source, ref target, notNullableOverride: true), Throws.InstanceOf<NullNotAllowedException>());
     }
 
     [TestCaseSource(nameof(RegularFieldsData))]

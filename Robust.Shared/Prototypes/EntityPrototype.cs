@@ -244,7 +244,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            serManager.CopyTo(data, ref component, context);
+            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
         }
 
         public override string ToString()

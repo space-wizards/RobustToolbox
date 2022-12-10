@@ -151,8 +151,8 @@ namespace Robust.Client.Input
                 .ToArray();
 
             mapping.Add("version", new ValueDataNode("1"));
-            mapping.Add("binds", _serialization.WriteValue(modifiedBindings));
-            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty));
+            mapping.Add("binds", _serialization.WriteValue(modifiedBindings, notNullableOverride: true));
+            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty, notNullableOverride: true));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = _resourceMan.UserData.OpenWriteText(path);

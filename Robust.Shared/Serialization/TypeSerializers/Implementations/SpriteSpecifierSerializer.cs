@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
+            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context, notNullableOverride: true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, EntityPrototype value,
@@ -162,7 +162,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath, notNullableOverride: true));
             mapping.Add("state", new ValueDataNode(value.RsiState));
             return mapping;
         }

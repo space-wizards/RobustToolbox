@@ -45,7 +45,7 @@ namespace Robust.Benchmarks.Serialization.Copy
         [Benchmark]
         public string? CreateCopyString()
         {
-            return SerializationManager.CreateCopy(String);
+            return SerializationManager.CreateCopy(String, notNullableOverride: true);
         }
 
         [Benchmark]
@@ -57,13 +57,13 @@ namespace Robust.Benchmarks.Serialization.Copy
         [Benchmark]
         public DataDefinitionWithString? CreateCopyDataDefinitionWithString()
         {
-            return SerializationManager.CreateCopy(DataDefinitionWithString);
+            return SerializationManager.CreateCopy(DataDefinitionWithString, notNullableOverride: true);
         }
 
         [Benchmark]
         public SeedDataDefinition? CreateCopySeedDataDefinition()
         {
-            return SerializationManager.CreateCopy(Seed);
+            return SerializationManager.CreateCopy(Seed, notNullableOverride: true);
         }
 
         [Benchmark]

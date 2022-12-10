@@ -63,7 +63,7 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
 
         foreach (var fixture in value)
         {
-            seq.Add(serializationManager.WriteValue(fixture, alwaysWrite, context));
+            seq.Add(serializationManager.WriteValue(fixture, alwaysWrite, context, notNullableOverride: true));
         }
 
         return seq;

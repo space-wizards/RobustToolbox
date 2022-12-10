@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
                 TestPropertyTwo = 10
             };
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var mapping = (MappingDataNode) serMan.WriteValue(type);
+            var mapping = (MappingDataNode) serMan.WriteValue(type, notNullableOverride: true);
 
             Assert.IsNotEmpty(mapping.Children);
 

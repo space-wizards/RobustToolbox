@@ -702,7 +702,7 @@ namespace Robust.Shared.Prototypes
             {
                 if (datanode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
                 {
-                    var parents = _serializationManager.Read<string[]>(parentNode);
+                    var parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
                     _inheritanceTrees[prototypeType].Add(idNode.Value, parents);
                 }
                 else

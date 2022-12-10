@@ -493,7 +493,7 @@ namespace Robust.Client.Input
 
             if (mapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode, notNullableOverride: true);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -522,7 +522,7 @@ namespace Robust.Client.Input
 
             if (userData && mapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node);
+                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node, notNullableOverride: true);
 
                 if (leaveEmpty.Length > 0)
                 {

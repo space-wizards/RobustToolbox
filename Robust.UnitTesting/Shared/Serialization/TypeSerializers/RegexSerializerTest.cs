@@ -27,7 +27,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var str = "[AEIOU]";
             var node = new ValueDataNode(str);
-            var deserializedRegex = Serialization.Read<Regex>(node);
+            var deserializedRegex = Serialization.Read<Regex>(node, notNullableOverride: true);
             var regex = new Regex(str, RegexOptions.Compiled);
 
             Assert.That(deserializedRegex.ToString(), Is.EqualTo(regex.ToString()));

@@ -10,121 +10,120 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
+
+[TypeSerializer]
+public sealed class HashSetSerializer<T> :
+    ITypeSerializer<HashSet<T>, SequenceDataNode>,
+    ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>,
+    ITypeCopier<HashSet<T>>,
+    ITypeCopyCreator<ImmutableHashSet<T>>
 {
-    [TypeSerializer]
-    public sealed class HashSetSerializer<T> :
-        ITypeSerializer<HashSet<T>, SequenceDataNode>,
-        ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>,
-        ITypeCopier<HashSet<T>>,
-        ITypeCopyCreator<ImmutableHashSet<T>>
+    HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+        SequenceDataNode node,
+        IDependencyCollection dependencies,
+        bool skipHook,
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
     {
-        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
-            SequenceDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
+        var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
+
+        foreach (var dataNode in node.Sequence)
         {
-            var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
-            }
-
-            return set;
+            set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
         }
 
-        ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
-            ISerializationManager serializationManager,
-            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+        return set;
+    }
+
+    ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
+        ISerializationManager serializationManager,
+        SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+    {
+        return Validate(serializationManager, node, context);
+    }
+
+    ValidationNode ITypeValidator<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+    {
+        return Validate(serializationManager, node, context);
+    }
+
+    ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
+    {
+        var list = new List<ValidationNode>();
+        foreach (var elem in node.Sequence)
         {
-            return Validate(serializationManager, node, context);
+            list.Add(serializationManager.ValidateNode<T>(elem, context));
         }
 
-        ValidationNode ITypeValidator<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
-            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+        return new ValidatedSequenceNode(list);
+    }
+
+    public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
+    }
+
+    public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
+        IDependencyCollection dependencies, bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        var sequence = new SequenceDataNode();
+
+        foreach (var elem in value)
         {
-            return Validate(serializationManager, node, context);
+            sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
         }
 
-        ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
-        {
-            var list = new List<ValidationNode>();
-            foreach (var elem in node.Sequence)
-            {
-                list.Add(serializationManager.ValidateNode<T>(elem, context));
-            }
+        return sequence;
+    }
 
-            return new ValidatedSequenceNode(list);
+    ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+        ISerializationManager serializationManager,
+        SequenceDataNode node,
+        IDependencyCollection dependencies,
+        bool skipHook,
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
+    {
+        if(instanceProvider != null)
+            Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
+        var set = ImmutableHashSet.CreateBuilder<T>();
+
+        foreach (var dataNode in node.Sequence)
+        {
+            set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
         }
 
-        public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
-            IDependencyCollection dependencies,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
+        return set.ToImmutable();
+    }
+
+    public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target, bool skipHook,
+        ISerializationContext? context = null)
+    {
+        target.Clear();
+        target.EnsureCapacity(source.Count);
+
+        foreach (var val in source)
         {
-            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
+            target.Add(serializationManager.CreateCopy(val, context, skipHook));
+        }
+    }
+
+    public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source, bool skipHook,
+        ISerializationContext? context = null)
+    {
+        var target = new HashSet<T>();
+        target.EnsureCapacity(source.Count);
+
+        foreach (var val in source)
+        {
+            target.Add(serializationManager.CreateCopy(val, context, skipHook));
         }
 
-        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value,
-            IDependencyCollection dependencies, bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            var sequence = new SequenceDataNode();
-
-            foreach (var elem in value)
-            {
-                sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
-            }
-
-            return sequence;
-        }
-
-        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager,
-            SequenceDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
-        {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
-            var set = ImmutableHashSet.CreateBuilder<T>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
-            }
-
-            return set.ToImmutable();
-        }
-
-        public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            target.Clear();
-            target.EnsureCapacity(source.Count);
-
-            foreach (var val in source)
-            {
-                target.Add(serializationManager.CreateCopy(val, context, skipHook));
-            }
-        }
-
-        public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            var target = new HashSet<T>();
-            target.EnsureCapacity(source.Count);
-
-            foreach (var val in source)
-            {
-                target.Add(serializationManager.CreateCopy(val, context, skipHook));
-            }
-
-            return target.ToImmutableHashSet();
-        }
+        return target.ToImmutableHashSet();
     }
 }

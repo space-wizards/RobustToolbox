@@ -37,7 +37,7 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
 
         foreach (var subNode in node)
         {
-            var fixture = serializationManager.Read<Fixture>(subNode, context, skipHook);
+            var fixture = serializationManager.Read<Fixture>(subNode, context, skipHook, notNullableOverride: true);
             value.Add(fixture);
         }
 

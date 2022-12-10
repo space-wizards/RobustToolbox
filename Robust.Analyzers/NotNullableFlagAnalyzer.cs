@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -46,12 +47,22 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         true,
         "Use nameof to avoid typos.");
 
+    private static readonly DiagnosticDescriptor NotNullableFlagValueTypeRule = new (
+        Diagnostics.IdNotNullableFlagValueType,
+        "NotNullable flag not supported for value types.",
+        "Value types as generic arguments are not supported for NotNullable flags",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Nullable value types are distinct at runtime when inspected with reflection. Therefore they are not supported for NotNullable flags.");
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(
             NotNullableNotSetRule,
             InvalidNotNullableValueRule,
             InvalidNotNullableImplementationRule,
-            InvalidNotNullableTypeRule);
+            InvalidNotNullableTypeRule,
+            NotNullableFlagValueTypeRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -83,19 +94,22 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         var attribute = context.Compilation.GetTypeByMetadataName(Attribute);
         var @bool = context.Compilation.GetSpecialType(SpecialType.System_Boolean);
 
-        for (var paramIndex = 0; paramIndex < invocationOperation.TargetMethod.Parameters.Length; paramIndex++)
+        foreach (var argument in invocationOperation.Arguments)
         {
-            var param = invocationOperation.TargetMethod.Parameters[paramIndex];
-            foreach (var attributeData in param.GetAttributes())
+            if(argument.Parameter == null) continue;
+
+            foreach (var attributeData in argument.Parameter.GetAttributes())
             {
                 if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, attribute))
                     continue;
 
-                if (!SymbolEqualityComparer.Default.Equals(param.Type, @bool) || !param.HasExplicitDefaultValue || param.ExplicitDefaultValue as bool? != false)
+                if (!SymbolEqualityComparer.Default.Equals(argument.Parameter.Type, @bool) ||
+                    !argument.Parameter.HasExplicitDefaultValue ||
+                    argument.Parameter.ExplicitDefaultValue as bool? != false)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InvalidNotNullableImplementationRule,
-                        param.Locations[0]));
+                        argument.Parameter.Locations[0]));
                     break;
                 }
 
@@ -104,17 +118,38 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InvalidNotNullableTypeRule,
-                        param.Locations[0],
+                        argument.Parameter.Locations[0],
                         attributeData.ConstructorArguments[0].Value as string));
                     break;
                 }
 
-                var argument = invocationOperation.Arguments[paramIndex];
-                if (typeArgument.NullableAnnotation == NullableAnnotation.None || typeArgument.IsValueType || !argument.ConstantValue.HasValue) break;
+                //until i find a way to implement it sanely, generic calls are exempt from this attribute
+                if(typeArgument is ITypeParameterSymbol) break;
+
+                //dont ask me why, argument.ConstantValue just straight up doesnt work.
+                //i still kept it in here as a fallback, incase it ever starts working again lol -<paul
+                var constantValue = (argument.Value as ILiteralOperation)?.ConstantValue ?? argument.ConstantValue;
+
+                if (typeArgument.IsValueType)
+                {
+                    if (argument.ArgumentKind != ArgumentKind.DefaultValue)
+                    {
+                        //todo diagnostic only use for struct types
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            NotNullableFlagValueTypeRule,
+                            argument.Syntax.GetLocation()));
+                    }
+                    break;
+                }
+
+                if (typeArgument.NullableAnnotation == NullableAnnotation.None ||
+                    (argument.ArgumentKind != ArgumentKind.DefaultValue && !constantValue.HasValue))
+                    break;
+
+                var flagValue = argument.ArgumentKind != ArgumentKind.DefaultValue ||
+                                constantValue.Value as bool? == true;
 
                 var nullable = typeArgument.NullableAnnotation == NullableAnnotation.Annotated;
-                var flagValue = argument.ArgumentKind == ArgumentKind.DefaultValue ||
-                                argument.ConstantValue.Value as bool? == true;
 
                 if (nullable && flagValue)
                 {

@@ -88,7 +88,7 @@ entitiesImmutableList:
             stream.Load(new StringReader(DataString));
 
             var node = stream.Documents[0].RootNode.ToDataNode();
-            var definition = Serialization.Read<PrototypeIdListSerializerTestDataDefinition>(node);
+            var definition = Serialization.Read<PrototypeIdListSerializerTestDataDefinition>(node, notNullableOverride: true);
 
             Assert.NotNull(definition);
 

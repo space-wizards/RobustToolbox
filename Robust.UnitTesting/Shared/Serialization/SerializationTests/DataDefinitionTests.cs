@@ -147,7 +147,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
     public void Read_NT_NV<T>(string fieldName, DataNode node, Func<T> value, Func<T> altValue)
     {
         var mapping = new MappingDataNode{ { fieldName, ValueDataNode.Null() } };
-        var res = Serialization.Read<DataDefTestDummy>(mapping);
+        var res = Serialization.Read<DataDefTestDummy>(mapping, notNullableOverride: true);
         Assert.Null(GetValue(res, fieldName));
     }
 
@@ -155,7 +155,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
     public void Read_NT_RV_AND_RT_RV<T>(string fieldName, DataNode node, Func<T> value, Func<T> altValue)
     {
         var mapping = new MappingDataNode{ { fieldName, node } };
-        var res = Serialization.Read<DataDefTestDummy>(mapping);
+        var res = Serialization.Read<DataDefTestDummy>(mapping, notNullableOverride: true);
         Assert.That(GetValue(res, fieldName), Is.EqualTo(value()));
     }
 
@@ -163,7 +163,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
     public void Read_RT_NV<T>(string fieldName, DataNode node, Func<T> value, Func<T> altValue)
     {
         var mapping = new MappingDataNode{ { fieldName, ValueDataNode.Null() } };
-        Assert.That(() => Serialization.Read<DataDefTestDummy>(mapping), Throws.InstanceOf<NullNotAllowedException>());
+        Assert.That(() => Serialization.Read<DataDefTestDummy>(mapping, notNullableOverride: true), Throws.InstanceOf<NullNotAllowedException>());
     }
 
     [TestCaseSource(nameof(NullableFieldsData))]

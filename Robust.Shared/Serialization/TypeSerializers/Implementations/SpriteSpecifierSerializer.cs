@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             bool skipHook, ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<Texture>? instanceProvider = null)
         {
-            var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(node, context, skipHook, notNullableOverride: true);
             return new Texture(path);
         }
 
@@ -69,7 +69,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook, notNullableOverride: true);
             return new Rsi(path, valueDataNode.Value);
         }
 

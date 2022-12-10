@@ -222,20 +222,10 @@ namespace Robust.Client.Graphics
             return DuplicateImpl();
         }
 
-        ~ShaderInstance()
+#pragma warning disable CA1816
+        public virtual void Dispose()
+#pragma warning restore CA1816
         {
-            Dispose(false);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            Disposed = true;
         }
 
         private void EnsureMutable()

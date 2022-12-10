@@ -50,31 +50,88 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void LoadFromFile(string configFile)
+        public HashSet<string> LoadFromTomlStream(Stream file)
         {
+            var loaded = new HashSet<string>();
             try
             {
-                var tblRoot = Toml.ReadFile(configFile);
-
                 var callbackEvents = new ValueList<ValueChangedInvoke>();
 
                 // Ensure callbacks are raised OUTSIDE the write lock.
                 using (Lock.WriteGuard())
                 {
-                    ProcessTomlObject(tblRoot, ref callbackEvents);
+                    foreach (var (cvar, value) in ParseCVarValuesFromToml(file))
+                    {
+                        loaded.Add(cvar);
+                        LoadTomlVar(cvar, value, ref callbackEvents);
+                    }
                 }
 
                 foreach (var callback in callbackEvents)
                 {
                     InvokeValueChanged(callback);
                 }
+            }
+            catch (Exception e)
+            {
+                loaded.Clear();
+                Logger.WarningS("cfg", "Unable to load configuration from stream:\n{0}", e);
+            }
 
+            return loaded;
+        }
+
+        private void LoadTomlVar(
+            string cvar,
+            object value,
+            ref ValueList<ValueChangedInvoke> changedInvokes)
+        {
+            if (_configVars.TryGetValue(cvar, out var cfgVar))
+            {
+                // overwrite the value with the saved one
+                cfgVar.Value = value;
+                if (SetupInvokeValueChanged(cfgVar, value) is { } invoke)
+                    changedInvokes.Add(invoke);
+            }
+            else
+            {
+                //or add another unregistered CVar
+                //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                cfgVar = new ConfigVar(cvar, 0, CVar.NONE) { Value = value };
+                _configVars.Add(cvar, cfgVar);
+            }
+
+            cfgVar.ConfigModified = true;
+        }
+
+        public HashSet<string> LoadDefaultsFromTomlStream(Stream stream)
+        {
+            var loaded = new HashSet<string>();
+
+            foreach (var (cvar, value) in ParseCVarValuesFromToml(stream))
+            {
+                loaded.Add(cvar);
+                OverrideDefault(cvar, value);
+            }
+
+            return loaded;
+        }
+
+        /// <inheritdoc />
+        public HashSet<string> LoadFromFile(string configFile)
+        {
+            try
+            {
+                using var file = File.OpenRead(configFile);
+                var result = LoadFromTomlStream(file);
                 _configFile = configFile;
                 Logger.InfoS("cfg", $"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                return result;
             }
             catch (Exception e)
             {
                 Logger.WarningS("cfg", "Unable to load configuration file:\n{0}", e);
+                return new HashSet<string>(0);
             }
         }
 
@@ -83,52 +140,80 @@ namespace Robust.Shared.Configuration
             _configFile = configFile;
         }
 
-        /// <summary>
-        /// A recursive function that walks over the config tree, transforming all key nodes into CVars.
-        /// </summary>
-        /// <param name="obj">The root table of the TOML document.</param>
-        /// <param name="changedInvokes">List of CVars that will need to have their InvokeValueChanged ran.</param>
-        /// <param name="tablePath">For internal use only, the current path to the node.</param>
-        private void ProcessTomlObject(
-            TomlObject obj,
-            ref ValueList<ValueChangedInvoke> changedInvokes,
-            string tablePath = "")
+        /// <inheritdoc />
+        public void SaveToTomlStream(Stream stream, IEnumerable<string> cvars)
         {
-            if (obj is TomlTable table) // this is a table
+            var tblRoot = Toml.Create();
+
+            using (Lock.ReadGuard())
             {
-                foreach (var kvTml in table)
+                foreach (var name in cvars)
                 {
-                    string newPath;
+                    if (!_configVars.TryGetValue(name, out var cVar))
+                        continue;
 
-                    if ((kvTml.Value is TomlTable))
-                        newPath = tablePath + kvTml.Key + TABLE_DELIMITER;
-                    else
-                        newPath = tablePath + kvTml.Key;
+                    var value = cVar.Value;
+                    if (value == null && cVar.Registered)
+                    {
+                        value = cVar.DefaultValue;
+                    }
 
-                    ProcessTomlObject(kvTml.Value, ref changedInvokes, newPath);
+                    if (value == null)
+                    {
+                        Logger.ErrorS("cfg",
+                            $"CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    var keyIndex = name.LastIndexOf(TABLE_DELIMITER);
+                    var tblPath = name.Substring(0, keyIndex).Split(TABLE_DELIMITER);
+                    var keyName = name.Substring(keyIndex + 1);
+
+                    // locate the Table in the config tree
+                    var table = tblRoot;
+                    foreach (var curTblName in tblPath)
+                    {
+                        if (!table.TryGetValue(curTblName, out TomlObject tblObject))
+                        {
+                            tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
+                        }
+
+                        table = tblObject as TomlTable ?? throw new InvalidConfigurationException(
+                            $"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
+                    }
+
+                    //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
+                    switch (value)
+                    {
+                        case Enum val:
+                            table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
+                            break;
+                        case int val:
+                            table.Add(keyName, val);
+                            break;
+                        case long val:
+                            table.Add(keyName, val);
+                            break;
+                        case bool val:
+                            table.Add(keyName, val);
+                            break;
+                        case string val:
+                            table.Add(keyName, val);
+                            break;
+                        case float val:
+                            table.Add(keyName, val);
+                            break;
+                        case double val:
+                            table.Add(keyName, val);
+                            break;
+                        default:
+                            Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
+                            break;
+                    }
                 }
             }
-            else // this is a key, add CVar
-            {
-                // if the CVar has already been registered
-                var tomlValue = TypeConvert(obj);
-                if (_configVars.TryGetValue(tablePath, out var cfgVar))
-                {
-                    // overwrite the value with the saved one
-                    cfgVar.Value = tomlValue;
-                    if (SetupInvokeValueChanged(cfgVar, tomlValue) is { } invoke)
-                        changedInvokes.Add(invoke);
-                }
-                else
-                {
-                    //or add another unregistered CVar
-                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
-                    _configVars.Add(tablePath, cfgVar);
-                }
 
-                cfgVar.ConfigModified = true;
-            }
+            Toml.WriteStream(tblRoot, stream);
         }
 
         /// <inheritdoc />
@@ -142,82 +227,15 @@ namespace Robust.Shared.Configuration
 
             try
             {
-                var tblRoot = Toml.Create();
+                // Always write if it was present when reading from the config file, otherwise:
+                // Don't write if Archive flag is not set.
+                // Don't write if the cVar is the default value.
+                var cvars = _configVars.Where(x => x.Value.ConfigModified
+                                                   || ((x.Value.Flags & CVar.ARCHIVE) == 0 && x.Value.Value != null &&
+                                                       !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
-                using (Lock.ReadGuard())
-                {
-                    foreach (var (name, cVar) in _configVars)
-                    {
-                        var value = cVar.Value;
-                        if (value == null && cVar.Registered)
-                        {
-                            value = cVar.DefaultValue;
-                        }
-
-                        if (value == null)
-                        {
-                            Logger.ErrorS("cfg",
-                                $"CVar {name} has no value or default value, was the default value registered as null?");
-                            continue;
-                        }
-
-                        // Don't write if Archive flag is not set.
-                        // Don't write if the cVar is the default value.
-                        if (!cVar.ConfigModified &&
-                            (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
-                        {
-                            continue;
-                        }
-
-                        var keyIndex = name.LastIndexOf(TABLE_DELIMITER);
-                        var tblPath = name.Substring(0, keyIndex).Split(TABLE_DELIMITER);
-                        var keyName = name.Substring(keyIndex + 1);
-
-                        // locate the Table in the config tree
-                        var table = tblRoot;
-                        foreach (var curTblName in tblPath)
-                        {
-                            if (!table.TryGetValue(curTblName, out TomlObject tblObject))
-                            {
-                                tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
-                            }
-
-                            table = tblObject as TomlTable ?? throw new InvalidConfigurationException(
-                                $"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
-                        }
-
-                        //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
-                        switch (value)
-                        {
-                            case Enum val:
-                                table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
-                                break;
-                            case int val:
-                                table.Add(keyName, val);
-                                break;
-                            case long val:
-                                table.Add(keyName, val);
-                                break;
-                            case bool val:
-                                table.Add(keyName, val);
-                                break;
-                            case string val:
-                                table.Add(keyName, val);
-                                break;
-                            case float val:
-                                table.Add(keyName, val);
-                                break;
-                            case double val:
-                                table.Add(keyName, val);
-                                break;
-                            default:
-                                Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
-                                break;
-                        }
-                    }
-                }
-
-                Toml.WriteFile(tblRoot, _configFile);
+                using var file = File.OpenWrite(_configFile);
+                SaveToTomlStream(file, cvars);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)
@@ -605,6 +623,39 @@ namespace Robust.Shared.Configuration
                 Invoke = var.ValueChanged,
                 Value = value
             };
+        }
+
+        private IEnumerable<(string cvar, object value)> ParseCVarValuesFromToml(Stream stream)
+        {
+            var tblRoot = Toml.ReadStream(stream);
+
+            return ProcessTomlObject(tblRoot, "");
+
+            IEnumerable<(string cvar, object value)> ProcessTomlObject(TomlObject obj, string tablePath)
+            {
+                if (obj is TomlTable table)
+                {
+                    foreach (var kvTml in table)
+                    {
+                        string newPath;
+
+                        if ((kvTml.Value is TomlTable))
+                            newPath = tablePath + kvTml.Key + TABLE_DELIMITER;
+                        else
+                            newPath = tablePath + kvTml.Key;
+
+                        foreach (var tuple in ProcessTomlObject(kvTml.Value, newPath))
+                        {
+                            yield return tuple;
+                        }
+                    }
+
+                    yield break;
+                }
+
+                var tomlValue = TypeConvert(obj);
+                yield return (tablePath, tomlValue);
+            }
         }
 
         /// <summary>

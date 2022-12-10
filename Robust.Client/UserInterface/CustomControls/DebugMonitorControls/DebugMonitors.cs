@@ -11,9 +11,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Timing;
 
-namespace Robust.Client.UserInterface.CustomControls
+namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
     internal sealed class DebugMonitors : BoxContainer, IDebugMonitors
     {
@@ -26,6 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             Visible = false;
 
+            SeparationOverride = 2;
             Orientation = LayoutOrientation.Vertical;
 
             Add(DebugMonitor.Fps, new FpsCounter(gameTiming));
@@ -36,6 +36,7 @@ namespace Robust.Client.UserInterface.CustomControls
             Add(DebugMonitor.Frames, new FrameGraph(gameTiming, IoCManager.Resolve<IConfigurationManager>()));
             Add(DebugMonitor.Memory, new DebugMemoryPanel());
             Add(DebugMonitor.Clyde, new DebugClydePanel { HorizontalAlignment = HAlignment.Left });
+            Add(DebugMonitor.System, new DebugSystemPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Input, new DebugInputPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Prof, new LiveProfileViewControl());
 

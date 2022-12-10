@@ -650,6 +650,7 @@ namespace Robust.UnitTesting
                 {
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
+                    (CVars.SysGCCollectStart.Name, "false"),
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
@@ -817,6 +818,8 @@ namespace Robust.UnitTesting
                     // Avoid preloading textures.
                     (CVars.ResTexturePreloadingEnabled.Name, "false"),
 
+                    (CVars.SysGCCollectStart.Name, "false"),
+
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
@@ -825,7 +828,10 @@ namespace Robust.UnitTesting
 
                 client.OverrideMainLoop(GameLoop);
                 client.ContentStart = Options?.ContentStart ?? false;
-                client.StartupSystemSplash(clientOptions, () => new TestLogHandler(cfg, "CLIENT"));
+                client.StartupSystemSplash(
+                    clientOptions,
+                    () => new TestLogHandler(cfg, "CLIENT"),
+                    globalExceptionLog: false);
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();

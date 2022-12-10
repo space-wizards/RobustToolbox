@@ -42,5 +42,10 @@ namespace Robust.Shared.Network
         void ClientDisconnect(string reason);
 
         void Reset(string reason);
+
+        /// <summary>
+        ///     Dispatches a messages as if it had just been received over the network.
+        /// </summary>
+        void DispatchLocalNetMessage(NetMessage message);
     }
 }

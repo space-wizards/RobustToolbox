@@ -30,6 +30,15 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Hard max-cap of concurrent connections for the main game networking.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxConnections =
+            CVarDef.Create("net.max_connections", 256, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
         /// UDP port to bind to for main game networking.
         /// Each address specified in <c>net.bindto</c> is bound with this port.
         /// </summary>
@@ -308,6 +317,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
 
+        /// <summary>
+        /// Whether to run a <see cref="GC.Collect()"/> operation after the engine is finished initializing.
+        /// </summary>
+        public static readonly CVarDef<bool> SysGCCollectStart =
+            CVarDef.Create("sys.gc_collect_start", true);
+
         /*
          * METRICS
          */
@@ -545,14 +560,21 @@ namespace Robust.Shared
         /// <remarks>
         /// This cannot be bypassed in any way, since it is used by Lidgren internally.
         /// </remarks>
+        [Obsolete("Use net.max_connections instead")]
         public static readonly CVarDef<int> GameMaxPlayers =
-            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("game.maxplayers", 0, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Name of the game server. This shows up in the launcher and potentially parts of the UI.
         /// </summary>
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Description of the game server in the launcher.
+        /// </summary>
+        public static readonly CVarDef<string> GameDesc =
+            CVarDef.Create("game.desc", "Just another server, don't mind me!", CVar.SERVERONLY);
 
         /// <summary>
         /// If a grid is shrunk to include no more tiles should it be deleted.

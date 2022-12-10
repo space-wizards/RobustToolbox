@@ -588,7 +588,7 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
-                netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
+                netConfig.MaximumConnections = _config.GetEffectiveMaxConnections();
             }
             else
             {
@@ -920,6 +920,14 @@ namespace Robust.Shared.Network
             }
 
             return true;
+        }
+
+        public void DispatchLocalNetMessage(NetMessage message)
+        {
+            if (!_messages.TryGetValue(message.MsgName, out var msgDat))
+                return;
+
+            msgDat.Callback!.Invoke(message);
         }
 
         private void CacheNetMsgIndex(int id, string name)

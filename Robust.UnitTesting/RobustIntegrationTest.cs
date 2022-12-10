@@ -828,7 +828,10 @@ namespace Robust.UnitTesting
 
                 client.OverrideMainLoop(GameLoop);
                 client.ContentStart = Options?.ContentStart ?? false;
-                client.StartupSystemSplash(clientOptions, () => new TestLogHandler(cfg, "CLIENT"));
+                client.StartupSystemSplash(
+                    clientOptions,
+                    () => new TestLogHandler(cfg, "CLIENT"),
+                    globalExceptionLog: false);
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();

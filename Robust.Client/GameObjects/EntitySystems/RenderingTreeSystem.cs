@@ -227,7 +227,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
+            EntityManager.EnsureComponent<RenderingTreeComponent>(e.Uid);
         }
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)

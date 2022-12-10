@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed client memory leaks and improved performance in integration testing.
 
 ### Other
 

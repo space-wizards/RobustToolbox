@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed client memory leaks and improved performance in integration testing.
 
 ### Other
 
@@ -52,6 +52,26 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
 
 
 ## 0.71.0.0

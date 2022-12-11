@@ -105,7 +105,7 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public void SetMapEntity(MapId mapId, EntityUid newMapEntity)
+    public void SetMapEntity(MapId mapId, EntityUid newMapEntity, bool updateChildren = true)
     {
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
@@ -139,6 +139,8 @@ internal partial class MapManager
                 preInit = mapComp.MapPreInit;
                 paused = mapComp.MapPaused;
             }
+
+            EntityManager.System<SharedTransformSystem>().ReparentChildren(oldEntId, newMapEntity);
 
             //Note: EntityUid.Invalid gets passed in here
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
@@ -175,7 +177,7 @@ internal partial class MapManager
         {
             var args = new MapEventArgs(mapId);
             OnMapCreatedGridTree(args);
-            var ev = new MapChangedEvent(mapId, true);
+            var ev = new MapChangedEvent(newMapEntity, mapId, true);
             EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
         }
     }

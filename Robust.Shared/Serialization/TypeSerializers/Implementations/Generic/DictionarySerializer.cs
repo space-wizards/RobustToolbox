@@ -33,7 +33,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         {
             mappingNode.Add(
                 serializationManager.WriteValue(key, alwaysWrite, context),
-                serializationManager.WriteValue(typeof(TValue), val, alwaysWrite, context));
+                serializationManager.WriteValue(val, alwaysWrite, context));
         }
 
         return mappingNode;

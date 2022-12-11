@@ -39,8 +39,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             var dict = new Dictionary<ValidationNode, ValidationNode>
             {
                 {
-                    serializationManager.ValidateNode(typeof(T1), entry.Key, context),
-                    serializationManager.ValidateNode(typeof(T2), entry.Value, context)
+                    serializationManager.ValidateNode<T1>(entry.Key, context),
+                    serializationManager.ValidateNode<T2>(entry.Value, context)
                 }
             };
 
@@ -54,9 +54,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             var mapping = new MappingDataNode();
 
             mapping.Add(
-                serializationManager.WriteValue(typeof(T1), value.Item1, alwaysWrite, context),
-                serializationManager.WriteValue(typeof(T2), value.Item2, alwaysWrite, context)
-            );
+                serializationManager.WriteValue<T1>(value.Item1, alwaysWrite, context),
+                serializationManager.WriteValue<T2>(value.Item2, alwaysWrite, context));
 
             return mapping;
         }

@@ -30,7 +30,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var elem in value)
             {
-                sequence.Add(serializationManager.WriteValue(typeof(T), elem, alwaysWrite, context));
+                sequence.Add(serializationManager.WriteValue<T>(elem, alwaysWrite, context));
             }
 
             return sequence;
@@ -115,7 +115,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             var list = new List<ValidationNode>();
             foreach (var elem in sequenceDataNode.Sequence)
             {
-                list.Add(serializationManager.ValidateNode(typeof(T), elem, context));
+                list.Add(serializationManager.ValidateNode<T>(elem, context));
             }
 
             return new ValidatedSequenceNode(list);

@@ -34,51 +34,16 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="manager">The container manager that this entity is inside of.</param>
         /// <returns>If a container manager was found.</returns>
-        public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager, IEntityManager? entMan = null)
+        public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager, IEntityManager? entMan = null, SharedContainerSystem? containerSystem = null)
         {
-            IoCManager.Resolve(ref entMan);
+            IoCManager.Resolve(ref entMan, ref containerSystem);
             DebugTools.Assert(entMan.EntityExists(entity));
 
-            var parentTransform = entMan.GetComponent<TransformComponent>(entity).Parent;
-            if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager, entMan) && manager.ContainsEntity(entity))
+            var parent = entMan.GetComponent<TransformComponent>(entity).ParentUid;
+            if (containerSystem.TryGetManagerComp(parent, out manager) && manager.ContainsEntity(entity))
                 return true;
 
-            manager = default;
             return false;
-        }
-
-        /// <summary>
-        /// Tries to find the container that this entity is inside (if any).
-        /// </summary>
-        /// <param name="entity">Entity that might be inside a container.</param>
-        /// <param name="container">The container that this entity is inside of.</param>
-        /// <returns>If a container was found.</returns>
-        [Obsolete("Use ContainerSystem.TryGetContainingContainer() instead")]
-        public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out IContainer? container, IEntityManager? entMan = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(entity));
-
-            if (TryGetContainerMan(entity, out var manager, entMan))
-                return manager.TryGetContainer(entity, out container);
-
-            container = default;
-            return false;
-        }
-
-        /// <summary>
-        /// Attempts to remove an entity from its container, if any.
-        /// <see cref="SharedContainerSystem.TryRemoveFromContainer"/>
-        /// </summary>
-        /// <param name="entity">Entity that might be inside a container.</param>
-        /// <param name="force">Whether to forcibly remove the entity from the container.</param>
-        /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
-        /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
-        [Obsolete("Use SharedContainerSystem.TryRemoveFromContainer() instead")]
-        public static bool TryRemoveFromContainer(this EntityUid entity, bool force, out bool wasInContainer, IEntityManager? entMan = null)
-        {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
-                .TryRemoveFromContainer(entity, force, out wasInContainer);
         }
 
         /// <summary>

@@ -12,6 +12,7 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         public Stack<MoveEvent> QueuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
@@ -89,10 +90,10 @@ namespace Robust.Shared.GameObjects
             if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-                if (grid.GridEntityId != xform.GridUid)
+                if (grid.Owner != xform.GridUid)
                 {
-                    xform.AttachParent(grid.GridEntityId);
-                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.GridEntityId);
+                    _transform.SetParent(entity, grid.Owner);
+                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.Owner);
                     RaiseLocalEvent(entity, ref ev, true);
                 }
             }
@@ -103,7 +104,7 @@ namespace Robust.Shared.GameObjects
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != null)
                 {
-                    xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
+                    _transform.SetParent(entity, _mapManager.GetMapEntityIdOrThrow(xform.MapID));
                     var ev = new ChangedGridEvent(entity, oldGridId, null);
                     RaiseLocalEvent(entity, ref ev, true);
                 }

@@ -5,7 +5,6 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
@@ -240,7 +239,7 @@ namespace Robust.Client.Placement
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
         }
     }
 }

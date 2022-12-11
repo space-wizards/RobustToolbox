@@ -46,7 +46,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -277,7 +276,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var grid in _mapManager.FindGridsIntersecting(mapId, viewBounds))
                 {
-                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
                     var color = Color.Orange.WithAlpha(Alpha);
                     var transform = physBody.GetTransform();
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);

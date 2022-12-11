@@ -1,16 +1,11 @@
 using System.IO;
-using System.Reflection;
-using Moq;
 using NUnit.Framework;
-using Robust.Server.Containers;
 using Robust.Server.GameObjects;
-using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
@@ -94,8 +89,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
 
             // that are not on the same map
-            parentTrans.Coordinates = new EntityCoordinates(GridA.GridEntityId, (5, 5));
-            childTrans.Coordinates = new EntityCoordinates(GridB.GridEntityId, (4, 4));
+            parentTrans.Coordinates = new EntityCoordinates(GridA.Owner, (5, 5));
+            childTrans.Coordinates = new EntityCoordinates(GridB.Owner, (4, 4));
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);

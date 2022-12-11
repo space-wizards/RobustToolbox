@@ -1,17 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
@@ -449,7 +449,7 @@ namespace Robust.Shared.GameObjects
                     return parentXform.FindGridEntityId(xformQuery);
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
         }
 
         /// <summary>
@@ -490,9 +490,9 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
             {
-                newMapEntity = mapGrid.GridEntityId;
+                newMapEntity = mapGrid.Owner;
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId)
                      && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt

@@ -50,9 +50,6 @@ namespace Robust.Shared.Map.Components
         [ViewVariables]
         public GameTick LastTileModifiedTick { get; internal set; }
 
-        [Obsolete("Use .Owner")]
-        [ViewVariables] public EntityUid GridEntityId => Owner;
-
         /// <summary>
         /// Map DynamicTree proxy to lookup for grid intersection.
         /// </summary>

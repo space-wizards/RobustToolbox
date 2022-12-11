@@ -1,4 +1,3 @@
-using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
@@ -15,7 +14,7 @@ namespace Robust.Shared.Map
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 
-            return new EntityCoordinates(grid.GridEntityId, (vector.X * tile, vector.Y * tile));
+            return new EntityCoordinates(grid.Owner, (vector.X * tile, vector.Y * tile));
         }
 
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
@@ -51,7 +50,7 @@ namespace Robust.Shared.Map
 
                 foreach (var grid in gridsInArea)
                 {
-                    var gridXform = xformQuery.GetComponent(grid.GridEntityId);
+                    var gridXform = xformQuery.GetComponent(grid.Owner);
                     // TODO: Use CollisionManager to get nearest edge.
 
                     // figure out closest intersect
@@ -78,7 +77,7 @@ namespace Robust.Shared.Map
                     // move mouse one tile out along normal
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;
 
-                    coords = new EntityCoordinates(closest.GridEntityId, closest.WorldToLocal(newTilePos));
+                    coords = new EntityCoordinates(closest.Owner, closest.WorldToLocal(newTilePos));
                 }
                 //else free place
             }

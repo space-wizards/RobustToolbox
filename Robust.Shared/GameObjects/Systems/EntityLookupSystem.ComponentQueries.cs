@@ -159,7 +159,7 @@ public sealed partial class EntityLookupSystem
             // Get grid entities
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                AddComponentsIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+                AddComponentsIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
             }
 
             // Get map entities

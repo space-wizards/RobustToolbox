@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -108,14 +107,14 @@ internal partial class MapManager
             {
                 var grid = grids[i];
 
-                var xformComp = xformQuery.GetComponent(grid.GridEntityId);
+                var xformComp = xformQuery.GetComponent(grid.Owner);
                 var (worldPos, worldRot, matrix, invMatrix) = xformComp.GetWorldPositionRotationMatrixWithInv(xformQuery);
                 var overlap = matrix.TransformBox(grid.LocalAABB).Intersect(aabb);
                 var localAABB = invMatrix.TransformBox(overlap);
 
                 var intersects = false;
 
-                if (physicsQuery.HasComponent(grid.GridEntityId))
+                if (physicsQuery.HasComponent(grid.Owner))
                 {
                     var enumerator = grid.GetLocalMapChunks(localAABB);
 

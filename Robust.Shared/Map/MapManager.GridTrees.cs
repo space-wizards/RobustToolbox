@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -81,9 +80,10 @@ internal partial class MapManager
         _movedGrids.Remove(e.Map);
     }
 
+    // ReSharper disable once InconsistentNaming
     private Box2 GetWorldAABB(MapGridComponent grid, TransformComponent? xform = null)
     {
-        xform ??= EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        xform ??= EntityManager.GetComponent<TransformComponent>(grid.Owner);
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 

@@ -1,16 +1,16 @@
+using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects;
 
@@ -80,7 +80,7 @@ public abstract partial class SharedTransformSystem
         }
 
         // Anchor snapping. Note that set coordiantes will dirty the component for us.
-        var pos = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
+        var pos = new EntityCoordinates(grid.Owner, grid.GridTileToLocal(tileIndices).Position);
         SetCoordinates(xform, pos, unanchor: false);
 
         return true;

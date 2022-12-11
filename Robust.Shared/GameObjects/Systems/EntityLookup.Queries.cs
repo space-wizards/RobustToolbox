@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
@@ -346,7 +345,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
         {
-            if (AnyEntitiesIntersecting(grid.GridEntityId, worldAABB, flags, lookupQuery, xformQuery)) return true;
+            if (AnyEntitiesIntersecting(grid.Owner, worldAABB, flags, lookupQuery, xformQuery)) return true;
         }
 
         var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -365,7 +364,7 @@ public sealed partial class EntityLookupSystem
         // Get grid entities
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
         {
-            AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
+            AddEntitiesIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
             if ((flags & (LookupFlags.Anchored | LookupFlags.Static)) != 0x0)
             {
@@ -398,7 +397,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox()))
         {
-            if (AnyEntitiesIntersecting(grid.GridEntityId, worldBounds, flags, lookupQuery, xformQuery)) return true;
+            if (AnyEntitiesIntersecting(grid.Owner, worldBounds, flags, lookupQuery, xformQuery)) return true;
         }
 
         var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -417,7 +416,7 @@ public sealed partial class EntityLookupSystem
         // Get grid entities
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox()))
         {
-            AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
+            AddEntitiesIntersecting(grid.Owner, intersecting, worldBounds, flags, lookupQuery, xformQuery);
         }
 
         // Get map entities
@@ -446,7 +445,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapID, worldAABB))
         {
-            if (AnyEntitiesIntersecting(grid.GridEntityId, worldAABB, flags, lookupQuery, xformQuery, uid))
+            if (AnyEntitiesIntersecting(grid.Owner, worldAABB, flags, lookupQuery, xformQuery, uid))
                 return true;
         }
 
@@ -466,7 +465,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapPos.MapId, worldAABB))
         {
-            if (AnyEntitiesIntersecting(grid.GridEntityId, worldAABB, flags, lookupQuery, xformQuery, uid))
+            if (AnyEntitiesIntersecting(grid.Owner, worldAABB, flags, lookupQuery, xformQuery, uid))
                 return true;
         }
 
@@ -597,7 +596,7 @@ public sealed partial class EntityLookupSystem
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
-        var lookup = Comp<BroadphaseComponent>(grid.GridEntityId);
+        var lookup = Comp<BroadphaseComponent>(grid.Owner);
         var intersecting = new HashSet<EntityUid>();
         var tileSize = grid.TileSize;
 
@@ -653,7 +652,7 @@ public sealed partial class EntityLookupSystem
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-        var lookup = Comp<BroadphaseComponent>(grid.GridEntityId);
+        var lookup = Comp<BroadphaseComponent>(grid.Owner);
         var tileSize = grid.TileSize;
         var aabb = GetLocalBounds(gridIndices, tileSize);
         return GetEntitiesIntersecting(lookup, aabb, flags);
@@ -731,7 +730,7 @@ public sealed partial class EntityLookupSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         var intersecting = new HashSet<EntityUid>();
 
-        AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
+        AddEntitiesIntersecting(grid.Owner, intersecting, worldBounds, flags, lookupQuery, xformQuery);
         AddContained(intersecting, flags, xformQuery);
 
         return intersecting;
@@ -856,7 +855,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
         {
-            yield return lookupQuery.GetComponent(grid.GridEntityId);
+            yield return lookupQuery.GetComponent(grid.Owner);
         }
     }
 
@@ -874,7 +873,7 @@ public sealed partial class EntityLookupSystem
         // Copy-paste with above but the query may differ slightly internally.
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
         {
-            yield return lookupQuery.GetComponent(grid.GridEntityId);
+            yield return lookupQuery.GetComponent(grid.Owner);
         }
     }
 
@@ -900,7 +899,7 @@ public sealed partial class EntityLookupSystem
 
         if (worldMatrix == null || angle == null)
         {
-            var gridXform = Transform(grid.GridEntityId);
+            var gridXform = Transform(grid.Owner);
             var (_, wAng, wMat) = gridXform.GetWorldPositionRotationMatrix();
             worldMatrix = wMat;
             angle = wAng;

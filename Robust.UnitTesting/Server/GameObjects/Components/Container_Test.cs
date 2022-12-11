@@ -198,7 +198,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).GridEntityId;
+            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).Owner;
             var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
@@ -221,10 +221,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(result, Is.True);
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildEntities.First(), Is.EqualTo(insertEntity));
+            var entMan = IoCManager.Resolve<IEntityManager>();
 
-            result = insertEntity.TryGetContainerMan(out var resultContainerMan);
+            Assert.That(entMan.GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
+            Assert.That(entMan.GetComponent<TransformComponent>(containerEntity).ChildEntities.First(), Is.EqualTo(insertEntity));
+
+            result = insertEntity.TryGetContainerMan(out var resultContainerMan, entMan: entMan, containerSystem: containerSys);
             Assert.That(result, Is.True);
             Assert.That(resultContainerMan, Is.EqualTo(container.Manager));
         }

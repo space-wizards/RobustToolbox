@@ -5,7 +5,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -341,10 +340,7 @@ namespace Robust.Shared.Containers
             {
                 wasInContainer = true;
 
-                if (!force)
-                    return container.Remove(entity);
-
-                container.ForceRemove(entity);
+                container.Remove(entity, force: force);
                 return true;
             }
 
@@ -385,7 +381,7 @@ namespace Robust.Shared.Containers
             foreach (var ent in container.ContainedEntities.ToArray())
             {
                 if (Deleted(ent)) continue;
-                container.ForceRemove(ent);
+                container.Remove(ent, force: true);
                 Del(ent);
             }
         }

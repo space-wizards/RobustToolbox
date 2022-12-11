@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
@@ -43,7 +42,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                var tempQualifier = grid.GridEntityId;
+                var tempQualifier = grid.Owner;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -57,7 +56,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                var tempQualifier = grid.GridEntityId;
+                var tempQualifier = grid.Owner;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -232,7 +231,7 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).Owner);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, TransformComponent xform, EntityQuery<TransformComponent> xforms)

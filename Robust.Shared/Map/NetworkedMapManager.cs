@@ -62,7 +62,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
-            var gridXform = EntityManager.GetComponent<TransformComponent>(iGrid.GridEntityId);
+            var gridXform = EntityManager.GetComponent<TransformComponent>(iGrid.Owner);
             var (worldPos, worldRot) = gridXform.GetWorldPositionRotation();
 
             var gridDatum = new GameStateMapData.GridDatum(
@@ -70,7 +70,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 new MapCoordinates(worldPos, gridXform.MapID),
                 worldRot);
 
-            gridDatums.Add(iGrid.GridEntityId, gridDatum);
+            gridDatums.Add(iGrid.Owner, gridDatum);
         }
 
         // no point sending empty collections

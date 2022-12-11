@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -7,10 +11,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Robust.Shared.GameObjects
 {
@@ -217,7 +217,7 @@ namespace Robust.Shared.GameObjects
             EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
             {
-                coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
+                coords = new(grid.Owner, grid.WorldToLocal(coordinates.Position));
                 _xforms.SetCoordinates(transform, coords, unanchor: false);
             }
             else

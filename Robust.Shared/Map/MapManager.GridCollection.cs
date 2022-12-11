@@ -212,6 +212,6 @@ internal partial class MapManager
     protected internal static void InvokeGridChanged(MapManager mapManager, MapGridComponent mapGrid, IReadOnlyCollection<(Vector2i position, Tile tile)> changedTiles)
     {
         mapManager.GridChanged?.Invoke(mapManager, new GridChangedEventArgs(mapGrid, changedTiles));
-        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.GridEntityId, new GridModifiedEvent(mapGrid, changedTiles), true);
+        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.Owner, new GridModifiedEvent(mapGrid, changedTiles), true);
     }
 }

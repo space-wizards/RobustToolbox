@@ -82,55 +82,6 @@ namespace Robust.Shared.Map.Components
                 _entMan.EventBus.RaiseLocalEvent(Owner, new EmptyGridEvent { GridId = Owner }, true);
         }
 
-        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, MapGridComponent gridComp,
-            GameStateMapData.ChunkDatum[] chunkUpdates)
-        {
-            networkedMapManager.SuppressOnTileChanged = true;
-            var modified = new List<(Vector2i position, Tile tile)>();
-
-            foreach (var chunkData in chunkUpdates)
-            {
-                if (chunkData.IsDeleted())
-                    continue;
-
-                var chunk = gridComp.GetOrAddChunk(chunkData.Index);
-                chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(chunkData.TileData.Length == gridComp.ChunkSize * gridComp.ChunkSize);
-
-                var counter = 0;
-                for (ushort x = 0; x < gridComp.ChunkSize; x++)
-                {
-                    for (ushort y = 0; y < gridComp.ChunkSize; y++)
-                    {
-                        var tile = chunkData.TileData[counter++];
-                        if (chunk.GetTile(x, y) == tile)
-                            continue;
-
-                        chunk.SetTile(x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * gridComp.ChunkSize + x, chunk.Y * gridComp.ChunkSize + y), tile));
-                    }
-                }
-            }
-
-            if (modified.Count != 0)
-                MapManager.InvokeGridChanged(networkedMapManager, gridComp, modified);
-
-            foreach (var chunkData in chunkUpdates)
-            {
-                if (chunkData.IsDeleted())
-                {
-                    gridComp.RemoveChunk(chunkData.Index);
-                    continue;
-                }
-
-                var chunk = gridComp.GetOrAddChunk(chunkData.Index);
-                chunk.SuppressCollisionRegeneration = false;
-                gridComp.RegenerateCollision(chunk);
-            }
-
-            networkedMapManager.SuppressOnTileChanged = false;
-        }
-
         /// <summary>
         /// Regenerate collision for multiple chunks at once; faster than doing it individually.
         /// </summary>
@@ -923,8 +874,9 @@ namespace Robust.Shared.Map.Components
         {
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
             var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
-            mapChunk.LastTileModifiedTick = _timing.CurTick;
-            LastTileModifiedTick = _timing.CurTick;
+            mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            _entMan.Dirty(this);
 
             // The map serializer currently sets tiles of unbound grids as part of the deserialization process
             // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
@@ -951,15 +903,20 @@ namespace Robust.Shared.Map.Components
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
-        public ushort ChunkSize { get; }
+        public ushort ChunkSize;
+
+        /// <summary>
+        /// Networked chunk data.
+        /// </summary>
+        public List<ChunkDatum>? ChunkData;
 
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
-        /// <param name="chunkSize">The size of the chunks in the map grid.</param>
-        public MapGridComponentState(ushort chunkSize)
+        public MapGridComponentState(ushort chunkSize, List<ChunkDatum>? chunkData)
         {
             ChunkSize = chunkSize;
+            ChunkData = chunkData;
         }
     }
 }

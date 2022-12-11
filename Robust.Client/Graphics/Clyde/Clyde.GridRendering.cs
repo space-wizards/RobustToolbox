@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -168,7 +169,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
         {
-            var data = _mapChunkData[grid.GridEntityId];
+            var data = _mapChunkData.GetOrNew(grid.GridEntityId);
             if (data.TryGetValue(chunk, out var datum))
             {
                 datum.Dirty = true;
@@ -196,7 +197,7 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateOnGridCreated(GridStartupEvent ev)
         {
             var gridId = ev.EntityUid;
-            _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
+            _mapChunkData.GetOrNew(gridId);
         }
 
         private void _updateOnGridRemoved(GridRemovalEvent ev)

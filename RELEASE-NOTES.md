@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
 ## 0.71.1.1
 
 ### Bugfixes

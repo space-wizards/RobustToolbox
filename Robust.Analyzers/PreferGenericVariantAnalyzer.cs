@@ -57,7 +57,6 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(CheckForGenericVariant, OperationKind.Invocation);
     }
 
-
     private void CheckForGenericVariant(OperationAnalysisContext obj)
     {
         if(obj.Operation is not IInvocationOperation invocationOperation) return;
@@ -154,8 +153,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
             invocationOperation.Syntax.GetLocation(),
             ImmutableDictionary.CreateRange(new Dictionary<string, string>()
             {
-                {"typeOperands", string.Join(",", typeOperands)},
-                {"newArgCount", Math.Min(genericVariantMethod.Parameters.Length, invocationOperation.Arguments.Length - genericVariantMethod.TypeParameters.Length).ToString()}
+                {"typeOperands", string.Join(",", typeOperands)}
             })));
     }
 }
@@ -165,18 +163,24 @@ public class PreferGenericVariantCodeFixProvider : CodeFixProvider
 {
     private static string Title(string method, string[] types) => $"Use {method}<{string.Join(",", types)}>.";
 
+    public override FixAllProvider GetFixAllProvider()
+    {
+        return WellKnownFixAllProviders.BatchFixer;
+    }
+
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
+        var root = await context.Document.GetSyntaxRootAsync();
+        if(root == null) return;
+
         foreach (var diagnostic in context.Diagnostics)
         {
             if (!diagnostic.Properties.TryGetValue("typeOperands", out var typeOperandsRaw)
-                || typeOperandsRaw == null
-                || !diagnostic.Properties.TryGetValue("newArgCount", out var argCountRaw)
-                || argCountRaw == null
-                || !int.TryParse(argCountRaw, out var argCount)) continue;
+                || typeOperandsRaw == null) continue;
 
-            var root = await context.Document.GetSyntaxRootAsync();
-            var node = root.FindNode(diagnostic.Location.SourceSpan).ChildNodes().First();
+            var node = root.FindNode(diagnostic.Location.SourceSpan);
+            if (node is ArgumentSyntax argumentSyntax)
+                node = argumentSyntax.Expression;
 
             if(node is not InvocationExpressionSyntax invocationExpression)
                 continue;
@@ -186,7 +190,7 @@ public class PreferGenericVariantCodeFixProvider : CodeFixProvider
             context.RegisterCodeFix(
                 CodeAction.Create(
                     Title(invocationExpression.Expression.ToString(), typeOperands),
-                    c => FixAsync(context.Document, invocationExpression, typeOperands, argCount, c),
+                    c => FixAsync(context.Document, invocationExpression, typeOperands, c),
                     Title(invocationExpression.Expression.ToString(), typeOperands)),
                 diagnostic);
         }
@@ -196,15 +200,13 @@ public class PreferGenericVariantCodeFixProvider : CodeFixProvider
         Document contextDocument,
         InvocationExpressionSyntax invocationExpression,
         string[] typeOperands,
-        int argCount,
         CancellationToken cancellationToken)
     {
         var memberAccess = (MemberAccessExpressionSyntax)invocationExpression.Expression;
 
         var root = (CompilationUnitSyntax) await contextDocument.GetSyntaxRootAsync(cancellationToken);
 
-        argCount = Math.Min(argCount, invocationExpression.ArgumentList.Arguments.Count - typeOperands.Length);
-        var arguments = new ArgumentSyntax[argCount];
+        var arguments = new ArgumentSyntax[invocationExpression.ArgumentList.Arguments.Count - typeOperands.Length];
         var types = new TypeSyntax[typeOperands.Length];
 
         for (int i = 0; i < typeOperands.Length; i++)
@@ -212,16 +214,20 @@ public class PreferGenericVariantCodeFixProvider : CodeFixProvider
             types[i] = ((TypeOfExpressionSyntax)invocationExpression.ArgumentList.Arguments[i].Expression).Type;
         }
 
-        for (int i = 0; i < argCount; i++)
-        {
-            arguments[i] = invocationExpression.ArgumentList.Arguments[i+typeOperands.Length];
-        }
+
+
+        Array.Copy(
+            invocationExpression.ArgumentList.Arguments.ToArray(),
+            typeOperands.Length,
+            arguments,
+            0,
+            arguments.Length);
 
         memberAccess = memberAccess.WithName(SyntaxFactory.GenericName(memberAccess.Name.Identifier,
             SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(types))));
 
         root = root!.ReplaceNode(invocationExpression,
-            invocationExpression.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments)))
+            invocationExpression.WithArgumentList(invocationExpression.ArgumentList.WithArguments(SyntaxFactory.SeparatedList(arguments)))
                 .WithExpression(memberAccess));
 
         return contextDocument.WithSyntaxRoot(root);

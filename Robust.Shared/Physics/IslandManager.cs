@@ -124,12 +124,12 @@ namespace Robust.Shared.Physics
 
             void UpdateMaxLinearVelocity()
             {
-                _islandCfg.MaxLinearVelocity = _maxLinearVelocityRaw / _tickRate;
+                _islandCfg.MaxTranslationPerTick = _maxLinearVelocityRaw / _tickRate;
             }
 
             void UpdateMaxAngularVelocity()
             {
-                _islandCfg.MaxAngularVelocity = (MathF.PI * 2 * _maxAngularVelocityRaw) / _tickRate;
+                _islandCfg.MaxRotationPerTick = (MathF.PI * 2 * _maxAngularVelocityRaw) / _tickRate;
             }
 
             void CfgVar<T>(CVarDef<T> cVar, Action<T> callback) where T : notnull

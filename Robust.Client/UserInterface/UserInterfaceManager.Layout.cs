@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 
@@ -124,7 +126,9 @@ internal sealed partial class UserInterfaceManager
                 DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
             }
 
-            void DoRender(WindowRoot root)
+        void DoRender(WindowRoot root)
+        {
+            try
             {
                 var total = 0;
                 _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
@@ -134,7 +138,13 @@ internal sealed partial class UserInterfaceManager
 
                 _prof.WriteValue("Controls rendered", ProfData.Int32(total));
             }
+            catch (Exception e)
+            {
+                Logger.Error($"Caught exception while trying to draw a UI element: {root}");
+                _runtime.LogException(e, nameof(UserInterfaceManager));
+            }
         }
+    }
 
         public void QueueStyleUpdate(Control control)
         {

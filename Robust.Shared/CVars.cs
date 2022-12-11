@@ -317,6 +317,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
 
+        /// <summary>
+        /// Whether to run a <see cref="GC.Collect()"/> operation after the engine is finished initializing.
+        /// </summary>
+        public static readonly CVarDef<bool> SysGCCollectStart =
+            CVarDef.Create("sys.gc_collect_start", true);
+
         /*
          * METRICS
          */

@@ -35,12 +35,51 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
-* RSIs with trailing commas in the JSON metadata are no longer allowed.
+*None yet*
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
+
+
+## 0.71.0.0
+
+### Breaking changes
+
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
 
 ### Bugfixes
 
@@ -54,10 +93,6 @@ END TEMPLATE-->
 * F3 (clyde monitor) now lists the windowing API and version in use.
 * Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
 * The engine now warns when loading `.png` textures inside a `.rsi`. This will be blocked in the future.
-
-### Internal
-
-*None yet*
 
 
 ## 0.70.0.0

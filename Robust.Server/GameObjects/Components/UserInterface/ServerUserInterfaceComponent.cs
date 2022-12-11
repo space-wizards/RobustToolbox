@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization;
 using static Robust.Shared.GameObjects.SharedUserInterfaceComponent;
 
 namespace Robust.Server.GameObjects
@@ -16,12 +16,22 @@ namespace Robust.Server.GameObjects
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
-        [DataField("interfaces", customTypeSerializer: typeof(ServerInterfaceDataTypeSerializer))]
-        internal readonly Dictionary<Enum, BoundUserInterface> _interfaces = new();
+        internal readonly Dictionary<Enum, BoundUserInterface> _interfaces =
+            new();
 
         public IReadOnlyDictionary<Enum, BoundUserInterface> Interfaces => _interfaces;
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            _interfaces.Clear();
+
+            foreach (var prototypeData in _interfaceData)
+            {
+                _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData, this);
+            }
+        }
     }
 
     [RegisterComponent]
@@ -39,8 +49,7 @@ namespace Robust.Server.GameObjects
         public float InteractionRangeSqrd;
 
         public Enum UiKey { get; }
-
-        [Access(typeof(UserInterfaceSystem))] public ServerUserInterfaceComponent Component { get; set; } = default!;
+        public ServerUserInterfaceComponent Component { get; }
         public EntityUid Owner => Component.Owner;
 
         internal readonly HashSet<IPlayerSession> _subscribedSessions = new();
@@ -60,10 +69,11 @@ namespace Robust.Server.GameObjects
         [Obsolete("Use system events")]
         public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
 
-        public BoundUserInterface(PrototypeData data)
+        public BoundUserInterface(PrototypeData data, ServerUserInterfaceComponent owner)
         {
             RequireInputValidation = data.RequireInputValidation;
             UiKey = data.UiKey;
+            Component = owner;
 
             // One Abs(), because negative values imply no limit
             InteractionRangeSqrd = data.InteractionRange * MathF.Abs(data.InteractionRange);

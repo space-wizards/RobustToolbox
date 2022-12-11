@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -9,6 +10,9 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedUserInterfaceComponent : Component
     {
+        [DataField("interfaces")]
+        internal List<PrototypeData> _interfaceData = new();
+
         [DataDefinition]
         public sealed class PrototypeData
         {

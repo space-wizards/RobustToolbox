@@ -188,7 +188,7 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
     public IPlayingAudioStream? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
     {
-        return Play(filename, Filter.Pvs(uid, entityManager: EntityManager), uid, true, audioParams);
+        return Play(filename, Filter.Pvs(uid, entityManager: EntityManager, playerManager:PlayerManager, cfgManager:CfgManager), uid, true, audioParams);
     }
 
     /// <summary>
@@ -270,7 +270,7 @@ public abstract class SharedAudioSystem : EntitySystem
     protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
     {
         if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))
-            return new EntityCoordinates(mapGrid.GridEntityId, mapGrid.WorldToLocal(mapCoordinates.Position));
+            return new EntityCoordinates(mapGrid.Owner, mapGrid.WorldToLocal(mapCoordinates.Position));
 
         if (_mapManager.HasMapEntity(mapCoordinates.MapId))
             return new EntityCoordinates(_mapManager.GetMapEntityId(mapCoordinates.MapId), mapCoordinates.Position);

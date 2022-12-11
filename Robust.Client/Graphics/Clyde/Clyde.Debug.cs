@@ -4,23 +4,13 @@ namespace Robust.Client.Graphics.Clyde
     {
         private readonly ClydeDebugStats _debugStats = new();
 
-        private sealed class ClydeDebugInfo : IClydeDebugInfo
-        {
-            public ClydeDebugInfo(OpenGLVersion openGLVersion, string renderer, string vendor, string versionString, bool overriding)
-            {
-                OpenGLVersion = openGLVersion;
-                Renderer = renderer;
-                Vendor = vendor;
-                VersionString = versionString;
-                Overriding = overriding;
-            }
-
-            public OpenGLVersion OpenGLVersion { get; }
-            public bool Overriding { get; }
-            public string Renderer { get; }
-            public string Vendor { get; }
-            public string VersionString { get; }
-        }
+        private sealed record ClydeDebugInfo(
+            OpenGLVersion OpenGLVersion,
+            string Renderer,
+            string Vendor,
+            string VersionString,
+            bool Overriding,
+            string WindowingApi) : IClydeDebugInfo;
 
         private sealed class ClydeDebugStats : IClydeDebugStats
         {

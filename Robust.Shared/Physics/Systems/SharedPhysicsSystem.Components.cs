@@ -436,7 +436,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(body.Owner))
                     return false;
 
-                if (Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount == 0 && !_mapMan.IsGrid(body.Owner))
+                if ((!Resolve(body.Owner, ref fixtures) || fixtures.FixtureCount == 0) && !_mapMan.IsGrid(body.Owner))
                     return false;
             }
             else
@@ -621,5 +621,27 @@ public partial class SharedPhysicsSystem
         }
 
         return bounds;
+    }
+
+    public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
+    {
+        if (!Resolve(uid, ref manager))
+        {
+            return (0, 0);
+        }
+
+        var layer = 0;
+        var mask = 0;
+
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            if (!fixture.Hard)
+                continue;
+
+            layer |= fixture._collisionLayer;
+            mask |= fixture._collisionMask;
+        }
+
+        return (layer, mask);
     }
 }

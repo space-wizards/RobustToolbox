@@ -128,12 +128,12 @@ public sealed class MapLoaderSystem : EntitySystem
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
-        rootUids = new List<EntityUid>();
 
         var resPath = new ResourcePath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
+            rootUids = new List<EntityUid>();
             return false;
         }
 
@@ -149,8 +149,17 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            rootUids = data.Entities;
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var rootEnts = new List<EntityUid>();
+            foreach (var ent in data.Entities)
+            {
+               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                    rootEnts.Add(ent);
+            }
+            rootUids = rootEnts;
         }
 
         _context.Clear();
@@ -487,10 +496,11 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
 
-        // There's 3 scenarios
-        // 1. We're loading a map file onto an existing map. In this case dump the map file map and use the existing map
-        // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
-        // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
+        // There's 4 scenarios
+        // 1. We're loading a map file onto an existing map. Dump the map file's map and use the existing one
+        // 2. We're loading a map file onto an existing map. Use the map file's map and swap entities to it.
+        // 3. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
+        // 4. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
 
         var rootNode = data.Entities[0];
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -501,29 +511,34 @@ public sealed class MapLoaderSystem : EntitySystem
             // If map exists swap out
             if (_mapManager.MapExists(data.TargetMap))
             {
+                // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
                 {
-                    _logLoader.Warning($"Loading map file with a root node onto an existing map!");
+                    _logLoader.Info($"Loading map file with a root node onto an existing map!");
+                    _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
-
-                var oldRootUid = data.Entities[0];
-                var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
-                data.Entities[0] = newRootUid;
-
-                foreach (var ent in data.Entities)
+                // Otherwise just ignore the map in the file.
+                else
                 {
-                    if (ent == newRootUid)
-                        continue;
+                    var oldRootUid = data.Entities[0];
+                    var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
+                    data.Entities[0] = newRootUid;
 
-                    var xform = xformQuery.GetComponent(ent);
-
-                    if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                    foreach (var ent in data.Entities)
                     {
-                        _transform.SetParent(xform, newRootUid);
-                    }
-                }
+                        if (ent == newRootUid)
+                            continue;
 
-                Del(oldRootUid);
+                        var xform = xformQuery.GetComponent(ent);
+
+                        if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                        {
+                            _transform.SetParent(xform, newRootUid);
+                        }
+                    }
+
+                    Del(oldRootUid);
+                }
             }
             else
             {

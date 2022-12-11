@@ -2,6 +2,7 @@
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -20,6 +21,14 @@ namespace Robust.Client.ResourceManagement
         public override void Load(IResourceCache cache, ResourcePath path)
         {
             var clyde = IoCManager.Resolve<IClyde>();
+
+            if (path.Directory.Filename.EndsWith(".rsi"))
+            {
+                Logger.WarningS(
+                    "res",
+                    "Loading raw texture inside RSI: {Path}. Refer to the RSI state instead of the raw PNG.",
+                    path);
+            }
 
             var data = new LoadStepData {Path = path};
 

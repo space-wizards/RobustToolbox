@@ -51,6 +51,11 @@ namespace Robust.Shared.IoC
             _parentCollection = parentCollection;
         }
 
+        public IDependencyCollection FromParent(IDependencyCollection parentCollection)
+        {
+            return new DependencyCollection(parentCollection);
+        }
+
         /// <inheritdoc />
         public IEnumerable<Type> GetRegisteredTypes()
         {

@@ -192,7 +192,7 @@ namespace Robust.Client.GameStates
                 AckGameState(message.State.ToSequence);
         }
 
-        public void UpdateFullRep(GameState state) => _processor.UpdateFullRep(state);
+        public void UpdateFullRep(GameState state, bool cloneDelta = false) => _processor.UpdateFullRep(state, cloneDelta);
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
@@ -578,8 +578,12 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    if (component.NetSyncEnabled)
-                        compData.Add(netId, _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session));
+                    if (!component.NetSyncEnabled)
+                        continue;
+
+                    var state = _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session, GameTick.Zero);
+                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    compData.Add(netId, state);
                 }
             }
 

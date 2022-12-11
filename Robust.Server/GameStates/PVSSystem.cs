@@ -1154,7 +1154,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
+            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1188,7 +1189,9 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
+            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);
         }
 

@@ -4,13 +4,13 @@ using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
+    public sealed class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
@@ -18,23 +18,13 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEntityNetworkManager _netMan = default!;
 
-        internal readonly Dictionary<Enum, BoundUserInterface> _openInterfaces =
-            new();
+        internal readonly Dictionary<Enum, BoundUserInterface> _openInterfaces = new();
 
-        internal readonly Dictionary<Enum, PrototypeData> _interfaces = new();
+        [DataField("interfaces", customTypeSerializer: typeof(ClientInterfaceDataTypeSerializer))]
+        private readonly Dictionary<Enum, PrototypeData> _interfaces = new();
 
         [ViewVariables]
         public IEnumerable<BoundUserInterface> Interfaces => _openInterfaces.Values;
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            _interfaces.Clear();
-
-            foreach (var data in _interfaceData)
-            {
-                _interfaces[data.UiKey] = data;
-            }
-        }
 
         internal void MessageReceived(BoundUIWrapMessage msg)
         {

@@ -62,12 +62,6 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        /// <summary>
-        /// Used to cache an entity, their local position and local rotation from their <see cref="TransformComponent"/>
-        /// Information is cached before the world is simulated to prevent lerping issues with substepping
-        /// </summary>
-        private Dictionary<EntityUid, (Vector2, Angle)> CachedEntityData = new();
-
         private ISawmill _sawmill = default!;
 
         public override void Initialize()
@@ -307,44 +301,71 @@ namespace Robust.Shared.Physics.Systems
             var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
             var substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
 
-            //Grab the transforms and cache the entity, their local position and local rotation to use after the physics step
-            foreach (var xformComp in EntityManager.EntityQuery<TransformComponent>(true))
-            {
-                CachedEntityData.Add(xformComp.Owner, (xformComp.LocalPosition, xformComp.LocalRotation));
-            }
-
             var substepping = false;
+            var frameTime = deltaTime / substeps;
 
             for (int i = 0; i < substeps; i++)
             {
-                var frameTime = deltaTime / substeps;
-
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateBeforeSolve);
 
                 if (substeps > 1)
                     substepping = true;
 
-                foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+                var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
                 {
                     comp.Step(frameTime, prediction, substepping);
-
-                    _physicsManager.ClearTransforms();
                 }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateAfterSolve);
-            }
 
-            // Go through and run all of the deferred events now
-            // Also compares the position pre physics and post physics to fix substep lerping issues
-            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
+                // Go through and run all of the deferred events now
+                // Also compares the position pre physics and post physics to fix substep lerping issues
+                enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
+                {
+                    comp.ProcessQueue();
+                }
+
+                if (i == substeps - 1)
+                {
+                    enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                    while (enumerator.MoveNext(out var comp))
+                    {
+                        FinalStep(comp);
+                    }
+                }
+
+                _traversal.ProcessMovement();
+                _physicsManager.ClearTransforms();
+            }
+        }
+
+        private void FinalStep(SharedPhysicsMapComponent component)
+        {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
             {
-                comp.ProcessQueue(CachedEntityData);
+                if (!xformQuery.TryGetComponent(uid, out var xform) ||
+                    !parentUid.IsValid())
+                {
+                    continue;
+                }
+
+                xform.PrevPosition = position;
+                xform.PrevRotation = rotation;
+                xform.LerpParent = parentUid;
+                xform.NextPosition = xform.LocalPosition;
+                xform.NextRotation = xform.LocalRotation;
             }
 
-            _traversal.ProcessMovement();
-            CachedEntityData.Clear();
+            component.LerpData.Clear();
         }
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)

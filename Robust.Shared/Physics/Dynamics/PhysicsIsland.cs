@@ -497,6 +497,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _brokenJoints.Clear();
 
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var meta = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
@@ -524,8 +525,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     // Apparantly lerping works with substepping here
                     transform.DeferUpdates = true;
-                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms, substepping);
-                    transform.RebuildMatrices();
+                    _transform.SetWorldPositionRotation(transform, bodyPos, angle, xforms);
                     transform.DeferUpdates = false;
 
                     // Unfortunately we can't cache the position and angle here because if our parent's position
@@ -537,18 +537,24 @@ stored in a single array since multiple arrays lead to multiple misses.
                 }
 
                 var linVelocity = _linearVelocities[i];
+                var dirty = false;
 
                 if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
                 {
-                    _physics.SetLinearVelocity(body, linVelocity);
+                    _physics.SetLinearVelocity(body, linVelocity, false);
+                    dirty = true;
                 }
 
                 var angVelocity = _angularVelocities[i];
 
                 if (!float.IsNaN(angVelocity))
                 {
-                    _physics.SetAngularVelocity(body, angVelocity);
+                    _physics.SetAngularVelocity(body, angVelocity, false);
+                    dirty = true;
                 }
+
+                if (dirty)
+                    _entityManager.Dirty(body, meta.GetComponent(body.Owner));
             }
         }
 

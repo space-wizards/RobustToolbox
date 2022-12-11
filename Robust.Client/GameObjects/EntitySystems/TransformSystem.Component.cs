@@ -30,14 +30,14 @@ public sealed partial class TransformSystem
         ActivateLerp(xform);
     }
 
-    public override void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot, bool substepping)
+    public override void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot)
     {
         xform.PrevPosition = xform._localPosition;
         xform.NextPosition = pos;
         xform.PrevRotation = xform._localRotation;
         xform.NextRotation = rot;
         xform.LerpParent = xform.ParentUid;
-        base.SetLocalPositionRotation(xform, pos, rot, substepping);
+        base.SetLocalPositionRotation(xform, pos, rot);
         ActivateLerp(xform);
     }
 }

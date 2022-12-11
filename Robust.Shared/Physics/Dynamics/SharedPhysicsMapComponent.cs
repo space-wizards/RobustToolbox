@@ -48,6 +48,12 @@ namespace Robust.Shared.Physics.Dynamics
         public bool AutoClearForces;
 
         /// <summary>
+        /// When substepping the client needs to know about the first position to use for lerping.
+        /// </summary>
+        public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+            LerpData = new();
+
+        /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
         /// </summary>
         public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
@@ -93,12 +99,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private HashSet<TransformComponent> _deferredUpdates = new();
+        protected readonly HashSet<TransformComponent> DeferredUpdates = new();
 
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
-        public HashSet<PhysicsComponent> AwakeBodies = new();
+        public readonly HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
         ///     Temporary body storage during solving.
@@ -159,8 +165,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Where the magic happens.
         /// </summary>
-        /// <param name="frameTime"></param>
-        /// <param name="prediction"></param>
         public void Step(float frameTime, bool prediction, bool substepping = false)
         {
             // Box2D does this at the end of a step and also here when there's a fixture update.
@@ -197,26 +201,15 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue(Dictionary<EntityUid, (Vector2, Angle)> cachedInfo)
+        public virtual void ProcessQueue()
         {
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in _deferredUpdates)
+            foreach (var xform in DeferredUpdates)
             {
-                //Set the previous position and rotation to the pre-physics cached data
-                //Then set the next position and rotation to the current xform data
-                //This fixes lerping issues with substepping
-                var cache = cachedInfo.FirstOrDefault(k => k.Key == xform.Owner).Value;
-
-                xform.PrevPosition = cache.Item1;
-                xform.PrevRotation = cache.Item2;
-                xform.NextPosition = xform._localPosition;
-                xform.NextRotation = xform._localRotation;
-                xform.RebuildMatrices();
-
                 xform.RunDeferred();
             }
 
-            _deferredUpdates.Clear();
+            DeferredUpdates.Clear();
         }
 
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
@@ -408,7 +401,7 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                island.UpdateBodies(_deferredUpdates, substepping);
+                island.UpdateBodies(DeferredUpdates, substepping);
                 island.SleepBodies(prediction, frameTime);
             }
         }

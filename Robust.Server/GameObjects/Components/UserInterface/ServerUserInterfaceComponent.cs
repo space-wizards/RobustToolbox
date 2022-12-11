@@ -60,6 +60,13 @@ namespace Robust.Server.GameObjects
         [Obsolete("Use system events")]
         public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
 
+        public BoundUserInterface(bool requireInputValidation, Enum uiKey, float interactionRangeSqrd)
+        {
+            RequireInputValidation = requireInputValidation;
+            UiKey = uiKey;
+            InteractionRangeSqrd = interactionRangeSqrd;
+        }
+
         public BoundUserInterface(PrototypeData data)
         {
             RequireInputValidation = data.RequireInputValidation;

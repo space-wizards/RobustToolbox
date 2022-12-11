@@ -207,10 +207,10 @@ namespace Robust.Shared.Physics.Dynamics
                 //This fixes lerping issues with substepping
                 var cache = cachedInfo.FirstOrDefault(k => k.Key == xform.Owner).Value;
 
-                xform._prevPosition = cache.Item1;
-                xform._prevRotation = cache.Item2;
-                xform._nextPosition = xform._localPosition;
-                xform._nextRotation = xform._localRotation;
+                xform.PrevPosition = cache.Item1;
+                xform.PrevRotation = cache.Item2;
+                xform.NextPosition = xform._localPosition;
+                xform.NextRotation = xform._localRotation;
                 xform.RebuildMatrices();
 
                 xform.RunDeferred();

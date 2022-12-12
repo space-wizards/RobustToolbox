@@ -560,14 +560,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -1154,7 +1154,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
+            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1188,7 +1189,9 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
+            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);
         }
 

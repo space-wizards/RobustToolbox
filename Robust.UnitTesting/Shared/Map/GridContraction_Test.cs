@@ -23,7 +23,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
-                var gridEntity = grid.GridEntityId;
+                var gridEntity = grid.Owner;
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -72,7 +72,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(!((!entManager.EntityExists(grid.GridEntityId) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage) >= EntityLifeStage.Deleted));
+                Assert.That(!((!entManager.EntityExists(grid.Owner) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid.Owner).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }
     }

@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using NetSerializer;
 using Robust.Shared.Timing;
-using System.Collections.Generic;
 
 namespace Robust.Shared.GameStates
 {
@@ -27,8 +26,7 @@ namespace Robust.Shared.GameStates
             uint lastInput,
             NetListAsArray<EntityState> entities,
             NetListAsArray<PlayerState> players,
-            NetListAsArray<EntityUid> deletions,
-            GameStateMapData? mapData)
+            NetListAsArray<EntityUid> deletions)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -36,7 +34,6 @@ namespace Robust.Shared.GameStates
             EntityStates = entities;
             PlayerStates = players;
             EntityDeletions = deletions;
-            MapData = mapData;
         }
 
         public readonly GameTick FromSequence;
@@ -47,6 +44,5 @@ namespace Robust.Shared.GameStates
         public readonly NetListAsArray<EntityState> EntityStates;
         public readonly NetListAsArray<PlayerState> PlayerStates;
         public readonly NetListAsArray<EntityUid> EntityDeletions;
-        public readonly GameStateMapData? MapData;
     }
 }

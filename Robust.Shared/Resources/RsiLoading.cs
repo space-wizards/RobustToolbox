@@ -14,10 +14,7 @@ internal static class RsiLoading
 {
     private static readonly float[] OneArray = {1};
 
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
-        {
-            AllowTrailingCommas = true
-        };
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     /// <summary>
     ///     The minimum version of RSI we can load.
@@ -31,27 +28,7 @@ internal static class RsiLoading
 
     internal static RsiMetadata LoadRsiMetadata(Stream manifestFile)
     {
-        RsiJsonMetadata? manifestJson;
-
-        if (manifestFile.CanSeek && manifestFile.Length <= 4096)
-        {
-            // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
-            // Avoids a ton of allocations with stream reader etc
-            // because System.Text.Json can process it directly.
-            Span<byte> buf = stackalloc byte[4096];
-            var totalRead = manifestFile.ReadToEnd(buf);
-            buf = buf[..totalRead];
-            buf = BomUtil.SkipBom(buf);
-
-            manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(buf, SerializerOptions);
-        }
-        else
-        {
-            using var reader = new StreamReader(manifestFile, leaveOpen: true);
-
-            string manifestContents = reader.ReadToEnd();
-            manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
-        }
+        var manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestFile, SerializerOptions);
 
         if (manifestJson == null)
             throw new RSILoadException($"Manifest JSON failed to deserialize!");
@@ -119,6 +96,12 @@ internal static class RsiLoading
         return new RsiMetadata(size, states);
     }
 
+    public static void Warmup()
+    {
+        // Just a random RSI I pulled from SS14.
+        const string warmupJson = @"{""version"":1,""license"":""CC-BY-SA-3.0"",""copyright"":""Space Wizards Federation"",""size"":{""x"":32,""y"":32},""states"":[{""name"":""mono""}]}";
+        JsonSerializer.Deserialize<RsiJsonMetadata>(warmupJson, SerializerOptions);
+    }
 
     internal sealed class RsiMetadata
     {

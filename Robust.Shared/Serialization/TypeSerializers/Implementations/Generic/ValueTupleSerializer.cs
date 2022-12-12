@@ -12,19 +12,19 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public sealed class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
+    public sealed class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>, ITypeCopyCreator<ValueTuple<T1, T2>>
     {
         public (T1, T2) Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null, (T1, T2) val = default)
+            ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<(T1, T2)>? val = null)
         {
             if (node.Children.Count != 1)
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook, val.Item1);
-            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook, val.Item2);
+            var v1 = serializationManager.Read<T1>(entry.Key, context, skipHook);
+            var v2 = serializationManager.Read<T2>(entry.Value, context, skipHook);
 
             return (v1, v2);
         }
@@ -61,15 +61,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return mapping;
         }
 
-        public (T1, T2) Copy(ISerializationManager serializationManager, (T1, T2) source, (T1, T2) target,
+        public (T1, T2) CreateCopy(ISerializationManager serializationManager, (T1, T2) source,
             bool skipHook,
             ISerializationContext? context = null)
         {
-            var i1 = target.Item1;
-            var i2 = target.Item2;
-            serializationManager.Copy(source.Item1, ref i1, context, skipHook);
-            serializationManager.Copy(source.Item2, ref i2, context, skipHook);
-            return (i1, i2);
+            return (serializationManager.CreateCopy(source.Item1, context, skipHook),
+                serializationManager.CreateCopy(source.Item2, context, skipHook));
         }
     }
 }

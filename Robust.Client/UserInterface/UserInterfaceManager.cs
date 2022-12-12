@@ -7,8 +7,10 @@ using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
@@ -46,6 +48,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IRuntimeLog _runtime = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]

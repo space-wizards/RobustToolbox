@@ -15,8 +15,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
     [TypeSerializer]
-    public sealed class PrototypeFlagsTypeSerializer<T>
-        : ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>, ITypeSerializer<PrototypeFlags<T>, ValueDataNode>
+    public sealed class PrototypeFlagsTypeSerializer<T> :
+        ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>,
+        ITypeSerializer<PrototypeFlags<T>, ValueDataNode>,
+        ITypeCopyCreator<PrototypeFlags<T>>,
+        ITypeCopier<PrototypeFlags<T>>
         where T : class, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
@@ -32,7 +35,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(value, context));
+                list.Add(serializationManager.ValidateNode<string, ValueDataNode, PrototypeIdSerializer<T>>(value, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -40,9 +43,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
+            ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
-            if(rawValue != null)
+            if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
 
             var flags = new List<string>(node.Sequence.Count);
@@ -65,26 +68,33 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new SequenceDataNode(value.ToArray());
         }
 
-        public PrototypeFlags<T> Copy(ISerializationManager serializationManager, PrototypeFlags<T> source, PrototypeFlags<T> target,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            return serializationManager.ValidateNode<string, ValueDataNode, PrototypeIdSerializer<T>>(node, context);
+        }
+
+        public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
+        {
+            if(instanceProvider != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+
+            return new PrototypeFlags<T>(node.Value);
+        }
+
+        public PrototypeFlags<T> CreateCopy(ISerializationManager serializationManager, PrototypeFlags<T> source,
             bool skipHook, ISerializationContext? context = null)
         {
             return new PrototypeFlags<T>(source);
         }
 
-        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, ISerializationContext? context = null)
+        public void CopyTo(ISerializationManager serializationManager, PrototypeFlags<T> source, ref PrototypeFlags<T> target, bool skipHook,
+            ISerializationContext? context = null)
         {
-            return serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(node, context);
-        }
-
-        public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
-            PrototypeFlags<T>? rawValue = null)
-        {
-            if(rawValue != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
-
-            return new PrototypeFlags<T>(node.Value);
+            target.Clear();
+            target.UnionWith(source);
         }
     }
 }

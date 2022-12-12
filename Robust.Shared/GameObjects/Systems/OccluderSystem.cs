@@ -175,7 +175,7 @@ namespace Robust.Shared.GameObjects
         {
             if (e.Map == MapId.Nullspace) return;
 
-            _mapManager.GetMapEntityId(e.Map).EnsureComponent<OccluderTreeComponent>();
+            EnsureComp<OccluderTreeComponent>(e.Uid);
         }
 
         private Box2 ExtractAabbFunc(in ComponentTreeEntry<OccluderComponent> entry)

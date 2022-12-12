@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Server.Maps;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -19,9 +18,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -41,10 +38,11 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly ISerializationManager _serManager = default!;
-    private          IServerEntityManagerInternal _serverEntityManager = default!;
+                 private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -60,7 +58,7 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
-        _context = new MapSerializationContext(_factory, EntityManager, _serManager);
+        _context = new MapSerializationContext();
     }
 
     #region Public
@@ -130,12 +128,12 @@ public sealed class MapLoaderSystem : EntitySystem
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
-        rootUids = new List<EntityUid>();
 
         var resPath = new ResourcePath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
+            rootUids = new List<EntityUid>();
             return false;
         }
 
@@ -151,8 +149,17 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            rootUids = data.Entities;
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var rootEnts = new List<EntityUid>();
+            foreach (var ent in data.Entities)
+            {
+               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                    rootEnts.Add(ent);
+            }
+            rootUids = rootEnts;
         }
 
         _context.Clear();
@@ -406,12 +413,22 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (data.TryGet("components", out SequenceDataNode? componentList))
         {
+            var prototype = meta.EntityPrototype;
+            _context.CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                _context.CurrentReadingEntityComponents[value] = datanode;
+                var compType = _componentFactory.GetRegistration(value).Type;
+                if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
+                {
+                    datanode =
+                        _serManager.PushCompositionWithGenericNode(
+                            compType,
+                            new[] { protData.Mapping }, datanode, _context);
+                }
+                _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
             }
         }
 
@@ -479,10 +496,11 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
 
-        // There's 3 scenarios
-        // 1. We're loading a map file onto an existing map. In this case dump the map file map and use the existing map
-        // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
-        // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
+        // There's 4 scenarios
+        // 1. We're loading a map file onto an existing map. Dump the map file's map and use the existing one
+        // 2. We're loading a map file onto an existing map. Use the map file's map and swap entities to it.
+        // 3. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
+        // 4. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
 
         var rootNode = data.Entities[0];
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -493,30 +511,34 @@ public sealed class MapLoaderSystem : EntitySystem
             // If map exists swap out
             if (_mapManager.MapExists(data.TargetMap))
             {
+                // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
                 {
-                    _logLoader.Warning($"Loading map file with a root node onto an existing map!");
+                    _logLoader.Info($"Loading map file with a root node onto an existing map!");
+                    _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
-
-                var oldRootUid = data.Entities[0];
-                var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
-                data.Entities[0] = newRootUid;
-
-                foreach (var ent in data.Entities)
+                // Otherwise just ignore the map in the file.
+                else
                 {
-                    if (ent == newRootUid)
-                        continue;
+                    var oldRootUid = data.Entities[0];
+                    var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
+                    data.Entities[0] = newRootUid;
 
-                    var xform = xformQuery.GetComponent(ent);
-
-                    if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                    foreach (var ent in data.Entities)
                     {
-                        _transform.SetParent(xform, newRootUid);
-                    }
-                }
+                        if (ent == newRootUid)
+                            continue;
 
-                Del(oldRootUid);
-                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
+                        var xform = xformQuery.GetComponent(ent);
+
+                        if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                        {
+                            _transform.SetParent(xform, newRootUid);
+                        }
+                    }
+
+                    Del(oldRootUid);
+                }
             }
             else
             {
@@ -622,8 +644,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                var chunk = grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY);
-                _serManager.Read(chunkNode, _context, value: chunk);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY));
             }
         }
     }
@@ -996,156 +1017,6 @@ public sealed class MapLoaderSystem : EntitySystem
     }
 
     #endregion
-
-    internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
-        ITypeSerializer<EntityUid, ValueDataNode>
-    {
-        private readonly IComponentFactory _factory;
-        private readonly IEntityManager _entityManager;
-        private readonly ISerializationManager _serializationManager;
-
-        public Dictionary<(Type, Type), object> TypeReaders { get; }
-        public Dictionary<Type, object> TypeWriters { get; }
-        public Dictionary<Type, object> TypeCopiers => TypeWriters;
-        public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
-
-        // Run-specific data
-        public Dictionary<ushort, string>? TileMap;
-        public readonly Dictionary<string, MappingDataNode> CurrentReadingEntityComponents = new();
-        public HashSet<string> CurrentlyIgnoredComponents = new();
-        public string? CurrentWritingComponent;
-        public EntityUid? CurrentWritingEntity;
-
-        private Dictionary<int, EntityUid> _uidEntityMap = new();
-        private Dictionary<EntityUid, int> _entityUidMap = new();
-
-        public MapSerializationContext(IComponentFactory factory, IEntityManager entityManager, ISerializationManager serializationManager)
-        {
-            _factory = factory;
-            _entityManager = entityManager;
-            _serializationManager = serializationManager;
-
-            TypeWriters = new Dictionary<Type, object>()
-            {
-                {typeof(EntityUid), this}
-            };
-            TypeReaders = new Dictionary<(Type, Type), object>()
-            {
-                {(typeof(EntityUid), typeof(ValueDataNode)), this}
-            };
-        }
-
-        public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
-        {
-            _uidEntityMap = uidEntityMap;
-            _entityUidMap = entityUidMap;
-        }
-
-        public void Clear()
-        {
-            CurrentReadingEntityComponents.Clear();
-            CurrentlyIgnoredComponents.Clear();
-            CurrentWritingComponent = null;
-            CurrentWritingEntity = null;
-        }
-
-        // Create custom object serializers that will correctly allow data to be overriden by the map file.
-        MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
-            MappingDataNode? protoData)
-        {
-            if (CurrentReadingEntityComponents == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-
-            if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
-            {
-                if (protoData == null) return mapping.Copy();
-
-                return _serializationManager.PushCompositionWithGenericNode(
-                    _factory.GetRegistration(componentName).Type, new[] { protoData }, mapping, this);
-            }
-
-            return protoData ?? new MappingDataNode();
-        }
-
-        public IEnumerable<string> GetExtraComponentTypes()
-        {
-            return CurrentReadingEntityComponents!.Keys;
-        }
-
-        public bool ShouldSkipComponent(string compName)
-        {
-            return CurrentlyIgnoredComponents.Contains(compName);
-        }
-
-        ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
-            ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
-        {
-            if (node.Value == "null")
-            {
-                return new ValidatedValueNode(node);
-            }
-
-            if (!int.TryParse(node.Value, out var val) || !_uidEntityMap.ContainsKey(val))
-            {
-                return new ErrorNode(node, "Invalid EntityUid", true);
-            }
-
-            return new ValidatedValueNode(node);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, EntityUid value,
-            IDependencyCollection dependencies, bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            if (!_entityUidMap.TryGetValue(value, out var entityUidMapped))
-            {
-                // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                if (CurrentWritingComponent != "Transform")
-                {
-                    Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
-                }
-
-                return new ValueDataNode("null");
-            }
-
-            return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
-        }
-
-        EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
-            ValueDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, EntityUid _)
-        {
-            if (node.Value == "null")
-            {
-                return EntityUid.Invalid;
-            }
-
-            var val = int.Parse(node.Value);
-
-            if (!_uidEntityMap.TryGetValue(val, out var entity))
-            {
-                Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-                return EntityUid.Invalid;
-            }
-            else
-            {
-                return entity;
-            }
-        }
-
-        [MustUseReturnValue]
-        public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
-            bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return new((int)source);
-        }
-    }
 
     /// <summary>
     ///     Does basic pre-deserialization checks on map file load.

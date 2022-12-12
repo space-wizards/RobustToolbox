@@ -48,6 +48,8 @@ namespace Robust.Server
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart, ServerOptions options)
         {
+            ServerWarmup.RunWarmup();
+
             Thread.CurrentThread.Name = "Main Thread";
             var deps = IoCManager.InitThread();
             ServerIoC.RegisterIoC(deps);

@@ -1205,7 +1205,7 @@ namespace Robust.Client.GameObjects
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         // Lobby SpriteView rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
+        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
         {
             RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
         }
@@ -1251,7 +1251,7 @@ namespace Robust.Client.GameObjects
         public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
 
         // Sprite rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
+        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
             Direction? overrideDir = null;
             if (_enableOverrideDirection)

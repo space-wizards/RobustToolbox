@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Mark `validate_rsis.py` as `+x` in Git.
 
 ### Internal
 

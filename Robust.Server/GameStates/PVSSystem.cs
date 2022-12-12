@@ -560,14 +560,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))

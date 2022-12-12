@@ -53,7 +53,7 @@ namespace Robust.Shared.Scripting
                 return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
             }
 
-            return new EntityCoordinates(grid.GridEntityId, ((float) x, (float) y));
+            return new EntityCoordinates(grid.Owner, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)

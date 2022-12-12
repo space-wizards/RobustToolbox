@@ -38,7 +38,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & (LookupFlags.Static)) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
             {

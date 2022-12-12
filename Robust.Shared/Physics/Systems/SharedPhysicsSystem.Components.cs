@@ -417,6 +417,16 @@ public partial class SharedPhysicsSystem
         }
     }
 
+    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    {
+        if (body.BodyStatus == status)
+            return;
+
+        body._bodyStatus = status;
+
+        if (dirty)
+            Dirty(body);
+    }
 
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.

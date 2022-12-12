@@ -465,7 +465,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RemoveComponentImmediate(comp, uid, true);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }

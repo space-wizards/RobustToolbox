@@ -43,7 +43,7 @@ public sealed partial class EntityLookupSystem
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
@@ -97,7 +97,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref intersecting,
             static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
@@ -151,7 +151,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
@@ -216,7 +216,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
@@ -367,7 +367,7 @@ public sealed partial class EntityLookupSystem
         {
             AddEntitiesIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
-            if ((flags & (LookupFlags.Anchored | LookupFlags.Static)) != 0x0)
+            if ((flags & LookupFlags.Static) != 0x0)
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                 {
@@ -589,9 +589,6 @@ public sealed partial class EntityLookupSystem
     /// <summary>
     /// Returns the entities intersecting any of the supplied tiles. Faster than doing each tile individually.
     /// </summary>
-    /// <param name="gridId"></param>
-    /// <param name="gridIndices"></param>
-    /// <returns></returns>
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
@@ -615,7 +612,7 @@ public sealed partial class EntityLookupSystem
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
 
-            if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+            if ((flags & LookupFlags.Static) != 0x0)
             {
                 lookup.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
@@ -673,7 +670,7 @@ public sealed partial class EntityLookupSystem
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
@@ -762,7 +759,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {

@@ -43,16 +43,27 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.71.1.4
+
+### Bugfixes
+
 * Fixed CVars not being saved correctly to config file.
 
 ### Other
 
 * Mark `validate_rsis.py` as `+x` in Git.
 * Made config system more robust against accidental corruption when saving.
-
-### Internal
-
-*None yet*
 
 
 ## 0.71.1.3

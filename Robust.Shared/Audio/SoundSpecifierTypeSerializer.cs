@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -6,7 +7,6 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
-using System;
 
 namespace Robust.Shared.Audio;
 
@@ -30,14 +30,16 @@ public sealed class SoundSpecifierTypeSerializer :
     }
 
     public SoundSpecifier Read(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, SoundSpecifier? _ = null)
+        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<SoundSpecifier>? instanceProvider = null)
     {
         var type = GetType(node);
         return (SoundSpecifier)serializationManager.Read(type, node, context, skipHook)!;
     }
 
     public SoundSpecifier Read(ISerializationManager serializationManager, ValueDataNode node,
-        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, SoundSpecifier? _ = null)
+        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<SoundSpecifier>? instanceProvider = null)
     {
         return new SoundPathSpecifier(node.Value);
     }

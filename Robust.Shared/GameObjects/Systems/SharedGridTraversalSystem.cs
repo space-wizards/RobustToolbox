@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.GameObjects
@@ -15,7 +16,7 @@ namespace Robust.Shared.GameObjects
         public Stack<MoveEvent> QueuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
 
-        private List<MapGrid> _gridBuffer = new();
+        private List<MapGridComponent> _gridBuffer = new();
 
         public override void Initialize()
         {
@@ -88,10 +89,10 @@ namespace Robust.Shared.GameObjects
             if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-                if (grid.GridEntityId != xform.GridUid)
+                if (grid.Owner != xform.GridUid)
                 {
-                    xform.AttachParent(grid.GridEntityId);
-                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.GridEntityId);
+                    xform.AttachParent(grid.Owner);
+                    var ev = new ChangedGridEvent(entity, xform.GridUid, grid.Owner);
                     RaiseLocalEvent(entity, ref ev, true);
                 }
             }

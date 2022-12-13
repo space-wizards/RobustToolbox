@@ -18,6 +18,7 @@ namespace Robust.Client.Console
     public sealed class WatchWindow : DefaultWindow
     {
         private readonly IReflectionManager _reflectionManager;
+        private readonly IDependencyCollection _dependency;
 
         private readonly BoxContainer _watchesVBox;
         private readonly LineEdit _addWatchEdit;
@@ -27,6 +28,7 @@ namespace Robust.Client.Console
         public WatchWindow()
         {
             _reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            _dependency = IoCManager.Resolve<IDependencyCollection>();
 
             ScriptInstanceShared.InitDummy();
 
@@ -92,7 +94,7 @@ namespace Robust.Client.Console
                 return;
             }
 
-            var control = new WatchControl(@delegate);
+            var control = new WatchControl(@delegate, _dependency);
 
             _watchesVBox.AddChild(control);
             _addWatchEdit.Clear();
@@ -101,13 +103,14 @@ namespace Robust.Client.Console
         private sealed class WatchControl : Control
         {
             private readonly ScriptRunner<object> _runner;
-            private readonly ScriptGlobalsImpl _globals = new();
+            private readonly ScriptGlobalsImpl _globals;
             private readonly Label _outputLabel;
 
-            public WatchControl(ScriptRunner<object> runner)
+            public WatchControl(ScriptRunner<object> runner, IDependencyCollection dependency)
             {
                 Button delButton;
                 _runner = runner;
+                _globals = new ScriptGlobalsImpl(dependency);
 
                 AddChild(new BoxContainer
                 {
@@ -150,9 +153,8 @@ namespace Robust.Client.Console
 
         private sealed class ScriptGlobalsImpl : ScriptGlobalsShared
         {
-            public ScriptGlobalsImpl()
+            public ScriptGlobalsImpl(IDependencyCollection dependency) : base(dependency)
             {
-                IoCManager.InjectDependencies(this);
             }
 
             protected override void WriteSyntax(object toString)

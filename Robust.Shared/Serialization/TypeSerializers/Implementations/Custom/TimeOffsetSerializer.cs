@@ -20,7 +20,8 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context = null, TimeSpan value = default)
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
@@ -48,13 +49,5 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         }
 
         return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
-    }
-
-    [MustUseReturnValue]
-    public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        return source;
     }
 }

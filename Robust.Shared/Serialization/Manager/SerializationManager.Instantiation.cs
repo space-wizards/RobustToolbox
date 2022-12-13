@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Robust.Shared.Serialization.Manager;
 
 public partial class SerializationManager
 {
-    internal delegate T InstantiationDelegate<out T>();
-
-    private readonly ConcurrentDictionary<Type, InstantiationDelegate<object>> _instantiators = new();
+    private readonly ConcurrentDictionary<Type, object> _instantiators = new();
 
     private static void CreateValueTypeInstantiator(ILGenerator generator, Type type)
     {
@@ -26,13 +26,20 @@ public partial class SerializationManager
             generator.Emit(OpCodes.Newobj, constructor);
         }
 
-        generator.Emit(OpCodes.Box, type);
         generator.Emit(OpCodes.Ret);
     }
 
     private static void CreateClassInstantiator(ILGenerator generator, Type type)
     {
-        var constructor = type.GetConstructor(Type.EmptyTypes);
+        if (type.IsArray)
+        {
+            throw new ArgumentException($"Tried instantiating unsupported type {type}.");
+        }
+
+        var constructor = type.GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            Type.EmptyTypes);
+
         if (constructor == null)
             throw new ArgumentException($"Could not find an empty constructor for non-record class {type}");
 
@@ -76,14 +83,23 @@ public partial class SerializationManager
         generator.Emit(OpCodes.Ret);
     }
 
-    private InstantiationDelegate<object> GetOrCreateInstantiator(Type type, bool isRecord)
+    internal ISerializationManager.InstantiationDelegate<T> GetOrCreateInstantiator<T>(bool isDataRecord, Type? actualType = null)
     {
-        return _instantiators.GetOrAdd(type, static (type, isRecord) =>
+        if (actualType != null && !actualType.IsAssignableTo(typeof(T)))
+        {
+            throw new ArgumentException(
+                $"{nameof(actualType)} has to be a derived type of {typeof(T)} but was {actualType}!",
+                nameof(actualType));
+        }
+
+        var type = actualType ?? typeof(T);
+
+        return (ISerializationManager.InstantiationDelegate<T>)_instantiators.GetOrAdd(type, static (type, isRecord) =>
         {
             var method = new DynamicMethod(
                 "Instantiator",
-                typeof(object),
-                new[] { typeof(object) },
+                type,
+                Type.EmptyTypes,
                 true);
 
             var generator = method.GetILGenerator();
@@ -101,7 +117,18 @@ public partial class SerializationManager
                 CreateClassInstantiator(generator, type);
             }
 
-            return method.CreateDelegate<InstantiationDelegate<object>>();
-        }, isRecord);
+            return method.CreateDelegate(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(type));
+        }, isDataRecord);
+    }
+
+    //we can safely set isDataRecord to false here due to a delegate already existing if it if it were
+    private T InstantiateValue<T>() => GetOrCreateInstantiator<T>(false)();
+
+    internal MethodCallExpression InstantiationExpression(ConstantExpression managerConst, Type type)
+    {
+        return Expression.Call(
+            managerConst,
+            nameof(InstantiateValue),
+            new[] { type });
     }
 }

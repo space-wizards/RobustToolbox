@@ -17,7 +17,6 @@ namespace Robust.Shared.Physics
     /// </remarks>
     [RegisterComponent]
     [NetworkedComponent]
-    [ComponentProtoName("Fixtures")]
     public sealed class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
@@ -31,7 +30,7 @@ namespace Robust.Shared.Physics
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
         public readonly Dictionary<string, Fixture> Fixtures = new();
 
-        [DataField("fixtures")]
+        [DataField("fixtures", customTypeSerializer:typeof(FixtureSerializer))]
         [NeverPushInheritance]
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
         internal List<Fixture> SerializedFixtures

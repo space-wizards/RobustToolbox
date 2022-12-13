@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
@@ -62,7 +63,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new EntityUid(512),
                     new []
                     {
-                        new ComponentChange(0, new MapGridComponentState(16), default)
+                        new ComponentChange(0, new MapGridComponentState(16, null), default)
                     }, default);
 
                 serializer.Serialize(stream, payload);

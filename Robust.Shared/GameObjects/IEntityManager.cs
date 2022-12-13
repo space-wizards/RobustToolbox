@@ -28,6 +28,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         void Cleanup();
 
+        /// <summary>
+        ///     Deletes all entities.
+        /// </summary>
+        void FlushEntities();
+
         /// <param name="noPredictions">
         /// Only run systems with <see cref="EntitySystem.UpdatesOutsidePrediction"/> set true.
         /// </param>

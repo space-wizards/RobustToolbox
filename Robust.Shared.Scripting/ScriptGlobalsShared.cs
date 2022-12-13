@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -28,6 +29,11 @@ namespace Robust.Shared.Scripting
         [field: Dependency] public IMapManager map { get; } = default!;
         [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
 
+        protected ScriptGlobalsShared(IDependencyCollection dependencies)
+        {
+            dependencies.InjectDependencies(this);
+        }
+
         public IEnumerable<T> protos<T>() where T : class, IPrototype
         {
             return prot.EnumeratePrototypes<T>();
@@ -47,7 +53,7 @@ namespace Robust.Shared.Scripting
                 return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
             }
 
-            return new EntityCoordinates(grid.GridEntityId, ((float) x, (float) y));
+            return new EntityCoordinates(grid.Owner, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
@@ -60,12 +66,12 @@ namespace Robust.Shared.Scripting
             return ent.GetComponent<T>(eid(i));
         }
 
-        public IMapGrid getgrid(int i)
+        public MapGridComponent getgrid(int i)
         {
             return map.GetGrid(new EntityUid(i));
         }
 
-        public IMapGrid getgrid(EntityUid mapId)
+        public MapGridComponent getgrid(EntityUid mapId)
         {
             return map.GetGrid(mapId);
         }

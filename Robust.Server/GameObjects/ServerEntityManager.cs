@@ -15,6 +15,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -30,6 +31,7 @@ namespace Robust.Server.GameObjects
             "robust_entities_count",
             "Amount of alive entities.");
 
+        [Dependency] private readonly IReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -164,12 +166,15 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
         {
             var newMsg = new MsgEntity();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
+
+            if (recordReplay)
+                _replay.QueueReplayMessage(message);
 
             _networkManager.ServerSendToAll(newMsg);
         }

@@ -18,7 +18,7 @@ We are happy to accept contributions from anybody. Get in Discord or IRC if you 
 
 ## Building
 
-This repository is the **engine** part of SS14. It's the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14). Think of Robust Toolbox as BYOND in the context of Spacestation 13.
+This repository is the **engine** part of SS14. It's the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14). Think of Robust Toolbox as BYOND in the context of Space Station 13.
 
 ## Legal Info
 

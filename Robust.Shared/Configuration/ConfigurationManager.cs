@@ -231,7 +231,7 @@ namespace Robust.Shared.Configuration
                 // Don't write if Archive flag is not set.
                 // Don't write if the cVar is the default value.
                 var cvars = _configVars.Where(x => x.Value.ConfigModified
-                                                   || ((x.Value.Flags & CVar.ARCHIVE) == 0 && x.Value.Value != null &&
+                                                   || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
                                                        !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
                 using var file = File.OpenWrite(_configFile);

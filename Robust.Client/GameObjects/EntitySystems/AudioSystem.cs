@@ -44,6 +44,17 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
     }
 
+    public override void Shutdown()
+    {
+        foreach (var stream in _playingClydeStreams)
+        {
+            stream.Source.Dispose();
+        }
+        _playingClydeStreams.Clear();
+
+        base.Shutdown();
+    }
+
     #region Event Handlers
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {

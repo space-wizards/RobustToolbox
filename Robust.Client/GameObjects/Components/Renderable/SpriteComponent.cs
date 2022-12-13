@@ -46,6 +46,10 @@ namespace Robust.Client.GameObjects
         [DataField("visible")]
         private bool _visible = true;
 
+        // VV convenience variable to examine layer objects using layer keys
+        [ViewVariables]
+        private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
+
         [ViewVariables(VVAccess.ReadWrite)]
         public override bool Visible
         {
@@ -854,8 +858,6 @@ namespace Robust.Client.GameObjects
                 default:
                     throw new NotImplementedException();
             }
-
-            RebuildBounds();
         }
 
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
@@ -871,6 +873,8 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
             theLayer.SetTexture(texture);
+
+            QueueUpdateIsInert();
             RebuildBounds();
         }
 
@@ -962,6 +966,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            QueueUpdateIsInert();
             RebuildBounds();
         }
 

@@ -234,8 +234,12 @@ namespace Robust.Shared.Configuration
                                                    || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
                                                        !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
+                // Write in-memory to avoid bulldozing config file on exception.
+                var memoryStream = new MemoryStream();
+                SaveToTomlStream(memoryStream, cvars);
+                memoryStream.Position = 0;
                 using var file = File.OpenWrite(_configFile);
-                SaveToTomlStream(file, cvars);
+                memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)

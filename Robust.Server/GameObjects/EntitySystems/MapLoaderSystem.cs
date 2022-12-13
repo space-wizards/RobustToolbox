@@ -803,7 +803,6 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var pauseTime = _meta.GetPauseTime(uid);
         _context.Set(uidEntityMap, entityUidMap, pauseTime);
-        WriteGridSection(data, entities);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);

@@ -356,7 +356,9 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>());
+        var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
+        var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
@@ -799,7 +801,8 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
-        _context.Set(uidEntityMap, entityUidMap);
+        var pauseTime = _meta.GetPauseTime(uid);
+        _context.Set(uidEntityMap, entityUidMap, pauseTime);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);

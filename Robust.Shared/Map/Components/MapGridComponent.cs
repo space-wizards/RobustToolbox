@@ -731,7 +731,7 @@ namespace Robust.Shared.Map.Components
         public Vector2i LocalToTile(EntityCoordinates coordinates)
         {
             var position = LocalToGrid(coordinates);
-            return new Vector2i((int) (position.X / TileSize), (int) (position.Y / TileSize));
+            return new Vector2i((int) Math.Floor(position.X / TileSize), (int) Math.Floor(position.Y / TileSize));
         }
 
         /// <inheritdoc />

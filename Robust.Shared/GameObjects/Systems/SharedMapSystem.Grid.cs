@@ -46,7 +46,9 @@ public abstract partial class SharedMapSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkRelative(Vector2i tile, int chunkSize)
     {
-        return new Vector2i(tile.X % chunkSize, tile.Y % chunkSize);
+        var x = MathHelper.Mod(tile.X, chunkSize);
+        var y = MathHelper.Mod(tile.Y, chunkSize);
+        return new Vector2i(x, y);
     }
 
     /// <summary>
@@ -55,7 +57,9 @@ public abstract partial class SharedMapSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkRelative(Vector2i tile, byte chunkSize)
     {
-        return new Vector2i(tile.X % chunkSize, tile.Y % chunkSize);
+        var x = MathHelper.Mod(tile.X, chunkSize);
+        var y = MathHelper.Mod(tile.Y, chunkSize);
+        return new Vector2i(x, y);
     }
 
     #endregion

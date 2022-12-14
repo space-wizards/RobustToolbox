@@ -56,6 +56,9 @@ END TEMPLATE-->
 
 ## 0.72.0.0
 
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
 
 ## 0.71.1.4
 

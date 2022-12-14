@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -28,15 +29,21 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     private Dictionary<int, EntityUid> _uidEntityMap = new();
     private Dictionary<EntityUid, int> _entityUidMap = new();
 
+    /// <summary>
+    /// How long the target map has been paused. Used for time offsets.
+    /// </summary>
+    public TimeSpan PauseTime;
+
     public MapSerializationContext()
     {
         SerializerProvider.RegisterSerializer(this);
     }
 
-    public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
+    public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap, TimeSpan pauseTime)
     {
         _uidEntityMap = uidEntityMap;
         _entityUidMap = entityUidMap;
+        PauseTime = pauseTime;
     }
 
     public void Clear()
@@ -45,6 +52,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         CurrentlyIgnoredComponents.Clear();
         CurrentWritingComponent = null;
         CurrentWritingEntity = null;
+        PauseTime = TimeSpan.Zero;
     }
 
     // Create custom object serializers that will correctly allow data to be overriden by the map file.

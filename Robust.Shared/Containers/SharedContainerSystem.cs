@@ -344,7 +344,7 @@ namespace Robust.Shared.Containers
                 if (!force)
                     return container.Remove(entity);
 
-                container.ForceRemove(entity);
+                container.Remove(entity, EntityManager, force: true);
                 return true;
             }
 
@@ -385,7 +385,7 @@ namespace Robust.Shared.Containers
             foreach (var ent in container.ContainedEntities.ToArray())
             {
                 if (Deleted(ent)) continue;
-                container.ForceRemove(ent);
+                container.Remove(ent, EntityManager, force: true);
                 Del(ent);
             }
         }

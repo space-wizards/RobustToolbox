@@ -154,11 +154,21 @@ public sealed class MapLoaderSystem : EntitySystem
             var mapEnt = _mapManager.GetMapEntityId(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var rootEnts = new List<EntityUid>();
-            foreach (var ent in data.Entities)
+            // aeoeoeieioe content
+
+            if (HasComp<MapGridComponent>(mapEnt))
             {
-               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
-                    rootEnts.Add(ent);
+                rootEnts.Add(mapEnt);
             }
+            else
+            {
+                foreach (var ent in data.Entities)
+                {
+                    if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                        rootEnts.Add(ent);
+                }
+            }
+
             rootUids = rootEnts;
         }
 
@@ -517,6 +527,14 @@ public sealed class MapLoaderSystem : EntitySystem
                 if (data.Options.LoadMap)
                 {
                     _logLoader.Info($"Loading map file with a root node onto an existing map!");
+
+                    // Smelly
+                    if (HasComp<MapGridComponent>(rootNode))
+                    {
+                        data.Options.Offset = Vector2.Zero;
+                        data.Options.Rotation = Angle.Zero;
+                    }
+
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
                 // Otherwise just ignore the map in the file.

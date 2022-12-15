@@ -804,7 +804,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if ((flags & (LookupFlags.Static | LookupFlags.Anchored)) != 0x0)
+        if ((flags & LookupFlags.Static) != 0x0)
         {
             component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {

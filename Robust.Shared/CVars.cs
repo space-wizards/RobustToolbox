@@ -1381,5 +1381,20 @@ namespace Robust.Shared
         /// Index log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+
+        /*
+         * CFG
+         */
+
+        /// <summary>
+        /// If set, check for any unknown CVars once the game is initialized to try the spot any unknown ones.
+        /// </summary>
+        /// <remarks>
+        /// CVars can be dynamically registered instead of just being statically known ahead of time,
+        /// so the engine is not capable of immediately telling if a CVar is a typo or such.
+        /// This check after game initialization assumes all CVars have been registered,
+        /// and will complain if anything unknown is found (probably indicating a typo of some kind).
+        /// </remarks>
+        public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
     }
 }

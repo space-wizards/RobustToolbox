@@ -377,6 +377,8 @@ namespace Robust.Server
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
 
+            _config.CheckUnusedCVars();
+
             if (_config.GetCVar(CVars.SysGCCollectStart))
             {
                 GC.Collect();

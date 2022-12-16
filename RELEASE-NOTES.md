@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
 
 ### Internal
 

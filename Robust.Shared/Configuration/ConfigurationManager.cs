@@ -21,6 +21,7 @@ namespace Robust.Shared.Configuration
     internal class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
@@ -28,6 +29,8 @@ namespace Robust.Shared.Configuration
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
+
+        private ISawmill _sawmill = default!;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -39,6 +42,8 @@ namespace Robust.Shared.Configuration
         public void Initialize(bool isServer)
         {
             _isServer = isServer;
+
+            _sawmill = _logManager.GetSawmill("cfg");
         }
 
         public virtual void Shutdown()
@@ -138,6 +143,23 @@ namespace Robust.Shared.Configuration
         public void SetSaveFile(string configFile)
         {
             _configFile = configFile;
+        }
+
+        public void CheckUnusedCVars()
+        {
+            if (!GetCVar(CVars.CfgCheckUnused))
+                return;
+
+            using (Lock.ReadGuard())
+            {
+                foreach (var cVar in _configVars.Values)
+                {
+                    if (cVar.Registered)
+                        continue;
+
+                    _sawmill.Warning("Unknown CVar found (typo in config?): {CVar}", cVar.Name);
+                }
+            }
         }
 
         /// <inheritdoc />

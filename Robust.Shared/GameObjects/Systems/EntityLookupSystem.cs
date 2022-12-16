@@ -45,12 +45,6 @@ namespace Robust.Shared.GameObjects
         Sundries = 1 << 3,
 
         /// <summary>
-        /// Also return entities from an anchoring query.
-        /// </summary>
-        [Obsolete("Use Static")]
-        Anchored = 1 << 4,
-
-        /// <summary>
         /// Include entities that are currently in containers.
         /// </summary>
         Contained = 1 << 5,

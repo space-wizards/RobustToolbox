@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Configuration
@@ -71,6 +72,7 @@ namespace Robust.UnitTesting.Shared.Configuration
             var collection = new DependencyCollection();
             collection.Register<ConfigurationManager, ConfigurationManager>();
             collection.Register<IGameTiming, GameTiming>();
+            collection.Register<ILogManager, LogManager>();
             collection.BuildGraph();
 
             return collection.Resolve<ConfigurationManager>();

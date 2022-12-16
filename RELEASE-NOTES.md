@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
 
 ### Bugfixes
 

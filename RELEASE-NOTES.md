@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
 
 ### New features
 

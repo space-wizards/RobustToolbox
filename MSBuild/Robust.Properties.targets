@@ -31,7 +31,7 @@
     <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
     <Python>python3</Python>
     <Python Condition="'$(ActualOS)' == 'Windows'">py -3</Python>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <EnableClientScripting>True</EnableClientScripting>
     <!-- Client scripting is disabled on full release builds for security and size reasons. -->
     <EnableClientScripting Condition="'$(FullRelease)' == 'True'">False</EnableClientScripting>

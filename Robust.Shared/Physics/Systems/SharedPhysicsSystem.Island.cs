@@ -10,6 +10,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -121,7 +122,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 public abstract partial class SharedPhysicsSystem
 {
     /*
-     * Handles island generation and overall solve code.
+     * Handles island generation and constraints solver code.
      */
     private const int MaxIslands = 256;
 
@@ -177,6 +178,9 @@ public abstract partial class SharedPhysicsSystem
     private int _positionIterations;
     private float _maxLinearVelocity;
     private float _maxAngularVelocity;
+    private float _maxTranslationPerTick;
+    private float _maxRotationPerTick;
+    private int _tickRate;
     private bool _sleepAllowed;
     protected float AngularToleranceSqr;
     protected float LinearToleranceSqr;
@@ -187,8 +191,11 @@ public abstract partial class SharedPhysicsSystem
     private const int VelocityConstraintsPerThread = 32;
     private const int PositionConstraintsPerThread = 32;
 
+    #region Setup
+
     private void InitializeIsland()
     {
+        _configManager.OnValueChanged(CVars.NetTickrate, SetTickRate, true);
         _configManager.OnValueChanged(CVars.WarmStarting, SetWarmStarting, true);
         _configManager.OnValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
         _configManager.OnValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
@@ -206,6 +213,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void ShutdownIsland()
     {
+        _configManager.UnsubValueChanged(CVars.NetTickrate, SetTickRate);
         _configManager.UnsubValueChanged(CVars.WarmStarting, SetWarmStarting);
         _configManager.UnsubValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection);
         _configManager.UnsubValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection);
@@ -226,14 +234,43 @@ public abstract partial class SharedPhysicsSystem
     private void SetMaxAngularCorrection(float value) => _maxAngularCorrection = value;
     private void SetVelocityIterations(int value) => _velocityIterations = value;
     private void SetPositionIterations(int value) => _positionIterations = value;
-    private void SetMaxLinearVelocity(float value) => _maxLinearVelocity = value;
-    private void SetMaxAngularVelocity(float value) => _maxAngularVelocity = value;
+    private void SetMaxLinearVelocity(float value)
+    {
+        _maxLinearVelocity = value;
+        UpdateMaxTranslation();
+    }
+
+    private void SetMaxAngularVelocity(float value)
+    {
+        _maxAngularVelocity = value;
+        UpdateMaxRotation();
+    }
+
+    private void SetTickRate(int value)
+    {
+        _tickRate = value;
+        UpdateMaxTranslation();
+        UpdateMaxRotation();
+    }
+
     private void SetSleepAllowed(bool value) => _sleepAllowed = value;
     private void SetAngularToleranceSqr(float value) => AngularToleranceSqr = value;
     private void SetLinearToleranceSqr(float value) => LinearToleranceSqr = value;
     private void SetTimeToSleep(float value) => TimeToSleep = value;
     private void SetVelocityThreshold(float value) => _velocityThreshold = value;
     private void SetBaumgarte(float value) => _baumgarte = value;
+
+    private void UpdateMaxTranslation()
+    {
+        _maxTranslationPerTick = _maxLinearVelocity / _tickRate;
+    }
+
+    private void UpdateMaxRotation()
+    {
+        _maxRotationPerTick = (MathF.Tau * _maxAngularVelocity) / _tickRate;
+    }
+
+    #endregion
 
     /// <summary>
     ///     Where the magic happens.
@@ -510,6 +547,8 @@ public abstract partial class SharedPhysicsSystem
             _positionIterations,
             _maxLinearVelocity,
             _maxAngularVelocity,
+            _maxTranslationPerTick,
+            _maxRotationPerTick,
             _sleepAllowed,
             AngularToleranceSqr,
             LinearToleranceSqr,
@@ -518,6 +557,7 @@ public abstract partial class SharedPhysicsSystem
             _baumgarte
         );
 
+        // We'll sort islands from internally parallel (due to lots of contacts) to running all the islands in parallel
         islands.Sort((x, y) => x.Contacts.Count.CompareTo(y.Contacts.Count) + x.Joints.Count.CompareTo(y.Joints.Count));
 
         var totalBodies = 0;
@@ -588,7 +628,7 @@ public abstract partial class SharedPhysicsSystem
     /// <returns></returns>
     private bool InternalParallel(IslandData island)
     {
-        return island.Contacts.Count > 32 || island.Joints.Count > 32;
+        return island.Contacts.Count > 128 || island.Joints.Count > 128;
     }
 
     /// <summary>
@@ -700,32 +740,33 @@ public abstract partial class SharedPhysicsSystem
         // Store for warm starting.
         StoreImpulses(in island, velocityConstraints);
 
+        var maxVel = data.MaxTranslation / data.FrameTime;
+        var maxVelSq = maxVel * maxVel;
+        var maxAngVel = data.MaxRotation / data.FrameTime;
+        var maxAngVelSq = maxAngVel * maxAngVel;
+
         // Integrate positions
         for (var i = 0; i < bodyCount; i++)
         {
-            ref var linearVelocity = ref linearVelocities[offset + i];
-            ref var angularVelocity = ref angularVelocities[offset + i];
+            var linearVelocity = linearVelocities[offset + i];
+            var angularVelocity = angularVelocities[offset + i];
 
-            ref var position = ref positions[i];
-            ref var angle = ref angles[i];
-
-            var translation = linearVelocity * data.FrameTime;
-            if (translation.Length > data.MaxLinearVelocity)
+            var velSqr = linearVelocity.LengthSquared;
+            if (velSqr > maxVelSq)
             {
-                var ratio = data.MaxLinearVelocity / translation.Length;
-                linearVelocity *= ratio;
+                linearVelocity *= maxVel / MathF.Sqrt(velSqr);
+                linearVelocities[offset + i] = linearVelocity;
             }
 
-            var rotation = angularVelocity * data.FrameTime;
-            if (rotation * rotation > data.MaxAngularVelocity)
+            if (angularVelocity * angularVelocity > maxAngVelSq)
             {
-                var ratio = data.MaxAngularVelocity / MathF.Abs(rotation);
-                angularVelocity *= ratio;
+                angularVelocity *= maxAngVel / MathF.Abs(angularVelocity);
+                angularVelocities[offset + i] = angularVelocity;
             }
 
             // Integrate
-            position += linearVelocity * data.FrameTime;
-            angle += angularVelocity * data.FrameTime;
+            positions[i] += linearVelocity * data.FrameTime;
+            angles[i] += angularVelocity * data.FrameTime;
         }
 
         island.PositionSolved = false;

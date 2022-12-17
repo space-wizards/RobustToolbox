@@ -155,6 +155,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         int PositionIterations,
         float MaxLinearVelocity,
         float MaxAngularVelocity,
+        float MaxTranslation,
+        float MaxRotation,
         bool SleepAllowed,
         float AngTolSqr,
         float LinTolSqr,
@@ -162,22 +164,5 @@ stored in a single array since multiple arrays lead to multiple misses.
         float VelocityThreshold,
         float Baumgarte)
     {
-        public readonly float FrameTime = FrameTime;
-        public readonly float DtRatio = DtRatio;
-        public readonly float InvDt = InvDt;
-
-        public readonly bool WarmStarting = WarmStarting;
-        public readonly float MaxLinearCorrection = MaxLinearCorrection;
-        public readonly float MaxAngularCorrection = MaxAngularCorrection;
-        public readonly int VelocityIterations = VelocityIterations;
-        public readonly int PositionIterations = PositionIterations;
-        public readonly float MaxLinearVelocity = MaxLinearVelocity;
-        public readonly float MaxAngularVelocity = MaxAngularVelocity;
-        public readonly bool SleepAllowed = SleepAllowed;
-        public readonly float AngTolSqr = AngTolSqr;
-        public readonly float LinTolSqr = LinTolSqr;
-        public readonly float TimeToSleep = TimeToSleep;
-        public readonly float VelocityThreshold = VelocityThreshold;
-        public readonly float Baumgarte = Baumgarte;
     }
 }

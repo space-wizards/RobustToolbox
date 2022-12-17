@@ -337,5 +337,5 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     }
 
     [ByRefEvent]
-    public readonly record struct JointBreakMessage(Joint Joint, float JointError) {}
+    public readonly record struct JointBreakEvent(Joint Joint, float JointError) {}
 }

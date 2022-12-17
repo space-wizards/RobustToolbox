@@ -658,13 +658,15 @@ public abstract partial class SharedPhysicsSystem
         var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
         var angles = ArrayPool<float>.Shared.Rent(bodyCount);
         var offset = island.Offset;
+        var xformQuery = GetEntityQuery<TransformComponent>();
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
             var body = island.Bodies[i];
+            var (worldPos, worldRot) =
+                _transform.GetWorldPositionRotation(xformQuery.GetComponent(body.Owner), xformQuery);
 
-            // Didn't use the old variable names because they're hard to read
-            var transform = _physicsManager.EnsureTransform(body);
+            var transform = new Transform(worldPos, worldRot);
             var position = Physics.Transform.Mul(transform, body.LocalCenter);
             // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
             var angle = transform.Quaternion2D.Angle;
@@ -808,29 +810,26 @@ public abstract partial class SharedPhysicsSystem
         // This means we can run the entire solver in parallel and not have to worry about stale world positions later
         // E.g. if a parent had its position updated then our worldposition is invalid
         // We can safely do this in parallel.
-        var xformQuery = GetEntityQuery<TransformComponent>();
 
         // Solve positions now and store for later; we can't write this safely in parallel.
-        for (var i = 0; i < bodyCount; i++)
+        var bodies = island.Bodies;
+
+        if (options != null)
         {
-            var body = island.Bodies[i];
+            const int FinaliseBodies = 32;
+            var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
 
-            if (body.BodyType == BodyType.Static)
-                continue;
+            Parallel.For(0, batches, options, i =>
+            {
+                var start = i * FinaliseBodies;
+                var end = Math.Min(bodyCount, start + FinaliseBodies);
 
-            var xform = xformQuery.GetComponent(body.Owner);
-            var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
-            var worldRot = (float) (parentRot + xform._localRotation);
-
-            var angle = angles[i];
-
-            var q = new Quaternion2D(angle);
-            var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
-
-            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
-            solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
-            solvedAngles[offset + i] = angles[i] - worldRot;
+                FinalisePositions(start, end, offset, bodies, xformQuery, positions, angles, solvedPositions, solvedAngles);
+            });
+        }
+        else
+        {
+            FinalisePositions(0, bodyCount, offset, bodies,xformQuery, positions, angles, solvedPositions, solvedAngles);
         }
 
         // Check sleep status for all of the bodies
@@ -908,6 +907,31 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
+    private void FinalisePositions(int start, int end, int offset, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
+    {
+        for (var i = start; i < end; i++)
+        {
+            var body = bodies[i];
+
+            if (body.BodyType == BodyType.Static)
+                continue;
+
+            var xform = xformQuery.GetComponent(body.Owner);
+            var parentXform = xformQuery.GetComponent(xform.ParentUid);
+            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+            var worldRot = (float) (parentRot + xform._localRotation);
+
+            var angle = angles[i];
+
+            var q = new Quaternion2D(angle);
+            var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
+
+            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+            solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
+            solvedAngles[offset + i] = angles[i] - worldRot;
+        }
+    }
+
     /// <summary>
     /// Updates the positions, rotations, and velocities of all of the solved bodies.
     /// Run sequentially to avoid threading issues.
@@ -923,7 +947,7 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
-            var ev = new JointBreakMessage(joint, MathF.Sqrt(error));
+            var ev = new JointBreakEvent(joint, MathF.Sqrt(error));
             RaiseLocalEvent(joint.BodyAUid, ref ev);
             RaiseLocalEvent(joint.BodyBUid, ref ev);
             RaiseLocalEvent(ref ev);
